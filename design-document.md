@@ -18,43 +18,43 @@ counting the number of times a sensitive or private event occurs and approximati
 that sensitive tokens or strings occur.
 
 Client applications hold private inputs to the aggregation function, server processors,
-or custodians, interact in a multi-party computation to compute the output, and a final
-collector obtains the output of the aggregator. At a high level, the flow of data through
+or aggregators, invoke  multi-party computation to compute the output, and a final collector 
+obtains the output of the aggregation function. At a high level, the flow of data through
 these entities works roughly as follows:
 
 ~~~
                             +------------+     
  (1) Batch submission       |            |        (3) Collection
-    +-----------------------> Processor  +------------------+
+    +-----------------------> Aggregator +------------------+
     |                       |            |                  |
     |                       +-^-------^--+                  |
     |                         |       |                     |
     |                         |       |                     |
     |                         |       |  (2) MPC            |
-+--------+           +--------v--+    |      eval      +----v------+
-|        |           |           |    |                |           |
-| Client +-----------> Processor |    |                | Collector |
-|        |           |           |    |                |           |
-+--------+           +--------^--+    |                +----^------+
++--------+           +--------v---+   |      eval      +----v------+
+|        |           |            |   |                |           |
+| Client +-----------> Aggregator |   |                | Collector |
+|        |           |            |   |                |           |
++--------+           +--------^---+   |                +----^------+
     |                         |       |                     |
     |                         |       |                     | 
     |                         |       |                     |
     |                       +-v-------v--+                  |
     |                       |            |                  |
-    +-----------------------> Processor  +------------------+
+    +-----------------------> Aggregator +------------------+
                             |            |
                             +------------+
 ~~~ 
 
 1. Applications split inputs into multiple (at least two) anonymized and encrypted shares,
-   and upload each share to different processors that do not collude or otherwise share 
+   and upload each share to different aggregators that do not collude or otherwise share 
    data with one another. Applications continue this process until a "batch" of data is 
-   collected. Upon receipt of a share, each processor verifies it for correctness. 
+   collected. Upon receipt of a share, each aggregator verifies it for correctness. 
    (Details about input validation and how it pertains to system security properties is 
    in {{CITE}}.)
-2. Each processor aggregates its shares into a partial sum. The processors then engage 
-   in a multi-party protocol to combine these sums into a final, aggregation output.
-3. The aggregation output is sent to the collector.
+2. Each aggregator combines its shares into a partial sum. The aggregators then engage 
+   in a multi-party protocol to combine these sums into a final, aggregated output.
+3. The aggregated output is sent to the collector.
 
 The output of a single batch aggregation reveals little to nothing beyond the value itself.
 
