@@ -61,7 +61,7 @@ The output of a single batch aggregation reveals little to nothing beyond the va
 ## Security overview
 
 Prio assumes a powerful adversary with the ability to compromise an unbounded number of 
-clients. In doing so, the adversary can input malicious (yet truthful) to the aggregation 
+clients. In doing so, the adversary can provide malicious (yet truthful) inputs to the aggregation 
 function. Prio also assumes that all but one server operates honestly, where a dishonest
 server does not execute the protocol faithfully as specified. The system also assumes
 that servers communicate over secure and mutually authenticated channels. In practice,
