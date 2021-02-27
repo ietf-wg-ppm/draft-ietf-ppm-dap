@@ -11,7 +11,7 @@ some of which we highlight below:
 
 - Simple statistics, including sum, mean, min, max, variance, and standard deviation;
 - Bit vector OR and AND operations; and
-- Count-min sketch (approximated frequency counts) over a closed universe of strings.
+- Data structures, like Bloom filters, counting Bloom filters, and count-min sketches, that approximately represent (multi-)sets of strings.
 
 The applications for such aggregations functions are large, including, though not limited to:
 counting the number of times a sensitive or private event occurs and approximating the frequency
