@@ -9,54 +9,60 @@ particular way. However, not all aggregation functions admit an efficient encodi
 them impractical to implement. Thus, Prio supports a limited set of aggregation functions, 
 some of which we highlight below:
 
-- Simple statistics, including sum, mean, min, max, variance, and standard deviation; [[OPEN ISSUE: It's possible to estimate quantiles such as the median. How practical is this?]]
-
-
+- Simple statistics, including sum, mean, min, max, variance, and standard deviation; 
+  [[OPEN ISSUE: It's possible to estimate quantiles such as the median. How practical is this?]]
 - Bit vector OR and AND operations; and
-- Data structures, like Bloom filters, counting Bloom filters, and count-min sketches, that approximately represent (multi-)sets of strings.
+- Data structures, like Bloom filters, counting Bloom filters, and count-min sketches, that 
+  approximately represent (multi-)sets of strings.
 
 The applications for such aggregations functions are large, including, though not limited to:
 counting the number of times a sensitive or private event occurs and approximating the frequency
 that sensitive tokens or strings occur.
 
 Client applications hold private inputs to the aggregation function, server processors,
-or aggregators, run a protocol that validates each input x[1], x[2], ... and computes the final output y. The final collector  
-obtains the output of the aggregation function. At a high level, the flow of data through
-these entities works roughly as follows:
+or aggregators, run a protocol that validates each input x[1], x[2], ... and computes the
+final output y. The final collector obtains the output of the aggregation function.
+
+At a high level, the flow of data through these entities works roughly as follows:
 
 ~~~
                             +------------+     
- (1) Batch submission       |            |        (3) Collection
-    +-----------------------> Aggregator +------------------+
-    |                       |            |                  |
-    |                       +-^-------^--+                  |
-    |                         |       |                     |
-    |                         |       |                     |
-    |                         |       |  (2) MPC            |
-+--------+           +--------v---+   |      eval      +----v------+
-|        |           |            |   |                |           |
-| Client +-----------> Aggregator |   |                | Collector |
-|        |           |            |   |                |           |
-+--------+           +--------^---+   |                +----^------+
-    |                         |       |                     |
-    |                         |       |                     | 
-    |                         |       |                     |
-    |                       +-v-------v--+                  |
-    |                       |            |                  |
-    +-----------------------> Aggregator +------------------+
+                            |            |        
+                            | Aggregator |
+                            |            |
+                            +-^-------^--+
+                              |       |   
+                          (2) |       | (3)
+                              |       |    
++--------+           +--------v---+   |        +-----------+
+|        |    (1)    |            <---+   (4)  |           |
+| Client +----------->   Leader   +------------> Collector |
+|        |           |            <---+        |           |
++--------+           +--------^---+   |        +-----------+
+                              |       |       
+                          (2) |       | (3)       
+                              |       |        
+                            +-v-------v--+     
+                            |            |     
+                            | Aggregator |
                             |            |
                             +------------+
 ~~~ 
 
-1. Applications split inputs into multiple (at least two) anonymized and encrypted shares,
-   and upload each share to different aggregators that do not collude or otherwise share 
-   data with one another. Applications continue this process until a "batch" of data is 
-   collected. Upon receipt of a share, each aggregator verifies it for correctness. 
-   (Details about input validation and how it pertains to system security properties is 
-   in {{CITE}}.)
-2. Each aggregator combines its shares into a partial sum. The aggregators then engage 
-   in a multi-party protocol to combine these sums into a final, aggregated output.
-3. The aggregated output is sent to the collector.
+1. Upload: Clients split inputs into s >= 2 shares, encrypt each share for a different 
+   Aggregator, and send these encrypted shares to the Leader. Clients continue 
+   this process until a "batch" of data is collected.
+2. Verify: Upon receipt of an encrypted share, the Leader sends it to the respective 
+   Aggregator. Each Aggregator decrypts the share, computes a proof from the respective
+   share, sends this proof to the leader. Once the Leader collects all proofs for 
+   the batch, it determines whether or not the data for each entry is correct. 
+   (Details about input validation and how it pertains to system security properties 
+   is in {{CITE}}.)
+3. Aggregate: Assuming the input share is valid, the Leader instructs each Aggregator 
+   to combine aggregate their corresponding input share locally. When complete, each
+   Aggregator sends their aggregated input shares to the Leader, who then combines all
+   aggregates into a final result. 
+4. Collect: The aggregated output is sent to the Collector.
 
 The output of a single batch aggregation reveals little to nothing beyond the value itself.
 
