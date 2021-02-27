@@ -15,6 +15,15 @@
 
 ## Threat model
 
+[[OPEN ISSUE: The threat model for Prio --- as it's described in the original
+paper and [BBC+19] --- considers **either** a malicious client (attacking
+soundness) **or** a malicious subset of aggregators (attacking privacy). In
+particular, soundness isn't guaranteed if any one of the aggregators is
+malicious; in theory it may be possible for a malicious client and aggregator to
+collude and break soundness. Is this a contingency we need to address? There are
+techniques in [BBC+19] that account for this; we need to figure out if they're
+practical.]]
+
 ## System requirements
 
 ### Data types
