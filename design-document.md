@@ -3,8 +3,8 @@
 ## Architecture overview
 
 Prio is a system and protocol for privately computing aggregation functions over private 
-input. An aggregation function F is one that computes an output y = F(x1,x2,...) for inputs
-xi. In general, Prio supports any aggregation function whose inputs can be encoded in a 
+input. An aggregation function F is one that computes an output y = F(x[1],x[2],...) for inputs
+x[i]. In general, Prio supports any aggregation function whose inputs can be encoded in a 
 particular way. However, not all aggregation functions admit an efficient encoding, rendering
 them impractical to implement. Thus, Prio supports a limited set of aggregation functions, 
 some of which we highlight below:
