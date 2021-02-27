@@ -9,7 +9,9 @@ particular way. However, not all aggregation functions admit an efficient encodi
 them impractical to implement. Thus, Prio supports a limited set of aggregation functions, 
 some of which we highlight below:
 
-- Simple statistics, including sum, mean, min, max, variance, and standard deviation;
+- Simple statistics, including sum, mean, min, max, variance, and standard deviation; [[OPEN ISSUE: It's possible to estimate quantiles such as the median. How practical is this?]]
+
+
 - Bit vector OR and AND operations; and
 - Data structures, like Bloom filters, counting Bloom filters, and count-min sketches, that approximately represent (multi-)sets of strings.
 
