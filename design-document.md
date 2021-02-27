@@ -18,7 +18,7 @@ counting the number of times a sensitive or private event occurs and approximati
 that sensitive tokens or strings occur.
 
 Client applications hold private inputs to the aggregation function, server processors,
-or aggregators, invoke  multi-party computation to compute the output, and a final collector 
+or aggregators, run a protocol that validates each input x[1], x[2], ... and computes the final output y. The final collector  
 obtains the output of the aggregation function. At a high level, the flow of data through
 these entities works roughly as follows:
 
