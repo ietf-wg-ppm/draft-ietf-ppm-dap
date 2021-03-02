@@ -30,6 +30,62 @@ practical.]]
 
 ## System constraints
 
+Prio has inherent constraints derived from the tradeoff between privacy
+guarantees and computational complexity. These tradeoffs influence how
+applications may choose to utilize services implementing the specification.
+
+### Data types have limited resolution due to input-validation complexity
+
+Privacy comes at the cost of computational complexity. While affine-aggregatable
+encodings can compute many useful statistics, they require more bandwidth and
+CPU cycles to account for finite-field arithmetic during input-validation. The
+throughput of the system bounds the volume of data processed, which is
+proportional to the verification circuit's size and the rate of verifications
+performed by each work unit in an aggregator.
+
+Applications that utilize proofs with a large number of gates or a high
+frequency of inputs may need to limit inputs into the system to meet bandwidth
+or compute constraints. Some methods of overcoming these limitations include
+choosing a better representation for the data or introducing sampling into the
+data collection methodology.
+
+### Aggregation services may need to fulfill near-real-time constraints
+
+A near-real-time system must produce a response within a deadline. This
+constraint may be relevant when the value of an aggregate decreases over time.
+
+An example of a near-real-time constraint is the expectation that a can be
+verified and aggregated in a period equal to data collection, given some
+computational budget. Meeting these deadlines may require efficient
+implementations of the input-validation protocol. Applications might batch
+requests and utilize binary serialization to improve throughput.
+
+Some applications may be constrained by the time that it takes to reach a
+privacy threshold defined by a minimum number of input shares. One possible
+solution is to increase the reporting period so more samples can be collected
+before the period is over, although this may need to be balanced with the need
+to produce a response within a deadline.
+
+### Aggregation services may need to fulfill data integrity constraints
+
+Data integrity concerns the accuracy and correctness of the outputs in the
+system. The integrity of the output can be influenced by an incomplete round of
+aggregation caused by network partitions, or by bad actors attempting to cause
+inaccuracies in the aggregates. An example data integrity constraint may be that
+every share must be processed at most once by all aggregators. Data integrity
+constraints may be at odds with the threat model if meeting the constraints
+requires replaying data.
+
+Invalid shares are expected when operating an aggregator and do not necessarily
+constitute failures in the protocol. However, a large number of invalid
+or identical inputs may be concerning participants in the protocol.
+
+Certain classes of errors do not exist in the input-validation protocol
+considered in this document. For example, errors from packet loss when clients
+make requests directly to aggregators are not relevant when the leader proxies
+requests and controls the clock cycle for signaling the end of the aggregation
+rounds.
+
 ## System design
 
 ## Open questions and system parameters
