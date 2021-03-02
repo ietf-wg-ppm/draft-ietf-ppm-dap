@@ -62,13 +62,13 @@ At a high level, the flow of data through these entities works roughly as follow
 ~~~ 
 
 1. Upload: Clients split inputs into s >= 2 shares, encrypt each share for a different 
-   Aggregator, and send these encrypted shares to the aggregators.
-2. Verify: Upon receipt of an encrypted share, the Leader sends it to the respective 
-   Aggregator. Each Aggregator decrypts the share, computes a proof from the respective
-   share, sends this proof to the leader. Once the Leader collects all proofs for 
-   the batch, it determines whether or not the data for each entry is correct. 
-   (Details about input validation and how it pertains to system security properties 
-   is in {{CITE}}.)
+   Aggregator, and send these encrypted shares to the Aggregators. (Details about Aggregator
+   discovery is in {{CITE}}.)
+2. Verify: Upon receipt of an encrypted share, an Aggregator decrypts the share, 
+   computes a proof from the respective share, and sends this proof to the Leader. 
+   Once the Leader collects all proofs for the batch, it determines whether or not the
+   data for each entry is correct. (Details about input validation and how it pertains 
+   to system security properties is in {{CITE}}.)
 3. Aggregate: Assuming the input share is valid, the Leader instructs each Aggregator 
    to combine aggregate their corresponding input share locally. When complete, each
    Aggregator sends their aggregated input shares to the Leader, who then combines all
