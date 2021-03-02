@@ -1,6 +1,7 @@
 # Prio v3 Design Document
 
 ## Terminology
+
 1. Aggregator: A server that runs the input-validation protocol and accumulates
    input shares.
 1. Client: the endpoint from which the user sends data to be aggregated, e.g., a
@@ -11,9 +12,97 @@
 1. Leader: A distinguished aggregator that coordinates input validation and data
    aggregation.
 
-## Sample user stories
+## Architecture overview
 
-## Threat model
+Prio is a system and protocol for privately computing aggregation functions over private 
+input. An aggregation function F is one that computes an output y = F(x[1],x[2],...) for inputs
+x[i]. In general, Prio supports any aggregation function whose inputs can be encoded in a 
+particular way. However, not all aggregation functions admit an efficient encoding, rendering
+them impractical to implement. Thus, Prio supports a limited set of aggregation functions, 
+some of which we highlight below:
+
+- Simple statistics, including sum, mean, min, max, variance, and standard deviation; 
+  [[OPEN ISSUE: It's possible to estimate quantiles such as the median. How practical is this?]]
+- Bit vector OR and AND operations; and
+- Data structures, like Bloom filters, counting Bloom filters, and count-min sketches, that 
+  approximately represent (multi-)sets of strings.
+
+The applications for such aggregations functions are large, including, though not limited to:
+counting the number of times a sensitive or private event occurs and approximating the frequency
+that sensitive tokens or strings occur.
+
+Client applications hold private inputs to the aggregation function, server processors,
+or aggregators, run a protocol that validates each input x[1], x[2], ... and computes the
+final output y. The final collector obtains the output of the aggregation function.
+
+At a high level, the flow of data through these entities works roughly as follows:
+
+~~~
+                            +------------+     
+                            |            |        
+                            | Aggregator |
+                            |            |
+                            +-^-------^--+
+                              |       |   
+                          (2) |       | (3)
+                              |       |    
++--------+    (1)    +--------v---+   |        +-----------+
+|        +----------->            <---+   (4)  |           |
+| Client +------->   |   Leader   +------------> Collector |
+|        +----->     |            <---+        |           |
++--------+           +--------^---+   |        +-----------+
+                              |       |       
+                          (2) |       | (3)       
+                              |       |        
+                            +-v-------v--+     
+                            |            |     
+                            | Aggregator |
+                            |            |
+                            +------------+
+~~~ 
+
+1. Upload: Clients split inputs into s >= 2 shares, encrypt each share for a different 
+   Aggregator, and send these encrypted shares to the Aggregators. (Details about Aggregator
+   discovery is in {{CITE}}.)
+2. Verify: Upon receipt of an encrypted share, an Aggregator decrypts the share, 
+   computes a proof from the respective share, and sends this proof to the Leader. 
+   Once the Leader collects all proofs for the batch, it determines whether or not the
+   data for each entry is correct. (Details about input validation and how it pertains 
+   to system security properties is in {{CITE}}.)
+3. Aggregate: Assuming the input share is valid, the Leader instructs each Aggregator 
+   to combine aggregate their corresponding input share locally. When complete, each
+   Aggregator sends their aggregated input shares to the Leader, who then combines all
+   aggregates into a final result. 
+4. Collect: The aggregated output is sent to the Collector.
+
+The output of a single batch aggregation reveals little to nothing beyond the value itself.
+
+## Security overview
+
+Prio assumes a powerful adversary with the ability to compromise an unbounded number of 
+clients. In doing so, the adversary can provide malicious (yet truthful) inputs to the aggregation 
+function. Prio also assumes that all but one server operates honestly, where a dishonest
+server does not execute the protocol faithfully as specified. The system also assumes
+that servers communicate over secure and mutually authenticated channels. In practice,
+this can be done by TLS or some other form of application-layer authentication.
+
+In the presence of this adversary, Prio provides two important properties for computing 
+an aggergation function F:
+
+1. Privacy. The adversary learns only the output of F computed over all client inputs, 
+   and nothing else. 
+1. Robustness. The adversary can influence the output of F only by reporting false 
+   (untruthful) data. The output cannot be influenced in any other way.
+
+There are several additional constraints that a Prio deployment must satisfy in order
+to achieve these goals:
+
+1. Minimum batch size. The aggregation batch size has an obvious impact on privacy.
+   (A batch size of one hides nothing of the input.) {{questions-and-params}} discusses
+   appropriate batch sizes and how it pertains to privacy in more detail.
+2. Aggregation function choice. Some aggregation functions leak slightly more than the 
+   function output itself. {{questions-and-params}} discusses the leakage profiles of 
+   various aggregation functions in more detail.
 
 [[OPEN ISSUE: The threat model for Prio --- as it's described in the original
 paper and [BBC+19] --- considers **either** a malicious client (attacking
@@ -32,7 +121,18 @@ practical.]]
 
 ## System design
 
-## Open questions and system parameters
+### Aggregator discovery
+
+[[OPEN ISSUE: writeme]]
+
+### Share uploading
+
+[[OPEN ISSUE: writeme]]
+
+## Open questions and system parameters {#questions-and-params}
+
+[[OPEN ISSUE: discuss batch size parameter and thresholds]]
+[[OPEN ISSUE: discuss f^ leakage differences from GB17]]
 
 ## Cryptographic components
 
@@ -243,3 +343,5 @@ prime?]]
 
 * [BBC+19] Boneh et al. "Zero-Knowledge Proofs on Secret-Shared Data via Fully
   Linear PCPs". Crypto 2019.
+* [GB17](https://crypto.stanford.edu/prio/paper.pdf) Corrigan-Gibbs and Boneh, 
+  "Prio: Private, Robust, and Scalable Computation of Aggregate Statistics". NSDI 2017. 
