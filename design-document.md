@@ -1,6 +1,7 @@
 # Prio v3 Design Document
 
 ## Terminology
+
 1. Aggregator: A server that runs the input-validation protocol and accumulates
    input shares.
 1. Client: the endpoint from which the user sends data to be aggregated, e.g., a
@@ -45,10 +46,10 @@ At a high level, the flow of data through these entities works roughly as follow
                               |       |   
                           (2) |       | (3)
                               |       |    
-+--------+           +--------v---+   |        +-----------+
-|        |    (1)    |            <---+   (4)  |           |
-| Client +----------->   Leader   +------------> Collector |
-|        |           |            <---+        |           |
++--------+    (1)    +--------v---+   |        +-----------+
+|        +----------->            <---+   (4)  |           |
+| Client +------->   |   Leader   +------------> Collector |
+|        +----->     |            <---+        |           |
 +--------+           +--------^---+   |        +-----------+
                               |       |       
                           (2) |       | (3)       
@@ -61,8 +62,7 @@ At a high level, the flow of data through these entities works roughly as follow
 ~~~ 
 
 1. Upload: Clients split inputs into s >= 2 shares, encrypt each share for a different 
-   Aggregator, and send these encrypted shares to the Leader. Clients continue 
-   this process until a "batch" of data is collected.
+   Aggregator, and send these encrypted shares to the aggregators.
 2. Verify: Upon receipt of an encrypted share, the Leader sends it to the respective 
    Aggregator. Each Aggregator decrypts the share, computes a proof from the respective
    share, sends this proof to the leader. Once the Leader collects all proofs for 
@@ -124,7 +124,7 @@ practical.]]
 ## Open questions and system parameters {#questions-and-params}
 
 [[OPEN ISSUE: discuss batch size parameter and thresholds]]
-[[OPEN ISSUE: discuss f^ leakage differences from HCG's paper]]
+[[OPEN ISSUE: discuss f^ leakage differences from GB17]]
 
 ## Cryptographic components
 
@@ -335,3 +335,5 @@ prime?]]
 
 * [BBC+19] Boneh et al. "Zero-Knowledge Proofs on Secret-Shared Data via Fully
   Linear PCPs". Crypto 2019.
+* [GB17](https://crypto.stanford.edu/prio/paper.pdf) Corrigan-Gibbs and Boneh, 
+  "Prio: Private, Robust, and Scalable Computation of Aggregate Statistics". NSDI 2017. 
