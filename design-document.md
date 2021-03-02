@@ -34,45 +34,45 @@ Prio has inherent constraints derived from the tradeoff between privacy
 guarantees and computational complexity. These tradeoffs influence how
 applications may choose to utilize services implementing the specification.
 
-### Data types have limited resolution due to input-validation complexity
+### Data resolution limitations
 
 Privacy comes at the cost of computational complexity. While affine-aggregatable
 encodings can compute many useful statistics, they require more bandwidth and
 CPU cycles to account for finite-field arithmetic during input-validation. The
 throughput of the system bounds the volume of data processed, which is
-proportional to the verification circuit's size and the rate of verifications
+related to the verification circuit's complexity and the rate of verifications
 performed by each work unit in an aggregator.
 
-Applications that utilize proofs with a large number of gates or a high
+Applications that utilize proofs with a large number of multiplication gates or a high
 frequency of inputs may need to limit inputs into the system to meet bandwidth
 or compute constraints. Some methods of overcoming these limitations include
 choosing a better representation for the data or introducing sampling into the
 data collection methodology.
 
-### Aggregation services may need to fulfill near-real-time constraints
+### Aggregation utility and soft batch deadlines
 
-A near-real-time system must produce a response within a deadline. This
+A soft real-time system should produce a response within a deadline in order to be useful. This
 constraint may be relevant when the value of an aggregate decreases over time.
 
-An example of a near-real-time constraint is the expectation that a can be
+An example of a soft real-time constraint is the expectation that input data can be
 verified and aggregated in a period equal to data collection, given some
-computational budget. Meeting these deadlines may require efficient
+computational budget. Meeting these deadlines will require efficient
 implementations of the input-validation protocol. Applications might batch
-requests and utilize binary serialization to improve throughput.
+requests or utilize more efficient serialization to improve throughput.
 
 Some applications may be constrained by the time that it takes to reach a
 privacy threshold defined by a minimum number of input shares. One possible
 solution is to increase the reporting period so more samples can be collected
 before the period is over, although this may need to be balanced with the need
-to produce a response within a deadline.
+to produce a response within a soft deadline.
 
 ### Aggregation services may need to fulfill data integrity constraints
 
 Data integrity concerns the accuracy and correctness of the outputs in the
 system. The integrity of the output can be influenced by an incomplete round of
 aggregation caused by network partitions, or by bad actors attempting to cause
-inaccuracies in the aggregates. An example data integrity constraint may be that
-every share must be processed at most once by all aggregators. Data integrity
+inaccuracies in the aggregates. An example data integrity constraint is that
+every share must be processed exactly once by all aggregators. Data integrity
 constraints may be at odds with the threat model if meeting the constraints
 requires replaying data.
 
@@ -83,7 +83,7 @@ or identical inputs may be concerning participants in the protocol.
 Certain classes of errors do not exist in the input-validation protocol
 considered in this document. For example, errors from packet loss when clients
 make requests directly to aggregators are not relevant when the leader proxies
-requests and controls the clock cycle for signaling the end of the aggregation
+requests and controls the schedule for signaling the end of the aggregation
 rounds.
 
 ## System design
