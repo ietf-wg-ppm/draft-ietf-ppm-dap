@@ -121,6 +121,14 @@ practical.]]
 
 ## System design
 
+### Aggregator discovery
+
+[[OPEN ISSUE: writeme]]
+
+### Share uploading
+
+[[OPEN ISSUE: writeme]]
+
 ## Open questions and system parameters {#questions-and-params}
 
 [[OPEN ISSUE: discuss batch size parameter and thresholds]]
