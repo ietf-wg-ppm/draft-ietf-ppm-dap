@@ -69,7 +69,7 @@ privacy threshold defined by a minimum number of input shares. One possible
 solution is to increase the reporting period so more samples can be collected,
 balanced against the urgency of responding to a soft deadline.
 
-### Aggregation services may need to fulfill data integrity constraints
+### Data integrity constraints
 
 Data integrity concerns the accuracy and correctness of the outputs in the
 system. The integrity of the output can be influenced by an incomplete round of
