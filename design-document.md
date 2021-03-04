@@ -2,12 +2,14 @@
 
 ## Terminology
 
-1. Aggregator: A server that runs the input-validation protocol and accumulates
+1. Aggregator: An endpoint that runs the input-validation protocol and accumulates
    input shares.
-1. Client: the endpoint from which the user sends data to be aggregated, e.g., a
+1. Client: The endpoint from which the user sends data to be aggregated, e.g., a
    web browser.
+1. Collector: The endpoint that receives the final aggregate. It also specifies
+   the parameters of the protocol.
 1. Input-validation protocol: The protocol executed by the client and aggregators
-   in order to validate the clients's input without leaking its value to the
+   in order to validate the client's input without leaking its value to the
    aggregators.
 1. Leader: A distinguished aggregator that coordinates input validation and data
    aggregation.
