@@ -311,48 +311,49 @@ criteria:
 1. **Field size.** How big the field needs to be depends on the type of data
    being aggregated and how many users there are. The field size also impacts
    the security level: the longer the validity circuit, the larger the field
-   needs to be in order to affectively detect malicious clients.
+   needs to be in order to effectively detect malicious clients. Typically the
+   soundness error (i.e., the probability of an invalid input being deemed valid
+   by the aggregators) will be 2n/(p-n), where n is the size of the input and p
+   is the prime modulus.
 1. **Fast polynomial operations.** In order to make Prio practical, it's
    important that implementations employ FFT to speed up polynomial operations.
-   In particular, the prime modulus p should be chosen so that (p-1) = 2^n * s
-   for large n and odd s. Then g^s is a principle, 2^n-th root of unity (i.e.,
-   g^(s\*2^n) = 1), where g is the generator of the multiplicative subgroup.
-   This fact allows us to quickly evaluate and interpolate polynomials at 2^d-th
-   roots of unity for 1 <= d <= n.
-1. **Highly composite subgroup.** Suppose that (p-1) = 2^n * s. It's best if s
+   In particular, the prime modulus p should be chosen so that (p-1) = 2^b * s
+   for large b and odd s. Then g^s is a principle, 2^b-th root of unity (i.e.,
+   g^(s\*2^b) = 1), where g is the generator of the multiplicative subgroup.
+   This fact allows us to quickly evaluate and interpolate polynomials at 2^a-th
+   roots of unity for 1 <= a <= b.
+1. **Highly composite subgroup.** Suppose that (p-1) = 2^b * s. It's best if s
    is highly composite because this minimizes the number of multiplications
    required to compute the inverse or apply Fermat's Little Theorem. (See
    [BBC+19, Section 5.2].)
-1. **Code opttimziation.** [[TODO: What properties of the field make
+1. **Code optimziation.** [[TODO: What properties of the field make
    it possible to write faster implementations?]]
 
 The table below lists parameters that meet these criteria at various levels of
-security. (Note that \#2 is the field used in "Prio v2".) The "bits" column
-indicates the size of the prime. For example, for p=3221225473,
-bits=log2(3221225473), which is approximately 31.53.
+security. (Note that \#1 is the field used in "Prio v2".) The "size" column
+indicates the number of bits required to represent elements of the field.
 
-| # | bits   | p                                      | g  | n   | s                |
-|---|--------|----------------------------------------|----|-----|------------------|
-| 1 | 31.58  | 3221225473                             | 5  | 30  | 3                |
-| 2 | 31.99  | 4293918721                             | 19 | 20  | 3^2 * 5 * 7 * 13 |
-| 3 | 63.75  | 15564440312192434177                   | 5  | 59  | 3^3              |
-| 4 | 66.17  | 83010348331692982273                   | 11 | 63  | 3^2              |
-| 5 | 122.81 | 9304595970494411110326649421962412033  | 3  | 120 | 7                |
-| 6 | 125.81 | 74769074762901517850839147140769382401 | 7  | 118 | 3^2 * 5^2        |
+| # | size | p                                      | g  | b   | s                |
+|---|------|----------------------------------------|----|-----|------------------|
+| 1 | 32   | 4293918721                             | 19 | 20  | 3^2 * 5 * 7 * 13 |
+| 2 | 64   | 15564440312192434177                   | 5  | 59  | 3^3              |
+| 3 | 80   | 779190469673491460259841               | 14 | 72  | 3 * 5 * 11       |
+| 4 | 123  | 9304595970494411110326649421962412033  | 3  | 120 | 7                |
+| 5 | 126  | 74769074762901517850839147140769382401 | 7  | 118 | 3^2 * 5^2        |
 
 **Finding suitable primes.**
-One way to find suitable primes is to first choose choose n, then "probe" to
+One way to find suitable primes is to first choose choose b, then "probe" to
 find a prime of the desired size. The following SageMath script prints the
-parameters of a number of primes larger than 2^n for a given n:
+parameters of a number of (probable) primes larger than 2^b for a given b:
 
 ```
-n = 116
+b = 116
 for s in range(0,1000,1):
-    N = 2^n
-    p = (N*s).next_prime()
-    if p-(N*s) == 1:
+    B = 2^b
+    p = (B*s).next_prime()
+    if p-(B*s) == 1:
         bits = round(math.log2(p), 2)
-        print(bits, p, GF(p).multiplicative_generator(), n, factor(s))
+        print(bits, p, GF(p).multiplicative_generator(), b, factor(s))
 ```
 
 #### Key encapsulation
