@@ -402,7 +402,7 @@ prime?]]
 
 ## References
 
-* [BBC+19] Boneh et al. "Zero-Knowledge Proofs on Secret-Shared Data via Fully
+* [BBC+19](https://eprint.iacr.org/2019/188.pdf) Boneh et al. "Zero-Knowledge Proofs on Secret-Shared Data via Fully
   Linear PCPs". Crypto 2019.
 * [GB17](https://crypto.stanford.edu/prio/paper.pdf) Corrigan-Gibbs and Boneh, 
   "Prio: Private, Robust, and Scalable Computation of Aggregate Statistics". NSDI 2017. 
