@@ -182,6 +182,29 @@ considered in this document. For example, packet loss errors when clients
 make requests directly to aggregators are not relevant when the leader proxies
 requests and controls the schedule for signaling aggregation rounds.
 
+### Batch size constraints
+
+In this batch processing system, the __n__ aggregators will share processed
+batches between each other. The size of the batches have a direct impact on the
+efficiency and throughput of the aggregator. 
+
+The aggregators may introduce a maximum content size measured in bytes that the
+clients can send to the leader. This requires the client to ensure batches do
+not exceed the maximum size of any aggregator. The content size is applied to
+the entire batch, rather than specific data points.
+
+
+### Aggregator count constraints
+
+The user of the Prio privacy preserving aggregation system may opt into using
+more than the minimum number of aggregators required for preserving privacy of
+clients. The likelihood of failures due to external factors increases
+exponentially with each additional aggregator. An example of such external
+factors are packet loss, infrastructure failure, and latency spikes.
+
+The exponential increase in failures is due to the multiplying effects of the 
+one to many communication between the aggregators.
+
 ## System design
 
 ### Aggregator discovery
