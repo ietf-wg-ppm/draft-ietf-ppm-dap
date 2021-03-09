@@ -13,6 +13,22 @@
    aggregators.
 1. Leader: A distinguished aggregator that coordinates input validation and data
    aggregation.
+1. Data: The original data emitted by a client, before any encryption or secret
+   sharing scheme is applied.
+1. Data share: one of the _n_ shares output by feeding a datum into a linear
+   secret sharing scheme. Each share is to be transmitted to one of the _n_
+   participating aggregators.
+1. Invalid data: Data which cannot be represented in the affine-aggregatable
+   encoding chosen by participants. e.g., a UTF-8 string if the chosen encoding
+   is a vector of 16 bits.
+1. False data: Data which is valid under the chosen affine-aggregatable encoding
+   but is not truthful. e.g., if the data being gathered is whether or not users
+   have clicked on a particular button, a client could report clicks when none
+   occurred.
+1. Aggregation: a statistical aggregation over a body of data which is of
+   interest to a collector.
+1. Aggregation share: the share of an aggregation emitted by an aggregator.
+   Aggregation shares can be reassembled by the collector into the aggregation.
 
 ## Architecture overview
 
@@ -95,6 +111,7 @@ an aggergation function F:
    and nothing else. 
 1. Robustness. The adversary can influence the output of F only by reporting false 
    (untruthful) data. The output cannot be influenced in any other way.
+1. Anonymity. The adversary cannot learn which client submitted which data value.
 
 There are several additional constraints that a Prio deployment must satisfy in order
 to achieve these goals:
@@ -105,6 +122,132 @@ to achieve these goals:
 2. Aggregation function choice. Some aggregation functions leak slightly more than the 
    function output itself. {{questions-and-params}} discusses the leakage profiles of 
    various aggregation functions in more detail.
+
+### Threat model
+
+In this section, we enumerate the actors participating in the Prio system and
+enumerate their assets (secrets that are either inherently valuable or which
+confer some capability that enables further attack on the system), the
+capabilities that a malicious or compromised actor has, and potential
+mitigations for attacks enabled by those capabilities.
+
+#### Client
+
+##### Assets
+
+1. Unshared data. Clients are the only actor that can ever see the original
+   data.
+1. Unencrypted data shares.
+1. Client identity (optionally).
+
+##### Capabilities
+
+1. Individual clients can trivially and undetectably defeat the privacy property
+   by leaking data outside of the Prio system. Accordingly, such attacks are
+   outside of the threat model.
+1. Clients may affect the quality of aggregations by reporting false data.
+
+[[OPEN ISSUE: Is there anything that could be done to either mitigate or detect
+a client compromising privacy? Do users have any choice but to trust that
+clients have faithfully implemented the protocol?]]
+
+##### Mitigations
+
+1. The shared validity proof evaluated by aggregators prevents either individual
+   clients or coalitions of clients from compromising the robustness property.
+1. Aggregators can require a minimum number of participating clients in order to
+   minimize the impact of false data.
+1. Many deployments could allow anyone to contribute data shares to aggregators,
+   but others could require that clients establish a trusted identity before
+   they may contribute data. A variety of techniques providing different degrees
+   of assurance could be employed to establish trust in clients, ranging from
+   whitebox cryptography to reproducible builds and remote attestation of
+   software measurements from a trusted computing base.
+
+[[OPEN ISSUE: The problem of clients sending bogus data exists in any metrics
+system, orthogonally to Prio, so perhaps it is out of scope.]]
+
+#### Aggregator
+
+##### Assets
+
+1. Unencrypted data shares.
+1. Data share decryption keys.
+1. Aggregation parts.
+1. Aggregator identity.
+
+##### Capabilities
+
+1. Aggregators may trivially and undetectably defeat the robustness of the
+   system by emitting bogus aggregation shares. Accordingly, such attacks are
+   outside of the threat model.
+1. If client identities are used, aggregators may weaken the anonymity of the
+   system by revealing that a particular client contributed data to the system.
+1. Individual aggregators may compromise availability of the system by refusing
+   to emit aggregation parts.
+
+##### Mitigations
+
+1. Infrastructure diversity. Prio deployments should ensure that aggregators'
+   security do not have a common point of failure. For instance, if all
+   participating aggregators stored unencrypted data shares on a single cloud
+   object storage service, then that cloud vendor would be able to decrypt and
+   reassemble all the data shares and defeat privacy.
+1. Implementation diversity. Similarly to infrastructure diversity, diversity in
+   implementations would help ensure that a single vulnerability in an
+   aggregator or one of its dependencies would not compromise _all_ the
+   participating aggregators.
+1. Introducing a further actor to the system whose sole responsibility would be
+   to verify the identity of participating clients before forwarding encrypted
+   data shares to aggregators would mitigate the aggregator's ability to weaken
+   client anonymity.
+1. Running the protocol over multiple subsets of the available aggregators in
+   parallel would prevent an individual aggregator from compromising
+   availability.
+
+[[OPEN ISSUE: can anything mitigate or detect the aggregator's capability to
+compromise robustness?]]
+
+#### Leader
+
+The leader is also an aggregator, and so all the assets, capabilities and
+mitigations available to aggregators also apply to the leader.
+
+##### Capabilities
+
+1. Data validity proof verification. The leader can forge proofs and collude
+   with a malicious client to trick aggregators into aggregating invalid data.
+1. Relaying messages between aggregators. The leader can compromise availability
+   by dropping messages.
+
+##### Mitigations
+
+1. Rather than having all aggregators trust the leader to validate proofs, each
+   aggregator could exchange proof shares with every other aggregator, enabling
+   each aggregator to independently verify the proofs.
+1. Running the protocol over multiple subsets of the available aggregators and
+   choosing different leaders for each run would prevent any individual leader
+   from compromising availability.
+
+#### Collector
+
+##### Capabilities
+
+1. Advertising shared configuration parameters (e.g., minimum thresholds for
+   aggregations, polynomial identity test values, arithmetic circuits).
+1. Collectors may trivially defeat availability by discarding aggregation
+   parts submitted by aggregators.
+
+##### Mitigations
+
+1. Aggregators should refuse shared parameters that are obviously insecure
+   (i.e., aggregation threshold of 1 contribution).
+
+#### Aggregator collusion
+
+If all aggregators collude (e.g. by promiscuously sharing unencrypted data
+shares), then none of the properties of the system hold. Accordingly, such
+scenarios are outside of the threat model.
 
 [[OPEN ISSUE: The threat model for Prio --- as it's described in the original
 paper and [BBC+19] --- considers **either** a malicious client (attacking
