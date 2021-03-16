@@ -131,7 +131,7 @@ confer some capability that enables further attack on the system), the
 capabilities that a malicious or compromised actor has, and potential
 mitigations for attacks enabled by those capabilities.
 
-#### Client
+#### Client/user
 
 ##### Assets
 
@@ -142,14 +142,19 @@ mitigations for attacks enabled by those capabilities.
 
 ##### Capabilities
 
-1. Individual clients can trivially and undetectably defeat the privacy property
-   by leaking data outside of the Prio system. Accordingly, such attacks are
-   outside of the threat model.
+1. Individual users can reveal their own data and compromise their own privacy.
+   This does not affect the privacy of others in the system.
+1. Clients (that is, software which might be used by many users of the system)
+   can defeat privacy by leaking data outside of the Prio system. Other
+   participants have no insight into what clients do besides uploading data
+   shares and accordingly, such attacks are outside of the current threat model.
 1. Clients may affect the quality of aggregations by reporting false data.
 
 [[OPEN ISSUE: Is there anything that could be done to either mitigate or detect
 a client compromising privacy? Do users have any choice but to trust that
-clients have faithfully implemented the protocol?]]
+clients have faithfully implemented the protocol? If we introduce the notion of
+a trusted OS or platform actor, distinct from the client, that could attest to
+the client's behavior, can we improve this?]]
 
 ##### Mitigations
 
@@ -164,9 +169,6 @@ clients have faithfully implemented the protocol?]]
    whitebox cryptography to reproducible builds and remote attestation of
    software measurements from a trusted computing base.
 
-[[OPEN ISSUE: The problem of clients sending bogus data exists in any metrics
-system, orthogonally to Prio, so perhaps it is out of scope.]]
-
 #### Aggregator
 
 ##### Assets
@@ -178,35 +180,44 @@ system, orthogonally to Prio, so perhaps it is out of scope.]]
 
 ##### Capabilities
 
-1. Aggregators may trivially and undetectably defeat the robustness of the
-   system by emitting bogus aggregation shares. Accordingly, such attacks are
-   outside of the threat model.
-1. If client identities are used, aggregators may weaken the anonymity of the
-   system by revealing that a particular client contributed data to the system.
+1. Aggregators may defeat the robustness of the system by emitting bogus
+   aggregation shares.
+1. If clients reveal identifying information to aggregators (such as a trusted
+   identity during client authentication), aggregators can learn which clients
+   are contributing data.
+     1. Aggregators may weaken anonymity by revealing that a particular client
+        contributed data to the system.
+     1. Aggregators may choose to selectively omit data from certain clients.
+          * For example, omitting submissions from a particular geographic
+            region to falsely suggest that a particular localization is not
+            being used.
 1. Individual aggregators may compromise availability of the system by refusing
    to emit aggregation parts.
 
 ##### Mitigations
 
-1. Infrastructure diversity. Prio deployments should ensure that aggregators'
-   security do not have a common point of failure. For instance, if all
-   participating aggregators stored unencrypted data shares on a single cloud
-   object storage service, then that cloud vendor would be able to decrypt and
-   reassemble all the data shares and defeat privacy.
-1. Implementation diversity. Similarly to infrastructure diversity, diversity in
-   implementations would help ensure that a single vulnerability in an
-   aggregator or one of its dependencies would not compromise _all_ the
-   participating aggregators.
+1. The linear secret sharing scheme employed by the client ensures that privacy
+   is preserved unless every participating aggregator reveals their unencrypted
+   data shares.
+1. Infrastructure diversity. Prio deployments should ensure that aggregators do
+   not have common dependencies that would enable a single vendor to reassemble
+   data.
+     * For example, if all participating aggregators stored unencrypted data
+       shares on the same cloud object storage service, then that cloud vendor
+       would be able to reassemble all the data shares and defeat privacy.
 1. Introducing a further actor to the system whose sole responsibility would be
    to verify the identity of participating clients before forwarding encrypted
    data shares to aggregators would mitigate the aggregator's ability to weaken
    client anonymity.
-1. Running the protocol over multiple subsets of the available aggregators in
-   parallel would prevent an individual aggregator from compromising
-   availability.
-
-[[OPEN ISSUE: can anything mitigate or detect the aggregator's capability to
-compromise robustness?]]
+1. Running the protocol over multiple subsets of the available aggregators
+   chosen so that no aggregator appears in all subsets and accepting any result
+   would prevent an individual aggregator from compromising availability.
+1. Running the protocol over multiple subsets of the available aggregators
+   chosen so that no aggregator appears in all subsets and requiring that the
+   results agree would prevent an individual aggregator from compromising
+   robustness
+     * This could also allow identifying of defective aggregators, by finding
+       the aggregator that appears in every subset whose results were wrong.
 
 #### Leader
 
@@ -240,7 +251,7 @@ mitigations available to aggregators also apply to the leader.
 
 ##### Mitigations
 
-1. Aggregators should refuse shared parameters that are obviously insecure
+1. Aggregators should refuse shared parameters that are trivially insecure
    (i.e., aggregation threshold of 1 contribution).
 
 #### Aggregator collusion
@@ -248,6 +259,42 @@ mitigations available to aggregators also apply to the leader.
 If all aggregators collude (e.g. by promiscuously sharing unencrypted data
 shares), then none of the properties of the system hold. Accordingly, such
 scenarios are outside of the threat model.
+
+#### Attacker on the network
+
+We assume the existence of attackers on the network links between participants.
+
+##### Capabilities
+
+1. Observation of network traffic. Attackers may observe messages exchanged
+   between participants at the IP layer.
+     1. The time of transmission of data shares by clients could reveal
+        information about user activity.
+          * For example, if a user opts into a new feature, and the client
+            immediately reports this to aggregators, then just by observing
+            network traffic, the attacker can infer what the user did.
+     1. Observation of message size could allow the attacker to learn how much
+        data is being submitted by a client.
+          * For example, if the attacker observes an encrypted message of some
+            size, they can infer the size of the plaintext, plus or minus the
+            cipher block size. From this they may be able to infer which
+            aggregations the user has opted into or out of.
+1. Tampering with network traffic. Attackers may drop messages or inject new
+   messages into communications between participants.
+
+##### Mitigations
+
+1. All messages exchanged between participants in the system should be
+   encrypted.
+1. All messages exchanged between aggregators, the collector and the leader
+   should be mutually authenticated so that network attackers cannot impersonate
+   participants.
+1. Messages sent from clients to aggregators can be authenticated using client
+   identities to prevent attackers from injecting false data into aggregations.
+1. Clients should be required to submit data at regular intervals so that the
+   timing of individual messages does not reveal anything.
+1. A fixed-length encoding should be used for data shares. Additionally, clients
+   should submit dummy data even for aggregations the user has not opted into.
 
 [[OPEN ISSUE: The threat model for Prio --- as it's described in the original
 paper and [BBC+19] --- considers **either** a malicious client (attacking
