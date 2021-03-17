@@ -143,31 +143,24 @@ mitigations for attacks enabled by those capabilities.
 ##### Capabilities
 
 1. Individual users can reveal their own data and compromise their own privacy.
-   This does not affect the privacy of others in the system.
+     * Since this does not affect the privacy of others in the system, it is
+       outside the threat model.
 1. Clients (that is, software which might be used by many users of the system)
-   can defeat privacy by leaking data outside of the Prio system. Other
-   participants have no insight into what clients do besides uploading data
-   shares and accordingly, such attacks are outside of the current threat model.
+   can defeat privacy by leaking data outside of the Prio system.
+     * In the current threat model, other participants have no insight into what
+       clients do besides uploading data shares and accordingly, such attacks
+       are outside of the threat model.
 1. Clients may affect the quality of aggregations by reporting false data.
-
-[[OPEN ISSUE: Is there anything that could be done to either mitigate or detect
-a client compromising privacy? Do users have any choice but to trust that
-clients have faithfully implemented the protocol? If we introduce the notion of
-a trusted OS or platform actor, distinct from the client, that could attest to
-the client's behavior, can we improve this?]]
+     * Prio can only prove that submitted data is valid, not that it is true.
+       False data can be mitigated orthogonally to the Prio protocol (e.g., by
+       requiring that aggregations include a minimum number of contributions)
+       and so these attacks are considered to be outside of the threat model.
+1. Clients can send invalid encodings of data.
 
 ##### Mitigations
 
 1. The shared validity proof evaluated by aggregators prevents either individual
    clients or coalitions of clients from compromising the robustness property.
-1. Aggregators can require a minimum number of participating clients in order to
-   minimize the impact of false data.
-1. Many deployments could allow anyone to contribute data shares to aggregators,
-   but others could require that clients establish a trusted identity before
-   they may contribute data. A variety of techniques providing different degrees
-   of assurance could be employed to establish trust in clients, ranging from
-   whitebox cryptography to reproducible builds and remote attestation of
-   software measurements from a trusted computing base.
 
 #### Aggregator
 
@@ -175,6 +168,7 @@ the client's behavior, can we improve this?]]
 
 1. Unencrypted data shares.
 1. Data share decryption keys.
+1. Client identifying information.
 1. Aggregation parts.
 1. Aggregator identity.
 
@@ -205,10 +199,6 @@ the client's behavior, can we improve this?]]
      * For example, if all participating aggregators stored unencrypted data
        shares on the same cloud object storage service, then that cloud vendor
        would be able to reassemble all the data shares and defeat privacy.
-1. Introducing a further actor to the system whose sole responsibility would be
-   to verify the identity of participating clients before forwarding encrypted
-   data shares to aggregators would mitigate the aggregator's ability to weaken
-   client anonymity.
 1. Running the protocol over multiple subsets of the available aggregators
    chosen so that no aggregator appears in all subsets and accepting any result
    would prevent an individual aggregator from compromising availability.
@@ -289,8 +279,6 @@ We assume the existence of attackers on the network links between participants.
 1. All messages exchanged between aggregators, the collector and the leader
    should be mutually authenticated so that network attackers cannot impersonate
    participants.
-1. Messages sent from clients to aggregators can be authenticated using client
-   identities to prevent attackers from injecting false data into aggregations.
 1. Clients should be required to submit data at regular intervals so that the
    timing of individual messages does not reveal anything.
 1. A fixed-length encoding should be used for data shares. Additionally, clients
@@ -304,6 +292,50 @@ malicious; in theory it may be possible for a malicious client and aggregator to
 collude and break soundness. Is this a contingency we need to address? There are
 techniques in [BBC+19] that account for this; we need to figure out if they're
 practical.]]
+
+### Future work and possible extensions
+
+In this section we discuss attacks that are not considered in the above threat
+model, and suggest mitigations that could be incorporated into implementations
+of this protocol or future revisions of this specfication.
+
+#### Client authentication
+
+Attackers can impersonate Prio clients and submit large amounts of valid but
+false data in order to spoil aggregations. Deployments could require that
+clients present a trusted identity before they may contribute data. For example,
+by requiring data submissions to be signed with a key trusted by aggregators. A
+variety of techniques providing different degrees of assurance could be employed
+to establish trust in clients, ranging from whitebox cryptography to public key
+infrastructures. However some deployments may opt to accept the risk of false
+data to avoid having to figure out how to distribute trusted identities to
+clients.
+
+#### Client attestation
+
+In the current threat model, servers participating in the protocol have no
+insight into the activities of clients except that they have uploaded data into
+a Prio aggregation, meaning that clients could covertly leak a user's data into
+some other channel which compromises privacy and anonymity. If we introduce the
+notion of a trusted computing base which can attest to the properties or
+activities of a client, then users and aggregators can be assured that their
+private data only goes into Prio. For instance, clients could use the trusted
+computing base to attest to software measurements over reproducible builds, or a
+trusted operating system could attest to the client's network activity, allowing
+external observers to be confident that no data is being exfiltrated.
+
+#### Trusted anonymizing and authenticating proxy
+
+While the data shares transmitted by clients to aggregators reveal nothing about
+the original data, the aggregator can still learn a lot from received messages
+(for instance, source IP or HTTP user agent), which weakens anonymity. This is
+worse if client authentication used, since incoming messages would be bound to a
+cryptographic identity. Deployments could include a trusted anonymizing proxy,
+which would be responsible for receiving data shares from clients, stripping any
+identifying information from them (including client authentication) and
+forwarding them to aggregators. There should still be a confidential and
+authenticated channel from the client to the aggregator to ensure that no actor
+besides the aggregator may decrypt the data shares.
 
 ## System requirements
 
