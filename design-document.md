@@ -107,10 +107,9 @@ In the presence of this adversary, Prio provides two important properties for co
 an aggergation function F:
 
 1. Privacy. The adversary learns only the output of F computed over all client inputs, 
-   and nothing else. 
+   and nothing else.
 1. Robustness. The adversary can influence the output of F only by reporting false 
    (untruthful) input. The output cannot be influenced in any other way.
-1. Anonymity. The adversary cannot learn which client submitted which input value.
 
 There are several additional constraints that a Prio deployment must satisfy in order
 to achieve these goals:
@@ -181,9 +180,9 @@ exchanged all shared parameters over some unspecified secure channel.
 1. If clients reveal identifying information to aggregators (such as a trusted
    identity during client authentication), aggregators can learn which clients
    are contributing input.
-     1. Aggregators may weaken anonymity by revealing that a particular client
-        contributed input to the system.
-     1. Aggregators may choose to selectively omit inputs from certain clients.
+     1. Aggregators may reveal that a particular client contributed input.
+     1. Aggregators may attack robustness by selectively omitting inputs from
+        certain clients.
           * For example, omitting submissions from a particular geographic
             region to falsely suggest that a particular localization is not
             being used.
@@ -307,26 +306,27 @@ out how to distribute trusted identities to clients.
 In the current threat model, servers participating in the protocol have no
 insight into the activities of clients except that they have uploaded input into
 a Prio aggregation, meaning that clients could covertly leak a user's data into
-some other channel which compromises privacy and anonymity. If we introduce the
-notion of a trusted computing base which can attest to the properties or
-activities of a client, then users and aggregators can be assured that their
-private data only goes into Prio. For instance, clients could use the trusted
-computing base to attest to software measurements over reproducible builds, or a
-trusted operating system could attest to the client's network activity, allowing
-external observers to be confident that no data is being exfiltrated.
+some other channel which compromises privacy. If we introduce the notion of a
+trusted computing base which can attest to the properties or activities of a
+client, then users and aggregators can be assured that their private data only
+goes into Prio. For instance, clients could use the trusted computing base to
+attest to software measurements over reproducible builds, or a trusted operating
+system could attest to the client's network activity, allowing external
+observers to be confident that no data is being exfiltrated.
 
 #### Trusted anonymizing and authenticating proxy
 
 While the input shares transmitted by clients to aggregators reveal nothing
-about the original input, the aggregator can still learn a lot from received
-messages (for instance, source IP or HTTP user agent), which weakens anonymity.
-This is worse if client authentication used, since incoming messages would be
-bound to a cryptographic identity. Deployments could include a trusted
-anonymizing proxy, which would be responsible for receiving input shares from
-clients, stripping any identifying information from them (including client
-authentication) and forwarding them to aggregators. There should still be a
-confidential and authenticated channel from the client to the aggregator to
-ensure that no actor besides the aggregator may decrypt the input shares.
+about the original input, the aggregator can still learn auxiliary information
+received messages (for instance, source IP or HTTP user agent), which can
+identify participating clients or permit some attacks on robustness. This is
+worse if client authentication used, since incoming messages would be bound to a
+cryptographic identity. Deployments could include a trusted anonymizing proxy,
+which would be responsible for receiving input shares from clients, stripping
+any identifying information from them (including client authentication) and
+forwarding them to aggregators. There should still be a confidential and
+authenticated channel from the client to the aggregator to ensure that no actor
+besides the aggregator may decrypt the input shares.
 
 #### Multiple protocol runs
 
