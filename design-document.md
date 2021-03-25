@@ -8,27 +8,26 @@
    web browser.
 1. Collector: The endpoint that receives the final aggregate. It also specifies
    the parameters of the protocol.
-1. Input-validation protocol: The protocol executed by the client and aggregators
+1. False input: Input which is valid under the input validation protocol but is
+   not truthful. e.g., if the data being gathered is whether or not users have
+   clicked on a particular button, a client could report clicks when none
+   occurred.
+1. Input: The original data emitted by a client, before any encryption or secret
+   sharing scheme is applied.
+1. Input share: one of the shares output by feeding an input into a secret
+   sharing scheme. Each share is to be transmitted to one of the participating
+   aggregators.
+1. Input validation protocol: The protocol executed by the client and aggregators
    in order to validate the client's input without leaking its value to the
    aggregators.
+1. Invalid input: An input for which the input validation protocol fails.
+   e.g., if the inputs are bit vectors, then `[2, 1, 0]` is invalid.
 1. Leader: A distinguished aggregator that coordinates input validation and data
    aggregation.
-1. Data: The original data emitted by a client, before any encryption or secret
-   sharing scheme is applied.
-1. Data share: one of the _n_ shares output by feeding a datum into a linear
-   secret sharing scheme. Each share is to be transmitted to one of the _n_
-   participating aggregators.
-1. Invalid data: Data which cannot be represented in the affine-aggregatable
-   encoding chosen by participants. e.g., a UTF-8 string if the chosen encoding
-   is a vector of 16 bits.
-1. False data: Data which is valid under the chosen affine-aggregatable encoding
-   but is not truthful. e.g., if the data being gathered is whether or not users
-   have clicked on a particular button, a client could report clicks when none
-   occurred.
-1. Aggregation: a statistical aggregation over a body of data which is of
-   interest to a collector.
-1. Aggregation share: the share of an aggregation emitted by an aggregator.
-   Aggregation shares can be reassembled by the collector into the aggregation.
+1. Output: A reduction over the inputs, for instance a statistical aggregation,
+   which is of interest to a collector.
+1. Output share: The share of an output emitted by an aggregator. Output shares
+   can be reassembled by the collector into the output.
 
 ## Architecture overview
 
@@ -110,8 +109,8 @@ an aggergation function F:
 1. Privacy. The adversary learns only the output of F computed over all client inputs, 
    and nothing else. 
 1. Robustness. The adversary can influence the output of F only by reporting false 
-   (untruthful) data. The output cannot be influenced in any other way.
-1. Anonymity. The adversary cannot learn which client submitted which data value.
+   (untruthful) input. The output cannot be influenced in any other way.
+1. Anonymity. The adversary cannot learn which client submitted which input value.
 
 There are several additional constraints that a Prio deployment must satisfy in order
 to achieve these goals:
@@ -131,83 +130,76 @@ confer some capability that enables further attack on the system), the
 capabilities that a malicious or compromised actor has, and potential
 mitigations for attacks enabled by those capabilities.
 
+This model assumes that all participants have previously agreed upon and
+exchanged all shared parameters over some unspecified secure channel.
+
 #### Client/user
 
 ##### Assets
 
-1. Unshared data. Clients are the only actor that can ever see the original
-   data.
-1. Unencrypted data shares.
-1. Client identity (optionally).
+1. Unshared inputs. Clients are the only actor that can ever see the original
+   inputs.
+1. Unencrypted input shares.
 
 ##### Capabilities
 
-1. Individual users can reveal their own data and compromise their own privacy.
+1. Individual users can reveal their own input and compromise their own privacy.
      * Since this does not affect the privacy of others in the system, it is
        outside the threat model.
 1. Clients (that is, software which might be used by many users of the system)
-   can defeat privacy by leaking data outside of the Prio system.
+   can defeat privacy by leaking input outside of the Prio system.
      * In the current threat model, other participants have no insight into what
-       clients do besides uploading data shares and accordingly, such attacks
-       are outside of the threat model.
-1. Clients may affect the quality of aggregations by reporting false data.
-     * Prio can only prove that submitted data is valid, not that it is true.
-       False data can be mitigated orthogonally to the Prio protocol (e.g., by
+       clients do besides uploading input shares. Accordingly, such attacks are
+       outside of the threat model.
+1. Clients may affect the quality of aggregations by reporting false input.
+     * Prio can only prove that submitted input is valid, not that it is true.
+       False input can be mitigated orthogonally to the Prio protocol (e.g., by
        requiring that aggregations include a minimum number of contributions)
        and so these attacks are considered to be outside of the threat model.
-1. Clients can send invalid encodings of data.
+1. Clients can send invalid encodings of input.
 
 ##### Mitigations
 
-1. The shared validity proof evaluated by aggregators prevents either individual
-   clients or coalitions of clients from compromising the robustness property.
+1. The input validation protocol executed by the aggregators prevents either
+   individual clients or coalitions of clients from compromising the robustness
+   property.
 
 #### Aggregator
 
 ##### Assets
 
-1. Unencrypted data shares.
-1. Data share decryption keys.
+1. Unencrypted input shares.
+1. Input share decryption keys.
 1. Client identifying information.
-1. Aggregation parts.
+1. Output shares.
 1. Aggregator identity.
 
 ##### Capabilities
 
 1. Aggregators may defeat the robustness of the system by emitting bogus
-   aggregation shares.
+   output shares.
 1. If clients reveal identifying information to aggregators (such as a trusted
    identity during client authentication), aggregators can learn which clients
-   are contributing data.
+   are contributing input.
      1. Aggregators may weaken anonymity by revealing that a particular client
-        contributed data to the system.
-     1. Aggregators may choose to selectively omit data from certain clients.
+        contributed input to the system.
+     1. Aggregators may choose to selectively omit inputs from certain clients.
           * For example, omitting submissions from a particular geographic
             region to falsely suggest that a particular localization is not
             being used.
 1. Individual aggregators may compromise availability of the system by refusing
-   to emit aggregation parts.
+   to emit output shares.
+1. Input validity proof forging. Any aggregator can collude with a malicious
+   client to craft a proof share that will fool honest aggregators into
+   accepting invalid input.
 
 ##### Mitigations
 
 1. The linear secret sharing scheme employed by the client ensures that privacy
-   is preserved unless every participating aggregator reveals their unencrypted
-   data shares.
-1. Infrastructure diversity. Prio deployments should ensure that aggregators do
-   not have common dependencies that would enable a single vendor to reassemble
-   data.
-     * For example, if all participating aggregators stored unencrypted data
-       shares on the same cloud object storage service, then that cloud vendor
-       would be able to reassemble all the data shares and defeat privacy.
-1. Running the protocol over multiple subsets of the available aggregators
-   chosen so that no aggregator appears in all subsets and accepting any result
-   would prevent an individual aggregator from compromising availability.
-1. Running the protocol over multiple subsets of the available aggregators
-   chosen so that no aggregator appears in all subsets and requiring that the
-   results agree would prevent an individual aggregator from compromising
-   robustness
-     * This could also allow identifying of defective aggregators, by finding
-       the aggregator that appears in every subset whose results were wrong.
+   is preserved as long as at least one aggregator does not reveal its input
+   shares.
+1. If computed over a sufficient number of input shares, output shares reveal
+   nothing about either the inputs or the participating clients.
 
 #### Leader
 
@@ -216,28 +208,30 @@ mitigations available to aggregators also apply to the leader.
 
 ##### Capabilities
 
-1. Data validity proof verification. The leader can forge proofs and collude
-   with a malicious client to trick aggregators into aggregating invalid data.
+1. Input validity proof verification. The leader can forge proofs and collude
+   with a malicious client to trick aggregators into aggregating invalid inputs.
+     * This capability is no stronger than any aggregator's ability to forge
+       validity proof shares in collusion with a malicious client.
 1. Relaying messages between aggregators. The leader can compromise availability
    by dropping messages.
+     * This capability is no stronger than any aggregator's ability to refuse to
+       emit output shares.
+1. Shinking the anonymity set. The leader instructs aggregators to construct
+   output parts and so could request aggregations over few inputs.
 
 ##### Mitigations
 
-1. Rather than having all aggregators trust the leader to validate proofs, each
-   aggregator could exchange proof shares with every other aggregator, enabling
-   each aggregator to independently verify the proofs.
-1. Running the protocol over multiple subsets of the available aggregators and
-   choosing different leaders for each run would prevent any individual leader
-   from compromising availability.
+1. Aggregators enforce agreed upon minimum aggregation thresholds to prevent
+   deanonymizing.
 
 #### Collector
 
 ##### Capabilities
 
 1. Advertising shared configuration parameters (e.g., minimum thresholds for
-   aggregations, polynomial identity test values, arithmetic circuits).
-1. Collectors may trivially defeat availability by discarding aggregation
-   parts submitted by aggregators.
+   aggregations, joint randomness, arithmetic circuits).
+1. Collectors may trivially defeat availability by discarding output shares
+   submitted by aggregators.
 
 ##### Mitigations
 
@@ -246,7 +240,7 @@ mitigations available to aggregators also apply to the leader.
 
 #### Aggregator collusion
 
-If all aggregators collude (e.g. by promiscuously sharing unencrypted data
+If all aggregators collude (e.g. by promiscuously sharing unencrypted input
 shares), then none of the properties of the system hold. Accordingly, such
 scenarios are outside of the threat model.
 
@@ -258,13 +252,13 @@ We assume the existence of attackers on the network links between participants.
 
 1. Observation of network traffic. Attackers may observe messages exchanged
    between participants at the IP layer.
-     1. The time of transmission of data shares by clients could reveal
+     1. The time of transmission of input shares by clients could reveal
         information about user activity.
           * For example, if a user opts into a new feature, and the client
             immediately reports this to aggregators, then just by observing
             network traffic, the attacker can infer what the user did.
      1. Observation of message size could allow the attacker to learn how much
-        data is being submitted by a client.
+        input is being submitted by a client.
           * For example, if the attacker observes an encrypted message of some
             size, they can infer the size of the plaintext, plus or minus the
             cipher block size. From this they may be able to infer which
@@ -279,10 +273,10 @@ We assume the existence of attackers on the network links between participants.
 1. All messages exchanged between aggregators, the collector and the leader
    should be mutually authenticated so that network attackers cannot impersonate
    participants.
-1. Clients should be required to submit data at regular intervals so that the
+1. Clients should be required to submit inputs at regular intervals so that the
    timing of individual messages does not reveal anything.
-1. A fixed-length encoding should be used for data shares. Additionally, clients
-   should submit dummy data even for aggregations the user has not opted into.
+1. Clients should submit dummy inputs even for aggregations the user has not
+   opted into.
 
 [[OPEN ISSUE: The threat model for Prio --- as it's described in the original
 paper and [BBC+19] --- considers **either** a malicious client (attacking
@@ -301,20 +295,17 @@ of this protocol or future revisions of this specfication.
 
 #### Client authentication
 
-Attackers can impersonate Prio clients and submit large amounts of valid but
-false data in order to spoil aggregations. Deployments could require that
-clients present a trusted identity before they may contribute data. For example,
-by requiring data submissions to be signed with a key trusted by aggregators. A
-variety of techniques providing different degrees of assurance could be employed
-to establish trust in clients, ranging from whitebox cryptography to public key
-infrastructures. However some deployments may opt to accept the risk of false
-data to avoid having to figure out how to distribute trusted identities to
-clients.
+Attackers can impersonate Prio clients and submit large amounts of false input
+in order to spoil aggregations. Deployments could require clients to
+authenticate before they may contribute inputs. For example, by requiring
+submissions to be signed with a key trusted by aggregators. However some
+deployments may opt to accept the risk of false inputs to avoid having to figure
+out how to distribute trusted identities to clients.
 
 #### Client attestation
 
 In the current threat model, servers participating in the protocol have no
-insight into the activities of clients except that they have uploaded data into
+insight into the activities of clients except that they have uploaded input into
 a Prio aggregation, meaning that clients could covertly leak a user's data into
 some other channel which compromises privacy and anonymity. If we introduce the
 notion of a trusted computing base which can attest to the properties or
@@ -326,16 +317,40 @@ external observers to be confident that no data is being exfiltrated.
 
 #### Trusted anonymizing and authenticating proxy
 
-While the data shares transmitted by clients to aggregators reveal nothing about
-the original data, the aggregator can still learn a lot from received messages
-(for instance, source IP or HTTP user agent), which weakens anonymity. This is
-worse if client authentication used, since incoming messages would be bound to a
-cryptographic identity. Deployments could include a trusted anonymizing proxy,
-which would be responsible for receiving data shares from clients, stripping any
-identifying information from them (including client authentication) and
-forwarding them to aggregators. There should still be a confidential and
-authenticated channel from the client to the aggregator to ensure that no actor
-besides the aggregator may decrypt the data shares.
+While the input shares transmitted by clients to aggregators reveal nothing
+about the original input, the aggregator can still learn a lot from received
+messages (for instance, source IP or HTTP user agent), which weakens anonymity.
+This is worse if client authentication used, since incoming messages would be
+bound to a cryptographic identity. Deployments could include a trusted
+anonymizing proxy, which would be responsible for receiving input shares from
+clients, stripping any identifying information from them (including client
+authentication) and forwarding them to aggregators. There should still be a
+confidential and authenticated channel from the client to the aggregator to
+ensure that no actor besides the aggregator may decrypt the input shares.
+
+#### Multiple protocol runs
+
+Prio is _robust_ against malicious clients, and _private_ against malicious
+servers, but cannot provide robustness against malicious servers. Any aggregator
+can simply emit bogus output shares and undetectably spoil aggregates. If enough
+aggregators were available, this could be mitigated by running the protocol
+multiple times with distinct subsets of aggregators chosen so that no aggregator
+appears in all subsets and checking all the outputs against each other. If all
+the protocol runs do not agree, then participants know that at least one
+aggregator is defective, and it may be possible to identify the defector (i.e.,
+if a majority of runs agree, and a single aggregator appears in every run that
+disagrees). See [#22](https://github.com/abetterinternet/prio-documents/issues/22)
+for discussion.
+
+### Security considerations
+
+#### Infrastructure diversity
+
+Prio deployments should ensure that aggregators do not have common dependencies
+that would enable a single vendor to reassemble inputs. For example, if all
+participating aggregators stored unencrypted input shares on the same cloud
+object storage service, then that cloud vendor would be able to reassemble all
+the input shares and defeat privacy.
 
 ## System requirements
 
