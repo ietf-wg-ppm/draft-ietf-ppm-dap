@@ -18,8 +18,9 @@
 
 Prio is a system and protocol for privately computing aggregation functions over private 
 input. An aggregation function F is one that computes an output y = F(x[1],x[2],...) for inputs
-x[i]. In general, Prio supports any aggregation function whose inputs can be encoded in a 
-particular way. However, not all aggregation functions admit an efficient encoding, rendering
+x[i]. Internally, Prio computes the aggregation function "sum" and can compute
+other aggregation functions by specially encoding the inputs.
+However, not all aggregation functions admit an efficient encoding, rendering
 them impractical to implement. Thus, Prio supports a limited set of aggregation functions, 
 some of which we highlight below:
 
@@ -50,8 +51,8 @@ At a high level, the flow of data through these entities works roughly as follow
                               |       |    
 +--------+    (1)    +--------v---+   |        +-----------+
 |        +----------->            <---+   (4)  |           |
-| Client +------->   |   Leader   +------------> Collector |
-|        +----->     |            <---+        |           |
+| Client +----------->   Leader   +------------> Collector |
+|        +----------->            <---+        |           |
 +--------+           +--------^---+   |        +-----------+
                               |       |       
                           (2) |       | (3)       
@@ -64,18 +65,22 @@ At a high level, the flow of data through these entities works roughly as follow
 ~~~ 
 
 1. Upload: Clients split inputs into s >= 2 shares, encrypt each share for a different 
-   Aggregator, and send these encrypted shares to the Aggregators. (Details about Aggregator
+   Aggregator, and send these encrypted shares to the Leader who then distributes
+   each Aggregator's shares. (Details about Aggregator
    discovery is in {{CITE}}.)
 2. Verify: Upon receipt of an encrypted share, an Aggregator decrypts the share, 
    computes a proof from the respective share, and sends this proof to the Leader. 
    Once the Leader collects all proofs for the batch, it determines whether or not the
    data for each entry is correct. (Details about input validation and how it pertains 
-   to system security properties is in {{CITE}}.)
+   to system security properties are in {{CITE}}.)
 3. Aggregate: Assuming the input share is valid, the Leader instructs each Aggregator 
    to combine aggregate their corresponding input share locally. When complete, each
    Aggregator sends their aggregated input shares to the Leader, who then combines all
    aggregates into a final result. 
 4. Collect: The aggregated output is sent to the Collector.
+
+Note: a simple version of Prio can have two Aggregator endpoints, one of which
+serves as Leader and Collector.
 
 The output of a single batch aggregation reveals little to nothing beyond the value itself.
 
@@ -101,7 +106,7 @@ to achieve these goals:
 
 1. Minimum batch size. The aggregation batch size has an obvious impact on privacy.
    (A batch size of one hides nothing of the input.) {{questions-and-params}} discusses
-   appropriate batch sizes and how it pertains to privacy in more detail.
+   appropriate batch sizes and how they pertains to privacy in more detail.
 2. Aggregation function choice. Some aggregation functions leak slightly more than the 
    function output itself. {{questions-and-params}} discusses the leakage profiles of 
    various aggregation functions in more detail.
@@ -119,68 +124,6 @@ practical.]]
 
 ### Data types
 
-## System constraints
-
-Prio has inherent constraints derived from the tradeoff between privacy
-guarantees and computational complexity. These tradeoffs influence how
-applications may choose to utilize services implementing the specification.
-
-### Data resolution limitations
-
-Privacy comes at the cost of computational complexity. While affine-aggregatable
-encodings (AFEs) can compute many useful statistics, they require more bandwidth
-and CPU cycles to account for finite-field arithmetic during input-validation.
-The increased work from verifying inputs decreases the throughput of the system
-or the inputs processed per unit time. Throughput is related to the verification
-circuit's complexity and the available compute-time to each aggregator.
-
-Applications that utilize proofs with a large number of multiplication gates or
-a high frequency of inputs may need to limit inputs into the system to meet
-bandwidth or compute constraints. Some methods of overcoming these limitations
-include choosing a better representation for the data or introducing sampling
-into the data collection methodology.
-
-[[TODO: Discuss explicit key performance indicators, here or elsewhere.]]
-
-### Aggregation utility and soft batch deadlines
-
-A soft real-time system should produce a response within a deadline to
-be useful. This constraint may be relevant when the value of an aggregate
-decreases over time. A missed deadline can reduce an aggregate's utility
-but not necessarily cause failure in the system.
-
-An example of a soft real-time constraint is the expectation that input data can
-be verified and aggregated in a period equal to data collection, given some
-computational budget. Meeting these deadlines will require efficient
-implementations of the input-validation protocol. Applications might batch
-requests or utilize more efficient serialization to improve throughput.
-
-Some applications may be constrained by the time that it takes to reach a
-privacy threshold defined by a minimum number of input shares. One possible
-solution is to increase the reporting period so more samples can be collected,
-balanced against the urgency of responding to a soft deadline.
-
-### Data integrity constraints
-
-Data integrity concerns the accuracy and correctness of the outputs in the
-system. The integrity of the output can be influenced by an incomplete round of
-aggregation caused by network partitions, or by bad actors attempting to cause
-inaccuracies in the aggregates. An example data integrity constraint is that
-every share must be processed exactly once by all aggregators. Data integrity
-constraints may be at odds with the threat model if meeting the constraints
-requires replaying data.
-
-Aggregator operators should expect to encounter invalid inputs during regular
-operation due to misconfigured or malicious clients. Low volumes of errors are
-tolerable; the input-verification protocol and AFEs are robust in the face of
-malformed data. Aggregators may need to detect and mitigate statistically
-significant floods of invalid or identical inputs that affect accuracy, e.g.,
-denial of service (DoS) events.
-
-Certain classes of errors do not exist in the input-validation protocol
-considered in this document. For example, packet loss errors when clients
-make requests directly to aggregators are not relevant when the leader proxies
-requests and controls the schedule for signaling aggregation rounds.
 
 ## System design
 
@@ -210,8 +153,12 @@ K^n.
 
 Prio combines standard [linear secret
 sharing](https://en.wikipedia.org/wiki/Secret_sharing#t_=_n) with a new type of
-probabilistically checkable proof (PCP) system, called a fully linear PCP. The
-input-input validation protocol can be described in terms of three main
+probabilistically checkable proof (PCP) system, called a fully linear PCP. 
+The aggregrators jointly validate the proof of correctness of the input.
+Before the protocol begins, the aggregators agree on joint randomness r and
+designate one of the aggregators as the leader.
+
+The input-input validation protocol can be described in terms of three main
 algorithms:
 
 1. pf := Prove(x) denotes generation of a proof pf of the validity of input x.
@@ -231,9 +178,7 @@ The values above have following types:
 1. The joint randomness r is an element of K^u(n) for some function u.
 1. Each verification share {vf:i} is an element of K^v(n) for some function v.
 
-Before the protocol begins, the aggregators agree on joint randomness r and
-designate one of the aggregators as the leader. The protocol proceeds as
-follows:
+The protocol proceeds as follows:
 
 1. The client runs pf := Prove(x). It splits x and pf into {x} and {pf}
    respectively and sends ({x:i}, {pf:i}) to aggregator i.
@@ -241,7 +186,7 @@ follows:
    the leader.
 1. The leader runs b := Decide({vf}, r) and sends b to each of the aggregators.
 
-If b=1, then each aggregator i adds its input share {x:i} into its share of the
+If b=True, then each aggregator i adds its input share {x:i} into its share of the
 aggregate. Once a sufficient number of inputs have been validated and
 aggregated, the aggregators send their aggregate shares to the leader, who adds
 them together to obtain the final result.
@@ -269,8 +214,7 @@ application.]]
 **Coordinating state.**
 The state of the input-validation protocol is maintained by the leader; except
 for aggregation of the input shares, the other aggregators are completely
-stateless. This is accomplished by making the following changes to the core
-protocol.
+stateless. In order to achieve this:
 
 1. The client sends all of its shares to the leader. To maintain privacy, the
    client encrypts each (input, proof) share under the public key of the share's
@@ -293,6 +237,7 @@ Let x be an element of K^n for some n. Suppose we split x into {x} by choosing
 We could instead choose s-1 random seeds k[s-1], ..., k[s-1] for a pseudorandom
 number generator PRG and let {x:i} = PRG(k[i], n) for each i. This effectively
 "compresses" s-1 of the shares to O(1) space.
+[[OPEN ISSUE:Move this elsewhere or something.]]]
 
 ### Primitives
 
@@ -326,7 +271,7 @@ criteria:
    is highly composite because this minimizes the number of multiplications
    required to compute the inverse or apply Fermat's Little Theorem. (See
    [BBC+19, Section 5.2].)
-1. **Code optimziation.** [[TODO: What properties of the field make
+1. **Code optimization.** [[TODO: What properties of the field make
    it possible to write faster implementations?]]
 
 The table below lists parameters that meet these criteria at various levels of
@@ -402,6 +347,70 @@ as an l-byte integer and reducing it modulo the prime modulus.
 small amount of bias on the output. How much bias is induced depends on the how
 close the prime is to a power of 2. Should this be a criterion for selecting the
 prime?]]
+
+# Operational Considerations
+
+Prio has inherent constraints derived from the tradeoff between privacy
+guarantees and computational complexity. These tradeoffs influence how
+applications may choose to utilize services implementing the specification.
+
+## Data resolution limitations
+
+Privacy comes at the cost of computational complexity. While affine-aggregatable
+encodings (AFEs) can compute many useful statistics, they require more bandwidth
+and CPU cycles to account for finite-field arithmetic during input-validation.
+The increased work from verifying inputs decreases the throughput of the system
+or the inputs processed per unit time. Throughput is related to the verification
+circuit's complexity and the available compute-time to each aggregator.
+
+Applications that utilize proofs with a large number of multiplication gates or
+a high frequency of inputs may need to limit inputs into the system to meet
+bandwidth or compute constraints. Some methods of overcoming these limitations
+include choosing a better representation for the data or introducing sampling
+into the data collection methodology.
+
+[[TODO: Discuss explicit key performance indicators, here or elsewhere.]]
+
+## Aggregation utility and soft batch deadlines
+
+A soft real-time system should produce a response within a deadline to
+be useful. This constraint may be relevant when the value of an aggregate
+decreases over time. A missed deadline can reduce an aggregate's utility
+but not necessarily cause failure in the system.
+
+An example of a soft real-time constraint is the expectation that input data can
+be verified and aggregated in a period equal to data collection, given some
+computational budget. Meeting these deadlines will require efficient
+implementations of the input-validation protocol. Applications might batch
+requests or utilize more efficient serialization to improve throughput.
+
+Some applications may be constrained by the time that it takes to reach a
+privacy threshold defined by a minimum number of input shares. One possible
+solution is to increase the reporting period so more samples can be collected,
+balanced against the urgency of responding to a soft deadline.
+
+## Data integrity constraints
+
+Data integrity concerns the accuracy and correctness of the outputs in the
+system. The integrity of the output can be influenced by an incomplete round of
+aggregation caused by network partitions, or by bad actors attempting to cause
+inaccuracies in the aggregates. An example data integrity constraint is that
+every share must be processed exactly once by all aggregators. Data integrity
+constraints may be at odds with the threat model if meeting the constraints
+requires replaying data.
+
+Aggregator operators should expect to encounter invalid inputs during regular
+operation due to misconfigured or malicious clients. Low volumes of errors are
+tolerable; the input-verification protocol and AFEs are robust in the face of
+malformed data. Aggregators may need to detect and mitigate statistically
+significant floods of invalid or identical inputs that affect accuracy, e.g.,
+denial of service (DoS) events.
+
+Certain classes of errors do not exist in the input-validation protocol
+considered in this document. For example, packet loss errors when clients
+make requests directly to aggregators are not relevant when the leader proxies
+requests and controls the schedule for signaling aggregation rounds.
+
 
 ## References
 
