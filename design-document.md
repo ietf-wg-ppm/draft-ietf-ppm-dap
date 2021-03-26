@@ -9,8 +9,8 @@
 1. Collector: The endpoint that receives the final aggregate. It also specifies
    the parameters of the protocol.
 1. False input: Input which is valid under the input validation protocol but is
-   not truthful. e.g., if the data being gathered is whether or not users have
-   clicked on a particular button, a client could report clicks when none
+   not truthful. For example, if the data being gathered is whether or not users
+   have clicked on a particular button, a client could report clicks when none
    occurred.
 1. Input: The original data emitted by a client, before any encryption or secret
    sharing scheme is applied.
@@ -106,10 +106,11 @@ this can be done by TLS or some other form of application-layer authentication.
 In the presence of this adversary, Prio provides two important properties for computing 
 an aggergation function F:
 
-1. Privacy. The adversary learns only the output of F computed over all client inputs, 
-   and nothing else.
-1. Robustness. The adversary can influence the output of F only by reporting false 
-   (untruthful) input. The output cannot be influenced in any other way.
+1. Privacy. The aggregators and collector learn only the output of F computed
+   over all client inputs, and nothing else.
+1. Robustness. As long as the aggregators execute the input-validation protocol
+   correctly, a malicious client can skew the output of F only by reporting
+   false (untruthful) input. The output cannot be influenced in any other way.
 
 There are several additional constraints that a Prio deployment must satisfy in order
 to achieve these goals:
@@ -215,7 +216,7 @@ mitigations available to aggregators also apply to the leader.
    by dropping messages.
      * This capability is no stronger than any aggregator's ability to refuse to
        emit output shares.
-1. Shinking the anonymity set. The leader instructs aggregators to construct
+1. Shrinking the anonymity set. The leader instructs aggregators to construct
    output parts and so could request aggregations over few inputs.
 
 ##### Mitigations
