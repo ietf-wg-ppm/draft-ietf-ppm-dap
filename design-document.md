@@ -2,8 +2,8 @@
 
 ## Terminology
 
-1. Aggregator: An endpoint that runs the input-validation protocol and accumulates
-   input shares.
+1. Aggregator: An endpoint that runs the input-validation protocol and
+   accumulates input shares.
 1. Client: The endpoint from which the user sends data to be aggregated, e.g., a
    web browser.
 1. Collector: The endpoint that receives the final aggregate. It also specifies
@@ -17,11 +17,11 @@
 1. Input share: one of the shares output by feeding an input into a secret
    sharing scheme. Each share is to be transmitted to one of the participating
    aggregators.
-1. Input validation protocol: The protocol executed by the client and aggregators
-   in order to validate the client's input without leaking its value to the
-   aggregators.
-1. Invalid input: An input for which the input validation protocol fails.
-   e.g., if the inputs are bit vectors, then `[2, 1, 0]` is invalid.
+1. Input validation protocol: The protocol executed by the client and
+   aggregators in order to validate the client's input without leaking its value
+   to the aggregators.
+1. Invalid input: An input for which the input validation protocol fails.  e.g.,
+   if the inputs are bit vectors, then `[2, 1, 0]` is invalid.
 1. Leader: A distinguished aggregator that coordinates input validation and data
    aggregation.
 1. Output: A reduction over the inputs, for instance a statistical aggregation,
@@ -31,85 +31,91 @@
 
 ## Architecture overview
 
-Prio is a system and protocol for privately computing aggregation functions over private 
-input. An aggregation function F is one that computes an output y = F(x[1],x[2],...) for inputs
-x[i]. Internally, Prio computes the aggregation function "sum" and can compute
-other aggregation functions by specially encoding the inputs.
-However, not all aggregation functions admit an efficient encoding, rendering
-them impractical to implement. Thus, Prio supports a limited set of aggregation functions, 
-some of which we highlight below:
+Prio is a system and protocol for privately computing aggregation functions over
+private input. An aggregation function F is one that computes an output y =
+F(x[1],x[2],...) for inputs x[i]. Internally, Prio computes the aggregation
+function "sum" and can compute other aggregation functions by specially encoding
+the inputs.  However, not all aggregation functions admit an efficient encoding,
+rendering them impractical to implement. Thus, Prio supports a limited set of
+aggregation functions, some of which we highlight below:
 
-- Simple statistics, including sum, mean, min, max, variance, and standard deviation; 
-  [[OPEN ISSUE: It's possible to estimate quantiles such as the median. How practical is this?]]
+- Simple statistics, including sum, mean, min, max, variance, and standard
+  deviation; [[OPEN ISSUE: It's possible to estimate quantiles such as the
+  median. How practical is this?]]
 - Bit vector OR and AND operations; and
-- Data structures, like Bloom filters, counting Bloom filters, and count-min sketches, that 
-  approximately represent (multi-)sets of strings.
+- Data structures, like Bloom filters, counting Bloom filters, and count-min
+  sketches, that approximately represent (multi-)sets of strings.
 
-The applications for such aggregations functions are large, including, though not limited to:
-counting the number of times a sensitive or private event occurs and approximating the frequency
-that sensitive tokens or strings occur.
+The applications for such aggregations functions are large, including, though
+not limited to: counting the number of times a sensitive or private event occurs
+and approximating the frequency that sensitive tokens or strings occur.
 
-Client applications hold private inputs to the aggregation function, server processors,
-or aggregators, run a protocol that validates each input x[1], x[2], ... and computes the
-final output y. The final collector obtains the output of the aggregation function.
+Client applications hold private inputs to the aggregation function, server
+processors, or aggregators, run a protocol that validates each input x[1], x[2],
+... and computes the final output y. The final collector obtains the output of
+the aggregation function.
 
-At a high level, the flow of data through these entities works roughly as follows:
+At a high level, the flow of data through these entities works roughly as
+follows:
 
 ~~~
-                            +------------+     
-                            |            |        
+                            +------------+
+                            |            |
                             | Aggregator |
                             |            |
                             +-^-------^--+
-                              |       |   
+                              |       |
                           (2) |       | (3)
-                              |       |    
+                              |       |
 +--------+    (1)    +--------v---+   |        +-----------+
 |        +----------->            <---+   (4)  |           |
 | Client +----------->   Leader   +------------> Collector |
 |        +----------->            <---+        |           |
 +--------+           +--------^---+   |        +-----------+
-                              |       |       
-                          (2) |       | (3)       
-                              |       |        
-                            +-v-------v--+     
-                            |            |     
+                              |       |
+                          (2) |       | (3)
+                              |       |
+                            +-v-------v--+
+                            |            |
                             | Aggregator |
                             |            |
                             +------------+
-~~~ 
+~~~
 
-1. Upload: Clients split inputs into s >= 2 shares, encrypt each share for a different 
-   Aggregator, and send these encrypted shares to the Leader who then distributes
-   each Aggregator's shares. (Details about Aggregator
-   discovery is in {{CITE}}.)
-2. Verify: Upon receipt of an encrypted share, an Aggregator decrypts the share, 
-   computes a proof from the respective share, and sends this proof to the Leader. 
-   Once the Leader collects all proofs for the batch, it determines whether or not the
-   data for each entry is correct. (Details about input validation and how it pertains 
-   to system security properties are in {{CITE}}.)
-3. Aggregate: Assuming the input share is valid, the Leader instructs each Aggregator 
-   to combine aggregate their corresponding input share locally. When complete, each
-   Aggregator sends their aggregated input shares to the Leader, who then combines all
-   aggregates into a final result. 
+1. Upload: Clients split inputs into s >= 2 shares, encrypt each share for a
+   different Aggregator, and send these encrypted shares to the Leader who then
+   distributes each Aggregator's shares. (Details about Aggregator discovery is
+   in {{CITE}}.)
+2. Verify: Upon receipt of an encrypted share, an Aggregator decrypts the share,
+   computes a proof from the respective share, and sends this proof to the
+   Leader.  Once the Leader collects all proofs for the batch, it determines
+   whether or not the data for each entry is correct. (Details about input
+   validation and how it pertains to system security properties are in
+   {{CITE}}.)
+3. Aggregate: Assuming the input share is valid, the Leader instructs each
+   Aggregator to combine aggregate their corresponding input share locally. When
+   complete, each Aggregator sends their aggregated input shares to the Leader,
+   who then combines all aggregates into a final result.
 4. Collect: The aggregated output is sent to the Collector.
 
 Note: a simple version of Prio can have two Aggregator endpoints, one of which
 serves as Leader and Collector.
 
-The output of a single batch aggregation reveals little to nothing beyond the value itself.
+The output of a single batch aggregation reveals little to nothing beyond the
+value itself.
 
 ## Security overview
 
-Prio assumes a powerful adversary with the ability to compromise an unbounded number of 
-clients. In doing so, the adversary can provide malicious (yet truthful) inputs to the aggregation 
-function. Prio also assumes that all but one server operates honestly, where a dishonest
-server does not execute the protocol faithfully as specified. The system also assumes
-that servers communicate over secure and mutually authenticated channels. In practice,
-this can be done by TLS or some other form of application-layer authentication.
+Prio assumes a powerful adversary with the ability to compromise an unbounded
+number of clients. In doing so, the adversary can provide malicious (yet
+truthful) inputs to the aggregation function. Prio also assumes that all but one
+server operates honestly, where a dishonest server does not execute the protocol
+faithfully as specified. The system also assumes that servers communicate over
+secure and mutually authenticated channels. In practice, this can be done by TLS
+or some other form of application-layer authentication.
 
-In the presence of this adversary, Prio provides two important properties for computing 
-an aggergation function F:
+In the presence of this adversary, Prio provides two important properties for
+computing an aggergation function F:
 
 1. Privacy. The aggregators and collector learn only the output of F computed
    over all client inputs, and nothing else.
@@ -117,15 +123,16 @@ an aggergation function F:
    correctly, a malicious client can skew the output of F only by reporting
    false (untruthful) input. The output cannot be influenced in any other way.
 
-There are several additional constraints that a Prio deployment must satisfy in order
-to achieve these goals:
+There are several additional constraints that a Prio deployment must satisfy in
+order to achieve these goals:
 
-1. Minimum batch size. The aggregation batch size has an obvious impact on privacy.
-   (A batch size of one hides nothing of the input.) {{questions-and-params}} discusses
-   appropriate batch sizes and how they pertains to privacy in more detail.
-2. Aggregation function choice. Some aggregation functions leak slightly more than the 
-   function output itself. {{questions-and-params}} discusses the leakage profiles of 
-   various aggregation functions in more detail.
+1. Minimum batch size. The aggregation batch size has an obvious impact on
+   privacy.  (A batch size of one hides nothing of the input.)
+   {{questions-and-params}} discusses appropriate batch sizes and how they
+   pertains to privacy in more detail.
+2. Aggregation function choice. Some aggregation functions leak slightly more
+   than the function output itself. {{questions-and-params}} discusses the
+   leakage profiles of various aggregation functions in more detail.
 
 ### Threat model
 
@@ -152,7 +159,7 @@ exchanged all shared parameters over some unspecified secure channel.
      * Since this does not affect the privacy of others in the system, it is
        outside the threat model.
 1. Clients (that is, software which might be used by many users of the system)
-   can defeat privacy by leaking input outside of the Prio system.
+can defeat privacy by leaking input outside of the Prio system.
      * In the current threat model, other participants have no insight into what
        clients do besides uploading input shares. Accordingly, such attacks are
        outside of the threat model.
@@ -166,8 +173,8 @@ exchanged all shared parameters over some unspecified secure channel.
 ##### Mitigations
 
 1. The input validation protocol executed by the aggregators prevents either
-   individual clients or coalitions of clients from compromising the robustness
-   property.
+individual clients or coalitions of clients from compromising the robustness
+property.
 
 #### Aggregator
 
@@ -181,8 +188,8 @@ exchanged all shared parameters over some unspecified secure channel.
 
 ##### Capabilities
 
-1. Aggregators may defeat the robustness of the system by emitting bogus
-   output shares.
+1. Aggregators may defeat the robustness of the system by emitting bogus output
+   shares.
 1. If clients reveal identifying information to aggregators (such as a trusted
    identity during client authentication), aggregators can learn which clients
    are contributing input.
@@ -193,10 +200,10 @@ exchanged all shared parameters over some unspecified secure channel.
             region to falsely suggest that a particular localization is not
             being used.
 1. Individual aggregators may compromise availability of the system by refusing
-   to emit output shares.
+to emit output shares.
 1. Input validity proof forging. Any aggregator can collude with a malicious
-   client to craft a proof share that will fool honest aggregators into
-   accepting invalid input.
+client to craft a proof share that will fool honest aggregators into accepting
+invalid input.
 
 ##### Mitigations
 
@@ -284,12 +291,12 @@ We assume the existence of attackers on the network links between participants.
    opted into.
 
 [[OPEN ISSUE: The threat model for Prio --- as it's described in the original
-paper and [BBC+19] --- considers **either** a malicious client (attacking
+paper and [BBG+19] --- considers **either** a malicious client (attacking
 soundness) **or** a malicious subset of aggregators (attacking privacy). In
 particular, soundness isn't guaranteed if any one of the aggregators is
 malicious; in theory it may be possible for a malicious client and aggregator to
 collude and break soundness. Is this a contingency we need to address? There are
-techniques in [BBC+19] that account for this; we need to figure out if they're
+techniques in [BBG+19] that account for this; we need to figure out if they're
 practical.]]
 
 ### Future work and possible extensions
@@ -345,8 +352,9 @@ appears in all subsets and checking all the outputs against each other. If all
 the protocol runs do not agree, then participants know that at least one
 aggregator is defective, and it may be possible to identify the defector (i.e.,
 if a majority of runs agree, and a single aggregator appears in every run that
-disagrees). See [#22](https://github.com/abetterinternet/prio-documents/issues/22)
-for discussion.
+disagrees). See
+[#22](https://github.com/abetterinternet/prio-documents/issues/22) for
+discussion.
 
 ### Security considerations
 
@@ -391,10 +399,10 @@ K^n.
 
 Prio combines standard [linear secret
 sharing](https://en.wikipedia.org/wiki/Secret_sharing#t_=_n) with a new type of
-probabilistically checkable proof (PCP) system, called a fully linear PCP. 
-The aggregrators jointly validate the proof of correctness of the input.
-Before the protocol begins, the aggregators agree on joint randomness r and
-designate one of the aggregators as the leader.
+probabilistically checkable proof (PCP) system, called a fully linear PCP. The
+aggregrators jointly validate the proof of correctness of the input. Before the
+protocol begins, the aggregators agree on joint randomness r and designate one
+of the aggregators as the leader.
 
 The input-input validation protocol can be described in terms of three main
 algorithms:
@@ -437,7 +445,7 @@ validity circuits with G-gates, a la [BCC+19, Theorem 4.3].]]
 
 **Security parameters.**
 [[TODO: Define completeness, soundness, and honest-verifier zero-knowledge for
-fully linear PCPs and state bounds for [BBC+19, Theorem 4.3]. This bound will
+fully linear PCPs and state bounds for [BBG+19, Theorem 4.3]. This bound will
 guide the selection of the field best suited for the data type and
 application.]]
 
@@ -508,7 +516,7 @@ criteria:
 1. **Highly composite subgroup.** Suppose that (p-1) = 2^b * s. It's best if s
    is highly composite because this minimizes the number of multiplications
    required to compute the inverse or apply Fermat's Little Theorem. (See
-   [BBC+19, Section 5.2].)
+   [BBG+19, Section 5.2].)
 1. **Code optimization.** [[TODO: What properties of the field make
    it possible to write faster implementations?]]
 
@@ -544,9 +552,9 @@ for s in range(0,1000,1):
 Our instantiation of the input-validation protocol involves two additional
 operations: public key encryption and cryptographically secure pseudorandom
 number generation (CSPRNG). The combination of these primitives that we use here
-allows us to make an additional simplification. We assume that clients communicate
-with the leader over a confidential and authenticated channel, such as TLS. As a
-result, we only need to encrypt CSPRNG seeds, which requires only a
+allows us to make an additional simplification. We assume that clients
+communicate with the leader over a confidential and authenticated channel, such
+as TLS. As a result, we only need to encrypt CSPRNG seeds, which requires only a
 key-encapsulation mechanism (KEM) rather than full-blown encryption.
 
 A KEM is comprised of two algorithms:
@@ -645,14 +653,15 @@ significant floods of invalid or identical inputs that affect accuracy, e.g.,
 denial of service (DoS) events.
 
 Certain classes of errors do not exist in the input-validation protocol
-considered in this document. For example, packet loss errors when clients
-make requests directly to aggregators are not relevant when the leader proxies
+considered in this document. For example, packet loss errors when clients make
+requests directly to aggregators are not relevant when the leader proxies
 requests and controls the schedule for signaling aggregation rounds.
 
 
 ## References
 
-* [BBC+19](https://eprint.iacr.org/2019/188.pdf) Boneh et al. "Zero-Knowledge Proofs on Secret-Shared Data via Fully
-  Linear PCPs". Crypto 2019.
-* [GB17](https://crypto.stanford.edu/prio/paper.pdf) Corrigan-Gibbs and Boneh, 
-  "Prio: Private, Robust, and Scalable Computation of Aggregate Statistics". NSDI 2017. 
+* [BBG+19](https://eprint.iacr.org/2019/188.pdf) Boneh et al. "Zero-Knowledge
+  Proofs on Secret-Shared Data via Fully Linear PCPs". Crypto 2019.
+* [GB17](https://crypto.stanford.edu/prio/paper.pdf) Corrigan-Gibbs and Boneh,
+  "Prio: Private, Robust, and Scalable Computation of Aggregate Statistics".
+  NSDI 2017.
