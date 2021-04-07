@@ -477,15 +477,13 @@ uploading, open issues, and system parameters?]]
 
 ### The input-validation protocol
 
-As described in {{overview}} each client wishes to report a set of
-inputs. For simple measurements, such as having each client report a
-count and computing the total, each input is just mapped onto a single
-integer. For more complicated measurements, it may be necessary to map
-a given input onto multiple integers. In any case, the client takes
-all of its inputs and maps them onto a vector of integers each 
-of which is a member of a finite field K. We denote this vector as x.
+Each run of the Prio protocol is parameterized by a finite field, which we will
+call K, and an integer n. Each client encodes its input as a length-n vector of
+element of K. The length of the vector depends on the type of data being
+collected. A single field element may be sufficient for some applications,
+whereas more sophisticated measurements will require larger encodings.
 
-In order to share x between s servers, we break it up into s shares
+In order to share x between s servers, we split it up into s shares
 {x:1}, ..., {x:s}, where {x:i} is the share held by the i-th party. We
 write {x} as shorthand for the sequence {x:1}, ..., {x:s}.
 
@@ -516,7 +514,7 @@ The values above have following types:
 1. The joint randomness r is a vector of length u(n) of elements of K.
 1. Each verification share {vf:i} is a vector of length v(n) of elements of K.
 
-Where p(n), u(n), and v(n) are functions that we specify later.
+Above, p(n), u(n), and v(n) are functions that we specify later.
 
 The protocol proceeds as follows:
 
