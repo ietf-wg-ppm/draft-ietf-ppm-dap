@@ -34,7 +34,7 @@ document.
    being gathered is whether or not users have clicked on a particular button, a
    client could report clicks when none occurred.
 1. Input: The original data emitted by a client, before any encryption or secret
-   sharing scheme is applied.
+   sharing scheme is applied. This may include multiple measurements.
 1. Input share: one of the shares output by feeding an input into a secret
    sharing scheme. Each share is to be transmitted to one of the participating
    aggregators.
@@ -57,13 +57,17 @@ document.
    client's input.
 1. Proof share: A share of a proof, used by an aggregator during the
    input-validation protocol.
+1. Measurement: A single value (e.g., a count) being reported by a client.
+   Multiple measurements may be grouped into a single protocol input.
 
 ## Overview {#overview}
 
-The protocol is executed by a large set of clients and a small set of servers.
-We call the servers the *aggregators*. Each client holds an input. Given the set
-of inputs x[1], ..., x[n], the goal is to compute y = F(x[1], ..., x[n]) for
-some aggregation function F, while revealing nothing else about the inputs.
+The protocol is executed by a large set of clients and a small set of
+servers.  We call the servers the *aggregators*. Each client holds a
+set of measurements (e.g., counts of some user behavior). Given the
+set of measurements x[1], ..., x[n] held by n users, the goal is to
+compute y = F(x[1], ..., x[n]) for some aggregation function F, while
+revealing nothing else about the measurements.
 
 ### Secret sharing
 
@@ -75,14 +79,18 @@ a proper subset of the shares; and second, it allows the aggregators to compute
 the final output by first adding up their input shares locally, then combining
 the results to obtain the final output.
 
-Consider an illustrative example. Suppose there are three clients and two
-aggregators. Each client holds a positive integer, and our goal is to compute
-the sum of the inputs. Using an additive secret-sharing scheme, the first client
-splits its input x[1] into a pair of integers x[1,1] and x[1,2] for which x[1] =
-x[1,1] + x[1,2] modulo a prime p. (For convenience, we will omit the the "mod p"
-in the rest of this section.) It then uploads x[1,1] to one sever x[1,2] to the
-other. The second client splits its input x[2] into x[2,1] and x[2,2], uploads
-them to the servers, and so on.
+Consider an illustrative example. Suppose there are three clients and
+two aggregators. Each client holds a single measurement in the form of
+a positive integer I, and our goal is to compute the sum of the
+measurements of all clients. Each client first maps its I into a Prio
+input x (in this case, x and I will be the same, but in more
+complicated cases, x might consist of multiple measurements).  Using
+an additive secret-sharing scheme, the first client splits its input
+x[1] into a pair of integers x[1,1] and x[1,2] for which x[1] =
+x[1,1] + x[1,2] modulo a prime p. (For convenience, we will omit the
+the "mod p" in the rest of this section.) It then uploads x[1,1] to
+one sever x[1,2] to the other. The second client splits its input x[2]
+into x[2,1] and x[2,2], uploads them to the servers, and so on.
 
 Now the first aggregator is in possession of input shares x[1,1], x[2,1], and
 x[3,1], and the second aggregator is in possession of input shares x[1,2],
@@ -100,13 +108,15 @@ because modular addition is commutative. I.e.,
       = F(x[1], x[2], x[3])
 ```
 
-This is essentially how all Prio computations are performed: the inputs
-are encoded in a manner that allows the function F to be expressed as a sum of
-the aggregators' shares of the aggregate; clients split their inputs into
-shares, sending one share to each server; the servers add up their input shares;
-and the servers combine their aggregate shares to get the final output of F. Not
-all aggregate functions can be expressed this way, however. Prio supports a
-limited set of aggregation functions, some of which we highlight below:
+This is essentially how all Prio computations are performed:
+measurements are encoded into inputs in a manner that allows the
+function F to be expressed as a sum of the aggregators' shares of the
+aggregate; clients split their inputs into shares, sending one share
+to each server; the servers add up their input shares; and the servers
+combine their aggregate shares to get the final output of F. Not all
+aggregate functions can be expressed this way, however. Prio supports
+a limited set of aggregation functions, some of which we highlight
+below:
 
 - Simple statistics, like sum, mean, min, max, variance, and standard
   deviation; [[OPEN ISSUE: It's possible to estimate quantiles such as the
