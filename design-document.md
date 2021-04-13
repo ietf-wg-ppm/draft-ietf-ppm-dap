@@ -63,38 +63,36 @@ document.
 ## Overview {#overview}
 
 The protocol is executed by a large set of clients and a small set of
-servers.  We call the servers the *aggregators*. Each client holds a
-set of measurements (e.g., counts of some user behavior). Given the
-set of measurements x[1], ..., x[n] held by n users, the goal is to
+servers.  We call the servers the *aggregators*. Each client's input to
+the protocol is a set of measurements (e.g., counts of some user behavior).
+Given the input set of measurements x[1], ..., x[n] held by n users, the goal is to
 compute y = F(x[1], ..., x[n]) for some aggregation function F, while
 revealing nothing else about the measurements.
+
 
 ### Secret sharing
 
 Prio achieves this goal using additive secret sharing. Rather than send its
-input in the clear, each client "splits" its input into a sequence of "shares"
+input in the clear, each client "splits" its measurements into a sequence of "shares"
 and sends a share to each of the aggregators. This secret-sharing procedure has
-two important properties: first, it is impossible to deduce the input given only
+two important properties: first, it is impossible to deduce the measurement given only
 a proper subset of the shares; and second, it allows the aggregators to compute
-the final output by first adding up their input shares locally, then combining
+the final output by first adding up their measurements shares locally, then combining
 the results to obtain the final output.
 
 Consider an illustrative example. Suppose there are three clients and
-two aggregators. Each client holds a single measurement in the form of
-a positive integer I, and our goal is to compute the sum of the
-measurements of all clients. Each client first maps its I into a Prio
-input x (in this case, x and I will be the same, but in more
-complicated cases, x might consist of multiple measurements).  Using
-an additive secret-sharing scheme, the first client splits its input
-x[1] into a pair of integers x[1,1] and x[1,2] for which x[1] =
+two aggregators. Each client i holds a single measurement in the form of
+a positive integer x[i], and our goal is to compute the sum of the
+measurements of all clients. Using an additive secret-sharing scheme, the first client splits its
+measurement x[1] into a pair of integers x[1,1] and x[1,2] for which x[1] =
 x[1,1] + x[1,2] modulo a prime p. (For convenience, we will omit the
 the "mod p" in the rest of this section.) It then uploads x[1,1] to
-one sever x[1,2] to the other. The second client splits its input x[2]
+one sever x[1,2] to the other. The second client splits its measurement x[2]
 into x[2,1] and x[2,2], uploads them to the servers, and so on.
 
-Now the first aggregator is in possession of input shares x[1,1], x[2,1], and
-x[3,1], and the second aggregator is in possession of input shares x[1,2],
-x[2,2], and x[3,2]. Each aggregator computes the sum of its input shares. Let
+Now the first aggregator is in possession of shares x[1,1], x[2,1], and
+x[3,1], and the second aggregator is in possession of shares x[1,2],
+x[2,2], and x[3,2]. Each aggregator computes the sum of its  shares. Let
 A[1] denote the first aggregator's share of the sum and let A[2] denote the
 second aggregator's share of the sum. In the last step, aggregators combine
 their sum shares to obtain the final output y = A[1] + A[2]. This is correct
@@ -108,15 +106,13 @@ because modular addition is commutative. I.e.,
       = F(x[1], x[2], x[3])
 ```
 
-This is essentially how all Prio computations are performed:
-measurements are encoded into inputs in a manner that allows the
-function F to be expressed as a sum of the aggregators' shares of the
-aggregate; clients split their inputs into shares, sending one share
-to each server; the servers add up their input shares; and the servers
-combine their aggregate shares to get the final output of F. Not all
-aggregate functions can be expressed this way, however. Prio supports
-a limited set of aggregation functions, some of which we highlight
-below:
+This is essentially how all Prio computations are performed: measurements
+are encoded into in a manner that allows the function F to be expressed as a sum of
+the aggregators' shares of the aggregate; clients split their encoded values into
+shares, sending one share to each server; the servers add up their shares;
+and the servers combine their aggregate shares to get the final output of F. Not
+all aggregate functions can be expressed this way, however. Prio supports a
+limited set of aggregation functions, some of which we highlight below:
 
 - Simple statistics, like sum, mean, min, max, variance, and standard
   deviation; [[OPEN ISSUE: It's possible to estimate quantiles such as the
@@ -129,11 +125,12 @@ below:
 This variety of aggregate types is sufficient to support a wide variety of
 data aggregation tasks.
 
+
 ### Validating inputs
 
-A crucial task of any data collection pipeline is ensuring that the inputs are
-valid. Going back to the example above, it's often useful to assert that each
-input is in a certain range, e.g., [0, 2^k) for some k. This straight-forward
+A crucial task of any data collection pipeline is ensuring that the input data
+is valid. Going back to the example above, it's often useful to assert that each
+measurement is in a certain range, e.g., [0, 2^k) for some k. This straight-forward
 task is complicated in Prio by the fact that the inputs are secret shared. In
 particular, a malicious client can corrupt the computation by submitting random
 integers instead of a proper secret sharing of a valid input.
@@ -144,6 +141,37 @@ share, each client sends to each aggregator a share of a "proof" of the input's
 validity. The aggregators use these proof shares in a protocol designed to
 establish the input's validity, without leaking the input itself. We describe
 this input-validation protocol in detail in {{CITE}}.
+
+### Assembling Reports
+
+As noted above, each client has a collection of measurements that it
+wants to send. Each measurement is characterized by a set of
+parameters that are centrally configured and provided to each client:
+
+- A unique identifier (e.g., "dns-queries-mean")
+- A description of how to collect the measurement (e.g., "count
+  the number of DNS queries")
+- The statistic to be computed over the measurement values (e.g., mean)
+- The rules for what constitutes a valid value (e.g., must be between 0
+  and 10000)
+
+Once the client has collected the measurements to send, it needs to
+turn them into a set of reports. Naively, each measurement would be
+sent in its own report, but it is also possible to have multiple
+measurements in a single report; clients need to be configured with
+the mapping from measurements to reports. The set of measurements
+that go into a report is referred to as the "input" to the report.
+Because each report is independent, for the remainder of this document
+we focus on a single report and its inputs.
+
+The client uses the statistic to be computed in order to know how to
+encode the measurement. For instance, if the statistic is mean, then
+the measurement can be encoded directly. However, if the statistic is
+standard deviation, then the client must send both x and x^2.  Section
+[TODO] describes how to encode measurements for each statistic.
+The client uses the validity rules to construct the zero knowledge
+proof showing that the encoded measurement is valid.
+
 
 ### Data flow
 
@@ -174,19 +202,20 @@ is as follows.
                     +------------+
 ```
 
-1. **Upload:** Each client generates a proof of its input's validity and splits
+1. **Upload:** Each client assembles the measurements it wants to send into
+   the input to Prio. It generates a proof of its input's validity and splits
    the input and proof into s >= 2 shares. Rather than send these shares to the
    aggregators directly, the client encrypts each share under the aggregator's
    public key and sends the ciphertext to a special aggregator, called the
    *leader*. The leader is charged with coordinating the execution of the
    input-validation protocol and the release of outputs to the data-collection
    endpoint. (Details about aggregator discovery is in {{CITE}}.)
-2. **Verify and accumulate:** The leader initializes the input-validation
+1. **Verify and accumulate:** The leader initializes the input-validation
    protocol by sending the encrypted shares to the aggregators. (Details about
    input validation and how it pertains to system security properties are in
    {{CITE}}.) If the input is deemed valid, then each aggregator adds its input
    share into its own share of the output.
-4. **Collect:** The leader requests each aggregator's share of the output. It
+1. **Collect:** The leader requests each aggregator's share of the output. It
    adds them together to obtain the final output, which it sends to the data
    collector. [[OPEN ISSUE: By assembling the final output, the leader gets to
    learn more information than the other aggregators. Maybe the aggregators
@@ -492,6 +521,9 @@ call K, and an integer n. Each client encodes its input as a length-n vector of
 element of K. The length of the vector depends on the type of data being
 collected. A single field element may be sufficient for some applications,
 whereas more sophisticated measurements will require larger encodings.
+Each client needs to use the same encoding of inputs into vectors; if there
+are multiple measurements in a single input, they will need to be in
+a consistent order.
 
 In order to share x between s servers, we split it up into s shares
 {x:1}, ..., {x:s}, where {x:i} is the share held by the i-th party. We
@@ -766,3 +798,5 @@ requests and controls the schedule for signaling aggregation rounds.
 * [GB17](https://crypto.stanford.edu/prio/paper.pdf) Corrigan-Gibbs and Boneh,
   "Prio: Private, Robust, and Scalable Computation of Aggregate Statistics".
   NSDI 2017.
+
+
