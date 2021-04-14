@@ -83,9 +83,10 @@ the results to obtain the final output.
 Consider an illustrative example. Suppose there are three clients and
 two aggregators. Each client i holds a single measurement in the form of
 a positive integer x[i], and our goal is to compute the sum of the
-measurements of all clients. Using an additive secret-sharing scheme, the first client splits its
-measurement x[1] into a pair of integers x[1,1] and x[1,2] for which x[1] =
-x[1,1] + x[1,2] modulo a prime p. (For convenience, we will omit the
+measurements of all clients. In this case, the protocol input is a single measurement consisting of 
+a single positive integer; no additional encoding is done. Given this input, the first client splits its
+measurement x[1] with additive secret-sharing into a pair of integers x[1,1] and x[1,2] for which 
+x[1] = x[1,1] + x[1,2] modulo a prime p. (For convenience, we will omit the
 the "mod p" in the rest of this section.) It then uploads x[1,1] to
 one sever x[1,2] to the other. The second client splits its measurement x[2]
 into x[2,1] and x[2,2], uploads them to the servers, and so on.
@@ -798,5 +799,4 @@ requests and controls the schedule for signaling aggregation rounds.
 * [GB17](https://crypto.stanford.edu/prio/paper.pdf) Corrigan-Gibbs and Boneh,
   "Prio: Private, Robust, and Scalable Computation of Aggregate Statistics".
   NSDI 2017.
-
 
