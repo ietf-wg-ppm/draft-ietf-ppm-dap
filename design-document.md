@@ -169,7 +169,8 @@ The client uses the statistic to be computed in order to know how to
 encode the measurement. For instance, if the statistic is mean, then
 the measurement can be encoded directly. However, if the statistic is
 standard deviation, then the client must send both x and x^2.  Section
-[TODO] describes how to encode measurements for each statistic.
+[TODO: cite to internal description of how to encode]
+describes how to encode measurements for each statistic.
 The client uses the validity rules to construct the zero knowledge
 proof showing that the encoded measurement is valid.
 
