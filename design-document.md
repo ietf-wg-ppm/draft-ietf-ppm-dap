@@ -16,6 +16,11 @@ list the use cases our system needs to support, how it is configured, and any
 other operational constraints for the protocol. In {{protocol}} we specify the
 protocol itself.
 
+## DISCLAIMER
+
+This document is a work in progress. We have not yet settled on the design of
+the protocol framework or the set of features we intend to support.
+
 ## Terminology
 
 This section defines some terminology we will use in the remainder of this
