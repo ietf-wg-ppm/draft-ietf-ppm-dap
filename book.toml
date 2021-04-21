@@ -3,4 +3,6 @@ authors = ["The Authors"]
 language = "en"
 multilingual = false
 src = "src"
-title = "Prio v3"
+title = "\"Prio v3\""
+
+[preprocessor.katex]
