@@ -238,6 +238,8 @@ may be used to make the system more resilient; see {{CITE}}.
 One option is to use client certificates for TLS; another is to have the leader
 sign its messages directly, as in Prio v2.]]
 
+[[TODO: Decide the "content type" for HTTP requests.]]
+
 Data ingestion involves the client uploading its secret shared inputs and the
 aggregators collectively validating the corresponding input. Before this process
 begins, the following must be true (the acronym "PA" stands for "Private
@@ -245,8 +247,8 @@ Aggregation"):
 1. The client knows the URL of the leader endpoint, e.g., `example.com/metrics`.
    We write this URL as `[leader]` below. (We write `[helper]` for the helper's
    URL and `[aggregator]` for the URL of some aggregator.)
-1. The client has a root certificate it can use to authenticate the leader.
-1. The leader's root certificates are sufficient to authenticate each helper.
+1. The client and leader can establish a leader-authenticated TLS channel.
+1. The leader can each helper can establish a leader-authenticated TLS channel.
 1. The helper has chosen an HPKE key pair.
 1. The aggregators agree on the PA parameters associated with a given PA task.
 
@@ -262,30 +264,38 @@ struct {
 } PAParam;
 
 struct {
-  PAProto proto;
   uint16 version;
   uint64 id;
+  PAProto proto;
 } PATask;
 
-Url opaque<0..255>;
+opaque<0..2^16-1> Url;
 
 enum { prio(0), hits(1) } PAProto;
 ```
 
-[[TODO: Add batch parameters, including min/max batch size, batch time window,
-etc.]]
+The first part of the `PAParam` structure, `PAParam.task`, identifies the data
+aggregation task and the PA protocol. The fields of the `PATask` structure are:
+1. `version` -- the version of this specification;
+1. `id` --- an opaque identifier used by the aggregators to map client inputs to
+   a specific PA task; and
+1. `proto` --- the PA protocol (e.g., Prio).
 
-[[NOTE: `PAParamters.task.id` is a 64-bit integer because it may be useful for
-task IDs to be sparse.]]
-
+The rest of the structure contains the protocol-specific parameters.
 `PrioParam` is defined in {{prio-messages}} and `HitsParam` is defined in
 {{hits-messages}}.
 
+[[TODO: Add batch parameters, including min/max batch size, batch time window,
+etc.]]
+
+[[NOTE: `PAoTask.id` is a 64-bit integer because it may be useful for
+task IDs to be sparse.]]
+
 ### Discovery
 
-To begin, the client first needs to discover the parameters and the URL of
-each helper. The client sends an HTTP request to `[leader]/parameters`. The
-leader responds with following message:
+To begin, the client first needs to discover the parameters and the URL of each
+helper. The client sends a GET request to `[leader]/parameters`. The leader
+responds with status 200 and the following message body:
 
 ```
 struct {
@@ -296,8 +306,6 @@ struct {
   }
   Url helper_urls<0..2^16-1>; // The URL of each helper
 } PAClientParam;
-
-Url opaque<0..255>;
 ```
 
 `PrioClientParam` is defined in {{prio-messages}}; `HitsClientParam` is defined
@@ -306,8 +314,9 @@ in {{hits-messages}}. These contain protocol-specific values, including any
 doesn't recognize the protocol or parameters, then it aborts and alerts the
 leader with "unrecognized protocol", as described in {{ingest-alerts}}.
 
-For each URL `[helper]` in `PAClientParam.helper_urls`, the client sends an HTTP
-request to `[helper]/key_config`. The helper's response contains an
+For each URL `[helper]` in `PAClientParam.helper_urls`, the client sends a GET
+request to `[helper]/key_config`. The helper responds with status 200 and a
+message body that contains an
 [HPKE](https://datatracker.ietf.org/doc/draft-irtf-cfrg-hpke/) public key and
 encryption parameters:
 
@@ -316,6 +325,7 @@ struct {
   uint8 id; // Used by helper to decide if it recognizes this config.
   HpkeKemId kem_id;
   HpkeKdfId kdf_id;
+  HpkeAeadKdfId aead_id;
   HpkePublicKey public_key;
 } HPKEKeyConfig;
 
@@ -341,7 +351,7 @@ with "no supported helpers".
 
 ### Upload
 
-For each helper, the client issues an HTTP request to the leader.
+For each helper, the client issues a POST request to the leader.
 
 **Request.**
 The client begins by setting up an HPKE context for the helper by running
@@ -362,7 +372,7 @@ procedures are specific to the PA protocol.)
 [[OPEN ISSUE: Is it safe to generate the proof once, then secret-share between
 each (leader, helper) pair? Probably not in general, but maybe for Prio?]]
 
-Finally, the clients sends an HTTP request to `[leader]/upload` with the
+Finally, the clients sends an POST request to `[leader]/upload` with the
 following payload:
 
 ```
@@ -372,34 +382,35 @@ struct {
   Url helper_url;             // URL of helper endpoint
   PAHelperShare helper_share; // The helper's encrypted share
   PALeaderShare leader_share; // The leader's share
-} PAUplaod;
+} PAUpload;
 
 struct {
   opaque enc<0..2^16-1>;     // Encapsulated HPKE context
-  opaque payload<0..2^24-1>; // The encrypted share
+  opaque payload<0..2^24-1>; // The encrypted share (may be empty)
 } PAHelperShare;
 
 opaque PALeaderShare<0..2^24-1>;
 ```
 
-### Input validation
-
-The leader handles HTTP requests to `[leader]/upload` as follows. It first
+**Response.**
+The leader handles POST requests to `[leader]/upload` as follows. It first
 checks the request for a well-formed `PAUpload` message. If not found, then the
-leader aborts and alerts the client with "malformed upload". Otherwise, if a
-well-formed `PAUpload` message is found, the leader responds to the request with
-"200 OK".
+leader aborts and alerts the client with "malformed upload".  It then looks up
+the PA parameters `PAParam` for which `PAUpload.task == PAParam.task` and
+`PAUpload.helper_url` is in `PAParam.helper_urls`. If none are found, then the
+leader aborts and alerts the client with "unrecognized task". Otherwise, if the
+upload is well-formed and contains a recognized PA task, then the leader
+responds to the GET request with status 200.
 
-#### Verify Start
+### Verify Start
 
-The leader begins the input-validation protocol by looking up the PA parameters
-`PAParam` for which `PAUpload.task == PAParam.task` and `PAUpload.helper_url` is
-in `PAParam.helper_urls`. If none are found, then the leader aborts without
-alerting the client.
+The leader begins the input-validation protocol by collecting a sequence of
+helper shares that all correspond to the same helper endpoint URL, key
+configuration, and PA task.
 
 **Request.**
-Let `[helper]` denote the URL corresponding to `PAUpload.helper_url`. The leader
-sends an HTTP request to `[helper]/verify_start` with the following payload:
+Let `[helper]` denote the helper URL. The leader sends a POST request to
+`[helper]/verify_start` with the following payload:
 
 ```
 struct {
@@ -413,24 +424,16 @@ struct {
 } PAVerifyStartReq;
 ```
 
-This message contains any number of encrypted helper shares: it might contain
-the shares uploaded by a single client, or it might contain the shares uploaded
-by multiple clients; we only require that all of the shares correspond to the
-same PA task and HPKE key configuration. This allows the aggregator to
-batch-process a number of inputs at once.
-
 Each helper share has a corresponding message payload contained in
 `PAVerifyStartReq.shares`. This includes any protocol-specific information the
 helper needs for input validation, e.g., the joint randomness used by the leader
-and helper for the protocol run.
-
-Note that a well-formed message contains as many payloads as shares, i.e., the
-sequence `PAVerifyStartReq.payloads` has the same number of elements as
-`PAVerifyStartReq.shares`. Moreover, the i-th payload should correspond to the
-i-th share for each i.
+and helper for the protocol run.  Note that a well-formed message contains as
+many payloads as shares, i.e., the sequence `PAVerifyStartReq.payloads` has the
+same number of elements as `PAVerifyStartReq.shares`. Moreover, the i-th payload
+should correspond to the i-th share for each i.
 
 **Response.**
-The helper handles HTTP requests to `[helper]/verify_start` as follows. It first
+The helper handles POST requests to `[helper]/verify_start` as follows. It first
 checks for a well-formed `PAVerifyStartReq`. If not found, then the helper
 aborts and alerts the leader with "malformed verify start request".
 
@@ -454,8 +457,8 @@ derives its proof share from `context` and `share.payload` as specified by the
 PA protocol. Finally, the helper uses the proof share and corresponding message
 to derive its response for the protocol run.
 
-The helper responds to the HTTP request from the leader with the following
-message:
+The helper responds to the POST request from the leader with status 200 and the
+following body:
 
 ```
 struct {
@@ -474,14 +477,14 @@ the helper wants the leader to retransmit its shares in the last step of the
 input-validation protocol. This allows the helper to implement the protocol
 statelessly, if desired.
 
-#### Verify Finish
+### Verify Finish
 
-The leader handles the helper's response to its HTTP request by first checking
+The leader handles the helper's response to its POST request by first checking
 for a well-formed `PAVerifyStartResp` message. If not found, then it aborts and
 alerts the helper with "malformed verify start response".
 
 **Request.**
-The leader sends an HTTP request to `[helper]/verify_finish` with the following
+The leader sends a POST request to `[helper]/verify_finish` with the following
 message:
 
 ```
@@ -503,7 +506,7 @@ equal to `PAVerifyStartReq.shares`. Otherwise, `PAVerifyFinishedReq.shares` is
 empty.
 
 **Response.**
-The helper handles HTTP requests to `[helper]/verify_finish` as follows. It
+The helper handles POST requests to `[helper]/verify_finish` as follows. It
 first checks for a well-formed `PAVerifyFinishReq` message. If not found, then
 it aborts and alerts the leader with "malformed verify finish request".
 
@@ -519,7 +522,8 @@ Next, the helper decides whether the input corresponding to each of its shares
 is valid. For each valid input, the helper derives the input share and stores it
 for processing later on, as described in {{CITE}}.
 
-Finally, the helper responds with the following message:
+Finally, the helper responds to the POST request with status 200 and the
+following message body:
 
 ```
 struct {
@@ -534,7 +538,7 @@ struct {
 As usual, the i-th payload corresponds to the i-th payload of the
 `PAVerifyFinishReq`.
 
-The leader handles the response to its HTTP request by checking for a
+The leader handles the response to its POST request by checking for a
 well-formed `PAVerifyFinishResp` message. If not found, it aborts and alerts the
 helper with "malformed verify finish response".
 
