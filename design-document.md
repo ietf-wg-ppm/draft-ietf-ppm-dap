@@ -38,7 +38,7 @@ document.
 1. False input: An input that is valid, but incorrect. For example, if the data
    being gathered is whether or not users have clicked on a particular button, a
    client could report clicks when none occurred.
-1. Helper: An aggreegator that is not a leader.
+1. Helper: An aggregator that is not the leader.
 1. Input: The original data emitted by a client, before any encryption or secret
    sharing scheme is applied. This may include multiple measurements.
 1. Input share: one of the shares output by feeding an input into a secret
@@ -243,15 +243,16 @@ sign its messages directly, as in Prio v2.]]
 
 Data ingestion involves the client uploading its secret shared inputs and the
 aggregators collectively validating the corresponding input. Before this process
-begins, the following must be true (the acronym "PA" stands for "Private
-Aggregation"):
+begins, the following criteria must be true (the acronym "PA" stands for
+"Private Aggregation"):
 1. The client knows the URL of the leader endpoint, e.g., `example.com/metrics`.
    We write this URL as `[leader]` below. (We write `[helper]` for the helper's
    URL and `[aggregator]` for the URL of some aggregator.)
 1. The client and leader can establish a leader-authenticated TLS channel.
-1. The leader can each helper can establish a leader-authenticated TLS channel.
-1. The helper has chosen an HPKE key pair.
-1. The aggregators agree on the PA parameters associated with a given PA task.
+1. The leader and each helper can establish a leader-authenticated TLS channel.
+1. Each helper has chosen an HPKE key pair.
+1. The aggregators agree on a set of PA tasks, as well as the PA protocol and
+   parameters used for each task.
 
 The PA parameters are structured as follows:
 
