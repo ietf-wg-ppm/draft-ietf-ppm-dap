@@ -295,7 +295,7 @@ task IDs to be sparse.]]
 ### Discovery
 
 To begin, the client first needs to discover the parameters and the URL of each
-helper. The client sends a GET request to `[leader]/parameters`. The leader
+helper. The client sends a POST request to `[leader]/upload`. The leader
 responds with status 200 and the following message body:
 
 ```
@@ -399,13 +399,13 @@ opaque PALeaderShare<0..2^24-1>;
 ```
 
 **Response.**
-The leader handles POST requests to `[leader]/upload` as follows. It first
-checks the request for a well-formed `PAUpload` message. If not found, then the
-leader aborts and alerts the client with "malformed upload".  It then looks up
-the PA parameters `PAParam` for which `PAUpload.task == PAParam.task` and
-`PAUpload.helper_url` is in `PAParam.helper_urls`. If none are found, then the
-leader aborts and alerts the client with "unrecognized task". Otherwise, if the
-upload is well-formed and contains a recognized PA task, then the leader
+The leader handles POST requests to `[leader]/upload_finish` as follows. It
+first checks the request for a well-formed `PAUpload` message. If not found,
+then the leader aborts and alerts the client with "malformed upload".  It then
+looks up the PA parameters `PAParam` for which `PAUpload.task == PAParam.task`
+and `PAUpload.helper_url` is in `PAParam.helper_urls`. If none are found, then
+the leader aborts and alerts the client with "unrecognized task". Otherwise, if
+the upload is well-formed and contains a recognized PA task, then the leader
 responds to the GET request with status 200.
 
 ### Verify Start
