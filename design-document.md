@@ -38,6 +38,7 @@ document.
 1. False input: An input that is valid, but incorrect. For example, if the data
    being gathered is whether or not users have clicked on a particular button, a
    client could report clicks when none occurred.
+1. Helper: An aggreegator that is not a leader.
 1. Input: The original data emitted by a client, before any encryption or secret
    sharing scheme is applied. This may include multiple measurements.
 1. Input share: one of the shares output by feeding an input into a secret
@@ -322,7 +323,7 @@ encryption parameters:
 
 ```
 struct {
-  uint8 id; // Used by helper to decide if it recognizes this config.
+  uint8 id;
   HpkeKemId kem_id;
   HpkeKdfId kdf_id;
   HpkeAeadKdfId aead_id;
@@ -336,15 +337,18 @@ uint16 HpkeKdfId;  // Defined in I-D.irtf-cfrg-hpke.
 ```
 
 We call this the helper's *key configation*. The key configuration is used to
-set up a base-mode HPKE context to use to protect the shares sent to the helper
-via the leader.
+set up a base-mode HPKE context to use to derive symmetric keys for protecting
+the shares sent to the helper via the leader. The *config ID*,
+`HPKEKeyConfig.id`, is forwarded by the client to the helper. The helper uses
+this to decide if it knows how to decrypt a share it receives.
 
 Finally, the client collects the set of helpers it will upload shares to. It
 ignores a helper if:
 * the client and helper failed to establish a secure, helper-authenticated
   channel;
 * the request to the helper URL failed or didn't return a valid key config; or
-* the key config specifies a KEM or KDF algorithm the client doesn't recognize.
+* the key config specifies a KEM, KDF, or AEAD algorithm the client doesn't
+  recognize.
 
 If the set of helpers is empty, then the client aborts and alerts the leader
 with "no supported helpers".
@@ -354,7 +358,9 @@ with "no supported helpers".
 For each helper, the client issues a POST request to the leader.
 
 **Request.**
-The client begins by setting up an HPKE context for the helper by running
+The client begins by [setting up an HPKE
+context](https://www.ietf.org/archive/id/draft-irtf-cfrg-hpke-08.html#name-encryption-to-a-public-key,)
+for the helper by running
 
 ```
 helper_enc, context = SetupBaseS(pk, PAClientParam.task)
@@ -425,12 +431,16 @@ struct {
 ```
 
 Each helper share has a corresponding message payload contained in
-`PAVerifyStartReq.shares`. This includes any protocol-specific information the
+`PAVerifyStartReq.payloads`. This includes any protocol-specific information the
 helper needs for input validation, e.g., the joint randomness used by the leader
-and helper for the protocol run.  Note that a well-formed message contains as
+and helper for the protocol run. Note that a well-formed message contains as
 many payloads as shares, i.e., the sequence `PAVerifyStartReq.payloads` has the
 same number of elements as `PAVerifyStartReq.shares`. Moreover, the i-th payload
 should correspond to the i-th share for each i.
+
+[[TODO: Instead of a sequence of shares and a sequence of payloads,
+`PAVerifyStartReq` should have a sequence of (share, payload) pairs. (Here and
+below.]]
 
 **Response.**
 The helper handles POST requests to `[helper]/verify_start` as follows. It first
@@ -473,9 +483,9 @@ struct {
 
 The i-th element of `PAVerifyStartResp.payloads` corresponds to the i-th element
 of `PAVerifyStartReq.payloads`. The boolean `resend_shares` is set to `true` if
-the helper wants the leader to retransmit its shares in the last step of the
-input-validation protocol. This allows the helper to implement the protocol
-statelessly, if desired.
+the helper wants the leader to retransmit *all* of the helper shares in the last
+step of the input-validation protocol. This allows the helper to implement the
+protocol statelessly, if desired.
 
 ### Verify Finish
 
@@ -515,7 +525,7 @@ PAParam.task`. If not found, then it aborts and alerts the leader with
 "unrecognized task".
 
 Next, it looks up the HPKE config and corresponding secret key associated with
-`PAVerifyStartReq.key_config_id`. If not found, then it aborts and alerts the
+`PAVerifyFinishReq.key_config_id`. If not found, then it aborts and alerts the
 leader with "unrecognized key config".
 
 Next, the helper decides whether the input corresponding to each of its shares
