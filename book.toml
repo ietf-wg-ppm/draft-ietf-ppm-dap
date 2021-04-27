@@ -1,0 +1,6 @@
+[book]
+authors = ["Christopher Patton"]
+language = "en"
+multilingual = false
+src = "src"
+title = "Prio v3"
