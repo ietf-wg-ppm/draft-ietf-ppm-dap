@@ -1,10 +1,10 @@
-# Prio
+# Private Data Analytics Protocol
 
-This is the working area for the individual Internet-Draft, "Prio".
+This is the working area for the individual Internet-Draft, "Private Data Analytics Protocol".
 
-* [Editor's Copy](https://abetterinternet.github.io/prio-documents/#go.draft-prio-core.html)
-* [Individual Draft](https://datatracker.ietf.org/doc/html/draft-prio-core)
-* [Compare Editor's Copy to Individual Draft](https://abetterinternet.github.io/prio-documents/#go.draft-prio-core.diff)
+* [Editor's Copy](https://abetterinternet.github.io/prio-documents/#go.draft-pda-core.html)
+* [Individual Draft](https://datatracker.ietf.org/doc/html/draft-pda-core)
+* [Compare Editor's Copy to Individual Draft](https://abetterinternet.github.io/prio-documents/#go.draft-pda-core.diff)
 
 ## Building the Draft
 
