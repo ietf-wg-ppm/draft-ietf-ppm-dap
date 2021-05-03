@@ -1,14 +1,24 @@
-This document is built using Rust's
-[mdbook](https://github.com/rust-lang/mdBook) tool.
+# Private Data Aggregation Protocol
 
-```
-cargo install mdbook # Install the binary
-mdbook build         # Build HTML (need the cargo bin directory in your $PATH)
+This is the working area for the individual Internet-Draft, "Private Data Aggregation Protocol".
+
+* [Editor's Copy](https://abetterinternet.github.io/prio-documents/#go.draft-pda-core.html)
+* [Individual Draft](https://datatracker.ietf.org/doc/html/draft-pda-core)
+* [Compare Editor's Copy to Individual Draft](https://abetterinternet.github.io/prio-documents/#go.draft-pda-core.diff)
+
+## Building the Draft
+
+Formatted text and HTML versions of the draft can be built using `make`.
+
+```sh
+$ make
 ```
 
-When editing, you can run a server that listens for changes to the source and
-re-renders it in real time:
+This requires that you have the necessary software installed.  See
+[the instructions](https://github.com/martinthomson/i-d-template/blob/master/doc/SETUP.md).
 
-```
-mkbook serve
-```
+
+## Contributing
+
+See the
+[guidelines for contributions](https://github.com/abetterinternet/prio-documents/blob/i-d-format/CONTRIBUTING.md).
