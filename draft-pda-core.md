@@ -104,6 +104,8 @@ document.
 
 # Overview {#overview}
 
+[OPEN ISSUE: Rework this section in light of issue #44.]
+
 The protocol is executed by a large set of clients and a small set of servers.
 We call the servers the *aggregators*. Each client's input to the protocol is a
 set of measurements (e.g., counts of some user behavior). Given the input set
@@ -143,13 +145,13 @@ second aggregator's share of the sum. In the last step, aggregators combine
 their sum shares to obtain the final output `y = A[1] + A[2]`. This is correct
 because modular addition is commutative. I.e.,
 
-```
+~~~
     y = A[1] + A[2]
       = (x[1,1] + x[2,1] + x[3,1]) + (x[1,2] + x[2,2] + x[3,2])
       = (x[1,1] + x[1,2]) + (x[2,1] + x[2,2]) + (x[3,1] + x[3,2])
       = x[1] + x[2] + x[3]
       = F(x[1], x[2], x[3])
-```
+~~~
 
 **Prio.**
 This approach can be used to privately compute any function `F` that can be
@@ -252,7 +254,7 @@ multiple pairs of aggregators.]
 
 Each PA task in this document is divided into three sub-protocols as follows.
 
-```
+~~~
                     +------------+
                     |            |
                     |   Helper   <---------------+
@@ -274,7 +276,7 @@ Each PA task in this document is divided into three sub-protocols as follows.
                     |   Helper   <---------------+
                     |            |
                     +------------+
-```
+~~~
 
 1. **Upload:** Each client assembles the measurements into an input for the given
    PA protocol. It generates a proof of its input's validity and splits the
@@ -291,11 +293,439 @@ Each PA task in this document is divided into three sub-protocols as follows.
 
 # PA protocols {#pa}
 
-[TODO(cjpatton)]
+This section specifies a protocol for executing generic PA tasks. Concrete
+PA protocols are described in {{prio}} and {{hits}}.
+
+Each round of the protocol corresponds to an HTTP request and response. We
+assume that some transport layer security protocol (e.g., TLS or QUIC) is used
+between each pair of parties and that the server is always authenticated.
+
+[TODO: Decide how to authenticate the leader in leader-to-helper and
+aggregator-to-collector connections. One option is to use client certificates
+for TLS; another is to have the leader sign its messages directly, as in Prio
+v2.]
+
+[TODO: Decide the "content type" for HTTP requests.]
+
+[TODO: @chris-wood suggested we specify APIs for producing and consuming each of
+the messages in the protocol. Specific PA protocols would implement this API.]
+
+[OPEN ISSUE: This needs to be reworked in order to account for protocols, like
+Hits, that involve multiple rounds of verify/collect. See issue #44.]
+
+**Error handling.**
+In this section, we will use the verbs "abort" and "alert with `[some error
+message]`" to describe how protocol participants react to various error
+conditions. The behavior is specified in {{pa-error}}. For common errors, we may
+elide the verbs altogether and refer to {{pa-error-common-aborts}}.
+
+## Configuration {#pa-config}
+
+**Tasks.**
+Each PA protocol is associated with a *PA task* that specifies the measurements
+that are to be collected and the protocol that will be used to collect them:
+
+~~~
+struct {
+  uint16 version;
+  opaque id[16];
+} PATask;
+
+~~~
+[TODO: Decide how to serialize protocol messages. We're using TLS syntax for
+now, but there's no reason to stick with it other than most folks are familiar
+with it.]
+
+The first field, `version` specifies the version of this document. The second
+field, `id` is an opaque identifier used by the clients, aggregators, and
+collector to uniquely identify the PA task at hand. We will call it the *task
+id* in the remainder.
+
+[TODO: Decide how the `PATask` is negotiated. Eventually this will be
+distributed, in an authenticated manner, from the collector the other parties.
+For now, we just assume this value is negotiated out-of-band.]
+
+**Parameters.**
+Associated to each task is the set of PA protocol parameters. These are encoded
+by the `PAParam` structure, which also includes the task:
+
+~~~
+struct {
+  PATask task;
+  uint64 batch_size;
+  PAProto proto;
+  select (PAClientParam.proto) {
+    case prio: PrioParam;
+    case hits: HitsParam;
+  }
+} PAParam;
+
+enum { prio(0), hits(1) } PAProto;
+~~~
+
+The `batch_size` field encodes the *batch size*, the number of input shares
+accumulated by each aggregator before emitting its output share.  The `proto`
+field identifies the specific PA protocol in use. The rest of the structure
+contains any protocol-specific parameters that are required.
+
+### Helper key configuration
+
+Our protocol uses HPKE for public-key encryption {{!I-D.irtf-cfrg-hpke}}.  Each
+helper specifies the HPKE public key that clients use to encrypt the helper's
+share. The public key and associated parameters are structured as follows:
+
+~~~
+struct {
+  uint8 id;
+  HpkeKemId kem_id;
+  HpkeKdfId kdf_id;
+  HpkeAeadKdfId aead_id;
+  HpkePublicKey public_key;
+} HpkeConfig;
+
+opaque HpkePublicKey<1..2^16-1>;
+uint16 HpkeAeadId; // Defined in I-D.irtf-cfrg-hpke
+uint16 HpkeKemId;  // Defined in I-D.irtf-cfrg-hpke
+uint16 HpkeKdfId;  // Defined in I-D.irtf-cfrg-hpke
+~~~
+[TODO: Decide whether to re-use the config from OHTTP/ECH. This would add
+support for multiple cipher suites.]
+
+We call this the helper's *key configation*. The key configuration is used to
+set up a base-mode HPKE context to use to derive symmetric keys for protecting
+the shares sent to the helper. The *config id*, `HpkeConfig.id`, is forwarded
+by the client to the helper, who uses this value to decide if it knows how to
+decrypt a share it receives.
+
+## Pre-conditions
+
+We assume the following conditions hold before the protocol begins:
+1. The client, aggregators, and collector are configured with a specific PA task.
+1. The client knows the URL of the leader endpoint, e.g., `example.com/metrics`.
+   We write this URL as `[leader]` below. (We write `[helper]` for a helper's
+   URL.)
+1. The client and leader can establish a leader-authenticated secure channel.
+1. The leader and each helper can establish a leader-authenticated secure
+   channel.
+1. Each helper has chosen an HPKE key pair.
+1. The aggregators agree on a set of PA tasks, as well as the PA protocol and
+   parameters used for each task.
+
+[TODO: It would be clearer to include a "pre-conditions" section prior to each
+"phase" of the protocol.]
+
+## Upload {#pa-upload}
+
+[TODO: Add an illustration of this sub-protocol.]
+
+Uploading a report involves two requests to the leader. In the  *upload start
+request*, the client discovers the protocol-specific parameters it needs to
+generate the report, as well as the endpoint URL of each helper. In the *upload
+finish request*, it uploads its report to the leader.
+
+[NOTE: @acmiyaguchi pointed out that the use of an anonymizing proxy for
+uploading shares might be easier to implement if the "upload" phase involved a
+single HTTP request. However, OHTTP
+(https//www.ietf.org/archive/id/draft-thomson-http-oblivious-01.html) allows
+clients to make multiple requests through a proxy, so these kinds of use cases
+should work.]
+
+[NOTE: @cjpatton: Breaking the upload phase into two requests is useful for
+supporting Prio-like proof systems in which the leader sends the client a
+"challenge" it uses to generate the proof. (See the SIMD construction of
+{{BBCp19}}, Section 5.2. Here, the "challenge" is a randomly generated field
+element.) Because the client/leader are using TLS, another way to implement this
+would be to export a secret from the key schedule.]
+
+### Upload Start
+
+**Request.**
+The client sends a POST request to `[leader]/upload_start` with the following
+message:
+
+~~~
+struct {
+  PATask task;
+  opaque id[16];
+} PAUploadStartReq;
+~~~
+
+The first field, `task` corresponds to the PA task for which a report will be
+generated. The second, `id` is the client's *upload id*, which it chooses at
+random.
+
+**Response.**
+The leader responds to well-formed requests to `[leader]/upload_start` with
+status 200 and the following message:
+
+~~~
+struct {
+  PAParam param;
+  Url helper_urls<1..2^16-1>;
+  select (PAUploadStartResp.param.proto) {
+    case prio: PrioUploadStartResp;
+    case hits: HitsUploadStartResp;
+  }
+} PAUploadStartResp;
+
+opaque Url<1..2^16-1>;
+~~~
+
+The message includes the URL of each helper and any protocol-specific parameters
+the client needs to generate its report. The leader's response to malformed
+requests is specified in {{pa-error-common-aborts}}.
+
+### Upload Finish
+
+**Gathering the set of helpers.**
+For each URL `[helper]` in `PAUploadStartResp.helper_urls`, the client sends a
+GET request to `[helper]/key_config`. The helper responds with status 200 and an
+`HpkeConfig` message. Next, the client collects the set of helpers it will
+upload shares to. It ignores a helper if:
+* the client and helper failed to establish a secure, helper-authenticated
+  channel;
+* the GET request to the helper URL failed or didn't return a valid key config;
+  or
+* the key config specifies a KEM, KDF, or AEAD algorithm the client doesn't
+  recognize.
+
+If the set of supported helpers is empty, then the client aborts and alerts the
+leader with "no supported helpers". Otherwise, for each supported helper the
+client issues a POST request to `[leader]/upload_finish` with a payload
+constructed as described below.
+
+[OPEN ISSUE: @chris-wood: Can't the leader determine if helpers are "online"?
+This seems to reveal information that's specific to clients. Imagine, for
+example, that clients are prohibited from talking to helpers but not the leader.
+Is it OK that leaders learn that about a client? I'm not sure, so I'd be
+inclined to remove this unless we have a concrete use case.]
+
+**Request.**
+The client begins by [setting up an HPKE
+context](https://www.ietf.org/archive/id/draft-irtf-cfrg-hpke-08.html#name-encryption-to-a-public-key,)
+for the helper by running
+
+~~~
+enc, context = SetupBaseS(pk, [TODO])
+~~~
+
+where `pk` is the KEM public key encoded by `HpkeConfig.public_key`. The outputs
+are the helper's encapsulated context `enc` and the context `context`.
+
+[TODO: Decide what the info string should be. At a minimum it should include
+`PAParam` so that the PA parameters are implicitly authenticated by the helper.
+when it decapsulates `enc`. We might consider using the hash of the transcript
+between the client and leader so far, i.e., `PAUploadStartReq`, ...,
+`PAUploadStartResp`, as this would be the most conservative thing. We just need
+to ensure that the helper can reproduce this transcript. This should be possible
+given the information it has.]
+
+Next, the client encodes its measurements as an input for the PA protocol. It
+then generates a validity proof for its input and uses `context` to split the
+input and proof into a *leader share* and a *helper share*, where the latter is
+protected by the HPKE context. Note that the details of each of these processing
+steps --- encode, prove, split, and encrypt --- are specific to the PA protocol.
+
+[OPEN ISSUE: Is it safe to generate the proof once, then secret-share between
+each (leader, helper) pair? Probably not in general, but maybe for Prio?]
+
+The payload of the POST request to `[leader]/upload_finish` is structured as
+follows:
+
+~~~
+struct {
+  PATask task;                 // Equal to PAUploadStartReq.task
+  opaque id[16];               // Equal to PAUploadStartReq.id
+  uint8 helper_hpke_config_id; // Equal to HpkeConfig.id
+  Url helper_url;
+  PAHelperShare helper_share;
+  PALeaderShare leader_share;
+} PAUploadFinishReq;
+~~~
+
+We sometimes refer to this message as the *report*. The message contains the
+`task` and `id` fields of the previous request. In addition, it includes the
+helper's HPKE config id, endpoint URL, and the helper and leader shares.
+The helper share has the following structure:
+
+~~~
+struct {
+  opaque enc<1..2^16-1>; // Equal to helper_enc
+  PAProto proto;
+  select (PAHelperShare.proto) {
+    case prio: PrioHelperShare;
+    case hits: HitsHelperShare;
+  }
+} PAHelperShare;
+~~~
+
+Field `enc` encodes the helper's encapsulated HPKE context. The remainder of the
+structure contains the share itself, the structure of which is specific to the
+PA protocol. The structure of the leader share is similarly protocol specific:
+
+~~~
+struct {
+  PAProto proto;
+  select (PALeaderShare.proto) {
+    case prio: PrioLeaderShare;
+    case hits: HitsLeaderShare;
+  };
+} PALeaderShare;
+~~~
+
+Note that the leader share is sent not encrypted.
+
+**Response.**
+The leader responds to well-formed requests to `[leader]/upload_finish` with
+status 200 and an empty payload. Malformed requests are handled as described in
+{{pa-error-common-aborts}}.
+
+## Verify {#pa-verify}
+
+[TODO: Add an illustration of this sub-protocol.]
+
+After the client uploads a report to the leader, the leader and helper verify in
+zero knowledge that the proof is well-formed. The exact procedure for doing so
+is protocol specific, but all protocols have the same basic structure. In
+particular, the protocol is comprised of a sequence of HTTPS requests from the
+leader to the helper. At the end of this phase, the leader and helper will have
+decided whether a set of client inputs are valid. For each valid input, they
+proceed as described in {{pa-collect}}.
+
+**Request.**
+The leader begins by collecting a sequence of reports that are all associated
+with the same PA task, helper URL, and helper HPKE config id. Let `[helper]`
+denote the the URL. The leader sends a POST request to `[helper]/verify` with
+the following message:
+
+~~~
+struct {
+  PATask task;
+  uint8 hpke_config_id;
+  PAVerifyReq seq<1..2^24-1>;
+} PAVerifyReqSeq;
+~~~
+
+The structure contains the PA task, the HPKE config id, and a sequence of
+*sub-requests*, each corresponding to a unique client report. Sub-requests are
+structured as follows:
+
+~~~
+struct {
+  opaque upload_id[16];
+  opaque enc<0..2^16-1>;
+  PAProto proto;
+  select (PAVerifyReq.proto) {
+    case prio:
+      PrioHelperShare;
+      PrioVerifyReq;
+    case hits:
+      HitsHelperShare;
+      HitsVerifyReq;
+  }
+} PAVerifyReq;
+~~~
+
+The `upload_id` is the upload id of the client's report and the `enc` field is the
+helper's encapsulated HPKE context sent in the reprot. The remainder of the me
+structure is dedicated to the protocol-specific helper share and request
+parameters used for the current round.
+
+**Response.**
+The helper handles well-formed requests as follows. (As usual, malformed
+requests are handled as described in {{pa-error-common-aborts}}.) It first looks
+for the PA parameters `PAParam` for which `PAVerifyReq.task.id ==
+PAParam.task.id`. Next, it looks up the HPKE config and corresponding secret key
+associated with `PAVerifyReq.key_config_id`. If not found, then it aborts and
+alerts the leader with "unrecognized key config". [NOTE: In this situation, the
+leader has no choice but to abort. This falls into the class of error scenarios
+that are addressable by running with multiple helpers.]
+
+The resposne is structured as a sequence of *sub-responses*, where the i-th
+sub-response corresponds to the sub-request for each i. As for sub-requests, the
+structure of each sub-response is specific to the PA protocol:
+
+~~~
+struct {
+   PAVerifyResp seq<1..2^24-1>;
+} PAVerifyRespSeq;
+
+struct {
+  PAProto;
+  select (PAVerifyResp.proto) {
+    case prio: PrioVerifyResp;
+    case hits: HitsVerifyResp;
+  }
+} PAVerifyReq;
+~~~
+
+Fopr each sub-request `PAVerifyReq`, the helper computes the corresponding
+sub-response as follows. It first checks that checks that `PAVerifyReq.proto ==
+PAPram.proto`. If not, it aborts and alerts the leader with "incorrect protocol
+for sub-request". Otherwise, It computes the HPKE context as
+
+~~~
+context = SetupBaseR(PAVerifyReq.enc, sk, [TODO])
+~~~
+
+where `sk` is the secret key corresponding to the HPKE config. Next, it computes
+the body of the `PAVerifyResp` according to the PA protocol.
+
+## Collect {#pa-collect}
+
+[TODO]
+
+## Error handling {#pa-error}
+
+A protocol participant *aborts* the protocol by tearing down the TLS connection
+with each of its peers.
+
+An *alert* is a message sent either in an HTTP request or response that signals
+to the receiver that the peer has aborted the protocol. The payload is
+
+~~~
+struct {
+  PATask task;
+  opaque payload<1..255>;
+} PAAlert;
+~~~
+
+where `task` is the associated PA task (this value is always known) and
+`payload` is the message. When sent by an aggregator in response to an HTTP
+request, the response status is 400. When sent in a request to an aggregator,
+the URL is always `[aggregator]/error`, where `[aggregator]` is the URL of the
+aggregator endpoint.
+
+[NOTE: It may be useful to include upload id for client->leader connections.]
+
+## Common abort conditions {#pa-error-common-aborts}
+
+The following specify the "boiler-plate" behavior for various error conditions.
+
+- The message type for the payload of each request and response is unique for a
+  given URL. If ever a client, aggregator, or collector receives a request or
+  response to a request with a malformed payload, then the receiver aborts and
+  alerts the peer with "unrecognized message".
+
+- Each POST request to an aggregator contains a `PATask`. If the aggregator does not
+  recognize the task, i.e., it can't find a `PAParam` for which `PATask.id ==
+  PAParam.task.id`, then it aborts and alerts the peer with "unrecognized task".
 
 # Prio {#prio}
 
-[TODO(cjpatton): Rework this section into a specification of the protocol.]
+[TODO: Define `PrioParam`]
+
+[TODO: Define `PrioUploadStartResp`]
+
+[TODO: Define `PrioHelperShare`]
+
+[TODO: Define `PrioLeaderShare`]
+
+[TODO: Define `PrioVerifyReq`]
+
+[TODO: Define `PrioVerifyResp`]
+
+[TODO(cjpatton): Rework the remainder of this section.]
 
 ## The input-validation protocol
 
@@ -454,7 +884,7 @@ One way to find suitable primes is to first choose choose b, then "probe" to
 find a prime of the desired size. The following SageMath script prints the
 parameters of a number of (probable) primes larger than 2^b for a given b:
 
-```
+~~~
 b = 116
 for s in range(0,1000,1):
     B = 2^b
@@ -462,7 +892,7 @@ for s in range(0,1000,1):
     if p-(B*s) == 1:
         bits = round(math.log2(p), 2)
         print(bits, p, GF(p).multiplicative_generator(), b, factor(s))
-```
+~~~
 
 ### Key encapsulation
 
@@ -512,8 +942,17 @@ prime?]]
 
 # Hits {#hits}
 
-[TODO:]
+[TODO: Define `HitsParam`]
 
+[TODO: Define `HitsUploadStartResp`]
+
+[TODO: Define `HitsHelperShare`]
+
+[TODO: Define `HitsLeaderShare`]
+
+[TODO: Define `HitsVerifyReq`]
+
+[TODO: Define `HitsVerifyResp`]
 
 # System design
 
