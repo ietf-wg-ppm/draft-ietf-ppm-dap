@@ -18,7 +18,7 @@ author:
 
 informative:
 
-  PRIO:
+  CB17:
     title: "Prio: Private, Robust, and Scalable Computation of Aggregate Statistics"
     date: 2017-03-14
     target: "https://crypto.stanford.edu/prio/paper.pdf"
@@ -26,6 +26,16 @@ informative:
       - ins: H. Corrigan-Gibbs
       - ins: D. Boneh
 
+  BBCp21:
+    title: "Lightweight Techniques for Private Heavy Hitters"
+    date: 2021-01-05
+    target: "https://eprint.iacr.org/2021/017"
+    author:
+      -ins: D. Boneh
+      -ins: E. Boyle
+      -ins: H. Corrigan-Gibbs
+      -ins: N. Gilboa
+      -ins: Y. Ishai
 
 --- abstract
 
@@ -35,21 +45,13 @@ TODO: writeme
 
 # Introduction
 
-This document describes an instantiation of Prio, a cryptosystem system designed
-by Henry Corrigan-Gibbs and others [GB17, BGG+19] that allows for
-privacy-preserving computation of statistics over sensitive user data. It works
-by distributing the computation over a set of servers in such a way that, as
-long as at least one server executes the protocol honestly, no input is ever
-seen in the clear.
-
-The goal of this document is to specify a protocol for executing Prio
-computations among a set of servers. We begin in {{overview}} with an overview
-of the protocol and a brief introduction cryptographic techniques underlying
-Prio. In the next section ({{security-requirements}}) we enumerate the security
-goals and non-goals of our protocol. In section {{operational-requirements}} we
-list the use cases our system needs to support, how it is configured, and any
-other operational constraints for the protocol. In {{protocol}} we specify the
-protocol itself.
+This document describes a framework for specifying protocols for
+privacy-preserving data-aggregation. Each protocol is executed by a large set of
+clients and a small set of servers. The servers' goal is to compute some
+aggregate statistic over the clients' inputs without learning the inputs
+themselves. This is made possible by distributing the computation among the
+servers in such a way that, as long as at least one of them executes the
+protocol honestly, no input is ever seen in the clear by any server.
 
 ## DISCLAIMER
 
@@ -102,41 +104,43 @@ document.
 
 # Overview {#overview}
 
-The protocol is executed by a large set of clients and a small set of
-servers.  We call the servers the *aggregators*. Each client's input to
-the protocol is a set of measurements (e.g., counts of some user behavior).
-Given the input set of measurements x[1], ..., x[n] held by n users, the goal is to
-compute y = F(x[1], ..., x[n]) for some aggregation function F, while
-revealing nothing else about the measurements.
+The protocol is executed by a large set of clients and a small set of servers.
+We call the servers the *aggregators*. Each client's input to the protocol is a
+set of measurements (e.g., counts of some user behavior). Given the input set
+of measurements `x_1, ..., x_n` held by `n` users, the goal of a
+*private aggregation (PA) protocol* is to compute `y = F(x_1, ..., x_n)` for
+some aggregation function `F` while revealing nothing else about the
+measurements.
 
+## Private aggregation via secret sharing
 
-## Secret sharing
+The main cryptographic tool used for achieving this privacy goal is *additive
+secret sharing*. Rather than send its input in the clear, each client splits
+its measurements into a sequence of *shares* and sends a share to each of the
+aggregators. Additive secret sharing has two important properties:
+- It's impossible to deduce the measurement without knowing *all* of the shares.
+- It allows the aggregators to compute the final output by first adding up their
+  measurements shares locally, then combining the results to obtain the final
+  output.
 
-Prio achieves this goal using additive secret sharing. Rather than send its
-input in the clear, each client "splits" its measurements into a sequence of "shares"
-and sends a share to each of the aggregators. This secret-sharing procedure has
-two important properties: first, it is impossible to deduce the measurement given only
-a proper subset of the shares; and second, it allows the aggregators to compute
-the final output by first adding up their measurements shares locally, then combining
-the results to obtain the final output.
+Consider an illustrative example. Suppose there are three clients and two
+aggregators. Each client `i` holds a single measurement in the form of a
+positive integer `x[i]`, and our goal is to compute the sum of the measurements
+of all clients. In this case, the protocol input is a single measurement
+consisting of a single positive integer; no additional encoding is done. Given
+this input, the first client splits its measurement `x[1]` with additive
+secret-sharing into a pair of integers `X[1,1]` and `X[1,2]` for which `x[1]` is
+equal to `X[1,1] + X[1,2]` modulo a prime number `p`. (For convenience, we will
+omit the mod `p` operator in the rest of this section.) It then uploads `X[1,1]`
+to one server `X[1,2]` to the other. The second client splits its measurement
+`x[2]` into `X[1,2]` and `X[2,2]`, uploads them to the servers, and so on.
 
-Consider an illustrative example. Suppose there are three clients and
-two aggregators. Each client i holds a single measurement in the form of
-a positive integer x[i], and our goal is to compute the sum of the
-measurements of all clients. In this case, the protocol input is a single measurement consisting of
-a single positive integer; no additional encoding is done. Given this input, the first client splits its
-measurement x[1] with additive secret-sharing into a pair of integers x[1,1] and x[1,2] for which
-x[1] = x[1,1] + x[1,2] modulo a prime p. (For convenience, we will omit the
-the "mod p" in the rest of this section.) It then uploads x[1,1] to
-one sever x[1,2] to the other. The second client splits its measurement x[2]
-into x[2,1] and x[2,2], uploads them to the servers, and so on.
-
-Now the first aggregator is in possession of shares x[1,1], x[2,1], and
-x[3,1], and the second aggregator is in possession of shares x[1,2],
-x[2,2], and x[3,2]. Each aggregator computes the sum of its  shares. Let
-A[1] denote the first aggregator's share of the sum and let A[2] denote the
+Now the first aggregator is in possession of shares `X[1,1]`, `X[2,1]`, and
+`X[3,1]` and the second aggregator is in possession of shares `X[2,1]`,
+`X[2,2]`, and `X[2,3]`. Each aggregator computes the sum of its shares; let
+`A[1]` denote the first aggregator's share of the sum and let `A[2]` denote the
 second aggregator's share of the sum. In the last step, aggregators combine
-their sum shares to obtain the final output y = A[1] + A[2]. This is correct
+their sum shares to obtain the final output `y = A[1] + A[2]`. This is correct
 because modular addition is commutative. I.e.,
 
 ```
@@ -147,17 +151,21 @@ because modular addition is commutative. I.e.,
       = F(x[1], x[2], x[3])
 ```
 
-This is essentially how all Prio computations are performed: measurements
-are encoded into in a manner that allows the function F to be expressed as a sum of
-the aggregators' shares of the aggregate; clients split their encoded values into
-shares, sending one share to each server; the servers add up their shares;
-and the servers combine their aggregate shares to get the final output of F. Not
-all aggregate functions can be expressed this way, however. Prio supports a
-limited set of aggregation functions, some of which we highlight below:
+**Prio.**
+This approach can be used to privately compute any function `F` that can be
+expressed as a function of the sum of the users' inputs. In Prio {{CB17}}, each
+user splits its input into shares and sends each share to one of the
+aggregators. The aggregators sum up their input shares. Once all the shares have
+been aggregated, they combine their shares of the aggregate to get the final
+output.
 
-- Simple statistics, like sum, mean, min, max, variance, and standard
-  deviation; [[OPEN ISSUE: It's possible to estimate quantiles such as the
-  median. How practical is this?]]
+Not all aggregate functions can be expressed this way efficiently, however. Prio
+supports only a limited set of aggregation functions, some of which we highlight
+below:
+
+- Simple statistics, like sum, mean, min, max, variance, and standard deviation;
+- Histograms with fixed bin sizes (also allows estimation of quantiles, e.g.,
+  the median);
 - More advanced statistics, like linear regression;
 - Bitwise-OR and -AND on bit strings; and
 - Computation of data structures, like Bloom filters, counting Bloom filters,
@@ -166,24 +174,39 @@ limited set of aggregation functions, some of which we highlight below:
 This variety of aggregate types is sufficient to support a wide variety of
 data aggregation tasks.
 
+**Hits.**
+A common PA task that can't be solved efficiently with Prio is the
+`t`-*heavy-hitters* problem {{BBCp21}}. In this setting, each user is in
+possession of a single `n`-bit string, and the goal is to compute the compute
+the set of strings that occur at least `t` times. One reason that Prio doesn't
+apply to this problem is that the proof generated by the client would be huge.
 
-## Validating inputs
+[TODO: Provide an overview of the protocol of {{BBCp21}} and provide some
+intuition about how additive secret sharing is used.]
 
-A crucial task of any data collection pipeline is ensuring that the input data
-is valid. Going back to the example above, it's often useful to assert that each
-measurement is in a certain range, e.g., [0, 2^k) for some k. This straight-forward
-task is complicated in Prio by the fact that the inputs are secret shared. In
-particular, a malicious client can corrupt the computation by submitting random
-integers instead of a proper secret sharing of a valid input.
+## Validating inputs in zero knowledge
 
-To solve this problem, Prio introduces a light-weight zero-knowledge proof
-system designed to operate on secret shared data. In addition to its input
-share, each client sends to each aggregator a share of a "proof" of the input's
-validity. The aggregators use these proof shares in a protocol designed to
-establish the input's validity, without leaking the input itself. We describe
-this input-validation protocol in detail in [[TODO:citeme]].
+An essential task of any data collection pipeline is ensuring that the input
+data is "valid". Going back to the example above, it's often useful to assert
+that each measurement is in a certain range, e.g., `[0, 2^k)` for some `k`.
+This straight-forward task is complicated in our setting by the fact that the
+inputs are secret shared. In particular, a malicious client can corrupt the
+computation by submitting random integers instead of a proper secret sharing of
+a valid input.
 
-## Assembling Reports
+To solve this problem, in each PA protocol, the client generates a
+zero-knowledge proof of its input's validity that the aggregators use
+to verify that their shares correspond to as valid input. The verification
+procedure is designed to ensure that the aggregators learn nothing about the
+input beyond its validity.
+
+After encoding its measurements as an input to the PA protocol, the client
+generates a *proof* of the input's validity. It then splits the proof into
+shares and sends a share of both the proof and input to each aggregator. The
+aggregators use their shares of the proof to decide if their input shares
+correspond to a valid input.
+
+## Collecting reports
 
 As noted above, each client has a collection of measurements that it
 wants to send. Each measurement is characterized by a set of
@@ -205,90 +228,74 @@ that go into a report is referred to as the "input" to the report.
 Because each report is independent, for the remainder of this document
 we focus on a single report and its inputs.
 
+[NOTE(cjpatton): This paragraph is slightly misleading. If you want to do a
+range check for the measurement (this will usually be necessary, IMO) then
+you'll need a few extra field elements to encode the input.]
 The client uses the statistic to be computed in order to know how to
 encode the measurement. For instance, if the statistic is mean, then
 the measurement can be encoded directly. However, if the statistic is
-standard deviation, then the client must send both x and x^2.  Section
+standard deviation, then the client must send both `x` and `x^2`. Section
 [TODO: cite to internal description of how to encode]
 describes how to encode measurements for each statistic.
 The client uses the validity rules to construct the zero knowledge
 proof showing that the encoded measurement is valid.
 
-
 ## Data flow
 
-At a high level, the flow of data from clients to the data-collection endpoint
-is as follows.
+[TODO: Rework this subsection so that all terms needed in the rest of the
+document are defined.]
+
+[TODO: Explain that the downside of using secret sharing is that the protocol
+requires at least two servers to be online during the entire data aggregation
+process. To ameliorate this problem, we run the protocol in parallel with
+multiple pairs of aggregators.]
+
+Each PA task in this document is divided into three sub-protocols as follows.
 
 ```
                     +------------+
                     |            |
-                    | Aggregator |
-                    |            |
-                    +-^--------^-+
-                      |        |
-                  (2) |        | (3)
-                      |        |
-+--------+ (1)      +-v--------v-+         +-----------+
-|        +---------->            |     (3) |           |
+                    |   Helper   <---------------+
+                    |            |               |
+                    +-----^------+               |
+                          |                      |
+                       2. |                   3. |
+                          |                      |
++--------+  1.      +-----v------+         +-----v-----+
+|        +---------->            |      3. |           |
 | Client +---------->   Leader   +---------> Collector |
 |        +---------->            |         |           |
-+--------+          +-^--------^-+         +-----------+
-                      |        |
-                  (2) |        | (3)
-                      |        |
-                    +-v--------v-+
-                    |            |
-                    | Aggregator |
++--------+          +-----^------+         +-----^-----+
+                          |                      |
+                       2. |                   3. |
+                          |                      |
+                    +-----V------+               |
+                    |            |               |
+                    |   Helper   <---------------+
                     |            |
                     +------------+
 ```
 
-1. **Upload:** Each client assembles the measurements it wants to send into
-   the input to Prio. It generates a proof of its input's validity and splits
-   the input and proof into s >= 2 shares. Rather than send these shares to the
-   aggregators directly, the client encrypts each share under the aggregator's
-   public key and sends the ciphertext to a special aggregator, called the
-   *leader*. The leader is charged with coordinating the execution of the
-   input-validation protocol and the release of outputs to the data-collection
-   endpoint. (Details about aggregator discovery is in [[TODO:citeme]].)
-1. **Verify and accumulate:** The leader initializes the input-validation
-   protocol by sending the encrypted shares to the aggregators. (Details about
-   input validation and how it pertains to system security properties are in
-   [[TODO:citeme]].) If the input is deemed valid, then each aggregator adds its input
-   share into its own share of the output.
-1. **Collect:** The leader requests each aggregator's share of the output. It
-   adds them together to obtain the final output, which it sends to the data
-   collector. [[OPEN ISSUE: By assembling the final output, the leader gets to
-   learn more information than the other aggregators. Maybe the aggregators
-   should send their shares directly to the collector?]]
+1. **Upload:** Each client assembles the measurements into an input for the given
+   PA protocol. It generates a proof of its input's validity and splits the
+   input and proof into two shares, one for the leader and another for a helper.
+   Rather than send each share to each aggregator directly, the client encrypts
+   each share under the helper's public key and sends the ciphertext to the
+   leader. The client repeats this procedure for each helper specified by the
+   leader.
+1. **Verify:** The leader initializes the input-validation protocol by sending
+   the encrypted shares to the aggregators. If the input is deemed valid, then
+   each aggregator stores its input share for processing later on.
+1. **Collect:** Finally, the collector interacts with the aggregators in order
+   to obtain the final output of the protocol.
 
-Note: Two non-colluding aggregators --- one leader and one standard aggregator
---- are required to provide protect the inputs' privacy. Additional aggregators
-may be used to make the system more resilient; see [[TODO:citeme]].
+# PA protocols {#pa}
 
-# System design
+[TODO(cjpatton)]
 
-[[OPEN ISSUE: This section seems like a catch-all for things not in other
-sections. Perhaps there is a natural home for aggregator discovery, share
-uploading, open issues, and system parameters?]]
+# Prio {#prio}
 
-## Aggregator discovery
-
-[[OPEN ISSUE: writeme]]
-
-## Share uploading
-
-[[OPEN ISSUE: writeme]]
-
-## Open questions and system parameters {#questions-and-params}
-
-[[OPEN ISSUE: discuss batch size parameter and thresholds]]
-[[OPEN ISSUE: discuss f^ leakage differences from [GB17]]]
-
-# Protocol {#protocol}
-
-[[TODO(cjpatton): Rework this section into a specification of the protocol.]]
+[TODO(cjpatton): Rework this section into a specification of the protocol.]
 
 ## The input-validation protocol
 
@@ -502,6 +509,30 @@ as an l-byte integer and reducing it modulo the prime modulus.
 small amount of bias on the output. How much bias is induced depends on the how
 close the prime is to a power of 2. Should this be a criterion for selecting the
 prime?]]
+
+# Hits {#hits}
+
+[TODO:]
+
+
+# System design
+
+[[OPEN ISSUE: This section seems like a catch-all for things not in other
+sections. Perhaps there is a natural home for aggregator discovery, share
+uploading, open issues, and system parameters?]]
+
+## Aggregator discovery
+
+[[OPEN ISSUE: writeme]]
+
+## Share uploading
+
+[[OPEN ISSUE: writeme]]
+
+## Open questions and system parameters {#questions-and-params}
+
+[[OPEN ISSUE: discuss batch size parameter and thresholds]]
+[[OPEN ISSUE: discuss f^ leakage differences from [GB17]]]
 
 
 # Operational Considerations
