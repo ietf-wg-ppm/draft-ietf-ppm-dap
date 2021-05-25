@@ -296,16 +296,15 @@ Each PA task in this document is divided into three sub-protocols as follows.
 This section specifies a protocol for executing generic PA tasks. Concrete
 PA protocols are described in {{prio}} and {{hits}}.
 
-Each round of the protocol corresponds to an HTTP request and response. We
-assume that some transport layer security protocol (e.g., TLS or QUIC) is used
-between each pair of parties and that the server is always authenticated.
+Each round of the protocol corresponds to an HTTP request and response. The
+content type of each request is "application/octet-stream". We assume that some
+transport layer security protocol (e.g., TLS or QUIC) is used between each pair
+of parties and that the server is always authenticated.
 
 [TODO: Decide how to authenticate the leader in leader-to-helper and
 aggregator-to-collector connections. One option is to use client certificates
 for TLS; another is to have the leader sign its messages directly, as in Prio
 v2.]
-
-[TODO: Decide the "content type" for HTTP requests.]
 
 [TODO: @chris-wood suggested we specify APIs for producing and consuming each of
 the messages in the protocol. Specific PA protocols would implement this API.]
@@ -341,7 +340,7 @@ field, `id` is an opaque identifier used by the clients, aggregators, and
 collector to uniquely identify the PA task at hand. We will call it the *task
 id* in the remainder.
 
-[TODO: Decide how the `PATask` is negotiated. Eventually this will be
+[TODO: Decide how the `PATask` is configured. Eventually this will be
 distributed, in an authenticated manner, from the collector the other parties.
 For now, we just assume this value is negotiated out-of-band.]
 
@@ -399,7 +398,8 @@ decrypt a share it receives.
 
 ## Pre-conditions
 
-We assume the following conditions hold before the protocol begins:
+We assume the following conditions hold before the client begins uploading its
+data:
 1. The client, aggregators, and collector are configured with a specific PA task.
 1. The client knows the URL of the leader endpoint, e.g., `example.com/metrics`.
    We write this URL as `[leader]` below. (We write `[helper]` for a helper's
