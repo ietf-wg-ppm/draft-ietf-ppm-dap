@@ -672,9 +672,6 @@ the body of the `PAVerifyResp` according to the PA protocol.
 
 ## Error handling {#pa-error}
 
-A protocol participant *aborts* the protocol by tearing down the TLS connection
-with each of its peers.
-
 An *alert* is a message sent either in an HTTP request or response that signals
 to the receiver that the peer has aborted the protocol. The payload is
 
