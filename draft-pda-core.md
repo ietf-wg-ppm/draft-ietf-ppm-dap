@@ -446,13 +446,11 @@ message:
 ~~~
 struct {
   PATask task;
-  opaque id[16];
 } PAUploadStartReq;
 ~~~
 
-The first field, `task` corresponds to the PA task for which a report will be
-generated. The second, `id` is the client's *upload id*, which it chooses at
-random.
+The `task` field corresponds to the PA task for which a report will be
+generated.
 
 **Response.**
 The leader responds to well-formed requests to `[leader]/upload_start` with
@@ -535,7 +533,6 @@ follows:
 ~~~
 struct {
   PATask task;                 // Equal to PAUploadStartReq.task
-  opaque id[16];               // Equal to PAUploadStartReq.id
   uint8 helper_hpke_config_id; // Equal to HpkeConfig.id
   Url helper_url;
   PAHelperShare helper_share;
@@ -544,13 +541,13 @@ struct {
 ~~~
 
 We sometimes refer to this message as the *report*. The message contains the
-`task` and `id` fields of the previous request. In addition, it includes the
-helper's HPKE config id, endpoint URL, and the helper and leader shares.
-The helper share has the following structure:
+`task` fields of the previous request. In addition, it includes the helper's
+HPKE config id, endpoint URL, and the helper and leader shares.  The helper
+share has the following structure:
 
 ~~~
 struct {
-  opaque enc<1..2^16-1>; // Equal to helper_enc
+  opaque enc<1..2^16-1>;
   PAProto proto;
   select (PAHelperShare.proto) {
     case prio: PrioHelperShare;
@@ -612,7 +609,6 @@ structured as follows:
 
 ~~~
 struct {
-  opaque upload_id[16];
   opaque enc<0..2^16-1>;
   PAProto proto;
   select (PAVerifyReq.proto) {
@@ -626,10 +622,9 @@ struct {
 } PAVerifyReq;
 ~~~
 
-The `upload_id` is the upload id of the client's report and the `enc` field is the
-helper's encapsulated HPKE context sent in the reprot. The remainder of the me
-structure is dedicated to the protocol-specific helper share and request
-parameters used for the current round.
+The `enc` field is the helper's encapsulated HPKE context sent in the report.
+The remainder of the me structure is dedicated to the protocol-specific helper
+share and request parameters used for the current round.
 
 **Response.**
 The helper handles well-formed requests as follows. (As usual, malformed
@@ -641,7 +636,7 @@ alerts the leader with "unrecognized key config". [NOTE: In this situation, the
 leader has no choice but to abort. This falls into the class of error scenarios
 that are addressable by running with multiple helpers.]
 
-The resposne is structured as a sequence of *sub-responses*, where the i-th
+The response is structured as a sequence of *sub-responses*, where the i-th
 sub-response corresponds to the sub-request for each i. As for sub-requests, the
 structure of each sub-response is specific to the PA protocol:
 
@@ -695,8 +690,6 @@ where `task` is the associated PA task (this value is always known) and
 request, the response status is 400. When sent in a request to an aggregator,
 the URL is always `[aggregator]/error`, where `[aggregator]` is the URL of the
 aggregator endpoint.
-
-[NOTE: It may be useful to include upload id for client->leader connections.]
 
 ## Common abort conditions {#pa-error-common-aborts}
 
