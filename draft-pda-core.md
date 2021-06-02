@@ -570,7 +570,7 @@ struct {
 Note that the leader share is sent not encrypted.
 
 The leader responds to well-formed requests to `[leader]/upload_finish` with
-status 200 and an empty payload. Malformed requests are handled as described in
+status 200 and an empty body. Malformed requests are handled as described in
 {{pa-error-common-aborts}}.
 
 ## Verify {#pa-verify}
