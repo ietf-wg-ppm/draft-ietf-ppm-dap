@@ -433,8 +433,7 @@ should work.]
 supporting Prio-like proof systems in which the leader sends the client a
 "challenge" it uses to generate the proof. (See the SIMD construction of
 {{BBCp19}}, Section 5.2. Here, the "challenge" is a randomly generated field
-element.) Because the client/leader are using TLS, another way to implement this
-would be to export a secret from the key schedule.]
+element.)]
 
 ### Upload Start
 
