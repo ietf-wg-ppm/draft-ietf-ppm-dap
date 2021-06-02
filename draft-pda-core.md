@@ -475,6 +475,7 @@ For each URL `[helper]` in `PAUploadStartResp.helper_urls`, the client sends a
 GET request to `[helper]/key_config`. The helper responds with status 200 and an
 `HpkeConfig` message. Next, the client collects the set of helpers it will
 upload shares to. It ignores a helper if:
+
 * the client and helper failed to establish a secure, helper-authenticated
   channel;
 * the GET request to the helper URL failed or didn't return a valid key config;
