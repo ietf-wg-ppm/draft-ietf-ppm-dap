@@ -320,7 +320,7 @@ elide the verbs altogether and refer to {{pa-error-common-aborts}}.
 
 ## Configuration {#pa-config}
 
-**Tasks.**
+### Tasks
 Each PA protocol is associated with a *PA task* that specifies the measurements
 that are to be collected and the protocol that will be used to collect them:
 
@@ -344,7 +344,8 @@ id* in the remainder.
 distributed, in an authenticated manner, from the collector the other parties.
 For now, we just assume this value is negotiated out-of-band.]
 
-**Parameters.**
+### Parameters
+
 Associated to each task is the set of PA protocol parameters. These are encoded
 by the `PAParam` structure, which also includes the task:
 
@@ -439,7 +440,6 @@ would be to export a secret from the key schedule.]
 
 ### Upload Start
 
-**Request.**
 The client sends a POST request to `[leader]/upload_start` with the following
 message:
 
@@ -452,7 +452,6 @@ struct {
 The `task` field corresponds to the PA task for which a report will be
 generated.
 
-**Response.**
 The leader responds to well-formed requests to `[leader]/upload_start` with
 status 200 and the following message:
 
@@ -475,7 +474,6 @@ requests is specified in {{pa-error-common-aborts}}.
 
 ### Upload Finish
 
-**Gathering the set of helpers.**
 For each URL `[helper]` in `PAUploadStartResp.helper_urls`, the client sends a
 GET request to `[helper]/key_config`. The helper responds with status 200 and an
 `HpkeConfig` message. Next, the client collects the set of helpers it will
@@ -498,10 +496,8 @@ example, that clients are prohibited from talking to helpers but not the leader.
 Is it OK that leaders learn that about a client? I'm not sure, so I'd be
 inclined to remove this unless we have a concrete use case.]
 
-**Request.**
-The client begins by [setting up an HPKE
-context](https://www.ietf.org/archive/id/draft-irtf-cfrg-hpke-08.html#name-encryption-to-a-public-key,)
-for the helper by running
+The client begins by setting up an HPKE {{!I-D.irtf-cfrg-hpke}} context for
+the helper by running
 
 ~~~
 enc, context = SetupBaseS(pk, [TODO])
@@ -526,6 +522,9 @@ steps --- encode, prove, split, and encrypt --- are specific to the PA protocol.
 
 [OPEN ISSUE: Is it safe to generate the proof once, then secret-share between
 each (leader, helper) pair? Probably not in general, but maybe for Prio?]
+
+[OPEN ISSUE: allow server to send joint randomness in UploadStartResp, and then
+enforce uniqueness via double-spend state or something else]
 
 The payload of the POST request to `[leader]/upload_finish` is structured as
 follows:
@@ -572,7 +571,6 @@ struct {
 
 Note that the leader share is sent not encrypted.
 
-**Response.**
 The leader responds to well-formed requests to `[leader]/upload_finish` with
 status 200 and an empty payload. Malformed requests are handled as described in
 {{pa-error-common-aborts}}.
@@ -589,7 +587,6 @@ leader to the helper. At the end of this phase, the leader and helper will have
 decided whether a set of client inputs are valid. For each valid input, they
 proceed as described in {{pa-collect}}.
 
-**Request.**
 The leader begins by collecting a sequence of reports that are all associated
 with the same PA task, helper URL, and helper HPKE config id. Let `[helper]`
 denote the the URL. The leader sends a POST request to `[helper]/verify` with
@@ -609,7 +606,7 @@ structured as follows:
 
 ~~~
 struct {
-  opaque enc<0..2^16-1>;
+  opaque enc<1..2^16-1>;
   PAProto proto;
   select (PAVerifyReq.proto) {
     case prio:
@@ -626,7 +623,6 @@ The `enc` field is the helper's encapsulated HPKE context sent in the report.
 The remainder of the me structure is dedicated to the protocol-specific helper
 share and request parameters used for the current round.
 
-**Response.**
 The helper handles well-formed requests as follows. (As usual, malformed
 requests are handled as described in {{pa-error-common-aborts}}.) It first looks
 for the PA parameters `PAParam` for which `PAVerifyReq.task.id ==
@@ -637,8 +633,8 @@ leader has no choice but to abort. This falls into the class of error scenarios
 that are addressable by running with multiple helpers.]
 
 The response is structured as a sequence of *sub-responses*, where the i-th
-sub-response corresponds to the sub-request for each i. As for sub-requests, the
-structure of each sub-response is specific to the PA protocol:
+sub-response corresponds to the sub-request for each i. The structure of each
+sub-response is specific to the PA protocol:
 
 ~~~
 struct {
@@ -651,10 +647,10 @@ struct {
     case prio: PrioVerifyResp;
     case hits: HitsVerifyResp;
   }
-} PAVerifyReq;
+} PAVerifyResp;
 ~~~
 
-Fopr each sub-request `PAVerifyReq`, the helper computes the corresponding
+For each sub-request `PAVerifyReq`, the helper computes the corresponding
 sub-response as follows. It first checks that checks that `PAVerifyReq.proto ==
 PAPram.proto`. If not, it aborts and alerts the leader with "incorrect protocol
 for sub-request". Otherwise, It computes the HPKE context as
@@ -665,6 +661,8 @@ context = SetupBaseR(PAVerifyReq.enc, sk, [TODO])
 
 where `sk` is the secret key corresponding to the HPKE config. Next, it computes
 the body of the `PAVerifyResp` according to the PA protocol.
+
+[OPEN ISSUE: encrypt and store Helper state at the Leader]
 
 ## Collect {#pa-collect}
 
