@@ -331,9 +331,6 @@ struct {
 } PATask;
 
 ~~~
-[TODO: Decide how to serialize protocol messages. We're using TLS syntax for
-now, but there's no reason to stick with it other than most folks are familiar
-with it.]
 
 The first field, `version` specifies the version of this document. The second
 field, `id` is an opaque identifier used by the clients, aggregators, and
