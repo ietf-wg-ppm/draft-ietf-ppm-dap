@@ -650,7 +650,7 @@ struct {
 
 For each sub-request `PAVerifyReq`, the helper computes the corresponding
 sub-response as follows. It first checks that checks that `PAVerifyReq.proto ==
-PAPram.proto`. If not, it aborts and alerts the leader with "incorrect protocol
+PAParam.proto`. If not, it aborts and alerts the leader with "incorrect protocol
 for sub-request". Otherwise, It computes the HPKE context as
 
 ~~~
