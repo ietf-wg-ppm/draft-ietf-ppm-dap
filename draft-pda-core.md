@@ -398,6 +398,7 @@ decrypt a share it receives.
 
 We assume the following conditions hold before the client begins uploading its
 data:
+
 1. The client, aggregators, and collector are configured with a specific PA task.
 1. The client knows the URL of the leader endpoint, e.g., `example.com/metrics`.
    We write this URL as `[leader]` below. (We write `[helper]` for a helper's
