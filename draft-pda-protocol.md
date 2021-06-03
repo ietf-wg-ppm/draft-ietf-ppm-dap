@@ -1,6 +1,6 @@
 ---
 title: "Private Data Aggregation Protocol"
-docname: draft-pda-core-latest
+docname: draft-pda-protocol-latest
 category: std
 ipr: trust200902
 area: ART
