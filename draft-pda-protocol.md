@@ -816,7 +816,7 @@ trick.
 Let x be an element of K^n for some n. Suppose we split x into {x} by choosing
 {x:1}, ..., {x:s-1} at random and letting {x:s} = x - ({x:1} + ... + {x:s-1}).
 We could instead choose s-1 random seeds k[s-1], ..., k[s-1] for a pseudorandom
-number generator PRG and let {x:i} = PRG(k[i], n) for each i. This effectively
+number generator PRNG and let {x:i} = PRNG(k[i], n) for each i. This effectively
 "compresses" s-1 of the shares to O(1) space.
 [[OPEN ISSUE:Move this elsewhere or something.]]]
 
@@ -901,7 +901,7 @@ A KEM is comprised of two algorithms:
 
 To generate an aggregator's share, the client runs (c[i], k[i]) := Encaps(pk[i])
 and sends c[i] to the aggregator. To compute its share, the aggregator would run
-k[i] := Decaps(sk[i], c[i]) and compute its share as {x:i} = PRG(k[i], n).
+k[i] := Decaps(sk[i], c[i]) and compute its share as {x:i} = PRNG(k[i], n).
 
 [HPKE](https://datatracker.ietf.org/doc/draft-irtf-cfrg-hpke/) is a natural
 candidate for instantiating the KEM. In "Export-Only" mode, HPKE provides an
@@ -913,20 +913,18 @@ variety of languages.
 
 ### Pseudorandom number generation
 
-A suitable PRG will have the following syntax. Fix a finite field K:
+A suitable PRNG will have the following syntax. Fix a finite field K:
 
-1. x := PRG(k, n) denotes generation of a vector of n elements of K.
+1. x := PRNG(k, n) denotes generation of a vector of n elements of K.
 
-This can be instantiated using a standard stream cipher, e.g.., ChaCha20 as
-follows. Interpret k as the cipher key, and using a fixed nonce, generate l\*n
-bytes of output, where l is the number of bytes needed to encode an element of
-K, then map each chunk of l bytes to an element of K by interpreting the chunk
-as an l-byte integer and reducing it modulo the prime modulus.
-
-[[OPEN ISSUE: Mapping the output of PRG(.,.) to a vector over K induces a
-small amount of bias on the output. How much bias is induced depends on the how
-close the prime is to a power of 2. Should this be a criterion for selecting the
-prime?]]
+This can be instantiated using a standard stream cipher, e.g., AES-CTR, as
+follows. Interpret the seed k as the key and IV for generating the AES-CTR key
+stream. Proceed by rejection sampling, as follows. Let m be the number of bits
+needed to encode an element of K. Generate the next m bits of key stream and
+interpret the bytes as an integer x, clearing the most significant m - l bits,
+where l is the bit-length of the modulus p. If x < p, then output x. Otherwise,
+generate the next m bits of key stream and try again. Repeat this process
+indefinitely until a suitable output is found.
 
 # Hits {#hits}
 
