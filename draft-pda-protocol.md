@@ -75,8 +75,8 @@ document.
 1. False input: An input that is valid, but incorrect. For example, if the data
    being gathered is whether or not users have clicked on a particular button, a
    client could report clicks when none occurred.
-1. Input: The original data emitted by a client, before any encryption or secret
-   sharing scheme is applied. This may include multiple measurements.
+1. Input: The measurement (or measurements) emitted by a client, before any
+   encryption or secret sharing scheme is applied.
 1. Input share: one of the shares output by feeding an input into a secret
    sharing scheme. Each share is to be transmitted to one of the participating
    aggregators.
@@ -86,6 +86,8 @@ document.
 1. Invalid input: An input for which the input validation protocol fails. For
    example, if the input is meant to be a  bit vectors, then `[2, 1, 0]` is
    invalid.
+1. Measurement: A single value (e.g., a count) being reported by a client.
+   Multiple measurements may be grouped into a single protocol input.
 1. Leader: A distinguished aggregator that coordinates input validation and data
    collection.
 1. Output: A reduction over the inputs, for instance a statistical aggregation,
@@ -99,8 +101,8 @@ document.
    client's input.
 1. Proof share: A share of a proof, used by an aggregator during the
    input-validation protocol.
-1. Measurement: A single value (e.g., a count) being reported by a client.
-   Multiple measurements may be grouped into a single protocol input.
+1. Report: Uploaded to the leader from the client. A report contains the
+   secret-shared and encrypted input and proof.
 
 # Overview {#overview}
 
