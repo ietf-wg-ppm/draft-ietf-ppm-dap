@@ -573,6 +573,11 @@ The leader responds to well-formed requests to `[leader]/upload_finish` with
 status 200 and an empty body. Malformed requests are handled as described in
 {{pa-error-common-aborts}}.
 
+[TODO: Since we're running the protocol with multiple cohorts of aggregators, the
+collector needs to decide how to pick which cohort has the "correct" output.
+This might be the cohort with the largest batch of inputs. Figure this out once
+the collection is specified.]
+
 ## Verify {#pa-verify}
 
 [TODO: Add an illustration of this sub-protocol.]
