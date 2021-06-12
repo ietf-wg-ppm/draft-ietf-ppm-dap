@@ -48,7 +48,7 @@ jobs:
       if: ${{ github.event_name == 'push' }}
       with:
         make: gh-pages
-        token: ${{ secrets.GITHUB_TOKEN }}
+        token: ${{ secrets.LE_AUTOMATON_TOKEN }}
 
     - name: "Archive Built Drafts"
       uses: actions/upload-artifact@v2
