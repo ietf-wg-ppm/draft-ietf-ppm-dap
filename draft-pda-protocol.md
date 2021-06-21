@@ -754,7 +754,7 @@ criteria:
    for large b and odd s. Then g^s is a principle, 2^b-th root of unity (i.e.,
    g^(s\*2^b) = 1), where g is the generator of the multiplicative subgroup.
    This fact allows us to quickly evaluate and interpolate polynomials at 2^a-th
-   roots of unity for any 1 <= a <= b. Note that b imposes n upper bound on the
+   roots of unity for any 1 <= a <= b. Note that b imposes an upper bound on the
    size of proofs, so it should be large enough to accommodate all foreseeable
    use cases. Something like b >= 20 is probably good enough.
 1. **As close to a power of two as possible.** We use rejection sampling to map
