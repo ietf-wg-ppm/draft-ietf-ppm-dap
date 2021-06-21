@@ -26,6 +26,17 @@ informative:
       - ins: H. Corrigan-Gibbs
       - ins: D. Boneh
 
+  BBCp19:
+    title: "Zero-Knowledge Proofs on Secret-Shared Data via Fully Linear PCPs"
+    date: 2021-01-05
+    target: "https://eprint.iacr.org/2019/188"
+    author:
+      -ins: D. Boneh
+      -ins: E. Boyle
+      -ins: H. Corrigan-Gibbs
+      -ins: N. Gilboa
+      -ins: Y. Ishai
+
   BBCp21:
     title: "Lightweight Techniques for Private Heavy Hitters"
     date: 2021-01-05
