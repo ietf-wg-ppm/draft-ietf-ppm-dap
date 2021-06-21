@@ -718,116 +718,7 @@ The following specify the "boiler-plate" behavior for various error conditions.
 
 [TODO: Define `PrioVerifyResp`]
 
-[TODO(cjpatton): Rework the remainder of this section.]
-
-## The input-validation protocol
-
-Each run of the Prio protocol is parameterized by a finite field, which we will
-call K, and an integer n. Each client encodes its input as a length-n vector of
-element of K. The length of the vector depends on the type of data being
-collected. A single field element may be sufficient for some applications,
-whereas more sophisticated measurements will require larger encodings.
-Each client needs to use the same encoding of inputs into vectors; if there
-are multiple measurements in a single input, they will need to be in
-a consistent order.
-
-In order to share x between s servers, we split it up into s shares
-{x:1}, ..., {x:s}, where {x:i} is the share held by the i-th party. We
-write {x} as shorthand for the sequence {x:1}, ..., {x:s}.
-
-Prio combines standard [linear secret
-sharing](https://en.wikipedia.org/wiki/Secret_sharing#t_=_n) with a new type of
-probabilistically checkable proof (PCP) system, called a fully linear PCP. The
-aggregrators jointly validate the proof of correctness of the input. Before the
-protocol begins, the aggregators agree on joint randomness r and designate one
-of the aggregators as the leader.
-
-The input-input validation protocol can be described in terms of three main
-algorithms:
-
-1. pf := Prove(x) denotes generation of a proof pf of the validity of input x.
-   This algorithm is executed by the client.
-1. {vf:i} := Query({x:i}, {pf:i}, r) denotes computation of the verification
-   share {vf:i} for input share {x:i} and proof share {pf:i}. This algorithm is
-   executed by each of the aggregators; input r denotes the joint randomness
-   shared by all of the aggregators.
-1. b := Decide({vf}, r) denotes the execution of the decision procedure on input
-   shares {vf} and joint randomness r. The output b is a boolean indicating
-   whether the input is deemed valid. This algorithm is run by the leader.
-
-The values above have following types:
-
-1. Input x is vector of length n elements of K.
-1. Proof pf is a vector of length p(n) of elements of K.
-1. The joint randomness r is a vector of length u(n) of elements of K.
-1. Each verification share {vf:i} is a vector of length v(n) of elements of K.
-
-Above, p(n), u(n), and v(n) are functions that we specify later.
-
-The protocol proceeds as follows:
-
-1. The client runs pf := Prove(x). It splits x and pf into {x} and {pf}
-   respectively and sends ({x:i}, {pf:i}) to aggregator i.
-1. Each aggregator i runs {vf:i} := Query({x:i}, {pf:i}, r) ands sends {vf:i} to
-   the leader.
-1. The leader runs b := Decide({vf}, r) and sends b to each of the aggregators.
-
-If b=True, then each aggregator i adds its input share {x:i} into its share of the
-aggregate. Once a sufficient number of inputs have been validated and
-aggregated, the aggregators send their aggregate shares to the leader, who adds
-them together to obtain the final result.
-
-[[TODO: Sketch out the b=1 path.]]
-
-**Proof generation and verification.**
-[[TODO: Describe how to construct proof systems for languages recognized by
-validity circuits with G-gates, a la {{?BBCp19=DOI.10.1007/978-3-030-26954-8_3}}, Theorem 4.3.]]
-
-**Security parameters.**
-[[TODO: Define completeness, soundness, and honest-verifier zero-knowledge for
-fully linear PCPs and state bounds for {{BBCp19}}, Theorem 4.3. This bound will
-guide the selection of the field best suited for the data type and
-application.]]
-
-**Consensus protocol.**
-[[TODO: Describe how the aggregators pick the leader and the joint randomness.]]
-
-**Key distribution.**
-[[TODO: Decide how clients obtain aggregators' public keys.]]
-
-## Changes to the input-validation protocol
-
-**Coordinating state.**
-The state of the input-validation protocol is maintained by the leader; except
-for aggregation of the input shares, the other aggregators are completely
-stateless. In order to achieve this:
-
-1. The client sends all of its shares to the leader. To maintain privacy, the
-   client encrypts each (input, proof) share under the public key of the share's
-   recipient.
-1. The leader forwards each encrypted share to its intended recipient. Each
-   aggregator decrypts its input and proof share, computes its verification
-   share, and sends its verification share to the aggregator as usual.
-1. If b=1 in the last step, then the leader also sends along the encrypted input
-   share to each aggregator so that they can decrypt and aggregate the share
-   without needing to cache the input share from the previous step.
-
-**Minimizing communication overhead.**
-In most linear secret sharing schemes, the length of each share is equal to the
-length of the input. Therefore, the communication overhead for the client is
-O(s\*(n+p(n))). This can be reduced to O(s+n+p(n)) with the following standard
-trick.
-
-Let x be an element of K^n for some n. Suppose we split x into {x} by choosing
-{x:1}, ..., {x:s-1} at random and letting {x:s} = x - ({x:1} + ... + {x:s-1}).
-We could instead choose s-1 random seeds k[s-1], ..., k[s-1] for a pseudorandom
-number generator PRNG and let {x:i} = PRNG(k[i], n) for each i. This effectively
-"compresses" s-1 of the shares to O(1) space.
-[[OPEN ISSUE:Move this elsewhere or something.]]]
-
-## Primitives
-
-This section describes the core cryptographic primitives of the system.
+## Parameters
 
 ### Finite field arithmetic
 
@@ -852,11 +743,13 @@ criteria:
    for large b and odd s. Then g^s is a principle, 2^b-th root of unity (i.e.,
    g^(s\*2^b) = 1), where g is the generator of the multiplicative subgroup.
    This fact allows us to quickly evaluate and interpolate polynomials at 2^a-th
-   roots of unity for 1 <= a <= b.
-1. **Highly composite subgroup.** Suppose that (p-1) = 2^b * s. It's best if s
-   is highly composite because this minimizes the number of multiplications
-   required to compute the inverse or apply Fermat's Little Theorem. (See
-   [BBG+19, Section 5.2].)
+   roots of unity for any 1 <= a <= b. Note that b imposes n upper bound on the
+   size of proofs, so it should be large enough to accommodate all foreseeable
+   use cases. Something like b >= 20 is probably good enough.
+1. **As close to a power of two as possible.** We use rejection sampling to map
+   a PRNG seed to a pseudorandom sequence of field elements (see {{prio-prng}).
+   In order to minimize the probability of a simple being rejected, the modulus
+   should be as close to a power of 2 as possible.
 1. **Code optimization.** [[TODO: What properties of the field make
    it possible to write faster implementations?]]
 
@@ -871,6 +764,10 @@ indicates the number of bits required to represent elements of the field.
 | 3 | 80   | 779190469673491460259841               | 14 | 72  | 3 * 5 * 11       |
 | 4 | 123  | 9304595970494411110326649421962412033  | 3  | 120 | 7                |
 | 5 | 126  | 74769074762901517850839147140769382401 | 7  | 118 | 3^2 * 5^2        |
+
+[TODO: Choose new parameters for 2, 3, and 5 so that p is as close to 2^size as
+possible without going over. (4 is already close enough; 1 is already deployed
+and can't be changed.]
 
 **Finding suitable primes.**
 One way to find suitable primes is to first choose choose b, then "probe" to
@@ -887,36 +784,7 @@ for s in range(0,1000,1):
         print(bits, p, GF(p).multiplicative_generator(), b, factor(s))
 ~~~
 
-### Key encapsulation
-
-Our instantiation of the input-validation protocol involves two additional
-operations: public key encryption and cryptographically secure pseudorandom
-number generation (CSPRNG). The combination of these primitives that we use here
-allows us to make an additional simplification. We assume that clients
-communicate with the leader over a confidential and authenticated channel, such
-as TLS. As a result, we only need to encrypt CSPRNG seeds, which requires only a
-key-encapsulation mechanism (KEM) rather than full-blown encryption.
-
-A KEM is comprised of two algorithms:
-
-1. (c, k) := Encaps(pk) denotes generation and encapsulation of symmetric key k
-   under the recipient's public key pk.
-1. k := Decaps(sk, c) denotes decapsulation of symmetric key k under the
-   recipient's secret key sk.
-
-To generate an aggregator's share, the client runs (c[i], k[i]) := Encaps(pk[i])
-and sends c[i] to the aggregator. To compute its share, the aggregator would run
-k[i] := Decaps(sk[i], c[i]) and compute its share as {x:i} = PRNG(k[i], n).
-
-[HPKE](https://datatracker.ietf.org/doc/draft-irtf-cfrg-hpke/) is a natural
-candidate for instantiating the KEM. In "Export-Only" mode, HPKE provides an
-efficient scheme with all the cryptographic agility we would ever need. And
-although it's still an Internet-Draft, it has high quality implementations in a
-variety of languages.
-
-[[TODO: Specify how HPKE is used to implement Encaps() and Decaps().]]
-
-### Pseudorandom number generation
+### Pseudorandom number generation {#prio-prng}
 
 A suitable PRNG will have the following syntax. Fix a finite field K:
 
