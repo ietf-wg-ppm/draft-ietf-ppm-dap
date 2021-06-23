@@ -483,20 +483,11 @@ element.)]
 
 ### Upload Start Request
 
-The client sends a POST request to `[leader]/upload_start` with the following
-message:
-
-~~~
-struct {
-  PATask task;
-} PAUploadStartReq;
-~~~
-
-The `task` field corresponds to the PA task for which a report will be
-generated.
-
-The leader responds to well-formed requests to `[leader]/upload_start` with
-status 200 and the following message:
+The client sends a GET request to `[leader]/[version]/[task_id]/upload_start`,
+where `[version] == PATask.version` and `[task_id] == PATask.id`. [TODO: Decide
+if adding the protocol version and task id to the URL is the right way to go.
+Instead, we may want to make this a POST with a body that specifies the PATask.
+(See issue#61.)] The leader respond with status 200 and the following message:
 
 ~~~
 struct {
