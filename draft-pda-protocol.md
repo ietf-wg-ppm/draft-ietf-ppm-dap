@@ -284,11 +284,10 @@ made from one entity to another.
 1. **Upload:** Each client assembles its measurements into an input for the
    given PA protocol. It generates a proof of its input's validity and splits
    the input and proof into two shares, one for the leader and another for a
-   helper. Rather than send each share to each aggregator directly, the client
-   sends a request to the helper to learn its public key, encrypts its share
-   under this public key, and sends the ciphertext to the leader. The leader's
-   share and the helper's encrypted share are referred to collectively as the
-   client's *report*.
+   helper. The client then encrypts the leader's share and helper's share under,
+   respectively, the leader's public key and the helper's public key. (The keys
+   are obtained by making requests to the leader and helper.) Finally, the
+   client uploads the encrypted shares to the leader.
 2. **Collect:** The collector makes one or more requests to the leader in order
    to obtain the final output of the protocol. Before the output can be
    computed, the aggregators (i.e, the leader and helper) need to have verified
@@ -323,6 +322,9 @@ In this section, we will use the verbs "abort" and "alert with `[some error
 message]`" to describe how protocol participants react to various error
 conditions. The behavior is specified in {{pa-error}}. For common errors, we may
 elide the verbs altogether and refer to {{pa-error-common-aborts}}.
+
+[TODO: Fix the bounds for length-prefixed parameters in protocol messages.
+(E.g., `<23..479>` instead of `<1..2^16-1>`.)]
 
 ## Configuration {#pa-config}
 
@@ -393,8 +395,8 @@ PAParam to change overtime?]
 ### HPKE key configuration {#hpke-config}
 
 Our protocol uses HPKE for public-key encryption {{!I-D.irtf-cfrg-hpke}}. Each
-helper specifies the HPKE public key that clients use to encrypt the helper's
-input share, and the collector specifies the HPKE public key that helpers use to
+aggregator specifies the HPKE public key that clients use to encrypt its input
+share, and the collector specifies the HPKE public key that helpers use to
 encrypt output shares during collection. The public key and associated
 parameters are structured as follows:
 
@@ -417,7 +419,7 @@ add support for multiple cipher suites.]
 
 We call this a *key configation*. The key configuration is used to set up a
 base-mode HPKE context to use to derive symmetric keys for protecting: (1) input
-shares sent from the client to the helper; or (2) output shares sent from the
+shares sent from the client to an aggregator; or (2) output shares sent from the
 helper to the collector. The *config id*, `HpkeConfig.id`, is forwarded by the
 sender to the receiver to help the receiver decide if it knows the decryption
 key.
@@ -441,7 +443,7 @@ We assume the following conditions hold before execution of any PA task begins:
    channel.
 1. The collector and leader can establish a leader-authenticated secure channel.
 1. The collector has chosen an HPKE configuration and corresponding secret key.
-1. The helper has chosen an HPKE configuration and corresponding secret key.
+1. Each aggregator has chosen an HPKE configuration and corresponding secret key.
 
 [TODO: It would be clearer to include a "pre-conditions" section prior to each
 "phase" of the protocol.]
@@ -502,15 +504,15 @@ The leader's response to malformed requests is specified in
 Let `[helper]` denote the helper URL encoded by
 `PAUploadStartResp.param.helper_url`.  When a client sends a GET request to
 `[helper]/key_config`, the helper responds with status 200 and an `HpkeConfig`
-message. The client aborts if any of the following happen:
+message. Similarly, when a client sends a GET request to `[leader]/key_config`,
+the leader responds with status 200 and an `HpkeConfig`. The client aborts if
+any of the following happen:
 
-* the client and helper failed to establish a secure, helper-authenticated
-  channel;
-* the GET request to the helper URL failed or didn't return a valid key config;
-  or
-* the key config specifies a KEM, KDF, or AEAD algorithm the client doesn't
+* the client and aggregator failed to establish a secure,
+  aggregator-authenticated channel;
+* either GET request failed or didn't return a valid key config; or
+* either key config specifies a KEM, KDF, or AEAD algorithm the client doesn't
   recognize.
-
 
 [OPEN ISSUE: Should the request URL encode the PA task? This would be necessary
 if we make `upload_start` an idempotent GET per issue#48.]
@@ -521,78 +523,69 @@ example, that clients are prohibited from talking to helpers but not the leader.
 Is it OK that leaders learn that about a client? I'm not sure, so I'd be
 inclined to remove this unless we have a concrete use case.]
 
-Next, the client issues a POST request to `[leader]/upload_finish`. It begins by
-setting up an HPKE {{!I-D.irtf-cfrg-hpke}} context for the helper by running
+Next, the client issues a POST request to `[leader]/upload_finish`. The payload
+is structured as follows:
+
+~~~
+struct {
+  PATask task;
+  uint64 time; // UNIX time (in seconds).
+  PAEncryptedInputShare encrypted_input_shares<1..2^16-1>;
+} PAUploadFinishReq;
+~~~
+
+We sometimes refer to this message as the *report*. The message contains the
+`task` fields of the previous request. It also includes the time (in seconds
+since the beginning of UNIX time) at which the report was generated. The rest of
+the message consists of the encrypted input shares, each of which has the
+following structure:
+
+~~~
+struct {
+  uint8 config_id;
+  opaque enc<1..2^16-1>;
+  opaque payload<1..2^16-1>;
+} PAEncryptedInputShare;
+~~~
+
+* `config_id` is equal to `HpkeConfig.id`, where `HpkeConfig` is the
+  aggregator's key config.
+* `enc` is the encapsulated HPKE context, used by the aggregator to decrypt its
+  input share.
+* `payload` is the encrypted input share.
+
+To generate the report, the client begins by encoding its measurements as an
+input for the PA protocol and splitting it into input shares. (Note that the
+structure of each input share depends on the PA protocol in use, its parameters,
+and the role of aggregator, i.e., whether the aggregator is a leader or helper.)
+To encrypt an input share, the client first generates an HPKE
+{{!I-D.irtf-cfrg-hpke}} context for the aggregator by running
 
 ~~~
 enc, context = SetupBaseS(pk, [TODO])
 ~~~
 
-where `pk` is the KEM public key encoded by `HpkeConfig.public_key`. The outputs
-are the helper's encapsulated context `enc` and the context `context`.
+where `pk` is the aggregator's public key. `enc` is the encapsulate HPKE
+context and `context` is the HPKE context used by the client for encryption.
+The payload is encrypted as
 
-Next, the client encodes its measurements as an input for the PA protocol. It
-then generates a validity proof for its input and uses `context` to split the
-input and proof into a *leader share* and a *helper share*, where the latter is
-protected by the HPKE context. Note that the details of each of these processing
-steps --- encode, prove, split, and encrypt --- are specific to the PA protocol.
+~~~
+payload = context.Seal(input_share, [TODO])
+~~~
 
-[TODO: Fully specify encryption of the helper's share. We need to make sure we
+where `input_share` is the aggregator's input share.
+
+[TODO: Fully specify encryption of the shares. We need to make sure we
 authenticate things like the PA parameters and the report timestamp. We need to
 decide what the info string for SetupBaseS() will be, as well as the aad for
 context.Seal(). The aad might be the entire "transcript" between the client and
-helper.]
+aggregator.]
+
+[OPEN ISSUE: Is it safe to generate the proof once, then secret-share between
+each (leader, helper) pair? Probably not in general, but maybe for Prio?]
 
 [OPEN ISSUE: allow server to send joint randomness in UploadStartResp, and then
 enforce uniqueness via double-spend state or something else (see issue#48).]
-
-The payload of the POST request to `[leader]/upload_finish` is structured as
-follows:
-
-~~~
-struct {
-  PATask task;                 // Equal to PAUploadStartReq.task
-  uint64 time;                 // UNIX time (in seconds).
-  uint8 helper_hpke_config_id; // Equal to HpkeConfig.id
-  PAHelperInputShare helper_input_share;
-  PALeaderInputShare leader_input_share;
-} PAUploadFinishReq;
-~~~
-
-We sometimes refer to this message as the *report*. The message contains the
-`task` fields of the previous request. In addition, it includes the time (in
-seconds since the beginning of UNIX time) at which the report was generated, the
-helper's HPKE config id, and the helper and leader shares. The helper share has
-the following structure:
-
-~~~
-struct {
-  opaque enc<1..2^16-1>;
-  PAProto proto;
-  select (PAHelperInputShare.proto) {
-    case prio: PrioHelperInputShare;
-    case hits: HitsHelperInputShare;
-  }
-} PAHelperInputShare;
-~~~
-
-Field `enc` encodes the helper's encapsulated HPKE context. The remainder of the
-structure contains the share itself, the structure of which is specific to the
-PA protocol. The structure of the leader share is similarly protocol specific:
-
-~~~
-struct {
-  PAProto proto;
-  select (PALeaderInputShare.proto) {
-    case prio: PrioLeaderInputShare;
-    case hits: HitsLeaderInputShare;
-  };
-} PALeaderInputShare;
-~~~
-
-Note that only the helper's share is encrypted, and that the leader share is
-sent in plaintext. (Confidentiality of the leader's share is provided by the
-server-authenticated secure channel over which the request is made.)
 
 [TODO: Encrypt the leader's share as well, as discussed in issue#69.]
 
@@ -736,36 +729,25 @@ struct {
 
 The structure contains the PA task, the helper's HPKE config id, an opaque
 *helper state* string, and a sequence of *sub-requests*, each corresponding to a
-unique client report.  Sub-requests are structured as follows:
+unique client report. Sub-requests are structured as follows:
 
 ~~~
 struct {
-  opaque enc<0..2^16-1>;
   uint64 time; // UNIX timestamp (seconds) of the report.
-  PAProto proto;
-  select (PAAggregateSubReq.proto) {
-    case prio:
-      PrioHelperInputShare;
-      PrioAggregateSubReq;
-    case hits:
-      HitsHelperInputShare;
-      HitsAggregateSubReq;
+  PAEncryptedInputShare helper_share;
+  select (PAParam.proto) { // PAParam for the PA task
+    case prio: PrioAggregateSubReq;
+    case hits: HitsAggregateSubReq;
   }
 } PAAggregateSubReq;
 ~~~
 
-[TODO: @ekr points out that the `proto` byte may not be needed in this message.
-because the protocol should be the same for each of the sub-requests.
-Syntactically, we can express the selector as `PAParam.proto`, where `PAParam`
-is the PA parameters determined by the task ID.]
-
-The `enc` field is the helper's encapsulated HPKE context sent in the report.
-(This field is marked optional because it is usually only needed for the first
-aggregate request. [TODO: Decide how to mark the helper input share as optional
-as well. This too is usually only needed for the first request.]) The `time`
-field should match the timestamp of the corresponding report. The remainder of
-the structure is dedicated to the protocol-specific helper share and request
-parameters used for the current round.
+The `helper_share` field is the helper's encrypted input share as it appeared in
+the report uploaded by the client. [OPEN ISSUE: We usually only need to send
+this in the first aggregate request. Shall we exclude it in subsequent requests
+somehow?] The `time` field should match the timestamp of the corresponding
+report. The remainder of the structure is dedicated to the protocol-specific
+helper share and request parameters used for the current round.
 
 The helper handles well-formed requests as follows. (As usual, malformed
 requests are handled as described in {{pa-error-common-aborts}}.) It first looks
@@ -789,16 +771,12 @@ struct {
 } PAAggregateResp;
 
 struct {
-  PAProto proto;
-  select (PAAggregateSubResp.proto) {
+  select (PAParam.proto) { // PAParam for the PA task
     case prio: PrioAggregateSubResp;
     case hits: HitsAggregateSubResp;
   }
 } PAAggregateSubResp;
 ~~~
-
-[TODO: Consider removing the `proto` byte from this message and just use the
-PAParam implied by the request.]
 
 The helper handles each sub-request `PAAggregateSubReq` as follows.  It first
 checks that checks that `PAAggregateSubReq.proto == PAParam.proto`. If not, it
