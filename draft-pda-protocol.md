@@ -363,6 +363,7 @@ struct {
   uint64 batch_size;
   uint64 batch_window;
   PAProto proto;
+  uint16 length; // Length of the remainder.
   select (PAClientParam.proto) {
     case prio: PrioParam;
     case hits: HitsParam;
