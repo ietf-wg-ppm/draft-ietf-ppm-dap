@@ -291,17 +291,12 @@ made from one entity to another.
    client's *report*.
 2. **Collect:** The collector makes one or more requests to the leader in order
    to obtain the final output of the protocol. Before the output can be
-   computed, the aggregators (i.e, the leader and helpers) need to have verified
+   computed, the aggregators (i.e, the leader and helper) need to have verified
    and aggregated a sufficient number of inputs. Depending on the PA protocol,
    it may be possible for the aggregators to do so immediately when reports are
    uploaded. (See {{prio}}.) However, in general it is necessary for them to
    wait until (a) enough reports have been uploaded and (b) the collector has
    made a request. (See {{hits}}.)
-
-[TODO: Say that the protocol involves multiple helpers. The downside of using
-secret sharing is that the protocol requires at least two servers to be online
-during the entire data aggregation process. To ameliorate this problem, we run
-the protocol in parallel with multiple helpers.]
 
 # PA protocols {#pa}
 
@@ -360,7 +355,7 @@ structure:
 ~~~
 struct {
   PATask task;
-  Url helper_urls<1..2^16-1>;
+  Url helper_url;
   HpkeConfig collector_config;
   uint64 batch_size;
   uint64 batch_window;
@@ -378,7 +373,7 @@ opaque Url<1..2^16-1>;
 ~~~
 
 * `task`: The PA task.
-* `helper_urls`: The helpers' endpoint URLs.
+* `helper_url`: The helpers endpoint URL.
 * `collector_config`: The HPKE configuration of the collector (described in
   {{hpke-config}}). [OPEN ISSUE: Maybe the collector's HPKE config should be
   carried by the collect request?]
@@ -504,10 +499,10 @@ The leader's response to malformed requests is specified in
 
 ### Upload Finish Request
 
-For each URL `[helper]` in `PAUploadStartResp.helper_urls`, the client sends a
-GET request to `[helper]/key_config`. The helper responds with status 200 and an
-`HpkeConfig` message. Next, the client collects the set of helpers it will
-upload shares to. It ignores a helper if:
+Let `[helper]` denote the helper URL encoded by
+`PAUploadStartResp.param.helper_url`.  When a client sends a GET request to
+`[helper]/key_config`, the helper responds with status 200 and an `HpkeConfig`
+message. The client aborts if any of the following happen:
 
 * the client and helper failed to establish a secure, helper-authenticated
   channel;
@@ -516,10 +511,6 @@ upload shares to. It ignores a helper if:
 * the key config specifies a KEM, KDF, or AEAD algorithm the client doesn't
   recognize.
 
-If the set of supported helpers is empty, then the client aborts and alerts the
-leader with "no supported helpers". Otherwise, for each supported helper the
-client issues a POST request to `[leader]/upload_finish` with a payload
-constructed as described below.
 
 [OPEN ISSUE: Should the request URL encode the PA task? This would be necessary
 if we make `upload_start` an idempotent GET per issue#48.]
@@ -530,8 +521,8 @@ example, that clients are prohibited from talking to helpers but not the leader.
 Is it OK that leaders learn that about a client? I'm not sure, so I'd be
 inclined to remove this unless we have a concrete use case.]
 
-The client begins by setting up an HPKE {{!I-D.irtf-cfrg-hpke}} context for
-the helper by running
+Next, the client issues a POST request to `[leader]/upload_finish`. It begins by
+setting up an HPKE {{!I-D.irtf-cfrg-hpke}} context for the helper by running
 
 ~~~
 enc, context = SetupBaseS(pk, [TODO])
@@ -552,9 +543,6 @@ decide what the info string for SetupBaseS() will be, as well as the aad for
 context.Seal(). The aad might be the entire "transcript" between the client and
 helper.]
 
-[OPEN ISSUE: Is it safe to generate the proof once, then secret-share between
-each (leader, helper) pair? Probably not in general, but maybe for Prio?]
-
 [OPEN ISSUE: allow server to send joint randomness in UploadStartResp, and then
 enforce uniqueness via double-spend state or something else (see issue#48).]
 
@@ -566,7 +554,6 @@ struct {
   PATask task;                 // Equal to PAUploadStartReq.task
   uint64 time;                 // UNIX time (in seconds).
   uint8 helper_hpke_config_id; // Equal to HpkeConfig.id
-  Url helper_url;
   PAHelperInputShare helper_input_share;
   PALeaderInputShare leader_input_share;
 } PAUploadFinishReq;
@@ -575,8 +562,8 @@ struct {
 We sometimes refer to this message as the *report*. The message contains the
 `task` fields of the previous request. In addition, it includes the time (in
 seconds since the beginning of UNIX time) at which the report was generated, the
-helper's HPKE config id, endpoint URL, and the helper and leader shares. The
-helper share has the following structure:
+helper's HPKE config id, and the helper and leader shares. The helper share has
+the following structure:
 
 ~~~
 struct {
@@ -673,7 +660,6 @@ PAParam. This state object has the following member functions:
 ~~~
 struct {
   PATask task;
-  Url helper;
   uint64 batch_start; // The beginning of the batch in UNIX time.
   Uint64 batch_end;   // The end of the batch in UNIX time (exclusive).
   PAProto proto;
@@ -734,9 +720,10 @@ complete batch).
 #### Aggregate Request
 
 The process begins with a PACollectReq. The leader collects a sequence of
-reports that are all associated with the same PA task, helper URL, and helper
-HPKE config id. Let `[helper]` denote `PACollectReq.helper_url`. The leader
-sends a POST request to `[helper]/aggregate` with the following message:
+reports that are all associated with the same PA task. Let `[helper]` denote
+`PAParam.helper_url`, where `PAParam` is the PA parameters structure associated
+`PAAggregateReq.task.id`. The leader sends a POST request to
+`[helper]/aggregate` with the following message:
 
 ~~~
 struct {
