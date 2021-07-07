@@ -314,9 +314,11 @@ transport layer security protocol (e.g., TLS or QUIC) is used between each pair
 of parties and that the server is always authenticated.
 
 [TODO: Decide how to provide mutual authentication in leader-to-helper and
-aggregator-to-collector connections. One option is to use client certificates
-for TLS; another is to have the leader sign its messages directly, as in Prio
-v2.]
+collector-to-leader connections. One option is to use client certificates for
+TLS; another is to have the leader sign its messages directly, as in Prio v2.
+For collector-to-leader connections, we may just have this be up to deployment.
+(For instance, the collector might authenticate themselves by logging into a
+website that has some trust relationship with the leader.)]
 
 [TODO: @chris-wood suggested we specify APIs for producing and consuming each of
 the messages in the protocol. Specific PA protocols would implement this API.]
@@ -443,9 +445,8 @@ We assume the following conditions hold before execution of any PA task begins:
 1. The leader and each helper can establish a helper-authenticated secure
    channel.
 1. The collector and leader can establish a leader-authenticated secure channel.
-1. The collector has chosen an HPKE key pair.
-1. Each helper has chosen an HPKE key pair.
-1. Each helper has chosen a key for an AEAD scheme.
+1. The collector has chosen an HPKE configuration and corresponding secret key.
+1. The helper has chosen an HPKE configuration and corresponding secret key.
 
 [TODO: It would be clearer to include a "pre-conditions" section prior to each
 "phase" of the protocol.]
@@ -476,12 +477,6 @@ single HTTP request. However, OHTTP
 clients to make multiple requests through a proxy, so these kinds of use cases
 should work.]
 
-[NOTE: @cjpatton: Breaking the upload phase into two requests is useful for
-supporting Prio-like proof systems in which the leader sends the client a
-"challenge" it uses to generate the proof. (See the SIMD construction of
-{{BBCp19}}, Section 5.2. Here, the "challenge" is a randomly generated field
-element.)]
-
 ### Upload Start Request
 
 The client sends a GET request to `[leader]/[version]/[task_id]/upload_start`,
@@ -506,9 +501,6 @@ the semantics of which is up to the PA protocol.
 
 The leader's response to malformed requests is specified in
 {{pa-error-common-aborts}}.
-
-[TODO: Maybe drop the protocol-specific message and make this an idempotent GET
-(see issue#48).]
 
 ### Upload Finish Request
 
@@ -614,6 +606,8 @@ struct {
 Note that only the helper's share is encrypted, and that the leader share is
 sent in plaintext. (Confidentiality of the leader's share is provided by the
 server-authenticated secure channel over which the request is made.)
+
+[TODO: Encrypt the leader's share as well, as discussed in issue#69.]
 
 The leader responds to well-formed requests to `[leader]/upload_finish` with
 status 200 and an empty body. Malformed requests are handled as described in
@@ -734,7 +728,8 @@ zero knowledge that the input is valid. The exact procedure for doing so is
 protocol specific, but all protocols have the same basic structure. In
 particular, the protocol is comprised of a sequence of *aggregate requests* from
 the leader to the helper. At the end of this procedure, the leader and helper
-will have have aggregated a set of valid client inputs.
+will have have aggregated a set of valid client inputs (though not necessarily a
+complete batch).
 
 #### Aggregate Request
 
