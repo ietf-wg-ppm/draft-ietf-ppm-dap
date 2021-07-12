@@ -337,6 +337,7 @@ verify and aggregate the clients' measurements:
 
 ~~~
 struct {
+  Url leader_url;
   Url helper_url;
   HpkeConfig collector_config; // [TODO: Remove this?]
   uint64 batch_size;
@@ -354,6 +355,7 @@ enum { prio(0), hits(1) } PAProto;
 opaque Url<1..2^16-1>;
 ~~~
 
+* `leader_url`: The leader's endpoint URL.
 * `helper_url`: The helper's endpoint URL.
 * `collector_config`: The HPKE configuration of the collector (described in
   {{hpke-config}}). [OPEN ISSUE: Maybe the collector's HPKE config should be
@@ -415,10 +417,8 @@ We assume the following conditions hold before execution of any PA task begins:
 1. Each aggregator has a clock that is roughly in sync with true time, i.e.,
    within the batch window specified by the PA parameters. (This is necessary to
    prevent the same report from appearing in multiple batches.)
-1. Each client has selected a PA task for which it will upload a report.
-1. Each client knows the URL of the leader endpoint, e.g.,
-   `example.com/metrics`. We write this URL as `[leader]` below. (We write
-   `[helper]` for a helper's URL.)
+1. Each client has selected a PA task for which it will upload a report. It is
+   also configured with the task's parameters.
 1. Each client and the leader can establish a leader-authenticated secure
    channel.
 1. The leader and each helper can establish a helper-authenticated secure
@@ -433,21 +433,16 @@ We assume the following conditions hold before execution of any PA task begins:
 ## Upload {#pa-upload}
 
 ~~~~
-Client            Leader         Helper
-  |  upload start   |              |
-  <----------------->              |
-  |                 |  key config  |
-  <-------------------------------->
-  |  upload finish  |              |
-  <----------------->              |
-  v                 v              v
+Client          Leader         Helper
+  |  key config  |              |
+  <-------------->              |
+  |              |  key config  |
+  <----------------------------->
+  |  upload      |              |
+  <-------------->              |
+  v              v              v
 ~~~~
 {: #pa-upload-flow title="Flow of the upload process"}
-
-Uploading a report involves two requests to the leader. In the *upload start
-request*, the client discovers the protocol-specific parameters it needs to
-generate the report. In the *upload finish request*, it uploads its report to
-the leader.
 
 [NOTE: @acmiyaguchi pointed out that the use of an anonymizing proxy for
 uploading shares might be easier to implement if the "upload" phase involved a
@@ -456,48 +451,23 @@ single HTTP request. However, OHTTP
 clients to make multiple requests through a proxy, so these kinds of use cases
 should work.]
 
-### Upload Start Request
+### Key Config Request
 
-The client sends a GET request to `[leader]/[version]/[task_id]/upload_start`,
-where `[task_id] == PATaskID`. [TODO: Decide if adding the protocol version and
-task id to the URL is the right way to go. Instead, we may want to make this a
-POST with a body that specifies the task id. (See issue#61.)] The leader respond
-with status 200 and the following message:
+Before the client can upload its report to the leader, it must first discover
+the key configs of each of the aggregators. To do so, the client sends a GET
+request to `[aggregator]/key_config`, where `[aggregator]` is the aggregator's
+endpoint URL. The aggregator responds to well-formed requests with status 200
+and an `HpkeConfig`.
 
-~~~
-struct {
-  PAParam param;
-  select (PAUploadStartResp.param.proto) {
-    case prio: PrioUploadStartResp;
-    case hits: HitsUploadStartResp;
-  }
-} PAUploadStartResp;
-~~~
-
-The message includes the PA parameters the client will use to generate its
-report. It also includes a protocol-specific message, e.g., PrioUploadStartResp,
-the semantics of which is up to the PA protocol.
-
-The leader's response to malformed requests is specified in
-{{pa-error-common-aborts}}.
-
-### Upload Finish Request
-
-Let `[helper]` denote the helper URL encoded by
-`PAUploadStartResp.param.helper_url`.  When a client sends a GET request to
-`[helper]/key_config`, the helper responds with status 200 and an `HpkeConfig`
-message. Similarly, when a client sends a GET request to `[leader]/key_config`,
-the leader responds with status 200 and an `HpkeConfig`. The client aborts if
-any of the following happen:
+The client issues a key config request to `PAParam.leader_url` and
+`PAParam.helper_Url`. It aborts if any of the following happen for either
+request:
 
 * the client and aggregator failed to establish a secure,
   aggregator-authenticated channel;
-* either GET request failed or didn't return a valid key config; or
-* either key config specifies a KEM, KDF, or AEAD algorithm the client doesn't
+* the GET request failed or didn't return a valid key config; or
+* the key config specifies a KEM, KDF, or AEAD algorithm the client doesn't
   recognize.
-
-[OPEN ISSUE: Should the request URL encode the task id? This would be necessary
-if we make `upload_start` an idempotent GET per issue#48.]
 
 [OPEN ISSUE: @chris-wood: Can't the leader determine if helpers are "online"?
 This seems to reveal information that's specific to clients. Imagine, for
@@ -505,22 +475,24 @@ example, that clients are prohibited from talking to helpers but not the leader.
 Is it OK that leaders learn that about a client? I'm not sure, so I'd be
 inclined to remove this unless we have a concrete use case.]
 
-Next, the client issues a POST request to `[leader]/upload_finish`. The payload
-is structured as follows:
+### Upload Request
+
+Next, the client issues a POST request to `[leader]/upload`, where `[leader]` is
+the leader's endpoint URL. The payload is structured as follows:
 
 ~~~
 struct {
   PATaskID task_id;
   uint64 time; // UNIX time (in seconds).
   PAEncryptedInputShare encrypted_input_shares<1..2^16-1>;
-} PAUploadFinishReq;
+} PAUploadReq;
 ~~~
 
 We sometimes refer to this message as the *report*. The message contains the
-`task_id` of the previous request. It also includes the time (in seconds since
-the beginning of UNIX time) at which the report was generated. The rest of the
-message consists of the encrypted input shares, each of which has the following
-structure:
+task id derived from the PA parameters. It also includes the time (in seconds
+since the beginning of UNIX time) at which the report was generated. The rest of
+the message consists of the encrypted input shares, each of which has the
+following structure:
 
 ~~~
 struct {
@@ -563,16 +535,8 @@ decide what the info string for SetupBaseS() will be, as well as the aad for
 context.Seal(). The aad might be the entire "transcript" between the client and
 aggregator.]
 
-[OPEN ISSUE: Is it safe to generate the proof once, then secret-share between
-each (leader, helper) pair? Probably not in general, but maybe for Prio?]
-
-[OPEN ISSUE: allow server to send joint randomness in UploadStartResp, and then
-enforce uniqueness via double-spend state or something else (see issue#48).]
-
-[TODO: Encrypt the leader's share as well, as discussed in issue#69.]
-
-The leader responds to well-formed requests to `[leader]/upload_finish` with
-status 200 and an empty body. Malformed requests are handled as described in
+The leader responds to well-formed requests to `[leader]/upload` with status 200
+and an empty body. Malformed requests are handled as described in
 {{pa-error-common-aborts}}.
 
 ## Collect {#pa-collect}
