@@ -483,15 +483,23 @@ the leader's endpoint URL. The payload is structured as follows:
 ~~~
 struct {
   PATaskID task_id;
-  uint64 time; // UNIX time (in seconds).
-  PAEncryptedInputShare encrypted_input_shares<1..2^16-1>;
+  PAReport reports<1..2^24-1>;
 } PAUploadReq;
 ~~~
 
-We sometimes refer to this message as the *report*. The message contains the
-task id derived from the PA parameters. It also includes the time (in seconds
-since the beginning of UNIX time) at which the report was generated. The rest of
-the message consists of the encrypted input shares, each of which has the
+This message consists of a task id and any number of *reports* for the task.
+Reports are structured as:
+
+~~~
+struct {
+  uint64 time; // UNIX time (in seconds).
+  PAEncryptedInputShare encrypted_input_shares<1..2^16-1>;
+} PAReport;
+~~~
+
+where `time` is the time (in seconds since the beginning of UNIX time) at which
+the report was generated and `encrypted_input_shares` is the sequence of
+encrypted input shares, each intended for one of the aggregators. These have the
 following structure:
 
 ~~~
@@ -508,11 +516,11 @@ struct {
   input share.
 * `payload` is the encrypted input share.
 
-To generate the report, the client begins by encoding its measurements as an
-input for the PA protocol and splitting it into input shares. (Note that the
-structure of each input share depends on the PA protocol in use, its parameters,
-and the role of aggregator, i.e., whether the aggregator is a leader or helper.)
-To encrypt an input share, the client first generates an HPKE
+To generate a report, the client begins by encoding its measurements as an input
+for the PA protocol and splitting it into input shares. (Note that the structure
+of each input share depends on the PA protocol in use, its parameters, and the
+role of aggregator, i.e., whether the aggregator is a leader or helper.) To
+encrypt an input share, the client first generates an HPKE
 {{!I-D.irtf-cfrg-hpke}} context for the aggregator by running
 
 ~~~
@@ -538,6 +546,13 @@ aggregator.]
 The leader responds to well-formed requests to `[leader]/upload` with status 200
 and an empty body. Malformed requests are handled as described in
 {{pa-error-common-aborts}}.
+
+#### Batched Uploading
+
+Usually the client's upload request will consist of a single report, but there
+are applications for which it's useful to be able to upload many reports in the
+same request. For example, reports might be collected from a set of clients and
+uploaded to the leader by some entity in the middle.
 
 ## Collect {#pa-collect}
 
