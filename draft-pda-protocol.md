@@ -668,7 +668,6 @@ reports that are all associated with the same PA task. Let `[helper]` denote
 ~~~
 struct {
   PATaskID task_id;
-  uint8 helper_hpke_config_id;
   opaque helper_state<0..2^16>;
   PAAggregateSubReq seq<1..2^24-1>;
 } PAAggregateReq;
@@ -680,7 +679,7 @@ unique client report. Sub-requests are structured as follows:
 
 ~~~
 struct {
-  uint64 time; // UNIX timestamp (seconds) of the report.
+  uint64 time; // Equal to PAReport.time.
   PAEncryptedInputShare helper_share;
   select (PAParam.proto) { // PAParam for the PA task
     case prio: PrioAggregateSubReq;
@@ -699,14 +698,7 @@ helper share and request parameters used for the current round.
 The helper handles well-formed requests as follows. (As usual, malformed
 requests are handled as described in {{pa-error-common-aborts}}.) It first looks
 for the PA parameters `PAParam` for which `PAAggregateReq.task_id` is equal to
-the task id derived from `PAParam`.  Next, it looks up the HPKE config and
-corresponding secret key associated with `PAAggregateReq.helper_hpke_config_id`.
-If not found, then it aborts and alerts the leader with "unrecognized key
-config". [NOTE: In this situation, the leader has no choice but to abort. This
-falls into the class of error scenarios that are addressable by running with
-multiple helpers.]
-
-[TODO: Don't require all sub-requests to pertain to the same HPKE config.]
+the task id derived from `PAParam`.
 
 The response consists of the helper's updated state and a sequence of
 *sub-responses*, where the i-th sub-response corresponds to the sub-request for
@@ -726,19 +718,25 @@ struct {
 } PAAggregateSubResp;
 ~~~
 
-The helper handles each sub-request `PAAggregateSubReq` as follows.  It first
-checks that checks that `PAAggregateSubReq.proto == PAParam.proto`. If not, it
-aborts and alerts the leader with "incorrect protocol for sub-request".
-Otherwise, it computes the HPKE context as
+The helper handles each sub-request `PAAggregateSubReq` as follows. It first
+looks up the HPKE config and corresponding secret key associated with
+`helper_share.config_id`. If not found, then the sub-response consists of an
+"unrecognized config" alert. [TODO: We'll want to be more precise about what
+this means. See issue#57.] Next, it attempts to decrypt the payload with the
+following procedure:
 
 ~~~
-context = SetupBaseR(PAAggregateSubReq.enc, sk, [TODO])
+context = SetupBaseR(helper_share.enc, sk, [TODO])
+input_share = context.Open(helper_share.config_id, [TODO])
 ~~~
 
-where `sk` is its HPKE key and computes the body of the `PAAggregateSubResp`. It
-then updates its state according to the PA protocol. After processing all of the
-sub-requests, the helper encrypts its updated state and constructs its response
-to the aggregate request.
+where `sk` is the HPKE secret key. If decryption fails, then the sub-response
+consists of a "decryption error" alert. [See issue#57.] Otherwise, the helper
+handles the request for its plaintext input share `input_share` and updates its
+state as specified by the PA protocol.
+
+After processing all of the sub-requests, the helper encrypts its updated state
+and constructs its response to the aggregate request.
 
 ##### Helper State
 
