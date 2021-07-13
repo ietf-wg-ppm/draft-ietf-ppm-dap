@@ -305,7 +305,7 @@ PA protocols are described in {{prio}} and {{hits}}.
 Each round of the protocol corresponds to an HTTP request and response. The
 content type of each request is "application/octet-stream". We assume that some
 transport layer security protocol (e.g., TLS or QUIC) is used between each pair
-of parties and that the server is always authenticated.
+of parties and that the server is authenticated.
 
 [TODO: Decide how to provide mutual authentication in leader-to-helper and
 collector-to-leader connections. One option is to use client certificates for
@@ -331,34 +331,14 @@ elide the verbs altogether and refer to {{pa-error-common-aborts}}.
 ### Tasks
 
 Each PA protocol is associated with a *PA task* that specifies the measurements
-that are to be collected:
+that are to be collected. Associated to each task is a set of *PA Parameters*,
+encoded by the following `PAParam` structure, which specify the protocol used to
+verify and aggregate the clients' measurements:
 
 ~~~
 struct {
-  uint16 version;
-  opaque id[16];
-} PATask;
-~~~
-
-The first field, `version` specifies the version of this document. The second
-field, `id`, is an opaque identifier used by the clients, aggregators, and
-collector to uniquely identify the PA task at hand. We will call it the *task
-id* in the remainder.
-
-[TODO: Decide how the `PATask` is configured. Eventually this will be
-distributed, in an authenticated manner, from the collector to the other
-parties. For now, we just assume this value is negotiated out-of-band.]
-
-### Parameters
-
-Associated to each task are the *PA Parameters* encoded by the `PAParam`
-structure:
-
-~~~
-struct {
-  PATask task;
   Url helper_url;
-  HpkeConfig collector_config;
+  HpkeConfig collector_config; // [TODO: Remove this?]
   uint64 batch_size;
   uint64 batch_window;
   PAProto proto;
@@ -374,8 +354,7 @@ enum { prio(0), hits(1) } PAProto;
 opaque Url<1..2^16-1>;
 ~~~
 
-* `task`: The PA task.
-* `helper_url`: The helpers endpoint URL.
+* `helper_url`: The helper's endpoint URL.
 * `collector_config`: The HPKE configuration of the collector (described in
   {{hpke-config}}). [OPEN ISSUE: Maybe the collector's HPKE config should be
   carried by the collect request?]
@@ -386,11 +365,14 @@ opaque Url<1..2^16-1>;
 * `proto`: The PA protocol, e.g., Prio or Hits. The rest of the structure
   contains the protocol specific parameters.
 
-[TODO: Decide how the `PAParam` is configured. Like the task, this will need to
-be authenticated by the collector.]
+Each task has a unique *task id* derived from the PA parameters:
 
-[OPEN ISSUE: Is there just one PAParam for each PATask, or do we want to allow
-PAParam to change overtime?]
+~~~
+opaque PATaskID[32];
+~~~
+
+The task id is derived using the following procedure. [TODO: Specify derivation
+of the task ID.]
 
 ### HPKE key configuration {#hpke-config}
 
@@ -477,10 +459,10 @@ should work.]
 ### Upload Start Request
 
 The client sends a GET request to `[leader]/[version]/[task_id]/upload_start`,
-where `[version] == PATask.version` and `[task_id] == PATask.id`. [TODO: Decide
-if adding the protocol version and task id to the URL is the right way to go.
-Instead, we may want to make this a POST with a body that specifies the PATask.
-(See issue#61.)] The leader respond with status 200 and the following message:
+where `[task_id] == PATaskID`. [TODO: Decide if adding the protocol version and
+task id to the URL is the right way to go. Instead, we may want to make this a
+POST with a body that specifies the task id. (See issue#61.)] The leader respond
+with status 200 and the following message:
 
 ~~~
 struct {
@@ -514,7 +496,7 @@ any of the following happen:
 * either key config specifies a KEM, KDF, or AEAD algorithm the client doesn't
   recognize.
 
-[OPEN ISSUE: Should the request URL encode the PA task? This would be necessary
+[OPEN ISSUE: Should the request URL encode the task id? This would be necessary
 if we make `upload_start` an idempotent GET per issue#48.]
 
 [OPEN ISSUE: @chris-wood: Can't the leader determine if helpers are "online"?
@@ -528,18 +510,18 @@ is structured as follows:
 
 ~~~
 struct {
-  PATask task;
+  PATaskID task_id;
   uint64 time; // UNIX time (in seconds).
   PAEncryptedInputShare encrypted_input_shares<1..2^16-1>;
 } PAUploadFinishReq;
 ~~~
 
 We sometimes refer to this message as the *report*. The message contains the
-`task` fields of the previous request. It also includes the time (in seconds
-since the beginning of UNIX time) at which the report was generated. This field
-is present to ensure that each report is included in at most one batch. The rest
-of the message consists of the encrypted input shares, each of which has the
-following structure:
+`task_id` of the previous request. It also includes the time (in seconds since
+the beginning of UNIX time) at which the report was generated. This field is 
+present to ensure that each report is included in at most one batch. The rest of 
+the message consists of the encrypted input shares, each of which has the following
+structure:
 
 ~~~
 struct {
@@ -653,7 +635,7 @@ PAParam. This state object has the following member functions:
 
 ~~~
 struct {
-  PATask task;
+  PATaskID task_id;
   uint64 batch_start; // The beginning of the batch in UNIX time.
   Uint64 batch_end;   // The end of the batch in UNIX time (exclusive).
   PAProto proto;
@@ -669,7 +651,7 @@ struct {
 
 ~~~
 struct {
-  PATask task;
+  PATaskID task_id;
   PAProto proto;
   PAOutputShare leader_share;
   opaque encrypted_helper_share;
@@ -721,7 +703,7 @@ reports that are all associated with the same PA task. Let `[helper]` denote
 
 ~~~
 struct {
-  PATask task;
+  PATaskID task_id;
   uint8 helper_hpke_config_id;
   opaque helper_state<0..2^16>;
   PAAggregateSubReq seq<1..2^24-1>;
@@ -752,12 +734,13 @@ helper share and request parameters used for the current round.
 
 The helper handles well-formed requests as follows. (As usual, malformed
 requests are handled as described in {{pa-error-common-aborts}}.) It first looks
-for the PA parameters `PAParam` for which `PAAggregateReq.task.id ==
-PAParam.task.id`. Next, it looks up the HPKE config and corresponding secret key
-associated with `PAAggregateReq.helper_hpke_config_id`. If not found, then it
-aborts and alerts the leader with "unrecognized key config". [NOTE: In this
-situation, the leader has no choice but to abort. This falls into the class of
-error scenarios that are addressable by running with multiple helpers.]
+for the PA parameters `PAParam` for which `PAAggregateReq.task_id` is equal to
+the task id derived from `PAParam`.  Next, it looks up the HPKE config and
+corresponding secret key associated with `PAAggregateReq.helper_hpke_config_id`.
+If not found, then it aborts and alerts the leader with "unrecognized key
+config". [NOTE: In this situation, the leader has no choice but to abort. This
+falls into the class of error scenarios that are addressable by running with
+multiple helpers.]
 
 [TODO: Don't require all sub-requests to pertain to the same HPKE config.]
 
@@ -813,7 +796,7 @@ message:
 
 ~~~
 struct {
-  PATask task;
+  PATaskID task_id;
   uint64 batch_start; // Same as PACollectReq.batch_start.
   Uint64 batch_end;   // Same as PACollectReq.batch_end.
   opaque helper_state<0..2^16>;
@@ -868,7 +851,7 @@ to the receiver that the peer has aborted the protocol. The payload is
 
 ~~~
 struct {
-  PATask task;
+  PATaskID task_id;
   opaque payload<1..255>;
 } PAAlert;
 ~~~
@@ -888,9 +871,10 @@ The following specify the "boiler-plate" behavior for various error conditions.
   response to a request with a malformed payload, then the receiver aborts and
   alerts the peer with "unrecognized message".
 
-- Each POST request to an aggregator contains a `PATask`. If the aggregator does not
-  recognize the task, i.e., it can't find a `PAParam` for which `PATask.id ==
-  PAParam.task.id`, then it aborts and alerts the peer with "unrecognized task".
+- Each POST request to an aggregator contains a `PATaskID`. If the aggregator
+  does not recognize the task, i.e., it can't find a `PAParam` for which the
+  derived task id matches the `PATaskID`, then it aborts and alerts the peer
+  with "unrecognized task".
 
 # Prio {#prio}
 
