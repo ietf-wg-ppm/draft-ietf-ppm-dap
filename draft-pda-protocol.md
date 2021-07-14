@@ -48,6 +48,16 @@ informative:
       -ins: N. Gilboa
       -ins: Y. Ishai
 
+normative:
+
+  FIPS180-4:
+    title: NIST FIPS 180-4, Secure Hash Standard
+    author:
+      name: NIST
+      ins: National Institute of Standards and Technology, U.S. Department of Commerce
+    date: 2012-03
+    target: http://csrc.nist.gov/publications/fips/fips180-4/fips-180-4.pdf
+
 --- abstract
 
 TODO: writeme
@@ -337,6 +347,7 @@ verify and aggregate the clients' measurements:
 
 ~~~
 struct {
+  opaque nonce[16];
   Url leader_url;
   Url helper_url;
   HpkeConfig collector_config; // [TODO: Remove this?]
@@ -355,6 +366,10 @@ enum { prio(0), hits(1) } PDAProto;
 opaque Url<1..2^16-1>;
 ~~~
 
+* `nonce`: A unique sequence of bytes used  to ensure that two otherwise
+  identical `PDAParam` instances will have distinct `PDATaskID`s. It is
+  RECOMMENDED that this be set to a random 16-byte string derived from a
+  cryptographically secure pseurandom number generator.
 * `leader_url`: The leader's endpoint URL.
 * `helper_url`: The helper's endpoint URL.
 * `collector_config`: The HPKE configuration of the collector (described in
@@ -367,14 +382,19 @@ opaque Url<1..2^16-1>;
 * `proto`: The PDA protocol, e.g., Prio or Hits. The rest of the structure
   contains the protocol specific parameters.
 
-Each task has a unique *task id* derived from the PDA parameters:
+Each task has a unique *task ID* derived from the PDA parameters:
 
 ~~~
 opaque PDATaskID[32];
 ~~~
 
-The task id is derived using the following procedure. [TODO: Specify derivation
-of the task ID.]
+The task ID of a `PDAParam` `is derived using the following procedure:
+
+~~~
+task_id = SHA-256(param)
+~~~
+
+Where `SHA-256` is as specified in [FIPS180-4].
 
 ### HPKE key configuration {#hpke-config}
 
@@ -698,7 +718,7 @@ helper share and request parameters used for the current round.
 The helper handles well-formed requests as follows. (As usual, malformed
 requests are handled as described in {{pa-error-common-aborts}}.) It first looks
 for the PDA parameters `PDAParam` for which `PDAAggregateReq.task_id` is equal to
-the task id derived from `PDAParam`.
+the task ID derived from `PDAParam`.
 
 The response consists of the helper's updated state and a sequence of
 *sub-responses*, where the i-th sub-response corresponds to the sub-request for
@@ -835,7 +855,7 @@ The following specify the "boiler-plate" behavior for various error conditions.
 
 - Each POST request to an aggregator contains a `PDATaskID`. If the aggregator
   does not recognize the task, i.e., it can't find a `PDAParam` for which the
-  derived task id matches the `PDATaskID`, then it aborts and alerts the peer
+  derived task ID matches the `PDATaskID`, then it aborts and alerts the peer
   with "unrecognized task".
 
 # Prio {#prio}
