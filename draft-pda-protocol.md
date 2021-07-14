@@ -126,7 +126,7 @@ The protocol is executed by a large set of clients and a small set of servers.
 We call the servers the *aggregators*. Each client's input to the protocol is a
 set of measurements (e.g., counts of some user behavior). Given the input set
 of measurements `x_1, ..., x_n` held by `n` users, the goal of a
-*private aggregation (PA) protocol* is to compute `y = F(x_1, ..., x_n)` for
+*private data aggregation (PDA) protocol* is to compute `y = F(x_1, ..., x_n)` for
 some aggregation function `F` while revealing nothing else about the
 measurements.
 
@@ -193,7 +193,7 @@ This variety of aggregate types is sufficient to support a wide variety of
 data aggregation tasks.
 
 **Hits.**
-A common PA task that can't be solved efficiently with Prio is the
+A common PDA task that can't be solved efficiently with Prio is the
 `t`-*heavy-hitters* problem {{BBCp21}}. In this setting, each user is in
 possession of a single `n`-bit string, and the goal is to compute the compute
 the set of strings that occur at least `t` times. One reason that Prio doesn't
@@ -212,13 +212,13 @@ inputs are secret shared. In particular, a malicious client can corrupt the
 computation by submitting random integers instead of a proper secret sharing of
 a valid input.
 
-To solve this problem, in each PA protocol, the client generates a
+To solve this problem, in each PDA protocol, the client generates a
 zero-knowledge proof of its input's validity that the aggregators use
 to verify that their shares correspond to as valid input. The verification
 procedure is designed to ensure that the aggregators learn nothing about the
 input beyond its validity.
 
-After encoding its measurements as an input to the PA protocol, the client
+After encoding its measurements as an input to the PDA protocol, the client
 generates a *proof* of the input's validity. It then splits the proof into
 shares and sends a share of both the proof and input to each aggregator. The
 aggregators use their shares of the proof to decide if their input shares
@@ -260,7 +260,7 @@ proof showing that the encoded measurement is valid.
 
 ## Data flow
 
-Each PA task consists of two sub-protocols, *upload* and *collect*, which are
+Each PDA task consists of two sub-protocols, *upload* and *collect*, which are
 executed concurrently. Each sub-protocol consists of a sequence of HTTP requests
 made from one entity to another.
 
@@ -279,10 +279,10 @@ made from one entity to another.
 |             |         |             |
 +-------------+         +-------------+
 ~~~~
-{: #pa-topology title="Who makes requests to whom while executing a PA task."}
+{: #pa-topology title="Who makes requests to whom while executing a PDA task."}
 
 1. **Upload:** Each client assembles its measurements into an input for the
-   given PA protocol. It generates a proof of its input's validity and splits
+   given PDA protocol. It generates a proof of its input's validity and splits
    the input and proof into two shares, one for the leader and another for a
    helper. The client then encrypts the leader's share and helper's share under,
    respectively, the leader's public key and the helper's public key. (The keys
@@ -291,16 +291,16 @@ made from one entity to another.
 2. **Collect:** The collector makes one or more requests to the leader in order
    to obtain the final output of the protocol. Before the output can be
    computed, the aggregators (i.e, the leader and helper) need to have verified
-   and aggregated a sufficient number of inputs. Depending on the PA protocol,
+   and aggregated a sufficient number of inputs. Depending on the PDA protocol,
    it may be possible for the aggregators to do so immediately when reports are
    uploaded. (See {{prio}}.) However, in general it is necessary for them to
    wait until (a) enough reports have been uploaded and (b) the collector has
    made a request. (See {{hits}}.)
 
-# PA protocols {#pa}
+# PDA protocols {#pa}
 
-This section specifies a protocol for executing generic PA tasks. Concrete
-PA protocols are described in {{prio}} and {{hits}}.
+This section specifies a protocol for executing generic PDA tasks. Concrete
+PDA protocols are described in {{prio}} and {{hits}}.
 
 Each round of the protocol corresponds to an HTTP request and response. The
 content type of each request is "application/octet-stream". We assume that some
@@ -315,7 +315,7 @@ For collector-to-leader connections, we may just have this be up to deployment.
 website that has some trust relationship with the leader.)]
 
 [TODO: @chris-wood suggested we specify APIs for producing and consuming each of
-the messages in the protocol. Specific PA protocols would implement this API.]
+the messages in the protocol. Specific PDA protocols would implement this API.]
 
 **Error handling.**
 In this section, we will use the verbs "abort" and "alert with `[some error
@@ -330,9 +330,9 @@ elide the verbs altogether and refer to {{pa-error-common-aborts}}.
 
 ### Tasks
 
-Each PA protocol is associated with a *PA task* that specifies the measurements
-that are to be collected. Associated to each task is a set of *PA Parameters*,
-encoded by the following `PAParam` structure, which specify the protocol used to
+Each PDA protocol is associated with a *PDA task* that specifies the measurements
+that are to be collected. Associated to each task is a set of *PDA Parameters*,
+encoded by the following `PDAParam` structure, which specify the protocol used to
 verify and aggregate the clients' measurements:
 
 ~~~
@@ -342,15 +342,15 @@ struct {
   HpkeConfig collector_config; // [TODO: Remove this?]
   uint64 batch_size;
   uint64 batch_window;
-  PAProto proto;
+  PDAProto proto;
   uint16 length; // Length of the remainder.
-  select (PAClientParam.proto) {
+  select (PDAClientParam.proto) {
     case prio: PrioParam;
     case hits: HitsParam;
   }
-} PAParam;
+} PDAParam;
 
-enum { prio(0), hits(1) } PAProto;
+enum { prio(0), hits(1) } PDAProto;
 
 opaque Url<1..2^16-1>;
 ~~~
@@ -364,13 +364,13 @@ opaque Url<1..2^16-1>;
   aggregated into an output.
 * `batch_window`: The batch window, i.e., the minimum time difference between
   the oldest and newest report in a batch.
-* `proto`: The PA protocol, e.g., Prio or Hits. The rest of the structure
+* `proto`: The PDA protocol, e.g., Prio or Hits. The rest of the structure
   contains the protocol specific parameters.
 
-Each task has a unique *task id* derived from the PA parameters:
+Each task has a unique *task id* derived from the PDA parameters:
 
 ~~~
-opaque PATaskID[32];
+opaque PDATaskID[32];
 ~~~
 
 The task id is derived using the following procedure. [TODO: Specify derivation
@@ -410,14 +410,14 @@ key.
 
 ## Pre-conditions
 
-We assume the following conditions hold before execution of any PA task begins:
+We assume the following conditions hold before execution of any PDA task begins:
 
-1. The aggregators agree on a set of PA tasks, as well as the PA parameters
+1. The aggregators agree on a set of PDA tasks, as well as the PDA parameters
    associated to each task.
 1. Each aggregator has a clock that is roughly in sync with true time, i.e.,
-   within the batch window specified by the PA parameters. (This is necessary to
+   within the batch window specified by the PDA parameters. (This is necessary to
    prevent the same report from appearing in multiple batches.)
-1. Each client has selected a PA task for which it will upload a report. It is
+1. Each client has selected a PDA task for which it will upload a report. It is
    also configured with the task's parameters.
 1. Each client and the leader can establish a leader-authenticated secure
    channel.
@@ -459,8 +459,8 @@ request to `[aggregator]/key_config`, where `[aggregator]` is the aggregator's
 endpoint URL. The aggregator responds to well-formed requests with status 200
 and an `HpkeConfig`.
 
-The client issues a key config request to `PAParam.leader_url` and
-`PAParam.helper_Url`. It aborts if any of the following happen for either
+The client issues a key config request to `PDAParam.leader_url` and
+`PDAParam.helper_Url`. It aborts if any of the following happen for either
 request:
 
 * the client and aggregator failed to establish a secure,
@@ -482,10 +482,10 @@ the leader's endpoint URL. The payload is structured as follows:
 
 ~~~
 struct {
-  PATaskID task_id;
+  PDATaskID task_id;
   uint64 time; // UNIX time (in seconds).
-  PAEncryptedInputShare encrypted_input_shares<1..2^16-1>;
-} PAUploadReq;
+  PDAEncryptedInputShare encrypted_input_shares<1..2^16-1>;
+} PDAUploadReq;
 ~~~
 
 We sometimes refer to this message as the *report*. The message contains the
@@ -500,7 +500,7 @@ struct {
   uint8 config_id;
   opaque enc<1..2^16-1>;
   opaque payload<1..2^16-1>;
-} PAEncryptedInputShare;
+} PDAEncryptedInputShare;
 ~~~
 
 * `config_id` is equal to `HpkeConfig.id`, where `HpkeConfig` is the
@@ -510,8 +510,8 @@ struct {
 * `payload` is the encrypted input share.
 
 To generate the report, the client begins by encoding its measurements as an
-input for the PA protocol and splitting it into input shares. (Note that the
-structure of each input share depends on the PA protocol in use, its parameters,
+input for the PDA protocol and splitting it into input shares. (Note that the
+structure of each input share depends on the PDA protocol in use, its parameters,
 and the role of aggregator, i.e., whether the aggregator is a leader or helper.)
 To encrypt an input share, the client first generates an HPKE
 {{!I-D.irtf-cfrg-hpke}} context for the aggregator by running
@@ -531,7 +531,7 @@ payload = context.Seal(input_share, [TODO])
 where `input_share` is the aggregator's input share.
 
 [TODO: Fully specify encryption of the shares. We need to make sure we
-authenticate things like the PA parameters and the report timestamp. We need to
+authenticate things like the PDA parameters and the report timestamp. We need to
 decide what the info string for SetupBaseS() will be, as well as the aad for
 context.Seal(). The aad might be the entire "transcript" between the client and
 aggregator.]
@@ -586,40 +586,40 @@ request. This procedure is described below in {{pa-aggregate}}.
 that it would be clearer to just talk about protocol messages.]
 
 The collect protocol is an iterative procedure driven by the collector and
-parameterized by a PAParam. At a high level, it proceeds as follows. First, the
+parameterized by a PDAParam. At a high level, it proceeds as follows. First, the
 collector initializes local per-protocol state using the corresponding
-PAParam. This state object has the following member functions:
+PDAParam. This state object has the following member functions:
 
-- CreateRequest(): Creates a PACollectReq object, defined below, that is sent to
+- CreateRequest(): Creates a PDACollectReq object, defined below, that is sent to
   the leader to complete one iteration of the protocol. Along with any
   protocol-specific parameters, the message specifies a time interval
   `[batch_start, batch_end)` that determines the batch of reports to be
-  aggregated. It must be that `batch_end - batch_start >= PAParam.batch_window`
-  and `batch_start` and `batch_end` are multiples of `PAParam.batch_window`.
+  aggregated. It must be that `batch_end - batch_start >= PDAParam.batch_window`
+  and `batch_start` and `batch_end` are multiples of `PDAParam.batch_window`.
 
 ~~~
 struct {
-  PATaskID task_id;
+  PDATaskID task_id;
   uint64 batch_start; // The beginning of the batch in UNIX time.
   Uint64 batch_end;   // The end of the batch in UNIX time (exclusive).
-  PAProto proto;
-  select (PACollectReq.proto) {
+  PDAProto proto;
+  select (PDACollectReq.proto) {
     case prio: PrioCollectReq;
     case hits: HitsCollectReq;
   }
-} PACollectReq;
+} PDACollectReq;
 ~~~
 
-- Update(resp: PACollectResp): Consumes an opaque PACollectResp object, defined
-  below, that is received from the leader in response to a PACollectReq.
+- Update(resp: PDACollectResp): Consumes an opaque PDACollectResp object, defined
+  below, that is received from the leader in response to a PDACollectReq.
 
 ~~~
 struct {
-  PATaskID task_id;
-  PAProto proto;
-  PAOutputShare leader_share;
+  PDATaskID task_id;
+  PDAProto proto;
+  PDAOutputShare leader_share;
   opaque encrypted_helper_share;
-} PACollectResp;
+} PDACollectResp;
 ~~~
 
 - Finished(): Returns a boolean indicating indicating whether or not the collection
@@ -627,7 +627,7 @@ struct {
   is complete.
 - Output(): Returns the aggregate output corresponding to the protocol.
 
-The collect procedure for a given PAParam structure `param` is then driven with
+The collect procedure for a given PDAParam structure `param` is then driven with
 the following algorithm:
 
 ~~~
@@ -643,7 +643,7 @@ return state.Output()
 issue#57). For example, how does a leader respond to a collect request if the
 helper drops out?]
 
-Each collect request involves one of the helpers specified by the PA parameters.
+Each collect request involves one of the helpers specified by the PDA parameters.
 If more than one helper is specified, the collector may issue the requests in
 any order.
 
@@ -659,33 +659,33 @@ complete batch).
 
 #### Aggregate Request
 
-The process begins with a PACollectReq. The leader collects a sequence of
-reports that are all associated with the same PA task. Let `[helper]` denote
-`PAParam.helper_url`, where `PAParam` is the PA parameters structure associated
-`PAAggregateReq.task.id`. The leader sends a POST request to
+The process begins with a PDACollectReq. The leader collects a sequence of
+reports that are all associated with the same PDA task. Let `[helper]` denote
+`PDAParam.helper_url`, where `PDAParam` is the PDA parameters structure associated
+`PDAAggregateReq.task.id`. The leader sends a POST request to
 `[helper]/aggregate` with the following message:
 
 ~~~
 struct {
-  PATaskID task_id;
+  PDATaskID task_id;
   opaque helper_state<0..2^16>;
-  PAAggregateSubReq seq<1..2^24-1>;
-} PAAggregateReq;
+  PDAAggregateSubReq seq<1..2^24-1>;
+} PDAAggregateReq;
 ~~~
 
-The structure contains the PA task, the helper's HPKE config id, an opaque
+The structure contains the PDA task, the helper's HPKE config id, an opaque
 *helper state* string, and a sequence of *sub-requests*, each corresponding to a
 unique client report. Sub-requests are structured as follows:
 
 ~~~
 struct {
-  uint64 time; // Equal to PAReport.time.
-  PAEncryptedInputShare helper_share;
-  select (PAParam.proto) { // PAParam for the PA task
+  uint64 time; // Equal to PDAReport.time.
+  PDAEncryptedInputShare helper_share;
+  select (PDAParam.proto) { // PDAParam for the PDA task
     case prio: PrioAggregateSubReq;
     case hits: HitsAggregateSubReq;
   }
-} PAAggregateSubReq;
+} PDAAggregateSubReq;
 ~~~
 
 The `helper_share` field is the helper's encrypted input share as it appeared in
@@ -697,28 +697,28 @@ helper share and request parameters used for the current round.
 
 The helper handles well-formed requests as follows. (As usual, malformed
 requests are handled as described in {{pa-error-common-aborts}}.) It first looks
-for the PA parameters `PAParam` for which `PAAggregateReq.task_id` is equal to
-the task id derived from `PAParam`.
+for the PDA parameters `PDAParam` for which `PDAAggregateReq.task_id` is equal to
+the task id derived from `PDAParam`.
 
 The response consists of the helper's updated state and a sequence of
 *sub-responses*, where the i-th sub-response corresponds to the sub-request for
-each i. The structure of each sub-response is specific to the PA protocol:
+each i. The structure of each sub-response is specific to the PDA protocol:
 
 ~~~
 struct {
   opaque helper_state<0..2^16>;
-  PAAggregateSubResp seq<1..2^24-1>;
-} PAAggregateResp;
+  PDAAggregateSubResp seq<1..2^24-1>;
+} PDAAggregateResp;
 
 struct {
-  select (PAParam.proto) { // PAParam for the PA task
+  select (PDAParam.proto) { // PDAParam for the PDA task
     case prio: PrioAggregateSubResp;
     case hits: HitsAggregateSubResp;
   }
-} PAAggregateSubResp;
+} PDAAggregateSubResp;
 ~~~
 
-The helper handles each sub-request `PAAggregateSubReq` as follows. It first
+The helper handles each sub-request `PDAAggregateSubReq` as follows. It first
 looks up the HPKE config and corresponding secret key associated with
 `helper_share.config_id`. If not found, then the sub-response consists of an
 "unrecognized config" alert. [TODO: We'll want to be more precise about what
@@ -733,7 +733,7 @@ input_share = context.Open(helper_share.config_id, [TODO])
 where `sk` is the HPKE secret key. If decryption fails, then the sub-response
 consists of a "decryption error" alert. [See issue#57.] Otherwise, the helper
 handles the request for its plaintext input share `input_share` and updates its
-state as specified by the PA protocol.
+state as specified by the PDA protocol.
 
 After processing all of the sub-requests, the helper encrypts its updated state
 and constructs its response to the aggregate request.
@@ -749,7 +749,7 @@ carries is up to the helper implementation.
 #### Output Share Request
 
 Once the aggregators have verified at least as many reports as required for the
-PA task, the leader issues an *output share request* to the helper. The helper
+PDA task, the leader issues an *output share request* to the helper. The helper
 responds to this request by extracting its output share from its state and
 encrypting it under the collector's HPKE public key.
 
@@ -758,11 +758,11 @@ message:
 
 ~~~
 struct {
-  PATaskID task_id;
-  uint64 batch_start; // Same as PACollectReq.batch_start.
-  Uint64 batch_end;   // Same as PACollectReq.batch_end.
+  PDATaskID task_id;
+  uint64 batch_start; // Same as PDACollectReq.batch_start.
+  Uint64 batch_end;   // Same as PDACollectReq.batch_end.
   opaque helper_state<0..2^16>;
-} PAOutputShareReq;
+} PDAOutputShareReq;
 ~~~
 
 To respond to valid output share requests, the helper first checks that
@@ -775,12 +775,12 @@ which has the following structure:
 
 ~~~
 struct {
-  PAProto proto;
-  select (PAOutputShare.proto) {
+  PDAProto proto;
+  select (PDAOutputShare.proto) {
     case prio: PrioOutputShare;
     case hits: HitsOutputShare;
   }
-} PAOutputShare;
+} PDAOutputShare;
 ~~~
 
 Next, it encrypts its output share under the collector's HPKE public key:
@@ -800,7 +800,7 @@ struct {
   uint8 collector_hpke_config_id;
   opaque enc<1..2^16-1>;
   opaque encrypted_output_share<1..2^16>;
-} PAOutputShareResp;
+} PDAOutputShareResp;
 ~~~
 
 The leader uses the helper's output share response to respond to the collector's
@@ -813,12 +813,12 @@ to the receiver that the peer has aborted the protocol. The payload is
 
 ~~~
 struct {
-  PATaskID task_id;
+  PDATaskID task_id;
   opaque payload<1..255>;
-} PAAlert;
+} PDAAlert;
 ~~~
 
-where `task` is the associated PA task (this value is always known) and
+where `task` is the associated PDA task (this value is always known) and
 `payload` is the message. When sent by an aggregator in response to an HTTP
 request, the response status is 400. When sent in a request to an aggregator,
 the URL is always `[aggregator]/error`, where `[aggregator]` is the URL of the
@@ -833,9 +833,9 @@ The following specify the "boiler-plate" behavior for various error conditions.
   response to a request with a malformed payload, then the receiver aborts and
   alerts the peer with "unrecognized message".
 
-- Each POST request to an aggregator contains a `PATaskID`. If the aggregator
-  does not recognize the task, i.e., it can't find a `PAParam` for which the
-  derived task id matches the `PATaskID`, then it aborts and alerts the peer
+- Each POST request to an aggregator contains a `PDATaskID`. If the aggregator
+  does not recognize the task, i.e., it can't find a `PDAParam` for which the
+  derived task id matches the `PDATaskID`, then it aborts and alerts the peer
   with "unrecognized task".
 
 # Prio {#prio}
