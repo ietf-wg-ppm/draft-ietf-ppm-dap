@@ -518,8 +518,9 @@ struct {
 
 We sometimes refer to this message as the *report*. The message contains the
 `task_id` of the previous request. It also includes the time (in seconds since
-the beginning of UNIX time) at which the report was generated. The rest of the
-message consists of the encrypted input shares, each of which has the following
+the beginning of UNIX time) at which the report was generated. This field is 
+present to ensure that each report is included in at most one batch. The rest of 
+the message consists of the encrypted input shares, each of which has the following
 structure:
 
 ~~~
@@ -764,7 +765,7 @@ struct {
 The helper handles each sub-request `PAAggregateSubReq` as follows.  It first
 checks that checks that `PAAggregateSubReq.proto == PAParam.proto`. If not, it
 aborts and alerts the leader with "incorrect protocol for sub-request".
-Otherwise, It computes the HPKE context as
+Otherwise, it computes the HPKE context as
 
 ~~~
 context = SetupBaseR(PAAggregateSubReq.enc, sk, [TODO])
