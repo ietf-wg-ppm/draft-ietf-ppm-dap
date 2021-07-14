@@ -1205,41 +1205,20 @@ collude and break soundness. Is this a contingency we need to address? There are
 techniques in [BBG+19] that account for this; we need to figure out if they're
 practical.]]
 
-## Client authentication
+## Client authentication or attestation
 
-Attackers can impersonate Prio clients and submit large amounts of false input
-in order to spoil aggregations. Deployments could require clients to
-authenticate before they may contribute inputs. For example, by requiring
-submissions to be signed with a key trusted by aggregators. However some
-deployments may opt to accept the risk of false inputs to avoid having to figure
-out how to distribute trusted identities to clients.
+[TODO: Solve issue#89]
 
-## Client attestation
+## Anonymizing proxies {#anon-proxy}
 
-In the current threat model, servers participating in the protocol have no
-insight into the activities of clients except that they have uploaded input into
-a Prio aggregation, meaning that clients could covertly leak a user's data into
-some other channel which compromises privacy. If we introduce the notion of a
-trusted computing base which can attest to the properties or activities of a
-client, then users and aggregators can be assured that their private data only
-goes into Prio. For instance, clients could use the trusted computing base to
-attest to software measurements over reproducible builds, or a trusted operating
-system could attest to the client's network activity, allowing external
-observers to be confident that no data is being exfiltrated.
-
-## Trusted anonymizing and authenticating proxy
-
-While the input shares transmitted by clients to aggregators reveal nothing
-about the original input, the aggregator can still learn auxiliary information
-received messages (for instance, source IP or HTTP user agent), which can
-identify participating clients or permit some attacks on robustness. This is
-worse if client authentication used, since incoming messages would be bound to a
-cryptographic identity. Deployments could include a trusted anonymizing proxy,
-which would be responsible for receiving input shares from clients, stripping
-any identifying information from them (including client authentication) and
-forwarding them to aggregators. There should still be a confidential and
-authenticated channel from the client to the aggregator to ensure that no actor
-besides the aggregator may decrypt the input shares.
+Client reports can contain auxiliary information such as source IP, HTTP user
+agent or in deployments which use it, client authentication information, which
+could be used by aggregators to identify participating clients or permit some
+attacks on robustness. This auxiliary information could be removed by having
+clients submit reports to an anonymizing proxy server which would then use
+Oblivous HTTP {{!I-D.thomson-http-oblivious}} to forward inputs to the PDA
+leader, without requiring any server participating in PDA to be aware of
+whatever client authentication or attestation scheme is in use.
 
 ## Multiple protocol runs
 
