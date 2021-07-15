@@ -341,7 +341,7 @@ struct {
   Url helper_url;
   HpkeConfig collector_config; // [TODO: Remove this?]
   uint64 batch_size;
-  uint64 batch_window;
+  Duration batch_window;
   PDAProto proto;
   uint16 length; // Length of the remainder.
   select (PDAClientParam.proto) {
@@ -353,6 +353,10 @@ struct {
 enum { prio(0), hits(1) } PDAProto;
 
 opaque Url<1..2^16-1>;
+
+Duration uint64; /* Number of seconds elapsed between two instants */
+
+Time uint64; /* seconds elapsed since start of UNIX epoch */
 ~~~
 
 * `leader_url`: The leader's endpoint URL.
@@ -483,17 +487,16 @@ the leader's endpoint URL. The payload is structured as follows:
 ~~~
 struct {
   PDATaskID task_id;
-  uint64 time; // UNIX time (in seconds).
+  Time time;
   PDAEncryptedInputShare encrypted_input_shares<1..2^16-1>;
 } PDAUploadReq;
 ~~~
 
 We sometimes refer to this message as the *report*. The message contains the
-`task_id` of the previous request. It also includes the time (in seconds since
-the beginning of UNIX time) at which the report was generated. This field is
-present to ensure that each report is included in at most one batch. The rest of
-the message consists of the encrypted input shares, each of which has the following
-structure:
+`task_id` of the previous request. It also includes the time at which the report
+was generated. This field is present to ensure that each report is included in
+at most one batch. The rest of the message consists of the encrypted input
+shares, each of which has the following structure:
 
 ~~~
 struct {
@@ -600,8 +603,8 @@ PDAParam. This state object has the following member functions:
 ~~~
 struct {
   PDATaskID task_id;
-  uint64 batch_start; // The beginning of the batch in UNIX time.
-  Uint64 batch_end;   // The end of the batch in UNIX time (exclusive).
+  Time batch_start; // The beginning of the batch.
+  Time batch_end;   // The end of the batch (exclusive).
   PDAProto proto;
   select (PDACollectReq.proto) {
     case prio: PrioCollectReq;
@@ -679,7 +682,7 @@ unique client report. Sub-requests are structured as follows:
 
 ~~~
 struct {
-  uint64 time; // Equal to PDAReport.time.
+  Time time; // Equal to PDAReport.time.
   PDAEncryptedInputShare helper_share;
   select (PDAParam.proto) { // PDAParam for the PDA task
     case prio: PrioAggregateSubReq;
@@ -759,8 +762,8 @@ message:
 ~~~
 struct {
   PDATaskID task_id;
-  uint64 batch_start; // Same as PDACollectReq.batch_start.
-  Uint64 batch_end;   // Same as PDACollectReq.batch_end.
+  Time batch_start; // Same as PDACollectReq.batch_start.
+  Time batch_end;   // Same as PDACollectReq.batch_end.
   opaque helper_state<0..2^16>;
 } PDAOutputShareReq;
 ~~~
