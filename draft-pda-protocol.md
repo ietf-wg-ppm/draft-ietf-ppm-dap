@@ -193,7 +193,8 @@ because modular addition is commutative. I.e.,
       = F(x[1], x[2], x[3])
 ~~~
 
-**Prio.**
+### Prio {#prio-variant}
+
 This approach can be used to privately compute any function `F` that can be
 expressed as a function of the sum of the users' inputs. In Prio {{CB17}}, each
 user splits its input into shares and sends each share to one of the
@@ -216,7 +217,8 @@ below:
 This variety of aggregate types is sufficient to support a wide variety of
 data aggregation tasks.
 
-**Hits.**
+### Hits {#hits-variant}
+
 A common PDA task that can't be solved efficiently with Prio is the
 `t`-*heavy-hitters* problem {{BBCp21}}. In this setting, each user is in
 possession of a single `n`-bit string, and the goal is to compute the compute
@@ -320,6 +322,9 @@ made from one entity to another.
    uploaded. (See {{prio}}.) However, in general it is necessary for them to
    wait until (a) enough reports have been uploaded and (b) the collector has
    made a request. (See {{hits}}.)
+
+The operational capabilities of each entity are described further in
+{{entity-capabilities}}.
 
 # PDA protocols {#pa}
 
@@ -580,7 +585,8 @@ where `input_share` is the aggregator's input share and `task_id`, `time`, and
 
 The leader responds to well-formed requests to `[leader]/upload` with status 200
 and an empty body. Malformed requests are handled as described in
-{{pa-error-common-aborts}}.
+{{pa-error-common-aborts}}. Clients SHOULD NOT upload the same measurement value
+in more than one report if the leader responds with status 200 and an empty body.
 
 ### Upload Extensions {#upload-extensions}
 
@@ -703,7 +709,7 @@ zero knowledge that the input is valid. The exact procedure for doing so is
 protocol specific, but all protocols have the same basic structure. In
 particular, the protocol is comprised of a sequence of *aggregate requests* from
 the leader to the helper. At the end of this procedure, the leader and helper
-will have have aggregated a set of valid client inputs (though not necessarily a
+will have aggregated a set of valid client inputs (though not necessarily a
 complete batch).
 
 #### Aggregate Request
@@ -767,6 +773,7 @@ each i. The structure of each sub-response is specific to the PDA protocol:
 
 ~~~
 struct {
+  // XXX(caw): include running hash output
   opaque helper_state<0..2^16>;
   PDAAggregateSubResp seq<1..2^24-1>;
 } PDAAggregateResp;
@@ -1001,31 +1008,70 @@ indefinitely until a suitable output is found.
 
 [TODO: Define Hits-specific protocol messages.]
 
-# System design
+# Operational Considerations {#operational-capabilities}
 
-[[OPEN ISSUE: This section seems like a catch-all for things not in other
-sections. Perhaps there is a natural home for aggregator discovery, share
-uploading, open issues, and system parameters?]]
-
-## Aggregator discovery
-
-[[OPEN ISSUE: writeme]]
-
-## Share uploading
-
-[[OPEN ISSUE: writeme]]
-
-## Open questions and system parameters {#questions-and-params}
-
-[[OPEN ISSUE: discuss batch size parameter and thresholds]]
-[[OPEN ISSUE: discuss f^ leakage differences from [GB17]]]
-
-
-# Operational Considerations
-
-Prio has inherent constraints derived from the tradeoff between privacy
+PDA protocols have inherent constraints derived from the tradeoff between privacy
 guarantees and computational complexity. These tradeoffs influence how
 applications may choose to utilize services implementing the specification.
+
+## Protocol participant capabilities {#entity-capabilities}
+
+The design in this document has different assumptions and requirements for
+different protocol participants, including clients, aggregators, and
+collectors. This section describes these capabilities in more detail.
+
+### Client capabilities
+
+Clients have limited capabilities and requirements. Their only inputs to the protocol
+are (1) the PDAParam structure configured out of band and (2) a measurement. Clients
+are not expected to store any state across any upload
+flows, nor are they required to implement any sort of report upload retry mechanism.
+By design, the protocol in this document is robust against individual client upload
+failures since the protocol output is an aggregate over all inputs.
+
+### Aggregator capabilities
+
+Helpers and leaders have different operational requirements. The design in this
+document assumes an operationally competent leader, i.e., one that has no storage
+or computation limitations or constraints, but only a modestly provisioned helper, i.e., one that
+has computation, bandwidth, and storage constraints. By design, leaders must be
+at least as capable as helpers, where helpers are generally required to:
+
+- Support the collect protocol, which includes verifying and aggregating
+  sets of reports in a given batch; and
+- Publish and manage an HPKE configuration that can be used for the upload protocol;
+
+In addition, for each PDAParam instance, helpers are required to:
+
+- Implement some form of batch-to-report index, as well as inter- and intra-batch
+  replay mitigation storage, which includes some way of tracking batch report size
+  with optional support for state offloading. Some of this state may be used for
+  replay attack mitigation. One relay mitigation strategy is described in {{anti-replay}}.
+
+Beyond the minimal capabilities required of helpers, leaders are generally required to:
+
+- Support the upload protocol and store client reports for a given PDAParam instance,
+  where each report maps uniquely to a single batch, and index this storage by batch durations;
+- Track batch report size during each collect flow and request encrypted output shares
+  from helpers.
+
+In addition, for each PDAParam instance, leaders are required to:
+
+- Ensure that, for each report, all aggregator shares are either included or not in a
+  given batch;
+- Implement and store state for some form of inter- and intra-batch replay mitigation; and
+- Store helper state associated with a given PDAParam batch.
+
+### Collector capabilities
+
+Collectors statefully interact with aggregators to produce an aggregate output. Their
+input to the protocol is the PAParam structure, configured out of band, which contains
+the corresponding batch window and size. For each collect invocation, collectors are
+required to keep state from the start of the protocol to the end as needed to produce
+the final aggregate output.
+
+Collectors must also maintain state for the lifetime of each PDAParam value, which includes
+key material associated with the HPKE key configuration.
 
 ## Data resolution limitations
 
@@ -1062,28 +1108,6 @@ privacy threshold defined by a minimum number of input shares. One possible
 solution is to increase the reporting period so more samples can be collected,
 balanced against the urgency of responding to a soft deadline.
 
-## Data integrity constraints
-
-Data integrity concerns the accuracy and correctness of the outputs in the
-system. The integrity of the output can be influenced by an incomplete round of
-aggregation caused by network partitions, or by bad actors attempting to cause
-inaccuracies in the aggregates. An example data integrity constraint is that
-every share must be processed exactly once by all aggregators. Data integrity
-constraints may be at odds with the threat model if meeting the constraints
-requires replaying data.
-
-Aggregator operators should expect to encounter invalid inputs during regular
-operation due to misconfigured or malicious clients. Low volumes of errors are
-tolerable; the input-verification protocol and AFEs are robust in the face of
-malformed data. Aggregators may need to detect and mitigate statistically
-significant floods of invalid or identical inputs that affect accuracy, e.g.,
-denial of service (DoS) events.
-
-Certain classes of errors do not exist in the input-validation protocol
-considered in this document. For example, packet loss errors when clients make
-requests directly to aggregators are not relevant when the leader proxies
-requests and controls the schedule for signaling aggregation rounds.
-
 # Security Considerations {#sec-considerations}
 
 Prio assumes a powerful adversary with the ability to compromise an unbounded
@@ -1108,11 +1132,10 @@ order to achieve these goals:
 
 1. Minimum batch size. The aggregation batch size has an obvious impact on
    privacy. (A batch size of one hides nothing of the input.)
-   {{questions-and-params}} discusses appropriate batch sizes and how they
-   pertains to privacy in more detail.
 2. Aggregation function choice. Some aggregation functions leak slightly more
-   than the function output itself. {{questions-and-params}} discusses the
-   leakage profiles of various aggregation functions in more detail.
+   than the function output itself.
+
+[TODO: discuss these in more detail.]
 
 ## Threat model
 
