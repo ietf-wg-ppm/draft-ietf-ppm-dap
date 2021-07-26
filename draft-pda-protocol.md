@@ -392,7 +392,7 @@ Each task has a unique *task ID* derived from the PDA parameters:
 opaque PDATaskID[32];
 ~~~
 
-The task ID of a `PDAParam` `is derived using the following procedure:
+The task ID of a `PDAParam` is derived using the following procedure:
 
 ~~~
 task_id = SHA-256(param)
@@ -508,15 +508,24 @@ the leader's endpoint URL. The payload is structured as follows:
 struct {
   PDATaskID task_id;
   Time time;
+  uint64 jitter;
   PDAEncryptedInputShare encrypted_input_shares<1..2^16-1>;
-} PDAUploadReq;
+} PDAReport;
 ~~~
 
-We sometimes refer to this message as the *report*. The message contains the
-`task_id` of the previous request. It also includes the time at which the report
-was generated. This field is present to ensure that each report is included in
-at most one batch. The rest of the message consists of the encrypted input
-shares, each of which has the following structure:
+This message is called the client's *report*. It contains the following fields:
+
+* `task_id` is the task ID of the task for which the report is intended.
+* `time` is the time at which the report was generated. This field is used by
+  the aggregators to ensure the report appears in at most one batch. (See
+  {{anti-replay}}.)
+* `jitter` is a random number chosen by the client generating the report. This
+  and the timestamp field are used by the aggregators to ensure that each report
+  appears at most once in a batch. (See {{anti-replay}}.)
+* `encrypted_input_shares` contains the encrypted input shares of each of the
+  aggregators.
+
+Encrypted input shares are structured as follows:
 
 ~~~
 struct {
@@ -540,24 +549,20 @@ To encrypt an input share, the client first generates an HPKE
 {{!I-D.irtf-cfrg-hpke}} context for the aggregator by running
 
 ~~~
-enc, context = SetupBaseS(pk, [TODO])
+enc, context = SetupBaseS(pk, "pda input share" || server_role)
 ~~~
 
-where `pk` is the aggregator's public key. `enc` is the encapsulate HPKE
-context and `context` is the HPKE context used by the client for encryption.
-The payload is encrypted as
+where `pk` is the aggregator's public key and `server_role` is a byte whose
+value is `0x01` if the aggregator is the leader and `0x00` if the aggregator is
+the helper. `enc` is the encapsulate HPKE context and `context` is the HPKE
+context used by the client for encryption. The payload is encrypted as
 
 ~~~
-payload = context.Seal(input_share, [TODO])
+payload = context.Seal(input_share, task_id || time || jitter)
 ~~~
 
-where `input_share` is the aggregator's input share.
-
-[TODO: Fully specify encryption of the shares. We need to make sure we
-authenticate things like the PDA parameters and the report timestamp. We need to
-decide what the info string for SetupBaseS() will be, as well as the aad for
-context.Seal(). The aad might be the entire "transcript" between the client and
-aggregator.]
+where `input_share` is the aggregator's input share and `task_id`, `time`, and
+`jitter` are the fields of `PDAReport`.
 
 The leader responds to well-formed requests to `[leader]/upload` with status 200
 and an empty body. Malformed requests are handled as described in
@@ -702,7 +707,8 @@ unique client report. Sub-requests are structured as follows:
 
 ~~~
 struct {
-  Time time; // Equal to PDAReport.time.
+  Time time;     // Equal to PDAReport.time.
+  uint64 jitter; // Equal to PDAReport.jitter.
   PDAEncryptedInputShare helper_share;
   select (PDAParam.proto) { // PDAParam for the PDA task
     case prio: PrioAggregateSubReq;
@@ -711,17 +717,27 @@ struct {
 } PDAAggregateSubReq;
 ~~~
 
-The `helper_share` field is the helper's encrypted input share as it appeared in
-the report uploaded by the client. [OPEN ISSUE: We usually only need to send
-this in the first aggregate request. Shall we exclude it in subsequent requests
-somehow?] The `time` field should match the timestamp of the corresponding
-report. The remainder of the structure is dedicated to the protocol-specific
-helper share and request parameters used for the current round.
+The `time` and `jitter` fields have the same value as those in the report
+uploaded by the client. Similarly, the `helper_share` field is the helper's
+encrypted input share as it appeared in the report. [OPEN ISSUE: We usually only
+need to send this in the first aggregate request. Shall we exclude it in
+subsequent requests somehow?] The remainder of the structure is dedicated to the
+protocol-specific request parameters.
+
+In order to provide replay protection, the leader is required to send aggregate
+sub-requests in ascending order, where the ordering on sub-requests is
+determined by the algorithm defined in {{anti-replay}}. Specifically, the leader
+constructs its request such that:
+* each sub-request follows the previous sub-request; and
+* the first sub-request follows the last sub-request in the previous aggregate
+  request.
 
 The helper handles well-formed requests as follows. (As usual, malformed
 requests are handled as described in {{pa-error-common-aborts}}.) It first looks
-for the PDA parameters `PDAParam` for which `PDAAggregateReq.task_id` is equal to
-the task ID derived from `PDAParam`.
+for the PDA parameters `PDAParam` for which `PDAAggregateReq.task_id` is equal
+to the task ID derived from `PDAParam`. It then filters out out-of-order
+sub-requests by ignoring any sub-request that does not follow the previous one
+(See {{anti-replay}}.)
 
 The response consists of the helper's updated state and a sequence of
 *sub-responses*, where the i-th sub-response corresponds to the sub-request for
@@ -734,6 +750,8 @@ struct {
 } PDAAggregateResp;
 
 struct {
+  Time time;     // Equal to PDAAggregateSubReq.time.
+  uint64 jitter; // Equal to PDAAggregateSubReq.jitter.
   select (PDAParam.proto) { // PDAParam for the PDA task
     case prio: PrioAggregateSubResp;
     case hits: HitsAggregateSubResp;
@@ -749,17 +767,28 @@ this means. See issue#57.] Next, it attempts to decrypt the payload with the
 following procedure:
 
 ~~~
-context = SetupBaseR(helper_share.enc, sk, [TODO])
-input_share = context.Open(helper_share.config_id, [TODO])
+context = SetupBaseR(helper_share.enc, sk,
+                     "pda input share" || server_role)
+input_share = context.Open(helper_share,
+                           task_id || time || jitter)
 ~~~
 
-where `sk` is the HPKE secret key. If decryption fails, then the sub-response
-consists of a "decryption error" alert. [See issue#57.] Otherwise, the helper
-handles the request for its plaintext input share `input_share` and updates its
-state as specified by the PDA protocol.
+where `sk` is the HPKE secret key and `server_role` is the role of the server
+(`0x01` for the leader and `0x00` for the helper). If decryption fails, then the
+sub-response consists of a "decryption error" alert. [See issue#57.] Otherwise,
+the helper handles the request for its plaintext input share `input_share` and
+updates its state as specified by the PDA protocol.
 
 After processing all of the sub-requests, the helper encrypts its updated state
 and constructs its response to the aggregate request.
+
+##### Leader State
+
+The leader is required to issue aggregate requests in order, but reports are
+likely to arrive out-of-order. The leader SHOULD buffer reports for a time
+period proportional to the batch window before issuing the first aggregate
+request. Failure to do so will result in out-of-order reports being dropped by
+the helper.
 
 ##### Helper State
 
@@ -809,8 +838,9 @@ struct {
 Next, it encrypts its output share under the collector's HPKE public key:
 
 ~~~
-enc, context = SetupBaseS(pk, [TODO])
-encrypted_output_share = context.Seal(output_share, [TODO])
+enc, context = SetupBaseS(pk, "pda output share")
+encrypted_output_share = context.Seal(output_share,
+                            task_id || batch_start || batch_end)
 ~~~
 
 where `pk` is the HPKE public key encoded by the collector's HPKE key
@@ -1275,6 +1305,28 @@ that would enable a single vendor to reassemble inputs. For example, if all
 participating aggregators stored unencrypted input shares on the same cloud
 object storage service, then that cloud vendor would be able to reassemble all
 the input shares and defeat privacy.
+
+#### Anti-replay {#anti-replay}
+
+Using a report in multiple batches, or multiple times within a single batch, is
+considered a privacy violation, since it may leak more information about that
+report than intended by the PDA protocol. For example, this may violate
+differential privacy. To mitigate this issue, the core specification imposes an
+ordering on reports so that aggregators can cheaply prevent replays attacks.
+
+Aggregate requests are ordered as follows: We say that a report `R2` *follows*
+report `R1` if either `R2.time > R1.time` or `R2.time == R1.time` and `R2.jitter
+> R1.jitter`. If `R2.time < R1.time`, or `R2.time == R1.time` but `R2.jitter <=
+R1.jitter`, then we say that `R2` *does not follow* `R1`.
+
+To prevent replay attacks, it suffices for each aggregator to ensure that each
+report it consumes follows the previous one it consumed. To prevent the
+adversary from tampering with the ordering of reports, honest clients
+incorporate the ordering-sensitive parameters `(time, jitter)` into the AAD for
+HPKE encryption.
+
+Note that this strategy may result in dropping reports that happen to have the
+same timestamp and jitter value.
 
 ## System requirements {#operational-requirements}
 
