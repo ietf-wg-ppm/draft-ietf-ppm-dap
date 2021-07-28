@@ -1035,8 +1035,6 @@ requests and controls the schedule for signaling aggregation rounds.
 
 # Security Considerations {#sec-considerations}
 
-## Security overview {#security-requirements}
-
 Prio assumes a powerful adversary with the ability to compromise an unbounded
 number of clients. In doing so, the adversary can provide malicious (yet
 truthful) inputs to the aggregation function. Prio also assumes that all but one
@@ -1065,7 +1063,7 @@ order to achieve these goals:
    than the function output itself. {{questions-and-params}} discusses the
    leakage profiles of various aggregation functions in more detail.
 
-### Threat model
+## Threat model
 
 In this section, we enumerate the actors participating in the Prio system and
 enumerate their assets (secrets that are either inherently valuable or which
@@ -1076,15 +1074,15 @@ mitigations for attacks enabled by those capabilities.
 This model assumes that all participants have previously agreed upon and
 exchanged all shared parameters over some unspecified secure channel.
 
-#### Client/user
+### Client/user
 
-##### Assets
+#### Assets
 
 1. Unshared inputs. Clients are the only actor that can ever see the original
    inputs.
 1. Unencrypted input shares.
 
-##### Capabilities
+#### Capabilities
 
 1. Individual users can reveal their own input and compromise their own privacy.
      * Since this does not affect the privacy of others in the system, it is
@@ -1101,15 +1099,15 @@ can defeat privacy by leaking input outside of the Prio system.
        and so these attacks are considered to be outside of the threat model.
 1. Clients can send invalid encodings of input.
 
-##### Mitigations
+#### Mitigations
 
 1. The input validation protocol executed by the aggregators prevents either
 individual clients or coalitions of clients from compromising the robustness
 property.
 
-#### Aggregator
+### Aggregator
 
-##### Assets
+#### Assets
 
 1. Unencrypted input shares.
 1. Input share decryption keys.
@@ -1117,7 +1115,7 @@ property.
 1. Output shares.
 1. Aggregator identity.
 
-##### Capabilities
+#### Capabilities
 
 1. Aggregators may defeat the robustness of the system by emitting bogus output
    shares.
@@ -1136,7 +1134,7 @@ to emit output shares.
 client to craft a proof share that will fool honest aggregators into accepting
 invalid input.
 
-##### Mitigations
+#### Mitigations
 
 1. The linear secret sharing scheme employed by the client ensures that privacy
    is preserved as long as at least one aggregator does not reveal its input
@@ -1144,12 +1142,12 @@ invalid input.
 1. If computed over a sufficient number of input shares, output shares reveal
    nothing about either the inputs or the participating clients.
 
-#### Leader
+### Leader
 
 The leader is also an aggregator, and so all the assets, capabilities and
 mitigations available to aggregators also apply to the leader.
 
-##### Capabilities
+#### Capabilities
 
 1. Input validity proof verification. The leader can forge proofs and collude
    with a malicious client to trick aggregators into aggregating invalid inputs.
@@ -1162,36 +1160,36 @@ mitigations available to aggregators also apply to the leader.
 1. Shrinking the anonymity set. The leader instructs aggregators to construct
    output parts and so could request aggregations over few inputs.
 
-##### Mitigations
+#### Mitigations
 
 1. Aggregators enforce agreed upon minimum aggregation thresholds to prevent
    deanonymizing.
 
-#### Collector
+### Collector
 
-##### Capabilities
+#### Capabilities
 
 1. Advertising shared configuration parameters (e.g., minimum thresholds for
    aggregations, joint randomness, arithmetic circuits).
 1. Collectors may trivially defeat availability by discarding output shares
    submitted by aggregators.
 
-##### Mitigations
+#### Mitigations
 
 1. Aggregators should refuse shared parameters that are trivially insecure
    (i.e., aggregation threshold of 1 contribution).
 
-#### Aggregator collusion
+### Aggregator collusion
 
 If all aggregators collude (e.g. by promiscuously sharing unencrypted input
 shares), then none of the properties of the system hold. Accordingly, such
 scenarios are outside of the threat model.
 
-#### Attacker on the network
+### Attacker on the network
 
 We assume the existence of attackers on the network links between participants.
 
-##### Capabilities
+#### Capabilities
 
 1. Observation of network traffic. Attackers may observe messages exchanged
    between participants at the IP layer.
@@ -1209,7 +1207,7 @@ We assume the existence of attackers on the network links between participants.
 1. Tampering with network traffic. Attackers may drop messages or inject new
    messages into communications between participants.
 
-##### Mitigations
+#### Mitigations
 
 1. All messages exchanged between participants in the system should be
    encrypted.
@@ -1230,49 +1228,32 @@ collude and break soundness. Is this a contingency we need to address? There are
 techniques in [BBG+19] that account for this; we need to figure out if they're
 practical.]]
 
-### Future work and possible extensions
+## Client authentication or attestation
 
-In this section we discuss attacks that are not considered in the above threat
-model, and suggest mitigations that could be incorporated into implementations
-of this protocol or future revisions of this specfication.
+[TODO: Solve issue#89]
 
-#### Client authentication
+## Anonymizing proxies {#anon-proxy}
 
-Attackers can impersonate Prio clients and submit large amounts of false input
-in order to spoil aggregations. Deployments could require clients to
-authenticate before they may contribute inputs. For example, by requiring
-submissions to be signed with a key trusted by aggregators. However some
-deployments may opt to accept the risk of false inputs to avoid having to figure
-out how to distribute trusted identities to clients.
+Client reports can contain auxiliary information such as source IP, HTTP user
+agent or in deployments which use it, client authentication information, which
+could be used by aggregators to identify participating clients or permit some
+attacks on robustness. This auxiliary information could be removed by having
+clients submit reports to an anonymizing proxy server which would then use
+Oblivous HTTP {{!I-D.thomson-http-oblivious}} to forward inputs to the PDA
+leader, without requiring any server participating in PDA to be aware of
+whatever client authentication or attestation scheme is in use.
 
-#### Client attestation
+## Batch sizes and privacy
 
-In the current threat model, servers participating in the protocol have no
-insight into the activities of clients except that they have uploaded input into
-a Prio aggregation, meaning that clients could covertly leak a user's data into
-some other channel which compromises privacy. If we introduce the notion of a
-trusted computing base which can attest to the properties or activities of a
-client, then users and aggregators can be assured that their private data only
-goes into Prio. For instance, clients could use the trusted computing base to
-attest to software measurements over reproducible builds, or a trusted operating
-system could attest to the client's network activity, allowing external
-observers to be confident that no data is being exfiltrated.
+An important parameter of a PDA deployment is the minimum batch size. If an
+aggregation includes too few inputs, then the outputs can reveal information
+about individual participants. Aggregators use the batch size field of the
+`PDAParams` structure to enforce minimum batch size during the collect protocol,
+but server implementations may also opt out of participating in a PDA task if
+the minimum batch size is too small. This document does not specify how to
+choose minimum batch sizes.
 
-#### Trusted anonymizing and authenticating proxy
-
-While the input shares transmitted by clients to aggregators reveal nothing
-about the original input, the aggregator can still learn auxiliary information
-received messages (for instance, source IP or HTTP user agent), which can
-identify participating clients or permit some attacks on robustness. This is
-worse if client authentication used, since incoming messages would be bound to a
-cryptographic identity. Deployments could include a trusted anonymizing proxy,
-which would be responsible for receiving input shares from clients, stripping
-any identifying information from them (including client authentication) and
-forwarding them to aggregators. There should still be a confidential and
-authenticated channel from the client to the aggregator to ensure that no actor
-besides the aggregator may decrypt the input shares.
-
-#### Multiple protocol runs
+## Multiple protocol runs
 
 Prio is _robust_ against malicious clients, and _private_ against malicious
 servers, but cannot provide robustness against malicious servers. Any aggregator
@@ -1287,9 +1268,7 @@ disagrees). See
 [#22](https://github.com/abetterinternet/prio-documents/issues/22) for
 discussion.
 
-### Security considerations
-
-#### Infrastructure diversity
+## Infrastructure diversity
 
 Prio deployments should ensure that aggregators do not have common dependencies
 that would enable a single vendor to reassemble inputs. For example, if all
