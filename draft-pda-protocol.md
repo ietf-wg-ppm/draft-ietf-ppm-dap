@@ -1099,7 +1099,7 @@ secure and mutually authenticated channels. In practice, this can be done by TLS
 or some other form of application-layer authentication.
 
 In the presence of this adversary, Prio provides two important properties for
-computing an aggergation function F:
+computing an aggregation function F:
 
 1. Privacy. The aggregators and collector learn only the output of F computed
    over all client inputs, and nothing else.
@@ -1140,13 +1140,8 @@ exchanged all shared parameters over some unspecified secure channel.
 #### Capabilities
 
 1. Individual users can reveal their own input and compromise their own privacy.
-     * Since this does not affect the privacy of others in the system, it is
-       outside the threat model.
 1. Clients (that is, software which might be used by many users of the system)
 can defeat privacy by leaking input outside of the Prio system.
-     * In the current threat model, other participants have no insight into what
-       clients do besides uploading input shares. Accordingly, such attacks are
-       outside of the threat model.
 1. Clients may affect the quality of aggregations by reporting false input.
      * Prio can only prove that submitted input is valid, not that it is true.
        False input can be mitigated orthogonally to the Prio protocol (e.g., by
@@ -1159,6 +1154,8 @@ can defeat privacy by leaking input outside of the Prio system.
 1. The input validation protocol executed by the aggregators prevents either
 individual clients or coalitions of clients from compromising the robustness
 property.
+1. If aggregator output satisifes [differential privacy](#differential-privacy)
+then all records not leaked by malicious clients are still protected.
 
 ### Aggregator
 
@@ -1219,6 +1216,9 @@ mitigations available to aggregators also apply to the leader.
 
 1. Aggregators enforce agreed upon minimum aggregation thresholds to prevent
    deanonymizing.
+1. If aggregator output satisifes [differential privacy](#differential-privacy)
+   then genuine records are protected regardless of the size of the anonymity
+   set.
 
 ### Collector
 
@@ -1228,11 +1228,17 @@ mitigations available to aggregators also apply to the leader.
    aggregations, joint randomness, arithmetic circuits).
 1. Collectors may trivially defeat availability by discarding output shares
    submitted by aggregators.
+1. Known input injection. Collectors may collude with clients to send known
+   input to the aggregators, allowing collectors to shrink the effective
+   anonymity set by subtracting the known inputs from the final output.
 
 #### Mitigations
 
 1. Aggregators should refuse shared parameters that are trivially insecure
    (i.e., aggregation threshold of 1 contribution).
+1. If aggregator output satisifes [differential privacy](#differential-privacy)
+   then genuine records are protected regardless of the size of the anonymity
+   set.
 
 ### Aggregator collusion
 
@@ -1307,6 +1313,18 @@ about individual participants. Aggregators use the batch size field of the
 but server implementations may also opt out of participating in a PDA task if
 the minimum batch size is too small. This document does not specify how to
 choose minimum batch sizes.
+
+## Differential privacy
+
+Optionally, PDA deployments can choose to ensure their output F achieves
+[differential privacy](https://en.wikipedia.org/wiki/Differential_privacy).
+A simple approach would require both the helper and leader to add two-sided
+noise (e.g. sampled from a two-sided geometric distribution) to outputs.
+Since each aggregator is adding noise independently, privacy can be guaranteed
+even if one of the aggregators is malicious. Differential privacy is a strong
+privacy definition, and protects users in extreme circumstances: Even if an
+adversary has prior knowledge of every input in a batch except for one, that
+one record is still protected.
 
 ## Multiple protocol runs
 
