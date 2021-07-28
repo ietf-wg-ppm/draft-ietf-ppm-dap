@@ -1099,8 +1099,8 @@ can defeat privacy by leaking input outside of the Prio system.
 1. The input validation protocol executed by the aggregators prevents either
 individual clients or coalitions of clients from compromising the robustness
 property.
-1. If aggregator output satisifes [differential privacy](#differential-privacy)
-then all records not leaked by malicious clients are still protected.
+1. If aggregator output satisifes differential privacy {{dp}}, then all records
+not leaked by malicious clients are still protected.
 
 ### Aggregator
 
@@ -1161,9 +1161,8 @@ mitigations available to aggregators also apply to the leader.
 
 1. Aggregators enforce agreed upon minimum aggregation thresholds to prevent
    deanonymizing.
-1. If aggregator output satisifes [differential privacy](#differential-privacy)
-   then genuine records are protected regardless of the size of the anonymity
-   set.
+1. If aggregator output satisifes differential privacy {{dp}}, then genuine
+   records are protected regardless of the size of the anonymity set.
 
 ### Collector
 
@@ -1181,9 +1180,8 @@ mitigations available to aggregators also apply to the leader.
 
 1. Aggregators should refuse shared parameters that are trivially insecure
    (i.e., aggregation threshold of 1 contribution).
-1. If aggregator output satisifes [differential privacy](#differential-privacy)
-   then genuine records are protected regardless of the size of the anonymity
-   set.
+1. If aggregator output satisifes differential privacy {{dp}}, then genuine
+   records are protected regardless of the size of the anonymity set.
 
 ### Aggregator collusion
 
@@ -1259,7 +1257,7 @@ but server implementations may also opt out of participating in a PDA task if
 the minimum batch size is too small. This document does not specify how to
 choose minimum batch sizes.
 
-## Differential privacy
+## Differential privacy {#dp}
 
 Optionally, PDA deployments can choose to ensure their output F achieves
 [differential privacy](https://en.wikipedia.org/wiki/Differential_privacy).
