@@ -1316,10 +1316,10 @@ choose minimum batch sizes.
 
 Optionally, PDA deployments can choose to ensure their output F achieves
 [differential privacy](https://en.wikipedia.org/wiki/Differential_privacy).
-A simple approach would require both the helper and leader to add two-sided
+A simple approach would require the aggregators to add two-sided
 noise (e.g. sampled from a two-sided geometric distribution) to outputs.
 Since each aggregator is adding noise independently, privacy can be guaranteed
-even if one of the aggregators is malicious. Differential privacy is a strong
+even if all but one of the aggregators is malicious. Differential privacy is a strong
 privacy definition, and protects users in extreme circumstances: Even if an
 adversary has prior knowledge of every input in a batch except for one, that
 one record is still protected.
