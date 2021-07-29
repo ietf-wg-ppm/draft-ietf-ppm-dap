@@ -48,6 +48,20 @@ informative:
       -ins: N. Gilboa
       -ins: Y. Ishai
 
+  JD02:
+    title: "The Sybil Attack"
+    date: 2022-10-10
+    target: "https://link.springer.com/chapter/10.1007/3-540-45748-8_24"
+    author:
+      -ins: J. Douceur
+
+  SV16:
+    title: "The Complexity of Differential Privacy"
+    date: 2016-08-09
+    target: "https://privacytools.seas.harvard.edu/files/privacytools/files/complexityprivacy_1.pdf"
+    author:
+      -ins: S. Vadhan
+
 normative:
 
   FIPS180-4:
@@ -1175,6 +1189,7 @@ mitigations available to aggregators also apply to the leader.
 1. Known input injection. Collectors may collude with clients to send known
    input to the aggregators, allowing collectors to shrink the effective
    anonymity set by subtracting the known inputs from the final output.
+   Sybil attacks {{JD02}} could be used to amplify this capability.
 
 #### Mitigations
 
@@ -1260,14 +1275,13 @@ choose minimum batch sizes.
 ## Differential privacy {#dp}
 
 Optionally, PDA deployments can choose to ensure their output F achieves
-[differential privacy](https://en.wikipedia.org/wiki/Differential_privacy).
-A simple approach would require the aggregators to add two-sided
-noise (e.g. sampled from a two-sided geometric distribution) to outputs.
-Since each aggregator is adding noise independently, privacy can be guaranteed
-even if all but one of the aggregators is malicious. Differential privacy is a strong
-privacy definition, and protects users in extreme circumstances: Even if an
-adversary has prior knowledge of every input in a batch except for one, that
-one record is still protected.
+differential privacy {{SV16}}. A simple approach would require the aggregators
+to add two-sided noise (e.g. sampled from a two-sided geometric distribution)
+to outputs. Since each aggregator is adding noise independently, privacy can be
+guaranteed even if all but one of the aggregators is malicious. Differential
+privacy is a strong privacy definition, and protects users in extreme
+circumstances: Even if an adversary has prior knowledge of every input in a
+batch except for one, that one record is still protected.
 
 ## Multiple protocol runs
 
