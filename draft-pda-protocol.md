@@ -509,6 +509,7 @@ struct {
   PDATaskID task_id;
   Time time;
   uint64 jitter;
+  Extension extensions<4..2^16-1>;
   PDAEncryptedInputShare encrypted_input_shares<1..2^16-1>;
 } PDAReport;
 ~~~
@@ -522,6 +523,8 @@ This message is called the client's *report*. It contains the following fields:
 * `jitter` is a random number chosen by the client generating the report. This
   and the timestamp field are used by the aggregators to ensure that each report
   appears at most once in a batch. (See {{anti-replay}}.)
+* `extensions` is a list of extensions to be included in the Upload flow; see
+  {{upload-extensions}}.
 * `encrypted_input_shares` contains the encrypted input shares of each of the
   aggregators.
 
@@ -558,7 +561,7 @@ the helper. `enc` is the encapsulate HPKE context and `context` is the HPKE
 context used by the client for encryption. The payload is encrypted as
 
 ~~~
-payload = context.Seal(input_share, task_id || time || jitter)
+payload = context.Seal(input_share, task_id || time || jitter || extensions)
 ~~~
 
 where `input_share` is the aggregator's input share and `task_id`, `time`, and
@@ -567,6 +570,27 @@ where `input_share` is the aggregator's input share and `task_id`, `time`, and
 The leader responds to well-formed requests to `[leader]/upload` with status 200
 and an empty body. Malformed requests are handled as described in
 {{pa-error-common-aborts}}.
+
+### Upload Extensions {#upload-extensions}
+
+Each PAUploadReq carries a list of extensions that clients may use to convey
+additional, authenticated information in the report. Each extension is a tag-length
+encoded value of the following form:
+
+~~~
+  struct {
+      ExtensionType extension_type;
+      opaque extension_data<0..2^16-1>;
+  } Extension;
+
+  enum {
+      TBD(0),
+      (65535)
+  } ExtensionType;
+~~~
+
+"extension_type" indicates the type of extension, and "extension_data" contains
+information specific to the extension.
 
 ## Collect {#pa-collect}
 
@@ -707,8 +731,9 @@ unique client report. Sub-requests are structured as follows:
 
 ~~~
 struct {
-  Time time;     // Equal to PDAReport.time.
-  uint64 jitter; // Equal to PDAReport.jitter.
+  Time time;                       // Equal to PDAReport.time.
+  uint64 jitter;                   // Equal to PDAReport.jitter.
+  Extension extensions<4..2^16-1>; // Equal to PDAReport.extensions.
   PDAEncryptedInputShare helper_share;
   select (PDAParam.proto) { // PDAParam for the PDA task
     case prio: PrioAggregateSubReq;
@@ -717,8 +742,8 @@ struct {
 } PDAAggregateSubReq;
 ~~~
 
-The `time` and `jitter` fields have the same value as those in the report
-uploaded by the client. Similarly, the `helper_share` field is the helper's
+The `time`, `jitter`, and `extensions` fields have the same value as those in the
+report uploaded by the client. Similarly, the `helper_share` field is the helper's
 encrypted input share as it appeared in the report. [OPEN ISSUE: We usually only
 need to send this in the first aggregate request. Shall we exclude it in
 subsequent requests somehow?] The remainder of the structure is dedicated to the
@@ -770,7 +795,7 @@ following procedure:
 context = SetupBaseR(helper_share.enc, sk,
                      "pda input share" || server_role)
 input_share = context.Open(helper_share,
-                           task_id || time || jitter)
+                           task_id || time || jitter || extensions)
 ~~~
 
 where `sk` is the HPKE secret key and `server_role` is the role of the server
@@ -1334,6 +1359,11 @@ same timestamp and jitter value.
 
 # IANA Considerations
 
-TODO
+## Upload Extension Registry
+
+This document requests creation of a new registry for extensions to the Upload
+protocol. This registry should contain the following columns:
+
+[TODO: define how we want to structure this registry when the time comes]
 
 --- back
