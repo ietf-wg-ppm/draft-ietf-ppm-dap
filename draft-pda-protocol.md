@@ -1336,7 +1336,12 @@ to outputs. Since each aggregator is adding noise independently, privacy can be
 guaranteed even if all but one of the aggregators is malicious. Differential
 privacy is a strong privacy definition, and protects users in extreme
 circumstances: Even if an adversary has prior knowledge of every input in a
-batch except for one, that one record is still protected.
+batch except for one, that one record is still formally protected.
+
+[OPEN ISSUE: While parameters configuring the differential privacy noise (like
+specific distributions / variance) can be agreed upon out of band by the
+aggregators and collector, there may be benefits to adding explicit protocol
+support by encoding them into `PDAParams`.]
 
 ## Multiple protocol runs
 
