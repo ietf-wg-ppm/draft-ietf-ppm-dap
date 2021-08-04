@@ -4,7 +4,7 @@ one might want to measure the most common sites that people browse to
 or exposure to some disease. In these cases, the entity taking the
 measurement is not interested in people's individual responses but
 rather in aggregated data (e.g., how many users visit URL X), but
-conventional methods require collecting individual response and then
+conventional methods require collecting individual responses and then
 aggregating it, thus representing a threat to user privacy and
 rendering many such measurements difficult and impractical.
 
