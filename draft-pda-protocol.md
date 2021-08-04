@@ -338,9 +338,6 @@ For collector-to-leader connections, we may just have this be up to deployment.
 (For instance, the collector might authenticate themselves by logging into a
 website that has some trust relationship with the leader.)]
 
-[TODO: @chris-wood suggested we specify APIs for producing and consuming each of
-the messages in the protocol. Specific PDA protocols would implement this API.]
-
 **Error handling.**
 In this section, we will use the verbs "abort" and "alert with `[some error
 message]`" to describe how protocol participants react to various error
@@ -644,31 +641,22 @@ Before a request can succeed, the aggregators must have verified and aggregated
 enough reports and the leader must have obtained the helper's encrypted output
 share (see {{pa-aggregate}}). In general, the procedure by which the aggregators
 verify and aggregate reports depends on parameters carried by the collect
-request. This procedure is described below in {{pa-aggregate}}.
+request.
 
 ### Collect Request
 
-[TODO: Decide whether to specify things in terms of functions. @ekr pointed out
-that it would be clearer to just talk about protocol messages.]
-
-The collect protocol is an iterative procedure driven by the collector and
-parameterized by a PDAParam. At a high level, it proceeds as follows. First, the
-collector initializes local per-protocol state using the corresponding
-PDAParam. This state object has the following member functions:
-
-- CreateRequest(): Creates a PDACollectReq object, defined below, that is sent to
-  the leader to complete one iteration of the protocol. Along with any
-  protocol-specific parameters, the message specifies a time interval
-  `[batch_start, batch_end)` that determines the batch of reports to be
-  aggregated. It must be that `batch_end - batch_start >= PDAParam.batch_window`
-  and `batch_start` and `batch_end` are multiples of `PDAParam.batch_window`.
+A collect request is associated with a PDA task. Along with the task ID, the
+request includes a time interval that determines the batch of reports to be
+aggregated. To make a collect request, the collector issues a POST request to
+`[leader]/collect`, where `[leader]` is the leader's endpoint URL. The body of
+the request is structured as follows:
 
 ~~~
 struct {
   PDATaskID task_id;
-  Time batch_start; // The beginning of the batch.
-  Time batch_end;   // The end of the batch (exclusive).
-  PDAProto proto;
+  Time batch_start;  // The beginning of the batch.
+  Time batch_end;    // The end of the batch (exclusive).
+  PDAProto proto;    // [TODO: Remove and use PDAParam.proto]
   select (PDACollectReq.proto) {
     case prio: PrioCollectReq;
     case hits: HitsCollectReq;
@@ -676,8 +664,24 @@ struct {
 } PDACollectReq;
 ~~~
 
-- Update(resp: PDACollectResp): Consumes an opaque PDACollectResp object, defined
-  below, that is received from the leader in response to a PDACollectReq.
+The batch window of the request is the interval `[batch_start, batch_end)`. A
+collect request is said to be valid if all of the following conditions hold (let
+`PDAParam` denote the parameters for the PDA task):
+
+1. The batch window of the request aligns with the size of the batch window for
+   the task, i.e., `batch_start` and `batch_end` are multiples of
+   `PDAParam.batch_window`.
+1. The batch window of the request is at least the minimum batch window for the
+   task, i.e., `batch_end - batch_start >= PDAParam.batch_window`.
+1. The batch window of the request does not overlap with the batch window of any
+   previous request. [TODO: Enforcing this condition breaks hits, which
+   explicitly requires multiple collect requests on the same batch. We'll need
+   to fix this.]
+
+The leader responds to valid collect requests by first interacting with the
+helper as described in {{pa-aggregate}}. Once it has obtained the helper's
+encrypted output share for the batch, it responds to the collector's request
+with the following message:
 
 ~~~
 struct {
@@ -686,23 +690,6 @@ struct {
   PDAOutputShare leader_share;
   opaque encrypted_helper_share;
 } PDACollectResp;
-~~~
-
-- Finished(): Returns a boolean indicating indicating whether or not the collection
-  procedure is complete. This function returns true when the collect iteration
-  is complete.
-- Output(): Returns the aggregate output corresponding to the protocol.
-
-The collect procedure for a given PDAParam structure `param` is then driven with
-the following algorithm:
-
-~~~
-state = CreateState(param)
-while not state.Finished():
-   req = state.CreateRequest()
-   resp = fetch([leader]/collect, req)
-   state.Update(resp)
-return state.Output()
 ~~~
 
 [OPEN ISSUE: Describe how intra-protocol errors yield collect errors (see
@@ -852,9 +839,8 @@ struct {
 } PDAOutputShareReq;
 ~~~
 
-To respond to valid output share requests, the helper first checks that
-`batch_start` and `batch_end` are multiples of `task.batch_window` and that
-`batch_end - batch_start >= task.batch_window`. Next, it extracts from its state
+To respond to valid output share requests, the helper first checks that the
+request corresponds to a valid collect request. Next, it extracts from its state
 the set of input shares that fall in the window `[batch_start, batch_end)`. If
 the size of the batch is less than `task.batch_size`, then it aborts and alerts
 the leader with "insufficient data". Otherwise, it computes its output share,
@@ -1375,14 +1361,15 @@ report `R1` if either `R2.time > R1.time` or `R2.time == R1.time` and `R2.jitter
 > R1.jitter`. If `R2.time < R1.time`, or `R2.time == R1.time` but `R2.jitter <=
 R1.jitter`, then we say that `R2` *does not follow* `R1`.
 
-To prevent replay attacks, it suffices for each aggregator to ensure that each
-report it consumes follows the previous one it consumed. To prevent the
-adversary from tampering with the ordering of reports, honest clients
-incorporate the ordering-sensitive parameters `(time, jitter)` into the AAD for
-HPKE encryption.
+To prevent replay attacks, each aggregator ensures that each report it consumes
+follows the previous one it consumed. To prevent the adversary from tampering
+with the ordering of reports, honest clients incorporate the ordering-sensitive
+parameters `(time, jitter)` into the AAD for HPKE encryption. Note that this
+strategy may result in dropping reports that happen to have the same timestamp
+and jitter value.
 
-Note that this strategy may result in dropping reports that happen to have the
-same timestamp and jitter value.
+Aggregators prevent the same report from being used in multiple batches by only
+consuming valid collect requests, as described in {{pa-collect}}.
 
 ## System requirements {#operational-requirements}
 
