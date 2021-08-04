@@ -5,7 +5,7 @@ or exposure to some disease. In these cases, the entity taking the
 measurement is not interested in people's individual responses but
 rather in aggregated data (e.g., how many users visit URL X), but
 conventional methods require collecting individual responses and then
-aggregating it, thus representing a threat to user privacy and
+aggregating them, thus representing a threat to user privacy and
 rendering many such measurements difficult and impractical.
 
 New cryptographic techniques such as Prio and Heavy Hitters address
