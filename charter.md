@@ -18,7 +18,7 @@ the Internet. This protocol will include mechanisms for:
 - Client submission of individual reports, including proofs of validity.
 - Server verification of validity proofs
 - Server computation of aggregate values and collection of results to
-  the entity taking the measurement
+- Reporting of aggregate results to the entity taking the measurement
   
 Configuration of clients and servers is out of scope for the working
 group. It is assumed that this happens out of band as part of the
