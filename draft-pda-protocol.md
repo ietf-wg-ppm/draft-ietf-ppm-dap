@@ -625,7 +625,7 @@ Collector     Leader           Helper
   +------------->                |
   |             |  aggregate 1   |
   |             <---------------->
-  |             |     ...        |
+  |             |  ...           |
   |             |  aggregate L   |
   |             <---------------->
   |             |  output share  |
@@ -708,10 +708,6 @@ return state.Output()
 [OPEN ISSUE: Describe how intra-protocol errors yield collect errors (see
 issue#57). For example, how does a leader respond to a collect request if the
 helper drops out?]
-
-Each collect request involves one of the helpers specified by the PDA parameters.
-If more than one helper is specified, the collector may issue the requests in
-any order.
 
 ### Verifying and Aggregating Reports {#pa-aggregate}
 
