@@ -1064,7 +1064,7 @@ In addition, for each PDAParam instance, leaders are required to:
 ### Collector capabilities
 
 Collectors statefully interact with aggregators to produce an aggregate output. Their
-input to the protocol is the PAParam structure, configured out of band, which contains
+input to the protocol is the PDAParam structure, configured out of band, which contains
 the corresponding batch window and size. For each collect invocation, collectors are
 required to keep state from the start of the protocol to the end as needed to produce
 the final aggregate output.
