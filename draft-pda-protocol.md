@@ -1038,7 +1038,7 @@ at least as capable as helpers, where helpers are generally required to:
 
 - Support the collect protocol, which includes verifying and aggregating
   sets of reports in a given batch; and
-- Publish and manage an HPKE configuration that can be used for the upload protocol;
+- Publish and manage an HPKE configuration that can be used for the upload protocol.
 
 In addition, for each PDAParam instance, helpers are required to:
 
