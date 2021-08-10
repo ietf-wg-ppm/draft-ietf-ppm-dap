@@ -1056,8 +1056,6 @@ Beyond the minimal capabilities required of helpers, leaders are generally requi
 
 In addition, for each PDAParam instance, leaders are required to:
 
-- Ensure that, for each report, all aggregator shares are either included or not in a
-  given batch;
 - Implement and store state for the form of inter- and intra-batch replay mitigation in {{anti-replay}}; and
 - Store helper state associated with a given PDAParam batch.
 
