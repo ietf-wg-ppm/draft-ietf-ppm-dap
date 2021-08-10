@@ -773,7 +773,6 @@ each i. The structure of each sub-response is specific to the PDA protocol:
 
 ~~~
 struct {
-  // XXX(caw): include running hash output
   opaque helper_state<0..2^16>;
   PDAAggregateSubResp seq<1..2^24-1>;
 } PDAAggregateResp;
