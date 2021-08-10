@@ -1045,7 +1045,7 @@ In addition, for each PDAParam instance, helpers are required to:
 - Implement some form of batch-to-report index, as well as inter- and intra-batch
   replay mitigation storage, which includes some way of tracking batch report size
   with optional support for state offloading. Some of this state may be used for
-  replay attack mitigation. One relay mitigation strategy is described in {{anti-replay}}.
+  replay attack mitigation. One replay mitigation strategy is described in {{anti-replay}}.
 
 Beyond the minimal capabilities required of helpers, leaders are generally required to:
 
