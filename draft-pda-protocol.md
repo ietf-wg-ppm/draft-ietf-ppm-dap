@@ -1,5 +1,5 @@
 ---
-title: "Private Data Aggregation Protocol"
+title: "Privacy Preserving Measurement"
 docname: draft-pda-protocol-latest
 category: std
 ipr: trust200902
@@ -150,7 +150,7 @@ The protocol is executed by a large set of clients and a small set of servers.
 We call the servers the *aggregators*. Each client's input to the protocol is a
 set of measurements (e.g., counts of some user behavior). Given the input set
 of measurements `x_1, ..., x_n` held by `n` users, the goal of a
-*private data aggregation (PDA) protocol* is to compute `y = F(x_1, ..., x_n)` for
+*private data aggregation (PPM) protocol* is to compute `y = F(x_1, ..., x_n)` for
 some aggregation function `F` while revealing nothing else about the
 measurements.
 
@@ -221,7 +221,7 @@ data aggregation tasks.
 
 ### Hits {#hits-variant}
 
-A common PDA task that can't be solved efficiently with Prio is the
+A common PPM task that can't be solved efficiently with Prio is the
 `t`-*heavy-hitters* problem {{BBCp21}}. In this setting, each user is in
 possession of a single `n`-bit string, and the goal is to compute the compute
 the set of strings that occur at least `t` times. One reason that Prio doesn't
@@ -240,13 +240,13 @@ inputs are secret shared. In particular, a malicious client can corrupt the
 computation by submitting random integers instead of a proper secret sharing of
 a valid input.
 
-To solve this problem, in each PDA protocol, the client generates a
+To solve this problem, in each PPM protocol, the client generates a
 zero-knowledge proof of its input's validity that the aggregators use
 to verify that their shares correspond to as valid input. The verification
 procedure is designed to ensure that the aggregators learn nothing about the
 input beyond its validity.
 
-After encoding its measurements as an input to the PDA protocol, the client
+After encoding its measurements as an input to the PPM protocol, the client
 generates a *proof* of the input's validity. It then splits the proof into
 shares and sends a share of both the proof and input to each aggregator. The
 aggregators use their shares of the proof to decide if their input shares
@@ -282,7 +282,7 @@ proof showing that the encoded measurement is valid.
 
 ## Data flow
 
-Each PDA task consists of two sub-protocols, *upload* and *collect*, which are
+Each PPM task consists of two sub-protocols, *upload* and *collect*, which are
 executed concurrently. Each sub-protocol consists of a sequence of HTTP requests
 made from one entity to another.
 
@@ -301,10 +301,10 @@ made from one entity to another.
 |             |         |             |
 +-------------+         +-------------+
 ~~~~
-{: #pa-topology title="Who makes requests to whom while executing a PDA task."}
+{: #pa-topology title="Who makes requests to whom while executing a PPM task."}
 
 1. **Upload:** Each client assembles its measurements into an input for the
-   given PDA protocol. It generates a proof of its input's validity and splits
+   given PPM protocol. It generates a proof of its input's validity and splits
    the input and proof into two shares, one for the leader and another for a
    helper. The client then encrypts the leader's share and helper's share under,
    respectively, the leader's public key and the helper's public key. (The keys
@@ -313,7 +313,7 @@ made from one entity to another.
 2. **Collect:** The collector makes one or more requests to the leader in order
    to obtain the final output of the protocol. Before the output can be
    computed, the aggregators (i.e., the leader and helper) need to have verified
-   and aggregated a sufficient number of inputs. Depending on the PDA protocol,
+   and aggregated a sufficient number of inputs. Depending on the PPM protocol,
    it may be possible for the aggregators to do so immediately when reports are
    uploaded. (See {{prio}}.) However, in general it is necessary for them to
    wait until (a) enough reports have been uploaded and (b) the collector has
@@ -322,10 +322,10 @@ made from one entity to another.
 The operational capabilities of each entity are described further in
 {{entity-capabilities}}.
 
-# PDA protocols {#pa}
+# PPM protocols {#pa}
 
-This section specifies a protocol for executing generic PDA tasks. Concrete
-PDA protocols are described in {{prio}} and {{hits}}.
+This section specifies a protocol for executing generic PPM tasks. Concrete
+PPM protocols are described in {{prio}} and {{hits}}.
 
 Each round of the protocol corresponds to an HTTP request and response. The
 content type of each request is "application/octet-stream". We assume that some
@@ -352,9 +352,9 @@ elide the verbs altogether and refer to {{pa-error-common-aborts}}.
 
 ### Tasks
 
-Each PDA protocol is associated with a *PDA task* that specifies the measurements
-that are to be collected. Associated to each task is a set of *PDA Parameters*,
-encoded by the following `PDAParam` structure, which specify the protocol used to
+Each PPM protocol is associated with a *PPM task* that specifies the measurements
+that are to be collected. Associated to each task is a set of *PPM Parameters*,
+encoded by the following `PPMParam` structure, which specify the protocol used to
 verify and aggregate the clients' measurements:
 
 ~~~
@@ -365,15 +365,15 @@ struct {
   HpkeConfig collector_config; // [TODO: Remove this?]
   uint64 batch_size;
   Duration batch_window;
-  PDAProto proto;
+  PPMProto proto;
   uint16 length; // Length of the remainder.
-  select (PDAClientParam.proto) {
+  select (PPMClientParam.proto) {
     case prio: PrioParam;
     case hits: HitsParam;
   }
-} PDAParam;
+} PPMParam;
 
-enum { prio(0), hits(1) } PDAProto;
+enum { prio(0), hits(1) } PPMProto;
 
 opaque Url<1..2^16-1>;
 
@@ -383,7 +383,7 @@ Time uint64; /* seconds elapsed since start of UNIX epoch */
 ~~~
 
 * `nonce`: A unique sequence of bytes used  to ensure that two otherwise
-  identical `PDAParam` instances will have distinct `PDATaskID`s. It is
+  identical `PPMParam` instances will have distinct `PPMTaskID`s. It is
   RECOMMENDED that this be set to a random 16-byte string derived from a
   cryptographically secure pseudorandom number generator.
 * `leader_url`: The leader's endpoint URL.
@@ -395,16 +395,16 @@ Time uint64; /* seconds elapsed since start of UNIX epoch */
   aggregated into an output.
 * `batch_window`: The window of time covered by a batch, i.e., the maximum
   interval between the oldest and newest report in a batch.
-* `proto`: The PDA protocol, e.g., Prio or Hits. The rest of the structure
+* `proto`: The PPM protocol, e.g., Prio or Hits. The rest of the structure
   contains the protocol specific parameters.
 
-Each task has a unique *task ID* derived from the PDA parameters:
+Each task has a unique *task ID* derived from the PPM parameters:
 
 ~~~
-opaque PDATaskID[32];
+opaque PPMTaskID[32];
 ~~~
 
-The task ID of a `PDAParam` is derived using the following procedure:
+The task ID of a `PPMParam` is derived using the following procedure:
 
 ~~~
 task_id = SHA-256(param)
@@ -446,14 +446,14 @@ key.
 
 ## Pre-conditions
 
-We assume the following conditions hold before execution of any PDA task begins:
+We assume the following conditions hold before execution of any PPM task begins:
 
-1. The clients, aggregators, and collector agree on a set of PDA tasks, as well
-   as the PDA parameters associated to each task.
+1. The clients, aggregators, and collector agree on a set of PPM tasks, as well
+   as the PPM parameters associated to each task.
 1. Each aggregator has a clock that is roughly in sync with true time, i.e.,
-   within the batch window specified by the PDA parameters. (This is necessary to
+   within the batch window specified by the PPM parameters. (This is necessary to
    prevent the same report from appearing in multiple batches.)
-1. Each client has selected a PDA task for which it will upload a report. It is
+1. Each client has selected a PPM task for which it will upload a report. It is
    also configured with the task's parameters.
 1. Each client and the leader can establish a leader-authenticated secure
    channel.
@@ -488,8 +488,8 @@ request to `[aggregator]/key_config`, where `[aggregator]` is the aggregator's
 endpoint URL. The aggregator responds to well-formed requests with status 200
 and an `HpkeConfig`.
 
-The client issues a key config request to `PDAParam.leader_url` and
-`PDAParam.helper_url`. It aborts if any of the following happen for either
+The client issues a key config request to `PPMParam.leader_url` and
+`PPMParam.helper_url`. It aborts if any of the following happen for either
 request:
 
 * the client and aggregator failed to establish a secure,
@@ -505,12 +505,12 @@ the leader's endpoint URL. The payload is structured as follows:
 
 ~~~
 struct {
-  PDATaskID task_id;
+  PPMTaskID task_id;
   Time time;
   uint64 jitter;
   Extension extensions<4..2^16-1>;
-  PDAEncryptedInputShare encrypted_input_shares<1..2^16-1>;
-} PDAReport;
+  PPMEncryptedInputShare encrypted_input_shares<1..2^16-1>;
+} PPMReport;
 ~~~
 
 This message is called the client's *report*. It contains the following fields:
@@ -534,7 +534,7 @@ struct {
   uint8 config_id;
   opaque enc<1..2^16-1>;
   opaque payload<1..2^16-1>;
-} PDAEncryptedInputShare;
+} PPMEncryptedInputShare;
 ~~~
 
 * `config_id` is equal to `HpkeConfig.id`, where `HpkeConfig` is the key config
@@ -544,8 +544,8 @@ struct {
 * `payload` is the encrypted input share.
 
 To generate the report, the client begins by encoding its measurements as an
-input for the PDA protocol and splitting it into input shares. (Note that the
-structure of each input share depends on the PDA protocol in use, its parameters,
+input for the PPM protocol and splitting it into input shares. (Note that the
+structure of each input share depends on the PPM protocol in use, its parameters,
 and the role of aggregator, i.e., whether the aggregator is a leader or helper.)
 To encrypt an input share, the client first generates an HPKE
 {{!I-D.irtf-cfrg-hpke}} context for the aggregator by running
@@ -564,7 +564,7 @@ payload = context.Seal(input_share, task_id || time || jitter || extensions)
 ~~~
 
 where `input_share` is the aggregator's input share and `task_id`, `time`, and
-`jitter` are the fields of `PDAReport`.
+`jitter` are the fields of `PPMReport`.
 
 The leader responds to well-formed requests to `[leader]/upload` with status 200
 and an empty body. Malformed requests are handled as described in
@@ -634,7 +634,7 @@ request.
 
 ### Collect Request
 
-A collect request is associated with a PDA task. Along with the task ID, the
+A collect request is associated with a PPM task. Along with the task ID, the
 request includes a time interval that determines the batch of reports to be
 aggregated. To make a collect request, the collector issues a POST request to
 `[leader]/collect`, where `[leader]` is the leader's endpoint URL. The body of
@@ -642,26 +642,26 @@ the request is structured as follows:
 
 ~~~
 struct {
-  PDATaskID task_id;
+  PPMTaskID task_id;
   Time batch_start;  // The beginning of the batch.
   Time batch_end;    // The end of the batch (exclusive).
-  PDAProto proto;    // [TODO: Remove and use PDAParam.proto]
-  select (PDACollectReq.proto) {
+  PPMProto proto;    // [TODO: Remove and use PPMParam.proto]
+  select (PPMCollectReq.proto) {
     case prio: PrioCollectReq;
     case hits: HitsCollectReq;
   }
-} PDACollectReq;
+} PPMCollectReq;
 ~~~
 
 The batch window of the request is the interval `[batch_start, batch_end)`. A
 collect request is said to be valid if all of the following conditions hold (let
-`PDAParam` denote the parameters for the PDA task):
+`PPMParam` denote the parameters for the PPM task):
 
 1. The batch window of the request aligns with the size of the batch window for
    the task, i.e., `batch_start` and `batch_end` are multiples of
-   `PDAParam.batch_window`.
+   `PPMParam.batch_window`.
 1. The batch window of the request is at least the minimum batch window for the
-   task, i.e., `batch_end - batch_start >= PDAParam.batch_window`.
+   task, i.e., `batch_end - batch_start >= PPMParam.batch_window`.
 1. The batch window of the request does not overlap with the batch window of any
    previous request. [TODO: Enforcing this condition breaks hits, which
    explicitly requires multiple collect requests on the same batch. We'll need
@@ -674,11 +674,11 @@ with the following message:
 
 ~~~
 struct {
-  PDATaskID task_id;
-  PDAProto proto;
-  PDAOutputShare leader_share;
+  PPMTaskID task_id;
+  PPMProto proto;
+  PPMOutputShare leader_share;
   opaque encrypted_helper_share;
-} PDACollectResp;
+} PPMCollectResp;
 ~~~
 
 [OPEN ISSUE: Describe how intra-protocol errors yield collect errors (see
@@ -697,35 +697,35 @@ complete batch).
 
 #### Aggregate Request
 
-The process begins with a `PDACollectReq`. The leader collects a sequence of
-reports that are all associated with the same PDA task. Let `[helper]` denote
-`PDAParam.helper_url`, where `PDAParam` is the PDA parameters structure
-associated with`PDAAggregateReq.task.id`. The leader sends a POST request to
+The process begins with a `PPMCollectReq`. The leader collects a sequence of
+reports that are all associated with the same PPM task. Let `[helper]` denote
+`PPMParam.helper_url`, where `PPMParam` is the PPM parameters structure
+associated with`PPMAggregateReq.task.id`. The leader sends a POST request to
 `[helper]/aggregate` with the following message:
 
 ~~~
 struct {
-  PDATaskID task_id;
+  PPMTaskID task_id;
   opaque helper_state<0..2^16>;
-  PDAAggregateSubReq seq<1..2^24-1>;
-} PDAAggregateReq;
+  PPMAggregateSubReq seq<1..2^24-1>;
+} PPMAggregateReq;
 ~~~
 
-The structure contains the PDA task, an opaque *helper state* string, and a
+The structure contains the PPM task, an opaque *helper state* string, and a
 sequence of *sub-requests*, each corresponding to a unique client report.
 Sub-requests are structured as follows:
 
 ~~~
 struct {
-  Time time;                       // Equal to PDAReport.time.
-  uint64 jitter;                   // Equal to PDAReport.jitter.
-  Extension extensions<4..2^16-1>; // Equal to PDAReport.extensions.
-  PDAEncryptedInputShare helper_share;
-  select (PDAParam.proto) { // PDAParam for the PDA task
+  Time time;                       // Equal to PPMReport.time.
+  uint64 jitter;                   // Equal to PPMReport.jitter.
+  Extension extensions<4..2^16-1>; // Equal to PPMReport.extensions.
+  PPMEncryptedInputShare helper_share;
+  select (PPMParam.proto) { // PPMParam for the PPM task
     case prio: PrioAggregateSubReq;
     case hits: HitsAggregateSubReq;
   }
-} PDAAggregateSubReq;
+} PPMAggregateSubReq;
 ~~~
 
 The `time`, `jitter`, and `extensions` fields have the same value as those in the
@@ -746,32 +746,32 @@ constructs its request such that:
 
 The helper handles well-formed requests as follows. (As usual, malformed
 requests are handled as described in {{pa-error-common-aborts}}.) It first looks
-for the PDA parameters `PDAParam` for which `PDAAggregateReq.task_id` is equal
-to the task ID derived from `PDAParam`. It then filters out out-of-order
+for the PPM parameters `PPMParam` for which `PPMAggregateReq.task_id` is equal
+to the task ID derived from `PPMParam`. It then filters out out-of-order
 sub-requests by ignoring any sub-request that does not follow the previous one
 (See {{anti-replay}}.)
 
 The response consists of the helper's updated state and a sequence of
 *sub-responses*, where the i-th sub-response corresponds to the i-th sub-request
-for each i. The structure of each sub-response is specific to the PDA protocol:
+for each i. The structure of each sub-response is specific to the PPM protocol:
 
 ~~~
 struct {
   opaque helper_state<0..2^16>;
-  PDAAggregateSubResp seq<1..2^24-1>;
-} PDAAggregateResp;
+  PPMAggregateSubResp seq<1..2^24-1>;
+} PPMAggregateResp;
 
 struct {
-  Time time;     // Equal to PDAAggregateSubReq.time.
-  uint64 jitter; // Equal to PDAAggregateSubReq.jitter.
-  select (PDAParam.proto) { // PDAParam for the PDA task
+  Time time;     // Equal to PPMAggregateSubReq.time.
+  uint64 jitter; // Equal to PPMAggregateSubReq.jitter.
+  select (PPMParam.proto) { // PPMParam for the PPM task
     case prio: PrioAggregateSubResp;
     case hits: HitsAggregateSubResp;
   }
-} PDAAggregateSubResp;
+} PPMAggregateSubResp;
 ~~~
 
-The helper handles each sub-request `PDAAggregateSubReq` as follows. It first
+The helper handles each sub-request `PPMAggregateSubReq` as follows. It first
 looks up the HPKE config and corresponding secret key associated with
 `helper_share.config_id`. If not found, then the sub-response consists of an
 "unrecognized config" alert. [TODO: We'll want to be more precise about what
@@ -789,7 +789,7 @@ where `sk` is the HPKE secret key and `server_role` is the role of the server
 (`0x01` for the leader and `0x00` for the helper). If decryption fails, then the
 sub-response consists of a "decryption error" alert. [See issue#57.] Otherwise,
 the helper handles the request for its plaintext input share `input_share` and
-updates its state as specified by the PDA protocol.
+updates its state as specified by the PPM protocol.
 
 After processing all of the sub-requests, the helper encrypts its updated state
 and constructs its response to the aggregate request.
@@ -813,7 +813,7 @@ carries is up to the helper implementation.
 #### Output Share Request
 
 Once the aggregators have verified at least as many reports as required for the
-PDA task, the leader issues an *output share request* to the helper. The helper
+PPM task, the leader issues an *output share request* to the helper. The helper
 responds to this request by extracting its output share from its state and
 encrypting it under the collector's HPKE public key.
 
@@ -822,11 +822,11 @@ message:
 
 ~~~
 struct {
-  PDATaskID task_id;
-  Time batch_start; // Same as PDACollectReq.batch_start.
-  Time batch_end;   // Same as PDACollectReq.batch_end.
+  PPMTaskID task_id;
+  Time batch_start; // Same as PPMCollectReq.batch_start.
+  Time batch_end;   // Same as PPMCollectReq.batch_end.
   opaque helper_state<0..2^16>;
-} PDAOutputShareReq;
+} PPMOutputShareReq;
 ~~~
 
 To respond to valid output share requests, the helper first checks that the
@@ -838,12 +838,12 @@ which has the following structure:
 
 ~~~
 struct {
-  PDAProto proto;
-  select (PDAOutputShare.proto) {
+  PPMProto proto;
+  select (PPMOutputShare.proto) {
     case prio: PrioOutputShare;
     case hits: HitsOutputShare;
   }
-} PDAOutputShare;
+} PPMOutputShare;
 ~~~
 
 Next, it encrypts its output share under the collector's HPKE public key:
@@ -864,7 +864,7 @@ struct {
   uint8 collector_hpke_config_id;
   opaque enc<1..2^16-1>;
   opaque encrypted_output_share<1..2^16>;
-} PDAOutputShareResp;
+} PPMOutputShareResp;
 ~~~
 
 The leader uses the helper's output share response to respond to the collector's
@@ -877,12 +877,12 @@ to the receiver that the peer has aborted the protocol. The payload is
 
 ~~~
 struct {
-  PDATaskID task_id;
+  PPMTaskID task_id;
   opaque payload<1..255>;
-} PDAAlert;
+} PPMAlert;
 ~~~
 
-where `task` is the associated PDA task (this value is always known) and
+where `task` is the associated PPM task (this value is always known) and
 `payload` is the message. When sent by an aggregator in response to an HTTP
 request, the response status is 400. When sent in a request to an aggregator,
 the URL is always `[aggregator]/error`, where `[aggregator]` is the URL of the
@@ -897,9 +897,9 @@ The following specify the "boiler-plate" behavior for various error conditions.
   response to a request with a malformed payload, then the receiver aborts and
   alerts the peer with "unrecognized message".
 
-- Each POST request to an aggregator contains a `PDATaskID`. If the aggregator
-  does not recognize the task, i.e., it can't find a `PDAParam` for which the
-  derived task ID matches the `PDATaskID`, then it aborts and alerts the peer
+- Each POST request to an aggregator contains a `PPMTaskID`. If the aggregator
+  does not recognize the task, i.e., it can't find a `PPMParam` for which the
+  derived task ID matches the `PPMTaskID`, then it aborts and alerts the peer
   with "unrecognized task".
 
 # Prio {#prio}
@@ -994,7 +994,7 @@ this process indefinitely until a suitable output is found.
 
 # Operational Considerations {#operational-capabilities}
 
-PDA protocols have inherent constraints derived from the tradeoff between privacy
+PPM protocols have inherent constraints derived from the tradeoff between privacy
 guarantees and computational complexity. These tradeoffs influence how
 applications may choose to utilize services implementing the specification.
 
@@ -1007,7 +1007,7 @@ collectors. This section describes these capabilities in more detail.
 ### Client capabilities
 
 Clients have limited capabilities and requirements. Their only inputs to the protocol
-are (1) the PDAParam structure configured out of band and (2) a measurement. Clients
+are (1) the PPMParam structure configured out of band and (2) a measurement. Clients
 are not expected to store any state across any upload
 flows, nor are they required to implement any sort of report upload retry mechanism.
 By design, the protocol in this document is robust against individual client upload
@@ -1025,7 +1025,7 @@ at least as capable as helpers, where helpers are generally required to:
   sets of reports in a given batch; and
 - Publish and manage an HPKE configuration that can be used for the upload protocol.
 
-In addition, for each PDAParam instance, helpers are required to:
+In addition, for each PPMParam instance, helpers are required to:
 
 - Implement some form of batch-to-report index, as well as inter- and intra-batch
   replay mitigation storage, which includes some way of tracking batch report size
@@ -1034,25 +1034,25 @@ In addition, for each PDAParam instance, helpers are required to:
 
 Beyond the minimal capabilities required of helpers, leaders are generally required to:
 
-- Support the upload protocol and store client reports for a given PDAParam instance,
+- Support the upload protocol and store client reports for a given PPMParam instance,
   where each report maps uniquely to a single batch, and index this storage by batch durations;
 - Track batch report size during each collect flow and request encrypted output shares
   from helpers.
 
-In addition, for each PDAParam instance, leaders are required to:
+In addition, for each PPMParam instance, leaders are required to:
 
 - Implement and store state for the form of inter- and intra-batch replay mitigation in {{anti-replay}}; and
-- Store helper state associated with a given PDAParam batch.
+- Store helper state associated with a given PPMParam batch.
 
 ### Collector capabilities
 
 Collectors statefully interact with aggregators to produce an aggregate output. Their
-input to the protocol is the PDAParam structure, configured out of band, which contains
+input to the protocol is the PPMParam structure, configured out of band, which contains
 the corresponding batch window and size. For each collect invocation, collectors are
 required to keep state from the start of the protocol to the end as needed to produce
 the final aggregate output.
 
-Collectors must also maintain state for the lifetime of each PDAParam value, which includes
+Collectors must also maintain state for the lifetime of each PPMParam value, which includes
 key material associated with the HPKE key configuration.
 
 ## Data resolution limitations
@@ -1300,23 +1300,23 @@ agent or in deployments which use it, client authentication information, which
 could be used by aggregators to identify participating clients or permit some
 attacks on robustness. This auxiliary information could be removed by having
 clients submit reports to an anonymizing proxy server which would then use
-Oblivous HTTP {{!I-D.thomson-http-oblivious}} to forward inputs to the PDA
-leader, without requiring any server participating in PDA to be aware of
+Oblivous HTTP {{!I-D.thomson-http-oblivious}} to forward inputs to the PPM
+leader, without requiring any server participating in PPM to be aware of
 whatever client authentication or attestation scheme is in use.
 
 ## Batch sizes and privacy
 
-An important parameter of a PDA deployment is the minimum batch size. If an
+An important parameter of a PPM deployment is the minimum batch size. If an
 aggregation includes too few inputs, then the outputs can reveal information
 about individual participants. Aggregators use the batch size field of the
-`PDAParams` structure to enforce minimum batch size during the collect protocol,
-but server implementations may also opt out of participating in a PDA task if
+`PPMParams` structure to enforce minimum batch size during the collect protocol,
+but server implementations may also opt out of participating in a PPM task if
 the minimum batch size is too small. This document does not specify how to
 choose minimum batch sizes.
 
 ## Differential privacy {#dp}
 
-Optionally, PDA deployments can choose to ensure their output F achieves
+Optionally, PPM deployments can choose to ensure their output F achieves
 differential privacy {{SV16}}. A simple approach would require the aggregators
 to add two-sided noise (e.g. sampled from a two-sided geometric distribution)
 to outputs. Since each aggregator is adding noise independently, privacy can be
@@ -1328,7 +1328,7 @@ batch except for one, that one record is still formally protected.
 [OPEN ISSUE: While parameters configuring the differential privacy noise (like
 specific distributions / variance) can be agreed upon out of band by the
 aggregators and collector, there may be benefits to adding explicit protocol
-support by encoding them into `PDAParams`.]
+support by encoding them into `PPMParams`.]
 
 ## Multiple protocol runs
 
@@ -1357,7 +1357,7 @@ the input shares and defeat privacy.
 
 Using a report in multiple batches, or multiple times within a single batch, is
 considered a privacy violation, since it may leak more information about that
-report than intended by the PDA protocol. For example, this may violate
+report than intended by the PPM protocol. For example, this may violate
 differential privacy. To mitigate this issue, the core specification imposes an
 ordering on reports so that aggregators can cheaply prevent replays attacks.
 
