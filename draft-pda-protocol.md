@@ -399,7 +399,7 @@ struct {
   opaque uuid[16];
   Url leader_url;
   Url helper_url;
-  HpkeConfig collector_config; // [TODO: Remove this?]
+  HpkeConfig collector_config;
   uint64 batch_size;
   Duration batch_window;
   Proto proto;
@@ -426,8 +426,10 @@ Time uint64; /* seconds elapsed since start of UNIX epoch */
 * `leader_url`: The leader's endpoint URL.
 * `helper_url`: The helper's endpoint URL.
 * `collector_config`: The HPKE configuration of the collector (described in
-  {{key-config}}). [OPEN ISSUE: Maybe the collector's HPKE config should be
-  carried by the collect request?]
+  {{key-config}}). Putting the collector's HPKE configuration directly in
+  `struct PPMParam` absolves collectors of the burden of operating an HTTP
+  server. See [#102](https://github.com/abetterinternet/prio-documents/issues/102)
+  for discussion.
 * `batch_size`: The batch size, i.e., the minimum number of reports that are
   aggregated into an output.
 * `batch_window`: The window of time covered by a batch, i.e., the maximum
