@@ -192,7 +192,7 @@ The overall system architecture is shown in {{pa-topology}}.
               |           |
 +--------+    |     +-----v------+         +-----------+
 |        |    +----->            |         |           |
-| Client +---------->   Leader   +---------> Collector |
+| Client +---------->   Leader   <---------> Collector |
 |        |    +----->            |         |           |
 +--------+    |     +-----^------+         +-----------+
               |           |
@@ -214,18 +214,19 @@ Collector:
   the results. Any given measurement will have a single collector.
 
 Client(s):
-: The endpoints which directly take the measurement(s) and report it to the
+: The endpoints which directly take the measurement(s) and report them to the
   PPM system. In order to provide reasonable levels of privacy, there
   must be a large number of clients.
 
 Aggregator:
 : An endpoint which receives report shares. Each aggregator works with the
   other aggregators to compute the final aggregate. This protocol defines
-  two types of aggregators: a Leader and a set of Helpers.
+  two types of aggregators: Leaders and Helpers. For each measurement,
+  there is a single leader and helper.
 
 Leader:
 : The leader is responsible for coordinating the protocol. It receives
-  the encrypted shares, distributes them to the helpers and orchestrates
+  the encrypted shares, distributes them to the helpers, and orchestrates
   the process of computing the final measurement.
 
 Helper:
@@ -238,8 +239,9 @@ Helper:
 In order to take a measurement, the collector first decides on the
 measurement parameters, including:
 
-* The values to be measured
-* The statistic to be computed (e.g., sum, mean, etc.)
+* The values to be measured;
+* The statistic to be computed (e.g., sum, mean, etc.); 
+* The set of aggregators and necessary cryptographic keying material to use; and
 * The PPM scheme to use. This is to some extent dictated by the previous
   choices.
 
@@ -247,7 +249,7 @@ These parameters are distributed out of band to the clients and to
 the aggregators.
 
 During the duration of the measurement, each client records its own
-value(s), packages them up into a report and sends them to the leader.
+value(s), packages them up into a report, and sends them to the leader.
 Each share is separately encrypted for each aggregator so that even
 though they pass through the leader, it is unable to see or modify
 them. Depending on the measurement, the client may only send one
@@ -258,9 +260,10 @@ the process of verifying them (see {{validating-inputs}})
 and assembling them into a final measurement for the collector.
 Depending on the PPM scheme, it may be possible to incrementally
 process each report as it comes in, or may be necesary to wait
-until all the required shares are received. This protocol is
-compatible with both a "push" mode in which the leader computes
-the measurements at predetermined points and sends the results
+until all the required shares are received. 
+
+This protocol is compatible with both a "push" deployment mode in which the 
+leader computes the measurements at predetermined points and sends the results
 to the collector and a "pull" mode in which the collector tells
 the leader when to perform the aggregation and return the results.
 
