@@ -80,13 +80,13 @@ TODO: writeme
 
 # Introduction
 
-This document describes a framework for specifying protocols for
-privacy-preserving data-aggregation. Each protocol is executed by a large set of
-clients and a small set of servers. The servers' goal is to compute some
-aggregate statistic over the clients' inputs without learning the inputs
-themselves. This is made possible by distributing the computation among the
-servers in such a way that, as long as at least one of them executes the
-protocol honestly, no input is ever seen in the clear by any server.
+This document describes a protocol for privacy preserving measurement.
+The protocol is executed by a large set of clients and a small set of
+servers. The servers' goal is to compute some aggregate statistic over
+the clients' inputs without learning the inputs themselves. This is
+made possible by distributing the computation among the servers in
+such a way that, as long as at least one of them executes the protocol
+honestly, no input is ever seen in the clear by any server.
 
 ## DISCLAIMER
 
@@ -146,13 +146,164 @@ document.
 
 [OPEN ISSUE: Rework this section in light of issue #44.]
 
-The protocol is executed by a large set of clients and a small set of servers.
-We call the servers the *aggregators*. Each client's input to the protocol is a
-set of measurements (e.g., counts of some user behavior). Given the input set
-of measurements `x_1, ..., x_n` held by `n` users, the goal of a
-*private data aggregation (PPM) protocol* is to compute `y = F(x_1, ..., x_n)` for
-some aggregation function `F` while revealing nothing else about the
-measurements.
+The protocol is executed by a large set of clients and a small set of
+servers.  We call the servers the *aggregators*. Each client's input
+to the protocol is a set of measurements (e.g., counts of some user
+behavior). Given the input set of measurements `x_1, ..., x_n` held by
+`n` users, the goal of a *privacy preserving measurement (PPM)
+protocol* is to compute `y = F(x_1, ..., x_n)` for some aggregation
+function `F` while revealing nothing else about the measurements.
+
+This protocol is extensible and allows for the addition of new
+cryptographic schemes that compute new functions. The current
+version supports two schemes:
+
+* Prio {{CB17}}, which allows for aggregate statistics such as
+  sum, mean, histograms, etc. over a single value.
+
+* Heavy Hitters {{BBCp21}}, which allows for finding the most
+  common strings among a collection of clients (e.g., the
+  URL of their home page) as well as counting the number of
+  clients that hold a given string.
+
+This protocol is designed to work with schemes that use secret
+sharing. Rather than send its input in the clear, each client splits
+its measurements into a sequence of *shares* and sends a share to each
+of the aggregators. This provides two important properties:
+
+* It's impossible to deduce the measurement without knowing *all* of the shares.
+
+* It allows the aggregators to compute the final output by first
+   aggregating up their measurements shares locally, then combining
+   the results to obtain the final output.
+
+## System Architecture
+
+The overall system architecture is shown in {{pa-topology}}.
+
+~~~~
+                    +------------+
+                    |            |
++--------+          |   Helper   |
+|        |          |            |
+| Client +----+     +-----^------+
+|        |    |           |
++--------+    |           |
+              |           |
++--------+    |     +-----v------+         +-----------+
+|        |    +----->            |         |           |
+| Client +---------->   Leader   +---------> Collector |
+|        |    +----->            |         |           |
++--------+    |     +-----^------+         +-----------+
+              |           |
++--------+    |           |
+|        |    |           |
+| Client +----+     +-----V------+
+|        |          |            |
++--------+          |   Helper   |
+                    |            |
+                    +------------+
+~~~~
+{: #pa-topology title="System Architecture"}
+
+
+The main participants in the protocol are as follows:
+
+Collector:
+: The entity which wants to take the measurement and ultimately receives
+  the results. Any given measurement will have a single collector.
+
+Client(s):
+: The endpoints which directly take the measurement(s) and report it to the
+  PPM system. In order to provide reasonable levels of privacy, there
+  must be a large number of clients.
+
+Aggregator:
+: An endpoint which receives report shares. Each aggregator works with the
+  other aggregators to compute the final aggregate. This protocol defines
+  two types of aggregators: a Leader and a set of Helpers.
+
+Leader:
+: The leader is responsible for coordinating the protocol. It receives
+  the encrypted shares, distributes them to the helpers and orchestrates
+  the process of computing the final measurement.
+
+Helper:
+: Helpers are responsible for executing the protocol as instructed
+  by the leader. The protocol is designed so that helpers can be relatively
+  lightweight, with most of the state held at the leader.
+{:br}
+
+
+In order to take a measurement, the collector first decides on the
+measurement parameters, including:
+
+* The values to be measured
+* The statistic to be computed (e.g., sum, mean, etc.)
+* The PPM scheme to use. This is to some extent dictated by the previous
+  choices.
+
+These parameters are distributed out of band to the clients and to
+the aggregators.
+
+During the duration of the measurement, each client records its own
+value(s), packages them up into a report and sends them to the leader.
+Each share is separately encrypted for each aggregator so that even
+though they pass through the leader, it is unable to see or modify
+them. Depending on the measurement, the client may only send one
+report or may send many reports over time.
+
+The leader distributes the shares to the helpers and orchestrates
+the process of verifying them (see {{validating-inputs}})
+and assembling them into a final measurement for the collector.
+Depending on the PPM scheme, it may be possible to incrementally
+process each report as it comes in, or may be necesary to wait
+until all the required shares are received. This protocol is
+compatible with both a "push" mode in which the leader computes
+the measurements at predetermined points and sends the results
+to the collector and a "pull" mode in which the collector tells
+the leader when to perform the aggregation and return the results.
+
+
+## Validating Inputs {#validating-inputs}
+
+An essential task of any data collection pipeline is ensuring that the input
+data is "valid". In PPM, input validation is complicated by
+the fact that none of the entities other than the client ever sees
+the values for individual clients.
+
+In order to address this problem, each PPM client generates a
+zero-knowledge proof that their input is valid and attaches it to the
+report. The aggregators can then jointly verify this proof prior to
+incorporating the report in the aggregation and reject the report if
+it cannot be verified. However, they do not learn anything about
+the individual report other than that it is valid.
+
+The specific properties attested to in the
+proof vary depending on the measurement being taken. For instance, if
+we want to measure the time the user took performing a given task the
+proof might demonstrate that the value reported was within a certain
+range (e.g., 0-60 seconds). By contrast, if we wanted to report which
+of a set of N options the user select, the report might contain N
+integers and the proof would demonstrate that N-1 were 0 and the other
+was 1.
+
+It is important to recogize that "validity" is distinct from "correctness".
+For instance, the user might have spent 30s on a task but the client
+might report 60s. This is a problem with any measurement system and
+PPM does not attempt to address it; it merely ensures that the data
+is within acceptable limits, so the client could not report 10^6s
+or -20s.
+
+<!--- EKR stopped here -->
+
+
+## Data flow
+
+Each PPM task consists of two sub-protocols, *upload* and *collect*, which are
+executed concurrently. Each sub-protocol consists of a sequence of HTTP requests
+made from one entity to another.
+
 
 ## Private aggregation via secret sharing
 
@@ -230,97 +381,8 @@ apply to this problem is that the proof generated by the client would be huge.
 [TODO: Provide an overview of the protocol of {{BBCp21}} and provide some
 intuition about how additive secret sharing is used.]
 
-## Validating inputs in zero knowledge
 
-An essential task of any data collection pipeline is ensuring that the input
-data is "valid". Going back to the example above, it's often useful to assert
-that each measurement is in a certain range, e.g., `[0, 2^k)` for some `k`.
-This straight-forward task is complicated in our setting by the fact that the
-inputs are secret shared. In particular, a malicious client can corrupt the
-computation by submitting random integers instead of a proper secret sharing of
-a valid input.
 
-To solve this problem, in each PPM protocol, the client generates a
-zero-knowledge proof of its input's validity that the aggregators use
-to verify that their shares correspond to as valid input. The verification
-procedure is designed to ensure that the aggregators learn nothing about the
-input beyond its validity.
-
-After encoding its measurements as an input to the PPM protocol, the client
-generates a *proof* of the input's validity. It then splits the proof into
-shares and sends a share of both the proof and input to each aggregator. The
-aggregators use their shares of the proof to decide if their input shares
-correspond to a valid input.
-
-## Collecting reports
-
-As noted above, each client has a collection of measurements that it
-wants to send. Each measurement is characterized by a set of
-parameters that are centrally configured and provided to each client (see
-{{pa-config}}).
-
-Once the client has collected the measurements to send, it needs to
-turn them into a set of reports. Naively, each measurement would be
-sent in its own report, but it is also possible to have multiple
-measurements in a single report; clients need to be configured with
-the mapping from measurements to reports. The set of measurements
-that go into a report is referred to as the "input" to the report.
-Because each report is independent, for the remainder of this document
-we focus on a single report and its inputs.
-
-[NOTE(cjpatton): This paragraph is slightly misleading. If you want to do a
-range check for the measurement (this will usually be necessary, IMO) then
-you'll need a few extra field elements to encode the input.]
-The client uses the statistic to be computed in order to know how to
-encode the measurement. For instance, if the statistic is mean, then
-the measurement can be encoded directly. However, if the statistic is
-standard deviation, then the client must send both `x` and `x^2`. Section
-[TODO: cite to internal description of how to encode]
-describes how to encode measurements for each statistic.
-The client uses the validity rules to construct the zero knowledge
-proof showing that the encoded measurement is valid.
-
-## Data flow
-
-Each PPM task consists of two sub-protocols, *upload* and *collect*, which are
-executed concurrently. Each sub-protocol consists of a sequence of HTTP requests
-made from one entity to another.
-
-~~~~
-+-------------+ 1.      +-------------+
-|             +--------->             |
-|   Client    |         |   Leader    |
-|             |    +----+             |
-+------+------+    | 2. +------^------+
-       | 1.        |           |
-       |           |           |
-       |           |           | 2.
-+------v------+    |    +------+------+
-|             <----+    |             |
-|   Helper    |         |  Collector  |
-|             |         |             |
-+-------------+         +-------------+
-~~~~
-{: #pa-topology title="Who makes requests to whom while executing a PPM task."}
-
-1. **Upload:** Each client assembles its measurements into an input for the
-   given PPM protocol. It generates a proof of its input's validity and splits
-   the input and proof into two shares, one for the leader and another for a
-   helper. The client then encrypts the leader's share and helper's share under,
-   respectively, the leader's public key and the helper's public key. (The keys
-   are obtained by making requests to the leader and helper.) Finally, the
-   client uploads the encrypted shares to the leader.
-2. **Collect:** The collector makes one or more requests to the leader in order
-   to obtain the final output of the protocol. Before the output can be
-   computed, the aggregators (i.e., the leader and helper) need to have verified
-   and aggregated a sufficient number of inputs. Depending on the PPM protocol,
-   it may be possible for the aggregators to do so immediately when reports are
-   uploaded. (See {{prio}}.) However, in general it is necessary for them to
-   wait until (a) enough reports have been uploaded and (b) the collector has
-   made a request. (See {{hits}}.)
-
-The operational capabilities of each entity are described further in
-{{entity-capabilities}}.
 
 # PPM protocols {#pa}
 
