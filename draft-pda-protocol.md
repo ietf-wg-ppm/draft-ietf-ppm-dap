@@ -227,7 +227,8 @@ Aggregator:
 Leader:
 : The leader is responsible for coordinating the protocol. It receives
   the encrypted shares, distributes them to the helpers, and orchestrates
-  the process of computing the final measurement.
+  the process of computing the final measurement as requested by
+  the collector.
 
 Helper:
 : Helpers are responsible for executing the protocol as instructed
