@@ -295,7 +295,7 @@ PPM does not attempt to address it; it merely ensures that the data
 is within acceptable limits, so the client could not report 10^6s
 or -20s.
 
-<!--- EKR stopped here -->
+# EKR STOPPED HERE
 
 
 ## Data flow
