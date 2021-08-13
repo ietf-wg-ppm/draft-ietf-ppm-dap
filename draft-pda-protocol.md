@@ -241,7 +241,8 @@ Helper:
 
 
 The basic unit of PPM is the "task" which represents
-a signal measurement. The definition of a task includes the
+a single measurement (though potentially taken over multiple
+time wndows). The definition of a task includes the
 following parameters:
 
 * The values to be measured;
@@ -249,6 +250,7 @@ following parameters:
 * The set of aggregators and necessary cryptographic keying material to use; and
 * The PPM scheme to use. This is to some extent dictated by the previous
   choices.
+* The minimum "batch size" of reports which canbe aggregated.
 
 These parameters are distributed out of band to the clients and to
 the aggregators. Each task is identified by a unique 32-byte ID.
@@ -281,7 +283,7 @@ the fact that none of the entities other than the client ever sees
 the values for individual clients.
 
 In order to address this problem, each PPM client generates a
-zero-knowledge proof that their input is valid and attaches it to the
+zero-knowledge proof that its report is valid and attaches it to the
 report. The aggregators can then jointly verify this proof prior to
 incorporating the report in the aggregation and reject the report if
 it cannot be verified. However, they do not learn anything about
@@ -1249,7 +1251,7 @@ protocol. This registry should contain the following columns:
 
 The text in {{message-transport}} is based extensively on {{?RFC8555}}
 
-# Attic
+# OLD CRYPTO TEXT THAT PROBABLY GOES IN ANOTHER DOC
 
 
 ## Definition flow
