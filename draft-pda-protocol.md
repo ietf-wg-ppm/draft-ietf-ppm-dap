@@ -4,7 +4,6 @@ docname: draft-pda-protocol-latest
 category: std
 ipr: trust200902
 area: ART
-workgroup: HTTPBIS
 
 stand_alone: yes
 pi: [toc, sortrefs, symrefs, docmapping]
@@ -767,7 +766,7 @@ struct {
 } PPMOutputShare;
 ~~~
 
-Next, it encrypts its output share under the collector's HPKE public key:
+Next, the helper encrypts its output share under the collector's HPKE public key:
 
 ~~~
 enc, context = SetupBaseS(pk, "pda output share")
@@ -776,7 +775,10 @@ encrypted_output_share = context.Seal(output_share,
 ~~~
 
 where `pk` is the HPKE public key encoded by the collector's HPKE key
-configuration and `output_share` is its serialized output share.
+configuration and `output_share` is its serialized output share. This
+encryption prevents the leader from learning the actual result, as
+it only has its own share and not the helper's share, which is encrypted
+for the collector.
 
 It responds with the following message:
 
@@ -793,15 +795,13 @@ collect request (see {{pa-collect}}).
 
 
 
+## Collecting Results {#pa-collect}
 
-
-### Collect Request
-
-A collect request is associated with a PPM task. Along with the task ID, the
-request includes a time interval that determines the batch of reports to be
-aggregated. To make a collect request, the collector issues a POST request to
-`[leader]/collect`, where `[leader]` is the leader's endpoint URL. The body of
-the request is structured as follows:
+The collector uses CollectReq to ask the leader to collect and return
+the results for a given PPM task over a given time period. To make
+a collect request, the collector issues a POST request to
+`[leader]/collect`, where `[leader]` is the leader's endpoint URL. The
+body of the request is structured as follows:
 
 ~~~
 struct {
@@ -816,108 +816,18 @@ struct {
 } PPMCollectReq;
 ~~~
 
+[[TODO: Define the fields]]
 
-
-
-
-After the client uploads a report to the leader, the aggregators verify in
-zero knowledge that the input is valid. The exact procedure for doing so is
-specific to the PPM scheme specific, but all schemes have the same basic structure. In
-particular, the scheme is comprised of a sequence of *aggregate requests* from
-the leader to the helper. At the end of this procedure, the leader and helper
-will have aggregated a set of valid client inputs (though not necessarily a
-complete batch).
-
-
-
-
-
-## 
-
-[TODO: Fix the bounds for length-prefixed parameters in protocol messages.
-(E.g., `<23..479>` instead of `<1..2^16-1>`.)]
-
-
-
-## Collect {#pa-collect}
-
-~~~~
-Collector     Leader           Helper
-  |  collect 1  |                |
-  +------------->                |
-  |             |  aggregate 1   |
-  |             <---------------->
-  |             |  ...           |
-  |             |  aggregate L   |
-  |             <---------------->
-  |             |  output share  |
-  |             <---------------->
-  <-------------+                |
-  |  ...        |                |
-  |  collect N  |                |
-  +------------->                |
-  |             |  aggregate 1   |
-  |             <---------------->
-  |             |  ...           |
-  |             |  aggregate L   |
-  |             <---------------->
-  |             |  output share  |
-  |             <---------------->
-  <-------------+                |
-  v             v                v
-~~~~
-{: #pa-collect-flow title="Flow of the collect process with N collect requests
-and L aggregate requests per collect request."}
-
-[TODO: Decide if and how the collector's request is authenticated.]
-
-The collector interacts with the leader to produce the final aggregate output.
-This process consists of a sequence of *collect requests* issued to the leader.
-Before a request can succeed, the aggregators must have verified and aggregated
-enough reports and the leader must have obtained the helper's encrypted output
-share (see {{pa-aggregate}}). In general, the procedure by which the aggregators
-verify and aggregate reports depends on parameters carried by the collect
-request.
-
-### Collect Request
-
-A collect request is associated with a PPM task. Along with the task ID, the
-request includes a time interval that determines the batch of reports to be
-aggregated. To make a collect request, the collector issues a POST request to
-`[leader]/collect`, where `[leader]` is the leader's endpoint URL. The body of
-the request is structured as follows:
-
-~~~
-struct {
-  PPMTaskID task_id;
-  Time batch_start;  // The beginning of the batch.
-  Time batch_end;    // The end of the batch (exclusive).
-  PPMProto proto;    // [TODO: Remove and use PPMParam.proto]
-  select (PPMCollectReq.proto) {
-    case prio: PrioCollectReq;
-    case hits: HitsCollectReq;
-  }
-} PPMCollectReq;
-~~~
-
-The batch window of the request is the interval `[batch_start, batch_end)`. A
-collect request is said to be valid if all of the following conditions hold (let
-`PPMParam` denote the parameters for the PPM task):
-
-1. The batch window of the request aligns with the size of the batch window for
-   the task, i.e., `batch_start` and `batch_end` are multiples of
-   `PPMParam.batch_window`.
-1. The batch window of the request is at least the minimum batch window for the
-   task, i.e., `batch_end - batch_start >= PPMParam.batch_window`.
-1. The batch window of the request does not overlap with the batch window of any
-   previous request. [TODO: Enforcing this condition breaks hits, which
-   explicitly requires multiple collect requests on the same batch. We'll need
-   to fix this.]
-
-The leader responds to valid collect requests by first interacting with the
-helper as described in {{pa-aggregate}}. Once it has obtained the helper's
+Depending on how the leader is configured, the CollectReq may cause
+the leader to send a series of AggregateReqs to the helpers in
+order to compute the aggregate. Alternately, the leader may already
+have computed the results and can return them immediately.
+In either case, once the leader has obtained the helper's
 encrypted output share for the batch, it responds to the collector's request
-with the following message:
+with the PPMCollectResp message:
+
+[[OPEN ISSUE: What happens if this all takes a really long time.]]
+[TODO: Decide if and how the collector's request is authenticated.]
 
 ~~~
 struct {
@@ -928,101 +838,15 @@ struct {
 } PPMCollectResp;
 ~~~
 
+[[TODO: Define the fields]]
+
+[[OPEN ISSUE: change this to just have a list of shares
+https://github.com/abetterinternet/prio-documents/issues/112]]
+
 [OPEN ISSUE: Describe how intra-protocol errors yield collect errors (see
 issue#57). For example, how does a leader respond to a collect request if the
 helper drops out?]
 
-
-
-# Prio {#prio}
-
-[TODO: Define Prio-specific protocol messages.]
-
-## Parameters
-
-### Finite field arithmetic
-
-The algorithms that comprise the input-validation protocol --- Prove, Query, and
-Decide --- are constructed by generating and evaluating polynomials over a
-finite field. As such, the main ingredient of Prio is an implementation of
-arithmetic in a finite field suitable for the given application.
-
-We will use a prime field. The choice of prime is influenced by the following
-criteria:
-
-1. **Field size.** How big the field needs to be depends on the type of data
-   being aggregated and how many users there are. The field size also impacts
-   the security level: the longer the validity circuit, the larger the field
-   needs to be in order to effectively detect malicious clients. Typically the
-   soundness error (i.e., the probability of an invalid input being deemed valid
-   by the aggregators) will be 2n/(p-n), where n is the size of the input and p
-   is the prime modulus.
-1. **Fast polynomial operations.** In order to make Prio practical, it's
-   important that implementations employ FFT to speed up polynomial operations.
-   In particular, the prime modulus p should be chosen so that `(p-1) = 2^b * s`
-   for large `b` and odd `s`. Then `g^s` is a principle, `2^b`-th root of unity
-   (i.e., `g^(s\*2^b) = 1`), where `g` is the generator of the multiplicative
-   subgroup.
-   This fact allows us to quickly evaluate and interpolate polynomials at
-   `2^a`-th roots of unity for any `1 <= a <= b`. Note that `b` imposes an upper
-   bound on the size of proofs, so it should be large enough to accommodate all
-   foreseeable use cases. Something like `b >= 20` is probably good enough.
-1. **As close to a power of two as possible.** We use rejection sampling to map
-   a PRNG seed to a pseudorandom sequence of field elements (see {{prio-prng}).
-   In order to minimize the probability of a simple being rejected, the modulus
-   should be as close to a power of 2 as possible.
-1. **Code optimization.** [[TODO: What properties of the field make
-   it possible to write faster implementations?]]
-
-The table below lists parameters that meet these criteria at various levels of
-security. (Note that \#1 is the field used in "Prio v2".) The "size" column
-indicates the number of bits required to represent elements of the field.
-
-| # | size | p                                      | g  | b   | s                |
-|---|------|----------------------------------------|----|-----|------------------|
-| 1 | 32   | 4293918721                             | 19 | 20  | 3^2 * 5 * 7 * 13 |
-| 2 | 64   | 15564440312192434177                   | 5  | 59  | 3^3              |
-| 3 | 80   | 779190469673491460259841               | 14 | 72  | 3 * 5 * 11       |
-| 4 | 123  | 9304595970494411110326649421962412033  | 3  | 120 | 7                |
-| 5 | 126  | 74769074762901517850839147140769382401 | 7  | 118 | 3^2 * 5^2        |
-
-[TODO: Choose new parameters for 2, 3, and 5 so that p is as close to 2^size as
-possible without going over. (4 is already close enough; 1 is already deployed
-and can't be changed.]
-
-**Finding suitable primes.**
-One way to find suitable primes is to first choose `b`, then "probe" to find a
-prime of the desired size. The following SageMath script prints the parameters
-of a number of (probable) primes larger than `2^b` for a given `b`:
-
-~~~
-b = 116
-for s in range(0,1000,1):
-    B = 2^b
-    p = (B*s).next_prime()
-    if p-(B*s) == 1:
-        bits = round(math.log2(p), 2)
-        print(bits, p, GF(p).multiplicative_generator(), b, factor(s))
-~~~
-
-### Pseudorandom number generation {#prio-prng}
-
-A suitable PRNG will have the following syntax. Fix a finite field `K`:
-
-1. `x := PRNG(k, n)` denotes generation of a vector of `n` elements of `K`.
-
-This can be instantiated using a standard stream cipher, e.g., AES-CTR, as
-follows. Interpret the seed `k` as the key and IV for generating the AES-CTR key
-stream. Proceed by rejection sampling, as follows. Let `m` be the number of bits
-needed to encode an element of `K`. Generate the next `m` bits of key stream and
-interpret the bytes as an integer `x`, clearing the most significant `m - l`
-bits, where `l` is the bit-length of the modulus `p`. If `x < p`, then output
-`x`. Otherwise, generate the next `m` bits of key stream and try again. Repeat
-this process indefinitely until a suitable output is found.
-
-# Hits {#hits}
-
-[TODO: Define Hits-specific protocol messages.]
 
 # Operational Considerations {#operational-capabilities}
 
@@ -1530,5 +1354,96 @@ TLS; another is to have the leader sign its messages directly, as in Prio v2.
 For collector-to-leader connections, we may just have this be up to deployment.
 (For instance, the collector might authenticate themselves by logging into a
 website that has some trust relationship with the leader.)]
+
+
+# Prio {#prio}
+
+[TODO: Define Prio-specific protocol messages.]
+
+## Parameters
+
+### Finite field arithmetic
+
+The algorithms that comprise the input-validation protocol --- Prove, Query, and
+Decide --- are constructed by generating and evaluating polynomials over a
+finite field. As such, the main ingredient of Prio is an implementation of
+arithmetic in a finite field suitable for the given application.
+
+We will use a prime field. The choice of prime is influenced by the following
+criteria:
+
+1. **Field size.** How big the field needs to be depends on the type of data
+   being aggregated and how many users there are. The field size also impacts
+   the security level: the longer the validity circuit, the larger the field
+   needs to be in order to effectively detect malicious clients. Typically the
+   soundness error (i.e., the probability of an invalid input being deemed valid
+   by the aggregators) will be 2n/(p-n), where n is the size of the input and p
+   is the prime modulus.
+1. **Fast polynomial operations.** In order to make Prio practical, it's
+   important that implementations employ FFT to speed up polynomial operations.
+   In particular, the prime modulus p should be chosen so that `(p-1) = 2^b * s`
+   for large `b` and odd `s`. Then `g^s` is a principle, `2^b`-th root of unity
+   (i.e., `g^(s\*2^b) = 1`), where `g` is the generator of the multiplicative
+   subgroup.
+   This fact allows us to quickly evaluate and interpolate polynomials at
+   `2^a`-th roots of unity for any `1 <= a <= b`. Note that `b` imposes an upper
+   bound on the size of proofs, so it should be large enough to accommodate all
+   foreseeable use cases. Something like `b >= 20` is probably good enough.
+1. **As close to a power of two as possible.** We use rejection sampling to map
+   a PRNG seed to a pseudorandom sequence of field elements (see {{prio-prng}).
+   In order to minimize the probability of a simple being rejected, the modulus
+   should be as close to a power of 2 as possible.
+1. **Code optimization.** [[TODO: What properties of the field make
+   it possible to write faster implementations?]]
+
+The table below lists parameters that meet these criteria at various levels of
+security. (Note that \#1 is the field used in "Prio v2".) The "size" column
+indicates the number of bits required to represent elements of the field.
+
+| # | size | p                                      | g  | b   | s                |
+|---|------|----------------------------------------|----|-----|------------------|
+| 1 | 32   | 4293918721                             | 19 | 20  | 3^2 * 5 * 7 * 13 |
+| 2 | 64   | 15564440312192434177                   | 5  | 59  | 3^3              |
+| 3 | 80   | 779190469673491460259841               | 14 | 72  | 3 * 5 * 11       |
+| 4 | 123  | 9304595970494411110326649421962412033  | 3  | 120 | 7                |
+| 5 | 126  | 74769074762901517850839147140769382401 | 7  | 118 | 3^2 * 5^2        |
+
+[TODO: Choose new parameters for 2, 3, and 5 so that p is as close to 2^size as
+possible without going over. (4 is already close enough; 1 is already deployed
+and can't be changed.]
+
+**Finding suitable primes.**
+One way to find suitable primes is to first choose `b`, then "probe" to find a
+prime of the desired size. The following SageMath script prints the parameters
+of a number of (probable) primes larger than `2^b` for a given `b`:
+
+~~~
+b = 116
+for s in range(0,1000,1):
+    B = 2^b
+    p = (B*s).next_prime()
+    if p-(B*s) == 1:
+        bits = round(math.log2(p), 2)
+        print(bits, p, GF(p).multiplicative_generator(), b, factor(s))
+~~~
+
+### Pseudorandom number generation {#prio-prng}
+
+A suitable PRNG will have the following syntax. Fix a finite field `K`:
+
+1. `x := PRNG(k, n)` denotes generation of a vector of `n` elements of `K`.
+
+This can be instantiated using a standard stream cipher, e.g., AES-CTR, as
+follows. Interpret the seed `k` as the key and IV for generating the AES-CTR key
+stream. Proceed by rejection sampling, as follows. Let `m` be the number of bits
+needed to encode an element of `K`. Generate the next `m` bits of key stream and
+interpret the bytes as an integer `x`, clearing the most significant `m - l`
+bits, where `l` is the bit-length of the modulus `p`. If `x < p`, then output
+`x`. Otherwise, generate the next `m` bits of key stream and try again. Repeat
+this process indefinitely until a suitable output is found.
+
+# Hits {#hits}
+
+[TODO: Define Hits-specific protocol messages.]
 
 --- back
