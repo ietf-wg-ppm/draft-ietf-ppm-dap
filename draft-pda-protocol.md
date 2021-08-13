@@ -99,6 +99,8 @@ the protocol framework or the set of features we intend to support.
 
 [[TODO: Clean up this glossary]]
 
+The following terms are used:
+
 * Aggregation function: The function computed over the users' inputs.
 * Aggregator: An endpoint that runs the input-validation protocol and
    accumulates input shares.
@@ -143,9 +145,9 @@ the protocol framework or the set of features we intend to support.
    secret-shared and encrypted input and proof.
 * Server: An aggregator or collector.
 
-# Overview {#overview}
+This document uses the protocol definition language of {{!RFC8446}}.
 
-[OPEN ISSUE: Rework this section in light of issue #44.]
+# Overview {#overview}
 
 The protocol is executed by a large set of clients and a small set of
 servers.  We call the servers the *aggregators*. Each client's input
@@ -303,6 +305,28 @@ is within acceptable limits, so the client could not report 10^6s
 or -20s.
 
 
+# Message Transport 
+
+Communications between PPM entities are carried over HTTPS {{!RFC2818}}.
+HTTPS provides server authentication and confidentiality. In addition,
+report shares are encrypted directly to the aggregators using HPKE {{!I-D.irtf-cfrg-hpke}}.
+
+## Errors
+
+Errors SHOULD be reported in PPM at the HTTP layer. PPM servers can
+return responses with an HTTP error response code (4XX or 5XX).  For
+example, if the client submits a request using a method not allowed in
+this document, then the server MAY return status code 405 (Method Not
+Allowed).
+
+When the server responds with an error status, it SHOULD provide
+additional information using a problem document {{!RFC7807}}.  To
+facilitate automatic response to errors, this document defines the
+following standard tokens for use in the "type" field (within the
+PPM URN namespace [[TBD]]
+
+[[TODO: Add error table here.]]
+
 # Protocol Definition
 
 PPM has three major interactions which need to be defined:
@@ -311,19 +335,189 @@ PPM has three major interactions which need to be defined:
 * Computing the results of a given measurement
 * Reporting results to the collector
 
-Each of these interactions is carried over HTTP {{!RFC7230}} and must
-be encrypted with TLS 1.3 or later {{!RFC8446}} or QUIC {{!RFC9000}}
-(which uses TLS 1.3 for security).
+## Task Configuration
+
+Each endpoint in the system must agree on the configuration for each
+task, which is defined using the PPMParam structure:
+
+~~~
+struct {
+  opaque nonce[16];
+  Url leader_url;
+  Url helper_url;
+  HpkeConfig collector_config; // [TODO: Remove this?]
+  uint64 batch_size;
+  Duration batch_window;
+  PPMProto proto;
+  uint16 length; // Length of the remainder.
+  select (PPMClientParam.proto) {
+    case prio: PrioParam;
+    case hits: HitsParam;
+  }
+} PPMParam;
+
+enum { prio(0), hits(1) } PPMProto;
+
+opaque Url<1..2^16-1>;
+
+Duration uint64; /* Number of seconds elapsed between two instants */
+
+Time uint64; /* seconds elapsed since start of UNIX epoch */
+~~~
+
+* `nonce`: A unique sequence of bytes used  to ensure that two otherwise
+  identical `PPMParam` instances will have distinct `PPMTaskID`s. It is
+  RECOMMENDED that this be set to a random 16-byte string derived from a
+  cryptographically secure pseudorandom number generator.
+* `leader_url`: The leader's endpoint URL.
+* `helper_url`: The helper's endpoint URL.
+* `collector_config`: The HPKE configuration of the collector (described in
+  {{hpke-config}}). [OPEN ISSUE: Maybe the collector's HPKE config should be
+  carried by the collect request?]
+* `batch_size`: The batch size, i.e., the minimum number of reports that are
+  aggregated into an output.
+* `batch_window`: The window of time covered by a batch, i.e., the maximum
+  interval between the oldest and newest report in a batch.
+* `proto`: The PPM protocol, e.g., Prio or Hits. The rest of the structure
+  contains the protocol specific parameters.
+
+The *task ID* is derived from the PPM parameters as:
+
+~~~
+task_id = SHA-256(param)
+~~~
+
+Where param is just the serialization of PPMParam.
 
 
-## Uploading Results
+## Uploading Reports
 
-As described in {{system-architecture}}, the client MUST first be
+Clients periodically upload reports to the leader, which then distributes
+the individual shares to each helper.
 
-Clients upload reports by using an HTTP POST to the 
-Next, the client issues a POST request to `[leader]/upload`, where `[leader]` is
-the leader's endpoint URL. The payload is structured as follows:
+### Key Config Request
 
+Before the client can upload its report to the leader, it must know
+the the key configs of each of the aggregators. These are retrieved
+from each aggregator by sending a request to
+`[aggregator]/key_config`, where `[aggregator]` is the aggregator's
+endpoint URL, provided in the PPMConfig. The aggregator responds to
+well-formed requests with status 200 and an `HpkeConfig` {{I-D.irtf-cfrg-hpke}}.
+
+The client issues a key config request to `PPMParam.leader_url` and
+`PPMParam.helper_url`. It aborts if any of the following happen for either
+request:
+
+* the client and aggregator failed to establish a secure,
+  aggregator-authenticated channel;
+* the GET request failed or didn't return a valid key config; or
+* the key config specifies a KEM, KDF, or AEAD algorithm the client doesn't
+  recognize.
+
+Clients SHOULD follow the usual HTTP caching {{!RFC7234}} semantics for
+key configurations. Aggregators SHOULD favor long cache lifetimes to avoid
+frequent cache revalidation. 
+
+Note: Long cache lifetimes may result in clients using stale HPKE
+keys; aggregators SHOULD continue to accept reports with old
+keys for a reasonable period after key changes in order to avoid
+rejecting reports.
+[[OPEN ISSUE: https://github.com/abetterinternet/prio-documents/issues/106]]
+
+### Uploading Reports
+
+Clients upload reports by using an HTTP POST `[leader]/upload`, where
+`[leader]` is the leader's endpoint URL. The payload is structured as
+follows:
+
+~~~
+struct {
+  PPMTaskID task_id;
+  Time time;
+  uint64 jitter;
+  Extension extensions<4..2^16-1>;
+  PPMEncryptedInputShare encrypted_input_shares<1..2^16-1>;
+} PPMReport;
+~~~
+
+This message is called the client's *report*. It contains the following fields:
+
+* `task_id` is the task ID of the task for which the report is intended.
+* `time` is the time at which the report was generated. This field is used by
+  the aggregators to ensure the report appears in at most one batch. (See
+  {{anti-replay}}.)
+* `jitter` is a random number chosen by the client generating the report. This
+  and the timestamp field are used by the aggregators to ensure that each report
+  appears at most once in a batch. (See {{anti-replay}}.)
+* `extensions` is a list of extensions to be included in the Upload flow; see
+  {{upload-extensions}}.
+* `encrypted_input_shares` contains the encrypted input shares of each of the
+  aggregators.
+
+Encrypted input shares are structured as follows:
+
+~~~
+struct {
+  uint8 config_id;
+  opaque enc<1..2^16-1>;
+  opaque payload<1..2^16-1>;
+} PPMEncryptedInputShare;
+~~~
+
+* `config_id` is equal to `HpkeConfig.id`, where `HpkeConfig` is the key config
+  of the aggregator receiving the input share.
+* `enc` is the encapsulated HPKE context, used by the aggregator to decrypt its
+  input share.
+* `payload` is the encrypted input share.
+
+To generate the report, the client begins by encoding its measurements as an
+input for the PPM scheme and splitting it into input shares. (Note that the
+structure of each input share depends on the PPM scheme in use, its parameters,
+and the role of aggregator, i.e., whether the aggregator is a leader or helper.)
+To encrypt an input share, the client first generates an HPKE
+{{!I-D.irtf-cfrg-hpke}} context for the aggregator by running
+
+~~~
+enc, context = SetupBaseS(pk, "pda input share" || server_role)
+~~~
+
+where `pk` is the aggregator's public key and `server_role` is a byte whose
+value is `0x01` if the aggregator is the leader and `0x00` if the aggregator is
+the helper. `enc` is the encapsulated HPKE context and `context` is the HPKE
+context used by the client for encryption. The payload is encrypted as
+
+~~~
+payload = context.Seal(input_share, task_id || time || jitter || extensions)
+~~~
+
+where `input_share` is the aggregator's input share and `task_id`, `time`, and
+`jitter` are the fields of `PPMReport`.
+
+The leader responds to well-formed requests to `[leader]/upload` with status 200
+and an empty body. Malformed requests are handled as described in
+{{pa-error-common-aborts}}. Clients SHOULD NOT upload the same measurement value
+in more than one report if the leader responds with status 200 and an empty body.
+
+### Upload Extensions {#upload-extensions}
+
+Each PAUploadReq carries a list of extensions that clients may use to convey
+additional, authenticated information in the report. Each extension is a tag-length
+encoded value of the following form:
+
+~~~
+  struct {
+      ExtensionType extension_type;
+      opaque extension_data<0..2^16-1>;
+  } Extension;
+
+  enum {
+      TBD(0),
+      (65535)
+  } ExtensionType;
+~~~
+
+"extension_type" indicates the type of extension, and "extension_data" contains
+information specific to the extension.
 
 
 
@@ -594,99 +788,6 @@ request:
 * the key config specifies a KEM, KDF, or AEAD algorithm the client doesn't
   recognize.
 
-### Upload Request
-
-Next, the client issues a POST request to `[leader]/upload`, where `[leader]` is
-the leader's endpoint URL. The payload is structured as follows:
-
-~~~
-struct {
-  PPMTaskID task_id;
-  Time time;
-  uint64 jitter;
-  Extension extensions<4..2^16-1>;
-  PPMEncryptedInputShare encrypted_input_shares<1..2^16-1>;
-} PPMReport;
-~~~
-
-This message is called the client's *report*. It contains the following fields:
-
-* `task_id` is the task ID of the task for which the report is intended.
-* `time` is the time at which the report was generated. This field is used by
-  the aggregators to ensure the report appears in at most one batch. (See
-  {{anti-replay}}.)
-* `jitter` is a random number chosen by the client generating the report. This
-  and the timestamp field are used by the aggregators to ensure that each report
-  appears at most once in a batch. (See {{anti-replay}}.)
-* `extensions` is a list of extensions to be included in the Upload flow; see
-  {{upload-extensions}}.
-* `encrypted_input_shares` contains the encrypted input shares of each of the
-  aggregators.
-
-Encrypted input shares are structured as follows:
-
-~~~
-struct {
-  uint8 config_id;
-  opaque enc<1..2^16-1>;
-  opaque payload<1..2^16-1>;
-} PPMEncryptedInputShare;
-~~~
-
-* `config_id` is equal to `HpkeConfig.id`, where `HpkeConfig` is the key config
-  of the aggregator receiving the input share.
-* `enc` is the encapsulated HPKE context, used by the aggregator to decrypt its
-  input share.
-* `payload` is the encrypted input share.
-
-To generate the report, the client begins by encoding its measurements as an
-input for the PPM protocol and splitting it into input shares. (Note that the
-structure of each input share depends on the PPM protocol in use, its parameters,
-and the role of aggregator, i.e., whether the aggregator is a leader or helper.)
-To encrypt an input share, the client first generates an HPKE
-{{!I-D.irtf-cfrg-hpke}} context for the aggregator by running
-
-~~~
-enc, context = SetupBaseS(pk, "pda input share" || server_role)
-~~~
-
-where `pk` is the aggregator's public key and `server_role` is a byte whose
-value is `0x01` if the aggregator is the leader and `0x00` if the aggregator is
-the helper. `enc` is the encapsulated HPKE context and `context` is the HPKE
-context used by the client for encryption. The payload is encrypted as
-
-~~~
-payload = context.Seal(input_share, task_id || time || jitter || extensions)
-~~~
-
-where `input_share` is the aggregator's input share and `task_id`, `time`, and
-`jitter` are the fields of `PPMReport`.
-
-The leader responds to well-formed requests to `[leader]/upload` with status 200
-and an empty body. Malformed requests are handled as described in
-{{pa-error-common-aborts}}. Clients SHOULD NOT upload the same measurement value
-in more than one report if the leader responds with status 200 and an empty body.
-
-### Upload Extensions {#upload-extensions}
-
-Each PAUploadReq carries a list of extensions that clients may use to convey
-additional, authenticated information in the report. Each extension is a tag-length
-encoded value of the following form:
-
-~~~
-  struct {
-      ExtensionType extension_type;
-      opaque extension_data<0..2^16-1>;
-  } Extension;
-
-  enum {
-      TBD(0),
-      (65535)
-  } ExtensionType;
-~~~
-
-"extension_type" indicates the type of extension, and "extension_data" contains
-information specific to the extension.
 
 ## Collect {#pa-collect}
 
@@ -1485,6 +1586,8 @@ protocol. This registry should contain the following columns:
 
 [TODO: define how we want to structure this registry when the time comes]
 
-# Attic
+# Acknowledgements
+
+The text in {{message-transport}} is based extensively on {{?RFC8555}}
 
 --- back
