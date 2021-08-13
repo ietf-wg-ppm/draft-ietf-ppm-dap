@@ -313,18 +313,40 @@ report shares are encrypted directly to the aggregators using HPKE {{!I-D.irtf-c
 
 ## Errors
 
-Errors SHOULD be reported in PPM at the HTTP layer. PPM servers can
-return responses with an HTTP error response code (4XX or 5XX).  For
-example, if the client submits a request using a method not allowed in
-this document, then the server MAY return status code 405 (Method Not
-Allowed).
+[[OPEN ISSUE: Align this with best practice, cribbing from ACME.]]
 
-When the server responds with an error status, it SHOULD provide
-additional information using a problem document {{!RFC7807}}.  To
-facilitate automatic response to errors, this document defines the
-following standard tokens for use in the "type" field (within the
-PPM URN namespace [[TBD]]
+Errors SHOULD be reported in PPM at the HTTP layer,  using an
+HTTP response code of 400. The response payload is a PPMAlert
+structure:
 
+~~~
+struct {
+  PPMTaskID task_id;
+  opaque payload<1..255>;
+} PPMAlert;
+~~~
+
+where `task` is the associated PPM task (this value is always known) and
+`payload` contains a string indicating the error that occurred.
+When sent by an aggregator in response to an HTTP
+request, the response status is 400. When sent in a request to an aggregator,
+the URL is always `[aggregator]/error`, where `[aggregator]` is the URL of the
+aggregator endpoint.
+
+[[OPEN ISSUE: What is the URL? https://github.com/abetterinternet/prio-documents/issues/108]]
+
+The following list defines a set of common errors.
+
+- The message type for the payload of each request and response is unique for a
+  given URL. If ever a client, aggregator, or collector receives a request or
+  response to a request with a malformed payload, then the receiver aborts and
+  alerts the peer with "unrecognized message".
+
+- Each POST request to an aggregator contains a `PPMTaskID`. If the aggregator
+  does not recognize the task, i.e., it can't find a `PPMParam` for which the
+  derived task ID matches the `PPMTaskID`, then it aborts and alerts the peer
+  with "unrecognized task".
+  
 [[TODO: Add error table here.]]
 
 # Protocol Definition
@@ -372,7 +394,7 @@ Time uint64; /* seconds elapsed since start of UNIX epoch */
 * `leader_url`: The leader's endpoint URL.
 * `helper_url`: The helper's endpoint URL.
 * `collector_config`: The HPKE configuration of the collector (described in
-  {{hpke-config}}). [OPEN ISSUE: Maybe the collector's HPKE config should be
+  {{key-config}}). [OPEN ISSUE: Maybe the collector's HPKE config should be
   carried by the collect request?]
 * `batch_size`: The batch size, i.e., the minimum number of reports that are
   aggregated into an output.
@@ -395,16 +417,33 @@ Where param is just the serialization of PPMParam.
 Clients periodically upload reports to the leader, which then distributes
 the individual shares to each helper.
 
-### Key Config Request
+### Key Configuration Request {#key-config}
 
 Before the client can upload its report to the leader, it must know
-the the key configs of each of the aggregators. These are retrieved
+the keys of each of the aggregators. These are retrieved
 from each aggregator by sending a request to
 `[aggregator]/key_config`, where `[aggregator]` is the aggregator's
 endpoint URL, provided in the PPMConfig. The aggregator responds to
-well-formed requests with status 200 and an `HpkeConfig` {{I-D.irtf-cfrg-hpke}}.
+well-formed requests with status 200 and an `HpkeConfig` value:
 
-The client issues a key config request to `PPMParam.leader_url` and
+~~~
+struct {
+  uint8 id;
+  HpkeKemId kem_id;
+  HpkeKdfId kdf_id;
+  HpkeAeadKdfId aead_id;
+  HpkePublicKey public_key;
+} HpkeConfig;
+
+opaque HpkePublicKey<1..2^16-1>;
+uint16 HpkeAeadId; // Defined in I-D.irtf-cfrg-hpke
+uint16 HpkeKemId;  // Defined in I-D.irtf-cfrg-hpke
+uint16 HpkeKdfId;  // Defined in I-D.irtf-cfrg-hpke
+~~~
+[TODO: Decide whether to use the same config structure as OHTTP/ECH. This would
+add support for multiple cipher suites.]
+
+The client issues a key configuration request to `PPMParam.leader_url` and
 `PPMParam.helper_url`. It aborts if any of the following happen for either
 request:
 
@@ -495,7 +534,7 @@ where `input_share` is the aggregator's input share and `task_id`, `time`, and
 
 The leader responds to well-formed requests to `[leader]/upload` with status 200
 and an empty body. Malformed requests are handled as described in
-{{pa-error-common-aborts}}. Clients SHOULD NOT upload the same measurement value
+{{errors}}. Clients SHOULD NOT upload the same measurement value
 in more than one report if the leader responds with status 200 and an empty body.
 
 ### Upload Extensions {#upload-extensions}
@@ -518,9 +557,6 @@ encoded value of the following form:
 
 "extension_type" indicates the type of extension, and "extension_data" contains
 information specific to the extension.
-
-
-
 
 
 
@@ -632,161 +668,12 @@ website that has some trust relationship with the leader.)]
 **Error handling.**
 In this section, we will use the verbs "abort" and "alert with `[some error
 message]`" to describe how protocol participants react to various error
-conditions. The behavior is specified in {{pa-error}}. For common errors, we may
-elide the verbs altogether and refer to {{pa-error-common-aborts}}.
+conditions. The behavior is specified in {{errors}}. For common errors, we may
+elide the verbs altogether and refer to {{errors}}.
 
 [TODO: Fix the bounds for length-prefixed parameters in protocol messages.
 (E.g., `<23..479>` instead of `<1..2^16-1>`.)]
 
-## Configuration {#pa-config}
-
-### Tasks
-
-Each PPM protocol is associated with a *PPM task* that specifies the measurements
-that are to be collected. Associated to each task is a set of *PPM Parameters*,
-encoded by the following `PPMParam` structure, which specify the protocol used to
-verify and aggregate the clients' measurements:
-
-~~~
-struct {
-  opaque nonce[16];
-  Url leader_url;
-  Url helper_url;
-  HpkeConfig collector_config; // [TODO: Remove this?]
-  uint64 batch_size;
-  Duration batch_window;
-  PPMProto proto;
-  uint16 length; // Length of the remainder.
-  select (PPMClientParam.proto) {
-    case prio: PrioParam;
-    case hits: HitsParam;
-  }
-} PPMParam;
-
-enum { prio(0), hits(1) } PPMProto;
-
-opaque Url<1..2^16-1>;
-
-Duration uint64; /* Number of seconds elapsed between two instants */
-
-Time uint64; /* seconds elapsed since start of UNIX epoch */
-~~~
-
-* `nonce`: A unique sequence of bytes used  to ensure that two otherwise
-  identical `PPMParam` instances will have distinct `PPMTaskID`s. It is
-  RECOMMENDED that this be set to a random 16-byte string derived from a
-  cryptographically secure pseudorandom number generator.
-* `leader_url`: The leader's endpoint URL.
-* `helper_url`: The helper's endpoint URL.
-* `collector_config`: The HPKE configuration of the collector (described in
-  {{hpke-config}}). [OPEN ISSUE: Maybe the collector's HPKE config should be
-  carried by the collect request?]
-* `batch_size`: The batch size, i.e., the minimum number of reports that are
-  aggregated into an output.
-* `batch_window`: The window of time covered by a batch, i.e., the maximum
-  interval between the oldest and newest report in a batch.
-* `proto`: The PPM protocol, e.g., Prio or Hits. The rest of the structure
-  contains the protocol specific parameters.
-
-Each task has a unique *task ID* derived from the PPM parameters:
-
-~~~
-opaque PPMTaskID[32];
-~~~
-
-The task ID of a `PPMParam` is derived using the following procedure:
-
-~~~
-task_id = SHA-256(param)
-~~~
-
-Where `SHA-256` is as specified in [FIPS180-4].
-
-### HPKE key configuration {#hpke-config}
-
-Our protocol uses HPKE for public-key encryption {{!I-D.irtf-cfrg-hpke}}. Each
-aggregator specifies the HPKE public key that clients use to encrypt its input
-share, and the collector specifies the HPKE public key that helpers use to
-encrypt output shares during collection. The public key and associated
-parameters are structured as follows:
-
-~~~
-struct {
-  uint8 id;
-  HpkeKemId kem_id;
-  HpkeKdfId kdf_id;
-  HpkeAeadKdfId aead_id;
-  HpkePublicKey public_key;
-} HpkeConfig;
-
-opaque HpkePublicKey<1..2^16-1>;
-uint16 HpkeAeadId; // Defined in I-D.irtf-cfrg-hpke
-uint16 HpkeKemId;  // Defined in I-D.irtf-cfrg-hpke
-uint16 HpkeKdfId;  // Defined in I-D.irtf-cfrg-hpke
-~~~
-[TODO: Decide whether to use the same config structure as OHTTP/ECH. This would
-add support for multiple cipher suites.]
-
-We call this a *key configuration*. The key configuration is used to set up a
-base-mode HPKE context to use to derive symmetric keys for protecting: (1) input
-shares sent from the client to an aggregator; or (2) output shares sent from the
-helper to the collector. The *config id*, `HpkeConfig.id`, is forwarded by the
-sender to the receiver to help the receiver decide if it knows the decryption
-key.
-
-## Pre-conditions
-
-We assume the following conditions hold before execution of any PPM task begins:
-
-1. The clients, aggregators, and collector agree on a set of PPM tasks, as well
-   as the PPM parameters associated to each task.
-1. Each aggregator has a clock that is roughly in sync with true time, i.e.,
-   within the batch window specified by the PPM parameters. (This is necessary to
-   prevent the same report from appearing in multiple batches.)
-1. Each client has selected a PPM task for which it will upload a report. It is
-   also configured with the task's parameters.
-1. Each client and the leader can establish a leader-authenticated secure
-   channel.
-1. The leader and each helper can establish a helper-authenticated secure
-   channel.
-1. The collector and leader can establish a leader-authenticated secure channel.
-1. The collector has chosen an HPKE configuration and corresponding secret key.
-1. Each aggregator has chosen an HPKE configuration and corresponding secret key.
-
-[TODO: It would be clearer to include a "pre-conditions" section prior to each
-"phase" of the protocol.]
-
-## Upload {#pa-upload}
-
-~~~~
-Client          Leader         Helper
-  |  key config  |              |
-  <-------------->              |
-  |              |  key config  |
-  <----------------------------->
-  |  upload      |              |
-  <-------------->              |
-  v              v              v
-~~~~
-{: #pa-upload-flow title="Flow of the upload process"}
-
-### Key Config Request
-
-Before the client can upload its report to the leader, it must first discover
-the key configs of each of the aggregators. To do so, the client sends a GET
-request to `[aggregator]/key_config`, where `[aggregator]` is the aggregator's
-endpoint URL. The aggregator responds to well-formed requests with status 200
-and an `HpkeConfig`.
-
-The client issues a key config request to `PPMParam.leader_url` and
-`PPMParam.helper_url`. It aborts if any of the following happen for either
-request:
-
-* the client and aggregator failed to establish a secure,
-  aggregator-authenticated channel;
-* the GET request failed or didn't return a valid key config; or
-* the key config specifies a KEM, KDF, or AEAD algorithm the client doesn't
-  recognize.
 
 
 ## Collect {#pa-collect}
@@ -942,7 +829,7 @@ constructs its request such that:
   request.
 
 The helper handles well-formed requests as follows. (As usual, malformed
-requests are handled as described in {{pa-error-common-aborts}}.) It first looks
+requests are handled as described in {{errors}}.) It first looks
 for the PPM parameters `PPMParam` for which `PPMAggregateReq.task_id` is equal
 to the task ID derived from `PPMParam`. It then filters out out-of-order
 sub-requests by ignoring any sub-request that does not follow the previous one
@@ -1067,37 +954,6 @@ struct {
 The leader uses the helper's output share response to respond to the collector's
 collect request (see {{pa-collect}}).
 
-## Error handling {#pa-error}
-
-An *alert* is a message sent either in an HTTP request or response that signals
-to the receiver that the peer has aborted the protocol. The payload is
-
-~~~
-struct {
-  PPMTaskID task_id;
-  opaque payload<1..255>;
-} PPMAlert;
-~~~
-
-where `task` is the associated PPM task (this value is always known) and
-`payload` is the message. When sent by an aggregator in response to an HTTP
-request, the response status is 400. When sent in a request to an aggregator,
-the URL is always `[aggregator]/error`, where `[aggregator]` is the URL of the
-aggregator endpoint.
-
-## Common abort conditions {#pa-error-common-aborts}
-
-The following specify the "boiler-plate" behavior for various error conditions.
-
-- The message type for the payload of each request and response is unique for a
-  given URL. If ever a client, aggregator, or collector receives a request or
-  response to a request with a malformed payload, then the receiver aborts and
-  alerts the peer with "unrecognized message".
-
-- Each POST request to an aggregator contains a `PPMTaskID`. If the aggregator
-  does not recognize the task, i.e., it can't find a `PPMParam` for which the
-  derived task ID matches the `PPMTaskID`, then it aborts and alerts the peer
-  with "unrecognized task".
 
 # Prio {#prio}
 
