@@ -573,7 +573,7 @@ can send them to the aggregators to be verified and aggregated. In order
 to enable the system to handle very large batches of reports, this process
 can be performed incrementally. To aggregate a set of reports,
 the leader sends an AggregateReq to the helper containing those report
-shares. The helper then processes the (verifying
+shares. The helper then processes them (verifying
 the proofs and incorporating their values into the ongoing aggregate)
 and replies to the leader. Depending on the PPM scheme, processing the
 reports -- especially verifying the proofs -- may require multiple
