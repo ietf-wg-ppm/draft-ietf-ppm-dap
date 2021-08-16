@@ -819,7 +819,7 @@ struct {
 
 [[TODO: Define the fields]]
 
-Depending on how the leader is configured, the CollectReq may cause
+Depending on the PPM scheme and how the leader is configured, the CollectReq may cause
 the leader to send a series of AggregateReqs to the helpers in
 order to compute the aggregate. Alternately, the leader may already
 have computed the results and can return them immediately.
