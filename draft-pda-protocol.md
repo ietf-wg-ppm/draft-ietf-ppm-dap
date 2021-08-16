@@ -578,7 +578,7 @@ and replies to the leader. Depending on the PPM scheme, processing the
 reports -- especially verifying the proofs -- may require multiple
 round trips.
 
-This process is shown below in {{pa-aggregate-flow}}. In this example,
+This process is illustrated below in {{pa-aggregate-flow}}. In this example,
 the batch size is 20, but the leader opts to process the reports in
 sub-batches of 10. Each sub-batch takes two round-trips to process.
 Once both sub-batches have been processed, the leader can issue
