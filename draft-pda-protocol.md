@@ -326,7 +326,7 @@ struct {
 } PPMAlert;
 ~~~
 
-where `task_id` is the associated PPM task (this value is always known) and
+where `task_id` is the associated PPM task (this value is always known, see {{task-configuration}}) and
 `payload` contains a string indicating the error that occurred.
 When sent by an aggregator in response to an HTTP
 request, the response status is 400. When sent in a request to an aggregator,
