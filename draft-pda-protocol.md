@@ -249,7 +249,7 @@ following parameters:
 * The set of aggregators and necessary cryptographic keying material to use; and
 * The PPM scheme to use. This is to some extent dictated by the previous
   choices.
-* The minimum "batch size" of reports which canbe aggregated.
+* The minimum "batch size" of reports which can be aggregated.
 
 These parameters are distributed out of band to the clients and to
 the aggregators. Each task is identified by a unique 32-byte ID.
