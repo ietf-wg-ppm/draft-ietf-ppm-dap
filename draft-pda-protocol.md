@@ -257,7 +257,7 @@ the aggregators. Each task is identified by a unique 32-byte ID.
 During the duration of the measurement, each client records its own
 value(s), packages them up into a report, and sends them to the leader.
 Each share is separately encrypted for each aggregator so that even
-though they pass through the leader, it is unable to see or modify
+though they pass through the leader, the leader is unable to see or modify
 them. Depending on the measurement, the client may only send one
 report or may send many reports over time.
 
