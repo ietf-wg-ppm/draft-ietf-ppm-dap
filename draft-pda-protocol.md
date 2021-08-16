@@ -586,7 +586,7 @@ an OutputShareReq in order to retrieve the helper's aggregated result.
 
 In order to allow the helpers to be stateless, the helper can attach a
 state parameter to its response, with the leader returning the state
-value in the next request, this offloading the state to the
+value in the next request, thus offloading the state to the
 leader. This state value MUST be cryptographically protected as
 described in {{helper-state}}.
 
