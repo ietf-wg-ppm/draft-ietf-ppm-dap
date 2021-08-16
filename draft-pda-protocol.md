@@ -362,7 +362,7 @@ PPM has three major interactions which need to be defined:
 * Computing the results of a given measurement
 * Reporting results to the collector
 
-## Task Configuration
+## Task Configuration {#task-configuration}
 
 Each endpoint in the system must agree on the configuration for each
 task, which is defined using the PPMParam structure:
