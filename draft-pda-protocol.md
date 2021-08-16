@@ -209,6 +209,9 @@ The overall system architecture is shown in {{pa-topology}}.
 ~~~~
 {: #pa-topology title="System Architecture"}
 
+[[OPEN ISSUE: This shows two helpers, but the document only allows one for now.
+https://github.com/abetterinternet/prio-documents/issues/117]]
+
 
 The main participants in the protocol are as follows:
 
@@ -250,6 +253,8 @@ following parameters:
 * The PPM scheme to use. This is to some extent dictated by the previous
   choices.
 * The minimum "batch size" of reports which can be aggregated.
+* The rate at which measurements can be taken, i.e., the "minimum batch window".
+
 
 These parameters are distributed out of band to the clients and to
 the aggregators. Each task is identified by a unique 32-byte ID.
@@ -267,11 +272,6 @@ and assembling them into a final measurement for the collector.
 Depending on the PPM scheme, it may be possible to incrementally
 process each report as it comes in, or may be necesary to wait
 until the entire batch of reports is received. 
-
-This protocol is compatible with both a "push" deployment mode in which the 
-leader computes the measurements at predetermined points and sends the results
-to the collector and a "pull" mode in which the collector tells
-the leader when to perform the aggregation and return the results.
 
 
 ## Validating Inputs {#validating-inputs}
@@ -468,7 +468,7 @@ keys for a reasonable period after key changes in order to avoid
 rejecting reports.
 [[OPEN ISSUE: https://github.com/abetterinternet/prio-documents/issues/106]]
 
-### Uploading Reports
+### Upload Request
 
 Clients upload reports by using an HTTP POST `[leader]/upload`, where
 `[leader]` is the leader's endpoint URL. The payload is structured as
