@@ -239,7 +239,6 @@ Helper:
   lightweight, with most of the state held at the leader.
 {:br}
 
-
 The basic unit of PPM is the "task" which represents
 a single measurement (though potentially taken over multiple
 time wndows). The definition of a task includes the
