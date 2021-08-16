@@ -266,7 +266,7 @@ the process of verifying them (see {{validating-inputs}})
 and assembling them into a final measurement for the collector.
 Depending on the PPM scheme, it may be possible to incrementally
 process each report as it comes in, or may be necesary to wait
-until all the required shares are received. 
+until the entire batch of reports is received. 
 
 This protocol is compatible with both a "push" deployment mode in which the 
 leader computes the measurements at predetermined points and sends the results
