@@ -40,8 +40,8 @@ will instead use algorithms defined by the CFRG.
 - Conflicts (whole Areas and/or WGs)
    - Chair Conflicts: TBD
    - Technology Overlap: TLS, PEARG, CFRG
-   - Key Participant Conflict: Chris Wood, Eric Rescorla, Christopher Patton, Martin Thomson,
-                               Richard Barnes
+   - Key Participant Conflict: Chris Wood, Eric Rescorla, Christopher Patton,
+                               Martin Thomson, Richard Barnes
 ## Agenda
    - [TODO]
 ## Links to the mailing list, draft charter if any, relevant Internet-Drafts, etc.
