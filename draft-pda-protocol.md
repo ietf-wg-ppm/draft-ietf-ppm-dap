@@ -255,9 +255,9 @@ following parameters:
 * The minimum "batch size" of reports which can be aggregated.
 * The rate at which measurements can be taken, i.e., the "minimum batch window".
 
-
 These parameters are distributed out of band to the clients and to
-the aggregators. Each task is identified by a unique 32-byte ID.
+the aggregators. Each task is identified by a unique 32-byte ID
+which is used to refer to it in protocol messages.
 
 During the duration of the measurement, each client records its own
 value(s), packages them up into a report, and sends them to the leader.
