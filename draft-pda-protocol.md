@@ -396,7 +396,7 @@ task, which is defined using the Param structure:
 
 ~~~
 struct {
-  opaque nonce[16];
+  opaque uuid[16];
   Url leader_url;
   Url helper_url;
   HpkeConfig collector_config; // [TODO: Remove this?]
@@ -419,7 +419,7 @@ Duration uint64; /* Number of seconds elapsed between two instants */
 Time uint64; /* seconds elapsed since start of UNIX epoch */
 ~~~
 
-* `nonce`: A unique sequence of bytes used  to ensure that two otherwise
+* `uuid`: A unique sequence of bytes used  to ensure that two otherwise
   identical `Param` instances will have distinct `TaskID`s. It is
   RECOMMENDED that this be set to a random 16-byte string derived from a
   cryptographically secure pseudorandom number generator.
