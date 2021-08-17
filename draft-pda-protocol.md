@@ -76,13 +76,13 @@ normative:
 There are many situations in which it is desirable to take
 measurements of data which people consider sensitive.  In these cases,
 the entity taking the measurement is usually not interested in
-people's individual responses but rather in aggregated data but
-conventional methods require collecting individual responses and then
+people's individual responses but rather in aggregated data. 
+Conventional methods require collecting individual responses and then
 aggregating them, thus representing a threat to user privacy and
 rendering many such measurements difficult and impractical.
-This document describes a privacy preserving measurement (PPM)
+This document describes a multi-party privacy preserving measurement (PPM)
 protocol which can be used to collect aggregate data without
-collecting any individual user's data.
+revealing any individual user's data.
 
 --- middle
 
