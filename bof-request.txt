@@ -1,0 +1,51 @@
+# Name: Privacy-Preserving Measurement
+
+## Description 
+
+There are many situations in which it is desirable to take
+measurements of data which people consider sensitive. For instance,
+one might want to measure the most common sites that people browse to
+or exposure to some disease. In these cases, the entity taking the
+measurement is not interested in people's individual responses but
+rather in aggregated data (e.g., how many users visit URL X), but
+conventional methods require collecting individual responses and then
+aggregating them, thus representing a threat to user privacy and
+rendering many such measurements difficult and impractical.
+
+New cryptographic techniques such as Prio and Heavy Hitters address
+this gap by splitting up measurements between multiple servers which
+can jointly compute the aggregate value without either server learning
+the value of individual responses. The Privacy Preserving Measurement
+(PPM) work will standardize a protocol for deployment of these
+techniques on the Internet. This protocol will include mechanisms for:
+
+* Client submission of individual reports, including proofs of validity.
+* Server verification of validity proofs
+* Server computation of aggregate values and collection of results to
+* Reporting of aggregate results to the entity taking the measurement
+
+This is a WG-forming BOF for a WG to standardize a PPM protocol.  The
+PPM WG will not itself define cryptographic algorithms for PPM but
+will instead use algorithms defined by the CFRG.
+
+
+
+## Required Details
+- Status: WG Forming
+- Responsible AD: Roman Danyliw
+- BOF proponents: Eric Rescorla <ekr@rtfm.com>, Chris Wood <caw@heapingbits.net>
+- BOF chairs: TBD
+- Number of people expected to attend: 100
+- Length of session (1 or 2 hours): 2 hours
+- Conflicts (whole Areas and/or WGs)
+   - Chair Conflicts: TBD
+   - Technology Overlap: TLS, PEARG, CFRG
+   - Key Participant Conflict: Chris Wood, Eric Rescorla, Chris Patton, Martin Thomson,
+                               Richard Barnes
+## Agenda
+   - [TODO]
+## Links to the mailing list, draft charter if any, relevant Internet-Drafts, etc.
+   - Mailing List: https://www.ietf.org/mailman/listinfo/example [TODO]
+   - Draft charter: https://datatracker.ietf.org/doc/charter-ietf-EXAMPLE/ [TODO]
+   - Relevant drafts:
+      - https://abetterinternet.github.io/prio-documents/draft-pda-protocol.html
