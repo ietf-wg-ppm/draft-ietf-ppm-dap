@@ -336,7 +336,7 @@ namespace for errors not listed in the appropriate IANA registry (see {{ppm-urn-
 Clients SHOULD display the "detail" field of all errors.
 The "instance" value MUST be the endpoint to which the request was
 targeted. The problem document MUST also include a "taskid" member which contains
-the associated PPM task (this value is always known, see {{task-configuration}}).
+the associated PPM task ID (this value is always known, see {{task-configuration}}).
 
 In the remainder of this document, we use the tokens in the table above to refer
 to error types, rather than the full URNs.  For example, an "error of type
