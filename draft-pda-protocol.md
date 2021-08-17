@@ -574,9 +574,21 @@ can be performed incrementally. To aggregate a set of reports,
 the leader sends an AggregateReq to the helper containing those report
 shares. The helper then processes them (verifying
 the proofs and incorporating their values into the ongoing aggregate)
-and replies to the leader. Depending on the PPM scheme, processing the
-reports -- especially verifying the proofs -- may require multiple
-round trips.
+and replies to the leader. 
+
+The exact structure of the aggregation flow depends on the PPM
+scheme. Specifically:
+
+* Some PPM schemes (e.g., Prio) allow the leader to start aggregating
+reports proactively before all the reports in a batch are received.
+Others (e.g., Hits) require all the reports to be present and
+must be initiated by the collector.
+
+* Processing the reports -- especially verifying the proofs -- may
+require multiple round trips.
+
+Note that it is possible to aggregate reports from one batch while
+reports from the next batch are coming in.
 
 This process is illustrated below in {{pa-aggregate-flow}}. In this example,
 the batch size is 20, but the leader opts to process the reports in
@@ -584,7 +596,7 @@ sub-batches of 10. Each sub-batch takes two round-trips to process.
 Once both sub-batches have been processed, the leader can issue
 an OutputShareReq in order to retrieve the helper's aggregated result.
 
-In order to allow the helpers to be stateless, the helper can attach a
+In order to allow the helpers to retain minimal state, the helper can attach a
 state parameter to its response, with the leader returning the state
 value in the next request, thus offloading the state to the
 leader. This state value MUST be cryptographically protected as
@@ -619,6 +631,7 @@ OutputShareReq (State 4) ----------------------------------->
 The AggregateReq request is used by the leader to send a set of reports
 to the helper. These reports MUST all be associated with the same PPM task.
 [[OPEN ISSUE: And the same batch, right?]]
+
 Let `[helper]` denote
 `PPMParam.helper_url`, where `PPMParam` is the PPM parameters structure
 associated with`PPMAggregateReq.task.id`. The leader sends a POST request to
@@ -1446,5 +1459,28 @@ this process indefinitely until a suitable output is found.
 # Hits {#hits}
 
 [TODO: Define Hits-specific protocol messages.]
+
+
+## Pre-conditions
+
+We assume the following conditions hold before execution of any PPM task begins:
+
+1. The clients, aggregators, and collector agree on a set of PPM tasks, as well
+   as the PPM parameters associated to each task.
+1. Each aggregator has a clock that is roughly in sync with true time, i.e.,
+   within the batch window specified by the PPM parameters. (This is necessary to
+   prevent the same report from appearing in multiple batches.)
+1. Each client has selected a PPM task for which it will upload a report. It is
+   also configured with the task's parameters.
+1. Each client and the leader can establish a leader-authenticated secure
+   channel.
+1. The leader and each helper can establish a helper-authenticated secure
+   channel.
+1. The collector and leader can establish a leader-authenticated secure channel.
+1. The collector has chosen an HPKE configuration and corresponding secret key.
+1. Each aggregator has chosen an HPKE configuration and corresponding secret key.
+
+[TODO: It would be clearer to include a "pre-conditions" section prior to each
+"phase" of the protocol.]
 
 --- back
