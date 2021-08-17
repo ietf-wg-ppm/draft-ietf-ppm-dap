@@ -123,6 +123,8 @@ Batch size:
 Batch window:
 : The minimum time difference between the oldest and newest report in
   a batch (in seconds).
+  [[OPEN ISSUE: This is defined as maximum later
+  https://github.com/abetterinternet/prio-documents/issues/118]]
 
 Client: 
 : The endpoint from which a user sends data to be aggregated, e.g., a
