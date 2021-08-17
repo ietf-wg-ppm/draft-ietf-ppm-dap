@@ -544,7 +544,7 @@ in more than one report if the leader responds with status 200 and an empty body
 
 ### Upload Extensions {#upload-extensions}
 
-Each PAUploadReq carries a list of extensions that clients may use to convey
+Each UploadReq carries a list of extensions that clients may use to convey
 additional, authenticated information in the report. Each extension is a tag-length
 encoded value of the following form:
 
