@@ -4,7 +4,6 @@ docname: draft-pda-protocol-latest
 category: std
 ipr: trust200902
 area: ART
-workgroup: HTTPBIS
 
 stand_alone: yes
 pi: [toc, sortrefs, symrefs, docmapping]
@@ -80,282 +79,293 @@ TODO: writeme
 
 # Introduction
 
-This document describes a framework for specifying protocols for
-privacy-preserving data-aggregation. Each protocol is executed by a large set of
-clients and a small set of servers. The servers' goal is to compute some
-aggregate statistic over the clients' inputs without learning the inputs
-themselves. This is made possible by distributing the computation among the
-servers in such a way that, as long as at least one of them executes the
-protocol honestly, no input is ever seen in the clear by any server.
+This document describes a protocol for privacy preserving measurement.
+The protocol is executed by a large set of clients and a small set of
+servers. The servers' goal is to compute some aggregate statistic over
+the clients' inputs without learning the inputs themselves. This is
+made possible by distributing the computation among the servers in
+such a way that, as long as at least one of them executes the protocol
+honestly, no input is ever seen in the clear by any server.
 
 ## DISCLAIMER
 
 This document is a work in progress. We have not yet settled on the design of
 the protocol framework or the set of features we intend to support.
 
-## Terminology
+## Conventions and Definitions
 
-This section defines some terminology we will use in the remainder of this
-document.
+{::boilerplate bcp14-tagged}
 
-1. Aggregation function: The function computed over the users' inputs.
-1. Aggregator: An endpoint that runs the input-validation protocol and
+[[TODO: Clean up this glossary]]
+
+The following terms are used:
+
+* Aggregation function: The function computed over the users' inputs.
+* Aggregator: An endpoint that runs the input-validation protocol and
    accumulates input shares.
-1. Batch: A set of reports that are aggregated into an output.
-1. Batch size: The minimum number of reports in a batch.
-1. Batch window: The minimum time difference between the oldest and newest
+* Batch: A set of reports that are aggregated into an output.
+* Batch size: The minimum number of reports in a batch.
+* Batch window: The minimum time difference between the oldest and newest
    report in a batch (in seconds).
-1. Client: The endpoint from which a user sends data to be aggregated, e.g., a
+* Client: The endpoint from which a user sends data to be aggregated, e.g., a
    web browser.
-1. Collector: The endpoint that receives the output of the aggregation function.
+* Collector: The endpoint that receives the output of the aggregation function.
    It also specifies the parameters of the protocol.
-1. False input: An input that is valid, but incorrect. For example, if the data
+* False input: An input that is valid, but incorrect. For example, if the data
    being gathered is whether or not users have clicked on a particular button, a
    client could report clicks when none occurred.
-1. Input: The measurement (or measurements) emitted by a client, before any
+* Input: The measurement (or measurements) emitted by a client, before any
    encryption or secret sharing scheme is applied.
-1. Input share: one of the shares output by feeding an input into a secret
+* Input share: one of the shares output by feeding an input into a secret
    sharing scheme. Each share is to be transmitted to one of the participating
    aggregators.
-1. Input validation protocol: The protocol executed by the client and
+* Input validation protocol: The protocol executed by the client and
    aggregators in order to validate the client's input without leaking its value
    to the aggregators.
-1. Invalid input: An input for which the input validation protocol fails. For
+* Invalid input: An input for which the input validation protocol fails. For
    example, if the input is meant to be a  bit vectors, then `[2, 1, 0]` is
    invalid.
-1. Measurement: A single value (e.g., a count) being reported by a client.
+* Measurement: A single value (e.g., a count) being reported by a client.
    Multiple measurements may be grouped into a single protocol input.
-1. Leader: A distinguished aggregator that coordinates input validation and data
+* Leader: A distinguished aggregator that coordinates input validation and data
    collection.
-1. Output: A reduction over the inputs, for instance a statistical aggregation,
+* Output: A reduction over the inputs, for instance a statistical aggregation,
    which is of interest to a collector. This is the output of the aggregation
    function.
-1. Output share: The share of an output emitted by an aggregator. Output shares
+* Output share: The share of an output emitted by an aggregator. Output shares
    can be reassembled by the leader into the final output.
-1. Prio v1: Mozilla's [Origin Telemetry project](https://blog.mozilla.org/security/2019/06/06/next-steps-in-privacy-preserving-telemetry-with-prio/).
-1. Prio v2: Contact tracing project by Apple, Google, and ISRG.
-1. Proof: A value generated by the client and used by the aggregators to verify
+* Prio v1: Mozilla's [Origin Telemetry project](https://blog.mozilla.org/security/2019/06/06/next-steps-in-privacy-preserving-telemetry-with-prio/).
+* Prio v2: Contact tracing project by Apple, Google, and ISRG.
+* Proof: A value generated by the client and used by the aggregators to verify
    the client's input.
-1. Proof share: A share of a proof, used by an aggregator during the
+* Proof share: A share of a proof, used by an aggregator during the
    input-validation protocol.
-1. Report: Uploaded to the leader from the client. A report contains the
+* Report: Uploaded to the leader from the client. A report contains the
    secret-shared and encrypted input and proof.
-1. Server: An aggregator or collector.
+* Server: An aggregator or collector.
+
+This document uses the protocol definition language of {{!RFC8446}}.
 
 # Overview {#overview}
 
-[OPEN ISSUE: Rework this section in light of issue #44.]
+The protocol is executed by a large set of clients and a small set of
+servers.  We call the servers the *aggregators*. Each client's input
+to the protocol is a set of measurements (e.g., counts of some user
+behavior). Given the input set of measurements `x_1, ..., x_n` held by
+`n` users, the goal of a *privacy preserving measurement (PPM)
+protocol* is to compute `y = F(x_1, ..., x_n)` for some aggregation
+function `F` while revealing nothing else about the measurements.
 
-The protocol is executed by a large set of clients and a small set of servers.
-We call the servers the *aggregators*. Each client's input to the protocol is a
-set of measurements (e.g., counts of some user behavior). Given the input set
-of measurements `x_1, ..., x_n` held by `n` users, the goal of a
-*private data aggregation (PPM) protocol* is to compute `y = F(x_1, ..., x_n)` for
-some aggregation function `F` while revealing nothing else about the
-measurements.
+This protocol is extensible and allows for the addition of new
+cryptographic schemes that compute new functions. The current
+version supports two schemes:
 
-## Private aggregation via secret sharing
+* Prio {{CB17}}, which allows for aggregate statistics such as
+  sum, mean, histograms, etc. over a single value.
 
-The main cryptographic tool used for achieving this privacy goal is *additive
-secret sharing*. Rather than send its input in the clear, each client splits
-its measurements into a sequence of *shares* and sends a share to each of the
-aggregators. Additive secret sharing has two important properties:
+* Heavy Hitters {{BBCp21}}, which allows for finding the most
+  common strings among a collection of clients (e.g., the
+  URL of their home page) as well as counting the number of
+  clients that hold a given string.
 
-- It's impossible to deduce the measurement without knowing *all* of the shares.
-- It allows the aggregators to compute the final output by first adding up their
-  measurements shares locally, then combining the results to obtain the final
-  output.
+This protocol is designed to work with schemes that use secret
+sharing. Rather than send its input in the clear, each client splits
+its measurements into a sequence of *shares* and sends a share to each
+of the aggregators. This provides two important properties:
 
-Consider an illustrative example. Suppose there are three clients and two
-aggregators. Each client `i` holds a single measurement in the form of a
-positive integer `x[i]`, and our goal is to compute the sum of the measurements
-of all clients. In this case, the protocol input is a single measurement
-consisting of a single positive integer; no additional encoding is done. Given
-this input, the first client splits its measurement `x[1]` with additive
-secret-sharing into a pair of integers `X[1,1]` and `X[1,2]` for which `x[1]` is
-equal to `X[1,1] + X[1,2]` modulo a prime number `p`. (For convenience, we will
-omit the mod `p` operator in the rest of this section.) It then uploads `X[1,1]`
-to one server and `X[1,2]` to the other. The second client splits its
-measurement `x[2]` into `X[1,2]` and `X[2,2]`, uploads them to the servers, and
-so on.
+* It's impossible to deduce the measurement without knowing *all* of the shares.
 
-Now the first aggregator is in possession of shares `X[1,1]`, `X[2,1]`, and
-`X[3,1]` and the second aggregator is in possession of shares `X[2,1]`,
-`X[2,2]`, and `X[2,3]`. Each aggregator computes the sum of its shares; let
-`A[1]` denote the first aggregator's share of the sum and let `A[2]` denote the
-second aggregator's share of the sum. In the last step, aggregators combine
-their sum shares to obtain the final output `y = A[1] + A[2]`. This is correct
-because modular addition is commutative. I.e.,
+* It allows the aggregators to compute the final output by first
+   aggregating up their measurements shares locally, then combining
+   the results to obtain the final output.
 
-~~~
-    y = A[1] + A[2]
-      = (x[1,1] + x[2,1] + x[3,1]) + (x[1,2] + x[2,2] + x[3,2])
-      = (x[1,1] + x[1,2]) + (x[2,1] + x[2,2]) + (x[3,1] + x[3,2])
-      = x[1] + x[2] + x[3]
-      = F(x[1], x[2], x[3])
-~~~
+## System Architecture
+{#system-architecture}
 
-### Prio {#prio-variant}
+The overall system architecture is shown in {{pa-topology}}.
 
-This approach can be used to privately compute any function `F` that can be
-expressed as a function of the sum of the users' inputs. In Prio {{CB17}}, each
-user splits its input into shares and sends each share to one of the
-aggregators. The aggregators sum up their input shares. Once all the shares have
-been aggregated, they combine their shares of the aggregate to get the final
-output.
+~~~~
+                    +------------+
+                    |            |
++--------+          |   Helper   |
+|        |          |            |
+| Client +----+     +-----^------+
+|        |    |           |
++--------+    |           |
+              |           |
++--------+    |     +-----v------+         +-----------+
+|        |    +----->            |         |           |
+| Client +---------->   Leader   <---------> Collector |
+|        |    +----->            |         |           |
++--------+    |     +-----^------+         +-----------+
+              |           |
++--------+    |           |
+|        |    |           |
+| Client +----+     +-----V------+
+|        |          |            |
++--------+          |   Helper   |
+                    |            |
+                    +------------+
+~~~~
+{: #pa-topology title="System Architecture"}
 
-Not all aggregate functions can be expressed this way efficiently, however. Prio
-supports only a limited set of aggregation functions, some of which we highlight
-below:
+[[OPEN ISSUE: This shows two helpers, but the document only allows one for now.
+https://github.com/abetterinternet/prio-documents/issues/117]]
 
-- Simple statistics, like sum, mean, min, max, variance, and standard deviation;
-- Histograms with fixed bin sizes (also allows estimation of quantiles, e.g.,
-  the median);
-- More advanced statistics, like linear regression;
-- Bitwise-OR and -AND on bit strings; and
-- Computation of data structures, like Bloom filters, counting Bloom filters,
-  and count-min sketches, that approximately represent (multi-)sets of strings.
 
-This variety of aggregate types is sufficient to support a wide variety of
-data aggregation tasks.
+The main participants in the protocol are as follows:
 
-### Hits {#hits-variant}
+Collector:
+: The entity which wants to take the measurement and ultimately receives
+  the results. Any given measurement will have a single collector.
 
-A common PPM task that can't be solved efficiently with Prio is the
-`t`-*heavy-hitters* problem {{BBCp21}}. In this setting, each user is in
-possession of a single `n`-bit string, and the goal is to compute the compute
-the set of strings that occur at least `t` times. One reason that Prio doesn't
-apply to this problem is that the proof generated by the client would be huge.
+Client(s):
+: The endpoints which directly take the measurement(s) and report them to the
+  PPM system. In order to provide reasonable levels of privacy, there
+  must be a large number of clients.
 
-[TODO: Provide an overview of the protocol of {{BBCp21}} and provide some
-intuition about how additive secret sharing is used.]
+Aggregator:
+: An endpoint which receives report shares. Each aggregator works with the
+  other aggregators to compute the final aggregate. This protocol defines
+  two types of aggregators: Leaders and Helpers. For each measurement,
+  there is a single leader and helper.
 
-## Validating inputs in zero knowledge
+Leader:
+: The leader is responsible for coordinating the protocol. It receives
+  the encrypted shares, distributes them to the helpers, and orchestrates
+  the process of computing the final measurement as requested by
+  the collector.
+
+Helper:
+: Helpers are responsible for executing the protocol as instructed
+  by the leader. The protocol is designed so that helpers can be relatively
+  lightweight, with most of the state held at the leader.
+{:br}
+
+The basic unit of PPM is the "task" which represents
+a single measurement (though potentially taken over multiple
+time wndows). The definition of a task includes the
+following parameters:
+
+* The values to be measured;
+* The statistic to be computed (e.g., sum, mean, etc.); 
+* The set of aggregators and necessary cryptographic keying material to use; and
+* The PPM scheme to use. This is to some extent dictated by the previous
+  choices.
+* The minimum "batch size" of reports which can be aggregated.
+* The rate at which measurements can be taken, i.e., the "minimum batch window".
+
+These parameters are distributed out of band to the clients and to
+the aggregators. Each task is identified by a unique 32-byte ID
+which is used to refer to it in protocol messages.
+
+During the duration of the measurement, each client records its own
+value(s), packages them up into a report, and sends them to the leader.
+Each share is separately encrypted for each aggregator so that even
+though they pass through the leader, the leader is unable to see or modify
+them. Depending on the measurement, the client may only send one
+report or may send many reports over time.
+
+The leader distributes the shares to the helpers and orchestrates
+the process of verifying them (see {{validating-inputs}})
+and assembling them into a final measurement for the collector.
+Depending on the PPM scheme, it may be possible to incrementally
+process each report as it comes in, or may be necesary to wait
+until the entire batch of reports is received. 
+
+
+## Validating Inputs {#validating-inputs}
 
 An essential task of any data collection pipeline is ensuring that the input
-data is "valid". Going back to the example above, it's often useful to assert
-that each measurement is in a certain range, e.g., `[0, 2^k)` for some `k`.
-This straight-forward task is complicated in our setting by the fact that the
-inputs are secret shared. In particular, a malicious client can corrupt the
-computation by submitting random integers instead of a proper secret sharing of
-a valid input.
+data is "valid". In PPM, input validation is complicated by
+the fact that none of the entities other than the client ever sees
+the values for individual clients.
 
-To solve this problem, in each PPM protocol, the client generates a
-zero-knowledge proof of its input's validity that the aggregators use
-to verify that their shares correspond to as valid input. The verification
-procedure is designed to ensure that the aggregators learn nothing about the
-input beyond its validity.
+In order to address this problem, each PPM client generates a
+zero-knowledge proof that its report is valid and attaches it to the
+report. The aggregators can then jointly verify this proof prior to
+incorporating the report in the aggregation and reject the report if
+it cannot be verified. However, they do not learn anything about
+the individual report other than that it is valid.
 
-After encoding its measurements as an input to the PPM protocol, the client
-generates a *proof* of the input's validity. It then splits the proof into
-shares and sends a share of both the proof and input to each aggregator. The
-aggregators use their shares of the proof to decide if their input shares
-correspond to a valid input.
+The specific properties attested to in the
+proof vary depending on the measurement being taken. For instance, if
+we want to measure the time the user took performing a given task the
+proof might demonstrate that the value reported was within a certain
+range (e.g., 0-60 seconds). By contrast, if we wanted to report which
+of a set of N options the user select, the report might contain N
+integers and the proof would demonstrate that N-1 were 0 and the other
+was 1.
 
-## Collecting reports
+It is important to recogize that "validity" is distinct from "correctness".
+For instance, the user might have spent 30s on a task but the client
+might report 60s. This is a problem with any measurement system and
+PPM does not attempt to address it; it merely ensures that the data
+is within acceptable limits, so the client could not report 10^6s
+or -20s.
 
-As noted above, each client has a collection of measurements that it
-wants to send. Each measurement is characterized by a set of
-parameters that are centrally configured and provided to each client (see
-{{pa-config}}).
 
-Once the client has collected the measurements to send, it needs to
-turn them into a set of reports. Naively, each measurement would be
-sent in its own report, but it is also possible to have multiple
-measurements in a single report; clients need to be configured with
-the mapping from measurements to reports. The set of measurements
-that go into a report is referred to as the "input" to the report.
-Because each report is independent, for the remainder of this document
-we focus on a single report and its inputs.
+# Message Transport 
 
-[NOTE(cjpatton): This paragraph is slightly misleading. If you want to do a
-range check for the measurement (this will usually be necessary, IMO) then
-you'll need a few extra field elements to encode the input.]
-The client uses the statistic to be computed in order to know how to
-encode the measurement. For instance, if the statistic is mean, then
-the measurement can be encoded directly. However, if the statistic is
-standard deviation, then the client must send both `x` and `x^2`. Section
-[TODO: cite to internal description of how to encode]
-describes how to encode measurements for each statistic.
-The client uses the validity rules to construct the zero knowledge
-proof showing that the encoded measurement is valid.
+Communications between PPM entities are carried over HTTPS {{!RFC2818}}.
+HTTPS provides server authentication and confidentiality. In addition,
+report shares are encrypted directly to the aggregators using HPKE {{!I-D.irtf-cfrg-hpke}}.
 
-## Data flow
+## Errors
 
-Each PPM task consists of two sub-protocols, *upload* and *collect*, which are
-executed concurrently. Each sub-protocol consists of a sequence of HTTP requests
-made from one entity to another.
+[[OPEN ISSUE: Align this with best practice, cribbing from ACME.]]
 
-~~~~
-+-------------+ 1.      +-------------+
-|             +--------->             |
-|   Client    |         |   Leader    |
-|             |    +----+             |
-+------+------+    | 2. +------^------+
-       | 1.        |           |
-       |           |           |
-       |           |           | 2.
-+------v------+    |    +------+------+
-|             <----+    |             |
-|   Helper    |         |  Collector  |
-|             |         |             |
-+-------------+         +-------------+
-~~~~
-{: #pa-topology title="Who makes requests to whom while executing a PPM task."}
+Errors SHOULD be reported in PPM at the HTTP layer,  using an
+HTTP response code of 400. The response payload is a PPMAlert
+structure:
 
-1. **Upload:** Each client assembles its measurements into an input for the
-   given PPM protocol. It generates a proof of its input's validity and splits
-   the input and proof into two shares, one for the leader and another for a
-   helper. The client then encrypts the leader's share and helper's share under,
-   respectively, the leader's public key and the helper's public key. (The keys
-   are obtained by making requests to the leader and helper.) Finally, the
-   client uploads the encrypted shares to the leader.
-2. **Collect:** The collector makes one or more requests to the leader in order
-   to obtain the final output of the protocol. Before the output can be
-   computed, the aggregators (i.e., the leader and helper) need to have verified
-   and aggregated a sufficient number of inputs. Depending on the PPM protocol,
-   it may be possible for the aggregators to do so immediately when reports are
-   uploaded. (See {{prio}}.) However, in general it is necessary for them to
-   wait until (a) enough reports have been uploaded and (b) the collector has
-   made a request. (See {{hits}}.)
+~~~
+struct {
+  PPMTaskID task_id;
+  opaque payload<1..255>;
+} PPMAlert;
+~~~
 
-The operational capabilities of each entity are described further in
-{{entity-capabilities}}.
+where `task_id` is the associated PPM task (this value is always known, see {{task-configuration}}) and
+`payload` contains a string indicating the error that occurred.
+When sent by an aggregator in response to an HTTP
+request, the response status is 400. When sent in a request to an aggregator,
+the URL is always `[aggregator]/error`, where `[aggregator]` is the URL of the
+aggregator endpoint.
 
-# PPM protocols {#pa}
+[[OPEN ISSUE: What is the URL? https://github.com/abetterinternet/prio-documents/issues/108]]
 
-This section specifies a protocol for executing generic PPM tasks. Concrete
-PPM protocols are described in {{prio}} and {{hits}}.
+The following list defines a set of common errors.
 
-Each round of the protocol corresponds to an HTTP request and response. The
-content type of each request is "application/octet-stream". We assume that some
-transport layer security protocol (e.g., TLS or QUIC) is used between each pair
-of parties and that the server is authenticated.
+- The message type for the payload of each request and response is unique for a
+  given URL. If ever a client, aggregator, or collector receives a request or
+  response to a request with a malformed payload, then the receiver aborts and
+  alerts the peer with "unrecognized message".
 
-[TODO: Decide how to provide mutual authentication in leader-to-helper and
-collector-to-leader connections. One option is to use client certificates for
-TLS; another is to have the leader sign its messages directly, as in Prio v2.
-For collector-to-leader connections, we may just have this be up to deployment.
-(For instance, the collector might authenticate themselves by logging into a
-website that has some trust relationship with the leader.)]
+- Each POST request to an aggregator contains a `PPMTaskID`. If the aggregator
+  does not recognize the task, i.e., it can't find a `PPMParam` for which the
+  derived task ID matches the `PPMTaskID`, then it aborts and alerts the peer
+  with "unrecognized task".
+  
+[[TODO: Add error table here.]]
 
-**Error handling.**
-In this section, we will use the verbs "abort" and "alert with `[some error
-message]`" to describe how protocol participants react to various error
-conditions. The behavior is specified in {{pa-error}}. For common errors, we may
-elide the verbs altogether and refer to {{pa-error-common-aborts}}.
+This document uses the verbs "abort" and "alert with `[some error
+message]`" to describe how protocol participants react to various
+error conditions.
 
-[TODO: Fix the bounds for length-prefixed parameters in protocol messages.
-(E.g., `<23..479>` instead of `<1..2^16-1>`.)]
 
-## Configuration {#pa-config}
+# Protocol Definition
 
-### Tasks
+PPM has three major interactions which need to be defined:
 
-Each PPM protocol is associated with a *PPM task* that specifies the measurements
-that are to be collected. Associated to each task is a set of *PPM Parameters*,
-encoded by the following `PPMParam` structure, which specify the protocol used to
-verify and aggregate the clients' measurements:
+* Uploading reports from the client to the aggregators
+* Computing the results of a given measurement
+* Reporting results to the collector
+
+## Task Configuration {#task-configuration}
+
+Each endpoint in the system must agree on the configuration for each
+task, which is defined using the PPMParam structure:
 
 ~~~
 struct {
@@ -389,7 +399,7 @@ Time uint64; /* seconds elapsed since start of UNIX epoch */
 * `leader_url`: The leader's endpoint URL.
 * `helper_url`: The helper's endpoint URL.
 * `collector_config`: The HPKE configuration of the collector (described in
-  {{hpke-config}}). [OPEN ISSUE: Maybe the collector's HPKE config should be
+  {{key-config}}). [OPEN ISSUE: Maybe the collector's HPKE config should be
   carried by the collect request?]
 * `batch_size`: The batch size, i.e., the minimum number of reports that are
   aggregated into an output.
@@ -398,27 +408,28 @@ Time uint64; /* seconds elapsed since start of UNIX epoch */
 * `proto`: The PPM protocol, e.g., Prio or Hits. The rest of the structure
   contains the protocol specific parameters.
 
-Each task has a unique *task ID* derived from the PPM parameters:
-
-~~~
-opaque PPMTaskID[32];
-~~~
-
-The task ID of a `PPMParam` is derived using the following procedure:
+The *task ID* is derived from the PPM parameters as:
 
 ~~~
 task_id = SHA-256(param)
 ~~~
 
-Where `SHA-256` is as specified in [FIPS180-4].
+Where param is just the serialization of PPMParam.
 
-### HPKE key configuration {#hpke-config}
 
-Our protocol uses HPKE for public-key encryption {{!I-D.irtf-cfrg-hpke}}. Each
-aggregator specifies the HPKE public key that clients use to encrypt its input
-share, and the collector specifies the HPKE public key that helpers use to
-encrypt output shares during collection. The public key and associated
-parameters are structured as follows:
+## Uploading Reports
+
+Clients periodically upload reports to the leader, which then distributes
+the individual shares to each helper.
+
+### Key Configuration Request {#key-config}
+
+Before the client can upload its report to the leader, it must know
+the keys of each of the aggregators. These are retrieved
+from each aggregator by sending a request to
+`[aggregator]/key_config`, where `[aggregator]` is the aggregator's
+endpoint URL, provided in the PPMConfig. The aggregator responds to
+well-formed requests with status 200 and an `HpkeConfig` value:
 
 ~~~
 struct {
@@ -437,58 +448,7 @@ uint16 HpkeKdfId;  // Defined in I-D.irtf-cfrg-hpke
 [TODO: Decide whether to use the same config structure as OHTTP/ECH. This would
 add support for multiple cipher suites.]
 
-We call this a *key configuration*. The key configuration is used to set up a
-base-mode HPKE context to use to derive symmetric keys for protecting: (1) input
-shares sent from the client to an aggregator; or (2) output shares sent from the
-helper to the collector. The *config id*, `HpkeConfig.id`, is forwarded by the
-sender to the receiver to help the receiver decide if it knows the decryption
-key.
-
-## Pre-conditions
-
-We assume the following conditions hold before execution of any PPM task begins:
-
-1. The clients, aggregators, and collector agree on a set of PPM tasks, as well
-   as the PPM parameters associated to each task.
-1. Each aggregator has a clock that is roughly in sync with true time, i.e.,
-   within the batch window specified by the PPM parameters. (This is necessary to
-   prevent the same report from appearing in multiple batches.)
-1. Each client has selected a PPM task for which it will upload a report. It is
-   also configured with the task's parameters.
-1. Each client and the leader can establish a leader-authenticated secure
-   channel.
-1. The leader and each helper can establish a helper-authenticated secure
-   channel.
-1. The collector and leader can establish a leader-authenticated secure channel.
-1. The collector has chosen an HPKE configuration and corresponding secret key.
-1. Each aggregator has chosen an HPKE configuration and corresponding secret key.
-
-[TODO: It would be clearer to include a "pre-conditions" section prior to each
-"phase" of the protocol.]
-
-## Upload {#pa-upload}
-
-~~~~
-Client          Leader         Helper
-  |  key config  |              |
-  <-------------->              |
-  |              |  key config  |
-  <----------------------------->
-  |  upload      |              |
-  <-------------->              |
-  v              v              v
-~~~~
-{: #pa-upload-flow title="Flow of the upload process"}
-
-### Key Config Request
-
-Before the client can upload its report to the leader, it must first discover
-the key configs of each of the aggregators. To do so, the client sends a GET
-request to `[aggregator]/key_config`, where `[aggregator]` is the aggregator's
-endpoint URL. The aggregator responds to well-formed requests with status 200
-and an `HpkeConfig`.
-
-The client issues a key config request to `PPMParam.leader_url` and
+The client issues a key configuration request to `PPMParam.leader_url` and
 `PPMParam.helper_url`. It aborts if any of the following happen for either
 request:
 
@@ -498,10 +458,21 @@ request:
 * the key config specifies a KEM, KDF, or AEAD algorithm the client doesn't
   recognize.
 
+Clients SHOULD follow the usual HTTP caching {{!RFC7234}} semantics for
+key configurations. Aggregators SHOULD favor long cache lifetimes to avoid
+frequent cache revalidation. 
+
+Note: Long cache lifetimes may result in clients using stale HPKE
+keys; aggregators SHOULD continue to accept reports with old
+keys for a reasonable period after key changes in order to avoid
+rejecting reports.
+[[OPEN ISSUE: https://github.com/abetterinternet/prio-documents/issues/106]]
+
 ### Upload Request
 
-Next, the client issues a POST request to `[leader]/upload`, where `[leader]` is
-the leader's endpoint URL. The payload is structured as follows:
+Clients upload reports by using an HTTP POST `[leader]/upload`, where
+`[leader]` is the leader's endpoint URL. The payload is structured as
+follows:
 
 ~~~
 struct {
@@ -544,8 +515,8 @@ struct {
 * `payload` is the encrypted input share.
 
 To generate the report, the client begins by encoding its measurements as an
-input for the PPM protocol and splitting it into input shares. (Note that the
-structure of each input share depends on the PPM protocol in use, its parameters,
+input for the PPM scheme and splitting it into input shares. (Note that the
+structure of each input share depends on the PPM scheme in use, its parameters,
 and the role of aggregator, i.e., whether the aggregator is a leader or helper.)
 To encrypt an input share, the client first generates an HPKE
 {{!I-D.irtf-cfrg-hpke}} context for the aggregator by running
@@ -568,7 +539,7 @@ where `input_share` is the aggregator's input share and `task_id`, `time`, and
 
 The leader responds to well-formed requests to `[leader]/upload` with status 200
 and an empty body. Malformed requests are handled as described in
-{{pa-error-common-aborts}}. Clients SHOULD NOT upload the same measurement value
+{{errors}}. Clients SHOULD NOT upload the same measurement value
 in more than one report if the leader responds with status 200 and an empty body.
 
 ### Upload Extensions {#upload-extensions}
@@ -592,113 +563,76 @@ encoded value of the following form:
 "extension_type" indicates the type of extension, and "extension_data" contains
 information specific to the extension.
 
-## Collect {#pa-collect}
+
+
+## Verifying and Aggregating Reports {#pa-aggregate}
+
+Once a set of clients have uploaded their reports to the leader, the leader
+can send them to the aggregators to be verified and aggregated. In order
+to enable the system to handle very large batches of reports, this process
+can be performed incrementally. To aggregate a set of reports,
+the leader sends an AggregateReq to the helper containing those report
+shares. The helper then processes them (verifying
+the proofs and incorporating their values into the ongoing aggregate)
+and replies to the leader. 
+
+The exact structure of the aggregation flow depends on the PPM
+scheme. Specifically:
+
+* Some PPM schemes (e.g., Prio) allow the leader to start aggregating
+reports proactively before all the reports in a batch are received.
+Others (e.g., Hits) require all the reports to be present and
+must be initiated by the collector.
+
+* Processing the reports -- especially verifying the proofs -- may
+require multiple round trips.
+
+Note that it is possible to aggregate reports from one batch while
+reports from the next batch are coming in.
+
+This process is illustrated below in {{pa-aggregate-flow}}. In this example,
+the batch size is 20, but the leader opts to process the reports in
+sub-batches of 10. Each sub-batch takes two round-trips to process.
+Once both sub-batches have been processed, the leader can issue
+an OutputShareReq in order to retrieve the helper's aggregated result.
+
+In order to allow the helpers to retain minimal state, the helper can attach a
+state parameter to its response, with the leader returning the state
+value in the next request, thus offloading the state to the
+leader. This state value MUST be cryptographically protected as
+described in {{helper-state}}.
 
 ~~~~
-Collector     Leader           Helper
-  |  collect 1  |                |
-  +------------->                |
-  |             |  aggregate 1   |
-  |             <---------------->
-  |             |  ...           |
-  |             |  aggregate L   |
-  |             <---------------->
-  |             |  output share  |
-  |             <---------------->
-  <-------------+                |
-  |  ...        |                |
-  |  collect N  |                |
-  +------------->                |
-  |             |  aggregate 1   |
-  |             <---------------->
-  |             |  ...           |
-  |             |  aggregate L   |
-  |             <---------------->
-  |             |  output share  |
-  |             <---------------->
-  <-------------+                |
-  v             v                v
-~~~~
-{: #pa-collect-flow title="Flow of the collect process with N collect requests
-and L aggregate requests per collect request."}
+Leader                                                 Helper
 
+AggregateReq (Reports 1-10) -------------------------------->  \ 
+<------------------------------------ AggregateResp (State 1)  | Reports
+AggregateReq (continued, State 1)      --------------------->  | 10-11
+<------------------------------------ AggregateResp (State 2)  /
+
+
+AggregateReq (Reports 11-20, State 2) ---------------------->  \
+<------------------------------------ AggregateResp (State 3)  | Reports
+AggregateReq (continued, State 3) -------------------------->  | 20-21
+<------------------------------------ AggregateResp (State 4) /
+
+OutputShareReq (State 4) ----------------------------------->
+<----------------------------------- OutputShareResp (Result)
+~~~~
+{: #pa-aggregate-flow title="Aggregation Process (batch size=20)"}
+
+[[OPEN ISSUE: Should there be an indication of whether
+  a given AggregateReq is a continuation of a previous sub-batch]]
 [TODO: Decide if and how the collector's request is authenticated.]
 
-The collector interacts with the leader to produce the final aggregate output.
-This process consists of a sequence of *collect requests* issued to the leader.
-Before a request can succeed, the aggregators must have verified and aggregated
-enough reports and the leader must have obtained the helper's encrypted output
-share (see {{pa-aggregate}}). In general, the procedure by which the aggregators
-verify and aggregate reports depends on parameters carried by the collect
-request.
 
-### Collect Request
+### Aggregate Request
 
-A collect request is associated with a PPM task. Along with the task ID, the
-request includes a time interval that determines the batch of reports to be
-aggregated. To make a collect request, the collector issues a POST request to
-`[leader]/collect`, where `[leader]` is the leader's endpoint URL. The body of
-the request is structured as follows:
+The AggregateReq request is used by the leader to send a set of reports
+to the helper. These reports MUST all be associated with the same PPM task.
+[[OPEN ISSUE: And the same batch, right?]]
 
-~~~
-struct {
-  PPMTaskID task_id;
-  Time batch_start;  // The beginning of the batch.
-  Time batch_end;    // The end of the batch (exclusive).
-  PPMProto proto;    // [TODO: Remove and use PPMParam.proto]
-  select (PPMCollectReq.proto) {
-    case prio: PrioCollectReq;
-    case hits: HitsCollectReq;
-  }
-} PPMCollectReq;
-~~~
-
-The batch window of the request is the interval `[batch_start, batch_end)`. A
-collect request is said to be valid if all of the following conditions hold (let
-`PPMParam` denote the parameters for the PPM task):
-
-1. The batch window of the request aligns with the size of the batch window for
-   the task, i.e., `batch_start` and `batch_end` are multiples of
-   `PPMParam.batch_window`.
-1. The batch window of the request is at least the minimum batch window for the
-   task, i.e., `batch_end - batch_start >= PPMParam.batch_window`.
-1. The batch window of the request does not overlap with the batch window of any
-   previous request. [TODO: Enforcing this condition breaks hits, which
-   explicitly requires multiple collect requests on the same batch. We'll need
-   to fix this.]
-
-The leader responds to valid collect requests by first interacting with the
-helper as described in {{pa-aggregate}}. Once it has obtained the helper's
-encrypted output share for the batch, it responds to the collector's request
-with the following message:
-
-~~~
-struct {
-  PPMTaskID task_id;
-  PPMProto proto;
-  PPMOutputShare leader_share;
-  opaque encrypted_helper_share;
-} PPMCollectResp;
-~~~
-
-[OPEN ISSUE: Describe how intra-protocol errors yield collect errors (see
-issue#57). For example, how does a leader respond to a collect request if the
-helper drops out?]
-
-### Verifying and Aggregating Reports {#pa-aggregate}
-
-After the client uploads a report to the leader, the leader and helper verify in
-zero knowledge that the input is valid. The exact procedure for doing so is
-protocol specific, but all protocols have the same basic structure. In
-particular, the protocol is comprised of a sequence of *aggregate requests* from
-the leader to the helper. At the end of this procedure, the leader and helper
-will have aggregated a set of valid client inputs (though not necessarily a
-complete batch).
-
-#### Aggregate Request
-
-The process begins with a `PPMCollectReq`. The leader collects a sequence of
-reports that are all associated with the same PPM task. Let `[helper]` denote
+Let `[helper]` denote
 `PPMParam.helper_url`, where `PPMParam` is the PPM parameters structure
 associated with`PPMAggregateReq.task.id`. The leader sends a POST request to
 `[helper]/aggregate` with the following message:
@@ -745,7 +679,7 @@ constructs its request such that:
   request.
 
 The helper handles well-formed requests as follows. (As usual, malformed
-requests are handled as described in {{pa-error-common-aborts}}.) It first looks
+requests are handled as described in {{errors}}.) It first looks
 for the PPM parameters `PPMParam` for which `PPMAggregateReq.task_id` is equal
 to the task ID derived from `PPMParam`. It then filters out out-of-order
 sub-requests by ignoring any sub-request that does not follow the previous one
@@ -794,7 +728,7 @@ updates its state as specified by the PPM protocol.
 After processing all of the sub-requests, the helper encrypts its updated state
 and constructs its response to the aggregate request.
 
-##### Leader State
+#### Leader State
 
 The leader is required to issue aggregate requests in order, but reports are
 likely to arrive out-of-order. The leader SHOULD buffer reports for a time
@@ -802,7 +736,7 @@ period proportional to the batch window before issuing the first aggregate
 request. Failure to do so will result in out-of-order reports being dropped by
 the helper.
 
-##### Helper State
+#### Helper State
 
 The helper state is an optional parameter of an aggregate request that the
 helper can use to carry state across requests. At least part of the state will
@@ -810,7 +744,7 @@ usually need to be encrypted in order to protect user privacy. However, the
 details of precisely how the state is encrypted and the information that it
 carries is up to the helper implementation.
 
-#### Output Share Request
+### Output Share Request
 
 Once the aggregators have verified at least as many reports as required for the
 PPM task, the leader issues an *output share request* to the helper. The helper
@@ -846,7 +780,7 @@ struct {
 } PPMOutputShare;
 ~~~
 
-Next, it encrypts its output share under the collector's HPKE public key:
+Next, the helper encrypts its output share under the collector's HPKE public key:
 
 ~~~
 enc, context = SetupBaseS(pk, "pda output share")
@@ -855,7 +789,10 @@ encrypted_output_share = context.Seal(output_share,
 ~~~
 
 where `pk` is the HPKE public key encoded by the collector's HPKE key
-configuration and `output_share` is its serialized output share.
+configuration and `output_share` is its serialized output share. This
+encryption prevents the leader from learning the actual result, as
+it only has its own share and not the helper's share, which is encrypted
+for the collector.
 
 It responds with the following message:
 
@@ -870,127 +807,60 @@ struct {
 The leader uses the helper's output share response to respond to the collector's
 collect request (see {{pa-collect}}).
 
-## Error handling {#pa-error}
 
-An *alert* is a message sent either in an HTTP request or response that signals
-to the receiver that the peer has aborted the protocol. The payload is
+
+## Collecting Results {#pa-collect}
+
+The collector uses CollectReq to ask the leader to collect and return
+the results for a given PPM task over a given time period. To make
+a collect request, the collector issues a POST request to
+`[leader]/collect`, where `[leader]` is the leader's endpoint URL. The
+body of the request is structured as follows:
 
 ~~~
 struct {
   PPMTaskID task_id;
-  opaque payload<1..255>;
-} PPMAlert;
+  Time batch_start;  // The beginning of the batch.
+  Time batch_end;    // The end of the batch (exclusive).
+  PPMProto proto;    // [TODO: Remove and use PPMParam.proto]
+  select (PPMCollectReq.proto) {
+    case prio: PrioCollectReq;
+    case hits: HitsCollectReq;
+  }
+} PPMCollectReq;
 ~~~
 
-where `task` is the associated PPM task (this value is always known) and
-`payload` is the message. When sent by an aggregator in response to an HTTP
-request, the response status is 400. When sent in a request to an aggregator,
-the URL is always `[aggregator]/error`, where `[aggregator]` is the URL of the
-aggregator endpoint.
+[[TODO: Define the fields]]
 
-## Common abort conditions {#pa-error-common-aborts}
+Depending on the PPM scheme and how the leader is configured, the CollectReq may cause
+the leader to send a series of AggregateReqs to the helpers in
+order to compute the aggregate. Alternately, the leader may already
+have computed the results and can return them immediately.
+In either case, once the leader has obtained the helper's
+encrypted output share for the batch, it responds to the collector's request
+with the PPMCollectResp message:
 
-The following specify the "boiler-plate" behavior for various error conditions.
-
-- The message type for the payload of each request and response is unique for a
-  given URL. If ever a client, aggregator, or collector receives a request or
-  response to a request with a malformed payload, then the receiver aborts and
-  alerts the peer with "unrecognized message".
-
-- Each POST request to an aggregator contains a `PPMTaskID`. If the aggregator
-  does not recognize the task, i.e., it can't find a `PPMParam` for which the
-  derived task ID matches the `PPMTaskID`, then it aborts and alerts the peer
-  with "unrecognized task".
-
-# Prio {#prio}
-
-[TODO: Define Prio-specific protocol messages.]
-
-## Parameters
-
-### Finite field arithmetic
-
-The algorithms that comprise the input-validation protocol --- Prove, Query, and
-Decide --- are constructed by generating and evaluating polynomials over a
-finite field. As such, the main ingredient of Prio is an implementation of
-arithmetic in a finite field suitable for the given application.
-
-We will use a prime field. The choice of prime is influenced by the following
-criteria:
-
-1. **Field size.** How big the field needs to be depends on the type of data
-   being aggregated and how many users there are. The field size also impacts
-   the security level: the longer the validity circuit, the larger the field
-   needs to be in order to effectively detect malicious clients. Typically the
-   soundness error (i.e., the probability of an invalid input being deemed valid
-   by the aggregators) will be 2n/(p-n), where n is the size of the input and p
-   is the prime modulus.
-1. **Fast polynomial operations.** In order to make Prio practical, it's
-   important that implementations employ FFT to speed up polynomial operations.
-   In particular, the prime modulus p should be chosen so that `(p-1) = 2^b * s`
-   for large `b` and odd `s`. Then `g^s` is a principle, `2^b`-th root of unity
-   (i.e., `g^(s\*2^b) = 1`), where `g` is the generator of the multiplicative
-   subgroup.
-   This fact allows us to quickly evaluate and interpolate polynomials at
-   `2^a`-th roots of unity for any `1 <= a <= b`. Note that `b` imposes an upper
-   bound on the size of proofs, so it should be large enough to accommodate all
-   foreseeable use cases. Something like `b >= 20` is probably good enough.
-1. **As close to a power of two as possible.** We use rejection sampling to map
-   a PRNG seed to a pseudorandom sequence of field elements (see {{prio-prng}).
-   In order to minimize the probability of a simple being rejected, the modulus
-   should be as close to a power of 2 as possible.
-1. **Code optimization.** [[TODO: What properties of the field make
-   it possible to write faster implementations?]]
-
-The table below lists parameters that meet these criteria at various levels of
-security. (Note that \#1 is the field used in "Prio v2".) The "size" column
-indicates the number of bits required to represent elements of the field.
-
-| # | size | p                                      | g  | b   | s                |
-|---|------|----------------------------------------|----|-----|------------------|
-| 1 | 32   | 4293918721                             | 19 | 20  | 3^2 * 5 * 7 * 13 |
-| 2 | 64   | 15564440312192434177                   | 5  | 59  | 3^3              |
-| 3 | 80   | 779190469673491460259841               | 14 | 72  | 3 * 5 * 11       |
-| 4 | 123  | 9304595970494411110326649421962412033  | 3  | 120 | 7                |
-| 5 | 126  | 74769074762901517850839147140769382401 | 7  | 118 | 3^2 * 5^2        |
-
-[TODO: Choose new parameters for 2, 3, and 5 so that p is as close to 2^size as
-possible without going over. (4 is already close enough; 1 is already deployed
-and can't be changed.]
-
-**Finding suitable primes.**
-One way to find suitable primes is to first choose `b`, then "probe" to find a
-prime of the desired size. The following SageMath script prints the parameters
-of a number of (probable) primes larger than `2^b` for a given `b`:
+[[OPEN ISSUE: What happens if this all takes a really long time.]]
+[TODO: Decide if and how the collector's request is authenticated.]
 
 ~~~
-b = 116
-for s in range(0,1000,1):
-    B = 2^b
-    p = (B*s).next_prime()
-    if p-(B*s) == 1:
-        bits = round(math.log2(p), 2)
-        print(bits, p, GF(p).multiplicative_generator(), b, factor(s))
+struct {
+  PPMTaskID task_id;
+  PPMProto proto;
+  PPMOutputShare leader_share;
+  opaque encrypted_helper_share;
+} PPMCollectResp;
 ~~~
 
-### Pseudorandom number generation {#prio-prng}
+[[TODO: Define the fields]]
 
-A suitable PRNG will have the following syntax. Fix a finite field `K`:
+[[OPEN ISSUE: change this to just have a list of shares
+https://github.com/abetterinternet/prio-documents/issues/112]]
 
-1. `x := PRNG(k, n)` denotes generation of a vector of `n` elements of `K`.
+[OPEN ISSUE: Describe how intra-protocol errors yield collect errors (see
+issue#57). For example, how does a leader respond to a collect request if the
+helper drops out?]
 
-This can be instantiated using a standard stream cipher, e.g., AES-CTR, as
-follows. Interpret the seed `k` as the key and IV for generating the AES-CTR key
-stream. Proceed by rejection sampling, as follows. Let `m` be the number of bits
-needed to encode an element of `K`. Generate the next `m` bits of key stream and
-interpret the bytes as an integer `x`, clearing the most significant `m - l`
-bits, where `l` is the bit-length of the modulus `p`. If `x < p`, then output
-`x`. Otherwise, generate the next `m` bits of key stream and try again. Repeat
-this process indefinitely until a suitable output is found.
-
-# Hits {#hits}
-
-[TODO: Define Hits-specific protocol messages.]
 
 # Operational Considerations {#operational-capabilities}
 
@@ -1388,5 +1258,229 @@ This document requests creation of a new registry for extensions to the Upload
 protocol. This registry should contain the following columns:
 
 [TODO: define how we want to structure this registry when the time comes]
+
+# Acknowledgements
+
+The text in {{message-transport}} is based extensively on {{?RFC8555}}
+
+# OLD CRYPTO TEXT THAT PROBABLY GOES IN ANOTHER DOC
+
+
+## Definition flow
+
+Each PPM task consists of two sub-protocols, *upload* and *collect*, which are
+executed concurrently. Each sub-protocol consists of a sequence of HTTP requests
+made from one entity to another.
+
+
+## Private aggregation via secret sharing
+
+The main cryptographic tool used for achieving this privacy goal is *additive
+secret sharing*. Rather than send its input in the clear, each client splits
+its measurements into a sequence of *shares* and sends a share to each of the
+aggregators. Additive secret sharing has two important properties:
+
+- It's impossible to deduce the measurement without knowing *all* of the shares.
+- It allows the aggregators to compute the final output by first adding up their
+  measurements shares locally, then combining the results to obtain the final
+  output.
+
+Consider an illustrative example. Suppose there are three clients and two
+aggregators. Each client `i` holds a single measurement in the form of a
+positive integer `x[i]`, and our goal is to compute the sum of the measurements
+of all clients. In this case, the protocol input is a single measurement
+consisting of a single positive integer; no additional encoding is done. Given
+this input, the first client splits its measurement `x[1]` with additive
+secret-sharing into a pair of integers `X[1,1]` and `X[1,2]` for which `x[1]` is
+equal to `X[1,1] + X[1,2]` modulo a prime number `p`. (For convenience, we will
+omit the mod `p` operator in the rest of this section.) It then uploads `X[1,1]`
+to one server and `X[1,2]` to the other. The second client splits its
+measurement `x[2]` into `X[1,2]` and `X[2,2]`, uploads them to the servers, and
+so on.
+
+Now the first aggregator is in possession of shares `X[1,1]`, `X[2,1]`, and
+`X[3,1]` and the second aggregator is in possession of shares `X[2,1]`,
+`X[2,2]`, and `X[2,3]`. Each aggregator computes the sum of its shares; let
+`A[1]` denote the first aggregator's share of the sum and let `A[2]` denote the
+second aggregator's share of the sum. In the last step, aggregators combine
+their sum shares to obtain the final output `y = A[1] + A[2]`. This is correct
+because modular addition is commutative. I.e.,
+
+~~~
+    y = A[1] + A[2]
+      = (x[1,1] + x[2,1] + x[3,1]) + (x[1,2] + x[2,2] + x[3,2])
+      = (x[1,1] + x[1,2]) + (x[2,1] + x[2,2]) + (x[3,1] + x[3,2])
+      = x[1] + x[2] + x[3]
+      = F(x[1], x[2], x[3])
+~~~
+
+### Prio {#prio-variant}
+
+This approach can be used to privately compute any function `F` that can be
+expressed as a function of the sum of the users' inputs. In Prio {{CB17}}, each
+user splits its input into shares and sends each share to one of the
+aggregators. The aggregators sum up their input shares. Once all the shares have
+been aggregated, they combine their shares of the aggregate to get the final
+output.
+
+Not all aggregate functions can be expressed this way efficiently, however. Prio
+supports only a limited set of aggregation functions, some of which we highlight
+below:
+
+- Simple statistics, like sum, mean, min, max, variance, and standard deviation;
+- Histograms with fixed bin sizes (also allows estimation of quantiles, e.g.,
+  the median);
+- More advanced statistics, like linear regression;
+- Bitwise-OR and -AND on bit strings; and
+- Computation of data structures, like Bloom filters, counting Bloom filters,
+  and count-min sketches, that approximately represent (multi-)sets of strings.
+
+This variety of aggregate types is sufficient to support a wide variety of
+data aggregation tasks.
+
+### Hits {#hits-variant}
+
+A common PPM task that can't be solved efficiently with Prio is the
+`t`-*heavy-hitters* problem {{BBCp21}}. In this setting, each user is in
+possession of a single `n`-bit string, and the goal is to compute the compute
+the set of strings that occur at least `t` times. One reason that Prio doesn't
+apply to this problem is that the proof generated by the client would be huge.
+
+[TODO: Provide an overview of the protocol of {{BBCp21}} and provide some
+intuition about how additive secret sharing is used.]
+
+
+
+
+# PPM protocols {#pa}
+
+This section specifies a protocol for executing generic PPM tasks. Concrete
+PPM protocols are described in {{prio}} and {{hits}}.
+
+Each round of the protocol corresponds to an HTTP request and response. The
+content type of each request is "application/octet-stream". We assume that some
+transport layer security protocol (e.g., TLS or QUIC) is used between each pair
+of parties and that the server is authenticated.
+
+[TODO: Decide how to provide mutual authentication in leader-to-helper and
+collector-to-leader connections. One option is to use client certificates for
+TLS; another is to have the leader sign its messages directly, as in Prio v2.
+For collector-to-leader connections, we may just have this be up to deployment.
+(For instance, the collector might authenticate themselves by logging into a
+website that has some trust relationship with the leader.)]
+
+
+# Prio {#prio}
+
+[TODO: Define Prio-specific protocol messages.]
+
+## Parameters
+
+### Finite field arithmetic
+
+The algorithms that comprise the input-validation protocol --- Prove, Query, and
+Decide --- are constructed by generating and evaluating polynomials over a
+finite field. As such, the main ingredient of Prio is an implementation of
+arithmetic in a finite field suitable for the given application.
+
+We will use a prime field. The choice of prime is influenced by the following
+criteria:
+
+1. **Field size.** How big the field needs to be depends on the type of data
+   being aggregated and how many users there are. The field size also impacts
+   the security level: the longer the validity circuit, the larger the field
+   needs to be in order to effectively detect malicious clients. Typically the
+   soundness error (i.e., the probability of an invalid input being deemed valid
+   by the aggregators) will be 2n/(p-n), where n is the size of the input and p
+   is the prime modulus.
+1. **Fast polynomial operations.** In order to make Prio practical, it's
+   important that implementations employ FFT to speed up polynomial operations.
+   In particular, the prime modulus p should be chosen so that `(p-1) = 2^b * s`
+   for large `b` and odd `s`. Then `g^s` is a principle, `2^b`-th root of unity
+   (i.e., `g^(s\*2^b) = 1`), where `g` is the generator of the multiplicative
+   subgroup.
+   This fact allows us to quickly evaluate and interpolate polynomials at
+   `2^a`-th roots of unity for any `1 <= a <= b`. Note that `b` imposes an upper
+   bound on the size of proofs, so it should be large enough to accommodate all
+   foreseeable use cases. Something like `b >= 20` is probably good enough.
+1. **As close to a power of two as possible.** We use rejection sampling to map
+   a PRNG seed to a pseudorandom sequence of field elements (see {{prio-prng}).
+   In order to minimize the probability of a simple being rejected, the modulus
+   should be as close to a power of 2 as possible.
+1. **Code optimization.** [[TODO: What properties of the field make
+   it possible to write faster implementations?]]
+
+The table below lists parameters that meet these criteria at various levels of
+security. (Note that \#1 is the field used in "Prio v2".) The "size" column
+indicates the number of bits required to represent elements of the field.
+
+| # | size | p                                      | g  | b   | s                |
+|---|------|----------------------------------------|----|-----|------------------|
+| 1 | 32   | 4293918721                             | 19 | 20  | 3^2 * 5 * 7 * 13 |
+| 2 | 64   | 15564440312192434177                   | 5  | 59  | 3^3              |
+| 3 | 80   | 779190469673491460259841               | 14 | 72  | 3 * 5 * 11       |
+| 4 | 123  | 9304595970494411110326649421962412033  | 3  | 120 | 7                |
+| 5 | 126  | 74769074762901517850839147140769382401 | 7  | 118 | 3^2 * 5^2        |
+
+[TODO: Choose new parameters for 2, 3, and 5 so that p is as close to 2^size as
+possible without going over. (4 is already close enough; 1 is already deployed
+and can't be changed.]
+
+**Finding suitable primes.**
+One way to find suitable primes is to first choose `b`, then "probe" to find a
+prime of the desired size. The following SageMath script prints the parameters
+of a number of (probable) primes larger than `2^b` for a given `b`:
+
+~~~
+b = 116
+for s in range(0,1000,1):
+    B = 2^b
+    p = (B*s).next_prime()
+    if p-(B*s) == 1:
+        bits = round(math.log2(p), 2)
+        print(bits, p, GF(p).multiplicative_generator(), b, factor(s))
+~~~
+
+### Pseudorandom number generation {#prio-prng}
+
+A suitable PRNG will have the following syntax. Fix a finite field `K`:
+
+1. `x := PRNG(k, n)` denotes generation of a vector of `n` elements of `K`.
+
+This can be instantiated using a standard stream cipher, e.g., AES-CTR, as
+follows. Interpret the seed `k` as the key and IV for generating the AES-CTR key
+stream. Proceed by rejection sampling, as follows. Let `m` be the number of bits
+needed to encode an element of `K`. Generate the next `m` bits of key stream and
+interpret the bytes as an integer `x`, clearing the most significant `m - l`
+bits, where `l` is the bit-length of the modulus `p`. If `x < p`, then output
+`x`. Otherwise, generate the next `m` bits of key stream and try again. Repeat
+this process indefinitely until a suitable output is found.
+
+# Hits {#hits}
+
+[TODO: Define Hits-specific protocol messages.]
+
+
+## Pre-conditions
+
+We assume the following conditions hold before execution of any PPM task begins:
+
+1. The clients, aggregators, and collector agree on a set of PPM tasks, as well
+   as the PPM parameters associated to each task.
+1. Each aggregator has a clock that is roughly in sync with true time, i.e.,
+   within the batch window specified by the PPM parameters. (This is necessary to
+   prevent the same report from appearing in multiple batches.)
+1. Each client has selected a PPM task for which it will upload a report. It is
+   also configured with the task's parameters.
+1. Each client and the leader can establish a leader-authenticated secure
+   channel.
+1. The leader and each helper can establish a helper-authenticated secure
+   channel.
+1. The collector and leader can establish a leader-authenticated secure channel.
+1. The collector has chosen an HPKE configuration and corresponding secret key.
+1. Each aggregator has chosen an HPKE configuration and corresponding secret key.
+
+[TODO: It would be clearer to include a "pre-conditions" section prior to each
+"phase" of the protocol.]
 
 --- back
