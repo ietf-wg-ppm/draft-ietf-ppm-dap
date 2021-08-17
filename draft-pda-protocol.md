@@ -313,7 +313,7 @@ report shares are encrypted directly to the aggregators using HPKE {{!I-D.irtf-c
 
 ## Errors
 Errors can be reported in PPM both at the HTTP layer and within
-challenge objects as defined in Section 8.  PPM servers can return
+challenge objects as defined in {{iana-considerations}}.  PPM servers can return
 responses with an HTTP error response code (4XX or 5XX).  For
 example, if the client submits a request using a method not allowed
 in this document, then the server MAY return status code 405 (Method
@@ -327,10 +327,10 @@ PPM URN namespace "urn:ietf:ppm:acme:error:"):
 
 | Type                    | Description                                                                                  |
 |:------------------------|:---------------------------------------------------------------------------------------------|
-| unrecognizedMessage     | The message type for a response was incorrect or the payload was malformed. 
+| unrecognizedMessage     | The message type for a response was incorrect or the payload was malformed. |
 | unrecognizedTask        | An endpoint received a message with an unknown task ID |
 
-This list is not exhaustive.  The server MAY return errors whose
+This list is not exhaustive.  The server MAY return errors
 set to a URI other than those defined above.  Servers MUST NOT use the PPM URN
 namespace for errors not listed in the appropriate IANA registry (see {{ppm-urn-space}}).
 Clients SHOULD display the "detail" field of all errors.
@@ -1257,7 +1257,7 @@ protocol. This registry should contain the following columns:
 
 The following value [will be/has been] registered in the "IETF URN Sub-
 namespace for Registered Protocol Parameter Identifiers" registry,
-following the template in [RFC3553]:
+following the template in {{!RFC3553}}:
 
 ~~~
 Registry name:  ppm
