@@ -316,14 +316,14 @@ report shares are encrypted directly to the aggregators using HPKE {{!I-D.irtf-c
 [[OPEN ISSUE: Align this with best practice, cribbing from ACME.]]
 
 Errors SHOULD be reported in PPM at the HTTP layer,  using an
-HTTP response code of 400. The response payload is a PPMAlert
+HTTP response code of 400. The response payload is a Alert
 structure:
 
 ~~~
 struct {
-  PPMTaskID task_id;
+  TaskID task_id;
   opaque payload<1..255>;
-} PPMAlert;
+} Alert;
 ~~~
 
 where `task_id` is the associated PPM task (this value is always known, see {{task-configuration}}) and
@@ -342,9 +342,9 @@ The following list defines a set of common errors.
   response to a request with a malformed payload, then the receiver aborts and
   alerts the peer with "unrecognized message".
 
-- Each POST request to an aggregator contains a `PPMTaskID`. If the aggregator
-  does not recognize the task, i.e., it can't find a `PPMParam` for which the
-  derived task ID matches the `PPMTaskID`, then it aborts and alerts the peer
+- Each POST request to an aggregator contains a `TaskID`. If the aggregator
+  does not recognize the task, i.e., it can't find a `Param` for which the
+  derived task ID matches the `TaskID`, then it aborts and alerts the peer
   with "unrecognized task".
   
 [[TODO: Add error table here.]]
@@ -365,7 +365,7 @@ PPM has three major interactions which need to be defined:
 ## Task Configuration {#task-configuration}
 
 Each endpoint in the system must agree on the configuration for each
-task, which is defined using the PPMParam structure:
+task, which is defined using the Param structure:
 
 ~~~
 struct {
@@ -375,15 +375,15 @@ struct {
   HpkeConfig collector_config; // [TODO: Remove this?]
   uint64 batch_size;
   Duration batch_window;
-  PPMProto proto;
+  Proto proto;
   uint16 length; // Length of the remainder.
-  select (PPMClientParam.proto) {
+  select (ClientParam.proto) {
     case prio: PrioParam;
     case hits: HitsParam;
   }
-} PPMParam;
+} Param;
 
-enum { prio(0), hits(1) } PPMProto;
+enum { prio(0), hits(1) } Proto;
 
 opaque Url<1..2^16-1>;
 
@@ -393,7 +393,7 @@ Time uint64; /* seconds elapsed since start of UNIX epoch */
 ~~~
 
 * `nonce`: A unique sequence of bytes used  to ensure that two otherwise
-  identical `PPMParam` instances will have distinct `PPMTaskID`s. It is
+  identical `Param` instances will have distinct `TaskID`s. It is
   RECOMMENDED that this be set to a random 16-byte string derived from a
   cryptographically secure pseudorandom number generator.
 * `leader_url`: The leader's endpoint URL.
@@ -414,7 +414,7 @@ The *task ID* is derived from the PPM parameters as:
 task_id = SHA-256(param)
 ~~~
 
-Where param is just the serialization of PPMParam.
+Where param is just the serialization of Param.
 
 
 ## Uploading Reports
@@ -428,7 +428,7 @@ Before the client can upload its report to the leader, it must know
 the keys of each of the aggregators. These are retrieved
 from each aggregator by sending a request to
 `[aggregator]/key_config`, where `[aggregator]` is the aggregator's
-endpoint URL, provided in the PPMConfig. The aggregator responds to
+endpoint URL, provided in the Config. The aggregator responds to
 well-formed requests with status 200 and an `HpkeConfig` value:
 
 ~~~
@@ -448,8 +448,8 @@ uint16 HpkeKdfId;  // Defined in I-D.irtf-cfrg-hpke
 [TODO: Decide whether to use the same config structure as OHTTP/ECH. This would
 add support for multiple cipher suites.]
 
-The client issues a key configuration request to `PPMParam.leader_url` and
-`PPMParam.helper_url`. It aborts if any of the following happen for either
+The client issues a key configuration request to `Param.leader_url` and
+`Param.helper_url`. It aborts if any of the following happen for either
 request:
 
 * the client and aggregator failed to establish a secure,
@@ -476,12 +476,12 @@ follows:
 
 ~~~
 struct {
-  PPMTaskID task_id;
+  TaskID task_id;
   Time time;
   uint64 jitter;
   Extension extensions<4..2^16-1>;
-  PPMEncryptedInputShare encrypted_input_shares<1..2^16-1>;
-} PPMReport;
+  EncryptedInputShare encrypted_input_shares<1..2^16-1>;
+} Report;
 ~~~
 
 This message is called the client's *report*. It contains the following fields:
@@ -505,7 +505,7 @@ struct {
   uint8 config_id;
   opaque enc<1..2^16-1>;
   opaque payload<1..2^16-1>;
-} PPMEncryptedInputShare;
+} EncryptedInputShare;
 ~~~
 
 * `config_id` is equal to `HpkeConfig.id`, where `HpkeConfig` is the key config
@@ -535,7 +535,7 @@ payload = context.Seal(input_share, task_id || time || jitter || extensions)
 ~~~
 
 where `input_share` is the aggregator's input share and `task_id`, `time`, and
-`jitter` are the fields of `PPMReport`.
+`jitter` are the fields of `Report`.
 
 The leader responds to well-formed requests to `[leader]/upload` with status 200
 and an empty body. Malformed requests are handled as described in
@@ -633,16 +633,16 @@ to the helper. These reports MUST all be associated with the same PPM task.
 [[OPEN ISSUE: And the same batch, right?]]
 
 Let `[helper]` denote
-`PPMParam.helper_url`, where `PPMParam` is the PPM parameters structure
-associated with`PPMAggregateReq.task.id`. The leader sends a POST request to
+`Param.helper_url`, where `Param` is the PPM parameters structure
+associated with`AggregateReq.task.id`. The leader sends a POST request to
 `[helper]/aggregate` with the following message:
 
 ~~~
 struct {
-  PPMTaskID task_id;
+  TaskID task_id;
   opaque helper_state<0..2^16>;
-  PPMAggregateSubReq seq<1..2^24-1>;
-} PPMAggregateReq;
+  AggregateSubReq seq<1..2^24-1>;
+} AggregateReq;
 ~~~
 
 The structure contains the PPM task, an opaque *helper state* string, and a
@@ -651,15 +651,15 @@ Sub-requests are structured as follows:
 
 ~~~
 struct {
-  Time time;                       // Equal to PPMReport.time.
-  uint64 jitter;                   // Equal to PPMReport.jitter.
-  Extension extensions<4..2^16-1>; // Equal to PPMReport.extensions.
-  PPMEncryptedInputShare helper_share;
-  select (PPMParam.proto) { // PPMParam for the PPM task
+  Time time;                       // Equal to Report.time.
+  uint64 jitter;                   // Equal to Report.jitter.
+  Extension extensions<4..2^16-1>; // Equal to Report.extensions.
+  EncryptedInputShare helper_share;
+  select (Param.proto) { // Param for the PPM task
     case prio: PrioAggregateSubReq;
     case hits: HitsAggregateSubReq;
   }
-} PPMAggregateSubReq;
+} AggregateSubReq;
 ~~~
 
 The `time`, `jitter`, and `extensions` fields have the same value as those in the
@@ -680,8 +680,8 @@ constructs its request such that:
 
 The helper handles well-formed requests as follows. (As usual, malformed
 requests are handled as described in {{errors}}.) It first looks
-for the PPM parameters `PPMParam` for which `PPMAggregateReq.task_id` is equal
-to the task ID derived from `PPMParam`. It then filters out out-of-order
+for the PPM parameters `Param` for which `AggregateReq.task_id` is equal
+to the task ID derived from `Param`. It then filters out out-of-order
 sub-requests by ignoring any sub-request that does not follow the previous one
 (See {{anti-replay}}.)
 
@@ -692,20 +692,20 @@ for each i. The structure of each sub-response is specific to the PPM protocol:
 ~~~
 struct {
   opaque helper_state<0..2^16>;
-  PPMAggregateSubResp seq<1..2^24-1>;
-} PPMAggregateResp;
+  AggregateSubResp seq<1..2^24-1>;
+} AggregateResp;
 
 struct {
-  Time time;     // Equal to PPMAggregateSubReq.time.
-  uint64 jitter; // Equal to PPMAggregateSubReq.jitter.
-  select (PPMParam.proto) { // PPMParam for the PPM task
+  Time time;     // Equal to AggregateSubReq.time.
+  uint64 jitter; // Equal to AggregateSubReq.jitter.
+  select (Param.proto) { // Param for the PPM task
     case prio: PrioAggregateSubResp;
     case hits: HitsAggregateSubResp;
   }
-} PPMAggregateSubResp;
+} AggregateSubResp;
 ~~~
 
-The helper handles each sub-request `PPMAggregateSubReq` as follows. It first
+The helper handles each sub-request `AggregateSubReq` as follows. It first
 looks up the HPKE config and corresponding secret key associated with
 `helper_share.config_id`. If not found, then the sub-response consists of an
 "unrecognized config" alert. [TODO: We'll want to be more precise about what
@@ -756,11 +756,11 @@ message:
 
 ~~~
 struct {
-  PPMTaskID task_id;
-  Time batch_start; // Same as PPMCollectReq.batch_start.
-  Time batch_end;   // Same as PPMCollectReq.batch_end.
+  TaskID task_id;
+  Time batch_start; // Same as CollectReq.batch_start.
+  Time batch_end;   // Same as CollectReq.batch_end.
   opaque helper_state<0..2^16>;
-} PPMOutputShareReq;
+} OutputShareReq;
 ~~~
 
 To respond to valid output share requests, the helper first checks that the
@@ -772,12 +772,12 @@ which has the following structure:
 
 ~~~
 struct {
-  PPMProto proto;
-  select (PPMOutputShare.proto) {
+  Proto proto;
+  select (OutputShare.proto) {
     case prio: PrioOutputShare;
     case hits: HitsOutputShare;
   }
-} PPMOutputShare;
+} OutputShare;
 ~~~
 
 Next, the helper encrypts its output share under the collector's HPKE public key:
@@ -801,7 +801,7 @@ struct {
   uint8 collector_hpke_config_id;
   opaque enc<1..2^16-1>;
   opaque encrypted_output_share<1..2^16>;
-} PPMOutputShareResp;
+} OutputShareResp;
 ~~~
 
 The leader uses the helper's output share response to respond to the collector's
@@ -819,15 +819,15 @@ body of the request is structured as follows:
 
 ~~~
 struct {
-  PPMTaskID task_id;
+  TaskID task_id;
   Time batch_start;  // The beginning of the batch.
   Time batch_end;    // The end of the batch (exclusive).
-  PPMProto proto;    // [TODO: Remove and use PPMParam.proto]
-  select (PPMCollectReq.proto) {
+  Proto proto;    // [TODO: Remove and use Param.proto]
+  select (CollectReq.proto) {
     case prio: PrioCollectReq;
     case hits: HitsCollectReq;
   }
-} PPMCollectReq;
+} CollectReq;
 ~~~
 
 [[TODO: Define the fields]]
@@ -838,18 +838,18 @@ order to compute the aggregate. Alternately, the leader may already
 have computed the results and can return them immediately.
 In either case, once the leader has obtained the helper's
 encrypted output share for the batch, it responds to the collector's request
-with the PPMCollectResp message:
+with the CollectResp message:
 
 [[OPEN ISSUE: What happens if this all takes a really long time.]]
 [TODO: Decide if and how the collector's request is authenticated.]
 
 ~~~
 struct {
-  PPMTaskID task_id;
-  PPMProto proto;
-  PPMOutputShare leader_share;
+  TaskID task_id;
+  Proto proto;
+  OutputShare leader_share;
   opaque encrypted_helper_share;
-} PPMCollectResp;
+} CollectResp;
 ~~~
 
 [[TODO: Define the fields]]
@@ -877,7 +877,7 @@ collectors. This section describes these capabilities in more detail.
 ### Client capabilities
 
 Clients have limited capabilities and requirements. Their only inputs to the protocol
-are (1) the PPMParam structure configured out of band and (2) a measurement. Clients
+are (1) the Param structure configured out of band and (2) a measurement. Clients
 are not expected to store any state across any upload
 flows, nor are they required to implement any sort of report upload retry mechanism.
 By design, the protocol in this document is robust against individual client upload
@@ -895,7 +895,7 @@ at least as capable as helpers, where helpers are generally required to:
   sets of reports in a given batch; and
 - Publish and manage an HPKE configuration that can be used for the upload protocol.
 
-In addition, for each PPMParam instance, helpers are required to:
+In addition, for each Param instance, helpers are required to:
 
 - Implement some form of batch-to-report index, as well as inter- and intra-batch
   replay mitigation storage, which includes some way of tracking batch report size
@@ -904,25 +904,25 @@ In addition, for each PPMParam instance, helpers are required to:
 
 Beyond the minimal capabilities required of helpers, leaders are generally required to:
 
-- Support the upload protocol and store client reports for a given PPMParam instance,
+- Support the upload protocol and store client reports for a given Param instance,
   where each report maps uniquely to a single batch, and index this storage by batch durations;
 - Track batch report size during each collect flow and request encrypted output shares
   from helpers.
 
-In addition, for each PPMParam instance, leaders are required to:
+In addition, for each Param instance, leaders are required to:
 
 - Implement and store state for the form of inter- and intra-batch replay mitigation in {{anti-replay}}; and
-- Store helper state associated with a given PPMParam batch.
+- Store helper state associated with a given Param batch.
 
 ### Collector capabilities
 
 Collectors statefully interact with aggregators to produce an aggregate output. Their
-input to the protocol is the PPMParam structure, configured out of band, which contains
+input to the protocol is the Param structure, configured out of band, which contains
 the corresponding batch window and size. For each collect invocation, collectors are
 required to keep state from the start of the protocol to the end as needed to produce
 the final aggregate output.
 
-Collectors must also maintain state for the lifetime of each PPMParam value, which includes
+Collectors must also maintain state for the lifetime of each Param value, which includes
 key material associated with the HPKE key configuration.
 
 ## Data resolution limitations
@@ -1179,7 +1179,7 @@ whatever client authentication or attestation scheme is in use.
 An important parameter of a PPM deployment is the minimum batch size. If an
 aggregation includes too few inputs, then the outputs can reveal information
 about individual participants. Aggregators use the batch size field of the
-`PPMParams` structure to enforce minimum batch size during the collect protocol,
+`Params` structure to enforce minimum batch size during the collect protocol,
 but server implementations may also opt out of participating in a PPM task if
 the minimum batch size is too small. This document does not specify how to
 choose minimum batch sizes.
@@ -1198,7 +1198,7 @@ batch except for one, that one record is still formally protected.
 [OPEN ISSUE: While parameters configuring the differential privacy noise (like
 specific distributions / variance) can be agreed upon out of band by the
 aggregators and collector, there may be benefits to adding explicit protocol
-support by encoding them into `PPMParams`.]
+support by encoding them into `Params`.]
 
 ## Multiple protocol runs
 
