@@ -12,7 +12,7 @@ conventional methods require collecting individual responses and then
 aggregating them, thus representing a threat to user privacy and
 rendering many such measurements difficult and impractical.
 
-New cryptographic techniques such as Prio and Heavy Hitters address
+New cryptographic techniques such as Prio and, more recently, a protocol for privacy preserving heavy hitters, address
 this gap by splitting up measurements between multiple servers which
 can jointly compute the aggregate value without either server learning
 the value of individual responses. The Privacy Preserving Measurement
@@ -40,7 +40,7 @@ will instead use algorithms defined by the CFRG.
 - Conflicts (whole Areas and/or WGs)
    - Chair Conflicts: TBD
    - Technology Overlap: TLS, PEARG, CFRG
-   - Key Participant Conflict: Chris Wood, Eric Rescorla, Chris Patton, Martin Thomson,
+   - Key Participant Conflict: Chris Wood, Eric Rescorla, Christopher Patton, Martin Thomson,
                                Richard Barnes
 ## Agenda
    - [TODO]
