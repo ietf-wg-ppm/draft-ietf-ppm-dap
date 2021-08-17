@@ -345,42 +345,36 @@ HTTPS provides server authentication and confidentiality. In addition,
 report shares are encrypted directly to the aggregators using HPKE {{!I-D.irtf-cfrg-hpke}}.
 
 ## Errors
+Errors can be reported in PPM both at the HTTP layer and within
+challenge objects as defined in {{iana-considerations}}.  PPM servers can return
+responses with an HTTP error response code (4XX or 5XX).  For
+example, if the client submits a request using a method not allowed
+in this document, then the server MAY return status code 405 (Method
+Not Allowed).
 
-[[OPEN ISSUE: Align this with best practice, cribbing from ACME.]]
+When the server responds with an error status, it SHOULD provide
+additional information using a problem document {{!RFC7807}}.  To
+facilitate automatic response to errors, this document defines the
+following standard tokens for use in the "type" field (within the
+PPM URN namespace "urn:ietf:ppm:acme:error:"):
 
-Errors SHOULD be reported in PPM at the HTTP layer,  using an
-HTTP response code of 400. The response payload is a Alert
-structure:
+| Type                    | Description                                                                                  |
+|:------------------------|:---------------------------------------------------------------------------------------------|
+| unrecognizedMessage     | The message type for a response was incorrect or the payload was malformed. |
+| unrecognizedTask        | An endpoint received a message with an unknown task ID |
 
-~~~
-struct {
-  TaskID task_id;
-  opaque payload<1..255>;
-} Alert;
-~~~
+This list is not exhaustive.  The server MAY return errors
+set to a URI other than those defined above.  Servers MUST NOT use the PPM URN
+namespace for errors not listed in the appropriate IANA registry (see {{ppm-urn-space}}).
+Clients SHOULD display the "detail" field of all errors.
+The "instance" value MUST be the endpoint to which the request was
+targeted. The problem document MUST also include a "taskid" member which contains
+the associated PPM task ID (this value is always known, see {{task-configuration}}).
 
-where `task_id` is the associated PPM task (this value is always known, see {{task-configuration}}) and
-`payload` contains a string indicating the error that occurred.
-When sent by an aggregator in response to an HTTP
-request, the response status is 400. When sent in a request to an aggregator,
-the URL is always `[aggregator]/error`, where `[aggregator]` is the URL of the
-aggregator endpoint.
-
-[[OPEN ISSUE: What is the URL? https://github.com/abetterinternet/prio-documents/issues/108]]
-
-The following list defines a set of common errors.
-
-- The message type for the payload of each request and response is unique for a
-  given URL. If ever a client, aggregator, or collector receives a request or
-  response to a request with a malformed payload, then the receiver aborts and
-  alerts the peer with "unrecognized message".
-
-- Each POST request to an aggregator contains a `TaskID`. If the aggregator
-  does not recognize the task, i.e., it can't find a `Param` for which the
-  derived task ID matches the `TaskID`, then it aborts and alerts the peer
-  with "unrecognized task".
-  
-[[TODO: Add error table here.]]
+In the remainder of this document, we use the tokens in the table above to refer
+to error types, rather than the full URNs.  For example, an "error of type
+'unrecognizedMessage'" refers to an error document with "type" value
+"urn:ietf:params:acme:error:unrecognizedMessage".
 
 This document uses the verbs "abort" and "alert with `[some error
 message]`" to describe how protocol participants react to various
@@ -1291,6 +1285,26 @@ This document requests creation of a new registry for extensions to the Upload
 protocol. This registry should contain the following columns:
 
 [TODO: define how we want to structure this registry when the time comes]
+
+## URN Sub-namespace for PPM (urn:ietf:params:ppm) {#ppm-urn-space}
+
+The following value [will be/has been] registered in the "IETF URN Sub-
+namespace for Registered Protocol Parameter Identifiers" registry,
+following the template in {{!RFC3553}}:
+
+~~~
+Registry name:  ppm
+
+Specification:  [[THIS DOCUMENT]]
+
+Repository:  http://www.iana.org/assignments/ppm
+
+Index value:  No transformation needed.
+~~~
+
+Initial contents: The types and descriptions in the table in
+{{errors}} above, with the Reference field set to point to this
+specification.
 
 # Acknowledgements
 
