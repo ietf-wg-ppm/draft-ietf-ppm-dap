@@ -1270,6 +1270,10 @@ Repository:  http://www.iana.org/assignments/ppm
 Index value:  No transformation needed.
 ~~~
 
+Initial contents: The types and descriptions in the table in
+{{errors}} above, with the Reference field set to point to this
+specification.
+
 # Acknowledgements
 
 The text in {{message-transport}} is based extensively on {{?RFC8555}}
