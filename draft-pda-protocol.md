@@ -9,11 +9,30 @@ stand_alone: yes
 pi: [toc, sortrefs, symrefs, docmapping]
 
 author:
-  -
-    ins: S. People
-    name: Some People
-    org: Somewhere
-    email: over@therainbow.net
+ -
+       ins: T. Geoghegan
+       name: Tim Geoghegan
+       organization: ISRG
+       email: timg@letsencrypt.org
+       
+ -
+       ins: C. Patton
+       name: Christopher Patton
+       organization: Cloudflare
+       email: cpatton@cloudflare.com
+
+ -
+       ins: E. Rescorla
+       name: Eric Rescorla
+       organization: Mozilla
+       email: ekr@rtfm.com
+
+ -
+       ins: C. A. Wood
+       name: Christopher A. Wood
+       organization: Cloudflare
+       email: caw@heapingbits.net
+
 
 informative:
 
