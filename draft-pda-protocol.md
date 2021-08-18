@@ -13,7 +13,7 @@ author:
        ins: T. Geoghegan
        name: Tim Geoghegan
        organization: ISRG
-       email: timg@letsencrypt.org
+       email: timgeog+ietf@gmail.com
        
  -
        ins: C. Patton
