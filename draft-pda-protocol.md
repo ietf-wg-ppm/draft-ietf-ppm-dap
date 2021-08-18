@@ -1304,6 +1304,8 @@ IANA [shall update / has updated] the "Media Types" registry at
 https://www.iana.org/assignments/media-types with the registration information
 in this section for all media types listed above.
 
+[OPEN ISSUE: Solicit review of these allocations from domain experts.]
+
 ### "application/ppm-hpke-config" media type
 
 Type name:
