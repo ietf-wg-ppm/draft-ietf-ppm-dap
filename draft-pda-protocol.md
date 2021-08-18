@@ -474,8 +474,8 @@ uint16 HpkeAeadId; // Defined in I-D.irtf-cfrg-hpke
 uint16 HpkeKemId;  // Defined in I-D.irtf-cfrg-hpke
 uint16 HpkeKdfId;  // Defined in I-D.irtf-cfrg-hpke
 ~~~
-[TODO: Decide whether to use the same config structure as OHTTP/ECH. This would
-add support for multiple cipher suites.]
+
+[OPEN ISSUE: Decide whether to expand the width of the id, or support multiple cipher suites (a la OHTTP/ECH).]
 
 The client issues a key configuration request to `Param.leader_url` and
 `Param.helper_url`. It aborts if any of the following happen for either
