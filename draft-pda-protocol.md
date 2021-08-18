@@ -1400,29 +1400,6 @@ intuition about how additive secret sharing is used.]
 
 
 
-
-# PPM protocols {#pa}
-
-This section specifies a protocol for executing generic PPM tasks. Concrete
-PPM protocols are described in {{prio}} and {{hits}}.
-
-Each round of the protocol corresponds to an HTTP request and response. The
-content type of each request is "application/octet-stream". We assume that some
-transport layer security protocol (e.g., TLS or QUIC) is used between each pair
-of parties and that the server is authenticated.
-
-[TODO: Decide how to provide mutual authentication in leader-to-helper and
-collector-to-leader connections. One option is to use client certificates for
-TLS; another is to have the leader sign its messages directly.
-For collector-to-leader connections, we may just have this be up to deployment.
-(For instance, the collector might authenticate themselves by logging into a
-website that has some trust relationship with the leader.)]
-
-
-# Prio {#prio}
-
-[TODO: Define Prio-specific protocol messages.]
-
 ## Parameters
 
 ### Finite field arithmetic
@@ -1504,11 +1481,6 @@ interpret the bytes as an integer `x`, clearing the most significant `m - l`
 bits, where `l` is the bit-length of the modulus `p`. If `x < p`, then output
 `x`. Otherwise, generate the next `m` bits of key stream and try again. Repeat
 this process indefinitely until a suitable output is found.
-
-# Hits {#hits}
-
-[TODO: Define Hits-specific protocol messages.]
-
 
 ## Pre-conditions
 
