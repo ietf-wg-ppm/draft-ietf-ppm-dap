@@ -562,7 +562,7 @@ the helper. `enc` is the encapsulated HPKE context and `context` is the HPKE
 context used by the client for encryption. The payload is encrypted as
 
 ~~~
-payload = context.Seal(input_share, task_id || time || nonce || extensions)
+payload = context.Seal(task_id || time || nonce || extensions, input_share)
 ~~~
 
 where `input_share` is the aggregator's input share and `task_id`, `time`, and
@@ -665,7 +665,7 @@ to the helper. These reports MUST all be associated with the same PPM task.
 
 Let `[helper]` denote
 `Param.helper_url`, where `Param` is the PPM parameters structure
-associated with`AggregateReq.task.id`. The leader sends a POST request to
+associated with `AggregateReq.task.id`. The leader sends a POST request to
 `[helper]/aggregate` with the following message:
 
 ~~~
@@ -716,9 +716,10 @@ to the task ID derived from `Param`. It then filters out out-of-order
 sub-requests by ignoring any sub-request that does not follow the previous one
 (See {{anti-replay}}.)
 
-The response consists of the helper's updated state and a sequence of
-*sub-responses*, where the i-th sub-response corresponds to the i-th sub-request
-for each i. The structure of each sub-response is specific to the PPM protocol:
+The response is an HTTP 200 OK with a body consisting of the helper's updated
+state and a sequence of *sub-responses*, where the i-th sub-response corresponds
+to the i-th sub-request for each i. The structure of each sub-response is
+specific to the PPM protocol:
 
 ~~~
 struct {
@@ -746,8 +747,8 @@ following procedure:
 ~~~
 context = SetupBaseR(helper_share.enc, sk,
                      "pda input share" || server_role)
-input_share = context.Open(helper_share,
-                           task_id || time || nonce || extensions)
+input_share = context.Open(task_id || time || nonce || extensions,
+                           helper_share)
 ~~~
 
 where `sk` is the HPKE secret key and `server_role` is the role of the server
@@ -775,7 +776,7 @@ usually need to be encrypted in order to protect user privacy. However, the
 details of precisely how the state is encrypted and the information that it
 carries is up to the helper implementation.
 
-### Output Share Request
+### Output Share Request {#output-share-request}
 
 Once the aggregators have verified at least as many reports as required for the
 PPM task, the leader issues an *output share request* to the helper. The helper
@@ -803,41 +804,48 @@ which has the following structure:
 
 ~~~
 struct {
-  Proto proto;
-  select (OutputShare.proto) {
+  select (Param.proto) { // Param corresponding to CollectReq.task_id
     case prio: PrioOutputShare;
     case hits: HitsOutputShare;
   }
 } OutputShare;
 ~~~
 
-Next, the helper encrypts its output share under the collector's HPKE public key:
+Next, the helper encrypts its output share under the collector's HPKE public
+key:
 
 ~~~
-enc, context = SetupBaseS(pk, "pda output share")
-encrypted_output_share = context.Seal(output_share,
-                            task_id || batch_start || batch_end)
+enc, context = SetupBaseS(pk, "pda output share" || server_role)
+encrypted_output_share = context.Seal(task_id || batch_start || batch_end,
+                                      output_share)
 ~~~
 
 where `pk` is the HPKE public key encoded by the collector's HPKE key
-configuration and `output_share` is its serialized output share. This
-encryption prevents the leader from learning the actual result, as
-it only has its own share and not the helper's share, which is encrypted
-for the collector.
-
-It responds with the following message:
+configuration, `server_role` is the role of the server (`0x01` for the leader
+and `0x00` for the helper) and `output_share` is the serialized `OutputShare`.
+`task_id`, `batch_start` and `batch_end` are obtained from the `OutputShareReq`.
+This encryption prevents the leader from learning the actual result, as it only
+has its own share and not the helper's share, which is encrypted for the
+collector. The helper response to the collector with HTTP status 200 OK and a
+body consisting of the following structure:
 
 ~~~
 struct {
   uint8 collector_hpke_config_id;
   opaque enc<1..2^16-1>;
   opaque encrypted_output_share<1..2^16>;
-} OutputShareResp;
+} EncryptedOutputShare;
 ~~~
+
+* `collector_hpke_config_id` is `collector_config.id` from the `Param`
+  corresponding to `CollectReq.task_id`.
+* `enc` is the encapsulated HPKE context, used by the collector to decrypt the
+  output share.
+* `encrypted_output_share` is an encrypted `OutputShare`, whose structure is
+  given below.
 
 The leader uses the helper's output share response to respond to the collector's
 collect request (see {{pa-collect}}).
-
 
 
 ## Collecting Results {#pa-collect}
@@ -853,8 +861,7 @@ struct {
   TaskID task_id;
   Time batch_start;  // The beginning of the batch.
   Time batch_end;    // The end of the batch (exclusive).
-  Proto proto;    // [TODO: Remove and use Param.proto]
-  select (CollectReq.proto) {
+  select (Param.proto) { // Param corresponding to task_id
     case prio: PrioCollectReq;
     case hits: HitsCollectReq;
   }
@@ -869,23 +876,24 @@ order to compute the aggregate. Alternately, the leader may already
 have computed the results and can return them immediately.
 In either case, once the leader has obtained the helper's
 encrypted output share for the batch, it responds to the collector's request
-with the CollectResp message:
+with HTTP status 200 and a body consisting of a CollectResp message:
 
 [[OPEN ISSUE: What happens if this all takes a really long time.]]
 [TODO: Decide if and how the collector's request is authenticated.]
 
 ~~~
 struct {
-  TaskID task_id;
-  Proto proto;
-  OutputShare leader_share;
-  opaque encrypted_helper_share;
+  EncryptedOutputShare leader_share;
+  EncryptedOutputShare helper_share;
 } CollectResp;
 ~~~
 
-[[TODO: Define the fields]]
+* `leader_share` and `helper_share` are `EncryptedOutputShare`s as described in
+  {{output-share-request}}, except that the `task_id`, `batch_start`, and
+  `batch_end` used to encrypt the `OutputShare` are obtained from the
+  `CollectReq`.
 
-[[OPEN ISSUE: change this to just have a list of shares
+[[OPEN ISSUE: change CollectResp to just have a list of shares
 https://github.com/abetterinternet/prio-documents/issues/112]]
 
 [OPEN ISSUE: Describe how intra-protocol errors yield collect errors (see
