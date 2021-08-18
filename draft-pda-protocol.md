@@ -19,7 +19,7 @@ author:
        ins: C. Patton
        name: Christopher Patton
        organization: Cloudflare
-       email: cpatton@cloudflare.com
+       email: chrispatton+ietf@gmail.com
 
  -
        ins: E. Rescorla
