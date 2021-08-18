@@ -487,7 +487,7 @@ request:
 * the key config specifies a KEM, KDF, or AEAD algorithm the client doesn't
   recognize.
 
-Aggregators SHOULD use the HTTP caching to permit client-side caching of this
+Aggregators SHOULD use HTTP caching to permit client-side caching of this
 resource {{!RFC5861}}. Aggregators SHOULD favor long cache lifetimes to avoid
 frequent cache revalidation, e.g., on the order of days. Aggregators can control
 this cached lifetime with the Cache-Control header, as follows:
