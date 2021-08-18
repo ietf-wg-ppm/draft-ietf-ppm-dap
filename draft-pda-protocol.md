@@ -1283,19 +1283,26 @@ consuming valid collect requests, as described in {{pa-collect}}.
 
 ## Protocol Message Media Types
 
-This specification defines the following protocol messages, along with their corresponding
-medai types types:
+This specification defines the following protocol messages, along with their
+corresponding media types types:
 
 - HpkeConfig {{task-configuration}}: "application/ppm-hpke-config"
-- Report {{report}}: "application/ppm-report"
-- AggregateReq {{aggregate-request}}: "application/ppm-aggregate-req"
-- AggregateResp {{aggregate-request}}: "application/ppm-aggregate-resp"
-- OutputShareReq {{output-share-request}}: "application/ppm-output-share-req"
-- OutputShareResp {{output-share-request}}: "application/ppm-output-share-resp"
-- CollectReq {{pa-collect}}: "application/ppm-collect-req"
-- CollectResp {{pa-collect}}: "application/ppm-collect-req"
+- Report {{report}}: "message/ppm-report"
+- AggregateReq {{aggregate-request}}: "message/ppm-aggregate-req"
+- AggregateResp {{aggregate-request}}: "message/ppm-aggregate-resp"
+- OutputShareReq {{output-share-request}}: "message/ppm-output-share-req"
+- OutputShareResp {{output-share-request}}: "message/ppm-output-share-resp"
+- CollectReq {{pa-collect}}: "message/ppm-collect-req"
+- CollectResp {{pa-collect}}: "message/ppm-collect-req"
 
 The definition for each media type is in the following subsections.
+
+Protocol message format evolution is supported through the definition of new
+formats that are identified by new media types.
+
+IANA [shall update / has updated] the "Media Types" registry at
+https://www.iana.org/assignments/media-types with the registration information
+in this section for all media types listed above.
 
 ### "application/ppm-hpke-config" media type
 
@@ -1368,11 +1375,11 @@ Change controller:
 
 : IESG
 
-### "application/ppm-report" media type
+### "message/ppm-report" media type
 
 Type name:
 
-: application
+: message
 
 Subtype name:
 
@@ -1439,11 +1446,11 @@ Change controller:
 
 : IESG
 
-### "application/ppm-aggregate-req" media type
+### "message/ppm-aggregate-req" media type
 
 Type name:
 
-: application
+: message
 
 Subtype name:
 
@@ -1510,7 +1517,7 @@ Change controller:
 
 : IESG
 
-### "application/ppm-aggregate-resp" media type
+### "message/ppm-aggregate-resp" media type
 
 Type name:
 
@@ -1581,7 +1588,7 @@ Change controller:
 
 : IESG
 
-### "application/ppm-output-share-req" media type
+### "message/ppm-output-share-req" media type
 
 Type name:
 
@@ -1652,7 +1659,7 @@ Change controller:
 
 : IESG
 
-### "application/ppm-output-share-resp" media type
+### "message/ppm-output-share-resp" media type
 
 Type name:
 
@@ -1723,7 +1730,7 @@ Change controller:
 
 : IESG
 
-### "application/ppm-collect-req" media type
+### "message/ppm-collect-req" media type
 
 Type name:
 
@@ -1794,7 +1801,7 @@ Change controller:
 
 : IESG
 
-### "application/ppm-collect-req" media type
+### "message/ppm-collect-req" media type
 
 Type name:
 
