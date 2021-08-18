@@ -356,7 +356,7 @@ When the server responds with an error status, it SHOULD provide
 additional information using a problem document {{!RFC7807}}.  To
 facilitate automatic response to errors, this document defines the
 following standard tokens for use in the "type" field (within the
-PPM URN namespace "urn:ietf:ppm:acme:error:"):
+PPM URN namespace "urn:ietf:params:ppm:error:"):
 
 | Type                    | Description                                                                                  |
 |:------------------------|:---------------------------------------------------------------------------------------------|
@@ -374,7 +374,7 @@ the associated PPM task ID (this value is always known, see {{task-configuration
 In the remainder of this document, we use the tokens in the table above to refer
 to error types, rather than the full URNs.  For example, an "error of type
 'unrecognizedMessage'" refers to an error document with "type" value
-"urn:ietf:params:acme:error:unrecognizedMessage".
+"urn:ietf:params:ppm:error:unrecognizedMessage".
 
 This document uses the verbs "abort" and "alert with `[some error
 message]`" to describe how protocol participants react to various
