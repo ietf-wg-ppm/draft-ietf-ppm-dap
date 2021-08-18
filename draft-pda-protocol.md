@@ -345,6 +345,7 @@ HTTPS provides server authentication and confidentiality. In addition,
 report shares are encrypted directly to the aggregators using HPKE {{!I-D.irtf-cfrg-hpke}}.
 
 ## Errors
+
 Errors can be reported in PPM both at the HTTP layer and within
 challenge objects as defined in {{iana-considerations}}.  PPM servers can return
 responses with an HTTP error response code (4XX or 5XX).  For
@@ -361,7 +362,8 @@ PPM URN namespace "urn:ietf:params:ppm:error:"):
 | Type                    | Description                                                                                  |
 |:------------------------|:---------------------------------------------------------------------------------------------|
 | unrecognizedMessage     | The message type for a response was incorrect or the payload was malformed. |
-| unrecognizedTask        | An endpoint received a message with an unknown task ID |
+| unrecognizedTask        | An endpoint received a message with an unknown task ID. |
+| outdatedConfig          | The message was generated using an outdated configuration. |
 
 This list is not exhaustive.  The server MAY return errors
 set to a URI other than those defined above.  Servers MUST NOT use the PPM URN
@@ -441,7 +443,7 @@ The *task ID* is derived from the PPM parameters as:
 task_id = SHA-256(param)
 ~~~
 
-Where param is just the serialization of Param.
+Where param is the serialization of Param.
 
 
 ## Uploading Reports
@@ -472,8 +474,8 @@ uint16 HpkeAeadId; // Defined in I-D.irtf-cfrg-hpke
 uint16 HpkeKemId;  // Defined in I-D.irtf-cfrg-hpke
 uint16 HpkeKdfId;  // Defined in I-D.irtf-cfrg-hpke
 ~~~
-[TODO: Decide whether to use the same config structure as OHTTP/ECH. This would
-add support for multiple cipher suites.]
+
+[OPEN ISSUE: Decide whether to expand the width of the id, or support multiple cipher suites (a la OHTTP/ECH).]
 
 The client issues a key configuration request to `Param.leader_url` and
 `Param.helper_url`. It aborts if any of the following happen for either
@@ -485,15 +487,22 @@ request:
 * the key config specifies a KEM, KDF, or AEAD algorithm the client doesn't
   recognize.
 
+Aggregators SHOULD use HTTP caching to permit client-side caching of this
+resource {{!RFC5861}}. Aggregators SHOULD favor long cache lifetimes to avoid
+frequent cache revalidation, e.g., on the order of days. Aggregators can control
+this cached lifetime with the Cache-Control header, as follows:
+
+~~~
+  Cache-Control: max-age=86400
+~~~
+
 Clients SHOULD follow the usual HTTP caching {{!RFC7234}} semantics for
-key configurations. Aggregators SHOULD favor long cache lifetimes to avoid
-frequent cache revalidation.
+key configurations.
 
 Note: Long cache lifetimes may result in clients using stale HPKE
 keys; aggregators SHOULD continue to accept reports with old
-keys for a reasonable period after key changes in order to avoid
+keys for at least twice the cache lifetime in order to avoid
 rejecting reports.
-[[OPEN ISSUE: https://github.com/abetterinternet/prio-documents/issues/106]]
 
 ### Upload Request
 
@@ -570,6 +579,12 @@ The leader responds to well-formed requests to `[leader]/upload` with status 200
 and an empty body. Malformed requests are handled as described in
 {{errors}}. Clients SHOULD NOT upload the same measurement value
 in more than one report if the leader responds with status 200 and an empty body.
+
+The leader responds to requests with out-of-date `HpkeConfig.id` values, indicated
+by `EncryptedInputShare.config_id`, with status 400 and an error of type
+'outdatedConfig'. Clients SHOULD invalidate any cached aggregator `HpkeConfig` and
+retry with a freshly generated Report. If this retried report does not succeed,
+clients MUST abort and discontinue retrying.
 
 ### Upload Extensions {#upload-extensions}
 
