@@ -473,14 +473,16 @@ opaque Url<1..2^16-1>;
 * `id`: An identifier for the aggregator, used in HPKE encryption and which
   allows participants to resolve entries in `Param.aggregators` against values
   in vectors in other protocol messages. The same `AggregatorId`s MUST be used
-  when consturcting other messages containing vectors with one value for each
+  when constructing other messages containing vectors with one value for each
   aggregator (e.g., `Report.encrypted_input_shares` in {{uploading-reports}}).
-  Each aggregator knows its own `id`. `id` values must be unique in a `Param`.
+  Each aggregator knows its own `id`. `id` values MUST be unique in a `Param`
+  but may have different meanings in different `Param`s.
 * `endpoint`: The URL relative to which an aggregator's API endpoints can be
   found.
 * `leader_aggregator_id` is a reserved `AggregatorId` identifying the leader.
   `leader_aggregator_id` MUST occur exactly once among the `aggregators` in a
-  `Param`.
+  `Param`. A `Param` structure without the `leader_aggregator_id` is considered
+  malformed and MUST be ignored by clients.
 
 The *task ID* is derived from the PPM parameters as:
 
