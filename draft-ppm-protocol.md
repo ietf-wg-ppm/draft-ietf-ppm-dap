@@ -463,7 +463,7 @@ struct {
   Url endpoint;
 } Aggregator;
 
-uint8 AggregatorId;
+uint64 AggregatorId;
 
 AggregatorId leader_aggregator_id = 0;
 
@@ -608,20 +608,20 @@ To encrypt an input share, the client first generates an HPKE
 {{!I-D.irtf-cfrg-hpke}} context for the aggregator by running
 
 ~~~
-enc, context = SetupBaseS(pk, "pda input share" || aggregator_id)
+enc, context = SetupBaseS(pk, "pda input share" || task_id || aggregator_id)
 ~~~
 
-where `pk` is the aggregator's public key and `aggregator_id` is the
-`Aggregator.id` of the aggregator receiving the input share. `enc` is the
-encapsulated HPKE context and `context` is the HPKE context used by the client
-for encryption. The payload is encrypted as
+where `pk` is the aggregator's public key, `task_id` is `Report.task_id` and
+`aggregator_id` is the `Aggregator.id` of the aggregator receiving the input
+share. `enc` is the encapsulated HPKE context and `context` is the HPKE context
+used by the client for encryption. The payload is encrypted as
 
 ~~~
-payload = context.Seal(task_id || time || nonce || extensions, input_share)
+payload = context.Seal(time || nonce || extensions, input_share)
 ~~~
 
-where `input_share` is the aggregator's input share and `task_id`, `time`, and
-`nonce` are the fields of `Report`.
+where `input_share` is the aggregator's input share and `time` and
+`nonce` are the corresponding fields of `Report`.
 
 The leader responds to well-formed requests to `[leader]/upload` with status 200
 and an empty body. Malformed requests are handled as described in {{errors}}.
@@ -807,16 +807,17 @@ following procedure:
 
 ~~~
 context = SetupBaseR(helper_share.enc, sk,
-                     "pda input share" || aggregator_id)
-input_share = context.Open(task_id || time || nonce || extensions,
-                           helper_share)
+                     "pda input share" || task_id || aggregator_id)
+input_share = context.Open(time || nonce || extensions, helper_share)
 ~~~
 
-where `sk` is the HPKE secret key and `aggregator_id` is the `AggregatorId` for
-the aggregator. If decryption fails, then the sub-response consists of a
-"decryption error" alert. [See issue#57.] Otherwise, the helper handles the
-request for its plaintext input share `input_share` and updates its state as
-specified by the PPM protocol.
+where `sk` is the HPKE secret key, `task_id` is `AggregateReq.task_id` and
+`aggregator_id` is the `AggregatorId` for the aggregator. `time`, `nonce` and
+`extensions` are obtained from the corresponding fields in `AggregateSubReq`. If
+decryption fails, then the sub-response consists of a "decryption error" alert.
+[See issue#57.] Otherwise, the helper handles the request for its plaintext
+input share `input_share` and updates its state as specified by the PPM
+protocol.
 
 After processing all of the sub-requests, the helper encrypts its updated state
 and constructs its response to the aggregate request.
@@ -878,15 +879,14 @@ Next, the helper encrypts its output share under the collector's HPKE public
 key:
 
 ~~~
-enc, context = SetupBaseS(pk, "pda output share" || aggregator_id)
-encrypted_output_share = context.Seal(task_id || batch_start || batch_end,
-                                      output_share)
+enc, context = SetupBaseS(pk, "pda output share" || task_id || aggregator_id)
+encrypted_output_share = context.Seal(batch_start || batch_end, output_share)
 ~~~
 
 where `pk` is the HPKE public key encoded by the collector's HPKE key
-configuration, `aggregator_id` is the `AggregatorId` of the server and
-`output_share` is the serialized `OutputShare`. `task_id`, `batch_start` and
-`batch_end` are obtained from the `OutputShareReq`.
+configuration, `task_id` is `OutputShareReq.task_id` and `aggregator_id` is the
+`AggregatorId` of the server. `output_share` is the serialized `OutputShare`.
+`batch_start` and `batch_end` are obtained from the `OutputShareReq`.
 
 This encryption prevents the leader from learning the actual result, as it only
 has its own share and not the helper's share, which is encrypted for the
