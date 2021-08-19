@@ -500,11 +500,11 @@ the individual shares to each helper.
 
 ### Key Configuration Request {#key-config}
 
-Before the client can upload its report to the leader, it must know the keys of
-each of the aggregators. These are retrieved from each aggregator by sending a
-request to `Param.aggregators[i].endpoint/key_config` for `0 <= i <
-len(Param.aggregators)`. The aggregator responds to well-formed requests with
-status 200 and an `HpkeConfig` value:
+Before the client can upload its report to the leader, it must know the public
+key of each of the aggregators. These are retrieved from each aggregator by
+sending a request to `[aggregator]/key_config`, where `[aggregator]` is the
+aggregator's endpoint URL, provided in the `Param`. The aggregator responds to
+well-formed requests with status 200 and an `HpkeConfig` value:
 
 ~~~
 struct {
@@ -723,10 +723,10 @@ The AggregateReq request is used by the leader to send a set of reports
 to the helper. These reports MUST all be associated with the same PPM task.
 [[OPEN ISSUE: And the same batch, right?]]
 
-Let `Param` denote the PPM parameters structure associated with
-`AggregateReq.task_id`. For each `aggregator` in `Param.aggregators` where
-`aggregator.id != leader_aggregator_id`, the leader sends a POST request to
-`aggregator.endpoint/aggregate` with the following message:
+For each aggregator endpoint `[aggregator]` in the `Param` structure associated
+with `AggregateReq.task_id` for which the ID is not `leader_aggregator_id`, the
+leader sends a POST request to `[aggregator]/aggregate` with the following
+message:
 
 ~~~
 struct {
@@ -885,7 +885,7 @@ encrypted_output_share = context.Seal(batch_start || batch_end, output_share)
 
 where `pk` is the HPKE public key encoded by the collector's HPKE key
 configuration, `task_id` is `OutputShareReq.task_id` and `aggregator_id` is the
-`AggregatorId` of the server. `output_share` is the serialized `OutputShare`.
+ID of the aggregator. `output_share` is the serialized `OutputShare`.
 `batch_start` and `batch_end` are obtained from the `OutputShareReq`.
 
 This encryption prevents the leader from learning the actual result, as it only
@@ -902,8 +902,7 @@ struct {
 } EncryptedOutputShare;
 ~~~
 
-* `aggregator_id` is the `AggregatorId` of the aggregator constructing the
-  output share.
+* `aggregator_id` is the ID of the aggregator constructing the output share.
 * `collector_hpke_config_id` is `collector_config.id` from the `Param`
   corresponding to `CollectReq.task_id`.
 * `enc` is the encapsulated HPKE context, used by the collector to decrypt the
