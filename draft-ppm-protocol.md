@@ -136,14 +136,12 @@ Aggregator:
 Batch:
 : A set of reports that are aggregated into an output.
 
-Batch size:
-: The minimum number of reports in a batch.
+Batch duration:
+: The time difference between the oldest and newest report in a batch.
 
-Batch window:
-: The minimum time difference between the oldest and newest report in
-  a batch (in seconds).
-  [[OPEN ISSUE: This is defined as maximum later
-  https://github.com/abetterinternet/prio-documents/issues/118]]
+Batch interval:
+: A parameter of the collect or output-share request that specifies the time
+  range of the reports in the batch.
 
 Client:
 : The endpoint from which a user sends data to be aggregated, e.g., a
@@ -170,6 +168,13 @@ Input validation protocol:
 Measurement:
 : A single value (e.g., a count) being reported by a client.
    Multiple measurements may be grouped into a single protocol input.
+
+Minimum batch duration:
+: The minimum batch duration permitted for a PPM task, i.e., the minimum time
+   difference between the oldest and newest report in a batch.
+
+Minimum batch size:
+: The minimum number of reports in a batch.
 
 Leader:
 : A distinguished aggregator that coordinates input validation and data
@@ -420,11 +425,12 @@ struct {
   opaque uuid[16];
   Url aggregator_endpoints<1..2^16-1>;
   HpkeConfig collector_config;
-  uint64 batch_size;
-  Duration batch_window;
+  uint64 max_batch_lifetime;
+  uint64 min_batch_size;
+  Duration min_batch_duration;
   Proto proto;
   uint16 length; // Length of the remainder.
-  select (ClientParam.proto) {
+  select (Param.proto) {
     case prio: PrioParam;
     case hits: HitsParam;
   }
@@ -453,10 +459,14 @@ Time uint64; /* seconds elapsed since start of UNIX epoch */
   `struct PPMParam` absolves collectors of the burden of operating an HTTP
   server. See [#102](https://github.com/abetterinternet/prio-documents/issues/102)
   for discussion.
-* `batch_size`: The batch size, i.e., the minimum number of reports that are
-  aggregated into an output.
-* `batch_window`: The window of time covered by a batch, i.e., the maximum
-  interval between the oldest and newest report in a batch.
+* `max_batch_lifetime`: The maximum number of times a batch of reports may be
+  used in a collect request.
+* `min_batch_size`: The minimum batch size, i.e., the minimum number of reports
+  that appear in a batch.
+* `min_batch_duration`: The minimum batch duration, i.e., the minimum time
+  difference between the oldest and newest report in a batch. This defines the
+  boundaries with which the batch interval of each collect request must be
+  aligned. (See {{batch-parameter-validation}}.)
 * `proto`: The PPM protocol, e.g., Prio or Hits. The rest of the structure
   contains the protocol specific parameters.
 
@@ -615,7 +625,10 @@ clients MUST abort and discontinue retrying.
 ### Upload Extensions {#upload-extensions}
 
 Each UploadReq carries a list of extensions that clients may use to convey
-additional, authenticated information in the report. Each extension is a tag-length
+additional, authenticated information in the report. [OPEN ISSUE: The extensions
+aren't authenticated. It's probably a good idea to be a bit more clear about how
+we envision extensions being used. Right now this includes client attestation
+for defeating Sybil attacks. See issue#89.] Each extension is a tag-length
 encoded value of the following form:
 
 ~~~
@@ -831,18 +844,27 @@ message:
 ~~~
 struct {
   TaskID task_id;
-  Time batch_start; // Same as CollectReq.batch_start.
-  Time batch_end;   // Same as CollectReq.batch_end.
+  Interval batch_interval;
   opaque helper_state<0..2^16>;
 } OutputShareReq;
+
+struct {
+  Time start;
+  Time end;
+} Interval;
 ~~~
 
-To respond to valid output share requests, the helper first checks that the
-request corresponds to a valid collect request. Next, it extracts from its state
-the set of input shares that fall in the window `[batch_start, batch_end)`. If
-the size of the batch is less than `task.batch_size`, then it aborts and alerts
-the leader with "insufficient data". Otherwise, it computes its output share,
-which has the following structure:
+* `task_id` is the task ID associated with the PPM parameters.
+* `batch_interval` is the batch interval of the request.
+* `helper_state` is the helper's state, which is carried across requests from
+  the leader.
+
+To respond to an output share request, the helper first looks up the PPM
+parameters `Param` associated with task `task_id`. Then, using the procedure in
+{{batch-parameter-validation}}, it ensures that the request meets the
+requirements of the batch parameters. If so, it aggregates all valid input
+shares that fall in the batch interval into an output share. The format of the
+output share is specific to the PPM protocol:
 
 ~~~
 struct {
@@ -853,19 +875,19 @@ struct {
 } OutputShare;
 ~~~
 
-Next, the helper encrypts its output share under the collector's HPKE public
-key:
+Next, the helper encrypts the output share `output_share` under the collector's
+public key as follows:
 
 ~~~
 enc, context = SetupBaseS(pk, "pda output share" || task_id || aggregator_id)
-encrypted_output_share = context.Seal(batch_start || batch_end, output_share)
+encrypted_output_share = context.Seal(batch_interval, output_share)
 ~~~
 
 where `pk` is the HPKE public key encoded by the collector's HPKE key
 configuration, `task_id` is `OutputShareReq.task_id` and `aggregator_id` is the
 index of the helper's endpoint in `Param.aggregator_endpoints`. `output_share`
-is the serialized `OutputShare`. `batch_start` and `batch_end` are obtained from
-the `OutputShareReq`.
+is the serialized `OutputShare`, and `batch_interval` is obtained from the
+`OutputShareReq`.
 
 This encryption prevents the leader from learning the actual result, as it only
 has its own share and not the helper's share, which is encrypted for the
@@ -902,8 +924,7 @@ body of the request is structured as follows:
 ~~~
 struct {
   TaskID task_id;
-  Time batch_start;  // The beginning of the batch.
-  Time batch_end;    // The end of the batch (exclusive).
+  Interval batch_interval;
   select (Param.proto) { // Param corresponding to task_id
     case prio: PrioCollectReq;
     case hits: HitsCollectReq;
@@ -911,15 +932,29 @@ struct {
 } CollectReq;
 ~~~
 
-[[TODO: Define the fields]]
+The named parameters are:
 
-Depending on the PPM scheme and how the leader is configured, the CollectReq may cause
-the leader to send a series of AggregateReqs to the helpers in
-order to compute the aggregate. Alternately, the leader may already
-have computed the results and can return them immediately.
-In either case, once the leader has obtained the helper's
-encrypted output share for the batch, it responds to the collector's request
-with HTTP status 200 and a body consisting of a CollectResp message:
+* `task_id`, the task ID associated with the PPM parameters `Param`.
+* `batch_interval`, the request's batch interval.
+
+The remainder of the message is dedicated to the protocol-specific request
+parameters.
+
+Depending on the PPM scheme and how the leader is configured, the collect
+request may cause the leader to send a series of aggregate requests to the
+helpers in order to compute their share of the output. Alternately, the leader
+may already have made these requests and can respond immediately. In either case
+it responds to the collector's request as follows.
+
+It begins by checking that the request meets the requirements of the batch
+parameters using the procedure in {{batch-parameter-validation}}. If so, it
+obtains the helper's encrypted output share for the batch interval by sending an
+output share request to the helper as described in {{output-share-request}}.
+(This request may too have been made in advance.)
+
+Next, the leader computes its own output share by aggregating all of the valid
+input shares that fall within the batch interval. Finally, it responds with HTTP
+status 200 and a body consisting of a CollectResp message:
 
 [[OPEN ISSUE: What happens if this all takes a really long time.]]
 [TODO: Decide if and how the collector's request is authenticated.]
@@ -931,14 +966,60 @@ struct {
 ~~~
 
 * `shares` is a vector of `EncryptedOutputShare`s, as described in
-  {{output-share-request}}, except that for the leader's share, the `task_id`,
-  `batch_start`, and `batch_end` used to encrypt the `OutputShare` are obtained
-  from the `CollectReq`.
+  {{output-share-request}}, except that for the leader's share, the `task_id`
+  and `batch_interval` used to encrypt the `OutputShare` are obtained from the
+  `CollectReq`.
 
 [OPEN ISSUE: Describe how intra-protocol errors yield collect errors (see
 issue#57). For example, how does a leader respond to a collect request if the
 helper drops out?]
 
+### Validating Batch Parameters {#batch-parameter-validation}
+
+Before an aggregator responds to a collect request or output share request, it
+must first check that the request does not violate the parameters associated
+with the PPM task. It does so as described here.
+
+First the aggregator checks that the request's batch interval respects the
+boundaries defined by the PPM parameters `Param`. Namely, it checks that both
+`batch_interval.start` and `batch_interval.end` are divisible by
+`Param.min_batch_duration` and that `batch_interval.end - batch_interval.start
+>= min_batch_duration`. Unless both these conditions are true, it aborts and
+alerts the peer with "invalid batch interval".
+
+Next, the aggregator checks that the request respects the generic privacy
+parameters of the PPM task. Let `X` denote the set of input shares the
+aggregator has validated and which fall in the batch interval of the request.
+
+* If `len(X) < Param.min_batch_size`, then the aggregator aborts and alerts the
+  peer with "insufficient batch size".
+* The aggregator keeps track of the number of times each input share was added
+  to the batch of an output share request. If any input share in `X` was added
+  to at least `Param.max_batch_lifetime` previous batches, then the helper
+  aborts and alerts the peer with "request exceeds the batch's privacy budget".
+
+### Anti-replay {#anti-replay}
+
+Using a report multiple times within a single batch, or using the same report
+in multiple batches, is considered a privacy violation. To prevent such replay
+attacks, this specification defines a total ordering on reports that aggregators
+can use to ensure that reports are aggregated once.
+
+Aggregate requests are ordered as follows: We say that a report `R2` follows
+report `R1` if either `R2.time > R1.time` or `R2.time == R1.time` and
+`R2.nonce > R1.nonce`. If `R2.time < R1.time`, or `R2.time == R1.time` but
+`R2.nonce <= R1.nonce`, then we say that `R2` does not follow `R1`.
+
+To prevent replay attacks, each aggregator ensures that each report it
+aggregates follows the previously aggregated report. To prevent the adversary
+from tampering with the ordering of reports, honest clients incorporate the
+ordering-sensitive parameters `(time, nonce)` into the AAD for HPKE encryption.
+Note that this strategy may result in dropping reports that happen to have the
+same timestamp and nonce value.
+
+Aggregators prevent the same report from being used in multiple batches (except
+as required by the protocol) by only responding to valid collect requests, as
+described in {{batch-parameter-validation}}.
 
 # Operational Considerations {#operational-capabilities}
 
@@ -969,11 +1050,11 @@ or computation limitations or constraints, but only a modestly provisioned helpe
 has computation, bandwidth, and storage constraints. By design, leaders must be
 at least as capable as helpers, where helpers are generally required to:
 
-- Support the collect protocol, which includes verifying and aggregating
-  sets of reports in a given batch; and
+- Support the collect protocol, which includes validating and aggregating
+  reports; and
 - Publish and manage an HPKE configuration that can be used for the upload protocol.
 
-In addition, for each Param instance, helpers are required to:
+In addition, for each PPM task, helpers are required to:
 
 - Implement some form of batch-to-report index, as well as inter- and intra-batch
   replay mitigation storage, which includes some way of tracking batch report size
@@ -982,15 +1063,15 @@ In addition, for each Param instance, helpers are required to:
 
 Beyond the minimal capabilities required of helpers, leaders are generally required to:
 
-- Support the upload protocol and store client reports for a given Param instance,
-  where each report maps uniquely to a single batch, and index this storage by batch durations;
+- Support the upload protocol and store reports; and
 - Track batch report size during each collect flow and request encrypted output shares
   from helpers.
 
-In addition, for each Param instance, leaders are required to:
+In addition, for each PPM task, leaders are required to:
 
-- Implement and store state for the form of inter- and intra-batch replay mitigation in {{anti-replay}}; and
-- Store helper state associated with a given Param batch.
+- Implement and store state for the form of inter- and intra-batch replay
+  mitigation in {{anti-replay}}; and
+- Store helper state.
 
 ### Collector capabilities
 
@@ -1037,6 +1118,25 @@ Some applications may be constrained by the time that it takes to reach a
 privacy threshold defined by a minimum number of input shares. One possible
 solution is to increase the reporting period so more samples can be collected,
 balanced against the urgency of responding to a soft deadline.
+
+## Protocol-specific optimizations
+
+Not all PPM tasks have the same operational requirements, so the protocol is
+designed to allow implementations to reduce operational costs in certain cases.
+
+### Reducing storage requirements
+
+In general, the aggregators are required to keep state for all valid reports for
+as long as collect requests can be made for them. In particular, the aggregators
+must store a batch as long as the batch has not been queried more than
+`max_batch_lifetime` times. However, it is not always necessary to store the
+reports themselves. For schemes like Prio in which the input-validation protocol
+is only run once per input share, each aggregator only needs to store the
+aggregate output share for each possible batch interval, along with the number
+of times the output share was used in a batch. (The helper may store its output
+shares in its encrypted state, thereby offloading this state to the leader.)
+This is due to the requirement that the batch interval respect the boundaries
+defined by the PPM parameters. (See {{batch-parameter-validation}}.)
 
 # Security Considerations {#sec-considerations}
 
@@ -1252,7 +1352,7 @@ Oblivous HTTP {{!I-D.thomson-http-oblivious}} to forward inputs to the PPM
 leader, without requiring any server participating in PPM to be aware of
 whatever client authentication or attestation scheme is in use.
 
-## Batch sizes and privacy
+## Batch parameters
 
 An important parameter of a PPM deployment is the minimum batch size. If an
 aggregation includes too few inputs, then the outputs can reveal information
@@ -1261,6 +1361,10 @@ about individual participants. Aggregators use the batch size field of the
 but server implementations may also opt out of participating in a PPM task if
 the minimum batch size is too small. This document does not specify how to
 choose minimum batch sizes.
+
+The PPM parameters also specify the maximum number of times a report can be
+used. Some protocols, such as Hits, require reports to be used in multiple
+batches spanning multiple collect requests.
 
 ## Differential privacy {#dp}
 
@@ -1278,11 +1382,11 @@ specific distributions / variance) can be agreed upon out of band by the
 aggregators and collector, there may be benefits to adding explicit protocol
 support by encoding them into `Params`.]
 
-## Multiple protocol runs
+## Robustness in the presence of malicious servers
 
-Prio is _robust_ against malicious clients, and _private_ against malicious
-servers, but cannot provide robustness against malicious servers. Any aggregator
-can simply emit bogus output shares and undetectably spoil aggregates. If enough
+Most PPM protocols, including Prio and Hits, are robust against malicious
+clients, but are not robust against malicious servers. Any aggregator can
+simply emit bogus output shares and undetectably spoil aggregates. If enough
 aggregators were available, this could be mitigated by running the protocol
 multiple times with distinct subsets of aggregators chosen so that no aggregator
 appears in all subsets and checking all the outputs against each other. If all
@@ -1300,29 +1404,6 @@ that would enable a single vendor to reassemble inputs. For example, if all
 participating aggregators stored unencrypted input shares on the same cloud
 object storage service, then that cloud vendor would be able to reassemble all
 the input shares and defeat privacy.
-
-#### Anti-replay {#anti-replay}
-
-Using a report in multiple batches, or multiple times within a single batch, is
-considered a privacy violation, since it may leak more information about that
-report than intended by the PPM protocol. For example, this may violate
-differential privacy. To mitigate this issue, the core specification imposes an
-ordering on reports so that aggregators can cheaply prevent replays attacks.
-
-Aggregate requests are ordered as follows: We say that a report `R2` follows
-report `R1` if either `R2.time > R1.time` or `R2.time == R1.time` and
-`R2.nonce > R1.nonce`. If `R2.time < R1.time`, or `R2.time == R1.time` but
-`R2.nonce <= R1.nonce`, then we say that `R2` does not follow `R1`.
-
-To prevent replay attacks, each aggregator ensures that each report it consumes
-follows the previous one it consumed. To prevent the adversary from tampering
-with the ordering of reports, honest clients incorporate the ordering-sensitive
-parameters `(time, nonce)` into the AAD for HPKE encryption. Note that this
-strategy may result in dropping reports that happen to have the same timestamp
-and nonce value.
-
-Aggregators prevent the same report from being used in multiple batches by only
-consuming valid collect requests, as described in {{pa-collect}}.
 
 ## System requirements {#operational-requirements}
 
