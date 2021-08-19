@@ -495,7 +495,7 @@ keys for a reasonable period after key changes in order to avoid
 rejecting reports.
 [[OPEN ISSUE: https://github.com/abetterinternet/prio-documents/issues/106]]
 
-### Report
+### Upload Request
 
 Clients upload reports by using an HTTP POST `[leader]/upload`, where
 `[leader]` is the leader's endpoint URL. The payload is structured as
@@ -1287,7 +1287,7 @@ This specification defines the following protocol messages, along with their
 corresponding media types types:
 
 - HpkeConfig {{task-configuration}}: "application/ppm-hpke-config"
-- Report {{report}}: "message/ppm-report"
+- Report {{upload-request}}: "message/ppm-report"
 - AggregateReq {{aggregate-request}}: "message/ppm-aggregate-req"
 - AggregateResp {{aggregate-request}}: "message/ppm-aggregate-resp"
 - OutputShareReq {{output-share-request}}: "message/ppm-output-share-req"
@@ -1401,7 +1401,7 @@ Encoding considerations:
 
 Security considerations:
 
-: see {{report}}
+: see {{upload-request}}
 
 Interoperability considerations:
 
