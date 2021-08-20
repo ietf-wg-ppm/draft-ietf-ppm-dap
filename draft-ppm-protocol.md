@@ -1,6 +1,6 @@
 ---
 title: "Privacy Preserving Measurement"
-docname: draft-pda-protocol-latest
+docname: draft-ppm-protocol-latest
 category: std
 ipr: trust200902
 area: ART
@@ -14,7 +14,7 @@ author:
        name: Tim Geoghegan
        organization: ISRG
        email: timgeog+ietf@gmail.com
-       
+
  -
        ins: C. Patton
        name: Christopher Patton

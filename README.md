@@ -2,9 +2,9 @@
 
 This is the working area for the individual Internet-Draft, "Private Data Aggregation Protocol".
 
-* [Editor's Copy](https://abetterinternet.github.io/prio-documents/#go.draft-pda-protocol.html)
-* [Individual Draft](https://datatracker.ietf.org/doc/html/draft-pda-protocol)
-* [Compare Editor's Copy to Individual Draft](https://abetterinternet.github.io/prio-documents/#go.draft-pda-protocol.diff)
+* [Editor's Copy](https://abetterinternet.github.io/prio-documents/#go.draft-ppm-protocol.html)
+* [Individual Draft](https://datatracker.ietf.org/doc/html/draft-ppm-protocol)
+* [Compare Editor's Copy to Individual Draft](https://abetterinternet.github.io/prio-documents/#go.draft-ppm-protocol.diff)
 
 ## Building the Draft
 
