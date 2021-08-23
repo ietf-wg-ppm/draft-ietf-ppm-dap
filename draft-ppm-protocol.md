@@ -445,9 +445,9 @@ Time uint64; /* seconds elapsed since start of UNIX epoch */
   cryptographically secure pseudorandom number generator.
 * `aggregator_endpoints`: Vector of URLs relative to which an aggregator's API
   endpoints can be found. The leader's endpoint MUST be the first in the vector.
-  The order in which aggregators appear in this vector MUST be consistent with
-  the order of the encrypted input shares in a `Report` (see
-  {{uploading-reports}}).
+  The order of the `encrypted_input_shares` in a `Report` (see
+  {{uploading-reports}}) MUST be the same as the order in which aggregators
+  appear in this vector.
 * `collector_config`: The HPKE configuration of the collector (described in
   {{key-config}}). Putting the collector's HPKE configuration directly in
   `struct PPMParam` absolves collectors of the burden of operating an HTTP
@@ -469,7 +469,7 @@ task_id = SHA-256(param)
 Where param is the serialization of Param.
 
 
-## Uploading Reports {#uploading-reports}
+## Uploading Reports
 
 Clients periodically upload reports to the leader, which then distributes
 the individual shares to each helper.
@@ -479,8 +479,8 @@ the individual shares to each helper.
 Before the client can upload its report to the leader, it must know the public
 key of each of the aggregators. These are retrieved from each aggregator by
 sending a request to `[aggregator]/key_config`, where `[aggregator]` is the
-aggregator's endpoint URL, provided in the `Param`. The aggregator responds to
-well-formed requests with status 200 and an `HpkeConfig` value:
+aggregator's endpoint URL, provided in the `Param` for the task. The aggregator
+responds to well-formed requests with status 200 and an `HpkeConfig` value:
 
 ~~~
 struct {
@@ -500,7 +500,8 @@ uint16 HpkeKdfId;  // Defined in I-D.irtf-cfrg-hpke
 
 [OPEN ISSUE: Decide whether to expand the width of the id, or support multiple cipher suites (a la OHTTP/ECH).]
 
-The client aborts if any of the following happen for any `key_config` request:
+The client MUST abort if any of the following happen for any `key_config`
+request:
 
 * the client and aggregator failed to establish a secure,
   aggregator-authenticated channel;
@@ -527,9 +528,9 @@ rejecting reports.
 
 ### Upload Request
 
-Let `[leader]` be the first entry in `Param.aggregators`. Clients upload reports
-by using an HTTP POST to `[leader]/upload`. The payload is structured as
-follows:
+Clients upload reports by using an HTTP POST to `[leader]/upload`, where
+`[leader]` is the first entry in `Param.aggregators`. The payload is structured
+as follows:
 
 ~~~
 struct {
@@ -556,7 +557,7 @@ This message is called the client's *report*. It contains the following fields:
   aggregators. The order in which the encrypted input shares appear MUST match
   the order of the `aggregator_endpoints` in the `Param` corresponding to
   `task_id` (i.e., the first share should be the leader's, the second share
-  should be for the second aggregator, and so on).
+  should be for the first helper, and so on).
 
 [OPEN ISSUE: consider dropping nonce altogether and relying on a more fine-grained timestamp, subject to collision analysis]
 
@@ -757,9 +758,9 @@ sub-requests by ignoring any sub-request that does not follow the previous one
 (See {{anti-replay}}.)
 
 The response is an HTTP 200 OK with a body consisting of the helper's updated
-state and a sequence of *sub-responses*, where the j-th sub-response corresponds
-to the j-th sub-request for each `1 <= j <= len(AggregateReq.seq)`. The
-structure of each sub-response is specific to the PPM protocol:
+state and a sequence of *sub-responses*, where each sub-response corresponds to
+the sub-request in the same position in `AggregateReq`. The structure of each
+sub-response is specific to the PPM protocol:
 
 ~~~
 struct {
@@ -824,10 +825,10 @@ PPM task, the leader issues an *output share request* to each helper. The helper
 responds to this request by extracting its output share from its state and
 encrypting it under the collector's HPKE public key.
 
-Let `Param` denote the PPM parameters structure associated with the task. For
-each `aggregator` in `Param.aggregators` where
-`aggregator.id != leader_aggregator_id`, the leader sends a POST request to
-`aggregator.endpoint/output_share` with the following message:
+For each aggregator endpoint `[aggregator]` in the `Param` structure associated
+with the `task_id` in the `CollectReq` (see {{pa-collect}}) except its own, the
+leader sends a POST request to `[aggregator]/output_share` with the following
+message:
 
 ~~~
 struct {
