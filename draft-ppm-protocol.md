@@ -585,14 +585,14 @@ To encrypt an input share, the client first generates an HPKE
 {{!I-D.irtf-cfrg-hpke}} context for the aggregator by running
 
 ~~~
-enc, context = SetupBaseS(pk, "pda input share" || task_id || aggregator_id)
+enc, context = SetupBaseS(pk, "pda input share" || task_id || server_role)
 ~~~
 
 where `pk` is the aggregator's public key, `task_id` is `Report.task_id` and
-`aggregator_id` is the index of the aggregator receiving the input share in
-`Param.aggregator_endpoints`. `enc` is the encapsulated HPKE context and
-`context` is the HPKE context used by the client for encryption. The payload is
-encrypted as
+`server_role` is a byte whose value is `0x01` if the aggregator is the leader
+and `0x00` if the aggregator is the helper. `enc` is the encapsulated HPKE
+context and `context` is the HPKE context used by the client for encryption.
+The payload is encrypted as
 
 ~~~
 payload = context.Seal(time || nonce || extensions, input_share)
@@ -787,14 +787,14 @@ following procedure:
 
 ~~~
 context = SetupBaseR(helper_share.enc, sk,
-                     "pda input share" || task_id || aggregator_id)
+                     "pda input share" || task_id || server_role)
 input_share = context.Open(time || nonce || extensions, helper_share)
 ~~~
 
 where `sk` is the HPKE secret key, `task_id` is `AggregateReq.task_id` and
-`aggregator_id` is the index of the helper's endpoint in
-`Param.aggregator_endpoints`. `time`, `nonce` and `extensions` are obtained from
-the corresponding fields in `AggregateSubReq`. If decryption fails, then the
+`server_role` is the role of the server (`0x01` for the leader and `0x00` for
+the helper). `time`, `nonce` and `extensions` are obtained from the
+corresponding fields in `AggregateSubReq`. If decryption fails, then the
 sub-response consists of a "decryption error" alert. [See issue#57.] Otherwise,
 the helper handles the request for its plaintext input share `input_share` and
 updates its state as specified by the PPM protocol.
