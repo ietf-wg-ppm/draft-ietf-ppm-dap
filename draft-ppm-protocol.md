@@ -734,10 +734,8 @@ The `time`, `nonce`, and `extensions` fields have the same value as those in the
 report uploaded by the client. Similarly, the `helper_share` field is the
 `EncryptedInputShare` from the `Report` whose index in
 `Report.encrypted_input_shares` is equal to the index of `[aggregator]` in
-`Param.aggregator_endpoints`.
-
-[OPEN ISSUE: We usually only need to send this in the
-first aggregate request. Shall we exclude it in subsequent requests somehow?]
+`Param.aggregator_endpoints`. [OPEN ISSUE: We usually only need to send this in
+the first aggregate request. Shall we exclude it in subsequent requests somehow?]
 The remainder of the structure is dedicated to the protocol-specific request
 parameters.
 
