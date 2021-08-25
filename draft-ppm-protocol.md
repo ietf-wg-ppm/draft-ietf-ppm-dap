@@ -565,14 +565,14 @@ Encrypted input shares are structured as follows:
 
 ~~~
 struct {
-  HpkeConfigId config_id;
+  HpkeConfigId aggregator_config_id;
   opaque enc<1..2^16-1>;
   opaque payload<1..2^16-1>;
 } EncryptedInputShare;
 ~~~
 
-* `config_id` is equal to `HpkeConfig.id`, where `HpkeConfig` is the key config
-  of the aggregator receiving the input share.
+* `aggregator_config_id` is equal to `HpkeConfig.id`, where `HpkeConfig` is the
+  key config of the aggregator receiving the input share.
 * `enc` is the encapsulated HPKE context, used by the aggregator to decrypt its
   input share.
 * `payload` is the encrypted input share.
@@ -858,7 +858,7 @@ key:
 
 ~~~
 enc, context = SetupBaseS(pk, "pda output share" || task_id || aggregator_id)
-encrypted_output_share = context.Seal(batch_start || batch_end, output_share)
+payload = context.Seal(batch_start || batch_end, output_share)
 ~~~
 
 where `pk` is the HPKE public key encoded by the collector's HPKE key
@@ -876,7 +876,7 @@ body consisting of the following structure:
 struct {
   HpkeConfigId collector_hpke_config_id;
   opaque enc<1..2^16-1>;
-  opaque encrypted_output_share<1..2^16>;
+  opaque payload<1..2^16>;
 } EncryptedOutputShare;
 ~~~
 
@@ -884,8 +884,7 @@ struct {
   corresponding to `CollectReq.task_id`.
 * `enc` is the encapsulated HPKE context, used by the collector to decrypt the
   output share.
-* `encrypted_output_share` is an encrypted `OutputShare`, whose structure is
-  given below.
+* `payload` is an encrypted `OutputShare`.
 
 The leader uses the helper's output share response to respond to the collector's
 collect request (see {{pa-collect}}).
