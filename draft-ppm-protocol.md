@@ -80,16 +80,6 @@ informative:
     author:
       -ins: S. Vadhan
 
-normative:
-
-  FIPS180-4:
-    title: NIST FIPS 180-4, Secure Hash Standard
-    author:
-      name: NIST
-      ins: National Institute of Standards and Technology, U.S. Department of Commerce
-    date: 2012-03
-    target: http://csrc.nist.gov/publications/fips/fips180-4/fips-180-4.pdf
-
 --- abstract
 
 There are many situations in which it is desirable to take
@@ -415,69 +405,57 @@ PPM has three major interactions which need to be defined:
 * Computing the results of a given measurement
 * Reporting results to the collector
 
-## Task Configuration {#task-configuration}
-
-Each endpoint in the system must agree on the configuration for each
-task, which is defined using the Param structure:
+We start with some basic type definitions used in other messages.
 
 ~~~
-struct {
-  opaque uuid[16];
-  Url aggregator_endpoints<1..2^16-1>;
-  HpkeConfig collector_config;
-  uint64 max_batch_lifetime;
-  uint64 min_batch_size;
-  Duration min_batch_duration;
-  Proto proto;
-  uint16 length; // Length of the remainder.
-  select (Param.proto) {
-    case prio: PrioParam;
-    case hits: HitsParam;
-  }
-} Param;
-
 enum { prio(0), hits(1) } Proto;
 
+ /* ASCII encoded URL. e.g., "https://example.com" */
 opaque Url<1..2^16-1>;
 
 Duration uint64; /* Number of seconds elapsed between two instants */
 
 Time uint64; /* seconds elapsed since start of UNIX epoch */
+
+/* An interval of time, where start is included and end is excluded */
+struct {
+  Time start;
+  Time end;
+} Interval;
 ~~~
 
-* `uuid`: A unique sequence of bytes used to ensure that two otherwise
-  identical `Param` instances will have distinct `TaskID`s. It is
-  RECOMMENDED that this be set to a random 16-byte string derived from a
-  cryptographically secure pseudorandom number generator.
-* `aggregator_endpoints`: Vector of URLs relative to which an aggregator's API
-  endpoints can be found. The leader's endpoint MUST be the first in the vector.
-  The order of the `encrypted_input_shares` in a `Report` (see
-  {{uploading-reports}}) MUST be the same as the order in which aggregators
-  appear in this vector.
+## Task Configuration {#task-configuration}
+
+Prior to the start of execution of the protocol, each participant must agree on
+the configuration for each task. A task is uniquely identified by its task ID:
+
+~~~
+opaque TaskId[32];
+~~~
+
+A `TaskId` is a globally unique sequence of bytes. It is RECOMMENDED that this
+be set to a random string output by a cryptographically secure pseudorandom
+number generator. Each task has the following parameters associated with it:
+
+* `aggregator_endpoints`: A list of URLs relative to which an aggregator's API
+  endpoints can be found. Each endpoint's list MUST be in the same order. The
+  leader's endpoint MUST be the first in the list. The order of the
+  `encrypted_input_shares` in a `Report` (see {{uploading-reports}}) MUST be the
+  same as the order in which aggregators appear in this list.
 * `collector_config`: The HPKE configuration of the collector (described in
-  {{key-config}}). Putting the collector's HPKE configuration directly in
-  `struct PPMParam` absolves collectors of the burden of operating an HTTP
-  server. See [#102](https://github.com/abetterinternet/ppm-specification/issues/102)
-  for discussion.
+  {{key-config}}). Having participants agree on this absolves collectors of the
+  burden of operating an HTTP server. See
+  [#102](https://github.com/abetterinternet/prio-documents/issues/102) for
+  discussion.
 * `max_batch_lifetime`: The maximum number of times a batch of reports may be
-  used in a collect request.
-* `min_batch_size`: The minimum batch size, i.e., the minimum number of reports
-  that appear in a batch.
-* `min_batch_duration`: The minimum batch duration, i.e., the minimum time
-  difference between the oldest and newest report in a batch. This defines the
-  boundaries with which the batch interval of each collect request must be
-  aligned. (See {{batch-parameter-validation}}.)
-* `proto`: The PPM protocol, e.g., Prio or Hits. The rest of the structure
-  contains the protocol specific parameters.
-
-The *task ID* is derived from the PPM parameters as:
-
-~~~
-task_id = SHA-256(param)
-~~~
-
-Where param is the serialization of Param.
-
+  used in collect requests.
+* `min_batch_size`: The minimum number of reports that appear in a batch.
+* `min_batch_duration`: The minimum time difference between the oldest and
+  newest report in a batch. This defines the boundaries with which the batch
+  interval of each collect request must be aligned. (See
+  {{batch-parameter-validation}}.)
+* `protocol`: named parameter identifying the core PPM protocol, e.g., Prio or
+   Hits.
 
 ## Uploading Reports
 
@@ -489,7 +467,7 @@ the individual shares to each helper.
 Before the client can upload its report to the leader, it must know the public
 key of each of the aggregators. These are retrieved from each aggregator by
 sending a request to `[aggregator]/key_config`, where `[aggregator]` is the
-aggregator's endpoint URL, provided in the `Param` for the task. The aggregator
+aggregator's endpoint URL, obtained from the task parameters. The aggregator
 responds to well-formed requests with status 200 and an `HpkeConfig` value:
 
 ~~~
@@ -539,8 +517,8 @@ rejecting reports.
 ### Upload Request
 
 Clients upload reports by using an HTTP POST to `[leader]/upload`, where
-`[leader]` is the first entry in `Param.aggregators`. The payload is structured
-as follows:
+`[leader]` is the first entry in the task's aggregator endpoints. The payload is
+structured as follows:
 
 ~~~
 struct {
@@ -565,9 +543,8 @@ This message is called the client's *report*. It contains the following fields:
   {{upload-extensions}}.
 * `encrypted_input_shares` contains the encrypted input shares of each of the
   aggregators. The order in which the encrypted input shares appear MUST match
-  the order of the `aggregator_endpoints` in the `Param` corresponding to
-  `task_id` (i.e., the first share should be the leader's, the second share
-  should be for the first helper, and so on).
+  the order of the task's `aggregator_endpoints` (i.e., the first share should
+  be the leader's, the second share should be for the first helper, and so on).
 
 [OPEN ISSUE: consider dropping nonce altogether and relying on a more fine-grained timestamp, subject to collision analysis]
 
@@ -595,7 +572,8 @@ To encrypt an input share, the client first generates an HPKE
 {{!I-D.irtf-cfrg-hpke}} context for the aggregator by running
 
 ~~~
-enc, context = SetupBaseS(pk, "pda input share" || task_id || server_role)
+enc, context = SetupBaseS(pk,
+                          "pda input share" || task_id || server_role)
 ~~~
 
 where `pk` is the aggregator's public key, `task_id` is `Report.task_id` and
@@ -714,8 +692,8 @@ The AggregateReq request is used by the leader to send a set of reports
 to the helper. These reports MUST all be associated with the same PPM task.
 [[OPEN ISSUE: And the same batch, right?]]
 
-For each aggregator endpoint `[aggregator]` in the `Param` structure associated
-with `AggregateReq.task_id` except its own, the leader sends a POST request to
+For each aggregator endpoint `[aggregator]` in `AggregateReq.task_id`'s
+parameters except its own, the leader sends a POST request to
 `[aggregator]/aggregate` with the following message:
 
 ~~~
@@ -736,7 +714,7 @@ struct {
   uint64 nonce;                    // Equal to Report.nonce.
   Extension extensions<4..2^16-1>; // Equal to Report.extensions.
   EncryptedInputShare helper_share;
-  select (Param.proto) { // Param for the PPM task
+  select (protocol) { // Protocol for the PPM task
     case prio: PrioAggregateSubReq;
     case hits: HitsAggregateSubReq;
   }
@@ -746,8 +724,8 @@ struct {
 The `time`, `nonce`, and `extensions` fields have the same value as those in the
 report uploaded by the client. Similarly, the `helper_share` field is the
 `EncryptedInputShare` from the `Report` whose index in
-`Report.encrypted_input_shares` is equal to the index of `[aggregator]` in
-`Param.aggregator_endpoints`. [OPEN ISSUE: We usually only need to send this in
+`Report.encrypted_input_shares` is equal to the index of `[aggregator]` in the
+task's aggregator endpoints. [OPEN ISSUE: We usually only need to send this in
 the first aggregate request. Shall we exclude it in subsequent requests somehow?]
 The remainder of the structure is dedicated to the protocol-specific request
 parameters.
@@ -763,10 +741,9 @@ constructs its request such that:
 
 The helper handles well-formed requests as follows. (As usual, malformed
 requests are handled as described in {{errors}}.) It first looks
-for the PPM parameters `Param` for which `AggregateReq.task_id` is equal
-to the task ID derived from `Param`. It then filters out out-of-order
-sub-requests by ignoring any sub-request that does not follow the previous one
-(See {{anti-replay}}.)
+for PPM parameters corresponding to `AggregateReq.task_id`. It then filters out
+out-of-order sub-requests by ignoring any sub-request that does not follow the
+previous one (See {{anti-replay}}.)
 
 The response is an HTTP 200 OK with a body consisting of the helper's updated
 state and a sequence of *sub-responses*, where each sub-response corresponds to
@@ -782,7 +759,7 @@ struct {
 struct {
   Time time;     // Equal to AggregateSubReq.time.
   uint64 nonce;  // Equal to AggregateSubReq.nonce.
-  select (Param.proto) { // Param for the PPM task
+  select (protocol) { // Protocol for the PPM task
     case prio: PrioAggregateSubResp;
     case hits: HitsAggregateSubResp;
   }
@@ -836,10 +813,9 @@ PPM task, the leader issues an *output share request* to each helper. The helper
 responds to this request by extracting its output share from its state and
 encrypting it under the collector's HPKE public key.
 
-For each aggregator endpoint `[aggregator]` in the `Param` structure associated
-with the `task_id` in the `CollectReq` (see {{pa-collect}}) except its own, the
-leader sends a POST request to `[aggregator]/output_share` with the following
-message:
+For each aggregator endpoint `[aggregator]` in the parameters associated with
+`CollectReq.task_id` (see {{pa-collect}}) except its own, the leader sends a
+POST request to `[aggregator]/output_share` with the following message:
 
 ~~~
 struct {
@@ -847,11 +823,6 @@ struct {
   Interval batch_interval;
   opaque helper_state<0..2^16>;
 } OutputShareReq;
-
-struct {
-  Time start;
-  Time end;
-} Interval;
 ~~~
 
 * `task_id` is the task ID associated with the PPM parameters.
@@ -860,7 +831,7 @@ struct {
   the leader.
 
 To respond to an output share request, the helper first looks up the PPM
-parameters `Param` associated with task `task_id`. Then, using the procedure in
+parameters associated with task `task_id`. Then, using the procedure in
 {{batch-parameter-validation}}, it ensures that the request meets the
 requirements of the batch parameters. If so, it aggregates all valid input
 shares that fall in the batch interval into an output share. The format of the
@@ -868,7 +839,7 @@ output share is specific to the PPM protocol:
 
 ~~~
 struct {
-  select (Param.proto) { // Param corresponding to CollectReq.task_id
+  select (protocol) { // Protocol for CollectReq.task_id
     case prio: PrioOutputShare;
     case hits: HitsOutputShare;
   }
@@ -879,15 +850,16 @@ Next, the helper encrypts the output share `output_share` under the collector's
 public key as follows:
 
 ~~~
-enc, context = SetupBaseS(pk, "pda output share" || task_id || aggregator_id)
+enc, context = SetupBaseS(pk,
+                          "pda output share" || task_id || server_role)
 encrypted_output_share = context.Seal(batch_interval, output_share)
 ~~~
 
 where `pk` is the HPKE public key encoded by the collector's HPKE key
-configuration, `task_id` is `OutputShareReq.task_id` and `aggregator_id` is the
-index of the helper's endpoint in `Param.aggregator_endpoints`. `output_share`
-is the serialized `OutputShare`, and `batch_interval` is obtained from the
-`OutputShareReq`.
+configuration, `task_id` is `OutputShareReq.task_id` and `server_role` is the
+role of the server (`0x01` for the leader and `0x00` for the helper).
+`output_share` is the serialized `OutputShare`, and `batch_interval` is obtained
+from the `OutputShareReq`.
 
 This encryption prevents the leader from learning the actual result, as it only
 has its own share and not the helper's share, which is encrypted for the
@@ -902,7 +874,7 @@ struct {
 } EncryptedOutputShare;
 ~~~
 
-* `collector_hpke_config_id` is `collector_config.id` from the `Param`
+* `collector_hpke_config_id` is `collector_config.id` from the task parameters
   corresponding to `CollectReq.task_id`.
 * `enc` is the encapsulated HPKE context, used by the collector to decrypt the
   output share.
@@ -924,7 +896,7 @@ body of the request is structured as follows:
 struct {
   TaskID task_id;
   Interval batch_interval;
-  select (Param.proto) { // Param corresponding to task_id
+  select (protocol) { // Protocol corresponding to task_id
     case prio: PrioCollectReq;
     case hits: HitsCollectReq;
   }
@@ -933,7 +905,7 @@ struct {
 
 The named parameters are:
 
-* `task_id`, the task ID associated with the PPM parameters `Param`.
+* `task_id`, the PPM task ID.
 * `batch_interval`, the request's batch interval.
 
 The remainder of the message is dedicated to the protocol-specific request
@@ -980,9 +952,9 @@ must first check that the request does not violate the parameters associated
 with the PPM task. It does so as described here.
 
 First the aggregator checks that the request's batch interval respects the
-boundaries defined by the PPM parameters `Param`. Namely, it checks that both
+boundaries defined by the PPM task's parameters. Namely, it checks that both
 `batch_interval.start` and `batch_interval.end` are divisible by
-`Param.min_batch_duration` and that `batch_interval.end - batch_interval.start
+`min_batch_duration` and that `batch_interval.end - batch_interval.start
 >= min_batch_duration`. Unless both these conditions are true, it aborts and
 alerts the peer with "invalid batch interval".
 
@@ -990,12 +962,12 @@ Next, the aggregator checks that the request respects the generic privacy
 parameters of the PPM task. Let `X` denote the set of input shares the
 aggregator has validated and which fall in the batch interval of the request.
 
-* If `len(X) < Param.min_batch_size`, then the aggregator aborts and alerts the
+* If `len(X) < min_batch_size`, then the aggregator aborts and alerts the
   peer with "insufficient batch size".
 * The aggregator keeps track of the number of times each input share was added
   to the batch of an output share request. If any input share in `X` was added
-  to at least `Param.max_batch_lifetime` previous batches, then the helper
-  aborts and alerts the peer with "request exceeds the batch's privacy budget".
+  to at least `max_batch_lifetime` previous batches, then the helper aborts and
+  alerts the peer with "request exceeds the batch's privacy budget".
 
 ### Anti-replay {#anti-replay}
 
@@ -1035,7 +1007,7 @@ collectors. This section describes these capabilities in more detail.
 ### Client capabilities
 
 Clients have limited capabilities and requirements. Their only inputs to the protocol
-are (1) the Param structure configured out of band and (2) a measurement. Clients
+are (1) the parameters configured out of band and (2) a measurement. Clients
 are not expected to store any state across any upload
 flows, nor are they required to implement any sort of report upload retry mechanism.
 By design, the protocol in this document is robust against individual client upload
@@ -1075,12 +1047,12 @@ In addition, for each PPM task, leaders are required to:
 ### Collector capabilities
 
 Collectors statefully interact with aggregators to produce an aggregate output. Their
-input to the protocol is the Param structure, configured out of band, which contains
+input to the protocol is the task parameters, configured out of band, which include
 the corresponding batch window and size. For each collect invocation, collectors are
 required to keep state from the start of the protocol to the end as needed to produce
 the final aggregate output.
 
-Collectors must also maintain state for the lifetime of each Param value, which includes
+Collectors must also maintain state for the lifetime of each task, which includes
 key material associated with the HPKE key configuration.
 
 ## Data resolution limitations
@@ -1356,7 +1328,7 @@ whatever client authentication or attestation scheme is in use.
 An important parameter of a PPM deployment is the minimum batch size. If an
 aggregation includes too few inputs, then the outputs can reveal information
 about individual participants. Aggregators use the batch size field of the
-`Params` structure to enforce minimum batch size during the collect protocol,
+shared task parameters to enforce minimum batch size during the collect protocol,
 but server implementations may also opt out of participating in a PPM task if
 the minimum batch size is too small. This document does not specify how to
 choose minimum batch sizes.
@@ -1379,7 +1351,7 @@ batch except for one, that one record is still formally protected.
 [OPEN ISSUE: While parameters configuring the differential privacy noise (like
 specific distributions / variance) can be agreed upon out of band by the
 aggregators and collector, there may be benefits to adding explicit protocol
-support by encoding them into `Params`.]
+support by encoding them into task parameters.]
 
 ## Robustness in the presence of malicious servers
 
