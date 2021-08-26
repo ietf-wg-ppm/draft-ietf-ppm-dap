@@ -418,8 +418,7 @@ task, which is defined using the Param structure:
 ~~~
 struct {
   opaque uuid[16];
-  Url leader_url;
-  Url helper_url;
+  Url aggregator_endpoints<1..2^16-1>;
   HpkeConfig collector_config;
   uint64 batch_size;
   Duration batch_window;
@@ -440,12 +439,15 @@ Duration uint64; /* Number of seconds elapsed between two instants */
 Time uint64; /* seconds elapsed since start of UNIX epoch */
 ~~~
 
-* `uuid`: A unique sequence of bytes used  to ensure that two otherwise
+* `uuid`: A unique sequence of bytes used to ensure that two otherwise
   identical `Param` instances will have distinct `TaskID`s. It is
   RECOMMENDED that this be set to a random 16-byte string derived from a
   cryptographically secure pseudorandom number generator.
-* `leader_url`: The leader's endpoint URL.
-* `helper_url`: The helper's endpoint URL.
+* `aggregator_endpoints`: Vector of URLs relative to which an aggregator's API
+  endpoints can be found. The leader's endpoint MUST be the first in the vector.
+  The order of the `encrypted_input_shares` in a `Report` (see
+  {{uploading-reports}}) MUST be the same as the order in which aggregators
+  appear in this vector.
 * `collector_config`: The HPKE configuration of the collector (described in
   {{key-config}}). Putting the collector's HPKE configuration directly in
   `struct PPMParam` absolves collectors of the burden of operating an HTTP
@@ -474,22 +476,22 @@ the individual shares to each helper.
 
 ### Key Configuration Request {#key-config}
 
-Before the client can upload its report to the leader, it must know
-the keys of each of the aggregators. These are retrieved
-from each aggregator by sending a request to
-`[aggregator]/key_config`, where `[aggregator]` is the aggregator's
-endpoint URL, provided in the Config. The aggregator responds to
-well-formed requests with status 200 and an `HpkeConfig` value:
+Before the client can upload its report to the leader, it must know the public
+key of each of the aggregators. These are retrieved from each aggregator by
+sending a request to `[aggregator]/key_config`, where `[aggregator]` is the
+aggregator's endpoint URL, provided in the `Param` for the task. The aggregator
+responds to well-formed requests with status 200 and an `HpkeConfig` value:
 
 ~~~
 struct {
-  uint8 id;
+  HpkeConfigId id;
   HpkeKemId kem_id;
   HpkeKdfId kdf_id;
   HpkeAeadKdfId aead_id;
   HpkePublicKey public_key;
 } HpkeConfig;
 
+uint8 HpkeConfigId;
 opaque HpkePublicKey<1..2^16-1>;
 uint16 HpkeAeadId; // Defined in I-D.irtf-cfrg-hpke
 uint16 HpkeKemId;  // Defined in I-D.irtf-cfrg-hpke
@@ -498,8 +500,7 @@ uint16 HpkeKdfId;  // Defined in I-D.irtf-cfrg-hpke
 
 [OPEN ISSUE: Decide whether to expand the width of the id, or support multiple cipher suites (a la OHTTP/ECH).]
 
-The client issues a key configuration request to `Param.leader_url` and
-`Param.helper_url`. It aborts if any of the following happen for either
+The client MUST abort if any of the following happen for any `key_config`
 request:
 
 * the client and aggregator failed to establish a secure,
@@ -527,9 +528,9 @@ rejecting reports.
 
 ### Upload Request
 
-Clients upload reports by using an HTTP POST `[leader]/upload`, where
-`[leader]` is the leader's endpoint URL. The payload is structured as
-follows:
+Clients upload reports by using an HTTP POST to `[leader]/upload`, where
+`[leader]` is the first entry in `Param.aggregators`. The payload is structured
+as follows:
 
 ~~~
 struct {
@@ -553,7 +554,10 @@ This message is called the client's *report*. It contains the following fields:
 * `extensions` is a list of extensions to be included in the Upload flow; see
   {{upload-extensions}}.
 * `encrypted_input_shares` contains the encrypted input shares of each of the
-  aggregators.
+  aggregators. The order in which the encrypted input shares appear MUST match
+  the order of the `aggregator_endpoints` in the `Param` corresponding to
+  `task_id` (i.e., the first share should be the leader's, the second share
+  should be for the first helper, and so on).
 
 [OPEN ISSUE: consider dropping nonce altogether and relying on a more fine-grained timestamp, subject to collision analysis]
 
@@ -561,7 +565,7 @@ Encrypted input shares are structured as follows:
 
 ~~~
 struct {
-  uint8 config_id;
+  HpkeConfigId config_id;
   opaque enc<1..2^16-1>;
   opaque payload<1..2^16-1>;
 } EncryptedInputShare;
@@ -581,25 +585,26 @@ To encrypt an input share, the client first generates an HPKE
 {{!I-D.irtf-cfrg-hpke}} context for the aggregator by running
 
 ~~~
-enc, context = SetupBaseS(pk, "pda input share" || server_role)
+enc, context = SetupBaseS(pk, "pda input share" || task_id || server_role)
 ~~~
 
-where `pk` is the aggregator's public key and `server_role` is a byte whose
-value is `0x01` if the aggregator is the leader and `0x00` if the aggregator is
-the helper. `enc` is the encapsulated HPKE context and `context` is the HPKE
-context used by the client for encryption. The payload is encrypted as
+where `pk` is the aggregator's public key, `task_id` is `Report.task_id` and
+`server_role` is a byte whose value is `0x01` if the aggregator is the leader
+and `0x00` if the aggregator is the helper. `enc` is the encapsulated HPKE
+context and `context` is the HPKE context used by the client for encryption.
+The payload is encrypted as
 
 ~~~
-payload = context.Seal(task_id || time || nonce || extensions, input_share)
+payload = context.Seal(time || nonce || extensions, input_share)
 ~~~
 
-where `input_share` is the aggregator's input share and `task_id`, `time`, and
-`nonce` are the fields of `Report`.
+where `input_share` is the aggregator's input share and `time`, `nonce` and
+extensions are the corresponding fields of `Report`.
 
 The leader responds to well-formed requests to `[leader]/upload` with status 200
-and an empty body. Malformed requests are handled as described in
-{{errors}}. Clients SHOULD NOT upload the same measurement value
-in more than one report if the leader responds with status 200 and an empty body.
+and an empty body. Malformed requests are handled as described in {{errors}}.
+Clients SHOULD NOT upload the same measurement value in more than one report if
+the leader responds with status 200 and an empty body.
 
 The leader responds to requests with out-of-date `HpkeConfig.id` values, indicated
 by `EncryptedInputShare.config_id`, with status 400 and an error of type
@@ -629,14 +634,13 @@ encoded value of the following form:
 information specific to the extension.
 
 
-
 ## Verifying and Aggregating Reports {#pa-aggregate}
 
 Once a set of clients have uploaded their reports to the leader, the leader
-can send them to the aggregators to be verified and aggregated. In order
+can send them to the helpers to be verified and aggregated. In order
 to enable the system to handle very large batches of reports, this process
 can be performed incrementally. To aggregate a set of reports,
-the leader sends an AggregateReq to the helper containing those report
+the leader sends an AggregateReq to each helper containing those report
 shares. The helper then processes them (verifying
 the proofs and incorporating their values into the ongoing aggregate)
 and replies to the leader.
@@ -697,10 +701,9 @@ The AggregateReq request is used by the leader to send a set of reports
 to the helper. These reports MUST all be associated with the same PPM task.
 [[OPEN ISSUE: And the same batch, right?]]
 
-Let `[helper]` denote
-`Param.helper_url`, where `Param` is the PPM parameters structure
-associated with `AggregateReq.task.id`. The leader sends a POST request to
-`[helper]/aggregate` with the following message:
+For each aggregator endpoint `[aggregator]` in the `Param` structure associated
+with `AggregateReq.task_id` except its own, the leader sends a POST request to
+`[aggregator]/aggregate` with the following message:
 
 ~~~
 struct {
@@ -728,11 +731,13 @@ struct {
 ~~~
 
 The `time`, `nonce`, and `extensions` fields have the same value as those in the
-report uploaded by the client. Similarly, the `helper_share` field is the helper's
-encrypted input share as it appeared in the report. [OPEN ISSUE: We usually only
-need to send this in the first aggregate request. Shall we exclude it in
-subsequent requests somehow?] The remainder of the structure is dedicated to the
-protocol-specific request parameters.
+report uploaded by the client. Similarly, the `helper_share` field is the
+`EncryptedInputShare` from the `Report` whose index in
+`Report.encrypted_input_shares` is equal to the index of `[aggregator]` in
+`Param.aggregator_endpoints`. [OPEN ISSUE: We usually only need to send this in
+the first aggregate request. Shall we exclude it in subsequent requests somehow?]
+The remainder of the structure is dedicated to the protocol-specific request
+parameters.
 
 In order to provide replay protection, the leader is required to send aggregate
 sub-requests in ascending order, where the ordering on sub-requests is
@@ -751,9 +756,9 @@ sub-requests by ignoring any sub-request that does not follow the previous one
 (See {{anti-replay}}.)
 
 The response is an HTTP 200 OK with a body consisting of the helper's updated
-state and a sequence of *sub-responses*, where the i-th sub-response corresponds
-to the i-th sub-request for each i. The structure of each sub-response is
-specific to the PPM protocol:
+state and a sequence of *sub-responses*, where each sub-response corresponds to
+the sub-request in the same position in `AggregateReq`. The structure of each
+sub-response is specific to the PPM protocol:
 
 ~~~
 struct {
@@ -780,13 +785,14 @@ following procedure:
 
 ~~~
 context = SetupBaseR(helper_share.enc, sk,
-                     "pda input share" || server_role)
-input_share = context.Open(task_id || time || nonce || extensions,
-                           helper_share)
+                     "pda input share" || task_id || server_role)
+input_share = context.Open(time || nonce || extensions, helper_share)
 ~~~
 
-where `sk` is the HPKE secret key and `server_role` is the role of the server
-(`0x01` for the leader and `0x00` for the helper). If decryption fails, then the
+where `sk` is the HPKE secret key, `task_id` is `AggregateReq.task_id` and
+`server_role` is the role of the server (`0x01` for the leader and `0x00` for
+the helper). `time`, `nonce` and `extensions` are obtained from the
+corresponding fields in `AggregateSubReq`. If decryption fails, then the
 sub-response consists of a "decryption error" alert. [See issue#57.] Otherwise,
 the helper handles the request for its plaintext input share `input_share` and
 updates its state as specified by the PPM protocol.
@@ -813,11 +819,13 @@ carries is up to the helper implementation.
 ### Output Share Request {#output-share-request}
 
 Once the aggregators have verified at least as many reports as required for the
-PPM task, the leader issues an *output share request* to the helper. The helper
+PPM task, the leader issues an *output share request* to each helper. The helper
 responds to this request by extracting its output share from its state and
 encrypting it under the collector's HPKE public key.
 
-The leader sends a POST request to `[helper]/output_share` with the following
+For each aggregator endpoint `[aggregator]` in the `Param` structure associated
+with the `task_id` in the `CollectReq` (see {{pa-collect}}) except its own, the
+leader sends a POST request to `[aggregator]/output_share` with the following
 message:
 
 ~~~
@@ -849,23 +857,24 @@ Next, the helper encrypts its output share under the collector's HPKE public
 key:
 
 ~~~
-enc, context = SetupBaseS(pk, "pda output share" || server_role)
-encrypted_output_share = context.Seal(task_id || batch_start || batch_end,
-                                      output_share)
+enc, context = SetupBaseS(pk, "pda output share" || task_id || aggregator_id)
+encrypted_output_share = context.Seal(batch_start || batch_end, output_share)
 ~~~
 
 where `pk` is the HPKE public key encoded by the collector's HPKE key
-configuration, `server_role` is the role of the server (`0x01` for the leader
-and `0x00` for the helper) and `output_share` is the serialized `OutputShare`.
-`task_id`, `batch_start` and `batch_end` are obtained from the `OutputShareReq`.
+configuration, `task_id` is `OutputShareReq.task_id` and `aggregator_id` is the
+index of the helper's endpoint in `Param.aggregator_endpoints`. `output_share`
+is the serialized `OutputShare`. `batch_start` and `batch_end` are obtained from
+the `OutputShareReq`.
+
 This encryption prevents the leader from learning the actual result, as it only
 has its own share and not the helper's share, which is encrypted for the
-collector. The helper response to the collector with HTTP status 200 OK and a
+collector. The helper responds to the collector with HTTP status 200 OK and a
 body consisting of the following structure:
 
 ~~~
 struct {
-  uint8 collector_hpke_config_id;
+  HpkeConfigId collector_hpke_config_id;
   opaque enc<1..2^16-1>;
   opaque encrypted_output_share<1..2^16>;
 } EncryptedOutputShare;
@@ -917,18 +926,14 @@ with HTTP status 200 and a body consisting of a CollectResp message:
 
 ~~~
 struct {
-  EncryptedOutputShare leader_share;
-  EncryptedOutputShare helper_share;
+  EncryptedOutputShare shares<1..2^16-1>;
 } CollectResp;
 ~~~
 
-* `leader_share` and `helper_share` are `EncryptedOutputShare`s as described in
-  {{output-share-request}}, except that the `task_id`, `batch_start`, and
-  `batch_end` used to encrypt the `OutputShare` are obtained from the
-  `CollectReq`.
-
-[[OPEN ISSUE: change CollectResp to just have a list of shares
-https://github.com/abetterinternet/prio-documents/issues/112]]
+* `shares` is a vector of `EncryptedOutputShare`s, as described in
+  {{output-share-request}}, except that for the leader's share, the `task_id`,
+  `batch_start`, and `batch_end` used to encrypt the `OutputShare` are obtained
+  from the `CollectReq`.
 
 [OPEN ISSUE: Describe how intra-protocol errors yield collect errors (see
 issue#57). For example, how does a leader respond to a collect request if the
