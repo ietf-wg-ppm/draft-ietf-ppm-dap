@@ -33,7 +33,7 @@ will instead use algorithms defined by the CFRG.
 
 ## Required Details
 - Status: WG Forming
-- Responsible AD: Roman Danyliw
+- Responsible AD: Roman Danyliw, Ben Kaduk
 - BOF proponents: Eric Rescorla <ekr@rtfm.com>, Chris Wood <caw@heapingbits.net>
 - BOF chairs: TBD
 - Number of people expected to attend: 100
@@ -44,9 +44,13 @@ will instead use algorithms defined by the CFRG.
    - Key Participant Conflict: Chris Wood, Eric Rescorla, Christopher Patton,
                                Martin Thomson, Richard Barnes
 ## Agenda
-   - [TODO]
+   - Presentation of use cases [15]
+   - Overview of solution draft [30]
+   - Charter discussion [30]
+   - BoF questions [Remainder]
+
 ## Links to the mailing list, draft charter if any, relevant Internet-Drafts, etc.
-   - Mailing List: To be created
-   - Draft charter: https://datatracker.ietf.org/doc/charter-ietf-EXAMPLE/ [TODO]
+   - Mailing List: ppm@ietf.org, https://www.ietf.org/mailman/listinfo/ppm
+   - Draft charter: https://github.com/abetterinternet/prio-documents/blob/main/charter.md
    - Relevant drafts:
       - https://abetterinternet.github.io/prio-documents/draft-pda-protocol.html
