@@ -12,12 +12,13 @@ conventional methods require collecting individual responses and then
 aggregating them, thus representing a threat to user privacy and
 rendering many such measurements difficult and impractical.
 
-New cryptographic techniques such as Prio and, more recently, a protocol for privacy preserving heavy hitters, address
-this gap by splitting up measurements between multiple servers which
-can jointly compute the aggregate value without either server learning
-the value of individual responses. The Privacy Preserving Measurement
-(PPM) work will standardize a protocol for deployment of these
-techniques on the Internet. This protocol will include mechanisms for:
+New cryptographic techniques such as Prio and, more recently, a
+protocol for privacy preserving heavy hitters, address this gap by
+splitting up measurements between multiple servers which can jointly
+compute the aggregate value without either server learning the value
+of individual responses. The Privacy Preserving Measurement (PPM) work
+will standardize a protocol for deployment of these techniques on the
+Internet. This protocol will include mechanisms for:
 
 * Client submission of individual reports, including proofs of validity.
 * Server verification of validity proofs
@@ -45,7 +46,7 @@ will instead use algorithms defined by the CFRG.
 ## Agenda
    - [TODO]
 ## Links to the mailing list, draft charter if any, relevant Internet-Drafts, etc.
-   - Mailing List: https://www.ietf.org/mailman/listinfo/example [TODO]
+   - Mailing List: To be created
    - Draft charter: https://datatracker.ietf.org/doc/charter-ietf-EXAMPLE/ [TODO]
    - Relevant drafts:
       - https://abetterinternet.github.io/prio-documents/draft-pda-protocol.html
