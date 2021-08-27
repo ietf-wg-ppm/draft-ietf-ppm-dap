@@ -8,24 +8,24 @@ conventional methods require collecting individual responses and then
 aggregating them, thus representing a threat to user privacy and
 rendering many such measurements difficult and impractical.
 
-New cryptographic techniques such as Prio and Heavy Hitters address
-this gap by splitting up measurements between multiple servers which
-can jointly compute the aggregate value without either server learning
-the value of individual responses. The Private Data Aggregation (PDA)
-work will standardize a protocol for deployment of these techniques on
-the Internet. This protocol will include mechanisms for:
-
+New cryptographic techniques e.g., Prio address this gap by splitting
+up measurements between multiple servers which can jointly compute the
+aggregate value without either server learning the value of individual
+responses. The Private Data Aggregation (PDA) work will standardize
+techniques for deployment of these techniques on the Internet. This
+will include mechanisms for:
+         
 - Client submission of individual reports, including proofs of validity.
-- Server verification of validity proofs
-- Server computation of aggregate values and collection of results to
-- Reporting of aggregate results to the entity taking the measurement
+- Verification of validity proofs by the servers
+- Computation of aggregate values by the servers and reporting of
+  results to the entity taking the measurement
   
 Configuration of clients and servers is out of scope for the working
 group. It is assumed that this happens out of band as part of the
 PDA service. 
 
-The WG will deliver a protocol which can accommodate multiple PDA
-algorithms, with the initial deliverable supporting both simple
+The WG will deliver one or protocols which can accommodate multiple
+PDA algorithms, with the initial deliverable supporting both simple
 predefined aggregates and measurement of "heavy hitters" out of the
 set of arbitrary strings submitted by users.  The PDA WG will not
 itself define cryptographic algorithms for PDA but will instead use
