@@ -4,11 +4,11 @@
 
 There are many situations in which it is desirable to take
 measurements of data which people consider sensitive. For instance,
-one might want to measure the most common sites that people browse to
+one might want to measure web sites that do not render properly
 or exposure to some disease. In these cases, the entity taking the
 measurement is not interested in people's individual responses but
-rather in aggregated data (e.g., how many users visit URL X), but
-conventional methods require collecting individual responses and then
+rather in aggregated data (e.g., how many users had errors on site X).
+Conventional methods require collecting individual measurements and then
 aggregating them, thus representing a threat to user privacy and
 rendering many such measurements difficult and impractical.
 
