@@ -1134,6 +1134,9 @@ to emit output shares.
 1. Input validity proof forging. Any aggregator can collude with a malicious
 client to craft a proof that will fool honest aggregators into accepting
 invalid input.
+1. Aggregators can count the total number of input shares, which could
+compromise user privacy (and differential privacy {{dp}}) if the presence or
+absence of a share for a given user is sensitive.
 
 #### Mitigations
 
@@ -1142,6 +1145,10 @@ invalid input.
    shares.
 1. If computed over a sufficient number of input shares, output shares reveal
    nothing about either the inputs or the participating clients.
+1. Leaders can inject bogus "null" shares that do not affect the aggregate
+   output but mask the total number of shares to non-leader aggregators.
+1. Clients can inject bogus "null" shares that do not affect the aggregate
+   output but mask the total number of shares all aggregators.
 
 ### Leader
 
