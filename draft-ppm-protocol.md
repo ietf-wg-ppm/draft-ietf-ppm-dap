@@ -1155,7 +1155,7 @@ absence of a share for a given user is sensitive.
        indistinguishable from true inputs (size, metadata, etc).
       
 [OPEN ISSUE: Define what "null" shares are. They should be defined such that
-inserting null shares into an aggregation is effectively a no-op]
+inserting null shares into an aggregation is effectively a no-op. See issue#98.]
 
 ### Leader
 
