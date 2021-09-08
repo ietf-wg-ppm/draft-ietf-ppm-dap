@@ -1145,10 +1145,17 @@ absence of a share for a given user is sensitive.
    shares.
 1. If computed over a sufficient number of input shares, output shares reveal
    nothing about either the inputs or the participating clients.
-1. Leaders can inject bogus "null" shares that do not affect the aggregate
-   output but mask the total number of shares to non-leader aggregators.
-1. Clients can inject bogus "null" shares that do not affect the aggregate
-   output but mask the total number of shares all aggregators.
+1. Clients can ensure that aggregate counts are non-sensitive by generating
+   input independently of user behavior.
+1. Bogus inputs can be generated that encode "null" shares that do not affect
+   the aggregate output, but mask the total number of true inputs.
+     * Either leaders or clients can generate these inputs to mask the total
+       number from non-leader aggregators or all the aggregators, respectively.
+     * In either case, care must be taken to ensure that bogus inputs are
+       indistinguishable from true inputs.
+      
+[OPEN ISSUE: Define what "null" shares are. They should be defined such that
+inserting null shares into an aggregation is effectively a no-op]
 
 ### Leader
 
