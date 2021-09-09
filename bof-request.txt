@@ -51,6 +51,6 @@ will instead use algorithms defined by the CFRG.
 
 ## Links to the mailing list, draft charter if any, relevant Internet-Drafts, etc.
    - Mailing List: ppm@ietf.org, https://www.ietf.org/mailman/listinfo/ppm
-   - Draft charter: https://github.com/abetterinternet/prio-documents/blob/main/charter.md
+   - Draft charter: https://github.com/abetterinternet/ppm-specification/blob/main/charter.md
    - Relevant drafts:
-      - https://abetterinternet.github.io/prio-documents/draft-pda-protocol.html
+      - https://abetterinternet.github.io/ppm-specification/draft-pda-protocol.html
