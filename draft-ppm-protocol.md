@@ -267,7 +267,7 @@ The overall system architecture is shown in {{pa-topology}}.
 {: #pa-topology title="System Architecture"}
 
 [[OPEN ISSUE: This shows two helpers, but the document only allows one for now.
-https://github.com/abetterinternet/prio-documents/issues/117]]
+https://github.com/abetterinternet/ppm-specification/issues/117]]
 
 
 The main participants in the protocol are as follows:
@@ -457,7 +457,7 @@ Time uint64; /* seconds elapsed since start of UNIX epoch */
 * `collector_config`: The HPKE configuration of the collector (described in
   {{key-config}}). Putting the collector's HPKE configuration directly in
   `struct PPMParam` absolves collectors of the burden of operating an HTTP
-  server. See [#102](https://github.com/abetterinternet/prio-documents/issues/102)
+  server. See [#102](https://github.com/abetterinternet/ppm-specification/issues/102)
   for discussion.
 * `max_batch_lifetime`: The maximum number of times a batch of reports may be
   used in a collect request.
@@ -1394,7 +1394,7 @@ the protocol runs do not agree, then participants know that at least one
 aggregator is defective, and it may be possible to identify the defector (i.e.,
 if a majority of runs agree, and a single aggregator appears in every run that
 disagrees). See
-[#22](https://github.com/abetterinternet/prio-documents/issues/22) for
+[#22](https://github.com/abetterinternet/ppm-specification/issues/22) for
 discussion.
 
 ## Infrastructure diversity
