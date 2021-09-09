@@ -1146,7 +1146,9 @@ absence of a share for a given user is sensitive.
 1. If computed over a sufficient number of input shares, output shares reveal
    nothing about either the inputs or the participating clients.
 1. Clients can ensure that aggregate counts are non-sensitive by generating
-   input independently of user behavior.
+   input independently of user behavior. For example, a client should periodically
+   upload a report even if the event that the task is tracking has not occurred, so
+   that the absence of reports cannot be distinguished from their presence.
 1. Bogus inputs can be generated that encode "null" shares that do not affect
    the aggregate output, but mask the total number of true inputs.
      * Either leaders or clients can generate these inputs to mask the total
