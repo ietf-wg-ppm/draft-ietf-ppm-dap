@@ -1234,6 +1234,9 @@ to emit output shares.
 1. Input validity proof forging. Any aggregator can collude with a malicious
 client to craft a proof that will fool honest aggregators into accepting
 invalid input.
+1. Aggregators can count the total number of input shares, which could
+compromise user privacy (and differential privacy {{dp}}) if the presence or
+absence of a share for a given user is sensitive.
 
 #### Mitigations
 
@@ -1242,6 +1245,20 @@ invalid input.
    shares.
 1. If computed over a sufficient number of input shares, output shares reveal
    nothing about either the inputs or the participating clients.
+1. Clients can ensure that aggregate counts are non-sensitive by generating
+   input independently of user behavior. For example, a client should periodically
+   upload a report even if the event that the task is tracking has not occurred, so
+   that the absence of reports cannot be distinguished from their presence.
+1. Bogus inputs can be generated that encode "null" shares that do not affect
+   the aggregate output, but mask the total number of true inputs.
+     * Either leaders or clients can generate these inputs to mask the total
+       number from non-leader aggregators or all the aggregators, respectively.
+     * In either case, care must be taken to ensure that bogus inputs are
+       indistinguishable from true inputs (metadata, etc), especially when
+       constructing timestamps on reports.
+      
+[OPEN ISSUE: Define what "null" shares are. They should be defined such that
+inserting null shares into an aggregation is effectively a no-op. See issue#98.]
 
 ### Leader
 
