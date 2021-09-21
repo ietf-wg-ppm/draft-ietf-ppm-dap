@@ -33,7 +33,6 @@ author:
        organization: Cloudflare
        email: caw@heapingbits.net
 
-
 informative:
 
   CGB17:
@@ -79,6 +78,11 @@ informative:
     target: "https://privacytools.seas.harvard.edu/files/privacytools/files/complexityprivacy_1.pdf"
     author:
       - ins: S. Vadhan
+
+  VDAF:
+    title: "Verifiable Distributed Aggregation Functions"
+    date: 2021-09-21
+    target: "TODO"
 
 --- abstract
 
@@ -190,6 +194,12 @@ This document uses the protocol definition language of {{!RFC8446}}.
 
 # Overview {#overview}
 
+[TODO Give an overview of the VDAF syntax and frame the PPM protocol around
+evaluation of a VDAF.]
+
+[TODO Name the various requests, including collect requests, and say what they
+are.]
+
 The protocol is executed by a large set of clients and a small set of servers.
 We call the servers the *aggregators*. Each client's input to the protocol is a
 set of measurements (e.g., counts of some user behavior). Given the input set of
@@ -288,7 +298,7 @@ includes the following parameters:
 * The values to be measured;
 * The statistic to be computed (e.g., sum, mean, etc.);
 * The set of aggregators and necessary cryptographic keying material to use; and
-* The PPM scheme to use. This is to some extent dictated by the previous
+* The VDAF scheme to use. This is to some extent dictated by the previous
   choices.
 * The minimum "batch size" of reports which can be aggregated.
 * The rate at which measurements can be taken, i.e., the "minimum batch window".
@@ -306,7 +316,7 @@ time.
 
 The leader distributes the shares to the helpers and orchestrates the process of
 verifying them (see {{validating-inputs}}) and assembling them into a final
-measurement for the collector. Depending on the PPM scheme, it may be possible
+measurement for the collector. Depending on the VDAF scheme, it may be possible
 to incrementally process each report as it comes in, or may be necessary to wait
 until the entire batch of reports is received.
 
@@ -409,16 +419,23 @@ struct {
 
 ## Task Configuration {#task-configuration}
 
-Prior to the start of execution of the protocol, each participant must agree on
-the configuration for each task. A task is uniquely identified by its task ID:
+A task centers around evaluation of a specific Verifiable Distributed
+Aggregation Function (VDAF, see [VDAF]) over a set of client inputs. The VDAF
+determines the type of input measurements and the type of the output. It also
+determines how many aggregators are involved and the maximum number of rounds of
+communication among the aggregators that are required to verify the output's
+validity. Prior to the start of execution of the protocol, each participant must
+agree on the configuration parameters for the task. A task is uniquely
+identified by its task ID:
 
 ~~~
 opaque TaskId[32];
 ~~~
 
-A `TaskId` is a globally unique sequence of bytes. It is RECOMMENDED that this
-be set to a random string output by a cryptographically secure pseudorandom
-number generator. Each task has the following parameters associated with it:
+A `TaskId` is a unique identifier for a specific task among a set of tasks. It
+is RECOMMENDED that this be set to a random string output by a cryptographically
+secure pseudorandom number generator. Each task has the following parameters
+associated with it:
 
 * `aggregator_endpoints`: A list of URLs relative to which an aggregator's API
   endpoints can be found. Each endpoint's list MUST be in the same order. The
@@ -437,13 +454,21 @@ number generator. Each task has the following parameters associated with it:
   newest report in a batch. This defines the boundaries with which the batch
   interval of each collect request must be aligned. (See
   {{batch-parameter-validation}}.)
-* `protocol`: named parameter identifying the core PPM protocol, e.g., Prio or
-  Hits.
+* `public_param` and `verify_param`: The outputs of the VDAF setup algorithm,
+  referred to as the public parameter and verification parameter respectively.
+  The client uses the public parameter to split its input into input shares, and
+  the aggregators use the verification parameter to verify the input's validity.
+  The public parameter MUST be distributed to all clients and MAY be distributed
+  to the servers. The verification parameter MUST be distributed to all
+  aggregators and MUST NOT be revealed to the clients.
+
+The VDAF scheme associated with a task MUST be defined for two and only two
+aggregators. [NOTE: We plan to lift this restriction once we're ready to specify
+the protocol for multiple helpers.]
 
 ## Uploading Reports
 
-Clients periodically upload reports to the leader, which then distributes the
-individual shares to each helper.
+Clients generate and upload reports to the leader as described here.
 
 ### Key Configuration Request {#key-config}
 
@@ -499,9 +524,9 @@ the cache lifetime in order to avoid rejecting reports.
 
 ### Upload Request
 
-Clients upload reports by using an HTTP POST to `[leader]/upload`, where
-`[leader]` is the first entry in the task's aggregator endpoints. The payload is
-structured as follows:
+Clients upload reports by sending an HTTP POST request to `[leader]/upload`,
+where `[leader]` is the first entry in the task's aggregator endpoints. The
+payload is structured as follows:
 
 ~~~
 struct {
@@ -516,9 +541,7 @@ struct {
 This message is called the client's *report*. It contains the following fields:
 
 * `task_id` is the task ID of the task for which the report is intended.
-* `time` is the time at which the report was generated. This field is used by
-  the aggregators to ensure the report appears in at most one batch. (See
-  {{anti-replay}}.)
+* `time` is the time at which the report was generated.
 * `nonce` is a random number chosen by the client generating the report. This
   and the timestamp field are used by the aggregators to ensure that each report
   appears at most once in a batch. (See {{anti-replay}}.)
@@ -548,11 +571,10 @@ struct {
   input share.
 * `payload` is the encrypted input share.
 
-To generate the report, the client begins by encoding its measurements as an
-input for the PPM scheme and splitting it into input shares. (Note that the
-structure of each input share depends on the PPM scheme in use, its parameters,
-and the role of aggregator, i.e., whether the aggregator is a leader or helper.)
-To encrypt an input share, the client first generates an HPKE
+To generate the report, the client begins by running the VDAF input-distribution
+algorithm on the public parameter `public_param` and its measurement. This
+transforms the measurement into a sequence of input shares, one for each
+aggregator. To encrypt each input share, the client first generates an HPKE
 {{!I-D.irtf-cfrg-hpke}} context for the aggregator by running
 
 ~~~
@@ -561,10 +583,10 @@ enc, context = SetupBaseS(pk,
 ~~~
 
 where `pk` is the aggregator's public key, `task_id` is `Report.task_id` and
-`server_role` is a byte whose value is `0x01` if the aggregator is the leader
-and `0x00` if the aggregator is the helper. `enc` is the encapsulated HPKE
-context and `context` is the HPKE context used by the client for encryption.
-The payload is encrypted as
+`server_role` is a byte whose value is the index of the aggregator in the
+aggregator list. The bytestring `enc` is the encapsulated HPKE context and the
+bytestring `context` is the HPKE context used by the client for encryption. The
+payload is encrypted as
 
 ~~~
 payload = context.Seal(time || nonce || extensions, input_share)
@@ -580,9 +602,11 @@ the leader responds with status 200 and an empty body.
 
 The leader responds to requests with out-of-date `HpkeConfig.id` values,
 indicated by `EncryptedInputShare.config_id`, with status 400 and an error of
-type 'outdatedConfig'. Clients SHOULD invalidate any cached aggregator
-`HpkeConfig` and retry with a freshly generated Report. If this retried report
-does not succeed, clients MUST abort and discontinue retrying.
+type 'outdatedConfig'. [OPEN ISSUE: How does the leader know if the HPKE config
+of a helper is invalid? Does it have to make a key-config request?] Clients
+SHOULD invalidate any cached aggregator `HpkeConfig` and retry with a freshly
+generated Report. If this retried report does not succeed, clients MUST abort
+and discontinue retrying.
 
 ### Upload Extensions {#upload-extensions}
 
@@ -611,33 +635,39 @@ information specific to the extension.
 
 ## Verifying and Aggregating Reports {#pa-aggregate}
 
-Once a set of clients have uploaded their reports to the leader, the leader can
-send them to the helpers to be verified and aggregated. In order to enable the
-system to handle very large batches of reports, this process can be performed
-incrementally. To aggregate a set of reports, the leader sends an AggregateReq
-to each helper containing those report shares. The helper then processes them
-(verifying the proofs and incorporating their values into the ongoing aggregate)
-and replies to the leader.
+Once a set of clients have uploaded their reports to the leader, the aggregators
+can begin verifying and aggregating them. In order to enable the system to
+handle very large batches of reports, this process can be performed
+incrementally. To aggregate a subset of reports, the leader sends a sequence of
+requests to each helper, the first of which contains the helper's encrypted
+input share. After a number of successful requests, the aggregators have
+recovered shares of a set of valid measurements.
 
-The exact structure of the aggregation flow depends on the PPM scheme.
-Specifically:
+The structure of the aggregation flow is determined by the VDAF [VDAF] being
+executed:
 
-* Some PPM schemes (e.g., Prio) allow the leader to start aggregating reports
-  proactively before all the reports in a batch are received. Others (e.g.,
-  Hits) require all the reports to be present and must be initiated by the
-  collector.
+* The VDAF specifies the maximum number of rounds of communication that are
+  required before the aggregators determine if their shares are valid. The
+  number of requests that are made from the leader to the helpers depends on the
+  number of VDAF rounds.
 
-* Processing the reports -- especially verifying the proofs -- may require
-  multiple round trips.
+* Evaluating the VDAF requires an *aggregation parameter*, which may not be known
+  prior to receiving a client's report. For example, the aggregation parameter
+  for Hits [BBCGGI21] is the set of candidate prefixes, which is only known once
+  the collector has recovered the output from the previous collect request. On
+  the other hand, PPM tasks that use prio3 [VDAF] can typically begin the
+  process right away because the aggregation parameter is fixed for the duration
+  of the PPM task.
 
-Note that it is possible to aggregate reports from one batch while reports from
-the next batch are coming in.
+[OPEN ISSUE: We're missing some flow from the last paragraph to the rest of this
+intro.] Note that it is possible to aggregate reports from one batch while
+reports from the next batch are coming in.
 
-This process is illustrated below in {{pa-aggregate-flow}}. In this example, the
-batch size is 20, but the leader opts to process the reports in sub-batches of
-10. Each sub-batch takes two round-trips to process. Once both sub-batches have
-been processed, the leader can issue an OutputShareReq in order to retrieve the
-helper's aggregated result.
+The aggregation flow is illustrated below in {{pa-aggregate-flow}}. In this
+example, the batch size is 20, but the leader opts to process the reports in
+sub-batches of 10. Each sub-batch takes two round-trips to process. Once both
+sub-batches have been processed, the leader can issue an OutputShareReq in order
+to retrieve the helper's aggregated result.
 
 In order to allow the helpers to retain minimal state, the helper can attach a
 state parameter to its response, with the leader returning the state value in
@@ -647,131 +677,219 @@ be cryptographically protected as described in {{helper-state}}.
 ~~~~
 Leader                                                 Helper
 
-AggregateReq (Reports 1-10) -------------------------------->  \
-<------------------------------------ AggregateResp (State 1)  | Reports
-AggregateReq (continued, State 1)      --------------------->  | 10-11
-<------------------------------------ AggregateResp (State 2)  /
+VerifyStartReq (Reports 1-10) -------------------------------->  \
+<------------------------------------ VerifyStartResp (State 1)  | Reports
+VerifyStartReq (continued, State 1) -------------------------->  | 10-11
+<------------------------------------ VerifyStartResp (State 2)  /
 
 
-AggregateReq (Reports 11-20, State 2) ---------------------->  \
-<------------------------------------ AggregateResp (State 3)  | Reports
-AggregateReq (continued, State 3) -------------------------->  | 20-21
-<------------------------------------ AggregateResp (State 4) /
+VerifyNextReq (Reports 11-20, State 2) ---------------------->  \
+<------------------------------------ VerifyNextResp (State 3)  | Reports
+VerifyNextReq (continued, State 3) -------------------------->  | 20-21
+<------------------------------------ VerifyNextResp (State 4)  /
 
 OutputShareReq (State 4) ----------------------------------->
 <----------------------------------- OutputShareResp (Result)
 ~~~~
 {: #pa-aggregate-flow title="Aggregation Process (batch size=20)"}
 
-[OPEN ISSUE: Should there be an indication of whether a given AggregateReq is a
-continuation of a previous sub-batch?]
-
 [TODO: Decide if and how the collector's request is authenticated.]
 
 
-### Aggregate Request
+### Verify-Start Request
 
-The AggregateReq request is used by the leader to send a set of reports to the
-helper. These reports MUST all be associated with the same PPM task. [[OPEN
-ISSUE: And the same batch, right?]]
+The *verify-start request* is used by the leader to distribute input shares to
+the helpers and initiate VDAF evaluation. The input shares in these requests
+MUST all be associated with the same PPM task. [[OPEN ISSUE: And the same batch,
+right? See issue#150.]]
 
 For each aggregator endpoint `[aggregator]` in `AggregateReq.task_id`'s
 parameters except its own, the leader sends a POST request to
-`[aggregator]/aggregate` with the following message:
+`[aggregator]/verify_start` with the following message:
 
 ~~~
 struct {
   TaskID task_id;
   opaque helper_state<0..2^16>;
-  AggregateSubReq seq<1..2^24-1>;
-} AggregateReq;
+  opaque aggregation_param<0..2^16-1>;
+  VerifyStartSubReq seq<1..2^24-1>;
+} VerifyStartReq;
 ~~~
 
-The structure contains the PPM task, an opaque *helper state* string, and a
-sequence of *sub-requests*, each corresponding to a unique client report.
-Sub-requests are structured as follows:
+The structure contains the task ID, an opaque *helper state* string
+(`helper_state`), and a sequence of *sub-requests* (`seq`), each corresponding
+to a unique client report. The request also carries the aggregation parameter
+(`aggregation_param`) used for VDAF evaluation. Sub-requests are structured as
+follows:
 
 ~~~
 struct {
-  Time time;                       // Equal to Report.time.
-  uint64 nonce;                    // Equal to Report.nonce.
-  Extension extensions<4..2^16-1>; // Equal to Report.extensions.
+  Time time;                       // Report.time
+  uint64 nonce;                    // Report.nonce
+  Extension extensions<4..2^16-1>; // Report.extensions
+  opaque verify_message<1..2^16-1>;
   EncryptedInputShare helper_share;
-  select (protocol) { // Protocol for the PPM task
-    case prio: PrioAggregateSubReq;
-    case hits: HitsAggregateSubReq;
-  }
-} AggregateSubReq;
+} VerifyStartSubReq;
 ~~~
 
-The `time`, `nonce`, and `extensions` fields have the same value as those in the
-report uploaded by the client. Similarly, the `helper_share` field is the
-`EncryptedInputShare` from the `Report` whose index in
-`Report.encrypted_input_shares` is equal to the index of `[aggregator]` in the
-task's aggregator endpoints. [OPEN ISSUE: We usually only need to send this in
-the first aggregate request. Shall we exclude it in subsequent requests
-somehow?] The remainder of the structure is dedicated to the protocol-specific
-request parameters.
+Each sub-request includes the report's timestamp, nonce, and extensions (`time`,
+`nonce`, and `extensions` respectively) and a value called the verification
+message (`verify_message`), generated as described in the next paragraph. The
+first sub-request also carries the helper's encrypted input share
+(`helper_share`).
 
-In order to provide replay protection, the leader is required to send aggregate
+In order for the leader to compute its first-round verification message, it must
+first decrypt its input share. To do so, it first looks up the HPKE secret key
+`sk` associated with `leader_share.aggregator_config_id`. Next, it runs
+
+~~~
+context = SetupBaseR(leader_share.enc, sk,
+                     "pda input share" || task_id || 0x00)
+input_share = context.Open(time || nonce || extensions,
+                           leader_share.payload)
+~~~
+
+where `task_id`, `time`, `nonce`, and `extensions` are the fields of the report
+with the same name. The '0x00' byte signifies that the decrypting party is the
+first aggregator in the sequence of aggregators associated with the task. If
+decryption succeeds, it runs the VDAF verify-start algorithm to compute its
+local VDAF state and its first-round verification message:
+
+~~~
+(state, VerifyStartSubReq.verify_message) = vdaf_start(
+      verify_param, aggregation_param, time || nonce, input_share)
+~~~
+
+In order to provide replay protection, the leader is required to send
 sub-requests in ascending order, where the ordering on sub-requests is
 determined by the algorithm defined in {{anti-replay}}. Specifically, the leader
-constructs its request such that:
+constructs each request such that:
 
 * each sub-request follows the previous sub-request; and
-* the first sub-request follows the last sub-request in the previous aggregate
-  request.
+* the first sub-request follows the last sub-request in the previous
+  verify-start request.
 
 The helper handles well-formed requests as follows. (As usual, malformed
 requests are handled as described in {{errors}}.) It first looks for PPM
-parameters corresponding to `AggregateReq.task_id`. It then filters out
+parameters corresponding to `VerifyStartReq.task_id`. It then filters out
 out-of-order sub-requests by ignoring any sub-request that does not follow the
 previous one (See {{anti-replay}}.)
 
 The response is an HTTP 200 OK with a body consisting of the helper's updated
-state and a sequence of *sub-responses*, where each sub-response corresponds to
-the sub-request in the same position in `AggregateReq`. The structure of each
-sub-response is specific to the PPM protocol:
+state and a sequence of *sub-responses* ordered by the timestamp and nonce as
+specified in {{anti-replay}}.
 
 ~~~
 struct {
   opaque helper_state<0..2^16>;
-  AggregateSubResp seq<1..2^24-1>;
-} AggregateResp;
+  VerifySubResp seq<1..2^24-1>;
+} VerifyResp;
 
 struct {
-  Time time;     // Equal to AggregateSubReq.time.
-  uint64 nonce;  // Equal to AggregateSubReq.nonce.
-  select (protocol) { // Protocol for the PPM task
-    case prio: PrioAggregateSubResp;
-    case hits: HitsAggregateSubResp;
-  }
-} AggregateSubResp;
+  Time time;    // VerifyStartSubReq.time
+  uint64 nonce; // VerifyStartSubReq.nonce
+  opaque verification_message<1..2^16-1>;
+} VerifySubResp;
 ~~~
 
-The helper handles each sub-request `AggregateSubReq` as follows. It first looks
-up the HPKE config and corresponding secret key associated with
-`helper_share.config_id`. If not found, then the sub-response consists of an
-"unrecognized config" alert. [TODO: We'll want to be more precise about what
-this means. See issue#57.] Next, it attempts to decrypt the payload with the
-following procedure:
+The helper computes its first-round VDAF verification message as follows. It
+first looks up the HPKE secret key `sk` associated with
+`helper_share.aggregator_config_id`. If not found, then the sub-response
+consists of an "unrecognized config" alert. [TODO: We'll want to be more
+precise about what this means. See issue#57.] Next, it attempts to decrypt the
+payload with the following procedure:
 
 ~~~
 context = SetupBaseR(helper_share.enc, sk,
                      "pda input share" || task_id || server_role)
-input_share = context.Open(time || nonce || extensions, helper_share)
+input_share = context.Open(time || nonce || extensions,
+                           helper_share.payload)
 ~~~
 
-where `sk` is the HPKE secret key, `task_id` is `AggregateReq.task_id` and
-`server_role` is the role of the server (`0x01` for the leader and `0x00` for
-the helper). `time`, `nonce` and `extensions` are obtained from the
-corresponding fields in `AggregateSubReq`. If decryption fails, then the
-sub-response consists of a "decryption error" alert. [See issue#57.] Otherwise,
-the helper handles the request for its plaintext input share `input_share` and
-updates its state as specified by the PPM protocol.
+where `task_id` is `VerifyStartReq.task_id` and `time`, `nonce`, and
+`extensiosn` are obtained from the corresponding fields in `VerifyStartSubReq`
+and `server_role` is a byte whose value is the index of the aggregator in the
+aggregator list. If decryption fails, then the sub-response consists of a
+"decryption error" alert. [See issue#57.]
+
+Otherwise, the helper runs the VDAF verify-start algorithm to initiate its local
+VDAF state and compute its first-round verification message:
+
+~~~
+(state, VerifySubResp.verify_message) = vdaf_start(
+          verify_param, aggregation_param, time || nonce, input_share)
+~~~
 
 After processing all of the sub-requests, the helper encrypts its updated state
-and constructs its response to the aggregate request.
+and constructs its response to the request.
+
+### Verify-Next Request
+
+For VDAFs requiring more than one round of communication, subsequent rounds are
+handled by using a *verify-next request*. the leader sends a POST request to
+`[aggregator]/verify_next` with the following message:
+
+~~~
+struct {
+  TaskID task_id;
+  opaque helper_state<0..2^16>;
+  VerifyNextSubReq seq<1..2^24-1>;
+} VerifyNextReq;
+~~~
+
+* `task_id` is the same as task ID as the verify-start request.
+* `helper_state` is the opaque state sent by the helper in response to the
+  previous verify request.
+* `seq` is the sequence of sub-requests. It has the same number of sub-requests
+  as the previous request.
+
+Each sub-request has the following structure:
+
+~~~
+struct {
+  Time time;
+  uint64 nonce;
+  opaque verify_message<1..2^16-1>;
+} VerifyNextSubReq;
+~~~
+
+[OPEN ISSUE: To support multiple helpers efficiently, `verify_message` will
+actually need to encode the previous round verification messages from all of the
+aggregators and not just the leader.]
+
+Fields `time` and `nonce` have the same value as the corresponding sub-request
+in the verify-start request. The helper's response consists of a `VerifyResp`
+message constructed as described above.
+
+All aggregators compute the next round's verification message using the VDAF
+verify-next algorithm as
+
+~~~
+(state, verify_message) = vdaf_next(state, inbound_messages)
+~~~
+
+where `inbound_messages` is the sequence of verification messages sent by all of
+the aggregators in the previous round and where `state` is the current
+aggregator's VDAF state. [OPEN ISSUE: We need to say how the sequence of
+verification messages are assembled.]
+
+### Recovering the Output Share
+
+Once all rounds of the VDAF have been completed for a given report, each
+aggregator runs the VDAF verify-finish algorithm to recover its share of the
+output:
+
+~~~
+output_share = vdaf_finish(state, inbound_messages)
+~~~
+
+where `inbound_messages` is the sequence of verification messages sent by all of
+the aggregators in the last round and where `state` is the aggregator's current
+state. The output, `output_share`, is added into the aggregator's running
+total. [OPEN ISSUE: Helper needs the leader to confirm acceptance before it
+consumes its output share. See issue#141.]
+
+[TODO Handle error if `vdaf_finish` says that the output share is invalid.]
 
 #### Leader State
 
@@ -785,13 +903,13 @@ few minutes, to account for clock skew.
 
 #### Helper State
 
-The helper state is an optional parameter of an aggregate request that the
-helper can use to carry state across requests. At least part of the state will
-usually need to be encrypted in order to protect user privacy. However, the
-details of precisely how the state is encrypted and the information that it
-carries is up to the helper implementation.
+The helper state is an optional parameter of the verify-start and verify-next
+requests that the helpers can use to carry state across requests. At least part
+of the state will usually need to be encrypted in order to protect user privacy.
+However, the details of precisely how the state is encrypted and the information
+that it carries is up to the helper implementation.
 
-### Output Share Request {#output-share-request}
+### Output-Share Request {#output-share-request}
 
 Once the aggregators have verified at least as many reports as required for the
 PPM task, the leader issues an *output share request* to each helper. The helper
@@ -818,36 +936,33 @@ struct {
 To respond to an output share request, the helper first looks up the PPM
 parameters associated with task `task_id`. Then, using the procedure in
 {{batch-parameter-validation}}, it ensures that the request meets the
-requirements of the batch parameters. If so, it aggregates all valid input
-shares that fall in the batch interval into an output share. The format of the
-output share is specific to the PPM protocol:
+requirements of the batch parameters. If so, it aggregates all valid output
+shares that fall in the batch interval. The structure of the aggregated output
+share is specific to the VDAF [VDAF] being executed, so here it is treated as an
+opaque byte string:
 
 ~~~
 struct {
-  select (protocol) { // Protocol for CollectReq.task_id
-    case prio: PrioOutputShare;
-    case hits: HitsOutputShare;
-  }
+  opaque output_share<1..2^16-1>;
 } OutputShare;
 ~~~
 
-Next, the helper encrypts the output share `output_share` under the collector's
-public key as follows:
+Next, the helper encrypts the output share under the collector's public key as
+follows:
 
 ~~~
 enc, context = SetupBaseS(pk,
                           "pda output share" || task_id || server_role)
-encrypted_output_share = context.Seal(batch_interval, output_share)
+encrypted_output_share = context.Seal(batch_interval, OutputShare)
 ~~~
 
-where `pk` is the HPKE public key encoded by the collector's HPKE key
-configuration, `task_id` is `OutputShareReq.task_id` and `server_role` is the
-role of the server (`0x01` for the leader and `0x00` for the helper).
-`output_share` is the serialized `OutputShare`, and `batch_interval` is obtained
-from the `OutputShareReq`.
+where `pk` is the HPKE public key encoded by the collector's HPKE keyv
+configuration, `task_id` is `OutputShareReq.task_id` and `server_role` is a byte
+whose value is the index of the aggregator in the aggregator list.
+`batch_interval` is obtained from the `OutputShareReq`.
 
-This encryption prevents the leader from learning the actual result, as it only
-has its own share and not the helper's share, which is encrypted for the
+This encryption prevents the leader from learning the actual VDAF output, as it
+only has its own share and not the helper shares, which is encrypted to the
 collector. The helper responds to the collector with HTTP status 200 OK and a
 body consisting of the following structure:
 
@@ -865,7 +980,7 @@ struct {
   output share.
 * `payload` is an encrypted `OutputShare`.
 
-The leader uses the helper's output share response to respond to the collector's
+The leader uses the helpers' output share responses to respond to the collector's
 collect request (see {{pa-collect}}).
 
 
@@ -881,10 +996,7 @@ as follows:
 struct {
   TaskID task_id;
   Interval batch_interval;
-  select (protocol) { // Protocol corresponding to task_id
-    case prio: PrioCollectReq;
-    case hits: HitsCollectReq;
-  }
+  opaque aggregation_param<0..2^16-1>;
 } CollectReq;
 ~~~
 
@@ -892,20 +1004,20 @@ The named parameters are:
 
 * `task_id`, the PPM task ID.
 * `batch_interval`, the request's batch interval.
+* `aggregation_param`, the aggregation parameter with which the VDAF [VDAF] will
+  be evaluated.
 
-The remainder of the message is dedicated to the protocol-specific request
-parameters.
-
-Depending on the PPM scheme and how the leader is configured, the collect
-request may cause the leader to send a series of aggregate requests to the
-helpers in order to compute their share of the output. Alternately, the leader
-may already have made these requests and can respond immediately. In either case
-it responds to the collector's request as follows.
+Depending on the VDAF and how the leader is configured, the collect request may
+cause the leader to send a series of requests to the helpers in order to compute
+their share of the output. Alternately, if `output_param` is empty or a
+well-known value that is fixed in advance, the leader may already have made
+these requests and can respond immediately. In either case it responds to the
+collector's request as follows.
 
 It begins by checking that the request meets the requirements of the batch
 parameters using the procedure in {{batch-parameter-validation}}. If so, it
 obtains the helper's encrypted output share for the batch interval by sending an
-output share request to the helper as described in {{output-share-request}}.
+output share request to each helper as described in {{output-share-request}}.
 (This request may too have been made in advance.)
 
 Next, the leader computes its own output share by aggregating all of the valid
@@ -1398,8 +1510,9 @@ corresponding media types types:
 
 - HpkeConfig {{task-configuration}}: "application/ppm-hpke-config"
 - Report {{upload-request}}: "message/ppm-report"
-- AggregateReq {{aggregate-request}}: "message/ppm-aggregate-req"
-- AggregateResp {{aggregate-request}}: "message/ppm-aggregate-resp"
+- VerifyStartReq {{verify-start-request}}: "message/ppm-verify-start-req"
+- VerifyNextReq {{verify-next-request}}: "message/ppm-verify-next-req"
+- VerifyResp {{verify-start-request}}: "message/ppm-verify-resp"
 - OutputShareReq {{output-share-request}}: "message/ppm-output-share-req"
 - OutputShareResp {{output-share-request}}: "message/ppm-output-share-resp"
 - CollectReq {{pa-collect}}: "message/ppm-collect-req"
@@ -1558,7 +1671,7 @@ Change controller:
 
 : IESG
 
-### "message/ppm-aggregate-req" media type
+### "message/ppm-verify-start-req" media type
 
 Type name:
 
@@ -1566,7 +1679,7 @@ Type name:
 
 Subtype name:
 
-: ppm-aggregate-req
+: ppm-verify-start-req
 
 Required parameters:
 
@@ -1582,7 +1695,7 @@ Encoding considerations:
 
 Security considerations:
 
-: see {{aggregate-request}}
+: see {{verify-start-request}}
 
 Interoperability considerations:
 
@@ -1629,15 +1742,15 @@ Change controller:
 
 : IESG
 
-### "message/ppm-aggregate-resp" media type
+### "message/ppm-verify-next-req" media type
 
 Type name:
 
-: application
+: message
 
 Subtype name:
 
-: ppm-aggregate-resp
+: ppm-verify-next-req
 
 Required parameters:
 
@@ -1653,7 +1766,78 @@ Encoding considerations:
 
 Security considerations:
 
-: see {{aggregate-request}}
+: see {{verify-next-request}}
+
+Interoperability considerations:
+
+: N/A
+
+Published specification:
+
+: this specification
+
+Applications that use this media type:
+
+: N/A
+
+Fragment identifier considerations:
+
+: N/A
+
+Additional information:
+
+: <dl>
+  <dt>Magic number(s):</dt><dd>N/A</dd>
+  <dt>Deprecated alias names for this type:</dt><dd>N/A</dd>
+  <dt>File extension(s):</dt><dd>N/A</dd>
+  <dt>Macintosh file type code(s):</dt><dd>N/A</dd>
+  </dl>
+
+Person and email address to contact for further information:
+
+: see Authors' Addresses section
+
+Intended usage:
+
+: COMMON
+
+Restrictions on usage:
+
+: N/A
+
+Author:
+
+: see Authors' Addresses section
+
+Change controller:
+
+: IESG
+
+### "message/ppm-verify-resp" media type
+
+Type name:
+
+: application
+
+Subtype name:
+
+: ppm-verify-resp
+
+Required parameters:
+
+: N/A
+
+Optional parameters:
+
+: None
+
+Encoding considerations:
+
+: only "8bit" or "binary" is permitted
+
+Security considerations:
+
+: see {{verify-start-request}}
 
 Interoperability considerations:
 
