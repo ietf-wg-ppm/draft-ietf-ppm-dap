@@ -49,36 +49,36 @@ informative:
     date: 2021-01-05
     target: "https://eprint.iacr.org/2019/188"
     author:
-      -ins: D. Boneh
-      -ins: E. Boyle
-      -ins: H. Corrigan-Gibbs
-      -ins: N. Gilboa
-      -ins: Y. Ishai
+      - ins: D. Boneh
+      - ins: E. Boyle
+      - ins: H. Corrigan-Gibbs
+      - ins: N. Gilboa
+      - ins: Y. Ishai
 
   BBCGGI21:
     title: "Lightweight Techniques for Private Heavy Hitters"
     date: 2021-01-05
     target: "https://eprint.iacr.org/2021/017"
     author:
-      -ins: D. Boneh
-      -ins: E. Boyle
-      -ins: H. Corrigan-Gibbs
-      -ins: N. Gilboa
-      -ins: Y. Ishai
+      - ins: D. Boneh
+      - ins: E. Boyle
+      - ins: H. Corrigan-Gibbs
+      - ins: N. Gilboa
+      - ins: Y. Ishai
 
   Dou02:
     title: "The Sybil Attack"
     date: 2022-10-10
     target: "https://link.springer.com/chapter/10.1007/3-540-45748-8_24"
     author:
-      -ins: J. Douceur
+      - ins: J. Douceur
 
   Vad16:
     title: "The Complexity of Differential Privacy"
     date: 2016-08-09
     target: "https://privacytools.seas.harvard.edu/files/privacytools/files/complexityprivacy_1.pdf"
     author:
-      -ins: S. Vadhan
+      - ins: S. Vadhan
 
 --- abstract
 
