@@ -1227,7 +1227,7 @@ absence of a share for a given user is sensitive.
      * In either case, care must be taken to ensure that bogus inputs are
        indistinguishable from true inputs (metadata, etc), especially when
        constructing timestamps on reports.
-      
+
 [OPEN ISSUE: Define what "null" shares are. They should be defined such that
 inserting null shares into an aggregation is effectively a no-op. See issue#98.]
 
