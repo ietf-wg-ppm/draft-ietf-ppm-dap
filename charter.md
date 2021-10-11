@@ -21,7 +21,7 @@ will include mechanisms for:
   results to the entity taking the measurement
 
 A successful PRIV system assumes that clients and the various servers
-are configured with each others identities and details of the types of
+are configured with each other's identities and details of the types of
 measurements to be taken. This is assumed to happen out of band
 and will not be standardized in this working group.
 
