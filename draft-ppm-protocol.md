@@ -437,6 +437,9 @@ number generator. Each task has the following parameters associated with it:
   newest report in a batch. This defines the boundaries with which the batch
   interval of each collect request must be aligned. (See
   {{batch-parameter-validation}}.)
+* `grace_window`: The minimum age of a client report, based on the report's
+  timestamp, before the leader will include the report in an aggregation.
+  (See {{leader-state}}.)
 * `protocol`: named parameter identifying the core PPM protocol, e.g., Prio or
   Hits.
 
@@ -773,16 +776,15 @@ updates its state as specified by the PPM protocol.
 After processing all of the sub-requests, the helper encrypts its updated state
 and constructs its response to the aggregate request.
 
-#### Leader State
+#### Leader State {#leader-state}
 
 The leader is required to issue aggregate requests in order, but reports are
 likely to arrive out-of-order. The leader MUST store reports until their
-timestamp is sufficiently far in the past (proportional to the batch window)
-before including them in an aggregate request. Failure to do so will result in
-reports being dropped by the helper. The leader SHOULD NOT accept reports from
-clients timestamped too far into the future (proportional to the batch window).
-Failure to do so will result in reports from malicious, misconfigured, or
-malfunctioning clients being stored for an arbitrary amount of time.
+timestamp is sufficiently far in the past (based on the `grace_window`
+task parameter) before including them in an aggregate request. Failure to do so
+will result in reports being dropped by the helper. The leader MUST NOT accept
+reports whose timestamps are in the future. Implementors MAY provide for some
+small leeway, usually no more than a few minutes, to account for clock skew.
 
 #### Helper State
 
@@ -960,9 +962,9 @@ aggregator has validated and which fall in the batch interval of the request.
 
 Using a client-provided report multiple times within a single batch, or using
 the same report in multiple batches, may allow a server to learn information
-about the client's measurement. To prevent such replay attacks, this
-specification defines a total ordering on reports that aggregators can use to
-ensure that reports are aggregated once.
+about the client's measurement, violating the privacy property of PPM. To
+prevent such replay attacks, this specification defines a total ordering on
+reports that aggregators can use to ensure that reports are aggregated once.
 
 Aggregate requests are ordered as follows: We say that a report `R2` follows
 report `R1` if either `R2.time > R1.time` or `R2.time == R1.time` and `R2.nonce
