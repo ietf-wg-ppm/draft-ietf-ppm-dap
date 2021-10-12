@@ -19,9 +19,11 @@ will include mechanisms for:
 - Verification of validity proofs by the servers
 - Computation of aggregate values by the servers and reporting of
   results to the entity taking the measurement
-  
-Configuration of clients and servers is out of scope for the working
-group. It is assumed that this happens out of band. 
+
+A successful PRIV system assumes that clients and the various servers
+are configured with each other's identities and details of the types of
+measurements to be taken. This is assumed to happen out of band
+and will not be standardized in this working group.
 
 The WG will deliver one or more protocols which can accommodate multiple
 PRIV algorithms. The initial deliverables will support the calculation of simple
