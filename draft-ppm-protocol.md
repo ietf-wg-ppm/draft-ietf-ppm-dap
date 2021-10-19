@@ -779,10 +779,10 @@ and constructs its response to the aggregate request.
 #### Leader State {#leader-state}
 
 The leader is required to issue aggregate requests in order, but reports are
-likely to arrive out-of-order. The leader MUST store reports until their
-timestamp is sufficiently far in the past (based on the `grace_window`
-task parameter) before including them in an aggregate request. Failure to do so
-will result in reports being dropped by the helper. The leader MUST NOT accept
+likely to arrive out-of-order. The leader SHOULD store reports until their
+timestamp is sufficiently far in the past (based on the `grace_window` task
+parameter) before including them in an aggregate request. Failure to do so may
+result in reports being dropped by the helper. The leader MUST NOT accept
 reports whose timestamps are in the future. Implementors MAY provide for some
 small leeway, usually no more than a few minutes, to account for clock skew.
 
