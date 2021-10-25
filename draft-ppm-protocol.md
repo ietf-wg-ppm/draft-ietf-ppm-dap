@@ -776,10 +776,12 @@ and constructs its response to the aggregate request.
 #### Leader State
 
 The leader is required to issue aggregate requests in order, but reports are
-likely to arrive out-of-order. The leader SHOULD buffer reports for a time
-period proportional to the batch window before issuing the first aggregate
-request. Failure to do so will result in out-of-order reports being dropped by
-the helper.
+likely to arrive out-of-order. The leader SHOULD store reports for a time
+period proportional to the batch window before including them in an aggregate
+request. Failure to do so may result in out-of-order reports being dropped by
+the helper. The leader MUST NOT accept reports whose timestamps are in the
+future. Implementors MAY provide for some small leeway, usually no more than a
+few minutes, to account for clock skew.
 
 #### Helper State
 
@@ -955,10 +957,11 @@ aggregator has validated and which fall in the batch interval of the request.
 
 ### Anti-replay {#anti-replay}
 
-Using a report multiple times within a single batch, or using the same report in
-multiple batches, is considered a privacy violation. To prevent such replay
-attacks, this specification defines a total ordering on reports that aggregators
-can use to ensure that reports are aggregated once.
+Using a client-provided report multiple times within a single batch, or using
+the same report in multiple batches, may allow a server to learn information
+about the client's measurement, violating the privacy property of PPM. To
+prevent such replay attacks, this specification defines a total ordering on
+reports that aggregators can use to ensure that reports are aggregated once.
 
 Aggregate requests are ordered as follows: We say that a report `R2` follows
 report `R1` if either `R2.time > R1.time` or `R2.time == R1.time` and `R2.nonce
