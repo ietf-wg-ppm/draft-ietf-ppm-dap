@@ -437,9 +437,6 @@ number generator. Each task has the following parameters associated with it:
   newest report in a batch. This defines the boundaries with which the batch
   interval of each collect request must be aligned. (See
   {{batch-parameter-validation}}.)
-* `grace_window`: The minimum age of a client report, based on the report's
-  timestamp, before the leader will include the report in an aggregation.
-  (See {{leader-state}}.)
 * `protocol`: named parameter identifying the core PPM protocol, e.g., Prio or
   Hits.
 
@@ -776,15 +773,15 @@ updates its state as specified by the PPM protocol.
 After processing all of the sub-requests, the helper encrypts its updated state
 and constructs its response to the aggregate request.
 
-#### Leader State {#leader-state}
+#### Leader State
 
 The leader is required to issue aggregate requests in order, but reports are
-likely to arrive out-of-order. The leader SHOULD store reports until their
-timestamp is sufficiently far in the past (based on the `grace_window` task
-parameter) before including them in an aggregate request. Failure to do so may
-result in reports being dropped by the helper. The leader MUST NOT accept
-reports whose timestamps are in the future. Implementors MAY provide for some
-small leeway, usually no more than a few minutes, to account for clock skew.
+likely to arrive out-of-order. The leader SHOULD store reports for a time
+period proportional to the batch window before including them in an aggregate
+request. Failure to do so may result in out-of-order reports being dropped by
+the helper. The leader MUST NOT accept reports whose timestamps are in the
+future. Implementors MAY provide for some small leeway, usually no more than a
+few minutes, to account for clock skew.
 
 #### Helper State
 
