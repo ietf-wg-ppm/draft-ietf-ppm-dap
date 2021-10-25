@@ -1,4 +1,4 @@
-TARGETS_DRAFTS := draft-ppm-protocol 
+TARGETS_DRAFTS := draft-gpew-priv-ppm
 TARGETS_TAGS := 
-draft-ppm-protocol-00.md: draft-ppm-protocol.md
-	sed -e 's/draft-ppm-protocol-latest/draft-ppm-protocol-00/g' $< >$@
+draft-gpew-priv-ppm-00.md: draft-gpew-priv-ppm.md
+	sed -e 's/draft-gpew-priv-ppm-latest/draft-gpew-priv-ppm-00/g' $< >$@

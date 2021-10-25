@@ -1,9 +1,9 @@
 ---
 title: "Privacy Preserving Measurement"
-docname: draft-ppm-protocol-latest
+docname: draft-gpew-priv-ppm-latest
 category: std
 ipr: trust200902
-area: ART
+area: SEC
 
 stand_alone: yes
 pi: [toc, sortrefs, symrefs, docmapping]
