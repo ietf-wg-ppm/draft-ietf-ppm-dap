@@ -30,7 +30,7 @@ PRIV algorithms. The initial deliverables will support the calculation of simple
 predefined statistical aggregates such as averages, as well as calculations of the values that most frequently appear in individual measurements.  The PRIV protocols will use
 cryptographic algorithms defined by the CFRG.
 
-The starting point for PRIV WG discussions shall be [TODO].
+The starting point for PRIV WG discussions shall be draft-gpew-priv-ppm.
 
 
 
