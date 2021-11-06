@@ -6,6 +6,8 @@
 \usepackage{slidesec} 
 \usepackage{url}
 \usepackage[framemethod=TikZ]{mdframed}
+\usepackage{tikz}
+\usetikzlibrary{calc,quotes,arrows.meta}
 \usepackage{color}
 \usepackage[normalem]{ulem}  
 \setbeamertemplate{itemize items}[circle]
@@ -376,12 +378,63 @@
       \begin{itemize}
       \item Minimum batch size
       \item Anti-replay
-      \item Differential privacy randomizatio
+      \item Differential privacy randomization
       \end{itemize}
     \end{itemize}
   \end{itemize}
 \end{frame}
 
+
+\begin{frame}{Privacy Preserving Measurement Protocol}
+  {\texttt{draft-gpew-priv-ppm-00}}
+
+  \begin{itemize}
+  \item A generic protocol for privacy-preserving measurement
+    \begin{itemize}
+    \item Compatible with multiple cryptographic algorithms (``verifiable distributed aggregation functions'')
+    \end{itemize}
+
+  \item Build on top of HTTPS
+    \begin{itemize}
+    \item Easy to implement with existing services infrastructure
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{PPM System Architecture}
+
+{\center
+\begin{tikzpicture}
+[
+ device/.style={rectangle, minimum height=1.5cm, minimum width=1.5cm, draw, rounded corners, align=center},
+ >=Stealth
+ ]
+
+ \node (client1) at (0, -2) [device] {Client};
+ \node (client2) at (0, 0) [device] {Client};
+ \node (client3) at (0, 2) [device] {Client};
+
+ \node (helper1) at (4, -3) [device] {Helper};
+ \node (leader) at (4, 0) [device] {Leader};
+ \node (helper2) at (4, 3) [device] {Helper};
+
+ \node (collector) at (8, 0) [device] {Collector};
+ 
+ \path [->] (client1) edge node [above, sloped] {Shares} (leader);
+ \path [->] (client2) edge node [above] {Shares} (leader);
+ \path [->] (client3) edge node [above, sloped] {Shares} (leader);
+
+ \path [->] (leader) edge node [above, sloped] {Results} (collector);
+
+\end{tikzpicture}
+}
+
+
+\end{frame}
+
+\begin{frame}{Questions?}
+
+\end{frame}
 
 \bibliography{ppm}
 \bibliographystyle{alpha}
