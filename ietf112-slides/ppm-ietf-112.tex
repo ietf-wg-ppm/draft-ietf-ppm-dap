@@ -136,6 +136,21 @@
 \end{frame}
 
 
+\begin{frame}{Motivating Use Case: User Interests}
+
+  \begin{itemize}
+  \item Useful to measure what kinds of sites users visit
+    \begin{itemize}
+    \item Bucket sites by topic
+    \item Count the number of visits to/minutes spent on each topic
+    \item But... some topics are sensitive
+    \end{itemize}
+    
+  \item Problem statement: collect distribution of time spent on each type of site
+  \end{itemize}
+\end{frame}
+
+
 
 \begin{frame}{Preview of Other Use Cases}
   \begin{itemize}
@@ -403,11 +418,10 @@ Solutions to both statistical queries and heavy hitters share a common framework
 
  \node (collector) at (9, 0) [device] {Collector};
  
- \path [->] (client1) edge node [above, sloped] {Shares} (leader);
- \path [->] (client2) edge node [above] {Shares} (leader);
- \path [->] (client3) edge node [above, sloped] {Shares} (leader);
+ \path [->] (client1) edge node [above, sloped] {Share} (leader);
+ \path [->] (client2) edge node [above] {Share} (leader);
+ \path [->] (client3) edge node [above, sloped] {Share} (leader);
 
- \path [->] (leader) edge node [above, sloped] {Aggregates} (collector);
 
  \path [->] (leader.north west) edge node {Shares} (helper2.south west);
  \path [->] (helper2.south east) edge node {Aggregates} (leader.north east);
@@ -416,7 +430,11 @@ Solutions to both statistical queries and heavy hitters share a common framework
  \path [->] (helper1.north east) edge node {Aggregates} (leader.south east);
 
  \node (dummy) at (11.5, 0) {};
- \path [->] (collector.east) edge node [above] {Results} (dummy);
+ \path [->] (collector.north west) edge node [above, sloped] {Get output} (leader.north east);
+ \path [->] (leader.south east) edge node [above, sloped] {Aggregates} (collector.south west);
+
+
+ \path [->] (collector) edge node [above] {Results} (dummy);
 
 \end{tikzpicture}
 }
