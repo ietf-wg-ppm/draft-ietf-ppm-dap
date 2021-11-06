@@ -99,20 +99,12 @@
   \end{itemize} 
 \end{frame}
 
-
-\begin{frame}{Motivating Use Case: Broken Certificates}
+\begin{frame}{Measurement Types}
   \begin{itemize}
-  \item Firefox was seeing mysterious certificate failures in the
-    field
-  \item Very hard to diagnose
-    \begin{itemize}
-    \item We just see counts of failures      
-    \item Didn't have copies of certificates or CRLs so hard to reproduce      
-    \end{itemize}
-
-  \item Much easier with a reproduction case
+  \item Simple aggregates (mean, median, sum, histograms...)
+  \item Relationships between multiple values (correlation, OLS, ...)
+  \item Common strings (``heavy hitters'')    
   \end{itemize}
-
 \end{frame}
 
 
@@ -147,24 +139,16 @@
 
 \begin{frame}{Preview of Other Use Cases}
   \begin{itemize}
-  \item Measuring failing certificates    
+  \item Learning most popular URLs users visit
   \item Advertising
     \begin{itemize}
     \item Conversion measurement
     \item Ad display measurement      
     \end{itemize}
-  \item COVID Exposure notification
-  \end{itemize}
-
-\end{frame}
-
-\begin{frame}{Measurement Types}
-  \begin{itemize}
-  \item Simple aggregates (mean, median, sum, histograms...)
-  \item Relationships between multiple values (correlation, OLS, ...)
-  \item Common strings (``heavy hitters'')    
+  \item COVID exposure notification
   \end{itemize}
 \end{frame}
+
 
 \begin{frame}{Privacy Threats}
 
@@ -191,7 +175,7 @@
     
 \end{frame}
 
-\begin{frame}{Anonymized Data Collection}
+\begin{frame}{Detour: Anonymized Data Collection}
 
   \begin{itemize}
   \item Basic idea: collect user information without identifiers
@@ -243,7 +227,7 @@
 \begin{frame}{Bad Use Cases for Anonymization}
 
   \begin{itemize}
-  \item High dimensionality data
+  \item High dimensionality data (statistical queries)
     \begin{itemize}
     \item Multiple variables that need to be reported together
     \item When you want to look at subgroups
@@ -251,10 +235,9 @@
     \item \emph{Anonymized data needs to be disaggregated to prevent de-anonymization}
     \end{itemize}
 
-  \item Collecting common values
+  \item Collecting common values (heavy hitters)
     \begin{itemize}
-    \item The ``top N'' values
-    \item Only values common to $>N$ users
+    \item The ``top N'' values common $>t$ users
     \item \emph{Anonymized data collects every value and depends on reporting only common values}      
     \end{itemize}
   \end{itemize}
@@ -265,6 +248,7 @@
 {\center
 \includegraphics[width=4in]{prio.png}  
 }
+Solutions to both statistical queries and heavy hitters share a common framework:
 \begin{itemize}
 \item Split data between two servers
 \item Each server computes aggregated shares
@@ -277,7 +261,7 @@
   \begin{itemize}
   \item Useful for computing numeric aggregates (sum, mean, etc.)
   \item[]
-  \item Each client $i$ holds a value $x_i$
+  \item Each client $i$ holds a value $x_i$, then secret shares it with each server
     \begin{itemize}
     \item Generates random $R_i \leftarrow \mathbb{F}_p$
     \item Sends $x_i - R_i (mod p)$ to server 1
@@ -320,7 +304,7 @@
     \begin{itemize}
     \item ``I am 180cm tall'' when I am actually 175cm
     \item A problem with any surveying technique
-    \item We just live with them
+    \item Solution: live with somewhat noisy data
     \end{itemize}
   \item Completely ridiculous
     \begin{itemize}
@@ -329,13 +313,12 @@
       \begin{itemize}
       \item ... but with Prio the data is encrypted
       \end{itemize}
-
-    \end{itemize}
-  \item Solution: each submission comes with a zero-knowledge proof of validity
+    \item Solution: each submission comes with a zero-knowledge proof of validity
     \begin{itemize}
-    \item ``This height report is between 100 and 200cm''
-    \item Servers work together to validate the proof
-    \item Only aggregate submissions with valid proofs
+      \item ``This height report is between 100 and 200cm''
+      \item Servers work together to validate the proof
+      \item Only aggregate submissions with valid proofs
+      \end{itemize}
     \end{itemize}
   \end{itemize}
 \end{frame}
@@ -391,7 +374,7 @@
   \begin{itemize}
   \item A generic protocol for privacy-preserving measurement
     \begin{itemize}
-    \item Compatible with multiple cryptographic algorithms (``verifiable distributed aggregation functions'')
+    \item Compatible with multiple cryptographic algorithms (``verifiable distributed aggregation functions'' -- see CFRG presentation for details)
     \end{itemize}
 
   \item Build on top of HTTPS
