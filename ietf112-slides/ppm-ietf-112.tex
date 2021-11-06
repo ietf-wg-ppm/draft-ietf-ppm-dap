@@ -414,17 +414,24 @@
  \node (client2) at (0, 0) [device] {Client};
  \node (client3) at (0, 2) [device] {Client};
 
- \node (helper1) at (4, -3) [device] {Helper};
- \node (leader) at (4, 0) [device] {Leader};
- \node (helper2) at (4, 3) [device] {Helper};
+ \node (helper1) at (5, -3) [device] {Helper};
+ \node (leader) at (5, 0) [device] {Leader};
+ \node (helper2) at (5, 3) [device] {Helper};
 
- \node (collector) at (8, 0) [device] {Collector};
+ \node (collector) at (10, 0) [device] {Collector};
  
  \path [->] (client1) edge node [above, sloped] {Shares} (leader);
  \path [->] (client2) edge node [above] {Shares} (leader);
  \path [->] (client3) edge node [above, sloped] {Shares} (leader);
 
  \path [->] (leader) edge node [above, sloped] {Results} (collector);
+
+ \path [->] (leader.north west) edge node {Shares} (helper2.south west);
+ \path [->] (helper2.south east) edge node {Aggregates} (leader.north east);
+
+ \path [->] (leader.south west) edge node {Shares} (helper1.north west);
+ \path [->] (helper1.north east) edge node {Aggregates} (leader.south east);
+
 
 \end{tikzpicture}
 }
