@@ -122,30 +122,30 @@
 \end{frame}
 
 
-\begin{frame}{Motivating Use Case: Web Site Breakage}
+\begin{frame}{Motivating Use Case: Web Site Issues}
 
   \begin{itemize}
   \item Web compatibility is a big problem
     \begin{itemize}
     \item Some sites will not render properly in some browsers
     \item Big problem for smaller browsers like Safari and Firefox
-    \item Only a small fraction gets reported      
+    \item Often we can detect breakage on the client      
     \end{itemize}
     
-  \item Often we can detect breakage on the client
+  \item Many Web sites fingerprint users
     \begin{itemize}
-    \item People hit reload or disable tracking protection
-    \item API errors
-    \item Call setup failures in WebRTC
+    \item Measure persistent properties to create a per-browser ``fingerprint''
+    \item This can be used for tracking
+    \item Often detectable on the client
     \end{itemize}
 
-  \item No way to learn about it
+  \item No way to learn about these issues
     \begin{itemize}
-    \item We need the URL so we can fix it
+    \item We need to know the site
     \item But browsing history is sensitive      
     \end{itemize}
 
-  \item Problem statement: collect the URLs with the most breakage
+  \item Problem statement: collect the sites where the client sees issues
   \end{itemize}
 \end{frame}
 
@@ -491,7 +491,6 @@ Solutions to both statistical queries and heavy hitters share a common framework
 \begin{frame}{PPM System Architecture}
 
   {\center
-    \resizebox{0.5\textwidth}{!}{%
   \begin{tikzpicture}
 [
  device/.style={rectangle, minimum height=1.5cm, minimum width=1.5cm, draw, rounded corners, align=center},
@@ -527,7 +526,6 @@ Solutions to both statistical queries and heavy hitters share a common framework
  \path [->] (collector) edge node [above] {Results} (dummy);
 
 \end{tikzpicture}
-}%
 }
 \end{frame}
 
