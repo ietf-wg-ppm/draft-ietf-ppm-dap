@@ -4,23 +4,20 @@ a browser company might want to measure web sites that do not render properly wi
 or a public health authority might want to measure exposure to some disease without learning the identities of those exposed. In these cases, the entity taking the
 measurement is not interested in people's individual responses but
 rather in aggregated data (e.g., how many users had errors on site X).
-Conventional methods require collecting individual measurements and then
+Conventional methods require collecting individual measurements in plaintext and then
 aggregating them, thus representing a threat to user privacy and
 rendering many such measurements difficult and impractical.
 
-New cryptographic techniques address this gap by splitting
-measurements between multiple, non-colluding servers which can jointly compute the
-aggregate value without either server learning the value of individual
-measurements. The Privacy Respecting Incorporation of Values (PRIV) work will standardize
+New cryptographic techniques address this gap through a variety of techiques, all of which aim to ensure that the server (or multiple, non-colluding servers) can compute the aggregated value without learning the value of individual measurements. The Privacy Respecting Incorporation of Values (PRIV) work will standardize
 protocols for deployment of these techniques on the Internet. This
 will include mechanisms for:
          
-- Client submission of individual measurements, including proofs of validity
-- Verification of validity proofs by the servers
-- Computation of aggregate values by the servers and reporting of
+- Client submission of individual measurements
+- Verification of validity proofs by the server(s), if sent by client
+- Computation of aggregate values by the server(s) and reporting of
   results to the entity taking the measurement
 
-A successful PRIV system assumes that clients and the various servers
+A successful PRIV system assumes that clients and servers
 are configured with each other's identities and details of the types of
 measurements to be taken. This is assumed to happen out of band
 and will not be standardized in this working group.
