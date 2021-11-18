@@ -25,10 +25,17 @@ are configured with each other's identities and details of the types of
 measurements to be taken. This is assumed to happen out of band
 and will not be standardized in this working group.
 
-The WG will deliver one or more protocols which can accommodate multiple
-PRIV algorithms. The initial deliverables will support the calculation of simple
-predefined statistical aggregates such as averages, as well as calculations of the values that most frequently appear in individual measurements.  The PRIV protocols will use
-cryptographic algorithms defined by the CFRG.
+The WG will deliver one or more protocols which can accommodate
+multiple PRIV algorithms. The initial deliverables will support the
+calculation of simple predefined statistical aggregates such as
+averages, as well as calculations of the values that most frequently
+appear in individual measurements.  The PRIV protocols will use
+cryptographic algorithms defined by the CFRG. The protocol 
+will be designed to limit abuse by both client and aggregators, including
+exposure of individual user measurements and denial of service attacks
+on the measurement system. The resulting documents shall clearly
+describe remaining attacks which are not prevented or mitigated by
+the protocol.
 
 The starting point for PRIV WG discussions shall be draft-gpew-priv-ppm.
 
