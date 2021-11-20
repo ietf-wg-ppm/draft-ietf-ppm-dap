@@ -12,7 +12,7 @@ New cryptographic techniques address this gap through a variety of techiques, al
 protocols for deployment of these techniques on the Internet. This
 will include mechanisms for:
          
-- Client submission of individual measurements
+- Client submission of individual measurements, potentially along with proofs of validity
 - Verification of validity proofs by the server(s), if sent by client
 - Computation of aggregate values by the server(s) and reporting of
   results to the entity taking the measurement
