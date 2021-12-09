@@ -195,17 +195,11 @@ We call the servers the *aggregators*. Each client's input to the protocol is a
 set of measurements (e.g., counts of some user behavior). Given the input set of
 measurements `x_1, ..., x_n` held by `n` users, the goal of a *privacy
 preserving measurement (PPM) protocol* is to compute `y = F(p, x_1, ..., x_n)`
-for some aggregation function `F` and aggregation parameter `p` while revealing
-nothing else about the measurements.
-
-The clients and servers need to agree on the aggregation function `F` before
-running the protocol. The aggregation parameter `p` is chosen later by the
-servers, and the same set of measurements may be aggregated multiple times with
-different aggregation parameters.
+for some function `F` while revealing nothing else about the measurements.
 
 This protocol is extensible and allows for the addition of new cryptographic
-schemes that implement the VDAF
-interface specified in {{?I-D.draft-gpew-priv-ppm}}. Candidates include:
+schemes that implement the VDAF interface specified in
+{{?I-D.draft-gpew-priv-ppm}}. Candidates include:
 
 * `prio3`, which allows for aggregate statistics such as sum, mean, histograms,
   etc. This VDAF is based on Prio [CGB17] and includes improvements described in
