@@ -14,3 +14,11 @@ report.xml
 venv/
 lib
 draft-gpew-priv-ppm.xml
+*.aux
+*.bbl
+*.blg
+*.nav
+*.out
+*.snm
+*.toc
+*.vrb
