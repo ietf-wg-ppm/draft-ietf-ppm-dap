@@ -12,7 +12,7 @@ many such measurements difficult and impractical.
 New cryptographic techniques address this gap through a variety of techniques,
 all of which aim to ensure that the server (or multiple, non-colluding servers)
 can compute the aggregated value without learning the value of individual
-measurements. The Privacy Respecting Incorporation of Values (PPM) work will
+measurements. The Privacy Preserving Measurement (PPM) work will
 standardize protocols for deployment of these techniques on the Internet. This
 will include mechanisms for:
 
