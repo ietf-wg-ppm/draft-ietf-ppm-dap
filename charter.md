@@ -12,7 +12,7 @@ many such measurements difficult and impractical.
 New cryptographic techniques address this gap through a variety of techniques,
 all of which aim to ensure that the server (or multiple, non-colluding servers)
 can compute the aggregated value without learning the value of individual
-measurements. The Privacy Respecting Incorporation of Values (PRIV) work will
+measurements. The Privacy Respecting Incorporation of Values (PPM) work will
 standardize protocols for deployment of these techniques on the Internet. This
 will include mechanisms for:
 
@@ -22,19 +22,19 @@ will include mechanisms for:
 - Computation of aggregate values by the server(s) and reporting of results to
   the entity taking the measurement
 
-A successful PRIV system assumes that clients and servers are configured with
+A successful PPM system assumes that clients and servers are configured with
 each other's identities and details of the types of measurements to be taken.
 This is assumed to happen out of band and will not be standardized in this
 working group.
 
-The WG will deliver one or more protocols which can accommodate multiple PRIV
+The WG will deliver one or more protocols which can accommodate multiple PPM
 algorithms. The initial deliverables will support the calculation of simple
 predefined statistical aggregates such as averages, as well as calculations of
-the values that most frequently appear in individual measurements. The PRIV
+the values that most frequently appear in individual measurements. The PPM
 protocols will use cryptographic algorithms defined by the CFRG. The protocol
 will be designed to limit abuse by both client and aggregators, including
 exposure of individual user measurements and denial of service attacks on the
-measurement system. The resulting documents shall clearly describe remaining
-attacks which are not prevented or mitigated by the protocol.
+measurement system. The resulting documents shall clearly describe abuse cases
+and remaining attacks which are not prevented or mitigated by the protocol.
 
-The starting point for PRIV WG discussions shall be draft-gpew-priv-ppm.
+The starting point for PPM WG discussions shall be draft-gpew-priv-ppm.
