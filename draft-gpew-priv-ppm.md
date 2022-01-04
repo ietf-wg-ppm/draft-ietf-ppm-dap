@@ -205,10 +205,11 @@ schemes that implement the VDAF interface specified in
   etc. This class of VDAFs is based on Prio [CGB17] and includes improvements
   described in [BBCGGI19].
 
-* `hits`, which allows for finding the most common strings among a collection
-  of clients (e.g., the URL of their home page) as well as counting the number
-  of clients that hold a given string. This VDAF is the basis of the
-  privacy preserving heavy hitters protocol of [BBCGGI21].
+* `poplar1`, which allows for finding the most popular strings among a
+  collection of clients (e.g., the URL of their home page) as well as counting
+  the number of clients that hold a given string. This VDAF is the basis of the
+  Poplar protocol of [BBCGGI21], which is designed to solve the heavy hitters
+  problem in a privacy preserving manner.
 
 This protocol is designed to work with schemes that use secret sharing. Rather
 than send its input in the clear, each client shards its measurements into a
@@ -624,7 +625,7 @@ The exact structure of the aggregation flow depends on the VDAF.  Specifically:
 
 * Some VDAFs (e.g., `prio3`) allow the leader to start aggregating reports
   proactively before all the reports in a batch are received. Others (e.g.,
-  `hits`) require all the reports to be present and must be initiated by the
+  `poplar1`) require all the reports to be present and must be initiated by the
   collector.
 
 * Processing the reports -- especially validating them -- may require multiple
@@ -1331,8 +1332,8 @@ task if the minimum batch size is too small. This document does not specify how
 to choose minimum batch sizes.
 
 The PPM parameters also specify the maximum number of times a report can be
-used. Some protocols, such as Hits, require reports to be used in multiple
-batches spanning multiple collect requests.
+used. Some protocols, such as Pooplar [BBCGGI21], require reports to be used in
+multiple batches spanning multiple collect requests.
 
 ## Differential privacy {#dp}
 
@@ -1352,7 +1353,7 @@ support by encoding them into task parameters.]
 
 ## Robustness in the presence of malicious servers
 
-Most PPM protocols, including Prio and Hits, are robust against malicious
+Most PPM protocols, including Prio and Poplar, are robust against malicious
 clients, but are not robust against malicious servers. Any aggregator can simply
 emit bogus output shares and undetectably spoil aggregates. If enough
 aggregators were available, this could be mitigated by running the protocol
