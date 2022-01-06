@@ -1332,7 +1332,7 @@ task if the minimum batch size is too small. This document does not specify how
 to choose minimum batch sizes.
 
 The PPM parameters also specify the maximum number of times a report can be
-used. Some protocols, such as Pooplar [BBCGGI21], require reports to be used in
+used. Some protocols, such as Poplar [BBCGGI21], require reports to be used in
 multiple batches spanning multiple collect requests.
 
 ## Differential privacy {#dp}
