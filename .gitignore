@@ -22,3 +22,4 @@ draft-gpew-priv-ppm.xml
 *.snm
 *.toc
 *.vrb
+.DS_Store

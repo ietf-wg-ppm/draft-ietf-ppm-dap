@@ -353,6 +353,7 @@ instance, the user might have spent 30s on a task but the client might report
 address it; it merely ensures that the data is within acceptable limits, so the
 client could not report 10^6s or -20s.
 
+[CP: Work begins here.]
 
 # Message Transport
 
@@ -378,6 +379,8 @@ in the "type" field (within the PPM URN namespace "urn:ietf:params:ppm:error:"):
 | unrecognizedMessage     | The message type for a response was incorrect or the payload was malformed. |
 | unrecognizedTask        | An endpoint received a message with an unknown task ID. |
 | outdatedConfig          | The message was generated using an outdated configuration. |
+| staleReport             | Report could not be processed because it arrived too late. |
+| invalidHmac             | The aggregate message's HMAC was not valid. |
 
 This list is not exhaustive. The server MAY return errors set to a URI other
 than those defined above. Servers MUST NOT use the PPM URN namespace for errors
@@ -395,7 +398,6 @@ to error types, rather than the full URNs. For example, an "error of type
 This document uses the verbs "abort" and "alert with `[some error message]`" to
 describe how protocol participants react to various error conditions.
 
-
 # Protocol Definition
 
 PPM has three major interactions which need to be defined:
@@ -404,7 +406,7 @@ PPM has three major interactions which need to be defined:
 * Computing the results of a given measurement
 * Reporting results to the collector
 
-We start with some basic type definitions used in other messages.
+We start with some basic type definitions common to each of these interactions.
 
 ~~~
 /* ASCII encoded URL. e.g., "https://example.com" */
@@ -421,13 +423,31 @@ struct {
   Duration duration;
 } Interval;
 
-/* A nonce used to uniquely identify a report in the context of a PPM task. It
-includes the time at which the report was generated and a random, 64-bit
-integer. */
+/* A nonce used to uniquely identify a report in the context of a PPM
+task. It includes the time at which the report was generated and a
+random, 64-bit integer. */
 struct {
   Time time;
   uint64 rand;
 } Nonce;
+
+/* The various roles in the PPM protocol. */
+enum {
+  collector(0),
+  client(1),
+  leader(2),
+  helper(3),
+} Role;
+
+/* Identifier for a server's HPKE configuration */
+uint8 HpkeConfigId;
+
+/* An HPKE ciphertext. */
+struct {
+  HpkeConfigId config_id;    // config ID
+  opaque enc<1..2^16-1>;     // encapsulated HPKE context
+  opaque payload<1..2^16-1>; // ciphertext
+} HpkeCiphertext;
 ~~~
 
 ## Task Configuration {#task-configuration}
@@ -441,18 +461,14 @@ opaque TaskId[32];
 
 A `TaskId` is a globally unique sequence of bytes. It is RECOMMENDED that this
 be set to a random string output by a cryptographically secure pseudorandom
-number generator. Each task has the following parameters associated with it:
+number generator. Each task has the following parameters associated with it,
+with which all of the parties are configured:
 
 * `aggregator_endpoints`: A list of URLs relative to which an aggregator's API
   endpoints can be found. Each endpoint's list MUST be in the same order. The
   leader's endpoint MUST be the first in the list. The order of the
   `encrypted_input_shares` in a `Report` (see {{uploading-reports}}) MUST be the
   same as the order in which aggregators appear in this list.
-* `collector_config`: The HPKE configuration of the collector (described in
-  {{key-config}}). Having participants agree on this absolves collectors of the
-  burden of operating an HTTP server. See
-  [#102](https://github.com/abetterinternet/prio-documents/issues/102) for
-  discussion.
 * `max_batch_lifetime`: The maximum number of times a batch of reports may be
   used in collect requests.
 * `min_batch_size`: The minimum number of reports that appear in a batch.
@@ -460,18 +476,36 @@ number generator. Each task has the following parameters associated with it:
   newest report in a batch. This defines the boundaries with which the batch
   interval of each collect request must be aligned. (See
   {{batch-parameter-validation}}.)
-* `protocol`: named parameter identifying the VDAF scheme in use.
+* A unique identifier for the VDAF being used for the task.
+
+In addition, in order to facilitate the aggregation and collect protocols, each
+of the aggregators is configured with following parameters:
+
+* `collector_hpke_config`: The HPKE {{?I-D.irtf-cfrg-hpke}} configuration of the
+  collector (described in {{hpke-config}}). Having participants agree on this
+  absolves collectors of the burden of operating an HTTP server. See
+  [#102](https://github.com/abetterinternet/prio-documents/issues/102) for
+  discussion.
+* `vdaf_verify_param`: The aggregator's VDAF verification parameter output by
+  the setup algorithm computed jointly by the aggregators before the start of the
+  PPM protocol {{?I-D.draft-cfrg-patton-vdaf}}). [OPEN ISSUE: This is yet to be
+  specified. See issue#161.]
+* `agg_auth_key`: A key for HMAC-SHA256 {{?RFC2104}} shared by the aggregators and
+  used for message authentication during the aggregation flow.
+
+Finally, the collector is configured with the HPKE secret key corresponding to
+`collector_hpke_config`.
 
 ## Uploading Reports
 
 Clients periodically upload reports to the leader, which then distributes the
 individual shares to each helper.
 
-### Key Configuration Request {#key-config}
+### HPKE Configuration Request {#hpke-config}
 
 Before the client can upload its report to the leader, it must know the public
 key of each of the aggregators. These are retrieved from each aggregator by
-sending a request to `[aggregator]/key_config`, where `[aggregator]` is the
+sending a request to `[aggregator]/hpke_config`, where `[aggregator]` is the
 aggregator's endpoint URL, obtained from the task parameters. The aggregator
 responds to well-formed requests with status 200 and an `HpkeConfig` value:
 
@@ -484,7 +518,6 @@ struct {
   HpkePublicKey public_key;
 } HpkeConfig;
 
-uint8 HpkeConfigId;
 opaque HpkePublicKey<1..2^16-1>;
 uint16 HpkeAeadId; // Defined in I-D.irtf-cfrg-hpke
 uint16 HpkeKemId;  // Defined in I-D.irtf-cfrg-hpke
@@ -494,7 +527,7 @@ uint16 HpkeKdfId;  // Defined in I-D.irtf-cfrg-hpke
 [OPEN ISSUE: Decide whether to expand the width of the id, or support multiple
 cipher suites (a la OHTTP/ECH).]
 
-The client MUST abort if any of the following happen for any `key_config`
+The client MUST abort if any of the following happen for any HPKE-config
 request:
 
 * the client and aggregator failed to establish a secure,
@@ -523,18 +556,18 @@ the cache lifetime in order to avoid rejecting reports.
 
 Clients upload reports by using an HTTP POST to `[leader]/upload`, where
 `[leader]` is the first entry in the task's aggregator endpoints. The payload is
-structured as follows:
+the following message:
 
 ~~~
 struct {
   TaskID task_id;
   Nonce nonce;
   Extension extensions<0..2^16-1>;
-  EncryptedInputShare encrypted_input_shares<1..2^16-1>;
+  HpkeCiphertext encrypted_input_shares<1..2^16-1>;
 } Report;
 ~~~
 
-This message is called the client's *report*. It contains the following fields:
+This message is called the client's "report". It contains the following fields:
 
 * `task_id` is the task ID of the task for which the report is intended.
 * `nonce` is the report nonce generated by the client. This field is used by the
@@ -547,44 +580,33 @@ This message is called the client's *report*. It contains the following fields:
   the order of the task's `aggregator_endpoints` (i.e., the first share should
   be the leader's, the second share should be for the first helper, and so on).
 
-Encrypted input shares are structured as follows:
-
-~~~
-struct {
-  HpkeConfigId aggregator_config_id;
-  opaque enc<1..2^16-1>;
-  opaque payload<1..2^16-1>;
-} EncryptedInputShare;
-~~~
-
-* `aggregator_config_id` is equal to `HpkeConfig.id`, where `HpkeConfig` is the
-  key config of the aggregator receiving the input share.
-* `enc` is the HPKE encapsulated key, used by the aggregator to decrypt its
-  input share.
-* `payload` is the encrypted input share.
-
 To generate the report, the client begins by sharding its measurement into a
 sequence of input shares as specified by the VDAF in use. To encrypt an input
 share, the client first generates an HPKE {{!I-D.irtf-cfrg-hpke}} context for
 the aggregator by running
 
 ~~~
-enc, context = SetupBaseS(pk,
-                          "pda input share" || task_id || server_role)
+enc, context = SetupBaseS(pk, Report.task_id ||
+                              "ppm input share" || 0x01 || server_role)
 ~~~
+[OPEN ISSUE: Is `0x01` ambiguous?]
 
-where `pk` is the aggregator's public key, `task_id` is `Report.task_id` and
-`server_role` is a byte whose value is `0x01` if the aggregator is the leader
-and `0x00` if the aggregator is the helper. `enc` is the HPKE encapsulated key
-and `context` is the HPKE context used by the client for encryption.  The
-payload is encrypted as
+where `pk` is the aggregator's public key and and `server_role` is the Role of
+the intended recipient (`0x02` for the leader and `0x03` for the helper). In
+general, the info string for computing the HPKE context is suffixed by two
+bytes, the first of which identifies the role of the sender and the second of
+which identifies the role of the intended recipient.
+
+`enc` is the HPKE encapsulated key and `context` is the HPKE
+context used by the client for encryption. The payload is encrypted as
 
 ~~~
-payload = context.Seal(nonce || extensions, input_share)
+payload = context.Seal(Report.nonce || Report.extensions, input_share)
 ~~~
 
 where `input_share` is the aggregator's input share and `nonce` and `extensions`
-are the corresponding fields of `Report`.
+are the corresponding fields of `Report`. Clients MUST NOT use the same `enc`
+for multitple reports.
 
 The leader responds to well-formed requests to `[leader]/upload` with status 200
 and an empty body. Malformed requests are handled as described in {{errors}}.
@@ -592,22 +614,20 @@ Clients SHOULD NOT upload the same measurement value in more than one report if
 the leader responds with status 200 and an empty body.
 
 The leader responds to requests with out-of-date `HpkeConfig.id` values,
-indicated by `EncryptedInputShare.config_id`, with status 400 and an error of
-type 'outdatedConfig'. Clients SHOULD invalidate any cached aggregator
-`HpkeConfig` and retry with a freshly generated Report. If this retried report
-does not succeed, clients MUST abort and discontinue retrying.
+indicated by `HpkeCiphertext.config_id`, with status 400 and an error of type
+'outdatedConfig'. Clients SHOULD invalidate any cached aggregator `HpkeConfig`
+and retry with a freshly generated Report. If this retried report does not
+succeed, clients MUST abort and discontinue retrying.
 
-The leader MUST ignore any report whose nonce contains a timestamp that falls in
-a batch interval for which it has received at least one collect request from the
-collector. (See {{pa-collect}}.) Otherwise, comparing the aggregate result to
-the previous aggregate result may result in a privacy violation. (Note that the
-helpers enforce this as well; see {{aggregate-request}}.) In addition, the
-leader SHOULD abort the upload protocol and alert the client with error
-"staleReport".
+As discussed in {{prep-start}}, the leader ignores any report whose nonce
+contains a timestamp that falls in a batch interval for which it has received a
+collect request from the collector. (Collect requests are defined in
+{{collect-flow}}.) In addition, the leader SHOULD abort the upload protocol and
+alert the client with error "staleReport".
 
 ### Upload Extensions {#upload-extensions}
 
-Each UploadReq carries a list of extensions that clients may use to convey
+Each Report carries a list of extensions that clients may use to convey
 additional, authenticated information in the report. [OPEN ISSUE: The extensions
 aren't authenticated. It's probably a good idea to be a bit more clear about how
 we envision extensions being used. Right now this includes client attestation
@@ -629,198 +649,558 @@ encoded value of the following form:
 "extension_type" indicates the type of extension, and "extension_data" contains
 information specific to the extension.
 
-
-## Verifying and Aggregating Reports {#pa-aggregate}
-
-Once a set of clients have uploaded their reports to the leader, the leader can
-send them to the helpers to be verified and aggregated. In order to enable the
-system to handle very large batches of reports, this process can be performed
-incrementally. To aggregate a set of reports, the leader sends an AggregateReq
-to each helper containing those report shares. The helper then processes them
-(verifying the proofs and incorporating their values into the ongoing aggregate)
-and replies to the leader.
-
-The exact structure of the aggregation flow depends on the VDAF.  Specifically:
-
-* Some VDAFs (e.g., `prio3`) allow the leader to start aggregating reports
-  proactively before all the reports in a batch are received. Others (e.g.,
-  `poplar1`) require all the reports to be present and must be initiated by the
-  collector.
-
-* Processing the reports -- especially validating them -- may require multiple
-  round trips.
-
-Note that it is possible to aggregate reports from one batch while reports from
-the next batch are coming in. This is because each report is validated
-independently.
-
-This process is illustrated below in {{pa-aggregate-flow}}. In this example, the
-batch size is 20, but the leader opts to process the reports in sub-batches of
-10. Each sub-batch takes two round-trips to process. Once both sub-batches have
-been processed, the leader can issue an AggregateShareReq in order to retrieve
-the helper's aggregated result.
-
-In order to allow the helpers to retain minimal state, the helper can attach a
-state parameter to its response, with the leader returning the state value in
-the next request, thus offloading the state to the leader. This state value MUST
-be cryptographically protected as described in {{helper-state}}.
-
-~~~~
-Leader                                                 Helper
-
-AggregateReq (Reports 1-10) -------------------------------->  \
-<------------------------------------ AggregateResp (State 1)  | Reports
-AggregateReq (continued, State 1)      --------------------->  | 10-11
-<------------------------------------ AggregateResp (State 2)  /
-
-
-AggregateReq (Reports 11-20, State 2) ---------------------->  \
-<------------------------------------ AggregateResp (State 3)  | Reports
-AggregateReq (continued, State 3) -------------------------->  | 20-21
-<------------------------------------ AggregateResp (State 4) /
-
-AggregateShareReq (State 4) -------------------------------->
-<-------------------------------- AggregateShareResp (Result)
-~~~~
-{: #pa-aggregate-flow title="Aggregation Process (batch size=20)"}
-
-[OPEN ISSUE: Should there be an indication of whether a given AggregateReq is a
-continuation of a previous sub-batch?]
-
-[TODO: Decide if and how the collector's request is authenticated.]
-
-
-### Aggregate Request
-
-The AggregateReq request is used by the leader to send a set of reports to the
-helper. These reports MUST all be associated with the same PPM task and batch.
-
-For each aggregator endpoint `[aggregator]` in `AggregateReq.task_id`'s
-parameters except its own, the leader sends a POST request to
-`[aggregator]/aggregate` with the following message:
-
-~~~
-struct {
-  TaskID task_id;
-  opaque agg_param<0..2^16-1>;  // VDAF aggregation parameter
-  opaque helper_state<0..2^16>; // helper's opaque state
-  AggregateSubReq seq<1..2^24-1>;
-} AggregateReq;
-~~~
-
-The structure contains the PPM task, an opaque, VDAF-specific aggregation
-parameter, an opaque *helper state* string, and a sequence of *sub-requests*,
-each corresponding to a unique client report. Sub-requests are structured as
-follows:
-
-~~~
-struct {
-  Nonce nonce;                     // Equal to Report.nonce.
-  Extension extensions<0..2^16-1>; // Equal to Report.extensions.
-  EncryptedInputShare helper_share;
-  opaque message<0..2^16-1>; // VDAF message
-} AggregateSubReq;
-~~~
-
-The `nonce` and `extensions` fields have the same value as those in the
-report uploaded by the client. Similarly, the `helper_share` field is the
-`EncryptedInputShare` from the `Report` whose index in
-`Report.encrypted_input_shares` is equal to the index of `[aggregator]` in the
-task's aggregator endpoints. [OPEN ISSUE: We usually only need to send this in
-the first aggregate request. Shall we exclude it in subsequent requests
-somehow?] The remainder of the structure is dedicated to VDAF-specific request
-parameters.
-
-In order to provide replay protection, the leader preprocesses the set of
-reports it sends in the the AggregateReq as described in {{anti-replay}}. Any
-reports filtered out by this procedure MUST be ignored.
-
-The helper handles well-formed requests as follows. (As usual, malformed
-requests are handled as described in {{errors}}.) It first looks for PPM
-parameters corresponding to `AggregateReq.task_id`. It then preprocesses the
-sub-requests as described in {{anti-replay}}. Any sub-requests filtered out by
-this procedure MUST be ignored.
-
-In addition, for any report whose nonce contains a timestamp that falls in a
-batch interval for which it has completed at least one aggregate-share request
-(see {{aggregate-share-request}}), the helper MUST send an error messsage in
-response rather than its next VDAF message. Note that this means leaders cannot
-interleave a sequence of aggregate and aggregate-share requests for a single
-batch.
-
-The response is an HTTP 200 OK with a body consisting of the helper's updated
-state and a sequence of *sub-responses*. Each sub-response encodes the nonce and
-a VDAF-specific `message`:
-
-~~~
-struct {
-  opaque helper_state<0..2^16>;
-  AggregateSubResp seq<1..2^24-1>;
-} AggregateResp;
-
-struct {
-  Nonce nonce;
-  opaque message<0..2^16-1>; // VDAF message
-} AggregateSubResp;
-~~~
-
-The helper handles each sub-request `AggregateSubReq` as follows. It first looks
-up the HPKE config and corresponding secret key associated with
-`helper_share.config_id`. If not found, then the sub-response consists of an
-"unrecognized config" alert. [TODO: We'll want to be more precise about what
-this means. See issue#57.] Next, it attempts to decrypt the payload with the
-following procedure:
-
-~~~
-context = SetupBaseR(helper_share.enc, sk,
-                     "pda input share" || task_id || server_role)
-input_share = context.Open(nonce || extensions, helper_share)
-~~~
-
-where `sk` is the HPKE secret key, `task_id` is `AggregateReq.task_id` and
-`server_role` is the role of the server (`0x01` for the leader and `0x00` for
-the helper). `nonce` and `extensions` are obtained from the
-corresponding fields in `AggregateSubReq`. If decryption fails, then the
-sub-response consists of a "decryption error" alert. [See issue#57.] Otherwise,
-the helper handles the request for its plaintext input share `input_share` and
-updates its state as specified by the PPM protocol.
-
-After processing all of the sub-requests, the helper encrypts its updated state
-and constructs its response to the aggregate request.
-
-#### Leader State
+### Report Storage
 
 The leader is required to buffer reports while waiting to aggregate them. The
 leader SHOULD NOT accept reports whose timestamps are too far in the future.
 Implementors MAY provide for some small leeway, usually no more than a few
 minutes, to account for clock skew.
 
-#### Helper State
+## Verifying and Aggregating Reports {#aggregation-flow}
 
-The helper state is an optional parameter of an aggregate request that the
-helper can use to carry state across requests. At least part of the state will
-usually need to be encrypted in order to protect user privacy. However, the
-details of precisely how the state is encrypted and the information that it
-carries is up to the helper implementation.
+Once a set of clients have uploaded their reports to the leader, the leader can
+send them to the helpers to be verified and aggregated. In order to enable the
+system to handle very large batches of reports, this process can be performed
+with multiple sets of reports in parallel. To aggregate a set of reports, the
+leader sends a request to each helper containing those report shares. Each helper
+then processes them (verifying the proofs and incorporating their values into
+the ongoing aggregate) and replies to the leader.
 
-### Aggregate Share Request {#aggregate-share-request}
+The exact structure of the aggregation flow depends on the VDAF. Specifically:
+
+* Some VDAFs (e.g., `prio3`) allow the leader to start aggregating reports
+  proactively before all the reports in a batch are received. Others (e.g.,
+  `poplar1`) require all the reports to be present and must be initiated by the
+  collector. (See {{collect-flow}}.)
+
+* Processing a set of reports -- especially validating them -- may require
+  multiple round trips.
+
+Note that it is possible to aggregate reports from one batch while reports from
+the next batch are coming in. This is because each report is validated
+independently.
+
+This process is illustrated below in {{aggregation-flow-illustration}}. In this
+example, the batch size is 20, but the leader opts to process the reports in
+sub-batches of 10. Each sub-batch takes two round-trips to process. Once both
+sub-batches have been processed, the leader can issue an AggregateShareReq in
+order to retrieve the helper's aggregate share. (see
+{{aggregate-share-request}}.)
+
+~~~
+Leader                                                 Helper
+
+AggregateReq (Reports 1-10) ----------------------------->  \
+<--------------------------------- AggregateResp (State 1)  | Reports
+AggregateReq (continued, State 1) ----------------------->  | 1-10
+<--------------------------------- AggregateResp (State 2)  /
+
+
+AggregateReq (Reports 11-20, State 1) ------------------->  \
+<--------------------------------- AggregateResp (State 1)  | Reports
+AggregateReq (continued, State 2) ----------------------->  | 11-20
+<--------------------------------- AggregateResp (State 2)  /
+
+
+AggregateShareReq (Reports 1-20) ------------------------>
+<----------------------------- AggregateShareResp (Result)
+~~~
+{: #aggregation-flow-illustration title="Aggregation Flow (batch size=20).
+Multiple aggregation flows can be executed at the same time."}
+
+[CP: To solve https://github.com/abetterinternet/ppm-specification/issues/141 we
+may wish to have another aggregate request before the aggregate-share request in
+which the leader instructs a helper to "commit" to the set of output shares it
+recovered.]
+
+### Report Shares
+
+A report `Report` is comprised of the task ID, the nonce generated by the
+client, the optional report extensions, and the sequence of encrypted input
+shares. To begin the aggregation flow, the leader splits the report into "report
+shares", one for each helper:
+
+~~~
+struct {
+  Nonce nonce;
+  Extension extensions<0..2^16-1>;
+  HpkeCiphertext encrypted_input_share;
+} ReportShare;
+~~~
+
+The `nonce` and `extensions` fields have the same value as those in the report
+uploaded by the client. The `encrypted_input_share` field is the
+`HpkeCiphertext` whose index in `Report.encrypted_input_shares` is equal to the
+index of the aggregator in the task's `aggregator_endpoints`.
+
+### Preparing a Report Share for Aggregation
+
+[CP: Todo: We permit VDAFs with 0 rounds of interaction, in particular those
+that don't provide verifiabilty. We'll have to do something about this here and
+in the VDAF spec. Maybe we just call them DAFs?]
+
+In order to aggregate its report share, an aggregator must first decrypt the
+input share and then interact with the other aggregators. This involves
+executing the "preparation step" described in {{?I-D.draft-cfrg-patton-vdaf}}.
+If successful, each aggregator recovers and verifies the validity of its output
+share. Output shares are then aggregated as described in {{out-to-agg-share}}.
+
+#### Transitions
+
+{{prep-leader}} and {{prep-helper}} specify the state machines of the leader and
+helper respectively while aggregating a single report. Both state machines
+consist of the same five states:
+
+* START: The aggregator is waiting to decrypt its input share and compute its
+  initial VDAF preparation state (see {{prep-start}})
+* WAITING: The aggregator is waiting for a message from its peer before
+  proceeding
+* FINISHED: The aggregator has completed the preparation process and recovered
+  an output share
+* FAILED: An error has occured and an output share cannot be recovered (e.g.,
+  the output share is invalid)
+* INVALID: An aggregator received an unexpected message
+
+A state transition occurs either when an aggregator processes its report share
+or receives a message from its peer. Messages exchanged between aggregators are
+structured as follows:
+
+~~~
+struct {
+  Nonce nonce;
+  TransitionType tran_type;
+  select (Transition.tran_type) {
+    case continued: opaque payload<0..2^16-1>; // VDAF message
+    case finished:  Empty;
+    case failed:    TransitionError;
+  }
+} Transition;
+~~~
+
+The `nonce` is the nonce carried by the ReportShare; the `type` field is
+the transition type, one of:
+
+~~~
+enum {
+  continued(0), // Sender is WAITING
+  finished(1),  // Sender has FINISHED
+  failed(2),    // Sender has FAILED
+} TransitionType;
+~~~
+
+The `continued` transition is accompanied by an opaque message for the VDAF
+computation. The `failed` transition is accomponied by the reason for the
+failure, one of:
+
+~~~
+enum {
+  batch-collected(0),
+  report-replayed(1),
+  report-dropped(2), // CP: Maybe not the best name
+  hpke-unknown-config-id(3),
+  hpke-decrypt-error(4),
+  vdaf-prep-error(5),
+  unrecognized-nonce(6),
+} TransitionError;
+~~~
+
+When an aggregator computes a Transition of type `continued` with payload
+`payload`, we say the aggregator "continues with VDAF message `payload`"; when
+an aggregator computes a Transition of type `finished`, we say the aggregator
+"finishes"; and when an aggregator computes a Transition of type `failed` with
+failure type `error`, we say the aggregator "fails with error `error`".
+
+#### Initializing the Preparation State {#prep-start}
+
+This section describes how each aggregator preprocesses its ReportShare into its
+first Transition.
+
+First, the aggregator checks if the report pertains to a batch that has already
+been collected. This is the case if the aggregator is the leader and has
+completed a collect request for a batch containing the report (see
+{{collect-flow}}), or if the aggregator is a helper and has completed an
+aggregate-share request for a batch containing the report (see
+{{aggregate-share-request}}). It also checks if the report has been observed.
+This is the case if the report was used in a previous aggregate request (see
+{{aggregate-init-request}} and {{aggregate-request}}).
+
+* If the report has not yet been observed but is contained by a batch that has
+  been collected, then the aggregator fails with error `batch-collected`. This
+  prevents additional reports from being aggregated after its batch has already
+  been collected.
+
+* If the report has been observed but has not been collected, then it fails with
+  error `report-replayed`. This prevents a report from being used more than once
+  in a batch.
+
+Note that detecting whether a report has been replayed (i.e., it has been
+aggregated but not yet collected) requires each aggregator to store the set of
+nonces of reports that have been aggregated in uncollected batch intervals. So
+that the aggregator does not have to maintain this storage indefinitely, it MAY
+fail with `report-dropped` under the conditions prescribed in {{anti-replay}}.
+
+Next, the aggregator attempts to decrypt its input share. It starts by looking
+up the HPKE config and corresponding secret key indicated by
+`encrypted_input_share.config_id`. If not found, then it fails with error
+`hpke-unknown-config-id`. Otherwise, it decrypts the payload with the following
+procedure:
+
+~~~
+context = SetupBaseR(encrypted_input_share.enc, sk,
+                   task_id || "ppm input share" || 0x01 || server_role)
+
+input_share = context.Open(ReportShare.nonce || ReportShare.extensions,
+                           ReportShare.encrypted_input_share.payload)
+~~~
+
+where `sk` is the HPKE secret key, `task_id` is the task ID, and `nonce` and
+`extensions` are the nonce and extensions of the report share respectively. If
+decryption fails, then the aggregator fails with error `hpke-decrypt-error`.
+Variable `server_role` is the Role of the intended recipient.
+
+Next, the aggregator runs the preparation-state initialization algorithm for the
+VDAF associated with the task and computes the first state transition. Let
+`agg_param` denote the aggregation parameter, and let `input_share` denote the
+input share:
+
+~~~
+prep_state = PrepState(vdaf_verify_param,
+                       agg_param, nonce, input_share)
+out = prep_state.next(None)
+~~~
+[CP: Note that this syntax is based on
+https://github.com/cjpatton/vdaf/pull/14.]
+
+If either step fails, then the aggregator fails with error `vdaf-prep-error`.
+Otherwise, `out` is interpreted as follows. If the VDAF is 0-round, then `out`
+is the aggregator's output share, in which case the aggregator finishes and
+stores its output share for further processing as described in
+{{out-to-agg-share}}. Otherwise, if the VDAF consists of one round or more, then
+the aggregator continues and `out` is the aggregator's next VDAF message.
+
+#### Leader {#prep-leader}
+
+[NOTE: This section assumes there is one one helper. It'll have to be extended
+to allow for multiple helpers.]
+
+[CP: We could have the leader send its first Transition in the first flight
+along with the ReportShare, thereby saving a round trip. We're setting things up
+the way we are because we anticipate adding support for multiple helpers, for
+which multiple rounds will be needed anyway.]
+
+The leader's state machine during the preparation process is shown below.
+
+~~~
+                       START
+                         | prep_start
+                         |
+                  failed V
+ +---------------------- if <--------------------------+
+ |                  else |                   prep_next |
+ |                       |             send Transition |
+ |                       |                             |
+ |                       | [send ReportShare]          |
+ |                       V                             |
+ |                    WAITING                          |
+ |                       | recv Transition             |
+ |                       |                             |
+ V           peer failed V peer continued    continued |
+FAILED <---------------- if -------------------------> if
+                         | peer finished          else |
+                         |                             |
+                         V else                        |
+                         if -------> INVALID <---------+
+                         | finished
+                         |
+                         V
+                     FINISHED
+
+   [] Indicates the action is only taken the first time the
+      edge is traversed.
+~~~
+{: #aggregation-flow-leader-state title="Leader's state machine while preparing
+a report share for aggregation."}
+
+The leader begins by initializing its preparation state for its ReportShare as
+described in {{prep-start}}. (This action is denoted by "prep_start"
+{{aggregation-flow-leader-state}}.) If it fails during this step, then it moves
+to state FAILED without sending a message to the helper. At this point the
+report will not be processed any further. Otherwise, it sends the helper its
+ReportShare and moves to state WAITING.
+
+After this initial step, the following procedure is repeated until the leader
+moves into a terminal state. First, the leader waits for a Transition message
+from the helper. Upon receiving it:
+
+* If the helper failed, then move to FAILED without sending a message to the
+  helper. The report will not be processed any further.
+* If the leader continued but the helper finished, or if the leader finished but
+  the helper continued, then move to state INVALID. The report will not be
+  processed any further and the leader proceeds as described in
+  {{aggregate-init-request}}.
+* If the leader and helper finished, then move to FINISHED. At this point the
+  report has been completely processed and both aggregators have recovered an
+  output share. The leader proceeds as described in {{out-to-agg-share}}.
+* If the leader and helper continued, then the leader computes its next state
+  transition ("prep_next") and sends the helper a Transition message with the
+  VDAF payload computed as described below.
+
+If continuing, the payload of the leader's Transition message is computed as
+follows. Let `leader_message` denote the last VDAF message it computed and let
+`helper_message` denote the last VDAF message it received from the helper. The
+payload of the the Transition message is computed as
+
+~~~
+payload = prep_shares_to_prep(agg_param,
+                              [leader_payload,
+                               helper_payload])
+~~~
+
+and its next state transition is computed as
+
+~~~
+out = prep_state.next(payload)
+~~~
+
+If either of these operations fails, then the leader moves to state FAILED
+without sending a message to the helper. Otherwise it interprets `out` as
+follows. If this is the last round of VDAF preparation phase, then `out` is the
+leader's output share, in which case the leader finishes. Otherwise, it
+continues with `out` as its next VDAF message. Either way, it moves to state
+WAITING.
+
+#### Helper {#prep-helper}
+
+The helper's state machine is shown below.
+
+~~~
+                          START                       INVALID
+           recv ReportShare |                              ^
+                 prep_start |                              |
+                            |                              |
+                            | prep_next               else |
+                            |<---------------------------- if
+                            |               peer continued ^
+                            |                              |
+                            |              recv Transition |
+                            |                         WAITING
+                            |                              ^
+                            |                              |
+        send Trans.  failed V continued    send Transition |
+FAILED <------------------- if ----------------------------+
+                            | finished
+                            |
+                            |
+                            V send Transition
+                         FINISHED
+~~~
+{: #aggregation-flow-helper-state title="Helper's state machine while preparing
+a report share for aggregation."}
+
+Upon receiving a ReportShare from the leader, the helper initializes its
+preparation state as described in {{prep-start}} (denoted by `prep_start` in
+{{aggregation-flow-helper-state}}). It then executes the following procedure
+until it moves to a terminal state:
+
+* If failed, then send the leader the Transition message and move to FAILED.
+* If finished, then send the leader the Transition message, move to FINISHED,
+  and proceed as described in {{out-to-agg-share}}.
+* If continued, then send the leader the Transition message and move to WAITING.
+
+Upon receiving a Transition message from the leader, proceed as follows. If the
+leader continued, then update the prepare state and compute the next Transition
+message as described below. Otherwise, if the leader finished or failed, then
+move to INVALID and proceed as described in {{aggregate-request}}.
+
+The helper computes its next state transition (denoted `prep_next`) as
+
+~~~
+out = prep_state.next(payload)
+~~~
+
+where `payload` is the previous VDAF message sent by the leader. If this
+operation fails, then the helper fails with error `vdaf-prep-error`. Otherwise,
+it interprets `out` as follows. If this is the last round of VDAF preparation
+phase, then `out` is the helper's output share, in which case the helper
+finishes. Otherwise, the helper continues with `out` as its next VDAF message.
+
+### Aggregating Output Shares {#out-to-agg-share}
+
+Once processing of a report share reaches the FINISHED state, the aggregator
+stores the the recovered output share until the batch to which it pertains is
+collected. To aggregate the output shares, the aggregator runs the aggregation
+algorithm specified by the VDAF:
+
+~~~
+agg_share = output_to_aggregate_shares(agg_param,
+                                       output_shares)
+~~~
+
+Note that for most VDAFs, it is possible to aggregate output shares as they
+arrive rather than wait until the batch is collected. To do so however, it is
+necessary to enforce the batch parameters as described in
+{{batch-parameter-validation}} so that the aggregator knows which aggregate
+share to update.
+
+The leader needs to store a report for as long as it can be collected. Once a
+report has been collected `max_batch_lifetime` times, the leader SHOULD remove
+the report from storage.
+
+### Aggregate Messages {#aggregate-message-auth}
+
+The following messages are defined in this section and are used to aggregate a
+number of reports simultaneously:
+
+~~~
+opaque AggregationJobID[32];
+
+enum {
+  agg_init_req(0),
+  agg_cont_req(1),
+} AggregateReqType;
+
+struct {
+    AggregateReqType msg_type;
+    select (msg_type) {
+        agg_init_req:  AggregateInitReq;
+        agg_cont_req:  AggregateContinueReq;
+    }
+    opaque tag[32];
+} AggregateReq;
+~~~
+
+As discussed in {{aggregation-flow}}, the leader may choose to shard the task of
+aggregating a large number of reports into any number of sub-batches. The
+process of aggregating the reports in a leader-defined sub-batch is called an
+*aggregation job*. An `AggregationJobID` is a globally unique sequence of bytes
+chosen by the leader to identify an aggregation job. It is RECOMMENDED that this
+be set to a random string output by a cryptographically secure pseudorandom
+number generator. The aggregation job ID is used by aggregators to look up
+preparation state for the reports included in the sub-batch.
+
+The last 32 bytes of each message is an HMAC-SHA256 tag computed over the
+serialized message excluding the `tag` field itself. The key that is used is the
+`agg_auth_key` shared by the aggregators and configured for the given task.
+
+Upon receiving an `AggregateReq` message, an aggregator MUST verify the tag before
+interpreting the message's contents. If verification fails, it MUST abort and
+alert its peer with error "invalidHmac".
+
+#### Aggregate Initialization Request {#aggregate-init-request}
+
+An AggregateInitReq message is sent from the leader to a helper in order to
+initialize the process of preparing a set of reports for aggregation. It is
+structured as follows:
+
+~~~
+struct {
+  TaskID task_id;
+  AggregationJobID job_id;
+  opaque agg_param<0..2^16-1>;
+  ReportShare seq<1..2^16-1>;
+} AggregateInitReq;
+~~~
+
+The message contains the PPM task ID, the aggregation job ID assigned by the
+leader, an opaque, VDAF-specific aggregation parameter, and the helper's report
+shares.
+
+To construct an AggregateInitReq, the leader begins by picking a sequence of
+reports, all of which MUST pertain to the same PPM task and batch. [CP: By
+"batch" we mean a batch interval whose duration is equal to the minimum batch
+duration. This could be made more clear.]
+
+Next, the leader extracts its own report shares and computes the initial
+preparation state for each as described in {{prep-start}}. It then removes from
+the report sequence any report for which the initial state is FAILED.
+
+Let `[aggregator]` denote the helper's API endpoint. The leader extracts the
+sequence of report shares for `[aggregator]` and sends sends a POST request to
+`[aggregator]/aggregate` with an Aggregate message of type `agg_init_req`
+and with AggregateInitReq as the payload.
+
+After verifying the authentication tag as described in
+{{aggregate-message-auth}}, the helper handles the AggregateInitReq by computing
+the initial preparation state for each ReportShare in `AggregateInitReq.seq` as
+described in {{prep-start}}. It then constructs an AggregateResp:
+
+~~~
+struct {
+  Transition seq<1..2^16-1>;
+  opaque tag[32];
+} AggregateResp;
+~~~
+
+The sequence of Transition messages corresponds to the ReportShare sequence of
+the AggregateInitReq. The order of these sequences MUST be the same (i.e., the
+nonce of the first Transition MUST be the same as first ReportShare and so on).
+`tag` is an HMAC-SHA256 tag over the serialized message, excluding the `tag`
+field itself, computed using the `agg_auth_key` shared by the aggregators.
+The helper's response to the leader is an HTTP 200 OK whose body is the
+AggregateResp.
+
+After verifying the authentication tag, the leader handles the AggregateResp as
+follows. It first checks that the sequence of Transition messages corresponds to
+the ReportShare sequence of the AggregateInitReq. If the messages appear out of
+order, any are missing, or a nonce is not recognized, then the leader MUST abort
+and alert its peer with error "XXX".
+
+Next, for each Transition, the leader proceeds as described in {{prep-leader}}.
+If any state transition results in INVALID, this indicates that the helper has
+not computed the AggregateResp correctly. The leader MUST abort and alert its
+peer with error "XXX".
+
+[timg: In the above two paragraphs, we say that the leader should alert its
+peer, but in these situations the helper is not awaiting a reply from leader so
+it's not clear how to alert.]
+
+Finally, the leader removes from the report sequence any report for which the
+corresponding state is FAILED.
+
+#### Aggregate Request {#aggregate-request}
+
+An AggregateContinueReq is sent from the leader to the helper to advance the
+preparation state of each report being aggregated. This message is defined as
+follows:
+
+~~~
+struct {
+  TaskID task_id;
+  AggregationJobID job_id;
+  Transition seq<1..2^16-1>;
+} AggregateContinueReq;
+~~~
+
+The contents are the PPM task ID, the aggregation job ID, and the sequence of
+Transition messages corresponding to the report sequence being aggregated. The
+sequences MUST have the same order; any Transition that appears out of order
+MUST be ignored by the helper. (See below.)
+
+Let `[aggregator]` denote the helper's API endpoint. The leader sends a POST
+request to `[aggregator]/aggregate` with an Aggregate message of type
+`agg_cont_req` with payload AggregateContinueReq.
+
+After verifying the authentication tag as described in
+{{aggregate-message-auth}}, the helper processes the AggregateContinueReq as
+follows. It first scans `AggregateContinueReq.seq` to check for any reports that
+may have been dropped by the leader in the previous step.
+
+Next, the helper processes the Transition messages from the leader. If any
+leader Transition contains an unrecognized nonce, the Helper should send a
+Transition with `tran_type = Failed` and `TransitionError = unrecognized-nonce`.
+Otherwise, it constructs a transition as described in {{prep-helper}}. If any
+state transition results in INVALID, the helper MUST abort with error "XXX".
+
+Next, the helper constructs an AggregateResp containing its next flight of
+Transition messages and it updated state. The messages MUST appear in the same
+order as `AggregateContinueReq.seq`. The helper's response is an HTTP 200 OK
+whose body is the AggregateResp.
+
+#### Aggregate Share Request {#aggregate-share-request}
 
 Once the aggregators have verified at least as many reports as required for the
-PPM task, the leader issues an "aggregate-share request" to each helper. The
-helper responds to this request by extracting its aggregate share from its state
-and encrypting it under the collector's HPKE public key.
-
-[OPEN ISSUE: consider updating the `checksum` algorithm to not permit
-collisions]
-
-First, the leader computes a checksum over the set of output shares included in
-the batch window. The checksum is computed by taking the SHA256 hash of each
-nonce from the client reports included in the aggregation, then combining the
-hash values with a bitwise-XOR operation.
-
-Then, for each aggregator endpoint `[aggregator]` in the parameters associated
-with `CollectReq.task_id` (see {{pa-collect}}) except its own, the leader sends
-a POST request to `[aggregator]/aggregate_share` with the following message:
+PPM task, the leader sends to each helper a POST request to
+`[helper]/aggregate_share` with the following message:
 
 ~~~
 struct {
@@ -828,88 +1208,95 @@ struct {
   Interval batch_interval;
   uint64 report_count;
   opaque checksum[32];
-  opaque helper_state<0..2^16>;
+  opaque tag[32];
 } AggregateShareReq;
 ~~~
+[OPEN ISSUE: consider updating the `checksum` algorithm to not permit
+collisions]
 
 * `task_id` is the task ID associated with the PPM parameters.
 * `batch_interval` is the batch interval of the request.
 * `report_count` is the number of reports included in the aggregation.
-* `checksum` is the checksum computed over the set of client reports, computed
-  as described above.
-* `helper_state` is the helper's state, which is carried across requests from
-  the leader.
+* `checksum` is the checksum computed over the set of client reports. The
+  checksum is computed by taking the SHA256 hash of each nonce from the client
+  reports included in the aggregation, then combining the hash values with a
+  bitwise-XOR operation.
+* `tag` is the the HMAC-SHA256 tag computed over the serialized message
+  excluding the `tag` field itself. The key that is used is the `agg_auth_key`
+  shared by the aggregators and configured for the given task.
 
-To respond to an AggregateShareReq message, the helper first looks up the PPM
-parameters associated with task `task_id`. Then, using the procedure in
-{{batch-parameter-validation}}, it ensures that the request meets the
-requirements of the batch parameters. It also computes a checksum based on its
-view of the output shares included in the batch window, and checks that the
-`report_count` and `checksum` included in the request match its computed
-values. If so, it aggregates all valid output shares that fall in the batch
-interval into an aggregate share. The response contains an opaque,
-VDAF-specific message:
+After verifying the authentication tag, the helper processes the
+AggregateShareReq as follows. It first ensures that the request meets the
+requirements for batch parameters following the procedure in
+{{batch-parameter-validation}}. If the batch parameters are invalid, then it
+MUST abort with error "XXX".
+
+Next, it computes a checksum based on its view of the output shares included in
+the batch window, and checks that the `report_count` and `checksum` included in
+the request match its computed values. If not, then it MUST abort with error
+"XXX".
+
+Next, it computes the aggregate share for the batch interval as described in
+{{out-to-agg-share}}, obtaining an opaque byte string `agg_share` whose
+structure is specific to the VDAF in use. The helper encrypts the
+`agg_share` as follows:
+
+~~~
+enc, context = SetupBaseS(pk, AggregateShareReq.task_id ||
+                              "ppm aggregate share" || 0x03 || 0x00)
+
+encrypted_agg_share = context.Seal(AggregateShareReq.batch_interval,
+                                   agg_share)
+~~~
+
+where `pk` is the HPKE public key encoded by the collector's HPKE key.
+
+Encryption prevents the leader from learning the actual result, as it only has
+its own aggregate share and cannot compute the helper's.
+
+The helper responds to the leader with HTTP status 200 OK and a body consisting
+of an `AggregateShareResp`:
 
 ~~~
 struct {
-  opaque message<0..2^16-1>; // VDAF message
-} AggregateShare;
+    HpkeCiphertext encrypted_aggregate_share;
+    opaque tag[32];
+} AggregateShareResp;
 ~~~
 
-Next, the helper encrypts the aggregate share `agg_share` under the collector's
-public key as follows:
+`encrypted_input_share.config_id` is set to the collector's HPKE config ID.
+`encrypted_input_share.enc` is set to the encapsulated HPKE context `enc`
+computed above and `encrypted_input_share.ciphertext` is the ciphertext
+`encrypted_agg_share` computed above. `tag` is an HMAC-SHA256 tag over the
+serialized message, excluding the `tag` field itself, computed using the
+`agg_auth_key` shared by the aggregators.
 
-~~~
-enc, context = SetupBaseS(pk,
-                       "pda aggregate share" || task_id || server_role)
-encrypted_agg_share = context.Seal(batch_interval, agg_share)
-~~~
+After verifying the authentication tag as described in
+{{aggregate-message-auth}}, the leader uses the HpkeCiphertext to respond to a
+collect request (see {{collect-flow}}).
 
-where `pk` is the HPKE public key encoded by the collector's HPKE key
-configuration, `task_id` is `AggregateShareReq.task_id` and `server_role` is the
-role of the server (`0x01` for the leader and `0x00` for the helper).
-`agg_share` is the serialized `AggregateShare`, and `batch_interval` is obtained
-from the `AggregateShareReq`.
+The leader MAY make multiple aggregate-share requests for a given batch interval
+and MUST get the same result each time.
 
-This encryption prevents the leader from learning the actual result, as it only
-has its own share and not the helper's share, which is encrypted for the
-collector. The helper responds to the collector with HTTP status 200 OK and a
-body consisting of the following structure:
+After issuing an aggregate-share request for a given batch interval, it is an
+error for the leader to issue any more aggregate or aggregate-init requests for
+reports in the batch interval. These reports will be rejected by helpers as
+described in {{prep-start}}.
 
-~~~
-struct {
-  HpkeConfigId collector_hpke_config_id;
-  opaque enc<1..2^16-1>;
-  opaque payload<1..2^16>;
-} EncryptedAggregateShare;
-~~~
-
-* `collector_hpke_config_id` is `collector_config.id` from the task parameters
-  corresponding to `CollectReq.task_id`.
-* `enc` is the HPKE encapsulated key, used by the collector to decrypt the
-  aggregate share.
-* `payload` is an encrypted `AggregateShare`.
-
-The leader uses the helper's aggregate share response to respond to the
-collector's collect request (see {{pa-collect}}).
-
-
-## Collecting Results {#pa-collect}
-
-The collector uses CollectReq to ask the leader to collect and return the
-results for a given PPM task over a given time period. To make a collect
-request, the collector issues a POST request to `[leader]/collect`, where
-`[leader]` is the leader's endpoint URL. The body of the request is structured
-as follows:
+## Collecting Results {#collect-flow}
 
 [OPEN ISSUE: Decide if and how the collector's request is authenticated. If not,
 then we need to ensure that collect job URIs are resistant to enumeration
 attacks.]
+
+The collector sends a CollectReq message to the leader in order to collect
+aggregate results. This message is structured as follows:
+
 ~~~
 struct {
   TaskID task_id;
   Interval batch_interval;
-  opaque agg_param<0..2^16-1>; // VDAF aggregation parameter
+  opaque agg_param<0..2^16-1>;
 } CollectReq;
 ~~~
 
@@ -918,6 +1305,10 @@ The named parameters are:
 * `task_id`, the PPM task ID.
 * `batch_interval`, the request's batch interval.
 * `agg_param`, an aggregation parameter for the VDAF being executed.
+
+To make a collect request, the collector issues a POST request to
+`[leader]/collect`, where `[leader]` is the leader's endpoint URL with a
+CollectReq message as the body.
 
 Depending on the VDAF scheme and how the leader is configured, the leader and
 helper may already have prepared all the reports falling within `batch_interval`
@@ -928,14 +1319,15 @@ inputs until the collector provides the aggregation parameter in the
 
 Upon receipt of a `CollectReq`, the leader begins by checking that the request
 meets the requirements of the batch parameters using the procedure in
-{{batch-parameter-validation}}. If so, it immediately sends the collector a
-response with HTTP status 303 See Other and a Location header containing a URI
-identifying the collect job that can be polled by the collector, called the
-"collect job URI".
+{{batch-parameter-validation}}. If not, it MUST abort with error "XXX".
+
+Next, the leader sends the collector a response with HTTP status 303 See Other
+and a Location header containing a URI identifying the collect job that can be
+polled by the collector, called the "collect job URI".
 
 The leader then begins working with the helper to prepare the shares falling
 into `CollectReq.batch_interval` (or continues this process, depending on the
-VDAF) as described in {{pa-aggregate}}.
+VDAF) as described in {{aggregation-flow}}.
 
 After receiving the response to its CollectReq, the collector makes an HTTP GET
 request to the collect job URI to check on the status of the collect job and
@@ -949,20 +1341,33 @@ helper's encrypted aggregate share for the batch interval by sending an
 The leader then computes its own aggregate share by aggregating all of the
 prepared output shares that fall within the batch interval.
 
+Next, the leader retrieves its own aggregate share `agg_share` for the batch
+interval as described in {{out-to-agg-share}}. Finally, it encrypts it under the
+collector's HPKE public key as follows:
+
+~~~
+enc, context = SetupBaseS(pk, CollectReq.task_id ||
+                              "ppm aggregate share" || 0x02 || 0x00)
+
+encrypted_agg_share = context.Seal(CollectReq.batch_interval,
+                                   agg_share)
+~~~
+
+where `pk` is the collector's public key.
+
 When both aggregators' shares are successfully obtained, the leader responds to
 subsequent HTTP GET requests to the collect job's URI with HTTP status 200 OK
 and a body consisting of a `CollectResp`:
 
 ~~~
 struct {
-  EncryptedAggregateShare shares<1..2^16-1>;
+  HpkeCiphertext encrypted_agg_shares<1..2^16-1>;
 } CollectResp;
 ~~~
 
-* `shares` is a vector of `EncryptedAggregateShare`s, as described in
-  {{aggregate-share-request}}, except that for the leader's share, the `task_id`
-  and `batch_interval` used to encrypt the `AggregateShare` are obtained from
-  the `CollectReq`.
+The `encrypted_agg_shares` field is the vector of encrypted aggregate shares.
+They MUST appear in the same order as the aggregator endpoints list of the task
+parameters.
 
 If obtaining aggregate shares fails, then the leader responds to subsequent HTTP
 GET requests to the collect job URI with an HTTP error status and a problem
@@ -977,62 +1382,60 @@ amount of time has passed, but it's not clear how to specify that. ACME doesn't
 bother to say anything at all about this when describing how subscribers should
 fetch certificates: https://datatracker.ietf.org/doc/html/rfc8555#section-7.4.2]
 
-[OPEN ISSUE: Describe how intra-protocol errors yield collect errors (see
-issue#57). For example, how does a leader respond to a collect request if the
-helper drops out?]
+## Validating Batch Parameters {#batch-parameter-validation}
 
-### Validating Batch Parameters {#batch-parameter-validation}
-
-Before an aggregator responds to a collect request or aggregate-share request,
-it must first check that the request does not violate the parameters associated
-with the PPM task. It does so as described here.
+Before the leader responds to a CollectReq or a helper responds to an
+AggregateShareReq, it must first check that the request does not violate the
+parameters associated with the PPM task. It does so as described here.
 
 First the aggregator checks that the request's batch interval respects the
 boundaries defined by the PPM task's parameters. Namely, it checks that both
 `batch_interval.start` and `batch_interval.duration` are divisible by
 `min_batch_duration` and that `batch_interval.duration >= min_batch_duration`.
-Unless both these conditions are true, it aborts and alerts the peer with
-"invalid batch interval".
+Unless both these conditions are true, the aggregator MUST abort and alert its
+peer with "invalid batch interval".
 
 Next, the aggregator checks that the request respects the generic privacy
 parameters of the PPM task. Let `X` denote the set of reports for which the
 aggregator has recovered a valid output share and which fall in the batch
 interval of the request.
 
-* If `len(X) < min_batch_size`, then the aggregator aborts and alerts the peer
-  with "insufficient batch size".
-* The aggregator keeps track of the number of times each report was added to the
-  batch of an AggregateShareReq. If any report in `X` was added to at least
-  `max_batch_lifetime` previous batches, then the helper aborts and alerts the
-  peer with "request exceeds the batch's privacy budget".
+* If `len(X) < min_batch_size`, then the aggregator MUST abort and alert the
+  peer with "XXX insufficient batch size".
+* The aggregator keeps track of the number of times each report was aggregated.
+  If any input share in `X` was added to at least `max_batch_lifetime` previous
+  batches, then the aggregator aborts and alerts the peer with "XXX request
+  exceeds the batch's privacy budget".
 
-### Anti-replay {#anti-replay}
+## Anti-replay {#anti-replay}
+
+[CP: This section is a bit messy. Some of it should go to security
+considerations, other parts could be abosrbed by other sections. However, we
+should keep it here until we figure out how to deal with nonce set storage long
+term.]
 
 Using a client-provided report multiple times within a single batch, or using
 the same report in multiple batches, may allow a server to learn information
-about the client's measurement, violating the privacy goal of PPM. To
-prevent such replay attacks, this specification requires the aggregators to
-detect and filter out replayed reports.
+about the client's measurement, violating the privacy goal of the PPM protocol.
+To prevent such replay attacks, this specification requires the aggregators to
+detect and filter out replayed reports. In addition, it prevents the
+aggregators from adding additional reports to a batch after that batch has been
+collected. (See {{prep-start}} for details.)
 
-To detect replay attacks, each aggregator keeps track of the set of nonces
-pertaining to reports that were previously aggregated for a given task. If the
-leader receives a report from a client whose nonce is in this set, it simply
-ignores it. A helper who receives an encrypted input share whose nonce is
-in this set replies to the leader with an error as described in
-{{aggregate-request}}.
-
-[OPEN ISSUE: This has the potential to require aggreagtors to store nonce sests
+[OPEN ISSUE: This has the potential to require aggregators to store nonce sets
 indefinitely. See issue#180.]
 
-A malicious aggregator may attempt to force a replay by replacing the nonce
+A malicious aggregator might try to force a replay by replacing the nonce
 generated by the client with a nonce its peer has not yet seen. To prevent this,
 clients incorporate the nonce into the AAD for HPKE encryption, ensuring that
-the output share is only recovered if the aggregator is given the correct nonce.
-(See {{upload-request}}.)
+the report share is only aggregated if the aggregator is given the correct
+nonce. (See {{upload-request}}.)
 
 Aggregators prevent the same report from being used in multiple batches (except
-as required by the protocol) by only responding to valid collect requests, as
-described in {{batch-parameter-validation}}.
+as required by the protocol) by only responding to valid requests for aggregate
+shares following the procedure described in {{batch-parameter-validation}}.
+
+[CP: Work ends here.]
 
 # Operational Considerations {#operational-capabilities}
 
@@ -1454,11 +1857,12 @@ corresponding media types types:
 - HpkeConfig {{task-configuration}}: "application/ppm-hpke-config"
 - Report {{upload-request}}: "message/ppm-report"
 - AggregateReq {{aggregate-request}}: "message/ppm-aggregate-req"
+- AggregateContinueReq {{aggregate-request}}: "message/ppm-aggregate-continue-req"
 - AggregateResp {{aggregate-request}}: "message/ppm-aggregate-resp"
 - AggregateShareReq {{aggregate-share-request}}: "message/ppm-aggregate-share-req"
 - AggregateShareResp {{aggregate-share-request}}: "message/ppm-aggregate-share-resp"
-- CollectReq {{pa-collect}}: "message/ppm-collect-req"
-- CollectResp {{pa-collect}}: "message/ppm-collect-resp"
+- CollectReq {{collect-flow}}: "message/ppm-collect-req"
+- CollectResp {{collect-flow}}: "message/ppm-collect-resp"
 
 The definition for each media type is in the following subsections.
 
@@ -1921,7 +2325,7 @@ Encoding considerations:
 
 Security considerations:
 
-: see {{pa-collect}}
+: see {{collect-flow}}
 
 Interoperability considerations:
 
@@ -1992,7 +2396,7 @@ Encoding considerations:
 
 Security considerations:
 
-: see {{pa-collect}}
+: see {{collect-flow}}
 
 Interoperability considerations:
 
