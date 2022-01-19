@@ -162,7 +162,7 @@ Leader:
 : A distinguished aggregator that coordinates input validation and data
    collection.
 
-Aggregate Result:
+Aggregate result:
 : The output of the aggregation function over a given set of reports.
 
 Aggregate share:
@@ -327,7 +327,7 @@ individual clients.
 In order to address this problem, the aggregators engage in a secure,
 multi-party computation specified by the chosen VDAF
 {{?I-D.draft-cfrg-patton-vdaf}} in order to prepare a report for aggregation. At
-the beginning of this computation, each aggregator is in posession of an input
+the beginning of this computation, each aggregator is in possession of an input
 share uploaded by the client. At the end of the computation, each aggregator is
 in posession of either an "output share" that is ready to be aggregated or an
 indication that a valid output share could not be recovered.
@@ -741,7 +741,7 @@ sub-requests as described in {{anti-replay}}. Any sub-requests filtered out by
 this procedure MUST be ignored.
 
 In addition, for any report whose nonce contains a timestamp that falls in a
-batch interval for which it has coimpleted at least one aggregate-share request
+batch interval for which it has completed at least one aggregate-share request
 (see {{aggregate-share-request}}), the helper MUST send an error messsage in
 response rather than its next VDAF message. Note that this means leaders cannot
 interleave a sequence of aggregate and aggregate-share requests for a single
