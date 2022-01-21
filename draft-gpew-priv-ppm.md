@@ -437,6 +437,13 @@ enum {
   leader(2),
   helper(3),
 } Role;
+
+/* An HPKE ciphertext. */
+struct {
+  HpkeConfigId config_id;    // config ID (see {{task-configuration}})
+  opaque enc<1..2^16-1>;     // encapsulated HPKE context
+  opaque payload<1..2^16-1>; // ciphertext
+} HpkeCiphertext;
 ~~~
 
 ## Task Configuration {#task-configuration}
@@ -571,22 +578,6 @@ This message is called the client's "report". It contains the following fields:
   aggregators. The order in which the encrypted input shares appear MUST match
   the order of the task's `aggregator_endpoints` (i.e., the first share should
   be the leader's, the second share should be for the first helper, and so on).
-
-HPKE ciphertexts are structured as follows:
-
-~~~
-struct {
-  HpkeConfigId config_id;
-  opaque enc<1..2^16-1>;
-  opaque payload<1..2^16-1>;
-} HpkeCiphertext;
-~~~
-
-* `config_id` is equal to `HpkeConfig.id`, where `HpkeConfig` is the
-  HPKE config of the intended recipient.
-* `enc` is the encapsulated HPKE context, used by the recipient to decrypt the
-  ciphertext.
-* `payload` is the ciphertext.
 
 To generate the report, the client begins by sharding its measurement into a
 sequence of input shares as specified by the VDAF in use. To encrypt an input
