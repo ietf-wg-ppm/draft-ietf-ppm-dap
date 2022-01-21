@@ -432,10 +432,10 @@ struct {
 [CP: To implement. Need to swap the byte for leader and helper.]
 /* The various roles in the PPM protocol. */
 enum {
-  leader(0),
-  helper(1),
-  collector(2),
-  client(3),
+  collector(0),
+  client(1),
+  leader(2),
+  helper(3),
 } Role;
 ~~~
 
@@ -595,11 +595,11 @@ the aggregator by running
 
 ~~~
 enc, context = SetupBaseS(pk, Report.task_id ||
-                              "ppm input share" || 0x03 || server_role)
+                              "ppm input share" || 0x01 || server_role)
 ~~~
 
 where `pk` is the aggregator's public key and and `server_role` is the Role of
-the intended recipient (`0x00` for the leader and `0x01` for the helper). In
+the intended racipient (`0x02` for the leader and `0x03` for the helper). In
 general, the info string for computing the HPKE context is suffixed by two
 bytes, the first of which identifies the role of the sender and the second of
 which identifies the role of the intended recipient.
@@ -864,7 +864,7 @@ procedure:
 
 ~~~
 context = SetupBaseR(encrypted_input_share.enc, sk,
-                   task_id || "ppm input share" || 0x03 || server_role)
+                   task_id || "ppm input share" || 0x01 || server_role)
 
 input_share = context.Open(nonce || extensions,
                            encrypted_input_share.payload)
@@ -873,8 +873,8 @@ input_share = context.Open(nonce || extensions,
 where `sk` is the HPKE secret key, `task_id` is the task ID, and `nonce` and
 `extensions` are the nonce and extensions of the report share respectively. If
 decryption fails, then the aggregator fails with error `hpke-decrypt-error`.
-Variable `server_role` is the Role of the intended recipient (`0x00` for the
-leader and `0x01` for a helper),
+Variable `server_role` is the Role of the intended recipient (`0x02` for the
+leader and `0x03` for a helper),
 
 Next, the aggregator runs the preparation-state initialization algorithm for the
 VDAF associated with the task and computes the first state transition. Let
@@ -1256,7 +1256,7 @@ follows:
 
 ~~~
 enc, context = SetupBaseS(pk, AggregateShareReq.task_id ||
-                              "ppm aggregate share" || 0x01 || 0x02)
+                              "ppm aggregate share" || 0x03 || 0x00)
 
 encrypted_agg_share = context.Seal(AggregateShareReq.batch_interval,
                                    agg_share)
@@ -1325,7 +1325,7 @@ collector's HPKE public key as follows:
 
 ~~~
 enc, context = SetupBaseS(pk, CollectReq.task_id ||
-                              "ppm aggregate share" || 0x00 || 0x02)
+                              "ppm aggregate share" || 0x02 || 0x00)
 
 encrypted_agg_share = context.Seal(CollectReq.batch_interval,
                                    agg_share)
