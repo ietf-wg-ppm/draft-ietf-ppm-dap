@@ -832,20 +832,21 @@ first Transition.
 
 First, the aggregator checks if the report pertains to a batch that has already
 been collected. This is the case if the aggregator is the leader and has
-completed a collect request for a batch interval containing the report nonce's
-timestamp (see {{collect-flow}}), or if the aggregator is a helper and has
-completed an aggregate-share request for a batch interval containing the
-timestamp (see {{aggregate-share-request}}). It also checks if the report has
-been aggregated. This is the case if the report was used in a previous aggregate
-request (see {{aggregate-init-request}} and {{aggregate-request}}).
+completed a collect request for a batch containing the report (see
+{{collect-flow}}), or if the aggregator is a helper and has completed an
+aggregate-share request for a batch containing the report (see
+{{aggregate-share-request}}). It also checks if the report has been observed.
+This is the case if the report was used in a previous aggregate request (see
+{{aggregate-init-request}} and {{aggregate-request}}).
 
-* If the report has been collected, then the aggregator fails with error
-  `batch-collected`. This prevents additional reports from being aggregated
-  after the batch has been collected.
+* If the report has not yet been observed but is contained by a batch that has
+  been collected, then the aggregator fails with error `batch-collected`. This
+  prevents additional reports from being aggregated after its batch has already
+  been collected.
 
-* If the report has been aggregated but not collected, then it fails with error
-  `report-replayed`. This prevents a report from being used more than once in a
-  batch.
+* If the report has been observed but has not been collected, then it fails with
+  error `report-replayed`. This prevents a report from being used more than once
+  in a batch.
 
 Note that detecting whether a report has been replayed (i.e., it has been
 aggregated but not yet collected) requires each aggregator to store the set of
