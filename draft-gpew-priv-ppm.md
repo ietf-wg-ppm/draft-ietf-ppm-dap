@@ -476,7 +476,9 @@ of the aggregators is configured with following parameters:
   [#102](https://github.com/abetterinternet/prio-documents/issues/102) for
   discussion.
 * `vdaf_verify_param`: The aggregator's VDAF verification parameter output by
-  the setup algorithm {{?I-D.draft-cfrg-patton-vdaf}}).
+  the setup algorithm computed jointly by the aggregators before the start of the
+  PPM protocol {{?I-D.draft-cfrg-patton-vdaf}}). [OPEN ISSUE: This is yet to be
+  specified. See issue#161.]
 * `agg_auth_key`: A key for HMAC-SHA256 {{?RFC2104}} shared by the aggregators and
   used for message authentication during the aggregation flow.
 
