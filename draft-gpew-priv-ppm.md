@@ -603,7 +603,8 @@ payload = context.Seal(Report.nonce || Report.extensions, input_share)
 ~~~
 
 where `input_share` is the aggregator's input share and `nonce` and `extensions`
-are the corresponding fields of `Report`.
+are the corresponding fields of `Report`. Clients MUST NOT use the same `enc`
+for multitple reports.
 
 The leader responds to well-formed requests to `[leader]/leader/upload` with
 status 200 and an empty body. Malformed requests are handled as described in
