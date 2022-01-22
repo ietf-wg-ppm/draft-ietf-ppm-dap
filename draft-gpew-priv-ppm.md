@@ -407,17 +407,18 @@ PPM has three major interactions which need to be defined:
 We start with some basic type definitions used in other messages.
 
 ~~~
- /* ASCII encoded URL. e.g., "https://example.com" */
+/* ASCII encoded URL. e.g., "https://example.com" */
 opaque Url<1..2^16-1>;
 
 Duration uint64; /* Number of seconds elapsed between two instants */
 
 Time uint64; /* seconds elapsed since start of UNIX epoch */
 
-/* An interval of time, where start is included and end is excluded */
+/* An interval of time of length duration, where start is included and (start +
+duration) is excluded. */
 struct {
   Time start;
-  Time end;
+  Duration duration;
 } Interval;
 
 /* A nonce used to uniquely identify a report in the context of a PPM task. It
@@ -942,10 +943,10 @@ with the PPM task. It does so as described here.
 
 First the aggregator checks that the request's batch interval respects the
 boundaries defined by the PPM task's parameters. Namely, it checks that both
-`batch_interval.start` and `batch_interval.end` are divisible by
-`min_batch_duration` and that `batch_interval.end - batch_interval.start
->= min_batch_duration`. Unless both these conditions are true, it aborts and
-alerts the peer with "invalid batch interval".
+`batch_interval.start` and `batch_interval.duration` are divisible by
+`min_batch_duration` and that `batch_interval.duration >= min_batch_duration`.
+Unless both these conditions are true, it aborts and alerts the peer with
+"invalid batch interval".
 
 Next, the aggregator checks that the request respects the generic privacy
 parameters of the PPM task. Let `X` denote the set of reports for which the
