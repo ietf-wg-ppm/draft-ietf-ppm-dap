@@ -471,8 +471,8 @@ another to upload its report share.
 
 ### Key Configuration Request {#key-config}
 
-Before the client can upload a report share to an aggregator, it must first
-obtain the aggregator's public key. This is retrieved by sending a request to
+Before the client can upload a report share to an aggregator, it first fetches
+the aggregator's public key. This is done by sending a request to
 `[aggregator]/key_config`, where `[aggregator]` is the aggregator's endpoint
 URL, obtained from the task parameters. The aggregator responds to well-formed
 requests with status 200 and an `HpkeConfig` value:
