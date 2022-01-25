@@ -554,7 +554,7 @@ the cache lifetime in order to avoid rejecting reports.
 
 ### Upload Request
 
-Clients upload reports by using an HTTP POST to `[leader]/leader/upload`, where
+Clients upload reports by using an HTTP POST to `[leader]/upload`, where
 `[leader]` is the first entry in the task's aggregator endpoints. The payload is
 the following message:
 
@@ -608,10 +608,10 @@ where `input_share` is the aggregator's input share and `nonce` and `extensions`
 are the corresponding fields of `Report`. Clients MUST NOT use the same `enc`
 for multitple reports.
 
-The leader responds to well-formed requests to `[leader]/leader/upload` with
-status 200 and an empty body. Malformed requests are handled as described in
-{{errors}}. Clients SHOULD NOT upload the same measurement value in more than
-one report if the leader responds with status 200 and an empty body.
+The leader responds to well-formed requests to `[leader]/upload` with status 200
+and an empty body. Malformed requests are handled as described in {{errors}}.
+Clients SHOULD NOT upload the same measurement value in more than one report if
+the leader responds with status 200 and an empty body.
 
 [CP: To implement.]
 The leader responds to requests with out-of-date `HpkeConfig.id` values,
@@ -814,8 +814,7 @@ enum {
   report-dropped(2), // CP: Maybe not the best name
   hpke-unknown-config-id(3),
   hpke-decrypt-error(4),
-  vdaf-prep-init-error(5),
-  vdaf-prep-next-error(6),
+  vdaf-prep-error(5),
 } TransitionError;
 ~~~
 
@@ -886,14 +885,12 @@ out = prep_state.next(None)
 [CP: Note that this syntax is based on
 https://github.com/cjpatton/vdaf/pull/14.]
 
-If the first step fails, then the aggregator fails with error
-`vdaf-prep-init-error`. If the second step fails, then the aggregator fails with
-error `vdaf-prep-next-error`. Otherwise, `out` is interpreted as follows. If the
-VDAF is 0-round, then `out` is the aggregator's output share, in which case the
-aggregator finishes and stores its output share for further processing as
-described in {{out-to-agg-share}}. Otherwise, if the VDAF consists of one round
-or more, then the aggregator continues and `out` is the aggregator's next VDAF
-message.
+If either step fails, then the aggregator fails with error `vdaf-prep-error`.
+Otherwise, `out` is interpreted as follows. If the VDAF is 0-round, then `out`
+is the aggregator's output share, in which case the aggregator finishes and
+stores its output share for further processing as described in
+{{out-to-agg-share}}. Otherwise, if the VDAF consists of one round or more, then
+the aggregator continues and `out` is the aggregator's next VDAF message.
 
 #### Leader {#prep-leader}
 
@@ -1036,11 +1033,10 @@ out = prep_state.next(payload)
 ~~~
 
 where `payload` is the previous VDAF message sent by the leader. If this
-operation fails, then the helper fails with error `vdaf-prep-next-error`.
-Otherwise, it interprets `out` as follows. If this is the last round of VDAF
-preparation phase, then `out` is the helper's output share, in which case the
-helper finishes. Otherwise, the helper continues with `out` as its next VDAF
-message.
+operation fails, then the helper fails with error `vdaf-prep-error`. Otherwise,
+it interprets `out` as follows. If this is the last round of VDAF preparation
+phase, then `out` is the helper's output share, in which case the helper
+finishes. Otherwise, the helper continues with `out` as its next VDAF message.
 
 ### Aggregating Output Shares {#out-to-agg-share}
 
@@ -1127,8 +1123,8 @@ the report sequence any report for which the initial state is FAILED.
 
 Let `[aggregator]` denote the helper's API endpoint. The leader extracts the
 sequence of report shares for `[aggregator]` and sends sends a POST request to
-`[aggregator]/helper/aggregate_init` with an Aggregate message of type
-`agg_init_req` and with AggregateInitReq as the payload.
+`[aggregator]/aggregate_init` with an Aggregate message of type `agg_init_req`
+and with AggregateInitReq as the payload.
 
 After verifying the authentication tag as described in
 {{aggregate-message-auth}}, the helper handles the AggregateInitReq by computing
@@ -1141,9 +1137,6 @@ struct {
   Transition seq<1..2^24-1>;
 } AggregateResp;
 ~~~
-
-[CP: Maybe we should add the task ID to this struct so the leader doesn't have
-to remmeber which task the response is for?]
 
 The sequence of Transition messages corresponds to the ReportShare sequence of
 the AggregateInitReq. The order of these sequences MUST be the same (i.e., the
@@ -1187,8 +1180,8 @@ any Transition that appears out of order MUST be ignored by the helper. (See
 below.)
 
 Let `[aggregator]` denote the helper's API endpoint. The leader sends a POST
-request to `[aggregator]/helper/aggregate` with an Aggregate message of type
-`agg_req` with payload AggregateReq.
+request to `[aggregator]/aggregate` with an Aggregate message of type `agg_req`
+with payload AggregateReq.
 
 After verifying the authentication tag as described in
 {{aggregate-message-auth}}, the helper processes the AggregateReq as follows. It
@@ -1300,7 +1293,7 @@ The named parameters are:
 * `agg_param`, an aggregation parameter for the VDAF being executed.
 
 To make a collect request, the collector issues a POST request to
-`[leader]/leader/collect`, where `[leader]` is the leader's endpoint URL with a
+`[leader]/collect`, where `[leader]` is the leader's endpoint URL with a
 CollectReq message as the body.
 
 Depending on the VDAF scheme and how the leader is configured, the collect
