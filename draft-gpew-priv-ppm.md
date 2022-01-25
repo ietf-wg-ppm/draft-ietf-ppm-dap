@@ -246,7 +246,7 @@ The overall system architecture is shown in {{pa-topology}}.
 |            |              |            |
 +------------+              +------------+
 ~~~
-{: #pa-topology-alt title "Who sends requests to whom in the PPM protocol. An
+{: #pa-topology title "Who sends requests to whom in the PPM protocol. An
 edge indicates a request and the edge label indicates the phase in which the
 request is sent. There mawy be multiple instances of the Helper role."}
 
