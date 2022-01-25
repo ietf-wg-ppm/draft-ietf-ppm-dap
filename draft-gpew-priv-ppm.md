@@ -550,11 +550,10 @@ the cache lifetime in order to avoid rejecting reports.
 ### Upload Request
 
 Report shares are usually uploaded by clients directly, but MAY instead be
-uploaded by an intermediary that ingests and buffers reports on behalf of the
-collector. A report share is uploaded using an HTTP POST to
-`[aggregator]/upload`, where `[aggregator]` is the URL of the aggregator
-endpoint in the tasks's aggregator endpoint list. The payload is structured as
-follows:
+uploaded by an intermediary that ingests and buffers reports. A report share is
+uploaded using an HTTP POST to `[aggregator]/upload`, where `[aggregator]` is
+the URL of the aggregator endpoint in the tasks's aggregator endpoint list. The
+payload is structured as follows:
 
 ~~~
 struct {
@@ -804,8 +803,8 @@ carries is up to the helper implementation.
 
 Once it has verified at least as many reports as required for the PPM task, the
 leader may issue an "aggregate-share request" to each helper. The helper
-responds to this request by extracting its aggregate share from its state and
-encrypting it under the collector's HPKE public key.
+responds to this request with its aggregate share encrypted under the
+collector's HPKE public key.
 
 For each aggregator endpoint `[aggregator]` in the parameters associated with
 `CollectReq.task_id` (see {{pa-collect}}) except its own, the leader sends a
