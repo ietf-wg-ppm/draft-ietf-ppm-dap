@@ -549,7 +549,7 @@ the cache lifetime in order to avoid rejecting reports.
 
 ### Upload Request
 
-Report shares are usually uploaded by clients dirctly, but MAY instead be
+Report shares are usually uploaded by clients directly, but MAY instead be
 uploaded by an intermediary that ingests and buffers reports on behalf of the
 collector. A report share is uploaded using an HTTP POST to
 `[aggregator]/upload`, where `[aggregator]` is the URL of the aggregator
