@@ -230,39 +230,9 @@ This provides two important properties:
 The overall system architecture is shown in {{pa-topology}}.
 
 ~~~~
-[TODO: Update this figure to reflect that clients upload input shares directly
-to each aggregator.]
-                    +------------+
-                    |            |
-+--------+          |   Helper   |
-|        |          |            |
-| Client +----+     +-----^------+
-|        |    |           |
-+--------+    |           |
-              |           |
-+--------+    |     +-----v------+         +-----------+
-|        |    +----->            |         |           |
-| Client +---------->   Leader   <---------> Collector |
-|        |    +----->            |         |           |
-+--------+    |     +-----^------+         +-----------+
-              |           |
-+--------+    |           |
-|        |    |           |
-| Client +----+     +-----V------+
-|        |          |            |
-+--------+          |   Helper   |
-                    |            |
-                    +------------+
-~~~~
 {: #pa-topology title="System Architecture"}
 
-[[OPEN ISSUE: This shows two helpers, but the document only allows one for now.
-https://github.com/abetterinternet/ppm-specification/issues/117]]
-
 ~~~
-[NOTE: This is a potential alternative to {{pa-topology}} that just shows how
-parties are connected, i.e., who make requests to whom. Note that there may be
-mulitple instances of the "Helper" role.]
 +------------+              +------------+
 |            | upload       |            |
 |   Client   +-------------->   Leader   |
@@ -279,8 +249,12 @@ mulitple instances of the "Helper" role.]
 |            |              |            |
 +------------+              +------------+
 ~~~
-{: #pa-topology-alt title "System Architecture"}
+{: #pa-topology-alt title "Who sends requests to whom in the PPM protocol. An
+edge indicates a request and the edge label indicates the phase in which the
+request is sent. There mawy be multiple instances of the Helper role."}
 
+[[OPEN ISSUE: This shows two helpers, but the document only allows one for now.
+https://github.com/abetterinternet/ppm-specification/issues/117]]
 
 The main participants in the protocol are as follows:
 
