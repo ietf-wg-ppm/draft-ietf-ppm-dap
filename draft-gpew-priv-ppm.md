@@ -229,9 +229,6 @@ This provides two important properties:
 
 The overall system architecture is shown in {{pa-topology}}.
 
-~~~~
-{: #pa-topology title="System Architecture"}
-
 ~~~
 +------------+              +------------+
 |            | upload       |            |
@@ -679,7 +676,8 @@ continuation of a previous sub-batch?]
 
 The AggregateReq request is used by the leader to coordinate aggregation of a
 set of reports with the helpers. These reports incident to a particular
-AggregateReq MUST all be associated with the same PPM task and batch.
+AggregateReq MUST all be associated with the same PPM task and batch. [NOTE:
+This "MUST" may not be strictly necessary.]
 
 For each aggregator endpoint `[aggregator]` in `AggregateReq.task_id`'s
 parameters except its own, the leader sends a POST request to
