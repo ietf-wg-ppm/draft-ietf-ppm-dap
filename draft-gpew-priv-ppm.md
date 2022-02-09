@@ -439,9 +439,12 @@ enum {
   helper(3),
 } Role;
 
+/* Identifier for a server's HPKE configuration */
+uint8 HpkeConfigId;
+
 /* An HPKE ciphertext. */
 struct {
-  HpkeConfigId config_id;    // config ID (see {{task-configuration}})
+  HpkeConfigId config_id;    // config ID
   opaque enc<1..2^16-1>;     // encapsulated HPKE context
   opaque payload<1..2^16-1>; // ciphertext
 } HpkeCiphertext;
@@ -515,7 +518,6 @@ struct {
   HpkePublicKey public_key;
 } HpkeConfig;
 
-uint8 HpkeConfigId;
 opaque HpkePublicKey<1..2^16-1>;
 uint16 HpkeAeadId; // Defined in I-D.irtf-cfrg-hpke
 uint16 HpkeKemId;  // Defined in I-D.irtf-cfrg-hpke
@@ -562,7 +564,7 @@ the following message:
 struct {
   TaskID task_id;
   Nonce nonce;
-  Extension extensions<4..2^16-1>;
+  Extension extensions<0..2^16-1>;
   HpkeCiphertext encrypted_input_shares<1..2^16-1>;
 } Report;
 ~~~
@@ -628,7 +630,7 @@ alert the client with error "staleReport".
 
 ### Upload Extensions {#upload-extensions}
 
-Each UploadReq carries a list of extensions that clients may use to convey
+Each Report carries a list of extensions that clients may use to convey
 additional, authenticated information in the report. [OPEN ISSUE: The extensions
 aren't authenticated. It's probably a good idea to be a bit more clear about how
 we envision extensions being used. Right now this includes client attestation
@@ -735,7 +737,7 @@ shares", one for each helper:
 ~~~
 struct {
   Nonce nonce;
-  Extension extensions<4..2^16-1>;
+  Extension extensions<0..2^16-1>;
   HpkeCiphertext encrypted_input_share;
 } ReportShare;
 ~~~
@@ -745,7 +747,7 @@ uploaded by the client. The `encrypted_input_share` field is the
 `HpkeCiphertext` whose index in `Report.encrypted_input_shares` is equal to the
 index of the aggregator in the task's `aggregator_endpoints`.
 
-### Preparing a Report Share for Aggreegation
+### Preparing a Report Share for Aggregation
 
 [CP: Todo: We permit VDAFs with 0 rounds of interaction, in particular those
 that don't provide verifiabilty. We'll have to do something about this here and
@@ -754,9 +756,8 @@ in the VDAF spec. Maybe we just call them DAFs?]
 In order to aggregate its report share, an aggregator must first decrypt the
 input share and then interact with the other aggregators. This involves
 executing the "preparation step" described in {{?I-D.draft-cfrg-patton-vdaf}}.
-If successful, each aggregator recovertes and verifies the validity of its
-output share. Output shares are then aggregated as described in
-{{out-to-agg-share}}.
+If successful, each aggregator recovers and verifies the validity of its output
+share. Output shares are then aggregated as described in {{out-to-agg-share}}.
 
 #### Transitions
 
@@ -1092,7 +1093,7 @@ serialized message excluding the `tag` field itself. The key that is used is the
 `agg_auth_key` shared by the aggregators and configured for the given task.
 
 Upon receiving an `Aggregate` message, an aggregator MUST verify the tag before
-interpreting the message's contents. If verificaiton fails, it MUST abort and
+interpreting the message's contents. If verification fails, it MUST abort and
 alert its peer with error "XXX".
 
 #### Aggregate Initialization Request {#aggregate-init-request}
@@ -1105,7 +1106,7 @@ structured as follows:
 struct {
   TaskID task_id;
   opaque agg_param<0..2^16-1>;
-  ReportShare seq<1..2^24-1>;
+  ReportShare seq<1..2^16-1>;
 } AggregateInitReq;
 ~~~
 
@@ -1123,7 +1124,7 @@ the report sequence any report for which the initial state is FAILED.
 
 Let `[aggregator]` denote the helper's API endpoint. The leader extracts the
 sequence of report shares for `[aggregator]` and sends sends a POST request to
-`[aggregator]/aggregate_init` with an Aggregate message of type `agg_init_req`
+`[aggregator]/aggregate` with an Aggregate message of type `agg_init_req`
 and with AggregateInitReq as the payload.
 
 After verifying the authentication tag as described in
@@ -1134,7 +1135,7 @@ described in {{prep-start}}. It then constructs an AggregateResp:
 ~~~
 struct {
   opaque helper_state<0..2^16>;
-  Transition seq<1..2^24-1>;
+  Transition seq<1..2^16-1>;
 } AggregateResp;
 ~~~
 
@@ -1169,7 +1170,7 @@ state of each report being aggregated. This message is defined as follows:
 struct {
   TaskID task_id;
   opaque helper_state<0..2^16>;
-  Transition seq<1..2^24-1>;
+  Transition seq<1..2^16-1>;
 } AggregateReq;
 ~~~
 
