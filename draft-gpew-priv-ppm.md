@@ -816,6 +816,7 @@ enum {
   hpke-unknown-config-id(3),
   hpke-decrypt-error(4),
   vdaf-prep-error(5),
+  unrecognized-nonce(6),
 } TransitionError;
 ~~~
 
@@ -1187,18 +1188,19 @@ with payload AggregateReq.
 After verifying the authentication tag as described in
 {{aggregate-message-auth}}, the helper processes the AggregateReq as follows. It
 first scans the `AggregateReq` to check for any reports that may have been
-dropped by the leader in the previous step. Any Transition message that appears
-out of order or with has an unrecognized nonce MUST be ignored.
+dropped by the leader in the previous step.
 
-Next, the helper processes the Transition messages from the leader as described
-in {{prep-helper}}. If any state transition results in INVALID, this indicates
-that the leader has not computed the AggregateReq correctly. The helper MUST
-abort with error "XXX".
+Next, the helper processes the Transition messages from the leader. If any
+leader Transition contains an unrecognized nonce, the Helper should send a
+Transition with `tran_type = Failed` and `TransitionError = unrecognized-nonce`.
+Otherwise, it constructs a transition as described in {{prep-helper}}. If any
+state transition results in INVALID, this indicates that the leader has not
+computed the AggregateReq correctly. The helper MUST abort with error "XXX".
 
-Next, the helper constructs an AggregateReq containing its next flight of
+Next, the helper constructs an AggregateResp containing its next flight of
 Transition messages and it updated state. The messages MUST appear in the same
 order as `AggregateReq.seq`. The helper's response is an HTTP 200 OK with an
-Aggregate message of type `agg_resp` with payload AggregateReq.
+Aggregate message of type `agg_resp` with payload AggregateResp.
 
 ##### Handling the Opaque Helper State
 
