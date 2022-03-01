@@ -886,6 +886,9 @@ request, the collector issues a POST request to `[leader]/collect`, where
 `[leader]` is the leader's endpoint URL. The body of the request is structured
 as follows:
 
+[OPEN ISSUE: Decide if and how the collector's request is authenticated. If not,
+then we need to ensure that collect job URIs are resistant to enumeration
+attacks.]
 ~~~
 struct {
   TaskID task_id;
@@ -900,36 +903,63 @@ The named parameters are:
 * `batch_interval`, the request's batch interval.
 * `agg_param`, an aggregation parameter for the VDAF being executed.
 
-Depending on the VDAF scheme and how the leader is configured, the collect
-request may cause the leader to send a series of aggregate requests to the
-helpers in order to compute their share of the aggregate. Alternately, the
-leader may already have made these requests and can respond immediately. In
-either case it responds to the collector's request as follows.
+Depending on the VDAF scheme and how the leader is configured, the leader and
+helper may already have prepared all the reports falling within `batch_interval`
+and be ready to return the aggregate shares right away, but this cannot be
+guaranteed. In fact, for some VDAFs, it is not be possible to begin preparing
+inputs until the collector provides the aggregation parameter in the
+`CollectReq`. For these reasons, collect requests are handled asynchronously.
 
-It begins by checking that the request meets the requirements of the batch
-parameters using the procedure in {{batch-parameter-validation}}. If so, it
-obtains the helper's encrypted aggregate share for the batch interval by sending
-an AggregateShareReq to the helper as described in {{aggregate-share-request}}.
-(This request may too have been made in advance.)
+Upon receipt of a `CollectReq`, the leader begins by checking that the request
+meets the requirements of the batch parameters using the procedure in
+{{batch-parameter-validation}}. If so, it immediately sends the collector a
+response with HTTP status 303 See Other and a Location header containing a URI
+identifying the collect job that can be polled by the collector, called the
+"collect job URI".
 
-Next, the leader computes its own aggregate share by aggregating all of the
-verified output shares that fall within the batch interval. Finally, it responds
-with HTTP status 200 and a body consisting of a CollectResp message:
+The leader then begins working with the helper to prepare the shares falling
+into `CollectReq.batch_interval` (or continues this process, depending on the
+VDAF) as described in {{pa-aggregate}}.
 
-[OPEN ISSUE: What happens if this all takes a really long time.]
+After receiving the response to its CollectReq, the collector makes an HTTP GET
+request to the collect job URI to check on the status of the collect job and
+eventually obtain the result. If the collect job is not finished yet, the leader
+responds with HTTP status 202 Accepted. The response MAY include a Retry-After
+header field to suggest a pulling interval to the collector.
 
-[TODO: Decide if and how the collector's request is authenticated.]
+Once all the necessary reports have been prepared, the leader obtains the
+helper's encrypted aggregate share for the batch interval by sending an
+`AggregateShareReq` to the helper as described in {{aggregate-share-request}}.
+The leader then computes its own aggregate share by aggregating all of the
+prepared output shares that fall within the batch interval.
+
+When both aggregators' shares are successfully obtained, the leader responds to
+subsequent HTTP GET requests to the collect job's URI with HTTP status 200 OK
+and a body consisting of a `CollectResult`:
 
 ~~~
 struct {
   EncryptedAggregateShare shares<1..2^16-1>;
-} CollectResp;
+} CollectResult;
 ~~~
 
 * `shares` is a vector of `EncryptedAggregateShare`s, as described in
   {{aggregate-share-request}}, except that for the leader's share, the `task_id`
   and `batch_interval` used to encrypt the `AggregateShare` are obtained from
   the `CollectReq`.
+
+If obtaining aggregate shares fails, then the leader responds to subsequent HTTP
+GET requests to the collect job URI with an HTTP error status and a problem
+document as described in {{errors}}.
+
+The leader MUST retain a collect job's results until the collector sends an HTTP
+DELETE request to the collect job URI, in which case the leader responds with
+HTTP status 204 No Content.
+
+[OPEN ISSUE: Allow the leader to drop aggregate shares after some reasonable
+amount of time has passed, but it's not clear how to specify that. ACME doesn't
+bother to say anything at all about this when describing how subscribers should
+fetch certificates: https://datatracker.ietf.org/doc/html/rfc8555#section-7.4.2]
 
 [OPEN ISSUE: Describe how intra-protocol errors yield collect errors (see
 issue#57). For example, how does a leader respond to a collect request if the
@@ -1412,7 +1442,7 @@ corresponding media types types:
 - AggregateShareReq {{aggregate-share-request}}: "message/ppm-aggregate-share-req"
 - AggregateShareResp {{aggregate-share-request}}: "message/ppm-aggregate-share-resp"
 - CollectReq {{pa-collect}}: "message/ppm-collect-req"
-- CollectResp {{pa-collect}}: "message/ppm-collect-req"
+- CollectResult {{pa-collect}}: "message/ppm-collect-result"
 
 The definition for each media type is in the following subsections.
 
