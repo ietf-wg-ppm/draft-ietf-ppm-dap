@@ -701,7 +701,7 @@ impossible to run many instances of the aggregation flow concurrently. It's also
 moot anyway since we now require the helper to maintain more state for
 anti-replay.]
 
-~~~~
+~~~
 Leader                                                 Helper
 
 AggregateInitReq (Reports 1-10) ------------------------->  \
@@ -716,7 +716,7 @@ AggregateReq (continued, State 2) ----------------------->  | 11-20
 <--------------------------------- AggregateResp (State 2)  /
 
 
-AggregateShareReq (Rports 1-20) ------------------------->
+AggregateShareReq (Reports 1-20) ------------------------>
 <----------------------------- AggregateShareResp (Result)
 ~~~
 {: #aggregation-flow-illustration title="Aggregation Flow (batch size=20).
