@@ -380,6 +380,7 @@ in the "type" field (within the PPM URN namespace "urn:ietf:params:ppm:error:"):
 | unrecognizedTask        | An endpoint received a message with an unknown task ID. |
 | outdatedConfig          | The message was generated using an outdated configuration. |
 | staleReport             | Report could not be processed because it arrived too late. |
+| invalidHmac             | The aggregate message's HMAC was not valid. |
 
 This list is not exhaustive. The server MAY return errors set to a URI other
 than those defined above. Servers MUST NOT use the PPM URN namespace for errors
@@ -690,17 +691,6 @@ sub-batches have been processed, the leader can issue an AggregateShareReq in
 order to retrieve the helper's aggregate share. (see
 {{aggregate-share-request}}.)
 
-In order to allow the helpers to retain minimal state, the helper can attach a
-state parameter to its response, with the leader returning the state value in
-the next request, thus offloading the state to the leader. The state is not
-carried across runs of the aggregation protocol, i.e., the initial aggregate
-request sent by the leader in a given run does not contain helper state.
-[CP: This diverges from the original intent of the helper state, which was to
-allow the helper to offload aggregate shares. However, this would make it
-impossible to run many instances of the aggregation flow concurrently. It's also
-moot anyway since we now require the helper to maintain more state for
-anti-replay.]
-
 ~~~
 Leader                                                 Helper
 
@@ -724,7 +714,7 @@ Multiple aggregation flows can be executed at the same time."}
 
 [CP: To solve https://github.com/abetterinternet/ppm-specification/issues/141 we
 may wish to have another aggregate request before the aggregate-share request in
-which the leader instructs a helper to "commmit" to the set of output shares it
+which the leader instructs a helper to "commit" to the set of output shares it
 recovered.]
 
 ### Report Shares
@@ -1015,7 +1005,7 @@ a report share for aggregation."}
 
 Upon receiving a ReportShare from the leader, the helper initializes its
 preparation state as described in {{prep-start}} (denoted by `prep_start` in
-{{aggregation-flow-helper-state}}). It then executes the following proecure
+{{aggregation-flow-helper-state}}). It then executes the following procedure
 until it moves to a terminal state:
 
 * If failed, then send the leader the Transition message and move to FAILED.
@@ -1068,34 +1058,39 @@ The following messages are defined in this section and are used to aggregate a
 number of reports simultaneously:
 
 ~~~
+opaque AggregationJobID[32];
+
 enum {
   agg_init_req(0),
   agg_req(1),
-  agg_resp(2),
-  agg_share_req(3),
-  agg_share_resp(4),
-} AggregateType;
+} AggregateReqType;
 
 struct {
-  AggregateType msg_type;
-  select (msg_type) {
-    agg_init_req:   AggregateInitReq;
-    agg_req:        AggregateReq;
-    agg_resp:       AggregateResp;
-    agg_share_req:  AggregateShareReq;
-    agg_share_resp: HpkeCiphertext;
-  }
-  opaque tag [32];
-} Aggregate;
+    AggregateReqType msg_type;
+    select (msg_type) {
+        agg_init_req: AggregateInitReq;
+        agg_req: AggregateReq;
+    }
+    opaque tag[32];
+} AggregateReq;
 ~~~
+
+As discussed in {aggregation-flow}, the leader may choose to shard the task of
+aggregating a large number of reports into any number of sub-batches. The
+process of aggregating the reports in a leader-defined sub-batch is called an
+*aggregation job*. An `AggregationJobID` is a globally unique sequence of bytes
+chosen by the leader to identify an aggregation job. It is RECOMMENDED that this
+be set to a random string output by a cryptographically secure pseudorandom
+number generator. The aggregation job ID is used by aggregators to look up
+preparation state for the reports included in the sub-batch.
 
 The last 32 bytes of each message is an HMAC-SHA256 tag computed over the
 serialized message excluding the `tag` field itself. The key that is used is the
 `agg_auth_key` shared by the aggregators and configured for the given task.
 
-Upon receiving an `Aggregate` message, an aggregator MUST verify the tag before
+Upon receiving an `AggregateReq` message, an aggregator MUST verify the tag before
 interpreting the message's contents. If verification fails, it MUST abort and
-alert its peer with error "XXX".
+alert its peer with error "invalidHmac".
 
 #### Aggregate Initialization Request {#aggregate-init-request}
 
@@ -1106,13 +1101,15 @@ structured as follows:
 ~~~
 struct {
   TaskID task_id;
+  AggregationJobID job_id;
   opaque agg_param<0..2^16-1>;
   ReportShare seq<1..2^16-1>;
 } AggregateInitReq;
 ~~~
 
-The message contains the PPM task ID, an opaque, VDAF-specific aggregation
-parameter, and the helper's report shares.
+The message contains the PPM task ID, the aggregation job ID assigned by the
+leader, an opaque, VDAF-specific aggregation parameter, and the helper's report
+shares.
 
 To construct an AggregateInitReq, the leader begins by picking a sequence of
 reports, all of which MUST pertain to the same PPM task and batch. [CP: By
@@ -1135,18 +1132,18 @@ described in {{prep-start}}. It then constructs an AggregateResp:
 
 ~~~
 struct {
-  opaque helper_state<0..2^16>;
   Transition seq<1..2^16-1>;
+  opaque tag[32];
 } AggregateResp;
 ~~~
 
 The sequence of Transition messages corresponds to the ReportShare sequence of
 the AggregateInitReq. The order of these sequences MUST be the same (i.e., the
 nonce of the first Transition MUST be the same as first ReportShare and so on).
-The `helper_state` field is an opaque byte string the helper can use to keep
-track of state across aggregate requests. The helper's response to the leader is
-an HTTP 200 OK with an Aggregate message of type `agg_resp` and with the
-AggregateResp as the payload.
+`tag` is an HMAC-SHA256 tag over the serialized message, excluding the `tag`
+field itself, computed using the `agg_auth_key` shared by the aggregators.
+The helper's response to the leader is an HTTP 200 OK whose body is the
+AggregateResp.
 
 After verifying the authentication tag, the leader handles the AggregateResp as
 follows. It first checks that the sequence of Transition messages corresponds to
@@ -1159,6 +1156,10 @@ If any state transition results in INVALID, this indicates that the helper has
 not computed the AggregateResp correctly. The leader MUST abort and alert its
 peer with error "XXX".
 
+[timg: In the above two paragraphs, we say that the leader should alert its
+peer, but in these situations the helper is not awaiting a reply from leader so
+it's not clear how to alert.]
+
 Finally, the leader removes from the report sequence any report for which the
 corresponding state is FAILED.
 
@@ -1170,16 +1171,15 @@ state of each report being aggregated. This message is defined as follows:
 ~~~
 struct {
   TaskID task_id;
-  opaque helper_state<0..2^16>;
+  AggregationJobID job_id;
   Transition seq<1..2^16-1>;
 } AggregateReq;
 ~~~
 
-The contents are the PPM task ID, the opaque helper sent from the helper in the
-previous AggregateResp, and the sequence of Transition messages corresponding to
-the report sequence being aggregated. The sequences MUST have the same order;
-any Transition that appears out of order MUST be ignored by the helper. (See
-below.)
+The contents are the PPM task ID, the aggregation job ID, and the sequence of
+Transition messages corresponding to the report sequence being aggregated. The
+sequences MUST have the same order; any Transition that appears out of order
+MUST be ignored by the helper. (See below.)
 
 Let `[aggregator]` denote the helper's API endpoint. The leader sends a POST
 request to `[aggregator]/aggregate` with an Aggregate message of type `agg_req`
@@ -1199,23 +1199,8 @@ computed the AggregateReq correctly. The helper MUST abort with error "XXX".
 
 Next, the helper constructs an AggregateResp containing its next flight of
 Transition messages and it updated state. The messages MUST appear in the same
-order as `AggregateReq.seq`. The helper's response is an HTTP 200 OK with an
-Aggregate message of type `agg_resp` with payload AggregateResp.
-
-##### Handling the Opaque Helper State
-
-The leader is responsible for maintaining an opaque helper-state string across
-aggregate requests. In particular, each `AggregateReq.helper_state` string MUST
-be identical to the previous `AggregateResp.helper_state` for a given sequence
-of reports. If not, the client MAY abort with error "XXX".
-
-The helper state is security sensitive because, if the leader had access to it,
-it would be able to recover individual client measurements in the clear. The
-helper MUST take measures to prevent this. For example, if `helper_state`
-contains all of the state it needs to respond to the next request, then it is
-RECOMMENDED that the helper encrypt the entire string using an authenticated
-encryption scheme known to be secure under chosen ciphertext attack, e.g., AEAD
-algorithms specified in {{?RFC5116}}.
+order as `AggregateReq.seq`. The helper's response is an HTTP 200 OK whose body
+is the AggregateResp.
 
 #### Aggregate Share Request {#aggregate-share-request}
 
@@ -1261,15 +1246,29 @@ where `pk` is the HPKE public key encoded by the collector's HPKE key.
 Encryption prevents the leader from learning the actual result, as it only has
 its own aggregate share and cannot compute the helper's.
 
-The helper responds to the leader with HTTP status 200 OK and an Aggregate
-message of type `agg_share_resp` and an HpkeCiphertext with the `config_id` set
-to the collector's body consisting of the collector's HPKE config ID, the
-encapsulated HPKE context `enc` computed above, and with the payload set to the
-ciphertext `encrypted_agg_share` computed above.
+The helper responds to the leader with HTTP status 200 OK and a body consisting
+of an `AggregateShareResp`:
+
+~~~
+struct {
+    HpkeCiphertext encrypted_aggregate_share;
+    opaque tag[32];
+} AggregateShareResp;
+~~~
+
+`encrypted_input_share.config_id` is set to the collector's HPKE config ID.
+`encrypted_input_share.enc` is set to the encapsulated HPKE context `enc`
+computed above and `encrypted_input_share.ciphertext` is the ciphertext
+`encrypted_agg_share` computed above. `tag` is an HMAC-SHA256 tag over the
+serialized message, excluding the `tag` field itself, computed using the
+`agg_auth_key` shared by the aggregators.
 
 After verifying the authentication tag as described in
 {{aggregate-message-auth}}, the leader uses the HpkeCiphertext to respond to a
 collect request (see {{collect-flow}}).
+
+The leader MAY make multiple aggregate-share requests for a given batch interval
+and MUST get the same result each time.
 
 After issuing an aggregate-share request for a given batch interval, it is an
 error for the leader to issue any more aggregate or aggregate-init requests for
