@@ -1069,7 +1069,7 @@ struct {
     AggregateReqType msg_type;
     select (msg_type) {
         agg_init_req: AggregateInitReq;
-        agg_req: AggregateReq;
+        agg_req: AggregateContinueReq;
     }
     opaque tag[32];
 } AggregateReq;
@@ -1165,15 +1165,16 @@ corresponding state is FAILED.
 
 #### Aggregate Request {#aggregate-request}
 
-An AggregateReq is sent from the leader to the helper to advance the preparation
-state of each report being aggregated. This message is defined as follows:
+An AggregateContinueReq is sent from the leader to the helper to advance the
+preparation state of each report being aggregated. This message is defined as
+follows:
 
 ~~~
 struct {
   TaskID task_id;
   AggregationJobID job_id;
   Transition seq<1..2^16-1>;
-} AggregateReq;
+} AggregateContinueReq;
 ~~~
 
 The contents are the PPM task ID, the aggregation job ID, and the sequence of
@@ -1183,24 +1184,23 @@ MUST be ignored by the helper. (See below.)
 
 Let `[aggregator]` denote the helper's API endpoint. The leader sends a POST
 request to `[aggregator]/aggregate` with an Aggregate message of type `agg_req`
-with payload AggregateReq.
+with payload AggregateContinueReq.
 
 After verifying the authentication tag as described in
-{{aggregate-message-auth}}, the helper processes the AggregateReq as follows. It
-first scans the `AggregateReq` to check for any reports that may have been
-dropped by the leader in the previous step.
+{{aggregate-message-auth}}, the helper processes the AggregateContinueReq as
+follows. It first scans `AggregateContinueReq.seq` to check for any reports that
+may have been dropped by the leader in the previous step.
 
 Next, the helper processes the Transition messages from the leader. If any
 leader Transition contains an unrecognized nonce, the Helper should send a
 Transition with `tran_type = Failed` and `TransitionError = unrecognized-nonce`.
 Otherwise, it constructs a transition as described in {{prep-helper}}. If any
-state transition results in INVALID, this indicates that the leader has not
-computed the AggregateReq correctly. The helper MUST abort with error "XXX".
+state transition results in INVALID, the helper MUST abort with error "XXX".
 
 Next, the helper constructs an AggregateResp containing its next flight of
 Transition messages and it updated state. The messages MUST appear in the same
-order as `AggregateReq.seq`. The helper's response is an HTTP 200 OK whose body
-is the AggregateResp.
+order as `AggregateContinueReq.seq`. The helper's response is an HTTP 200 OK
+whose body is the AggregateResp.
 
 #### Aggregate Share Request {#aggregate-share-request}
 
@@ -1821,6 +1821,7 @@ corresponding media types types:
 - HpkeConfig {{task-configuration}}: "application/ppm-hpke-config"
 - Report {{upload-request}}: "message/ppm-report"
 - AggregateReq {{aggregate-request}}: "message/ppm-aggregate-req"
+- AggregateContinueReq {{aggregate-request}}: "message/ppm-aggregate-continue-req"
 - AggregateResp {{aggregate-request}}: "message/ppm-aggregate-resp"
 - AggregateShareReq {{aggregate-share-request}}: "message/ppm-aggregate-share-req"
 - AggregateShareResp {{aggregate-share-request}}: "message/ppm-aggregate-share-resp"
