@@ -811,9 +811,9 @@ helper responds to this request by extracting its aggregate share from its state
 and encrypting it under the collector's HPKE public key.
 
 First, the leader computes a checksum over the set of output shares included in
-the batch window. The checksum is computed by taking the SHA256 of the nonces
-for the client reports included in the aggregation, then combining the hash
-values with a bytewise-XOR operation.
+the batch window. The checksum is computed by taking the SHA256 hash of each
+nonce from the client reports included in the aggregation, then combining the
+hash values with a bitwise-XOR operation.
 
 Then, for each aggregator endpoint `[aggregator]` in the parameters associated
 with `CollectReq.task_id` (see {{pa-collect}}) except its own, the leader sends
