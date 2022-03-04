@@ -810,6 +810,9 @@ PPM task, the leader issues an "aggregate-share request" to each helper. The
 helper responds to this request by extracting its aggregate share from its state
 and encrypting it under the collector's HPKE public key.
 
+[OPEN ISSUE: consider updating the `checksum` algorithm to not permit
+collisions]
+
 First, the leader computes a checksum over the set of output shares included in
 the batch window. The checksum is computed by taking the SHA256 hash of each
 nonce from the client reports included in the aggregation, then combining the
