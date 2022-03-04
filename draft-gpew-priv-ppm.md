@@ -493,6 +493,9 @@ of the aggregators is configured with following parameters:
   specified. See issue#161.]
 * `agg_auth_key`: A key for HMAC-SHA256 {{?RFC2104}} shared by the aggregators and
   used for message authentication during the aggregation flow.
+* `collect_auth_key`: A key for HMAC-SHA256 {{?RFC2104}} shared by the
+  aggregators and the collector and used for message authentication during the
+  collect flow.
 
 Finally, the collector is configured with the HPKE secret key corresponding to
 `collector_hpke_config`.
@@ -1211,12 +1214,15 @@ PPM task, the leader sends an AggregateShareReq message to each helper:
 struct {
   TaskID task_id;
   Interval batch_interval;
+  opaque tag[32];
 } AggregateShareReq;
 ~~~
 
 The first field is the task ID and the second is the batch interval for the
-batch being collected. The helper responds to this request with an aggregate
-share encrypted under the collector's HPKE public key.
+batch being collected. `tag` is an HMAC-SHA256 tag over the serialized
+message, excluding the `tag` field itself, computed using the `agg_auth_key`
+shared by the aggregators. The helper responds to this request with an
+aggregate share encrypted under the collector's HPKE public key.
 
 For each aggregator endpoint `[aggregator]` in the parameters associated with
 task, except its own, the leader sends a POST request to
@@ -1285,6 +1291,7 @@ struct {
   TaskID task_id;
   Interval batch_interval;
   opaque agg_param<0..2^16-1>;
+  opaque tag[32];
 } CollectReq;
 ~~~
 
@@ -1293,6 +1300,9 @@ The named parameters are:
 * `task_id`, the PPM task ID.
 * `batch_interval`, the request's batch interval.
 * `agg_param`, an aggregation parameter for the VDAF being executed.
+* `tag`, an HMAC-SHA256 tag over the serialized message, excluding the `tag`
+   field itself, computed using the `collect_auth_key` shared by the leader
+   and the collector.
 
 To make a collect request, the collector issues a POST request to
 `[leader]/collect`, where `[leader]` is the leader's endpoint URL with a
@@ -1336,12 +1346,15 @@ message:
 ~~~
 struct {
   HpkeCiphertext encrypted_agg_shares shares<1..2^16-1>;
+  opaque tag[32];
 } CollectResp;
 ~~~
 
 The `encrypted_agg_shares` field is the vector of encrypted aggregate shares.
 They MUST appear in the same order as the aggregator endpoints list of the task
-parameters.
+parameters. `tag` is an HMAC-SHA256 tag over the serialized message, excluding
+the `tag` field itself, computed using the `collect_auth_key` shared by the
+leader and the collector. 
 
 [OPEN ISSUE: What should the collector do if it can't compute the aggregate
 result?]
