@@ -810,29 +810,45 @@ PPM task, the leader issues an "aggregate-share request" to each helper. The
 helper responds to this request by extracting its aggregate share from its state
 and encrypting it under the collector's HPKE public key.
 
-For each aggregator endpoint `[aggregator]` in the parameters associated with
-`CollectReq.task_id` (see {{pa-collect}}) except its own, the leader sends a
-POST request to `[aggregator]/aggregate_share` with the following message:
+[OPEN ISSUE: consider updating the `checksum` algorithm to not permit
+collisions]
+
+First, the leader computes a checksum over the set of output shares included in
+the batch window. The checksum is computed by taking the SHA256 hash of each
+nonce from the client reports included in the aggregation, then combining the
+hash values with a bitwise-XOR operation.
+
+Then, for each aggregator endpoint `[aggregator]` in the parameters associated
+with `CollectReq.task_id` (see {{pa-collect}}) except its own, the leader sends
+a POST request to `[aggregator]/aggregate_share` with the following message:
 
 ~~~
 struct {
   TaskID task_id;
   Interval batch_interval;
+  uint64 report_count;
+  opaque checksum[32];
   opaque helper_state<0..2^16>;
 } AggregateShareReq;
 ~~~
 
 * `task_id` is the task ID associated with the PPM parameters.
 * `batch_interval` is the batch interval of the request.
+* `report_count` is the number of reports included in the aggregation.
+* `checksum` is the checksum computed over the set of client reports, computed
+  as described above.
 * `helper_state` is the helper's state, which is carried across requests from
   the leader.
 
 To respond to an AggregateShareReq message, the helper first looks up the PPM
 parameters associated with task `task_id`. Then, using the procedure in
 {{batch-parameter-validation}}, it ensures that the request meets the
-requirements of the batch parameters. If so, it aggregates all valid output
-shares that fall in the batch interval into an aggregate share. The response
-contains an opaque, VDAF-specific message:
+requirements of the batch parameters. It also computes a checksum based on its
+view of the output shares included in the batch window, and checks that the
+`report_count` and `checksum` included in the request match its computed
+values. If so, it aggregates all valid output shares that fall in the batch
+interval into an aggregate share. The response contains an opaque,
+VDAF-specific message:
 
 ~~~
 struct {
