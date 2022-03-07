@@ -188,7 +188,7 @@ Server:
 {:br}
 
 
-This document uses the protocol definition language of {{!RFC8446}}.
+This document uses the presentation language of {{!RFC8446}}.
 
 # Overview {#overview}
 
@@ -559,7 +559,7 @@ struct {
 
 * `aggregator_config_id` is equal to `HpkeConfig.id`, where `HpkeConfig` is the
   key config of the aggregator receiving the input share.
-* `enc` is the encapsulated HPKE context, used by the aggregator to decrypt its
+* `enc` is the HPKE encapsulated key, used by the aggregator to decrypt its
   input share.
 * `payload` is the encrypted input share.
 
@@ -575,9 +575,9 @@ enc, context = SetupBaseS(pk,
 
 where `pk` is the aggregator's public key, `task_id` is `Report.task_id` and
 `server_role` is a byte whose value is `0x01` if the aggregator is the leader
-and `0x00` if the aggregator is the helper. `enc` is the encapsulated HPKE
-context and `context` is the HPKE context used by the client for encryption.
-The payload is encrypted as
+and `0x00` if the aggregator is the helper. `enc` is the HPKE encapsulated key
+and `context` is the HPKE context used by the client for encryption.  The
+payload is encrypted as
 
 ~~~
 payload = context.Seal(nonce || extensions, input_share)
@@ -886,7 +886,7 @@ struct {
 
 * `collector_hpke_config_id` is `collector_config.id` from the task parameters
   corresponding to `CollectReq.task_id`.
-* `enc` is the encapsulated HPKE context, used by the collector to decrypt the
+* `enc` is the HPKE encapsulated key, used by the collector to decrypt the
   aggregate share.
 * `payload` is an encrypted `AggregateShare`.
 
@@ -2048,9 +2048,9 @@ protocol. This registry should contain the following columns:
 
 ## URN Sub-namespace for PPM (urn:ietf:params:ppm) {#ppm-urn-space}
 
-The following value [will be/has been] registered in the "IETF URN Sub-
-namespace for Registered Protocol Parameter Identifiers" registry, following the
-template in {{!RFC3553}}:
+The following value [will be/has been] registered in the "IETF URN
+Sub-namespace for Registered Protocol Parameter Identifiers" registry,
+following the template in {{!RFC3553}}:
 
 ~~~
 Registry name:  ppm
