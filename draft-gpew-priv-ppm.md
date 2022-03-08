@@ -1211,12 +1211,15 @@ PPM task, the leader sends an AggregateShareReq message to each helper:
 struct {
   TaskID task_id;
   Interval batch_interval;
+  opaque tag[32];
 } AggregateShareReq;
 ~~~
 
 The first field is the task ID and the second is the batch interval for the
-batch being collected. The helper responds to this request with an aggregate
-share encrypted under the collector's HPKE public key.
+batch being collected. `tag` is an HMAC-SHA256 tag over the serialized
+message, excluding the `tag` field itself, computed using the `agg_auth_key`
+shared by the aggregators. The helper responds to this request with an
+aggregate share encrypted under the collector's HPKE public key.
 
 For each aggregator endpoint `[aggregator]` in the parameters associated with
 task, except its own, the leader sends a POST request to
