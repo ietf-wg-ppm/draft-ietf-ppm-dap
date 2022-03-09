@@ -570,7 +570,7 @@ the aggregator by running
 
 ~~~
 enc, context = SetupBaseS(pk,
-                          "pda input share" || task_id || server_role)
+                          "ppm input share" || task_id || server_role)
 ~~~
 
 where `pk` is the aggregator's public key, `task_id` is `Report.task_id` and
@@ -773,7 +773,7 @@ following procedure:
 
 ~~~
 context = SetupBaseR(helper_share.enc, sk,
-                     "pda input share" || task_id || server_role)
+                     "ppm input share" || task_id || server_role)
 input_share = context.Open(nonce || extensions, helper_share)
 ~~~
 
@@ -861,7 +861,7 @@ public key as follows:
 
 ~~~
 enc, context = SetupBaseS(pk,
-                       "pda aggregate share" || task_id || server_role)
+                       "ppm aggregate share" || task_id || server_role)
 encrypted_agg_share = context.Seal(batch_interval, agg_share)
 ~~~
 
@@ -980,6 +980,21 @@ fetch certificates: https://datatracker.ietf.org/doc/html/rfc8555#section-7.4.2]
 [OPEN ISSUE: Describe how intra-protocol errors yield collect errors (see
 issue#57). For example, how does a leader respond to a collect request if the
 helper drops out?]
+
+The collector then decrypts each aggregate share `share` using the following
+procedure:
+
+~~~
+context = SetupBaseR(share.enc, sk,
+                     "ppm aggregate share" || task_id || server_role)
+input_share = context.Open(batch_interval, share.payload)
+~~~
+
+where `sk` is the HPKE secret key, `task_id` is `AggregateReq.task_id` and
+`server_role` is the role of the server that send the aggregate share (`0x01`
+for the leader and `0x00` for the helper). `batch_interval` is the `Interval`
+from the `CollectReq`. The collector then unshards the aggregate shares into an
+aggregate result using the VDAF's `agg_shares_to_result` algorithm.
 
 ### Validating Batch Parameters {#batch-parameter-validation}
 
