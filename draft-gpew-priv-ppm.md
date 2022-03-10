@@ -431,7 +431,6 @@ struct {
   uint64 rand;
 } Nonce;
 
-[CP: To implement. Need to swap the byte for leader and helper.]
 /* The various roles in the PPM protocol. */
 enum {
   collector(0),
@@ -528,7 +527,6 @@ uint16 HpkeKdfId;  // Defined in I-D.irtf-cfrg-hpke
 [OPEN ISSUE: Decide whether to expand the width of the id, or support multiple
 cipher suites (a la OHTTP/ECH).]
 
-[CP: To implement.]
 The client MUST abort if any of the following happen for any HPKE-config
 request:
 
@@ -538,7 +536,6 @@ request:
 * the key config specifies a KEM, KDF, or AEAD algorithm the client doesn't
   recognize.
 
-[CP: To implement.]
 Aggregators SHOULD use HTTP caching to permit client-side caching of this
 resource {{!RFC5861}}. Aggregators SHOULD favor long cache lifetimes to avoid
 frequent cache revalidation, e.g., on the order of days. Aggregators can control
@@ -592,7 +589,7 @@ the aggregator by running
 enc, context = SetupBaseS(pk, Report.task_id ||
                               "ppm input share" || 0x01 || server_role)
 ~~~
-[OPEN ISSUE: Is `0x01` ambiguous?
+[OPEN ISSUE: Is `0x01` ambiguous?]
 
 where `pk` is the aggregator's public key and and `server_role` is the Role of
 the intended racipient (`0x02` for the leader and `0x03` for the helper). In
@@ -616,7 +613,6 @@ and an empty body. Malformed requests are handled as described in {{errors}}.
 Clients SHOULD NOT upload the same measurement value in more than one report if
 the leader responds with status 200 and an empty body.
 
-[CP: To implement.]
 The leader responds to requests with out-of-date `HpkeConfig.id` values,
 indicated by `HpkeCiphertext.config_id`, with status 400 and an error of type
 'outdatedConfig'. Clients SHOULD invalidate any cached aggregator `HpkeConfig`
@@ -694,13 +690,13 @@ order to retrieve the helper's aggregate share. (see
 ~~~
 Leader                                                 Helper
 
-AggregateInitReq (Reports 1-10) ------------------------->  \
+AggregateReq (Reports 1-10) ----------------------------->  \
 <--------------------------------- AggregateResp (State 1)  | Reports
 AggregateReq (continued, State 1) ----------------------->  | 1-10
 <--------------------------------- AggregateResp (State 2)  /
 
 
-AggregateInitReq (Reports 11-20, State 1) --------------->  \
+AggregateReq (Reports 11-20, State 1) ------------------->  \
 <--------------------------------- AggregateResp (State 1)  | Reports
 AggregateReq (continued, State 2) ----------------------->  | 11-20
 <--------------------------------- AggregateResp (State 2)  /
@@ -1075,7 +1071,7 @@ struct {
 } AggregateReq;
 ~~~
 
-As discussed in {aggregation-flow}, the leader may choose to shard the task of
+As discussed in {{aggregation-flow}}, the leader may choose to shard the task of
 aggregating a large number of reports into any number of sub-batches. The
 process of aggregating the reports in a leader-defined sub-batch is called an
 *aggregation job*. An `AggregationJobID` is a globally unique sequence of bytes
@@ -1338,7 +1334,7 @@ message:
 
 ~~~
 struct {
-  HpkeCiphertext encrypted_agg_shares shares<1..2^16-1>;
+  HpkeCiphertext encrypted_agg_shares<1..2^16-1>;
 } CollectResp;
 ~~~
 
