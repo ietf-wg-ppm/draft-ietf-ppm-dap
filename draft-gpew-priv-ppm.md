@@ -529,7 +529,7 @@ structured as follows:
 struct {
   TaskID task_id;
   Nonce nonce;
-  Extension extensions<4..2^16-1>;
+  Extension extensions<0..2^16-1>;
   EncryptedInputShare encrypted_input_shares<1..2^16-1>;
 } Report;
 ~~~
@@ -716,7 +716,7 @@ follows:
 ~~~
 struct {
   Nonce nonce;                     // Equal to Report.nonce.
-  Extension extensions<4..2^16-1>; // Equal to Report.extensions.
+  Extension extensions<0..2^16-1>; // Equal to Report.extensions.
   EncryptedInputShare helper_share;
   opaque message<0..2^16-1>; // VDAF message
 } AggregateSubReq;
