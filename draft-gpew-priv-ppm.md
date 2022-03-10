@@ -951,12 +951,12 @@ prepared output shares that fall within the batch interval.
 
 When both aggregators' shares are successfully obtained, the leader responds to
 subsequent HTTP GET requests to the collect job's URI with HTTP status 200 OK
-and a body consisting of a `CollectResult`:
+and a body consisting of a `CollectResp`:
 
 ~~~
 struct {
   EncryptedAggregateShare shares<1..2^16-1>;
-} CollectResult;
+} CollectResp;
 ~~~
 
 * `shares` is a vector of `EncryptedAggregateShare`s, as described in
@@ -1458,7 +1458,7 @@ corresponding media types types:
 - AggregateShareReq {{aggregate-share-request}}: "message/ppm-aggregate-share-req"
 - AggregateShareResp {{aggregate-share-request}}: "message/ppm-aggregate-share-resp"
 - CollectReq {{pa-collect}}: "message/ppm-collect-req"
-- CollectResult {{pa-collect}}: "message/ppm-collect-result"
+- CollectResp {{pa-collect}}: "message/ppm-collect-resp"
 
 The definition for each media type is in the following subsections.
 
