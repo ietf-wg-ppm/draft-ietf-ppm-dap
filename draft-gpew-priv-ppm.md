@@ -741,7 +741,7 @@ in the VDAF spec. Maybe we just call them DAFs?]
 
 In order to aggregate its report share, an aggregator must first decrypt the
 input share and then interact with the other aggregators. This involves
-executing the "preparation step" described in {{?I-D.draft-cfrg-patton-vdaf}}.
+executing the "preparation phase" described in {{?I-D.draft-cfrg-patton-vdaf}}.
 If successful, each aggregator recovers and verifies the validity of its output
 share. Output shares are then aggregated as described in {{out-to-agg-share}}.
 
@@ -777,7 +777,7 @@ struct {
 } Transition;
 ~~~
 
-The `nonce` is the nonce carried by the ReportShare; the `type` field is
+The `nonce` is the nonce carried by the ReportShare; the `tran_type` field is
 the transition type, one of:
 
 ~~~
@@ -944,6 +944,8 @@ from the helper. Upon receiving it:
 * If the leader and helper continued, then the leader computes its next state
   transition ("prep_next") and sends the helper a Transition message with the
   VDAF payload computed as described below.
+
+[CP: What if the nonce doesn't match? Should the leader skip?]
 
 If continuing, the payload of the leader's Transition message is computed as
 follows. Let `leader_message` denote the last VDAF message it computed and let
@@ -1186,10 +1188,15 @@ follows. It first scans `AggregateContinueReq.seq` to check for any reports that
 may have been dropped by the leader in the previous step.
 
 Next, the helper processes the Transition messages from the leader. If any
-leader Transition contains an unrecognized nonce, the Helper should send a
-Transition with `tran_type = Failed` and `TransitionError = unrecognized-nonce`.
-Otherwise, it constructs a transition as described in {{prep-helper}}. If any
-state transition results in INVALID, the helper MUST abort with error "XXX".
+leader Transition contains an unrecognized nonce, the Helper sends a Transition
+with `tran_type = failed` and `TransitionError = unrecognized-nonce`. Otherwise,
+it constructs a transition as described in {{prep-helper}}. If any state
+transition results in INVALID, the helper MUST abort with error "XXX".
+
+[CP: It may be better to go to INVALID, rather than FAILED, if we get a nonce we
+don't recognize. Our thinking is that sending a nonce that the client hasn't
+seen before is tentamount to sending a malformed aggregate request, and it may
+be best to treat these the same.]
 
 Next, the helper constructs an AggregateResp containing its next flight of
 Transition messages and it updated state. The messages MUST appear in the same
