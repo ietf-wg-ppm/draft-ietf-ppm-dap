@@ -848,7 +848,7 @@ This is the case if the report was used in a previous aggregate request (see
 Note that detecting whether a report has been replayed (i.e., it has been
 aggregated but not yet collected) requires each aggregator to store the nonces
 of reports that have been aggregated in uncollected batch intervals. So that the
-aggregator does not have to maintain this storage indefinitely, it MAY insetead
+aggregator does not have to maintain this storage indefinitely, it MAY instead
 fail with `report-dropped` under the conditions prescribed in {{anti-replay}}.
 
 Next, the aggregator attempts to decrypt its input share. It starts by looking
@@ -978,8 +978,8 @@ without sending a message to the helper. Otherwise it interprets `out` as
 follows. If this is the last round of VDAF preparation phase, then `out` is the
 leader's output share, in which case the leader finishes. Otherwise, it
 interpresets `out` as the tuple `(new_state, outbound)`, where `new_state` is
-its new preparation state and `outobund` is its next VDAF messaage, and
-continues wiht `outbound` as its next VDAF message. Either way, it moves to
+its new preparation state and `outbound` is its next VDAF messaage, and
+continues with `outbound` as its next VDAF message. Either way, it moves to
 state WAITING.
 
 #### Helper {#prep-helper}
