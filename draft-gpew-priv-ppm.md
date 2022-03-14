@@ -381,6 +381,7 @@ in the "type" field (within the PPM URN namespace "urn:ietf:params:ppm:error:"):
 | outdatedConfig          | The message was generated using an outdated configuration. |
 | staleReport             | Report could not be processed because it arrived too late. |
 | invalidHmac             | The aggregate message's HMAC was not valid. |
+{: #error-types title="Error types."}
 
 This list is not exhaustive. The server MAY return errors set to a URI other
 than those defined above. Servers MUST NOT use the PPM URN namespace for errors
@@ -394,9 +395,6 @@ In the remainder of this document, we use the tokens in the table above to refer
 to error types, rather than the full URNs. For example, an "error of type
 'unrecognizedMessage'" refers to an error document with "type" value
 "urn:ietf:params:ppm:error:unrecognizedMessage".
-
-This document uses the verbs "abort" and "alert with `[some error message]`" to
-describe how protocol participants react to various error conditions.
 
 # Protocol Definition
 
@@ -449,6 +447,19 @@ struct {
   opaque payload<1..2^16-1>; // ciphertext
 } HpkeCiphertext;
 ~~~
+
+## Aborting the Protocol
+
+This documented uses the verb "abort with error ERROR", where "ERROR" is an
+error type enumerated in {{error-types}}, to prescribe the behavior of a
+protocol participant when it encounters a fatal error:
+
+* If a fatal error is encountered while processing an HTTP request, the HTTP
+  server responds with an HTTP error status as described in {{errors}}.
+
+* If a fatal error is encountered while processing an HTTP request, the HTTP
+  client... [TODO: Figure out what behavior is called for here. An HTTP request
+  should be sent that conveys the error.]
 
 ## Task Configuration {#task-configuration}
 
@@ -805,10 +816,11 @@ enum {
 ~~~
 
 When an aggregator computes a Transition of type `continued` with payload
-`payload`, we say the aggregator "continues with VDAF message `payload`"; when
-an aggregator computes a Transition of type `finished`, we say the aggregator
-"finishes"; and when an aggregator computes a Transition of type `failed` with
-failure type `error`, we say the aggregator "fails with error `error`".
+`[payload]`, we say the aggregator "continues with VDAF message `[payload]`";
+when an aggregator computes a Transition of type `finished`, we say the
+aggregator "finishes"; and when an aggregator computes a Transition of type
+`failed` with failure type `[error]`, we say the aggregator "fails with error
+`[error]`".
 
 #### Initializing the Preparation State {#prep-start}
 
@@ -820,28 +832,28 @@ been collected. This is the case if the aggregator is the leader and has
 completed a collect request for a batch containing the report (see
 {{collect-flow}}), or if the aggregator is a helper and has completed an
 aggregate-share request for a batch containing the report (see
-{{aggregate-share-request}}). It also checks if the report has been observed.
+{{aggregate-share-request}}). It also checks if the report has been aggregated.
 This is the case if the report was used in a previous aggregate request (see
 {{aggregate-init-request}} and {{aggregate-request}}).
 
-* If the report has not yet been observed but is contained by a batch that has
-  been collected, then the aggregator fails with error `batch-collected`. This
-  prevents additional reports from being aggregated after its batch has already
-  been collected.
+* If the report has never been aggregated but is contained by a batch that has
+  been collected, then the aggregator MUST fail with error `batch-collected`.
+  This prevents additional reports from being aggregated after its batch has
+  already been collected.
 
-* If the report has been observed but has not been collected, then it fails with
-  error `report-replayed`. This prevents a report from being used more than once
-  in a batch.
+* If the report has been aggregated but has not been collected, then it MUST
+  fail with error `report-replayed`. This prevents a report from being used more
+  than once in a batch.
 
 Note that detecting whether a report has been replayed (i.e., it has been
-aggregated but not yet collected) requires each aggregator to store the set of
-nonces of reports that have been aggregated in uncollected batch intervals. So
-that the aggregator does not have to maintain this storage indefinitely, it MAY
+aggregated but not yet collected) requires each aggregator to store the nonces
+of reports that have been aggregated in uncollected batch intervals. So that the
+aggregator does not have to maintain this storage indefinitely, it MAY insetead
 fail with `report-dropped` under the conditions prescribed in {{anti-replay}}.
 
 Next, the aggregator attempts to decrypt its input share. It starts by looking
 up the HPKE config and corresponding secret key indicated by
-`encrypted_input_share.config_id`. If not found, then it fails with error
+`encrypted_input_share.config_id`. If not found, then it MUST fail with error
 `hpke-unknown-config-id`. Otherwise, it decrypts the payload with the following
 procedure:
 
@@ -854,9 +866,9 @@ input_share = context.Open(ReportShare.nonce || ReportShare.extensions,
 ~~~
 
 where `sk` is the HPKE secret key, `task_id` is the task ID, and `nonce` and
-`extensions` are the nonce and extensions of the report share respectively. If
-decryption fails, then the aggregator fails with error `hpke-decrypt-error`.
-Variable `server_role` is the Role of the intended recipient.
+`extensions` are the nonce and extensions of the report share respectively.
+Variable `server_role` is the Role of the intended recipient. If decryption
+fails, then the aggregator MUST fail with error `hpke-decrypt-error`.
 
 Next, the aggregator runs the preparation-state initialization algorithm for the
 VDAF associated with the task and computes the first state transition. Let
@@ -864,19 +876,18 @@ VDAF associated with the task and computes the first state transition. Let
 input share:
 
 ~~~
-prep_state = PrepState(vdaf_verify_param,
-                       agg_param, nonce, input_share)
-out = prep_state.next(None)
+state = prep_init(vdaf_verify_param, agg_param, nonce, input_share)
+out = prep_next(state, None)
 ~~~
-[CP: Note that this syntax is based on
-https://github.com/cjpatton/vdaf/pull/14.]
 
-If either step fails, then the aggregator fails with error `vdaf-prep-error`.
-Otherwise, `out` is interpreted as follows. If the VDAF is 0-round, then `out`
-is the aggregator's output share, in which case the aggregator finishes and
-stores its output share for further processing as described in
-{{out-to-agg-share}}. Otherwise, if the VDAF consists of one round or more, then
-the aggregator continues and `out` is the aggregator's next VDAF message.
+If either step fails, then the aggregator MUST fail with error
+`vdaf-prep-error`. Otherwise, `out` is interpreted as follows. If the VDAF is
+0-round, then `out` is the aggregator's output share, in which case the
+aggregator finishes and stores its output share for further processing as
+described in {{out-to-agg-share}}. Otherwise, if the VDAF consists of one round
+or more, then the aggregator interprets `out` as the pair `(new_state,
+outbound)`, where `new_state` is its updated state and `outbound` is its next
+VDAF message.
 
 #### Leader {#prep-leader}
 
@@ -943,33 +954,33 @@ from the helper. Upon receiving it:
   output share. The leader proceeds as described in {{out-to-agg-share}}.
 * If the leader and helper continued, then the leader computes its next state
   transition ("prep_next") and sends the helper a Transition message with the
-  VDAF payload computed as described below.
-
-[CP: What if the nonce doesn't match? Should the leader skip?]
+  payload computed as described below.
 
 If continuing, the payload of the leader's Transition message is computed as
-follows. Let `leader_message` denote the last VDAF message it computed and let
-`helper_message` denote the last VDAF message it received from the helper. The
+follows. Let `leader_outbound` denote the last VDAF message it computed and let
+`helper_outbound` denote the last VDAF message it received from the helper. The
 payload of the the Transition message is computed as
 
 ~~~
-payload = prep_shares_to_prep(agg_param,
-                              [leader_payload,
-                               helper_payload])
+inbound = prep_shares_to_prep(agg_param,
+                              [leader_outbound,
+                               helper_outbound])
 ~~~
 
 and its next state transition is computed as
 
 ~~~
-out = prep_state.next(payload)
+out = prep_state.next(inbound)
 ~~~
 
 If either of these operations fails, then the leader moves to state FAILED
 without sending a message to the helper. Otherwise it interprets `out` as
 follows. If this is the last round of VDAF preparation phase, then `out` is the
 leader's output share, in which case the leader finishes. Otherwise, it
-continues with `out` as its next VDAF message. Either way, it moves to state
-WAITING.
+interpresets `out` as the tuple `(new_state, outbound)`, where `new_state` is
+its new preparation state and `outobund` is its next VDAF messaage, and
+continues wiht `outbound` as its next VDAF message. Either way, it moves to
+state WAITING.
 
 #### Helper {#prep-helper}
 
@@ -1014,17 +1025,20 @@ leader continued, then update the prepare state and compute the next Transition
 message as described below. Otherwise, if the leader finished or failed, then
 move to INVALID and proceed as described in {{aggregate-request}}.
 
-The helper computes its next state transition (denoted `prep_next`) as
+The helper computes its next state transition as
 
 ~~~
-out = prep_state.next(payload)
+out = prep_next(state, inbound)
 ~~~
 
-where `payload` is the previous VDAF message sent by the leader. If this
-operation fails, then the helper fails with error `vdaf-prep-error`. Otherwise,
-it interprets `out` as follows. If this is the last round of VDAF preparation
-phase, then `out` is the helper's output share, in which case the helper
-finishes. Otherwise, the helper continues with `out` as its next VDAF message.
+where `inbound` is the previous VDAF message sent by the leader and `state` is
+its current preparation state. If this operation fails, then the helper fails
+with error `vdaf-prep-error`. Otherwise, it interprets `out` as follows. If this
+is the last round of VDAF preparation phase, then `out` is the helper's output
+share, in which case the helper finishes and transitions to FINISHED. Otherwise,
+the helper interpets `out` as the tuple `(new_state, outbound)`, where
+`new_state` is its updated preperation state and `outbound` is its next VDAF
+message, continues with `outbound`, and transitions to WAITING.
 
 ### Aggregating Output Shares {#out-to-agg-share}
 
@@ -1034,8 +1048,7 @@ collected. To aggregate the output shares, the aggregator runs the aggregation
 algorithm specified by the VDAF:
 
 ~~~
-agg_share = output_to_aggregate_shares(agg_param,
-                                       output_shares)
+agg_share = out_shares_to_agg_share(agg_param, out_shares)
 ~~~
 
 Note that for most VDAFs, it is possible to aggregate output shares as they
@@ -1070,6 +1083,8 @@ struct {
     opaque tag[32];
 } AggregateReq;
 ~~~
+[CP: Since these parameters are required for all variants, I think we should
+consider moving task_id and job_id to precede the message type.]
 
 As discussed in {{aggregation-flow}}, the leader may choose to shard the task of
 aggregating a large number of reports into any number of sub-batches. The
@@ -1114,7 +1129,7 @@ duration. This could be made more clear.]
 
 Next, the leader extracts its own report shares and computes the initial
 preparation state for each as described in {{prep-start}}. It then removes from
-the report sequence any report for which the initial state is FAILED.
+the report sequence any report for which the transition state is FAILED.
 
 Let `[aggregator]` denote the helper's API endpoint. The leader extracts the
 sequence of report shares for `[aggregator]` and sends sends a POST request to
@@ -1136,28 +1151,26 @@ struct {
 The sequence of Transition messages corresponds to the ReportShare sequence of
 the AggregateInitReq. The order of these sequences MUST be the same (i.e., the
 nonce of the first Transition MUST be the same as first ReportShare and so on).
-`tag` is an HMAC-SHA256 tag over the serialized message, excluding the `tag`
-field itself, computed using the `agg_auth_key` shared by the aggregators.
-The helper's response to the leader is an HTTP 200 OK whose body is the
-AggregateResp.
+The tag `tag` field is an HMAC-SHA256 tag over the serialized message, excluding
+the `tag` field itself, computed using the `agg_auth_key` shared by the
+aggregators. The helper's response to the leader is an HTTP 200 OK whose body is
+the AggregateResp.
 
-After verifying the authentication tag, the leader handles the AggregateResp as
-follows. It first checks that the sequence of Transition messages corresponds to
-the ReportShare sequence of the AggregateInitReq. If the messages appear out of
-order, any are missing, or a nonce is not recognized, then the leader MUST abort
-and alert its peer with error "XXX".
+The leader handles the AggregateResp as follows. It first verifies the tag. If
+this check fails, it MUST abort with error "invalidHmac".
+
+Next, it first checks that the sequence of Transition messages corresponds to
+the ReportShare sequence of the AggregateInitReq. If any message appears out of
+order or is missing, or a transition has an unrecognized nonce, then the leader
+MUST abort with error "unrecognizedMessage".
 
 Next, for each Transition, the leader proceeds as described in {{prep-leader}}.
 If any state transition results in INVALID, this indicates that the helper has
-not computed the AggregateResp correctly. The leader MUST abort and alert its
-peer with error "XXX".
-
-[timg: In the above two paragraphs, we say that the leader should alert its
-peer, but in these situations the helper is not awaiting a reply from leader so
-it's not clear how to alert.]
+not computed the AggregateResp correctly. The leader MUST abort with error
+"unrecognizedMessage".
 
 Finally, the leader removes from the report sequence any report for which the
-corresponding state is FAILED.
+corresponding state is FAILED and proceeds as described in the next section.
 
 #### Aggregate Request {#aggregate-request}
 
@@ -1175,8 +1188,7 @@ struct {
 
 The contents are the PPM task ID, the aggregation job ID, and the sequence of
 Transition messages corresponding to the report sequence being aggregated. The
-sequences MUST have the same order; any Transition that appears out of order
-MUST be ignored by the helper. (See below.)
+sequences MUST have the same order.
 
 Let `[aggregator]` denote the helper's API endpoint. The leader sends a POST
 request to `[aggregator]/aggregate` with an Aggregate message of type
@@ -1189,14 +1201,14 @@ may have been dropped by the leader in the previous step.
 
 Next, the helper processes the Transition messages from the leader. If any
 leader Transition contains an unrecognized nonce, the Helper sends a Transition
-with `tran_type = failed` and `TransitionError = unrecognized-nonce`. Otherwise,
-it constructs a transition as described in {{prep-helper}}. If any state
-transition results in INVALID, the helper MUST abort with error "XXX".
+with `tran_type = failed` and `TransitionError = unrecognized-nonce`. [CP: It
+may be better to go to abort rather than just fail, since this s tentamount to
+sending a malformed aggregate request.] If any Transition appears out-of-order,
+the helper MUST abort with error "unrecognizedMessage".
 
-[CP: It may be better to go to INVALID, rather than FAILED, if we get a nonce we
-don't recognize. Our thinking is that sending a nonce that the client hasn't
-seen before is tentamount to sending a malformed aggregate request, and it may
-be best to treat these the same.]
+Next, it constructs a transition as described in {{prep-helper}}. If any state
+transition results in INVALID, the helper MUST abort with error
+"unrecognizedMessage".
 
 Next, the helper constructs an AggregateResp containing its next flight of
 Transition messages and it updated state. The messages MUST appear in the same
