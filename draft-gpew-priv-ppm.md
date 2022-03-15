@@ -458,8 +458,13 @@ protocol participant when it encounters a fatal error:
   server responds with an HTTP error status as described in {{errors}}.
 
 * If a fatal error is encountered while processing an HTTP response, the HTTP
-  client... [TODO: Figure out what behavior is called for here. An HTTP request
-  should be sent that conveys the error.]
+  client sends a followup "abort" request with a message specific to the particular
+  interaction. (For example, in an aggregation flow, the leader would send an
+  `AggregateAbortReq` as described in {{aggregate-message-auth}}.)
+
+[TODO: consider unifying the format of the request/response for errors, or
+providing a unified way for HTTP clients to transmit errors for all interaction
+types]
 
 ## Task Configuration {#task-configuration}
 
@@ -1072,13 +1077,15 @@ opaque AggregationJobID[32];
 enum {
   agg_init_req(0),
   agg_cont_req(1),
+  agg_abort_req(2),
 } AggregateReqType;
 
 struct {
     AggregateReqType msg_type;
     select (msg_type) {
-        agg_init_req:  AggregateInitReq;
-        agg_cont_req:  AggregateContinueReq;
+        agg_init_req:   AggregateInitReq;
+        agg_cont_req:   AggregateContinueReq;
+        agg_abort_req:  AggregateAbortReq;
     }
     opaque tag[32];
 } AggregateReq;
@@ -1094,6 +1101,13 @@ chosen by the leader to identify an aggregation job. It is RECOMMENDED that this
 be set to a random string output by a cryptographically secure pseudorandom
 number generator. The aggregation job ID is used by aggregators to look up
 preparation state for the reports included in the sub-batch.
+
+Throughout this section, when we say an aggregator must alert its peer, the
+meaning of this depends on which aggregator is sending the alert. The leader
+sends an alert by sending the helper an `AggregateReq` message containing an
+`AggregateAbortReq` sub-message, as described in {{aggregate-abort-request}}.
+The helper sends an alert by responding to the leader's request as described in
+{{errors}}.
 
 The last 32 bytes of each message is an HMAC-SHA256 tag computed over the
 serialized message excluding the `tag` field itself. The key that is used is the
@@ -1214,6 +1228,23 @@ Next, the helper constructs an AggregateResp containing its next flight of
 Transition messages and it updated state. The messages MUST appear in the same
 order as `AggregateContinueReq.seq`. The helper's response is an HTTP 200 OK
 whose body is the AggregateResp.
+
+#### Aggregate Abort Request {#aggregate-abort-request}
+
+An `AggregateAbortReq` is sent by the leader when it needs to alert the helper
+that an aggregation job must be aborted due to an unrecoverable error.
+
+~~~
+struct {
+  TaskID task_id;
+  AggregationJobID job_id;
+  opaque details<0..2^16-1>;
+} AggregateAbortReq;
+~~~
+
+The contents are the PPM task ID, the aggregation job ID, and a `details`
+field. The content of the `details` field is a serialized problem document as
+described in {{errors}}.
 
 #### Aggregate Share Request {#aggregate-share-request}
 
