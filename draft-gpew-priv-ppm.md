@@ -457,7 +457,7 @@ protocol participant when it encounters a fatal error:
 * If a fatal error is encountered while processing an HTTP request, the HTTP
   server responds with an HTTP error status as described in {{errors}}.
 
-* If a fatal error is encountered while processing an HTTP request, the HTTP
+* If a fatal error is encountered while processing an HTTP response, the HTTP
   client... [TODO: Figure out what behavior is called for here. An HTTP request
   should be sent that conveys the error.]
 
@@ -977,7 +977,7 @@ If either of these operations fails, then the leader moves to state FAILED
 without sending a message to the helper. Otherwise it interprets `out` as
 follows. If this is the last round of VDAF preparation phase, then `out` is the
 leader's output share, in which case the leader finishes. Otherwise, it
-interpresets `out` as the tuple `(new_state, outbound)`, where `new_state` is
+interprets `out` as the tuple `(new_state, outbound)`, where `new_state` is
 its new preparation state and `outbound` is its next VDAF messaage, and
 continues with `outbound` as its next VDAF message. Either way, it moves to
 state WAITING.
@@ -1159,7 +1159,7 @@ the AggregateResp.
 The leader handles the AggregateResp as follows. It first verifies the tag. If
 this check fails, it MUST abort with error "invalidHmac".
 
-Next, it first checks that the sequence of Transition messages corresponds to
+Next, it checks that the sequence of Transition messages corresponds to
 the ReportShare sequence of the AggregateInitReq. If any message appears out of
 order or is missing, or a transition has an unrecognized nonce, then the leader
 MUST abort with error "unrecognizedMessage".
