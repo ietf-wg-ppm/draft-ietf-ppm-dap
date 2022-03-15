@@ -428,6 +428,24 @@ struct {
   Time time;
   uint64 rand;
 } Nonce;
+
+/* The various roles in the PPM protocol. */
+enum {
+  collector(0),
+  client(1),
+  leader(2),
+  helper(3),
+} Role;
+
+/* Identifier for a server's HPKE configuration */
+uint8 HpkeConfigId;
+
+/* An HPKE ciphertext. */
+struct {
+  HpkeConfigId config_id;    // config ID
+  opaque enc<1..2^16-1>;     // encapsulated HPKE context
+  opaque payload<1..2^16-1>; // ciphertext
+} HpkeCiphertext;
 ~~~
 
 ## Task Configuration {#task-configuration}
@@ -484,7 +502,6 @@ struct {
   HpkePublicKey public_key;
 } HpkeConfig;
 
-uint8 HpkeConfigId;
 opaque HpkePublicKey<1..2^16-1>;
 uint16 HpkeAeadId; // Defined in I-D.irtf-cfrg-hpke
 uint16 HpkeKemId;  // Defined in I-D.irtf-cfrg-hpke
@@ -530,7 +547,7 @@ struct {
   TaskID task_id;
   Nonce nonce;
   Extension extensions<0..2^16-1>;
-  EncryptedInputShare encrypted_input_shares<1..2^16-1>;
+  HpkeCiphertext encrypted_input_shares<1..2^16-1>;
 } Report;
 ~~~
 
@@ -547,55 +564,44 @@ This message is called the client's *report*. It contains the following fields:
   the order of the task's `aggregator_endpoints` (i.e., the first share should
   be the leader's, the second share should be for the first helper, and so on).
 
-Encrypted input shares are structured as follows:
-
-~~~
-struct {
-  HpkeConfigId aggregator_config_id;
-  opaque enc<1..2^16-1>;
-  opaque payload<1..2^16-1>;
-} EncryptedInputShare;
-~~~
-
-* `aggregator_config_id` is equal to `HpkeConfig.id`, where `HpkeConfig` is the
-  key config of the aggregator receiving the input share.
-* `enc` is the HPKE encapsulated key, used by the aggregator to decrypt its
-  input share.
-* `payload` is the encrypted input share.
-
 To generate the report, the client begins by sharding its measurement into a
 sequence of input shares as specified by the VDAF in use. To encrypt an input
 share, the client first generates an HPKE {{!I-D.irtf-cfrg-hpke}} context for
 the aggregator by running
 
 ~~~
-enc, context = SetupBaseS(pk,
-                          "ppm input share" || task_id || server_role)
+enc, context = SetupBaseS(pk, Report.task_id || "ppm-00 input share" ||
+                              0x01 || server_role)
 ~~~
 
-where `pk` is the aggregator's public key, `task_id` is `Report.task_id` and
-`server_role` is a byte whose value is `0x01` if the aggregator is the leader
-and `0x00` if the aggregator is the helper. `enc` is the HPKE encapsulated key
-and `context` is the HPKE context used by the client for encryption.  The
-payload is encrypted as
+where `pk` is the aggregator's public key and `server_role` is the Role of the
+intended recipient (`0x02` for the leader and `0x03` for the helper). In
+general, the info string for computing the HPKE context is suffixed by two
+bytes, the first of which identifies the role of the sender and the second of
+which identifies the role of the intended recipient.
+
+`enc` is the HPKE encapsulated key and `context` is the HPKE context used by the
+client for encryption. The payload is encrypted as
 
 ~~~
 payload = context.Seal(nonce || extensions, input_share)
 ~~~
 
 where `input_share` is the aggregator's input share and `nonce` and `extensions`
-are the corresponding fields of `Report`.
+are the corresponding fields of `Report`. Clients MUST NOT use the same `enc`
+for multiple reports.
 
 The leader responds to well-formed requests to `[leader]/upload` with status 200
 and an empty body. Malformed requests are handled as described in {{errors}}.
 Clients SHOULD NOT upload the same measurement value in more than one report if
 the leader responds with status 200 and an empty body.
 
-The leader responds to requests with out-of-date `HpkeConfig.id` values,
-indicated by `EncryptedInputShare.config_id`, with status 400 and an error of
-type 'outdatedConfig'. Clients SHOULD invalidate any cached aggregator
-`HpkeConfig` and retry with a freshly generated Report. If this retried report
-does not succeed, clients MUST abort and discontinue retrying.
+The leader responds to requests whose leader encrypted input share uses an
+out-of-date `HpkeConfig.id` value, indicated by `HpkeCiphertext.config_id`, with
+status 400 and an error of type 'outdatedConfig'. Clients SHOULD invalidate any
+cached aggregator `HpkeConfig` and retry with a freshly generated Report. If
+this retried report does not succeed, clients MUST abort and discontinue
+retrying.
 
 The leader MUST ignore any report whose nonce contains a timestamp that falls in
 a batch interval for which it has received at least one collect request from the
@@ -717,14 +723,14 @@ follows:
 struct {
   Nonce nonce;                     // Equal to Report.nonce.
   Extension extensions<0..2^16-1>; // Equal to Report.extensions.
-  EncryptedInputShare helper_share;
+  HpkeCiphertext helper_share;
   opaque message<0..2^16-1>; // VDAF message
 } AggregateSubReq;
 ~~~
 
 The `nonce` and `extensions` fields have the same value as those in the
 report uploaded by the client. Similarly, the `helper_share` field is the
-`EncryptedInputShare` from the `Report` whose index in
+`HpkeCiphertext` from the `Report` whose index in
 `Report.encrypted_input_shares` is equal to the index of `[aggregator]` in the
 task's aggregator endpoints. [OPEN ISSUE: We usually only need to send this in
 the first aggregate request. Shall we exclude it in subsequent requests
@@ -772,18 +778,19 @@ this means. See issue#57.] Next, it attempts to decrypt the payload with the
 following procedure:
 
 ~~~
-context = SetupBaseR(helper_share.enc, sk,
-                     "ppm input share" || task_id || server_role)
+context = SetupBaseR(helper_share.enc, sk, task_id ||
+                     "ppm-00 input share" || 0x01 || server_role)
 input_share = context.Open(nonce || extensions, helper_share)
 ~~~
 
 where `sk` is the HPKE secret key, `task_id` is `AggregateReq.task_id` and
-`server_role` is the role of the server (`0x01` for the leader and `0x00` for
-the helper). `nonce` and `extensions` are obtained from the
-corresponding fields in `AggregateSubReq`. If decryption fails, then the
-sub-response consists of a "decryption error" alert. [See issue#57.] Otherwise,
-the helper handles the request for its plaintext input share `input_share` and
-updates its state as specified by the PPM protocol.
+`server_role` is the role of the server (`0x02` for the leader and `0x03` for
+the helper; `0x01`, the client role, is used as the sender). `nonce` and
+`extensions` are obtained from the corresponding fields in `AggregateSubReq`. If
+decryption fails, then the sub-response consists of a "decryption error" alert.
+[See issue#57.] Otherwise, the helper handles the request for its plaintext
+input share `input_share` and updates its state as specified by the PPM
+protocol.
 
 After processing all of the sub-requests, the helper encrypts its updated state
 and constructs its response to the aggregate request.
@@ -860,39 +867,25 @@ Next, the helper encrypts the aggregate share `agg_share` under the collector's
 public key as follows:
 
 ~~~
-enc, context = SetupBaseS(pk,
-                       "ppm aggregate share" || task_id || server_role)
+enc, context = SetupBaseS(pk, task_id,
+                          "ppm-00 aggregate share" || 0x03 || 0x00)
 encrypted_agg_share = context.Seal(batch_interval, agg_share)
 ~~~
 
 where `pk` is the HPKE public key encoded by the collector's HPKE key
-configuration, `task_id` is `AggregateShareReq.task_id` and `server_role` is the
-role of the server (`0x01` for the leader and `0x00` for the helper).
-`agg_share` is the serialized `AggregateShare`, and `batch_interval` is obtained
-from the `AggregateShareReq`.
+configuration and `task_id` is `AggregateShareReq.task_id`. `agg_share` is the
+serialized `AggregateShare`, and `batch_interval` is obtained from the
+`AggregateShareReq`.
 
 This encryption prevents the leader from learning the actual result, as it only
 has its own share and not the helper's share, which is encrypted for the
-collector. The helper responds to the collector with HTTP status 200 OK and a
-body consisting of the following structure:
-
-~~~
-struct {
-  HpkeConfigId collector_hpke_config_id;
-  opaque enc<1..2^16-1>;
-  opaque payload<1..2^16>;
-} EncryptedAggregateShare;
-~~~
-
-* `collector_hpke_config_id` is `collector_config.id` from the task parameters
-  corresponding to `CollectReq.task_id`.
-* `enc` is the HPKE encapsulated key, used by the collector to decrypt the
-  aggregate share.
-* `payload` is an encrypted `AggregateShare`.
+collector. The helper responds to the leader with HTTP status 200 OK and a body
+consisting of an `HpkeCiphertext` where `config_id` is set to the collector's
+HPKE config ID, `enc` is set to the encapsulated HPKE context `enc` and
+`ciphertext` is `encrypted_agg_share`.
 
 The leader uses the helper's aggregate share response to respond to the
 collector's collect request (see {{pa-collect}}).
-
 
 ## Collecting Results {#pa-collect}
 
@@ -947,8 +940,18 @@ header field to suggest a pulling interval to the collector.
 Once all the necessary reports have been prepared, the leader obtains the
 helper's encrypted aggregate share for the batch interval by sending an
 `AggregateShareReq` to the helper as described in {{aggregate-share-request}}.
-The leader then computes its own aggregate share by aggregating all of the
-prepared output shares that fall within the batch interval.
+The leader then computes its own aggregate share `agg_share` by aggregating all
+of the prepared output shares that fall within the batch interval. Finally, it
+encrypts it under the collector's HPKE public key as follows:
+
+~~~
+enc, context = SetupBaseS(pk, CollectReq.task_id ||
+                              "ppm-00 aggregate share" || 0x02 || 0x00)
+encrypted_agg_share = context.Seal(CollectReq.batch_interval,
+                                   agg_share)
+~~~
+
+where `pk` is the collector's public key.
 
 When both aggregators' shares are successfully obtained, the leader responds to
 subsequent HTTP GET requests to the collect job's URI with HTTP status 200 OK
@@ -956,14 +959,13 @@ and a body consisting of a `CollectResp`:
 
 ~~~
 struct {
-  EncryptedAggregateShare shares<1..2^16-1>;
+  HpkeCiphertext encrypted_agg_shares<1..2^16-1>;
 } CollectResp;
 ~~~
 
-* `shares` is a vector of `EncryptedAggregateShare`s, as described in
-  {{aggregate-share-request}}, except that for the leader's share, the `task_id`
-  and `batch_interval` used to encrypt the `AggregateShare` are obtained from
-  the `CollectReq`.
+The `encrypted_agg_shares` field is the vector of encrypted aggregate shares.
+They MUST appear in the same order as the aggregator endpoints list of the task
+parameters.
 
 If obtaining aggregate shares fails, then the leader responds to subsequent HTTP
 GET requests to the collect job URI with an HTTP error status and a problem
@@ -987,13 +989,14 @@ procedure:
 
 ~~~
 context = SetupBaseR(share.enc, sk,
-                     "ppm aggregate share" || task_id || server_role)
+                     "ppm-00 aggregate share" ||
+                     task_id || server_role || 0x00)
 input_share = context.Open(batch_interval, share.payload)
 ~~~
 
 where `sk` is the HPKE secret key, `task_id` is `AggregateReq.task_id` and
-`server_role` is the role of the server that send the aggregate share (`0x01`
-for the leader and `0x00` for the helper). `batch_interval` is the `Interval`
+`server_role` is the role of the server that sent the aggregate share (`0x02`
+for the leader and `0x03` for the helper). `batch_interval` is the `Interval`
 from the `CollectReq`. The collector then unshards the aggregate shares into an
 aggregate result using the VDAF's `agg_shares_to_result` algorithm.
 
