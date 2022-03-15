@@ -905,6 +905,7 @@ as follows:
 [OPEN ISSUE: Decide if and how the collector's request is authenticated. If not,
 then we need to ensure that collect job URIs are resistant to enumeration
 attacks.]
+
 ~~~
 struct {
   TaskID task_id;
