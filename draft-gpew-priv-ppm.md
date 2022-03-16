@@ -811,7 +811,6 @@ enum {
   hpke-unknown-config-id(3),
   hpke-decrypt-error(4),
   vdaf-prep-error(5),
-  unrecognized-nonce(6),
 } TransitionError;
 ~~~
 
@@ -1075,6 +1074,8 @@ enum {
 } AggregateReqType;
 
 struct {
+    TaskID task_id;
+    AggregationJobID job_id;
     AggregateReqType msg_type;
     select (msg_type) {
         agg_init_req:  AggregateInitReq;
@@ -1083,8 +1084,6 @@ struct {
     opaque tag[32];
 } AggregateReq;
 ~~~
-[CP: Since these parameters are required for all variants, I think we should
-consider moving task_id and job_id to precede the message type.]
 
 As discussed in {{aggregation-flow}}, the leader may choose to shard the task of
 aggregating a large number of reports into any number of sub-batches. The
@@ -1111,16 +1110,13 @@ structured as follows:
 
 ~~~
 struct {
-  TaskID task_id;
-  AggregationJobID job_id;
   opaque agg_param<0..2^16-1>;
   ReportShare seq<1..2^16-1>;
 } AggregateInitReq;
 ~~~
 
-The message contains the PPM task ID, the aggregation job ID assigned by the
-leader, an opaque, VDAF-specific aggregation parameter, and the helper's report
-shares.
+The message contains an opaque, VDAF-specific aggregation parameter and the
+helper's report shares.
 
 To construct an AggregateInitReq, the leader begins by picking a sequence of
 reports, all of which MUST pertain to the same PPM task and batch. [CP: By
@@ -1129,7 +1125,8 @@ duration. This could be made more clear.]
 
 Next, the leader extracts its own report shares and computes the initial
 preparation state for each as described in {{prep-start}}. It then removes from
-the report sequence any report for which the transition state is FAILED.
+the report sequence any report for which the transition state is FAILED. If the
+resulting sequence is empty, then the leader halts without issuing a request.
 
 Let `[aggregator]` denote the helper's API endpoint. The leader extracts the
 sequence of report shares for `[aggregator]` and sends sends a POST request to
@@ -1137,9 +1134,12 @@ sequence of report shares for `[aggregator]` and sends sends a POST request to
 and with AggregateInitReq as the payload.
 
 After verifying the authentication tag as described in
-{{aggregate-message-auth}}, the helper handles the AggregateInitReq by computing
-the initial preparation state for each ReportShare in `AggregateInitReq.seq` as
-described in {{prep-start}}. It then constructs an AggregateResp:
+{{aggregate-message-auth}}, the helper first checks that the nonces in
+`AggregateInitReq.seq` are all distinct. If two ReportShare messages have the
+same nonce, then the helper MUST abort with error "unrecognizedMessage". Next,
+the helper handles the AggregateInitReq by computing the initial preparation
+state for each ReportShare in `AggregateInitReq.seq` as described in
+{{prep-start}}. It then constructs an AggregateResp:
 
 ~~~
 struct {
@@ -1159,10 +1159,10 @@ the AggregateResp.
 The leader handles the AggregateResp as follows. It first verifies the tag. If
 this check fails, it MUST abort with error "invalidHmac".
 
-Next, it checks that the sequence of Transition messages corresponds to
-the ReportShare sequence of the AggregateInitReq. If any message appears out of
-order or is missing, or a transition has an unrecognized nonce, then the leader
-MUST abort with error "unrecognizedMessage".
+Next, it checks that the sequence of Transition messages corresponds to the
+ReportShare sequence of the AggregateInitReq. If any message appears out of
+order, is missing, has an unrecognized nonce, or if two messages have the same
+nonce, then the leader MUST abort with error "unrecognizedMessage".
 
 Next, for each Transition, the leader proceeds as described in {{prep-leader}}.
 If any state transition results in INVALID, this indicates that the helper has
@@ -1170,9 +1170,10 @@ not computed the AggregateResp correctly. The leader MUST abort with error
 "unrecognizedMessage".
 
 Finally, the leader removes from the report sequence any report for which the
-corresponding state is FAILED and proceeds as described in the next section.
+corresponding state is FAILED and proceeds as described in the next section,
+even if the sequence is empty.
 
-#### Aggregate Request {#aggregate-request}
+#### Aggregate Continuation Request {#aggregate-request}
 
 An AggregateContinueReq is sent from the leader to the helper to advance the
 preparation state of each report being aggregated. This message is defined as
@@ -1180,40 +1181,36 @@ follows:
 
 ~~~
 struct {
-  TaskID task_id;
-  AggregationJobID job_id;
   Transition seq<1..2^16-1>;
 } AggregateContinueReq;
 ~~~
 
-The contents are the PPM task ID, the aggregation job ID, and the sequence of
-Transition messages corresponding to the report sequence being aggregated. The
-sequences MUST have the same order.
+The message consists of a sequence of Transition messages corresponding to the
+report sequence being aggregated. The sequences MUST have the same order.
 
 Let `[aggregator]` denote the helper's API endpoint. The leader sends a POST
 request to `[aggregator]/aggregate` with an Aggregate message of type
 `agg_cont_req` with payload AggregateContinueReq.
 
 After verifying the authentication tag as described in
-{{aggregate-message-auth}}, the helper processes the AggregateContinueReq as
-follows. It first scans `AggregateContinueReq.seq` to check for any reports that
-may have been dropped by the leader in the previous step.
+{{aggregate-message-auth}}, the helper begins by scanning
+`AggregateContinueReq.seq` to check for any reports that may have been dropped
+by the leader in the previous step.
 
 Next, the helper processes the Transition messages from the leader. If any
-leader Transition contains an unrecognized nonce, the Helper sends a Transition
-with `tran_type = failed` and `TransitionError = unrecognized-nonce`. [CP: It
-may be better to go to abort rather than just fail, since this s tentamount to
-sending a malformed aggregate request.] If any Transition appears out-of-order,
-the helper MUST abort with error "unrecognizedMessage".
+message appears out of order or has an unrecognized nonce, or if any two
+messages have the same nonce, then the helper MUST abort with error
+"unrecognizedMessage".
 
-Next, it constructs a transition as described in {{prep-helper}}. If any state
-transition results in INVALID, the helper MUST abort with error
+Next, the helper processes each Transition as described in {{prep-helper}}. If
+any state transition results in INVALID, the helper MUST abort with error
 "unrecognizedMessage".
 
 Next, the helper constructs an AggregateResp containing its next flight of
-Transition messages and it updated state. The messages MUST appear in the same
+Transition messages and its updated state. The messages MUST appear in the same
 order as `AggregateContinueReq.seq`. The helper's response is an HTTP 200 OK
-whose body is the AggregateResp.
+whose body is the AggregateResp. The leader processes this message as described
+in {{aggregate-init-request}}.
 
 #### Aggregate Share Request {#aggregate-share-request}
 
