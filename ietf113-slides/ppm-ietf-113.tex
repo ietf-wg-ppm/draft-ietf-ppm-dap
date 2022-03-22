@@ -15,9 +15,9 @@
 \long\def\symbolfootnote[#1]#2{\begingroup%
 \def\thefootnote{\fnsymbol{footnote}}\footnote[#1]{#2}\endgroup}
 
-\title{Privacy Preserving Measurement}
+\title{Privacy Preserving Measurement (IETF 113)}
 \author{Eric Rescorla \\\url{ekr@rtfm.com}}
-\date{\today}
+\date{2022-03-23}
 
 \begin{document}
 
@@ -55,7 +55,7 @@
   \item Behavioral measurements
     \begin{itemize}
     \item Discovering new Web sites
-    \item Which information are people most interested in?     
+    \item Which information are people most interested in?
     \end{itemize}
   \end{itemize}
 \end{frame}
@@ -107,7 +107,7 @@
   \end{itemize}
 \end{frame}
 
-\begin{frame}{Motivating Use Case: User Interests}
+\begin{frame}{Example Use Case: User Interests}
 
   \begin{itemize}
   \item Useful to measure what kinds of sites users visit
@@ -122,7 +122,7 @@
 \end{frame}
 
 
-\begin{frame}{Motivating Use Case: Web Site Issues}
+\begin{frame}{Example: Use Case: Web Site Issues}
 
   \begin{itemize}
   \item Web compatibility is a big problem
@@ -146,19 +146,6 @@
     \end{itemize}
 
   \item Problem statement: collect the sites where the client sees issues
-  \end{itemize}
-\end{frame}
-
-
-\begin{frame}{Preview of Other Use Cases}
-  \begin{itemize}
-  \item Learning most popular URLs users visit
-  \item Advertising
-    \begin{itemize}
-    \item Conversion measurement
-    \item Ad display measurement      
-    \end{itemize}
-  \item COVID exposure notification
   \end{itemize}
 \end{frame}
 
@@ -527,32 +514,6 @@ Solutions to both statistical queries and heavy hitters share a common framework
 
 \end{tikzpicture}
 }
-\end{frame}
-
-\begin{frame}{Relationship to OHAI}
-
-  \begin{itemize}
-  \item Complements, not substitutes
-  \item Good cases for OHAI    
-    \begin{itemize}
-    \item Lightweight measurements of semi-sensitive data
-    \item Rich freeform data
-    \item Anything that needs a response (e.g., DNS)
-    \end{itemize}
-
-  \item Good cases for PPM
-    \begin{itemize}
-    \item Very sensitive data
-    \item Simple scalar-type data values
-    \item Settings where you need to ``drill down''
-    \end{itemize}
-
-  \item Two great tastes that taste great together
-    \begin{itemize}
-    \item Can use OHAI to talk to a PPM server
-    \item This provides another layer of privacy
-    \end{itemize}
-  \end{itemize}
 \end{frame}
 
 \begin{frame}{Questions?}
