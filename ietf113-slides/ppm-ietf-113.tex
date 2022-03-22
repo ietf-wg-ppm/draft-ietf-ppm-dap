@@ -1,4 +1,4 @@
-\documentclass[helvetica]{beamer}
+\documentclass[helvetica]{beamer}
 \usetheme{Boadilla}
 \input{xy}
 \xyoption{all}
@@ -406,7 +406,7 @@ Solutions to both statistical queries and heavy hitters share a common framework
 \end{frame}
 
 
-\begin{frame}{Cryptographic Protocol: Heavy Hitters (``Hits'') ~\cite{cryptoeprint:2021:017}}
+\begin{frame}{Cryptographic Protocol: Heavy Hitters (``Poplar'') ~\cite{cryptoeprint:2021:017}}
 
   \begin{itemize}
   \item Each client submits a string (e.g., a URL)
@@ -424,11 +424,11 @@ Solutions to both statistical queries and heavy hitters share a common framework
  % TODO: binary tree picture?
 \end{frame}
 
-\begin{frame}{Collecting Broken Sites with Hits}
+\begin{frame}{Collecting Broken Sites with Poplar}
 
   \begin{itemize}
   \item Client creates one report for each site which is broken
-  \item Use Hits to determine the top sites
+  \item Use Poplar to determine the top sites
   \item Servers only learn the most important sites, not who reported them
   \end{itemize}
 
@@ -464,7 +464,7 @@ Solutions to both statistical queries and heavy hitters share a common framework
   \begin{itemize}
   \item A generic, modular, protocol for privacy-preserving measurement
     \begin{itemize}
-    \item Initially implementing Prio and Hits      
+    \item Initially implementing Prio and Poplar      
     \item Compatible with multiple cryptographic algorithms (``verifiable distributed aggregation functions'' -- see CFRG presentation for details)
     \end{itemize}
 
