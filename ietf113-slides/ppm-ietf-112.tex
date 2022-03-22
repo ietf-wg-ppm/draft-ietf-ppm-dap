@@ -1,0 +1,568 @@
+\documentclass[helvetica]{beamer}
+\usetheme{Boadilla}
+\input{xy}
+\xyoption{all}
+\usepackage{graphicx} 
+\usepackage{slidesec} 
+\usepackage{url}
+\usepackage[framemethod=TikZ]{mdframed}
+\usepackage{tikz}
+\usetikzlibrary{calc,quotes,arrows.meta}
+\usepackage{color}
+\usepackage[normalem]{ulem}  
+\setbeamertemplate{itemize items}[circle]
+\def\dash---{\unskip\kern.16667em---\penalty\exhyphenpenalty\hskip.16667em\ignorespaces}
+\long\def\symbolfootnote[#1]#2{\begingroup%
+\def\thefootnote{\fnsymbol{footnote}}\footnote[#1]{#2}\endgroup}
+
+\title{Privacy Preserving Measurement}
+\author{Eric Rescorla \\\url{ekr@rtfm.com}}
+\date{\today}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}{Overview}
+  \begin{itemize}
+  \item Measurement scenarios
+  \item Anonymous measurement
+  \item MPC-based privacy-preserving measurement techniques
+  \item Technical architecture
+  \end{itemize}
+\end{frame}
+
+  
+\begin{frame}{Many situations where we want to learn about people}
+
+  \begin{itemize}
+  \item Public research (e.g., the census)
+    \begin{itemize}
+    \item Demographics
+    \item Income
+    \item Medical issues
+    \end{itemize}
+    
+  \item Product development
+    \begin{itemize}
+    \item Which features do they use/don't use?
+    \item How much do they use them?
+    \item Where/why are products failing?      
+    \end{itemize}
+    
+  \item Behavioral measurements
+    \begin{itemize}
+    \item Discovering new Web sites
+    \item Which information are people most interested in?     
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{This information is very useful}
+
+  \begin{itemize}
+    \item But can be very sensitive
+    \begin{itemize}
+    \item Medical issues, income, sexual orientation, etc.
+    \end{itemize}
+  \item Even ``less'' sensitive data can be very revealing
+    \begin{itemize}
+    \item Especially when you put a lot of ``less'' sensitive data together      
+    \end{itemize}
+  \end{itemize}
+
+
+  \includegraphics[scale=.3]{target-pregnancy.png}
+\end{frame}
+
+
+\begin{frame}{What do we really want to measure?}
+
+  \begin{itemize}
+  \item Mostly we want \emph{aggregates}
+    \begin{itemize}
+     \item What is the distribution of people's income?
+     \item What is relationship between income and height?
+     \item What are the most popular Web sites?
+    \end{itemize}
+  \item Need to slice the data multiple ways
+    \begin{itemize}
+    \item Just look at a given region
+    \item Compare two variables
+    \end{itemize}
+  \item Individual values are neither necessary nor useful
+    \begin{itemize}
+    \item As long as we can compute the aggregates      
+    \end{itemize}    
+  \end{itemize} 
+\end{frame}
+
+\begin{frame}{Measurement Types}
+  \begin{itemize}
+  \item Simple aggregates (mean, median, sum, histograms...)
+  \item Relationships between multiple values (correlation, OLS, ...)
+  \item Common strings (``heavy hitters'')    
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Motivating Use Case: User Interests}
+
+  \begin{itemize}
+  \item Useful to measure what kinds of sites users visit
+    \begin{itemize}
+    \item Bucket sites by topic
+    \item Count the number of visits to/minutes spent on each topic
+    \item But... some topics are sensitive
+    \end{itemize}
+    
+  \item Problem statement: collect distribution of time spent on each type of site
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}{Motivating Use Case: Web Site Issues}
+
+  \begin{itemize}
+  \item Web compatibility is a big problem
+    \begin{itemize}
+    \item Some sites will not render properly in some browsers
+    \item Big problem for smaller browsers like Safari and Firefox
+    \item Often we can detect breakage on the client      
+    \end{itemize}
+    
+  \item Many Web sites fingerprint users
+    \begin{itemize}
+    \item Measure persistent properties to create a per-browser ``fingerprint''
+    \item This can be used for tracking
+    \item Often detectable on the client
+    \end{itemize}
+
+  \item No way to learn about these issues
+    \begin{itemize}
+    \item We need to know the site
+    \item But browsing history is sensitive      
+    \end{itemize}
+
+  \item Problem statement: collect the sites where the client sees issues
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}{Preview of Other Use Cases}
+  \begin{itemize}
+  \item Learning most popular URLs users visit
+  \item Advertising
+    \begin{itemize}
+    \item Conversion measurement
+    \item Ad display measurement      
+    \end{itemize}
+  \item COVID exposure notification
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}{Privacy Threats}
+
+  \begin{itemize}
+  \item Tying sensitive data directly to identifying information
+    \begin{itemize}
+    \item Directly via user identifiers (E-mail, cookies, etc.)
+    \item Indirectly via metadata (IP address, E.164 number, etc.)
+    \end{itemize}
+
+  \item Collecting sensitive data along with non-sensitive identifying information
+    \begin{itemize}
+    \item Example: (birthday, zip code, initials) $\rightarrow$ income
+      \end{itemize}
+  \end{itemize}
+
+  \vspace{1ex}
+  \begin{quote}
+    It was found that 87\% (216 million of 248 million) of the
+    population in the United States had reported characteristics that
+    likely made them unique based only on {5-digit ZIP, gender, date of
+      birth}. --- Sweeney, 2014~\cite{sweeney2000simple}
+    \end{quote}
+    
+\end{frame}
+
+\begin{frame}[fragile]{Anonymized Data Collection with OHAI}
+
+  \begin{itemize}
+  \item Basic idea: collect user information without identifiers
+  \item Practically speaking    
+    \begin{itemize}
+    \item Strip direct identifiers on the client side
+    \item Strip metadata using a proxy
+    \end{itemize}    
+  \end{itemize}
+
+  \vspace{2ex}
+    \resizebox{0.8\textwidth}{!}{%  
+\begin{tikzpicture}
+[
+ device/.style={rectangle, minimum height=2.5cm, minimum width=1.5cm, draw, rounded corners, align=center},
+ >=Stealth
+ ]
+
+\node (client) at (0, 0) [device] {Client};
+\node (proxy) at (7, 0) [device] {Proxy};
+\node (collector) at (14, 0) [device] {Collector};
+\path [->] (client) edge node [above] {$Encrypt(K_{Collector}, Report)$} (proxy) ;
+\path [->] (proxy) edge node [above] {$Encrypt(K_{Collector}, Report)$}  (collector) ;
+
+\end{tikzpicture}
+}%
+  \vspace{2ex}
+  
+  \begin{itemize}
+  \item Example technologies:
+    \begin{itemize}
+    \item Connection-level proxies (IPsec, RFC 2817 CONNECT, MASQUE)
+    \item Application-level proxies (OHAI)      
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}{Good Use Cases for Anonymization}
+
+  \begin{itemize}
+  \item Boosting the privacy of semi-sensitive data
+    \begin{itemize}
+    \item Important: this requires that the proxy and server do not collude      
+    \item Example: existing browser Telemetry is done with no privacy
+    \end{itemize}
+
+  \item Individual values where you don't need to ``dig into'' the data
+    
+  \item Freeform data
+    \begin{itemize}
+    \item E.g., JSON blobs
+    \end{itemize}
+
+  \item Anything that needs an answer
+    \begin{itemize}
+    \item DNS requests
+    \item Safe Browsing queries
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}{Bad Use Cases for Anonymization}
+
+  \begin{itemize}
+  \item High dimensionality data (statistical queries)
+    \begin{itemize}
+    \item Multiple variables that need to be reported together
+    \item When you want to look at subgroups
+    \item Any time you want to do correlation/regression
+    \item \emph{Anonymized data needs to be disaggregated to prevent de-anonymization}
+    \end{itemize}
+
+  \item Collecting common values (heavy hitters)
+    \begin{itemize}
+    \item The ``top N'' values common $>t$ users
+    \item \emph{Anonymized data collects every value and depends on reporting only common values}      
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}{Cryptography to the Rescue}
+
+  \vspace{-1ex}
+  {\center
+    \resizebox{0.7\textwidth}{!}{%      
+\begin{tikzpicture}
+[
+ device/.style={rectangle, minimum height=2.5cm, minimum width=1.5cm, draw, rounded corners, align=center},
+ >=Stealth
+ ]
+
+\node (client1) at (0, 3) [device] {Client 1};
+\node (client2) at (0, 0) [device] {Client 2};
+\node (client3) at (0, -3) [device] {Client 3};
+\node (server1) at (7, 2) [device] {Server 1};
+\node (server2) at (7, -2) [device] {Server 2};
+\node (collector) at (14, 0) [device] {Collector};
+
+\path [->] (client1) edge node [sloped, above] {Client 1 Share 1} (server1) ;
+\path [->] (client1) edge node [sloped, above] {Client 1 Share 2} (server2) ;
+\path [->] (client2) edge node [sloped, above] {} (server1) ;
+\path [->] (client2) edge node [sloped, above] {} (server2) ;
+\path [->] (client3) edge node [sloped, above] {} (server1) ;
+\path [->] (client3) edge node [sloped, above] {} (server2) ;
+
+
+\path [->] (server1) edge node [sloped, above] {Aggregated Shares} (collector) ;
+\path [->] (server2) edge node [sloped, above] {Aggregated Shares} (collector) ;
+
+\end{tikzpicture}
+}%
+}
+
+Solutions to both statistical queries and heavy hitters share a common framework:
+\begin{itemize}
+\item Split data between two servers
+\item Each server computes aggregated shares
+\item Aggregate shares combined to produce final value  
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}{Trust Model}
+
+  \begin{itemize}
+  \item Client's requirement: The two servers do not collude
+    \begin{itemize}
+    \item If they do, they can compute individual values
+    \item The servers enforce minimum batch sizes and query limits      
+    \end{itemize}
+
+  \item Collector's requirement: Both servers execute the protocol correctly
+    \begin{itemize}
+    \item Either server can distort the results
+    \end{itemize}
+
+  \item Difficult to verify this
+    \begin{itemize}
+    \item Collusion can happen through side channels
+    \item If traffic goes through the leader, helper can just share keys
+    \item Point-in-time audits are possible
+    \end{itemize}
+  \end{itemize}
+
+\end{frame}
+
+
+\begin{frame}{Cryptographic Protocol: Prio~\cite{201553}}
+
+  \begin{itemize}
+  \item Useful for computing numeric aggregates (sum, mean, etc.)
+  \item[]
+  \item Each client $i$ holds a value $x_i$, then secret shares it with each server
+    \begin{itemize}
+    \item Generates random $R_i \leftarrow \mathbb{F}_p$
+    \item Sends $x_i - R_i (mod p)$ to server 1
+    \item Sends $R_i$ to server 2
+    \end{itemize}
+
+  \item Each server adds up their shares
+    \begin{itemize}
+    \item Server 1: $\sum_i x_i - R_i$
+    \item Server 2: $\sum_i R_i$
+    \end{itemize}
+
+  \item Now add these up: $\sum_i x_i - R_i + \sum_i R_i = \sum_i x_i + \sum_i R_i - \sum_i R_i = \sum_i x_i$
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}{What else can Prio compute?}
+
+  \begin{tabular}{l l}
+    Arithmetic mean & $\sum_i x_i / i$ \\
+    Product & $exp(\sum_i log(x_i))$  \\
+    Geometric mean & From product \\
+    Variance and stddeviation & From $\sum_i x_i$ and $\sum_i (x_i)^2$ \\
+    Boolean OR, AND & ... \\
+    MIN, MAX & ... \\
+    Ordinarily least squares (OLS) & ... \\
+  \end{tabular}
+
+  \vspace{2ex}
+  \begin{itemize}
+    \item[] The trick is finding the right encoding    
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{What about bogus data?}
+
+  \begin{itemize}
+  \item Plausible but false
+    \begin{itemize}
+    \item ``I am 180cm tall'' when I am actually 175cm
+    \item A problem with any surveying technique
+    \item Solution: live with somewhat noisy data
+    \end{itemize}
+  \item Completely ridiculous
+    \begin{itemize}
+    \item ``I am 1km tall'' (or worse, ``I am -1km tall'')
+    \item Easy to remove with standard systems by filtering
+      \begin{itemize}
+      \item ... but with Prio the data is encrypted
+      \end{itemize}
+    \item Solution: each submission comes with a zero-knowledge proof of validity
+    \begin{itemize}
+      \item ``This height report is between 100 and 200cm''
+      \item Servers work together to validate the proof
+      \item Only aggregate submissions with valid proofs
+      \end{itemize}
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+
+
+\begin{frame}{Collecting User Interests with Prio}
+
+  \begin{itemize}
+  \item Each user interest gets a bucket
+  \item Client reports the time $T$ spent in each bucket (including 0s) with Prio
+  \item Use Prio to sum them up\footnote{Bonus: report $T^2$ to compute standard deviation}
+  \item Servers only learn aggregates, not values for each category
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}{Cryptographic Protocol: Heavy Hitters (``Hits'') ~\cite{cryptoeprint:2021:017}}
+
+  \begin{itemize}
+  \item Each client submits a string (e.g., a URL)
+    \begin{itemize}
+    \item Report the $N$ most frequent strings
+    \end{itemize}
+
+  \item Servers jointly can compute the number of strings with prefix $p$
+    \begin{itemize}
+    \item Can use binary search to compute the most common strings
+    \item ``How many strings have prefix $p || 0$ versus $p || 1$
+    \end{itemize}
+  \end{itemize}
+
+ % TODO: binary tree picture?
+\end{frame}
+
+\begin{frame}{Collecting Broken Sites with Hits}
+
+  \begin{itemize}
+  \item Client creates one report for each site which is broken
+  \item Use Hits to determine the top sites
+  \item Servers only learn the most important sites, not who reported them
+  \end{itemize}
+
+\end{frame}
+
+\begin{frame}{Subset Queries}
+
+  \begin{itemize}
+  \item Submissions can be tagged with demographic data
+    \begin{itemize}
+    \item Example: (birthday, zip code, initials) $\rightarrow$ Encrypted(income)
+    \item This is safe because the sensitive information is encrypted      
+    \item Servers can then compute aggregates over subsets
+    \end{itemize}
+
+  \item Repeated queries can be used to determine individual values
+    \begin{itemize}
+    \item Querying for $S$ and $S \setminus I$ reveals $I$'s value
+    \item Defenses
+      \begin{itemize}
+      \item Minimum batch size
+      \item Anti-replay
+      \item Differential privacy randomization
+      \end{itemize}
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}{Privacy Preserving Measurement Protocol}
+  {\texttt{draft-gpew-priv-ppm-00}}
+
+  \begin{itemize}
+  \item A generic, modular, protocol for privacy-preserving measurement
+    \begin{itemize}
+    \item Initially implementing Prio and Hits      
+    \item Compatible with multiple cryptographic algorithms (``verifiable distributed aggregation functions'' -- see CFRG presentation for details)
+    \end{itemize}
+
+  \item Build on top of HTTPS
+    \begin{itemize}
+    \item Easy to implement with existing services infrastructure
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{PPM System Architecture}
+
+  {\center
+  \begin{tikzpicture}
+[
+ device/.style={rectangle, minimum height=1.5cm, minimum width=1.5cm, draw, rounded corners, align=center},
+ >=Stealth
+ ]
+
+ \node (client1) at (0, -2) [device] {Client};
+ \node (client2) at (0, 0) [device] {Client};
+ \node (client3) at (0, 2) [device] {Client};
+
+ \node (helper1) at (5, -3) [device] {Helper};
+ \node (leader) at (5, 0) [device] {Leader};
+ \node (helper2) at (5, 3) [device] {Helper};
+
+ \node (collector) at (9, 0) [device] {Collector};
+ 
+ \path [->] (client1) edge node [above, sloped] {Share} (leader);
+ \path [->] (client2) edge node [above] {Share} (leader);
+ \path [->] (client3) edge node [above, sloped] {Share} (leader);
+
+
+ \path [->] (leader.north west) edge node {Shares} (helper2.south west);
+ \path [->] (helper2.south east) edge node {Aggregates} (leader.north east);
+
+ \path [->] (leader.south west) edge node {Shares} (helper1.north west);
+ \path [->] (helper1.north east) edge node {Aggregates} (leader.south east);
+
+ \node (dummy) at (11.5, 0) {};
+ \path [->] (collector.north west) edge node [above, sloped] {Get output} (leader.north east);
+ \path [->] (leader.south east) edge node [above, sloped] {Aggregates} (collector.south west);
+
+
+ \path [->] (collector) edge node [above] {Results} (dummy);
+
+\end{tikzpicture}
+}
+\end{frame}
+
+\begin{frame}{Relationship to OHAI}
+
+  \begin{itemize}
+  \item Complements, not substitutes
+  \item Good cases for OHAI    
+    \begin{itemize}
+    \item Lightweight measurements of semi-sensitive data
+    \item Rich freeform data
+    \item Anything that needs a response (e.g., DNS)
+    \end{itemize}
+
+  \item Good cases for PPM
+    \begin{itemize}
+    \item Very sensitive data
+    \item Simple scalar-type data values
+    \item Settings where you need to ``drill down''
+    \end{itemize}
+
+  \item Two great tastes that taste great together
+    \begin{itemize}
+    \item Can use OHAI to talk to a PPM server
+    \item This provides another layer of privacy
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Questions?}
+
+\end{frame}
+
+\bibliography{ppm}
+\bibliographystyle{alpha}
+
+\end{document}
+
+
+        
