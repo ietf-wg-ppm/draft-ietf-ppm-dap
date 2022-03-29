@@ -1280,9 +1280,9 @@ struct {
 } AggregateShareResp;
 ~~~
 
-`encrypted_input_share.config_id` is set to the collector's HPKE config ID.
-`encrypted_input_share.enc` is set to the encapsulated HPKE context `enc`
-computed above and `encrypted_input_share.ciphertext` is the ciphertext
+`encrypted_aggregate_share.config_id` is set to the collector's HPKE config ID.
+`encrypted_aggregate_share.enc` is set to the encapsulated HPKE context `enc`
+computed above and `encrypted_aggregate_share.ciphertext` is the ciphertext
 `encrypted_agg_share` computed above. `tag` is an HMAC-SHA256 tag over the
 serialized message, excluding the `tag` field itself, computed using the
 `agg_auth_key` shared by the aggregators.
