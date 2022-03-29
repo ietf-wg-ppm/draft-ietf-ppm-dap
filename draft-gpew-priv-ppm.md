@@ -385,8 +385,8 @@ not listed in the appropriate IANA registry (see {{ppm-urn-space}}). Clients
 SHOULD display the "detail" field of all errors. The "instance" value MUST be
 the endpoint to which the request was targeted. The problem document MUST also
 include a "taskid" member which contains the associated PPM task ID, encoded
-with base64 {{!RFC4648}} (this value is always known, see
-{{task-configuration}}).
+with base64 using the standard alphabet {{!RFC4648}} (this value is always
+known, see {{task-configuration}}).
 
 In the remainder of this document, we use the tokens in the table above to refer
 to error types, rather than the full URNs. For example, an "error of type
