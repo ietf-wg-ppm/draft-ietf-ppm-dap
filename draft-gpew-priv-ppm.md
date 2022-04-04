@@ -389,8 +389,9 @@ not listed in the appropriate IANA registry (see {{ppm-urn-space}}). Clients
 SHOULD display the "detail" field of all errors. The "instance" value MUST be
 the endpoint to which the request was targeted. The problem document MUST also
 include a "taskid" member which contains the associated PPM task ID, encoded
-with base64 using the standard alphabet {{!RFC4648}} (this value is always
-known, see {{task-configuration}}).
+in Base 64 using the URL and filename safe alphabet with no padding as defined
+in sections 5 and 3.2 of {{!RFC4648}} (this value is always known, see
+{{task-configuration}}).
 
 In the remainder of this document, we use the tokens in the table above to refer
 to error types, rather than the full URNs. For example, an "error of type
@@ -480,7 +481,8 @@ with which all of the parties are configured:
   endpoints can be found. Each endpoint's list MUST be in the same order. The
   leader's endpoint MUST be the first in the list. The order of the
   `encrypted_input_shares` in a `Report` (see {{uploading-reports}}) MUST be the
-  same as the order in which aggregators appear in this list.
+  same as the order in which aggregators appear in this list. Aggregators MAY
+  use the same endpoint for multiple tasks.
 * `max_batch_lifetime`: The maximum number of times a batch of reports may be
   used in collect requests.
 * `min_batch_size`: The minimum number of reports that appear in a batch.
@@ -517,9 +519,17 @@ individual shares to each helper.
 
 Before the client can upload its report to the leader, it must know the public
 key of each of the aggregators. These are retrieved from each aggregator by
-sending a request to `[aggregator]/hpke_config`, where `[aggregator]` is the
-aggregator's endpoint URL, obtained from the task parameters. The aggregator
-responds to well-formed requests with status 200 and an `HpkeConfig` value:
+sending a request to `[aggregator]/hpke_config?task_id=[task-id]`, where
+`[aggregator]` is the aggregator's endpoint URL, obtained from the task
+parameters, and `[task-id]` is the task ID obtained from the task parameters,
+encoded in Base 64 with URL and filename safe alphabet with no padding, as
+specified in sections 5 and 3.2 of {{!RFC4648}}. If the aggregator does not
+recognize the task ID, then it responds with HTTP error status 404 Not Found and
+an error of type `unrecognizedTask`. The aggregator responds to well-formed
+requests with status 200 and an `HpkeConfig` value:
+
+[TODO: Allow aggregators to return HTTP 403 Forbidden in deployments that use
+authentication to avoid leaking information about which tasks exist.]
 
 ~~~
 struct {
