@@ -614,7 +614,7 @@ leader SHOULD abort the upload protocol and alert the client with error
 
 ### Upload Extensions {#upload-extensions}
 
-Each UploadReq carries a list of extensions that clients may use to convey
+Each Report carries a list of extensions that clients may use to convey
 additional, authenticated information in the report. [OPEN ISSUE: The extensions
 aren't authenticated. It's probably a good idea to be a bit more clear about how
 we envision extensions being used. Right now this includes client attestation
