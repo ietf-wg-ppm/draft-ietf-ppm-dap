@@ -378,6 +378,7 @@ in the "type" field (within the PPM URN namespace "urn:ietf:params:ppm:error:"):
 | unrecognizedMessage     | The message type for a response was incorrect or the payload was malformed. |
 | unrecognizedTask        | An endpoint received a message with an unknown task ID. |
 | outdatedConfig          | The message was generated using an outdated configuration. |
+| batchInvalid            | A collect or aggregate-share request was made with invalid batch parameters. |
 
 This list is not exhaustive. The server MAY return errors set to a URI other
 than those defined above. Servers MUST NOT use the PPM URN namespace for errors
@@ -467,11 +468,6 @@ number generator. Each task has the following parameters associated with it:
   leader's endpoint MUST be the first in the list. The order of the
   `encrypted_input_shares` in a `Report` (see {{uploading-reports}}) MUST be the
   same as the order in which aggregators appear in this list.
-* `collector_config`: The HPKE configuration of the collector (described in
-  {{key-config}}). Having participants agree on this absolves collectors of the
-  burden of operating an HTTP server. See
-  [#102](https://github.com/abetterinternet/prio-documents/issues/102) for
-  discussion.
 * `max_batch_lifetime`: The maximum number of times a batch of reports may be
   used in collect requests.
 * `min_batch_size`: The minimum number of reports that appear in a batch.
@@ -479,7 +475,20 @@ number generator. Each task has the following parameters associated with it:
   newest report in a batch. This defines the boundaries with which the batch
   interval of each collect request must be aligned. (See
   {{batch-parameter-validation}}.)
-* `protocol`: named parameter identifying the VDAF scheme in use.
+* A unique identifier for the VDAF being used for the task.
+
+In addition, in order to facilitate the aggregation and collect protocols, each
+of the aggregators is configured with following parameters:
+
+* `collector_config`: The HPKE configuration of the collector (described in
+  {{key-config}}).
+* `vdaf_verify_param`: The aggregator's VDAF verification parameter output by
+  the setup algorithm computed jointly by the aggregators before the start of the
+  PPM protocol {{?I-D.draft-cfrg-patton-vdaf}}). [OPEN ISSUE: This is yet to be
+  specified. See issue#161.]
+
+Finally, the collector is configured with the HPKE secret key corresponding to
+`collector_hpke_config`.
 
 ## Uploading Reports
 
@@ -661,35 +670,38 @@ Note that it is possible to aggregate reports from one batch while reports from
 the next batch are coming in. This is because each report is validated
 independently.
 
-This process is illustrated below in {{pa-aggregate-flow}}. In this example, the
-batch size is 20, but the leader opts to process the reports in sub-batches of
-10. Each sub-batch takes two round-trips to process. Once both sub-batches have
-been processed, the leader can issue an AggregateShareReq in order to retrieve
-the helper's aggregated result.
+This process is illustrated below in {{aggregation-flow-illustration}}. In this
+example, the batch size is 20, but the leader opts to process the reports in
+sub-batches of 10. Each sub-batch takes two round-trips to process. Once both
+sub-batches have been processed, the leader can issue an AggregateShareReq in
+order to retrieve the helper's aggregate share. (see
+{{aggregate-share-request}}.)
 
 In order to allow the helpers to retain minimal state, the helper can attach a
 state parameter to its response, with the leader returning the state value in
 the next request, thus offloading the state to the leader. This state value MUST
 be cryptographically protected as described in {{helper-state}}.
 
-~~~~
+~~~
 Leader                                                 Helper
 
-AggregateReq (Reports 1-10) -------------------------------->  \
-<------------------------------------ AggregateResp (State 1)  | Reports
-AggregateReq (continued, State 1)      --------------------->  | 10-11
-<------------------------------------ AggregateResp (State 2)  /
+AggregateReq (Reports 1-10) ----------------------------->  \
+<--------------------------------- AggregateResp (State 1)  | Reports
+AggregateReq (continued, State 1) ----------------------->  | 1-10
+<--------------------------------- AggregateResp (State 2)  /
 
 
-AggregateReq (Reports 11-20, State 2) ---------------------->  \
-<------------------------------------ AggregateResp (State 3)  | Reports
-AggregateReq (continued, State 3) -------------------------->  | 20-21
-<------------------------------------ AggregateResp (State 4) /
+AggregateReq (Reports 11-20, State 1) ------------------->  \
+<--------------------------------- AggregateResp (State 1)  | Reports
+AggregateReq (continued, State 2) ----------------------->  | 11-20
+<--------------------------------- AggregateResp (State 2)  /
 
-AggregateShareReq (State 4) -------------------------------->
-<-------------------------------- AggregateShareResp (Result)
-~~~~
-{: #pa-aggregate-flow title="Aggregation Process (batch size=20)"}
+
+AggregateShareReq (Reports 1-20) ------------------------>
+<----------------------------- AggregateShareResp (Result)
+~~~
+{: #aggregation-flow-illustration title="Aggregation Flow (batch size=20).
+Multiple aggregation flows can be executed at the same time."}
 
 [OPEN ISSUE: Should there be an indication of whether a given AggregateReq is a
 continuation of a previous sub-batch?]
@@ -843,10 +855,17 @@ struct {
 * `task_id` is the task ID associated with the PPM parameters.
 * `batch_interval` is the batch interval of the request.
 * `report_count` is the number of reports included in the aggregation.
-* `checksum` is the checksum computed over the set of client reports, computed
-  as described above.
+* `checksum` is the checksum computed over the set of client reports. The
+  checksum is computed by taking the SHA256 hash of each nonce from the client
+  reports included in the aggregation, then combining the hash values with a
+  bitwise-XOR operation.
 * `helper_state` is the helper's state, which is carried across requests from
   the leader.
+
+To handle the leader's request, the helper first ensures that the request meets
+the requirements for batch parameters following the procedure in
+{{batch-parameter-validation}}. If the batch parameters are invalid, then it
+MUST abort with error "batchInvalid".
 
 To respond to an AggregateShareReq message, the helper first looks up the PPM
 parameters associated with task `task_id`. Then, using the procedure in
