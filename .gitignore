@@ -13,7 +13,7 @@ archive.json
 report.xml
 venv/
 lib
-draft-gpew-priv-ppm.xml
+draft-ietf-ppm-dap.xml
 *.aux
 *.bbl
 *.blg
