@@ -2,9 +2,9 @@
 
 This is the working area for the individual Internet-Draft, "Privacy Preserving Measurement Protocol".
 
-* [Editor's Copy](https://ietf-wg-ppm.github.io/ppm-specification/#go.draft-gpew-priv-ppm.html)
-* [Individual Draft](https://datatracker.ietf.org/doc/html/draft-gpew-priv-ppm)
-* [Compare Editor's Copy to Individual Draft](https://ietf-wg-ppm.github.io/ppm-specification/#go.draft-gpew-priv-ppm.diff)
+* [Editor's Copy](https://ietf-wg-ppm.github.io/ppm-specification/#go.draft-ietf-ppm-dap.html)
+* [Individual Draft](https://datatracker.ietf.org/doc/html/draft-ietf-ppm-dap)
+* [Compare Editor's Copy to Individual Draft](https://ietf-wg-ppm.github.io/ppm-specification/#go.draft-ietf-ppm-dap.diff)
 
 ## Building the Draft
 

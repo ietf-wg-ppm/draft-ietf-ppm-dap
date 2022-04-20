@@ -37,4 +37,4 @@ exposure of individual user measurements and denial of service attacks on the
 measurement system. The resulting documents shall clearly describe abuse cases
 and remaining attacks which are not prevented or mitigated by the protocol.
 
-The starting point for PPM WG discussions shall be draft-gpew-priv-ppm.
+The starting point for PPM WG discussions shall be draft-ietf-ppm-dap.
