@@ -380,7 +380,11 @@ in the "type" field (within the PPM URN namespace "urn:ietf:params:ppm:error:"):
 | unrecognizedTask        | An endpoint received a message with an unknown task ID. |
 | outdatedConfig          | The message was generated using an outdated configuration. |
 | staleReport             | Report could not be processed because it arrived too late. |
+| reportFromTheFuture     | Report could not be processed because its timestamp is too far in the future. |
 | invalidHmac             | The aggregate message's HMAC was not valid. |
+| invalidBatchInterval    | The batch interval in the collect or aggregate share request is not valid for the task. |
+| insufficientBatchSize   | There are not enough reports in the batch interval. |
+| privacyBudgetExceeded   | The privacy budget has been exceeded for one or more reports included in the batch interval. |
 {: #error-types title="Error types."}
 
 This list is not exhaustive. The server MAY return errors set to a URI other
@@ -647,6 +651,12 @@ collect request from the collector. (Collect requests are defined in
 {{collect-flow}}.) In addition, the leader SHOULD abort the upload protocol and
 alert the client with error "staleReport".
 
+The leader SHOULD NOT accept reports whose timestamps are too far in the future.
+Implementors MAY provide for some small leeway, usually no more than a few
+minutes, to account for clock skew. If the leader rejects a report for this
+reason, it SHOULD abort the upload protocol and alert the client with error
+"reportFromTheFuture".
+
 ### Upload Extensions {#upload-extensions}
 
 Each Report carries a list of extensions that clients may use to convey
@@ -673,10 +683,7 @@ information specific to the extension.
 
 ### Report Storage
 
-The leader is required to buffer reports while waiting to aggregate them. The
-leader SHOULD NOT accept reports whose timestamps are too far in the future.
-Implementors MAY provide for some small leeway, usually no more than a few
-minutes, to account for clock skew.
+The leader is required to buffer reports while waiting to aggregate them.
 
 ## Verifying and Aggregating Reports {#aggregation-flow}
 
@@ -1346,7 +1353,7 @@ inputs until the collector provides the aggregation parameter in the
 
 Upon receipt of a `CollectReq`, the leader begins by checking that the request
 meets the requirements of the batch parameters using the procedure in
-{{batch-parameter-validation}}. If not, it MUST abort with error "XXX".
+{{batch-parameter-validation}}.
 
 Next, the leader sends the collector a response with HTTP status 303 See Other
 and a Location header containing a URI identifying the collect job that can be
@@ -1420,7 +1427,7 @@ boundaries defined by the PPM task's parameters. Namely, it checks that both
 `batch_interval.start` and `batch_interval.duration` are divisible by
 `min_batch_duration` and that `batch_interval.duration >= min_batch_duration`.
 Unless both these conditions are true, the aggregator MUST abort and alert its
-peer with "invalid batch interval".
+peer with error "invalidBatchInterval".
 
 Next, the aggregator checks that the request respects the generic privacy
 parameters of the PPM task. Let `X` denote the set of reports for which the
@@ -1428,11 +1435,11 @@ aggregator has recovered a valid output share and which fall in the batch
 interval of the request.
 
 * If `len(X) < min_batch_size`, then the aggregator MUST abort and alert the
-  peer with "XXX insufficient batch size".
+  peer with error "insufficientBatchSize".
 * The aggregator keeps track of the number of times each report was aggregated.
   If any input share in `X` was added to at least `max_batch_lifetime` previous
-  batches, then the aggregator aborts and alerts the peer with "XXX request
-  exceeds the batch's privacy budget".
+  batches, then the aggregator aborts and alerts the peer with error
+  "privacyBudgetExceeded".
 
 ## Anti-replay {#anti-replay}
 
