@@ -475,7 +475,7 @@ number generator. Each task has the following parameters associated with it:
   newest report in a batch. This defines the boundaries with which the batch
   interval of each collect request must be aligned. (See
   {{batch-parameter-validation}}.)
-* A unique identifier for the VDAF being used for the task.
+* A unique identifier for the VDAF instance used for the task, including the type of measurement associated with the task.
 
 In addition, in order to facilitate the aggregation and collect protocols, each
 of the aggregators is configured with following parameters:
