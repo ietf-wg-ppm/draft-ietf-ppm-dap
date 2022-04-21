@@ -999,7 +999,7 @@ with error `vdaf-prep-error`. Otherwise, it interprets `out` as follows. If this
 is the last round of VDAF preparation phase, then `out` is the helper's output
 share, in which case the helper finishes and transitions to FINISHED. Otherwise,
 the helper interpets `out` as the tuple `(new_state, agg_msg)`, where
-`new_state` is its updated preperation state and `agg_msg` is its next VDAF
+`new_state` is its updated preparation state and `agg_msg` is its next VDAF
 message.
 
 This output message for each report in AggregateContinueReq.seq is then sent to the leader
