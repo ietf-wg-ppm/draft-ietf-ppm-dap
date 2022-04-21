@@ -984,18 +984,18 @@ parameters except its own, the leader sends a POST request to
 `[aggregator]/aggregate` with AggregateContinueReq as the payload and the media
 type set to "message/ppm-aggregate-continue-req".
 
-For each PrepareShare in AggregateContinueReq.process_shares received from the leader, the helper
-proceeds as follows:
+For each PrepareShare in AggregateContinueReq.process_shares received from the leader,
+the helper performs the following check to determine if the report share should continue
+being prepared.
 
 * If failed, then mark the report as failed and reply with a failed PrepareShare
   to the leader.
 * If finished, then mark the report as finished and reply with a finished PrepareShare
   to the leader. The helper then moves to the completion phase of aggregation;
   see {{agg-complete}}.
-* If continued, then generate a new VDAF state and output message based on the leader's
-  message and reply with a continued PrepareShare to the leader.
 
-The helper computes its update state and output message as follows:
+Otherwise, preparation continues. In this case, the helper computes its updated state
+and output message as follows:
 
 ~~~
 out = VDAF.prep_next(prep_state, inbound)
