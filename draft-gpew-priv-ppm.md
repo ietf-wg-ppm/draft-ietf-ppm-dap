@@ -706,7 +706,8 @@ Multiple aggregation flows can be executed at the same time."}
 [OPEN ISSUE: Should there be an indication of whether a given aggregate request is a
 continuation of a previous sub-batch?]
 
-The aggregation flow can be thought of as having three phases:
+The aggregation flow can be thought of as having three phases for transforming
+each valid input report share into an output share:
 
 - Initialization: Begin the aggregation flow by sharing report shares with each
   helper. Each aggregator, including the leader, initializates the underlying
@@ -717,10 +718,6 @@ The aggregation flow can be thought of as having three phases:
   These messages do not replay the shares.
 - Completion: Finish the aggregate flow, yielding an output share corresponding
   for each input report share in the batch.
-
-Once both aggregation is complete and a sufficient number of reports have
-been aggregated, the aggregate shares can be collected to produce the final,
-aggregate output. That process is described in {{collect-flow}}.
 
 ### Aggregate Initialization {#agg-init}
 
@@ -770,7 +767,7 @@ prep_state = VDAF.prep_init(vdaf_verify_param, agg_param, nonce, input_share)
 
 Once the leader has initialized this state for all candidate report shares, it
 then creates an AggregateInitReq message for each helper to initialize the
-process of aggregating this candidate set. This message is structured as follows:
+preparation of this candidate set. This message is structured as follows:
 
 ~~~
 struct {
@@ -867,7 +864,7 @@ out = VDAF.prep_next(prep_state, None)
 
 The value `out` is interpreted as follows. If the VDAF is 0-round, then `out` is the
 aggregator's output share, in which case the aggregator finishes and stores its
-output share for further processing as described in {{agg-complete}}. Otherwise,
+output share for further processing as described in {{collect-flow}}. Otherwise,
 if the VDAF consists of one round or more, then the aggregator interprets `out` as
 the pair `(new_state, prep_msg)`, where `new_state` is its updated state and `prep_msg`
 is its next VDAF message. For the latter case, the helper sets `prep_state` to `new_state`.
@@ -935,8 +932,8 @@ following procedure.
 * If the leader continued but the helper finished, or if the leader finished but
   the helper continued, then mark the report as failed and do not process it further.
 * If the leader and helper finished, then continuation is complete. At this point the
-  report has been completely processed and both aggregators have recovered an
-  output share. The leader proceeds as described in {{agg-complete}}.
+  report has been prepared for aggregation and both aggregators have recovered an
+  output share that can be aggregated and collected as described in {{collect-flow}}.
 * If the leader and helper continued, then the leader computes its next state
   transition ("prep_next") and sends the helper a PrepareShare message with the
   payload computed as described below.
@@ -971,7 +968,7 @@ structured as follows:
 ~~~
 struct {
   opaque helper_state<0..2^16>;
-  PrepareShare process_shares<1..2^16-1>;
+  PrepareShare prepare_shares<1..2^16-1>;
 } AggregateContinueReq;
 ~~~
 
@@ -980,15 +977,15 @@ parameters except its own, the leader sends a POST request to
 `[aggregator]/aggregate` with AggregateContinueReq as the payload and the media
 type set to "message/ppm-aggregate-continue-req".
 
-For each PrepareShare in AggregateContinueReq.process_shares received from the leader,
+For each PrepareShare in AggregateContinueReq.prepare_shares received from the leader,
 the helper performs the following check to determine if the report share should continue
 being prepared.
 
 * If failed, then mark the report as failed and reply with a failed PrepareShare
   to the leader.
 * If finished, then mark the report as finished and reply with a finished PrepareShare
-  to the leader. The helper then moves to the completion phase of aggregation;
-  see {{agg-complete}}.
+  to the leader. The helper then stores the output share and awaits for collection;
+  see {{collect-flow}}.
 
 Otherwise, preparation continues. In this case, the helper computes its updated state
 and output message as follows:
@@ -1006,41 +1003,20 @@ the helper interpets `out` as the tuple `(new_state, prep_msg)`, where
 `new_state` is its updated preparation state and `prep_msg` is its next VDAF
 message.
 
-This output message for each report in AggregateContinueReq.process_shares is then sent to the leader
+This output message for each report in AggregateContinueReq.prepare_shares is then sent to the leader
 in an AggregateContinueResp message, structured as follows:
 
 ~~~
 struct {
   opaque helper_state<0..2^16>;
-  PrepareShare process_shares<1..2^16-1>;
+  PrepareShare prepare_shares<1..2^16-1>;
 } AggregateContinueResp;
 ~~~
 
-The order of AggregateContinueResp.process_shares matches that of the PrepareShare values in
-`AggregateContinueReq.process_shares`. The helper's response to the leader is an HTTP 200 OK whose body
+The order of AggregateContinueResp.prepare_shares matches that of the PrepareShare values in
+`AggregateContinueReq.prepare_shares`. The helper's response to the leader is an HTTP 200 OK whose body
 is the AggregateContinueResp and media type is "message/ppm-aggregate-continue-resp". The helper
 then awaits the next message from the leader.
-
-### Aggregate Completion {#agg-complete}
-
-Once processing of a report share is finished, each aggregator stores the
-recovered output share until the batch to which it pertains is collected.
-To aggregate the output shares, denoted `out_shares`, the aggregator runs
-the aggregation algorithm specified by the VDAF:
-
-~~~
-agg_share = VDAF.out_shares_to_agg_share(agg_param, out_shares)
-~~~
-
-Note that for most VDAFs, it is possible to aggregate output shares as they
-arrive rather than wait until the batch is collected. To do so however, it is
-necessary to enforce the batch parameters as described in
-{{batch-parameter-validation}} so that the aggregator knows which aggregate
-share to update.
-
-The leader needs to store a report for as long as it can be collected. Once a
-report has been collected `max_batch_lifetime` times, the leader SHOULD remove
-the report from storage.
 
 ## Collecting Results {#collect-flow}
 
@@ -1132,10 +1108,20 @@ the batch window, and checks that the `report_count` and `checksum` included in
 the request match its computed values. If not, then it MUST abort with error
 "batchMismatch".
 
-Next, it computes the aggregate share for the batch interval as described in
-{{agg-complete}}, obtaining an opaque byte string `agg_share` whose
-structure is specific to the VDAF in use. The helper encrypts the
-`agg_share` as follows:
+Next, it computes the aggregate share `agg_share` corresponding to the set of
+output shares, denoted `out_shares`, for the batch interval, as follows:
+
+~~~
+agg_share = VDAF.out_shares_to_agg_share(agg_param, out_shares)
+~~~
+
+Note that for most VDAFs, it is possible to aggregate output shares as they
+arrive rather than wait until the batch is collected. To do so however, it is
+necessary to enforce the batch parameters as described in
+{{batch-parameter-validation}} so that the aggregator knows which aggregate
+share to update.
+
+The helper then encrypts `agg_share` as follows:
 
 ~~~
 enc, context = SetupBaseS(pk, AggregateShareReq.task_id ||
