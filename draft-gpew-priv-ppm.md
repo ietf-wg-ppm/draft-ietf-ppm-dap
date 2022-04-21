@@ -712,7 +712,8 @@ The aggregation flow can be thought of as having three phases:
   VDAF instance using these report shares and the VDAF configured for the
   corresponding measurement task.
 - Continuation: Continue the aggregation flow by exchanging messages produced
-  by the underlying VDAF instance until aggregation completes or an error occurs. These messages do not replay the shares.
+  by the underlying VDAF instance until aggregation completes or an error occurs.
+  These messages do not replay the shares.
 - Completion: Finish the aggregate flow, yielding an output share corresponding
   for each input report share in the batch.
 
@@ -722,13 +723,20 @@ aggregate output. That process is described in {{collect-flow}}.
 
 ### Aggregate Initialization {#agg-init}
 
-The leader begins aggregation by choosing a set of candidate reports that is subject to the following restrictions:
-* Each report in the set MUST pertain to the same PPM task.
-* It is an error to allow a report to be replayed. If the leader has already aggregated a report, but the report does not pertain to a batch that has been collected, then the report MUST be excluded.
-* It is an error to include a new report in a batch that has already been collected. If the report pertains to a batch that has been collected, but the leader has not yet aggregated the report, then it MUST be excluded.
+The leader begins aggregation by choosing a set of candidate reports that is subject
+to the following restrictions:
 
-After choosing the set of candidates, the The leader begins aggregation by splitting each report into "report
-shares", one for each aggregator. A single report share is encoded as follows:
+* Each report in the set MUST pertain to the same PPM task.
+* It is an error to allow a report to be replayed. If the leader has already aggregated
+  a report, but the report does not pertain to a batch that has been collected, then
+  the report MUST be excluded.
+* It is an error to include a new report in a batch that has already been collected.
+  If the report pertains to a batch that has been collected, but the leader has not yet
+  aggregated the report, then it MUST be excluded.
+
+After choosing the set of candidates, the The leader begins aggregation by splitting each
+report into "report shares", one for each aggregator. A single report share is encoded
+as follows:
 
 ~~~
 struct {
