@@ -713,7 +713,7 @@ The aggregation flow can be thought of as having three phases:
   VDAF instance using these report shares and the public VDAF configured for
   the corresponding measurement task.
 - Continuation: Continue the aggregation flow by exchanging messages produced
-  by the underlying VDAF instance until aggregation completes or an error occurs.
+  by the underlying VDAF instance until aggregation completes or an error occurs. These messages do not replay the shares.
 - Completion: Finish the aggregate flow, yielding an aggregate share corresponding
   to all output shares in the batch.
 
