@@ -475,7 +475,8 @@ number generator. Each task has the following parameters associated with it:
   newest report in a batch. This defines the boundaries with which the batch
   interval of each collect request must be aligned. (See
   {{batch-parameter-validation}}.)
-* A unique identifier for the VDAF instance used for the task, including the type of measurement associated with the task.
+* A unique identifier for the VDAF instance used for the task, including the
+  type of measurement associated with the task.
 
 In addition, in order to facilitate the aggregation and collect protocols, each
 of the aggregators is configured with following parameters:
@@ -786,7 +787,7 @@ struct {
   TaskID task_id;
   opaque agg_param<0..2^16-1>;
   opaque helper_state<0..2^16>;
-  ReportShare seq<1..2^16-1>;
+  ReportShare report_shares<1..2^16-1>;
 } AggregateInitReq;
 ~~~
 
@@ -803,11 +804,11 @@ request to `[aggregator]/aggregate` with its AggregateInitReq message as
 the payload. The media type is "message/ppm-aggregate-init-req".
 
 To process the leader's request, the helper first checks that the nonces in
-`AggregateInitReq.seq` are all distinct. If two InputReportShare messages have the
+`AggregateInitReq.report_shares` are all distinct. If two ReportShare values have the
 same nonce, then the helper MUST abort with error "unrecognizedMessage".
 
 Next, the helper initializates the preparation state for each report share in
-`AggregateInitReq.seq`. Each report share will either be processed successfully
+`AggregateInitReq.report_shares`. Each report share will either be processed successfully
 or is otherwise invalid, being marked with one of the following errors:
 
 ~~~
@@ -875,7 +876,7 @@ if the VDAF consists of one round or more, then the aggregator interprets `out` 
 the pair `(new_state, agg_msg)`, where `new_state` is its updated state and `agg_msg`
 is its next VDAF message. For the latter case, the helper sets `prep_state` to `new_state`.
 
-Once the helper has processed each report share in `AggregateInitReq.seq`, the helper
+Once the helper has processed each report share in `AggregateInitReq.report_shares`, the helper
 then creates an AggregateInitResp message to complete its initialization. This message is
 structured as follows:
 
@@ -912,7 +913,7 @@ helper implementation.
 [[OPEN ISSUE: we may end up removing helper_state. See #185]]
 
 The rest of the message is a sequence of ProcessShare values, the order of which
-matches that of the InputReportShare values in `AggregateInitReq.seq`. Each report
+matches that of the ReportShare values in `AggregateInitReq.report_shares`. Each report
 that was marked as invalid is assigned the ProcessType `failed`. Otherwise, the
 ProcessShare is either marked as continued with the output `agg_msg`, or is marked
 as finished if the VDAF computation is finished.
@@ -974,7 +975,7 @@ structured as follows:
 ~~~
 struct {
   opaque helper_state<0..2^16>;
-  ProcessShare seq<1..2^16-1>;
+  ProcessShare process_shares<1..2^16-1>;
 } AggregateContinueReq;
 ~~~
 
@@ -983,7 +984,7 @@ parameters except its own, the leader sends a POST request to
 `[aggregator]/aggregate` with AggregateContinueReq as the payload and the media
 type set to "message/ppm-aggregate-continue-req".
 
-For each ProcessShare in AggregateContinueReq.seq received from the leader, the helper
+For each ProcessShare in AggregateContinueReq.process_shares received from the leader, the helper
 proceeds as follows:
 
 * If failed, then mark the report as failed and reply with a failed ProcessShare
@@ -1009,18 +1010,18 @@ the helper interpets `out` as the tuple `(new_state, agg_msg)`, where
 `new_state` is its updated preparation state and `agg_msg` is its next VDAF
 message.
 
-This output message for each report in AggregateContinueReq.seq is then sent to the leader
+This output message for each report in AggregateContinueReq.process_shares is then sent to the leader
 in an AggregateContinueResp message, structured as follows:
 
 ~~~
 struct {
   opaque helper_state<0..2^16>;
-  ProcessShare seq<1..2^16-1>;
+  ProcessShare process_shares<1..2^16-1>;
 } AggregateContinueResp;
 ~~~
 
-The order of AggregateContinueResp.seq matches that of the InputReportShare values in
-`AggregateContinueReq.seq`. The helper's response to the leader is an HTTP 200 OK whose body
+The order of AggregateContinueResp.process_shares matches that of the ProcessShare values in
+`AggregateContinueReq.process_shares`. The helper's response to the leader is an HTTP 200 OK whose body
 is the AggregateInitResp and media type is "message/ppm-aggregate-continue-resp". The helper
 then awaits the next message from the leader.
 
