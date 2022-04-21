@@ -379,7 +379,6 @@ in the "type" field (within the PPM URN namespace "urn:ietf:params:ppm:error:"):
 | unrecognizedTask        | An endpoint received a message with an unknown task ID. |
 | outdatedConfig          | The message was generated using an outdated configuration. |
 | batchInvalid            | A collect or aggregate-share request was made with invalid batch parameters. |
-| invalidReportShare      | The report share was invalid and could not be processed. |
 
 This list is not exhaustive. The server MAY return errors set to a URI other
 than those defined above. Servers MUST NOT use the PPM URN namespace for errors
@@ -1114,10 +1113,7 @@ struct {
 * `task_id` is the task ID associated with the PPM parameters.
 * `batch_interval` is the batch interval of the request.
 * `report_count` is the number of reports included in the aggregation.
-* `checksum` is the checksum computed over the set of client reports. The
-  checksum is computed by taking the SHA256 hash of each nonce from the client
-  reports included in the aggregation, then combining the hash values with a
-  bitwise-XOR operation.
+* `checksum` is the checksum computed over the set of client reports.
 * `helper_state` is the helper's state, which is carried across requests from
   the leader.
 
