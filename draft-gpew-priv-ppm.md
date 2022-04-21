@@ -648,7 +648,7 @@ information specific to the extension.
 
 ### Leader State {#leader-state}
 
-The leader is required to buffer reports while waiting to aggregate them. The
+The leader MUST buffer reports while waiting to aggregate them. The
 leader SHOULD NOT accept reports whose timestamps are too far in the future.
 Implementors MAY provide for some small leeway, usually no more than a few
 minutes, to account for clock skew.
