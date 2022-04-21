@@ -384,7 +384,7 @@ in the "type" field (within the PPM URN namespace "urn:ietf:params:ppm:error:"):
 | invalidHmac             | The aggregate message's HMAC was not valid. |
 | invalidBatchInterval    | The batch interval in the collect or aggregate share request is not valid for the task. |
 | insufficientBatchSize   | There are not enough reports in the batch interval. |
-| privacyBudgetExceeded   | The privacy budget has been exceeded for one or more reports included in the batch interval. |
+| batchLifetimeExceeded   | The batch lifetime has been exceeded for one or more reports included in the batch interval. |
 {: #error-types title="Error types."}
 
 This list is not exhaustive. The server MAY return errors set to a URI other
@@ -1439,7 +1439,7 @@ interval of the request.
 * The aggregator keeps track of the number of times each report was aggregated.
   If any input share in `X` was added to at least `max_batch_lifetime` previous
   batches, then the aggregator aborts and alerts the peer with error
-  "privacyBudgetExceeded".
+  "batchLifetimeExceeded".
 
 ## Anti-replay {#anti-replay}
 
