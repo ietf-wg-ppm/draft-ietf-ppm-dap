@@ -1018,7 +1018,7 @@ struct {
 
 The order of AggregateContinueResp.process_shares matches that of the PrepareShare values in
 `AggregateContinueReq.process_shares`. The helper's response to the leader is an HTTP 200 OK whose body
-is the AggregateInitResp and media type is "message/ppm-aggregate-continue-resp". The helper
+is the AggregateContinueResp and media type is "message/ppm-aggregate-continue-resp". The helper
 then awaits the next message from the leader.
 
 ### Aggregate Completion {#agg-complete}
