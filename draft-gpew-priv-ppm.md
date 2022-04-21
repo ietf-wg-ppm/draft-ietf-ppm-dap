@@ -1019,8 +1019,8 @@ then awaits the next message from the leader.
 
 ### Aggregate Completion {#agg-complete}
 
-Once processing of a report share is finished, each aggregator stores the the
-recovered output shares until the batch to which it pertains is collected.
+Once processing of a report share is finished, each aggregator stores the
+recovered output share until the batch to which it pertains is collected.
 To aggregate the output shares, denoted `out_shares`, the aggregator runs
 the aggregation algorithm specified by the VDAF:
 
