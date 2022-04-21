@@ -732,42 +732,39 @@ to the following restrictions:
   If the report pertains to a batch that has been collected, but the leader has not yet
   aggregated the report, then it MUST be excluded.
 
-After choosing the set of candidates, the The leader begins aggregation by splitting
-each report into "report shares", one for each aggregator. Once the set of report
-shares is identified, the leader decrypts its own input shares and computes the
-initial preparation state. To do this, the leader starts by looking up the HPKE
-config and corresponding secret key indicated by `encrypted_input_share.config_id`.
-If not found, then it MUST remove the report share from the set. Otherwise, it
-decrypts the payload with the following procedure:
+After choosing the set of candidates, the leader begins aggregation by splitting
+each report into "report shares", one for each aggregator. The leader and helpers then
+run the aggregate initialization flow to accomplish two tasks:
+
+1. Recover and determine which input report shares are invalid.
+1. For each valid input report share, initialize the VDAF preparation process.
+
+An invalid report share is marked with one of the following errors:
 
 ~~~
-context = SetupBaseR(encrypted_input_share.enc, sk, task_id ||
-                     "ppm-00 input share" || 0x01 || 0x02)
-
-input_share = context.Open(nonce || extensions,
-                           encrypted_input_share.payload)
+enum {
+  batch-collected(0),
+  report-replayed(1),
+  report-dropped(2),
+  hpke-unknown-config-id(3),
+  hpke-decrypt-error(4),
+  vdaf-prep-error(5),
+} ReportShareError;
 ~~~
 
-where `sk` is the HPKE secret key, `task_id` is the task ID, and `nonce` and
-`extensions` are the nonce and extensions of the report share respectively.
-If decryption fails, the leader marks this report as invalid and removes it
-from the set of candidate reports. Moreover, if the report has never been aggregated
-but is contained by a batch that has been collected, then the aggregator marks
-this report as invalid and removes it from the set of candidate reports.
+#### Leader Initialization
 
-Next, the leader runs the preparation-state initialization algorithm for the
-VDAF associated with the task and computes the first state transition. Let
-`vdaf_verify_param` denote the pre-configured VDAF verification parameter,
-`agg_param` denote the aggregation parameter, `nonce` denote the report nonce,
-and let `input_share` denote the input share:
+The leader begins the aggregate initialization phase with the set of candidate report
+shares as follows:
 
-~~~
-prep_state = VDAF.prep_init(vdaf_verify_param, agg_param, nonce, input_share)
-~~~
+1. Decrypt the input share for each report share as described in {{input-share-decryption}}.
+1. Check that the resulting input share is valid as described in {{input-share-batch-validation}}.
+1. Initialize VDAF preparation and initial outputs as described in {{input-share-prep}}.
 
-Once the leader has initialized this state for all candidate report shares, it
-then creates an AggregateInitReq message for each helper to initialize the
-preparation of this candidate set. This message is structured as follows:
+If any step yields yields an invalid report share, the leader removes the report share from
+the set of candidate reports. Once the leader has initialized this state for all valid
+candidate report shares, it then creates an AggregateInitReq message for each helper to
+initialize the preparation of this candidate set. This message is structured as follows:
 
 ~~~
 struct {
@@ -796,81 +793,25 @@ Let `[aggregator]` denote the helper's API endpoint. The leader sends a POST
 request to `[aggregator]/aggregate` with its AggregateInitReq message as
 the payload. The media type is "message/ppm-aggregate-init-req".
 
-To process the leader's request, the helper first checks that the nonces in
-`AggregateInitReq.report_shares` are all distinct. If two ReportShare values have the
-same nonce, then the helper MUST abort with error "unrecognizedMessage".
+#### Helper Initialization
 
-Next, the helper initializates the preparation state for each report share in
-`AggregateInitReq.report_shares`. Each report share will either be processed successfully
-or is otherwise invalid, being marked with one of the following errors:
+Each helper begins their portion of the aggregate initialization phase with the set
+of candidate report shares obtained in a `AggregateInitReq` message from the leader.
+It attempts to recover and validate the corresponding input shares similar to the leader,
+and eventually returns a response to the leader carrying the preparation state for each
+report share.
 
-~~~
-enum {
-  batch-collected(0),
-  report-replayed(1),
-  report-dropped(2),
-  hpke-unknown-config-id(3),
-  hpke-decrypt-error(4),
-  vdaf-prep-error(5),
-} ReportShareError;
-~~~
+To begin this process, the helper first checks that the nonces in `AggregateInitReq.report_shares`
+are all distinct. If two ReportShare values have the same nonce, then the helper MUST abort with
+error "unrecognizedMessage". If this check succeeds, the helper then attempts to recover each
+input share in `AggregateInitReq.report_shares` as follows:
 
-Processing a report share begins by first checking if the report has already
-been aggregated. This is the case if the report was used in a previous aggregate
-request and is therefore a replay. In this case, the helper marks the report as
-invalid with the `report-replayed` error. Note that detecting whether a report
-has been replayed (i.e., it has been aggregated but not yet collected) requires
-each aggregator to store the nonces of reports that have been aggregated in
-uncollected batch intervals. So that the aggregator does not have to maintain
-this storage indefinitely, it MAY instead mark the report invalid with `report-dropped`
-under the conditions prescribed in {{anti-replay}}. The helper also checks to see
-if the report has never been aggregated but is contained by a batch that has been
-collected. If this is true, then the helper marks the report as invalid with error
-`batch-collected`. This prevents additional reports from being aggregated after its
-batch has already been collected.
+1. Decrypt the input share for each report share as described in {{input-share-decryption}}.
+1. Check that the resulting input share is valid as described in {{input-share-batch-validation}}.
+1. Initialize VDAF preparation and initial outputs as described in {{input-share-prep}}.
 
-Next, the helper attempts to decrypt its input share. It starts by looking
-up the HPKE config and corresponding secret key indicated by
-`encrypted_input_share.config_id`. If not found, then it marks the report
-as invalid with error `hpke-unknown-config-id`. Otherwise, it decrypts the
-payload with the following procedure:
-
-~~~
-context = SetupBaseR(encrypted_input_share.enc, sk, task_id ||
-                     "ppm-00 input share" || 0x01 || 0x03)
-
-input_share = context.Open(ReportShare.nonce || ReportShare.extensions,
-                           ReportShare.encrypted_input_share.payload)
-~~~
-
-where `sk` is the HPKE secret key, `task_id` is the task ID, and `nonce` and
-`extensions` are the nonce and extensions of the report share respectively.
-If decryption fails, then the aggregator marks the report as invalid with
-error `hpke-decrypt-error`.
-
-Next, the helper runs the preparation-state initialization algorithm for the
-VDAF associated with the task and computes the first state transition:
-
-~~~
-prep_state = VDAF.prep_init(vdaf_verify_param, agg_param, nonce, input_share)
-~~~
-
-If this step fails, the helper marks the report as invalid with error
-`vdaf-prep-error`. Otherwise, the helper produces an initial outbound message:
-
-~~~
-out = VDAF.prep_next(prep_state, None)
-~~~
-
-The value `out` is interpreted as follows. If the VDAF is 0-round, then `out` is the
-aggregator's output share, in which case the aggregator finishes and stores its
-output share for further processing as described in {{collect-flow}}. Otherwise,
-if the VDAF consists of one round or more, then the aggregator interprets `out` as
-the pair `(new_state, prep_msg)`, where `new_state` is its updated state and `prep_msg`
-is its next VDAF message. For the latter case, the helper sets `prep_state` to `new_state`.
-
-Once the helper has processed each report share in `AggregateInitReq.report_shares`, the helper
-then creates an AggregateInitResp message to complete its initialization. This message is
+Once the helper has processed each valid report share in `AggregateInitReq.report_shares`, the
+helper then creates an AggregateInitResp message to complete its initialization. This message is
 structured as follows:
 
 ~~~
@@ -920,47 +861,112 @@ AggregateInitReq. If any message appears out of order, is missing, has an
 unrecognized nonce, or if two messages have the same nonce, then the leader MUST
 abort with error "unrecognizedMessage".
 
+[[OPEN ISSUE: the leader behavior here is sort of bizarre -- to whom does it abort?]]
+
+#### Input Share Decryption {#input-share-decryption}
+
+Each report share has a corresponding task ID, nonce, list of extensions, and encrypted
+input report share. Let `nonce`, `extensions`, and `encrypted_input_share` denote these
+values, respectively. Given these values, an aggregator decrypts the input report
+share as follows. First, the aggregator looks up the HPKE config and corresponding
+secret key indicated by `encrypted_input_share.config_id`. If not found, then it
+marks the report share as invalid. Otherwise, it decrypts the payload with the
+following procedure:
+
+~~~
+context = SetupBaseR(encrypted_input_share.enc, sk, task_id ||
+                     "ppm-00 input share" || 0x01 || 0x02)
+
+input_share = context.Open(nonce || extensions,
+                           encrypted_input_share.payload)
+~~~
+
+where `sk` is the HPKE secret key, `task_id` is the task ID, and `nonce` and
+`extensions` are the nonce and extensions of the report share respectively.
+If decryption fails, the aggregator marks the report share as invalid. Otherwise,
+it outputs the resulting `input_share`.
+
+#### Input Share Batch Validation {#input-share-batch-validation}
+
+Validating an input share will either succeed or fail. In the case of failure,
+the input share is marked as invalid with a ReportShareError.
+
+The validation checks are as follows.
+
+1. Check if the report has never been aggregated but is contained by
+   a batch that has been collected. If this check fails, the input share
+   is marked as invalid with the error `batch-collected`. This prevents
+   additional reports from being aggregated after its batch has already
+   been collected.
+2. Check if the report has already been aggregated. If this check fails,
+   the input share is marked as invalid with the error `report-replayed`.
+   This is the case if the report was used in a previous aggregate request
+   and is therefore a replay. An aggregator may also choose to mark an
+   input share as invalid with the  error `report-dropped` under the conditions
+   prescribed in {{anti-replay}}. The helper also checks to see if the report
+   has never been aggregated but is contained by a batch that has been collected.
+
+If both checks succeed, the input share is not marked as invalid.
+
+#### Input Share Preparation {#input-share-prep}
+
+Input share preparation consists of running the preparation-state initialization
+algorithm for the VDAF associated with the task and computes the first state transition.
+This produces three possible values:
+
+1. An error, in which case the input report share is marked as invalid.
+1. An output share, in which case the aggregator stores the output share for future collection
+   as described in {{collect-flow}}.
+1. An initial VDAF state and preparation message, denoted `(prep_state, prep_msg)`.
+
+Each aggregator runs this procedure for a given input share with corresponding nonce
+as follows:
+
+~~~
+prep_state = VDAF.prep_init(vdaf_verify_param, agg_param, nonce, input_share)
+out = VDAF.prep_next(prep_state, None)
+~~~
+
+`vdaf_verify_param` is the public VDAF parameter, and `agg_param` is the opaque aggregation
+parameter. If either step fails, the aggregator marks the report as invalid with error
+`vdaf-prep-error`.
+
+Otherwise, the value `out` is interpreted as follows. If the VDAF is 0-round, then `out`
+is the aggregator's output share. Otherwise, if the VDAF consists of one round or more,
+then the aggregator interprets `out` as the pair `(prep_state, prep_msg)`.
+
 ### Aggregate Continuation {#agg-continue-flow}
 
-In the continuation phase, the leader drives aggregation of each share in the candidate
-report set until the underlying VDAF moves into a terminal state, which happens either
-when aggregation completes or an error occurs. The leader does this by repeating the
-following procedure.
+In the continuation phase, the leader drives the VDAF preparation of each share in the
+candidate report set until the underlying VDAF moves into a terminal state, yielding
+an output share for all aggregators or an error. This phase may involve multiple rounds
+of interaction depending on the underlying VDAF parameters. Each round trip is initiated
+by the leader.
 
-* If the helper failed, then mark the report as failed, remove it from the candidate
-  report set, and do not process it further.
-* If the leader continued but the helper finished, or if the leader finished but
-  the helper continued, then mark the report as failed and do not process it further.
-* If the leader and helper finished, then continuation is complete. At this point the
-  report has been prepared for aggregation and both aggregators have recovered an
-  output share that can be aggregated and collected as described in {{collect-flow}}.
-* If the leader and helper continued, then the leader computes its next state
-  transition ("prep_next") and sends the helper a PrepareShare message with the
-  payload computed as described below.
+#### Leader Continuation
 
-The leader sends each helper a PrepareShare value for each report share that is to
-be continued. Let `leader_outbound` denote the last VDAF message the leader computed
-and let `helper_outbound` denote the last VDAF message it received from the helper.
-The payload of the the PrepareShare message is computed as
+The leader begins each round of continuation for a report share based on a previous
+response from the helper, denoted `helper_outbound`, and a previous message produced
+from the leader, denoted `leader_outbound`. Each helper message carries a PrepareResult,
+indicating if preparation for the report share should continue, has failed, or is finished.
+
+If the helper message failed, then the leadaer marks the report as failed and removes it
+from the candidate report set and does not process it further. Otherwise, the leader
+computes its next state transition as follows:
 
 ~~~
 inbound = VDAF.prep_shares_to_prep(agg_param, [leader_outbound, helper_outbound])
-~~~
-
-where [leader_outbound, helper_outbound] is a vector of two elements. The next state
-transition is then computed as:
-
-~~~
 out = VDAF.prep_next(prep_state, inbound)
 ~~~
 
+where [leader_outbound, helper_outbound] is a vector of two elements.
 If either of these operations fails, then the leader marks the report as invalid.
-Otherwise it interprets `out` as follows. If this is the last round of VDAF
-preparation phase, then `out` is the leader's output share, in which case the leader
-finishes aggregation. Otherwise, it interprets `out` as the tuple `(new_state, outbound)`,
-where `new_state` is its new preparation state and `outbound` is its next VDAF messaage,
-and continues with `outbound` as its next VDAF message. The leader sets `prep_state`
-to `new_state`.
+Otherwise it interprets `out` as follows. If this is the last round of the VDAF,
+then `out` is the aggregator's output share, in which case the aggregator finishes
+and stores its output share for further processing as described in {{collect-flow}}.
+Otherwise, `out` is the pair `(new_state, prep_msg)`, where `new_state` is its updated
+state and `prep_msg` is its next VDAF message (which will be `leader_outbound` in the next
+round of continuation). For the latter case, the helper sets `prep_state` to `new_state`.
 
 The leader then sends each PrepareShare to the helper in an AggregateContinueReq message,
 structured as follows:
@@ -977,9 +983,20 @@ parameters except its own, the leader sends a POST request to
 `[aggregator]/aggregate` with AggregateContinueReq as the payload and the media
 type set to "message/ppm-aggregate-continue-req".
 
-For each PrepareShare in AggregateContinueReq.prepare_shares received from the leader,
-the helper performs the following check to determine if the report share should continue
-being prepared.
+#### Helper Continuation
+
+The helper continues with preparation for a report share by combining the leader's input
+message in `AggregateContinueReq` and its current preparation state (`prep_state`). This
+step yields one of three outputs:
+
+1. An error, in which case the input report share is marked as invalid.
+1. An output share, in which case the helper stores the output share for future collection
+   as described in {{collect-flow}}.
+1. An updated VDAF state and preparation message, denoted `(prep_state, prep_msg)`.
+
+To carry out this step, for each PrepareShare in AggregateContinueReq.prepare_shares received
+from the leader, the helper performs the following check to determine if the report share
+should continue being prepared.
 
 * If failed, then mark the report as failed and reply with a failed PrepareShare
   to the leader.
@@ -998,13 +1015,13 @@ where `inbound` is the previous VDAF message sent by the leader and `prep_state`
 its current preparation state. If this operation fails, then the helper fails
 with error `vdaf-prep-error`. Otherwise, it interprets `out` as follows. If this
 is the last round of VDAF preparation phase, then `out` is the helper's output
-share, in which case the helper finishes and transitions to FINISHED. Otherwise,
-the helper interpets `out` as the tuple `(new_state, prep_msg)`, where
+share, in which case the helper stores the output share for future collection.
+Otherwise, the helper interpets `out` as the tuple `(new_state, prep_msg)`, where
 `new_state` is its updated preparation state and `prep_msg` is its next VDAF
 message.
 
-This output message for each report in AggregateContinueReq.prepare_shares is then sent to the leader
-in an AggregateContinueResp message, structured as follows:
+This output message for each report in AggregateContinueReq.prepare_shares is then sent
+to the leader in an AggregateContinueResp message, structured as follows:
 
 ~~~
 struct {
@@ -1017,6 +1034,8 @@ The order of AggregateContinueResp.prepare_shares matches that of the PrepareSha
 `AggregateContinueReq.prepare_shares`. The helper's response to the leader is an HTTP 200 OK whose body
 is the AggregateContinueResp and media type is "message/ppm-aggregate-continue-resp". The helper
 then awaits the next message from the leader.
+
+[[OPEN ISSUE: consider relaxing this ordering constraint]]
 
 ## Collecting Results {#collect-flow}
 
