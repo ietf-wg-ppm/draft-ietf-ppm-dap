@@ -1140,18 +1140,8 @@ necessary to enforce the batch parameters as described in
 {{batch-parameter-validation}} so that the aggregator knows which aggregate
 share to update.
 
-The helper then encrypts `agg_share` as follows:
-
-~~~
-enc, context = SetupBaseS(pk, AggregateShareReq.task_id ||
-                              "ppm-00 aggregate share" || 0x03 || 0x00)
-
-encrypted_agg_share = context.Seal(AggregateShareReq.batch_interval,
-                                   agg_share)
-~~~
-
-where `pk` is the HPKE public key encoded by the collector's HPKE key.
-
+The helper then encrypts `agg_share` under the collector's HPKE public
+key as described in {{aggregate-share-encrypt}}, yielding `encrypted_agg_share`.
 Encryption prevents the leader from learning the actual result, as it only has
 its own aggregate share and cannot compute the helper's.
 
@@ -1182,16 +1172,7 @@ described {{agg-init}}.
 
 The leader then computes its own aggregate share `agg_share` by aggregating all
 of the prepared output shares that fall within the batch interval. Finally, it
-encrypts it under the collector's HPKE public key as follows:
-
-~~~
-enc, context = SetupBaseS(pk, CollectReq.task_id ||
-                              "ppm-00 aggregate share" || 0x02 || 0x00)
-encrypted_agg_share = context.Seal(CollectReq.batch_interval,
-                                   agg_share)
-~~~
-
-where `pk` is the collector's public key.
+encrypts it under the collector's HPKE public key as described in {{aggregate-share-encrypt}}.
 
 When both aggregators' shares are successfully obtained, the leader responds to
 subsequent HTTP GET requests to the collect job's URI with HTTP status 200 OK
@@ -1224,21 +1205,39 @@ fetch certificates: https://datatracker.ietf.org/doc/html/rfc8555#section-7.4.2]
 issue#57). For example, how does a leader respond to a collect request if the
 helper drops out?]
 
-The collector then decrypts each aggregate share `share` using the following
-procedure:
+The collector then decrypts each aggregate share `enc_share` as described in
+{{aggregate-share-encrypt}}. Finally, the collector then unshards the aggregate
+shares into an aggregate result using the VDAF's `agg_shares_to_result` algorithm.
+
+### Aggregate Share Encryption {#aggregate-share-encrypt}
+
+Encrypting an aggregate share `agg_share` for a given `AggregateShareReq` is done
+as follows:
 
 ~~~
-context = SetupBaseR(share.enc, sk,
+enc, context = SetupBaseS(pk, AggregateShareReq.task_id ||
+                              "ppm-00 aggregate share" || 0x03 || 0x00)
+
+encrypted_agg_share = context.Seal(AggregateShareReq.batch_interval,
+                                   agg_share)
+~~~
+
+where `pk` is the HPKE public key encoded by the collector's HPKE key.
+
+The collector decrypts these aggregate shares using the opposite process.
+Specifically, given an encrypted input share, denoted `enc_share`, for a
+given batch interval, denoted `batch_interval`, decryption works as follows:
+
+~~~
+context = SetupBaseR(enc_share.enc, sk,
                      "ppm-00 aggregate share" ||
                      task_id || server_role || 0x00)
-input_share = context.Open(batch_interval, share.payload)
+agg_share = context.Open(batch_interval, enc_share.payload)
 ~~~
 
-where `sk` is the HPKE secret key, `task_id` is `AggregateContinueReq.task_id` and
-`server_role` is the role of the server that sent the aggregate share (`0x02`
-for the leader and `0x03` for the helper). `batch_interval` is the `Interval`
-from the `CollectReq`. The collector then unshards the aggregate shares into an
-aggregate result using the VDAF's `agg_shares_to_result` algorithm.
+where `sk` is the HPKE secret key, `task_id` is the task ID for a given collect
+request, and `server_role` is the role of the server that sent the aggregate share
+(`0x02` for the leader and `0x03` for the helper).
 
 ### Validating Batch Parameters {#batch-parameter-validation}
 
