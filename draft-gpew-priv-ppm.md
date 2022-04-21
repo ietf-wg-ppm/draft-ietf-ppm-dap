@@ -873,7 +873,7 @@ The value `out` is interpreted as follows. If the VDAF is 0-round, then `out` is
 aggregator's output share, in which case the aggregator finishes and stores its
 output share for further processing as described in {{agg-complete}}. Otherwise,
 if the VDAF consists of one round or more, then the aggregator interprets `out` as
-the pair `(new_state, agg_msg)`, where `new_state` is its updated state and `agg_msg`
+the pair `(new_state, prep_msg)`, where `new_state` is its updated state and `prep_msg`
 is its next VDAF message. For the latter case, the helper sets `prep_state` to `new_state`.
 
 Once the helper has processed each report share in `AggregateInitReq.report_shares`, the helper
@@ -885,21 +885,21 @@ enum {
   continued(0),
   finished(1)
   failed(2),
-} ProcessType;
+} PrepareResult;
 
 struct {
   Nonce nonce;
-  ProcessType process_type;
-  select (ProcessShare.process_type) {
-    case continued: opaque agg_msg<0..2^16-1>; // VDAF output message
+  PrepareResult prepare_result;
+  select (PrepareShare.prepare_result) {
+    case continued: opaque prep_msg<0..2^16-1>; // VDAF preparation message
     case finished:  // empty
     case failed:    ReportShareError;
   }
-} ProcessShare;
+} PrepareShare;
 
 struct {
   opaque helper_state<0..2^16>;
-  ProcessShare seq<1..2^16-1>;
+  PrepareShare seq<1..2^16-1>;
 } AggregateInitResp;
 ~~~
 
@@ -912,17 +912,17 @@ helper implementation.
 
 [[OPEN ISSUE: we may end up removing helper_state. See #185]]
 
-The rest of the message is a sequence of ProcessShare values, the order of which
+The rest of the message is a sequence of PrepareShare values, the order of which
 matches that of the ReportShare values in `AggregateInitReq.report_shares`. Each report
-that was marked as invalid is assigned the ProcessType `failed`. Otherwise, the
-ProcessShare is either marked as continued with the output `agg_msg`, or is marked
+that was marked as invalid is assigned the PrepareResult `failed`. Otherwise, the
+PrepareShare is either marked as continued with the output `prep_msg`, or is marked
 as finished if the VDAF computation is finished.
 
 The helper's response to the leader is an HTTP 200 OK whose body is the
 AggregateInitResp and media type is "message/ppm-aggregate-init-resp".
 
 Upon receipt of a helper's AggregateInitResp message, the leader checks that the
-sequence of ProcessShare messages corresponds to the ReportShare sequence of the
+sequence of PrepareShare messages corresponds to the ReportShare sequence of the
 AggregateInitReq. If any message appears out of order, is missing, has an
 unrecognized nonce, or if two messages have the same nonce, then the leader MUST
 abort with error "unrecognizedMessage".
@@ -942,13 +942,13 @@ following procedure.
   report has been completely processed and both aggregators have recovered an
   output share. The leader proceeds as described in {{agg-complete}}.
 * If the leader and helper continued, then the leader computes its next state
-  transition ("prep_next") and sends the helper a ProcessShare message with the
+  transition ("prep_next") and sends the helper a PrepareShare message with the
   payload computed as described below.
 
-The leader sends each helper a ProcessShare value for each report share that is to
+The leader sends each helper a PrepareShare value for each report share that is to
 be continued. Let `leader_outbound` denote the last VDAF message the leader computed
 and let `helper_outbound` denote the last VDAF message it received from the helper.
-The payload of the the ProcessShare message is computed as
+The payload of the the PrepareShare message is computed as
 
 ~~~
 inbound = VDAF.prep_shares_to_prep(agg_param, [leader_outbound, helper_outbound])
@@ -969,13 +969,13 @@ where `new_state` is its new preparation state and `outbound` is its next VDAF m
 and continues with `outbound` as its next VDAF message. The leader sets `prep_state`
 to `new_state`.
 
-The leader then sends each ProcessShare to the helper in an AggregateContinueReq message,
+The leader then sends each PrepareShare to the helper in an AggregateContinueReq message,
 structured as follows:
 
 ~~~
 struct {
   opaque helper_state<0..2^16>;
-  ProcessShare process_shares<1..2^16-1>;
+  PrepareShare process_shares<1..2^16-1>;
 } AggregateContinueReq;
 ~~~
 
@@ -984,16 +984,16 @@ parameters except its own, the leader sends a POST request to
 `[aggregator]/aggregate` with AggregateContinueReq as the payload and the media
 type set to "message/ppm-aggregate-continue-req".
 
-For each ProcessShare in AggregateContinueReq.process_shares received from the leader, the helper
+For each PrepareShare in AggregateContinueReq.process_shares received from the leader, the helper
 proceeds as follows:
 
-* If failed, then mark the report as failed and reply with a failed ProcessShare
+* If failed, then mark the report as failed and reply with a failed PrepareShare
   to the leader.
-* If finished, then mark the report as finished and reply with a finished ProcessShare
+* If finished, then mark the report as finished and reply with a finished PrepareShare
   to the leader. The helper then moves to the completion phase of aggregation;
   see {{agg-complete}}.
 * If continued, then generate a new VDAF state and output message based on the leader's
-  message and reply with a continued ProcessShare to the leader.
+  message and reply with a continued PrepareShare to the leader.
 
 The helper computes its update state and output message as follows:
 
@@ -1006,8 +1006,8 @@ its current preparation state. If this operation fails, then the helper fails
 with error `vdaf-prep-error`. Otherwise, it interprets `out` as follows. If this
 is the last round of VDAF preparation phase, then `out` is the helper's output
 share, in which case the helper finishes and transitions to FINISHED. Otherwise,
-the helper interpets `out` as the tuple `(new_state, agg_msg)`, where
-`new_state` is its updated preparation state and `agg_msg` is its next VDAF
+the helper interpets `out` as the tuple `(new_state, prep_msg)`, where
+`new_state` is its updated preparation state and `prep_msg` is its next VDAF
 message.
 
 This output message for each report in AggregateContinueReq.process_shares is then sent to the leader
@@ -1016,11 +1016,11 @@ in an AggregateContinueResp message, structured as follows:
 ~~~
 struct {
   opaque helper_state<0..2^16>;
-  ProcessShare process_shares<1..2^16-1>;
+  PrepareShare process_shares<1..2^16-1>;
 } AggregateContinueResp;
 ~~~
 
-The order of AggregateContinueResp.process_shares matches that of the ProcessShare values in
+The order of AggregateContinueResp.process_shares matches that of the PrepareShare values in
 `AggregateContinueReq.process_shares`. The helper's response to the leader is an HTTP 200 OK whose body
 is the AggregateInitResp and media type is "message/ppm-aggregate-continue-resp". The helper
 then awaits the next message from the leader.
