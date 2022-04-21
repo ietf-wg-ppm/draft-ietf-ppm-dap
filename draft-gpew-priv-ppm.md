@@ -735,21 +735,11 @@ to the following restrictions:
   If the report pertains to a batch that has been collected, but the leader has not yet
   aggregated the report, then it MUST be excluded.
 
-After choosing the set of candidates, the The leader begins aggregation by splitting each
-report into "report shares", one for each aggregator. A single report share is encoded
-as follows:
-
-~~~
-struct {
-  Nonce nonce;
-  Extension extensions<0..2^16-1>;
-  HpkeCiphertext encrypted_input_share;
-} ReportShare;
-~~~
-
-Once the set of report shares is identified, the leader decrypts its own input
-shares and computes the initial preparation state. To do this, the leader starts
-by looking up the HPKE config and corresponding secret key indicated by `encrypted_input_share.config_id`.
+After choosing the set of candidates, the The leader begins aggregation by splitting
+each report into "report shares", one for each aggregator. Once the set of report
+shares is identified, the leader decrypts its own input shares and computes the
+initial preparation state. To do this, the leader starts by looking up the HPKE
+config and corresponding secret key indicated by `encrypted_input_share.config_id`.
 If not found, then it MUST remove the report share from the set. Otherwise, it
 decrypts the payload with the following procedure:
 
@@ -757,8 +747,8 @@ decrypts the payload with the following procedure:
 context = SetupBaseR(encrypted_input_share.enc, sk, task_id ||
                      "ppm-00 input share" || 0x01 || 0x02)
 
-input_share = context.Open(ReportShare.nonce || ReportShare.extensions,
-                           ReportShare.encrypted_input_share.payload)
+input_share = context.Open(nonce || extensions,
+                           encrypted_input_share.payload)
 ~~~
 
 where `sk` is the HPKE secret key, `task_id` is the task ID, and `nonce` and
@@ -783,6 +773,12 @@ then creates an AggregateInitReq message for each helper to initialize the
 process of aggregating this candidate set. This message is structured as follows:
 
 ~~~
+struct {
+  Nonce nonce;
+  Extension extensions<0..2^16-1>;
+  HpkeCiphertext encrypted_input_share;
+} ReportShare;
+
 struct {
   TaskID task_id;
   opaque agg_param<0..2^16-1>;
