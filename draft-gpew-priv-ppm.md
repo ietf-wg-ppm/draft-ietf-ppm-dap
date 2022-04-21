@@ -709,12 +709,12 @@ The aggregation flow can be thought of as having three phases:
 
 - Initialization: Begin the aggregation flow by sharing report shares with each
   helper. Each aggregator, including the leader, initializates the underlying
-  VDAF instance using these report shares and the public VDAF configured for
-  the corresponding measurement task.
+  VDAF instance using these report shares and the VDAF configured for the
+  corresponding measurement task.
 - Continuation: Continue the aggregation flow by exchanging messages produced
   by the underlying VDAF instance until aggregation completes or an error occurs. These messages do not replay the shares.
-- Completion: Finish the aggregate flow, yielding an aggregate share corresponding
-  to all output shares in the batch.
+- Completion: Finish the aggregate flow, yielding an output share corresponding
+  for each input report share in the batch.
 
 Once both aggregation is complete and a sufficient number of reports have
 been aggregated, the aggregate shares can be collected to produce the final,
