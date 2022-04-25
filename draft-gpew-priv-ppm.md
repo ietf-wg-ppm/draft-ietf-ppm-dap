@@ -1240,6 +1240,7 @@ PPM task, the leader sends to each helper a POST request to
 struct {
   TaskID task_id;
   Interval batch_interval;
+  opaque agg_param<0..2^16-1>;
   uint64 report_count;
   opaque checksum[32];
   opaque tag[32];
@@ -1250,6 +1251,7 @@ collisions]
 
 * `task_id` is the task ID associated with the PPM parameters.
 * `batch_interval` is the batch interval of the request.
+* `agg_param` is the VDAF aggregation parameter.
 * `report_count` is the number of reports included in the aggregation.
 * `checksum` is the checksum computed over the set of client reports. The
   checksum is computed by taking the SHA256 hash of each nonce from the client
