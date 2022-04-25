@@ -945,14 +945,15 @@ by the leader.
 
 #### Leader Continuation
 
-The leader begins each round of continuation for a report share based on a previous
-response from the helper, denoted `helper_outbound`, and a previous message produced
-from the leader, denoted `leader_outbound`. Each helper message carries a PrepareResult,
-indicating if preparation for the report share should continue, has failed, or is finished.
+The leader begins each round of continuation for a report share based on its locally computed 
+prepare message and the previous PrepareShare from the helper. If PrepareShare is of type "failed", 
+then the leader marks the report as failed and removes it from the candidate report set and does not
+process it further. If the type is "finished", then the leader aborts with "unrecognizedMessage".
+[[OPEN ISSUE: This behavior is not specified.]] If the type is "continued", then the leader proceeds as
+follows.
 
-If the helper message failed, then the leadaer marks the report as failed and removes it
-from the candidate report set and does not process it further. Otherwise, the leader
-computes its next state transition as follows:
+Let `leader_outbound` denote the leader's prepare message and `helper_outbound` denote the
+helper's. The leader computes the next state transition as follows:
 
 ~~~
 inbound = VDAF.prep_shares_to_prep(agg_param, [leader_outbound, helper_outbound])
