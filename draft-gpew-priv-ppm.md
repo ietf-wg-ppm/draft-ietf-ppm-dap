@@ -867,7 +867,7 @@ abort with error "unrecognizedMessage".
 
 Each report share has a corresponding task ID, nonce, list of extensions, and encrypted
 input share. Let `nonce`, `extensions`, and `encrypted_input_share` denote these
-values, respectively. Given these values, an aggregator decrypts the input report
+values, respectively. Given these values, an aggregator decrypts the input
 share as follows. First, the aggregator looks up the HPKE config and corresponding
 secret key indicated by `encrypted_input_share.config_id`. If not found, then it
 marks the report share as invalid. Otherwise, it decrypts the payload with the
