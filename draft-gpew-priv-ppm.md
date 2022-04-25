@@ -759,7 +759,7 @@ shares as follows:
 
 1. Decrypt the input share for each report share as described in {{input-share-decryption}}.
 1. Check that the resulting input share is valid as described in {{input-share-batch-validation}}.
-1. Initialize VDAF preparation and initial outputs as described in {{input-share-prep}}.
+1. Initialize VDAF preparation as described in {{input-share-prep}}.
 
 If any step yields yields an invalid report share, the leader removes the report share from
 the set of candidate reports. Once the leader has initialized this state for all valid
