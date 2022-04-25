@@ -796,7 +796,7 @@ the payload. The media type is "message/ppm-aggregate-init-req".
 #### Helper Initialization
 
 Each helper begins their portion of the aggregate initialization phase with the set
-of candidate report shares obtained in a `AggregateInitReq` message from the leader.
+of candidate report shares obtained in an `AggregateInitReq` message from the leader.
 It attempts to recover and validate the corresponding input shares similar to the leader,
 and eventually returns a response to the leader carrying the preparation state for each
 report share.
@@ -826,7 +826,7 @@ struct {
   PrepareResult prepare_result;
   select (PrepareShare.prepare_result) {
     case continued: opaque prep_msg<0..2^16-1>; // VDAF preparation message
-    case finished:  // empty
+    case finished:  Empty;
     case failed:    ReportShareError;
   }
 } PrepareShare;
@@ -875,14 +875,15 @@ following procedure:
 
 ~~~
 context = SetupBaseR(encrypted_input_share.enc, sk, task_id ||
-                     "ppm-00 input share" || 0x01 || 0x02)
+                     "ppm-00 input share" || 0x01 || server_role)
 
 input_share = context.Open(nonce || extensions,
                            encrypted_input_share.payload)
 ~~~
 
-where `sk` is the HPKE secret key, `task_id` is the task ID, and `nonce` and
-`extensions` are the nonce and extensions of the report share respectively.
+where `sk` is the HPKE secret key, `task_id` is the task ID, `nonce` and
+`extensions` are the nonce and extensions of the report share respectively,
+and `server_role` is 0x02 if the aggregator is the leader and 0x03 otherwise.
 If decryption fails, the aggregator marks the report share as invalid. Otherwise,
 it outputs the resulting `input_share`.
 
