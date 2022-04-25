@@ -737,7 +737,7 @@ each report into "report shares", one for each aggregator. The leader and helper
 run the aggregate initialization flow to accomplish two tasks:
 
 1. Recover and determine which input report shares are invalid.
-1. For each valid input report share, initialize the VDAF preparation process.
+1. For each valid report share, initialize the VDAF preparation process.
 
 An invalid report share is marked with one of the following errors:
 
