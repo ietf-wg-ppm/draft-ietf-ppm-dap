@@ -809,21 +809,21 @@ enum {
   continued(0),
   finished(1)
   failed(2),
-} PrepareResult;
+} PrepareStepResult;
 
 struct {
   Nonce nonce;
-  PrepareResult prepare_result;
-  select (PrepareShare.prepare_result) {
+  PrepareStepResult prepares_step_result;
+  select (PrepareStep.prepares_step_result) {
     case continued: opaque prep_msg<0..2^16-1>; // VDAF preparation message
     case finished:  Empty;
     case failed:    ReportShareError;
   }
-} PrepareShare;
+} PrepareStep;
 
 struct {
   opaque helper_state<0..2^16>;
-  PrepareShare seq<1..2^16-1>;
+  PrepareStep seq<1..2^16-1>;
 } AggregateInitResp;
 ~~~
 
@@ -836,17 +836,17 @@ helper implementation.
 
 [[OPEN ISSUE: we may end up removing helper_state. See #185]]
 
-The rest of the message is a sequence of PrepareShare values, the order of which
+The rest of the message is a sequence of PrepareStep values, the order of which
 matches that of the ReportShare values in `AggregateInitReq.report_shares`. Each report
-that was marked as invalid is assigned the PrepareResult `failed`. Otherwise, the
-PrepareShare is either marked as continued with the output `prep_msg`, or is marked
+that was marked as invalid is assigned the PrepareStepResult `failed`. Otherwise, the
+PrepareStep is either marked as continued with the output `prep_msg`, or is marked
 as finished if the VDAF preparation process is finished for the report share.
 
 The helper's response to the leader is an HTTP 200 OK whose body is the
 AggregateInitResp and media type is "message/ppm-aggregate-init-resp".
 
 Upon receipt of a helper's AggregateInitResp message, the leader checks that the
-sequence of PrepareShare messages corresponds to the ReportShare sequence of the
+sequence of PrepareStep messages corresponds to the ReportShare sequence of the
 AggregateInitReq. If any message appears out of order, is missing, has an
 unrecognized nonce, or if two messages have the same nonce, then the leader MUST
 abort with error "unrecognizedMessage".
@@ -937,7 +937,7 @@ by the leader.
 #### Leader Continuation
 
 The leader begins each round of continuation for a report share based on its locally computed
-prepare message and the previous PrepareShare from the helper. If PrepareShare is of type "failed",
+prepare message and the previous PrepareStep from the helper. If PrepareStep is of type "failed",
 then the leader marks the report as failed and removes it from the candidate report set and does not
 process it further. If the type is "finished", then the leader aborts with "unrecognizedMessage".
 [[OPEN ISSUE: This behavior is not specified.]] If the type is "continued", then the leader proceeds as
@@ -960,13 +960,13 @@ Otherwise, `out` is the pair `(new_state, prep_msg)`, where `new_state` is its u
 state and `prep_msg` is its next VDAF message (which will be `leader_outbound` in the next
 round of continuation). For the latter case, the helper sets `prep_state` to `new_state`.
 
-The leader then sends each PrepareShare to the helper in an AggregateContinueReq message,
+The leader then sends each PrepareStep to the helper in an AggregateContinueReq message,
 structured as follows:
 
 ~~~
 struct {
   opaque helper_state<0..2^16>;
-  PrepareShare prepare_shares<1..2^16-1>;
+  PrepareStep prepare_shares<1..2^16-1>;
 } AggregateContinueReq;
 ~~~
 
@@ -986,13 +986,13 @@ step yields one of three outputs:
    as described in {{collect-flow}}.
 1. An updated VDAF state and preparation message, denoted `(prep_state, prep_msg)`.
 
-To carry out this step, for each PrepareShare in AggregateContinueReq.prepare_shares received
+To carry out this step, for each PrepareStep in AggregateContinueReq.prepare_shares received
 from the leader, the helper performs the following check to determine if the report share
 should continue being prepared.
 
-* If failed, then mark the report as failed and reply with a failed PrepareShare
+* If failed, then mark the report as failed and reply with a failed PrepareStep
   to the leader.
-* If finished, then mark the report as finished and reply with a finished PrepareShare
+* If finished, then mark the report as finished and reply with a finished PrepareStep
   to the leader. The helper then stores the output share and awaits for collection;
   see {{collect-flow}}.
 
@@ -1018,11 +1018,11 @@ to the leader in an AggregateContinueResp message, structured as follows:
 ~~~
 struct {
   opaque helper_state<0..2^16>;
-  PrepareShare prepare_shares<1..2^16-1>;
+  PrepareStep prepare_shares<1..2^16-1>;
 } AggregateContinueResp;
 ~~~
 
-The order of AggregateContinueResp.prepare_shares matches that of the PrepareShare values in
+The order of AggregateContinueResp.prepare_shares matches that of the PrepareStep values in
 `AggregateContinueReq.prepare_shares`. The helper's response to the leader is an HTTP 200 OK whose body
 is the AggregateContinueResp and media type is "message/ppm-aggregate-continue-resp". The helper
 then awaits the next message from the leader.
