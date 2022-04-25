@@ -1012,7 +1012,7 @@ and output message as follows:
 out = VDAF.prep_next(prep_state, inbound)
 ~~~
 
-where `inbound` is the previous VDAF message sent by the leader and `prep_state` is
+where `inbound` is the previous VDAF preapre message sent by the leader and `prep_state` is
 its current preparation state. If this operation fails, then the helper fails
 with error `vdaf-prep-error`. Otherwise, it interprets `out` as follows. If this
 is the last round of VDAF preparation phase, then `out` is the helper's output
