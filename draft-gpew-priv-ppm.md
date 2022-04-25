@@ -1036,7 +1036,7 @@ The order of AggregateContinueResp.prepare_shares matches that of the PrepareSha
 is the AggregateContinueResp and media type is "message/ppm-aggregate-continue-resp". The helper
 then awaits the next message from the leader.
 
-[[OPEN ISSUE: consider relaxing this ordering constraint]]
+[[OPEN ISSUE: consider relaxing this ordering constraint. See issue#217.]]
 
 ## Collecting Results {#collect-flow}
 
