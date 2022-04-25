@@ -721,20 +721,10 @@ each valid input report share into an output share:
 
 ### Aggregate Initialization {#agg-init}
 
-The leader begins aggregation by choosing a set of candidate reports that is subject
-to the following restrictions:
-
-* Each report in the set MUST pertain to the same PPM task.
-* It is an error to allow a report to be replayed. If the leader has already aggregated
-  a report, but the report does not pertain to a batch that has been collected, then
-  the report MUST be excluded.
-* It is an error to include a new report in a batch that has already been collected.
-  If the report pertains to a batch that has been collected, but the leader has not yet
-  aggregated the report, then it MUST be excluded.
-
-After choosing the set of candidates, the leader begins aggregation by splitting
-each report into "report shares", one for each aggregator. The leader and helpers then
-run the aggregate initialization flow to accomplish two tasks:
+The leader begins aggregation by choosing a set of candidate reports that pertain
+to the same PPM task. After choosing the set of candidates, the leader begins
+aggregation by splitting each report into "report shares", one for each aggregator.
+The leader and helpers then run the aggregate initialization flow to accomplish two tasks:
 
 1. Recover and determine which input report shares are invalid.
 1. For each valid report share, initialize the VDAF preparation process.
@@ -946,8 +936,8 @@ by the leader.
 
 #### Leader Continuation
 
-The leader begins each round of continuation for a report share based on its locally computed 
-prepare message and the previous PrepareShare from the helper. If PrepareShare is of type "failed", 
+The leader begins each round of continuation for a report share based on its locally computed
+prepare message and the previous PrepareShare from the helper. If PrepareShare is of type "failed",
 then the leader marks the report as failed and removes it from the candidate report set and does not
 process it further. If the type is "finished", then the leader aborts with "unrecognizedMessage".
 [[OPEN ISSUE: This behavior is not specified.]] If the type is "continued", then the leader proceeds as
@@ -1040,6 +1030,8 @@ then awaits the next message from the leader.
 [[OPEN ISSUE: consider relaxing this ordering constraint. See issue#217.]]
 
 ## Collecting Results {#collect-flow}
+
+
 
 The collector uses CollectReq to ask the leader to collect and return the
 results for a given PPM task over a given time period. To make a collect
