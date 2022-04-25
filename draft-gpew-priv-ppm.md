@@ -850,7 +850,7 @@ The rest of the message is a sequence of PrepareShare values, the order of which
 matches that of the ReportShare values in `AggregateInitReq.report_shares`. Each report
 that was marked as invalid is assigned the PrepareResult `failed`. Otherwise, the
 PrepareShare is either marked as continued with the output `prep_msg`, or is marked
-as finished if the VDAF computation is finished.
+as finished if the VDAF preparation process is finished for the report share.
 
 The helper's response to the leader is an HTTP 200 OK whose body is the
 AggregateInitResp and media type is "message/ppm-aggregate-init-resp".
