@@ -821,7 +821,7 @@ struct {
 
 struct {
   opaque helper_state<0..2^16>;
-  PrepareStep seq<1..2^16-1>;
+  PrepareStep prepare_steps<1..2^16-1>;
 } AggregateInitResp;
 ~~~
 
@@ -854,12 +854,12 @@ abort with error "unrecognizedMessage".
 #### Input Share Decryption {#input-share-decryption}
 
 Each report share has a corresponding task ID, nonce, list of extensions, and encrypted
-input share. Let `nonce`, `extensions`, and `encrypted_input_share` denote these
+input share. Let `task_id`, `nonce`, `extensions`, and `encrypted_input_share` denote these
 values, respectively. Given these values, an aggregator decrypts the input
 share as follows. First, the aggregator looks up the HPKE config and corresponding
 secret key indicated by `encrypted_input_share.config_id`. If not found, then it
-marks the report share as invalid. Otherwise, it decrypts the payload with the
-following procedure:
+marks the report share as invalid with the error `hpke-unknown-config-id`.
+Otherwise, it decrypts the payload with the following procedure:
 
 ~~~
 context = SetupBaseR(encrypted_input_share.enc, sk, task_id ||
@@ -872,13 +872,13 @@ input_share = context.Open(nonce || extensions,
 where `sk` is the HPKE secret key, `task_id` is the task ID, `nonce` and
 `extensions` are the nonce and extensions of the report share respectively,
 and `server_role` is 0x02 if the aggregator is the leader and 0x03 otherwise.
-If decryption fails, the aggregator marks the report share as invalid. Otherwise,
-it outputs the resulting `input_share`.
+If decryption fails, the aggregator marks the report share as invalid with the
+error `hpke-decrypt-error`. Otherwise, it outputs the resulting `input_share`.
 
-#### Input Share Batch Validation {#input-share-batch-validation}
+#### Input Share Validation {#input-share-batch-validation}
 
 Validating an input share will either succeed or fail. In the case of failure,
-the input share is marked as invalid with a ReportShareError.
+the input share is marked as invalid with a ReportShareError of type `vdaf-prep-error`.
 
 The validation checks are as follows.
 
@@ -892,8 +892,7 @@ The validation checks are as follows.
    This is the case if the report was used in a previous aggregate request
    and is therefore a replay. An aggregator may also choose to mark an
    input share as invalid with the  error `report-dropped` under the conditions
-   prescribed in {{anti-replay}}. The helper also checks to see if the report
-   has never been aggregated but is contained by a batch that has been collected.
+   prescribed in {{anti-replay}}.
 
 If both checks succeed, the input share is not marked as invalid.
 
