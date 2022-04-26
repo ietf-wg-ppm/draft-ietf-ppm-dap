@@ -187,7 +187,6 @@ Server:
 
 {:br}
 
-
 This document uses the presentation language of {{!RFC8446}}.
 
 # Overview {#overview}
@@ -224,8 +223,7 @@ This provides two important properties:
   their measurements shares locally, then combining the results to obtain the
   final output.
 
-## System Architecture
-{#system-architecture}
+## System Architecture {#system-architecture}
 
 The overall system architecture is shown in {{pa-topology}}.
 
@@ -402,9 +400,9 @@ describe how protocol participants react to various error conditions.
 
 PPM has three major interactions which need to be defined:
 
-* Uploading reports from the client to the aggregators
-* Computing the results of a given measurement
-* Reporting results to the collector
+* Uploading reports from the client to the aggregators, specified in {{upload-flow}}
+* Computing the results of a given measurement, specified in {{aggregate-flow}}
+* Collecting aggregated results, specified in {{collect-flow}}
 
 We start with some basic type definitions used in other messages.
 
@@ -466,7 +464,7 @@ number generator. Each task has the following parameters associated with it:
 * `aggregator_endpoints`: A list of URLs relative to which an aggregator's API
   endpoints can be found. Each endpoint's list MUST be in the same order. The
   leader's endpoint MUST be the first in the list. The order of the
-  `encrypted_input_shares` in a `Report` (see {{uploading-reports}}) MUST be the
+  `encrypted_input_shares` in a `Report` (see {{upload-flow}}) MUST be the
   same as the order in which aggregators appear in this list.
 * `max_batch_lifetime`: The maximum number of times a batch of reports may be
   used in collect requests.
@@ -491,7 +489,7 @@ of the aggregators is configured with following parameters:
 Finally, the collector is configured with the HPKE secret key corresponding to
 `collector_hpke_config`.
 
-## Uploading Reports
+## Uploading Reports {#upload-flow}
 
 Clients periodically upload reports to the leader, which then distributes the
 individual shares to each helper.
@@ -653,7 +651,7 @@ leader SHOULD NOT accept reports whose timestamps are too far in the future.
 Implementors MAY provide for some small leeway, usually no more than a few
 minutes, to account for clock skew.
 
-## Verifying and Aggregating Reports {#pa-aggregate}
+## Verifying and Aggregating Reports {#aggregate-flow}
 
 Once a set of clients have uploaded their reports to the leader, the leader can
 send them to the helpers to be verified and aggregated. In order to enable the
@@ -1031,12 +1029,25 @@ then awaits the next message from the leader.
 
 ## Collecting Results {#collect-flow}
 
+In this phase, the collector requests aggregate shares from each aggregator
+and then locally combines them to yield a single, aggregate output. In particular,
+the collector asks the leader to collect and return the results for a given
+PPM task over a given time period. The aggregate shares are encrypted to the
+collector so that it can decrypt and combine them to yield the aggregate output.
+This entire process is composed of two interactions:
 
+1. Collect request and response between the collector and leader, specified
+   in {{collect-init}}
+1. Aggregate share request and response between the leader and each aggregator,
+   specified in {{collect-aggregate}}
 
-The collector uses CollectReq to ask the leader to collect and return the
-results for a given PPM task over a given time period. To make a collect
-request, the collector issues a POST request to `[leader]/collect`, where
-`[leader]` is the leader's endpoint URL. The body of the request is structured
+Once complete, the collector computes the final aggregate result as specified in
+{{collect-finalization}}.
+
+### Collection Initialization {#collect-init}
+
+To initiate collection, the collector issues a POST request to `[leader]/collect`,
+where `[leader]` is the leader's endpoint URL. The body of the request is structured
 as follows:
 
 [OPEN ISSUE: Decide if and how the collector's request is authenticated. If not,
@@ -1073,7 +1084,7 @@ identifying the collect job that can be polled by the collector, called the
 
 The leader then begins working with the helper to prepare the shares falling
 into `CollectReq.batch_interval` (or continues this process, depending on the
-VDAF) as described in {{pa-aggregate}}.
+VDAF) as described in {{aggregate-flow}}.
 
 After receiving the response to its CollectReq, the collector makes an HTTP GET
 request to the collect job URI to check on the status of the collect job and
@@ -1081,14 +1092,47 @@ eventually obtain the result. If the collect job is not finished yet, the leader
 responds with HTTP status 202 Accepted. The response MAY include a Retry-After
 header field to suggest a pulling interval to the collector.
 
-Once all the necessary reports have been prepared, the leader obtains the
-helper's encrypted aggregate share for the batch interval by requesting an
-aggregate share from each helper.
+If the leader has not yet obtained an aggregator share from each aggregator,
+the leader invokes the aggregate share request flow described in {{collect-aggregate}}.
+Otherwise, when all aggregator shares are successfully obtained, the leader responds
+to subsequent HTTP GET requests to the collect job's URI with HTTP status 200 OK
+and a body consisting of a `CollectResp`:
 
-To do this, the leader first computes a checksum over the set of output shares
-included in the batch window. The checksum is computed by taking the SHA256 hash of
-each nonce from the client reports included in the aggregation, then combining the
-hash values with a bitwise-XOR operation.
+~~~
+struct {
+  HpkeCiphertext encrypted_agg_shares<1..2^16-1>;
+} CollectResp;
+~~~
+
+The `encrypted_agg_shares` field is the vector of encrypted aggregate shares.
+They MUST appear in the same order as the aggregator endpoints list of the task
+parameters.
+
+If obtaining aggregate shares fails, then the leader responds to subsequent HTTP
+GET requests to the collect job URI with an HTTP error status and a problem
+document as described in {{errors}}.
+
+The leader MUST retain a collect job's results until the collector sends an HTTP
+DELETE request to the collect job URI, in which case the leader responds with
+HTTP status 204 No Content.
+
+[OPEN ISSUE: Allow the leader to drop aggregate shares after some reasonable
+amount of time has passed, but it's not clear how to specify that. ACME doesn't
+bother to say anything at all about this when describing how subscribers should
+fetch certificates: https://datatracker.ietf.org/doc/html/rfc8555#section-7.4.2]
+
+[OPEN ISSUE: Describe how intra-protocol errors yield collect errors (see
+issue#57). For example, how does a leader respond to a collect request if the
+helper drops out?]
+
+### Collection Aggregation {#collect-aggregate}
+
+The leader obtains each helper's encrypted aggregate share in order to respond
+to the collector's collect response. To do this, the leader first computes a
+checksum over the set of output shares included in the batch window identified
+by the collect request. The checksum is computed by taking the SHA256 hash of
+each nonce from the client reports included in the aggregation, then combining
+the hash values with a bitwise-XOR operation.
 
 Then, for each aggregator endpoint `[aggregator]` in the parameters associated
 with `CollectReq.task_id` (see {{collect-flow}}) except its own, the leader sends
@@ -1164,44 +1208,26 @@ error for the leader to issue any more aggregate or aggregate-init requests for
 additional reports in the batch interval. These reports will be rejected by helpers as
 described {{agg-init}}.
 
-The leader then computes its own aggregate share `agg_share` by aggregating all
-of the prepared output shares that fall within the batch interval. Finally, it
-encrypts it under the collector's HPKE public key as described in {{aggregate-share-encrypt}}.
+Before completing the collect request, the leader also computes its own aggregate
+share `agg_share` by aggregating all of the prepared output shares that fall within
+the batch interval. Finally, it encrypts it under the collector's HPKE public key as
+described in {{aggregate-share-encrypt}}.
 
-When both aggregators' shares are successfully obtained, the leader responds to
-subsequent HTTP GET requests to the collect job's URI with HTTP status 200 OK
-and a body consisting of a `CollectResp`:
+### Collection Finalization {#collect-finalization}
+
+Once the collector has received a successful collect response from the leader,
+it can decrypt the aggregate shares and produce an aggregate result. The collector
+decrypts each aggregate share as described in {{aggregate-share-encrypt}}.
+If the collector successfully decrypts all aggregate shares, the collector
+then unshards the aggregate shares into an aggregate result using the VDAF's
+`agg_shares_to_result` algorithm. In particular, let `agg_shares` denote the
+ordered sequence of aggregator shares, ordered by aggregator index, and let
+`agg_param` be the opaque aggregation parameter. The final aggregate result
+is computed as follows:
 
 ~~~
-struct {
-  HpkeCiphertext encrypted_agg_shares<1..2^16-1>;
-} CollectResp;
+agg_result = VDAF.agg_shares_to_result(agg_param, agg_shares)
 ~~~
-
-The `encrypted_agg_shares` field is the vector of encrypted aggregate shares.
-They MUST appear in the same order as the aggregator endpoints list of the task
-parameters.
-
-If obtaining aggregate shares fails, then the leader responds to subsequent HTTP
-GET requests to the collect job URI with an HTTP error status and a problem
-document as described in {{errors}}.
-
-The leader MUST retain a collect job's results until the collector sends an HTTP
-DELETE request to the collect job URI, in which case the leader responds with
-HTTP status 204 No Content.
-
-[OPEN ISSUE: Allow the leader to drop aggregate shares after some reasonable
-amount of time has passed, but it's not clear how to specify that. ACME doesn't
-bother to say anything at all about this when describing how subscribers should
-fetch certificates: https://datatracker.ietf.org/doc/html/rfc8555#section-7.4.2]
-
-[OPEN ISSUE: Describe how intra-protocol errors yield collect errors (see
-issue#57). For example, how does a leader respond to a collect request if the
-helper drops out?]
-
-The collector then decrypts each aggregate share `enc_share` as described in
-{{aggregate-share-encrypt}}. Finally, the collector then unshards the aggregate
-shares into an aggregate result using the VDAF's `agg_shares_to_result` algorithm.
 
 ### Aggregate Share Encryption {#aggregate-share-encrypt}
 
