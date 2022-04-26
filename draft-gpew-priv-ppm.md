@@ -811,8 +811,8 @@ enum {
 
 struct {
   Nonce nonce;
-  PrepareStepResult prepares_step_result;
-  select (PrepareStep.prepares_step_result) {
+  PrepareStepResult prepare_step_result;
+  select (PrepareStep.prepare_step_result) {
     case continued: opaque prep_msg<0..2^16-1>; // VDAF preparation message
     case finished:  Empty;
     case failed:    ReportShareError;
