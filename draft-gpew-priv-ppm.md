@@ -1019,7 +1019,7 @@ struct {
 } AggregateContinueResp;
 ~~~
 
-The order of AggregateContinueResp.prepare_shares matches that of the PrepareStep values in
+The order of AggregateContinueResp.prepare_shares MUST match that of the PrepareStep values in
 `AggregateContinueReq.prepare_shares`. The helper's response to the leader is an HTTP 200 OK whose body
 is the AggregateContinueResp and media type is "message/ppm-aggregate-continue-resp". The helper
 then awaits the next message from the leader.
