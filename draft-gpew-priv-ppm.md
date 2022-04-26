@@ -1892,7 +1892,7 @@ corresponding media types types:
 
 - HpkeConfig {{task-configuration}}: "application/ppm-hpke-config"
 - Report {{upload-request}}: "message/ppm-report"
-- AggregateReq {{aggregate-request}}: "message/ppm-aggregate-req"
+- AggregateInitReq {{aggregate-request}}: "message/ppm-aggregate-init-req"
 - AggregateContinueReq {{aggregate-request}}: "message/ppm-aggregate-continue-req"
 - AggregateResp {{aggregate-request}}: "message/ppm-aggregate-resp"
 - AggregateShareReq {{aggregate-share-request}}: "message/ppm-aggregate-share-req"
