@@ -1231,13 +1231,14 @@ as follows:
 
 ~~~
 enc, context = SetupBaseS(pk, AggregateShareReq.task_id ||
-                              "ppm-00 aggregate share" || 0x03 || 0x00)
+                              "ppm-00 aggregate share" || server_role || 0x00)
 
 encrypted_agg_share = context.Seal(AggregateShareReq.batch_interval,
                                    agg_share)
 ~~~
 
-where `pk` is the HPKE public key encoded by the collector's HPKE key.
+where `pk` is the HPKE public key encoded by the collector's HPKE key,
+and server_role is is `0x02` for the leader and `0x03` for a helper.
 
 The collector decrypts these aggregate shares using the opposite process.
 Specifically, given an encrypted input share, denoted `enc_share`, for a
