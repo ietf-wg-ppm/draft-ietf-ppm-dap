@@ -920,9 +920,8 @@ out = VDAF.prep_next(prep_state, None)
 parameter. If either step fails, the aggregator marks the report as invalid with error
 `vdaf-prep-error`.
 
-Otherwise, the value `out` is interpreted as follows. If the VDAF is 0-round, then `out`
-is the aggregator's output share. Otherwise, if the VDAF consists of one round or more,
-then the aggregator interprets `out` as the pair `(prep_state, prep_msg)`.
+Otherwise, the value `out` is interpreted as follows. If this is the last round of the VDAF,
+then `out` is the aggregator's output share. Otherwise, `out` is the pair `(prep_state, prep_msg)`.
 
 ### Aggregate Continuation {#agg-continue-flow}
 
