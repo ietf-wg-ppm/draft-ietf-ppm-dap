@@ -786,7 +786,7 @@ the payload. The media type is "message/ppm-aggregate-init-req".
 Each helper begins their portion of the aggregate initialization phase with the set
 of candidate report shares obtained in an `AggregateInitReq` message from the leader.
 It attempts to recover and validate the corresponding input shares similar to the leader,
-and eventually returns a response to the leader carrying the preparation state for each
+and eventually returns a response to the leader carrying a VDAF-specific message for each
 report share.
 
 To begin this process, the helper first checks that the nonces in `AggregateInitReq.report_shares`
