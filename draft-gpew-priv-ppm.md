@@ -144,7 +144,7 @@ Input:
 
 Input share:
 : An aggregator's share of the output of the VDAF
-   {{?I-D.draft-cfrg-patton-vdaf}} sharding algorithm. This algorithm is run by
+   {{?VDAF=I-D.draft-irtf-cfrg-vdaf}} sharding algorithm. This algorithm is run by
    each client in order to cryptographically protect its measurement.
 
 Measurement:
@@ -171,7 +171,7 @@ Aggregate share:
 
 Output share:
 : An aggregator's share of the output of the VDAF
-   {{?I-D.draft-cfrg-patton-vdaf}} preparation step. Many output shares are
+   {{?VDAF=I-D.draft-irtf-cfrg-vdaf}} preparation step. Many output shares are
    combined into an aggregate share via the VDAF aggregation algorithm.
 
 Proof:
@@ -201,7 +201,7 @@ for some function `F` while revealing nothing else about the measurements.
 
 This protocol is extensible and allows for the addition of new cryptographic
 schemes that implement the VDAF interface specified in
-{{?I-D.draft-cfrg-patton-vdaf}}. Candidates include:
+{{?VDAF=I-D.draft-irtf-cfrg-vdaf}}. Candidates include:
 
 * `prio3`, which allows for aggregate statistics such as sum, mean, histograms,
   etc. This class of VDAFs is based on Prio {{CGB17}} and includes improvements
@@ -326,7 +326,7 @@ individual clients.
 
 In order to address this problem, the aggregators engage in a secure,
 multi-party computation specified by the chosen VDAF
-{{?I-D.draft-cfrg-patton-vdaf}} in order to prepare a report for aggregation. At
+{{?VDAF=I-D.draft-irtf-cfrg-vdaf}} in order to prepare a report for aggregation. At
 the beginning of this computation, each aggregator is in possession of an input
 share uploaded by the client. At the end of the computation, each aggregator is
 in posession of either an "output share" that is ready to be aggregated or an
@@ -484,7 +484,7 @@ of the aggregators is configured with following parameters:
   {{key-config}}).
 * `vdaf_verify_param`: The aggregator's VDAF verification parameter output by
   the setup algorithm computed jointly by the aggregators before the start of the
-  PPM protocol {{?I-D.draft-cfrg-patton-vdaf}}). [OPEN ISSUE: This is yet to be
+  PPM protocol {{?VDAF=I-D.draft-irtf-cfrg-vdaf}}). [OPEN ISSUE: This is yet to be
   specified. See issue#161.]
 
 Finally, the collector is configured with the HPKE secret key corresponding to
