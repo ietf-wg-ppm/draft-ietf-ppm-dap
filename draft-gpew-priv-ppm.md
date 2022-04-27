@@ -721,7 +721,8 @@ each valid input report share into an output share:
 ### Aggregate Initialization {#agg-init}
 
 The leader begins aggregation by choosing a set of candidate reports that pertain
-to the same PPM task. After choosing the set of candidates, the leader begins
+to the same PPM task. The leader can run this process for many candidate reports
+in parallel as needed. After choosing the set of candidates, the leader begins
 aggregation by splitting each report into "report shares", one for each aggregator.
 The leader and helpers then run the aggregate initialization flow to accomplish two tasks:
 
@@ -741,6 +742,8 @@ enum {
 } ReportShareError;
 ~~~
 
+The leader and helper initialization behavior is detailed below.
+
 #### Leader Initialization
 
 The leader begins the aggregate initialization phase with the set of candidate report
@@ -753,7 +756,8 @@ shares as follows:
 If any step yields an invalid report share, the leader removes the report share from
 the set of candidate reports. Once the leader has initialized this state for all valid
 candidate report shares, it then creates an AggregateInitReq message for each helper to
-initialize the preparation of this candidate set. This message is structured as follows:
+initialize the preparation of this candidate set. The AggregateInitReq message is
+structured as follows:
 
 ~~~
 struct {
