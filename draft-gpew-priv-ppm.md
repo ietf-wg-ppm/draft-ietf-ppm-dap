@@ -385,6 +385,7 @@ in the "type" field (within the PPM URN namespace "urn:ietf:params:ppm:error:"):
 | invalidBatchInterval    | The batch interval in the collect or aggregate share request is not valid for the task. |
 | insufficientBatchSize   | There are not enough reports in the batch interval. |
 | batchLifetimeExceeded   | The batch lifetime has been exceeded for one or more reports included in the batch interval. |
+| batchMismatch           | The checksums or report counts in the two aggregator's aggregate shares do not match. |
 {: #error-types title="Error types."}
 
 This list is not exhaustive. The server MAY return errors set to a URI other
@@ -1264,13 +1265,12 @@ collisions]
 After verifying the authentication tag, the helper processes the
 AggregateShareReq as follows. It first ensures that the request meets the
 requirements for batch parameters following the procedure in
-{{batch-parameter-validation}}. If the batch parameters are invalid, then it
-MUST abort with error "XXX".
+{{batch-parameter-validation}}.
 
 Next, it computes a checksum based on its view of the output shares included in
 the batch window, and checks that the `report_count` and `checksum` included in
 the request match its computed values. If not, then it MUST abort with error
-"XXX".
+"batchMismatch".
 
 Next, it computes the aggregate share for the batch interval as described in
 {{out-to-agg-share}}, obtaining an opaque byte string `agg_share` whose
