@@ -377,6 +377,7 @@ in the "type" field (within the PPM URN namespace "urn:ietf:params:ppm:error:"):
 | unrecognizedTask        | An endpoint received a message with an unknown task ID. |
 | outdatedConfig          | The message was generated using an outdated configuration. |
 | batchInvalid            | A collect or aggregate-share request was made with invalid batch parameters. |
+| batchMismatch           | Aggregators disagree on the report shares that were aggregated in a batch. |
 
 This list is not exhaustive. The server MAY return errors set to a URI other
 than those defined above. Servers MUST NOT use the PPM URN namespace for errors
