@@ -803,6 +803,8 @@ input share in `AggregateInitReq.report_shares` as follows:
 1. Check that the resulting input share is valid as described in {{input-share-batch-validation}}.
 1. Initialize VDAF preparation and initial outputs as described in {{input-share-prep}}.
 
+[[OPEN ISSUE: consider moving the helper nonce check into #input-share-batch-validation]]
+
 Once the helper has processed each valid report share in `AggregateInitReq.report_shares`, the
 helper then creates an AggregateInitResp message to complete its initialization. This message is
 structured as follows:
