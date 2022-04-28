@@ -774,6 +774,8 @@ struct {
 } AggregateInitReq;
 ~~~
 
+[[OPEN ISSUE: consider sending report shares separately (in parallel) to the aggregate instructions. RIght now, aggregation parameters and the corresponding report shares are sent at the same time, but this may not be strictly necessary. ]]
+
 The `nonce` and `extensions` fields of each ReportShare match that in the Report
 uploaded by the client. The `encrypted_input_share` field is the `HpkeCiphertext`
 whose index in `Report.encrypted_input_shares` is equal to the index of the aggregator
