@@ -661,12 +661,18 @@ minutes, to account for clock skew.
 Once a set of clients have uploaded their reports to the leader, the leader can
 send them to the helpers to be verified and aggregated. In order to enable the
 system to handle very large batches of reports, this process can be performed
-incrementally. To aggregate a set of reports, the leader sends a message to each
-helper containing those report shares. The helper then processes them (verifying
-the proofs and incorporating their values into the ongoing aggregate) and replies
-to the leader.
+incrementally. Verification of a set of reports is referred to as an aggregation
+job. Each aggregation job is associated with exactly one PPM task, and a PPM
+task can have many aggregation jobs. Each job is associated with an ID that is
+unique within the context of a PPM task in order to distinguish different jobs
+from one another. Each aggregator uses this ID as an index into per-job storage,
+e.g., to keep track of report shares that belong to a given aggregation job.
 
-The exact structure of the aggregation flow depends on the VDAF. Specifically:
+To run an aggregation job, the leader sends a message to each helper containing
+the report shares in the job. The helper then processes them (verifying the proofs
+and incorporating their values into the ongoing aggregate) and replies to the leader.
+
+The exact structure of the aggregation job flow depends on the VDAF. Specifically:
 
 * Some VDAFs (e.g., `prio3`) allow the leader to start aggregating reports
   proactively before all the reports in a batch are received. Others (e.g.,
@@ -677,8 +683,7 @@ The exact structure of the aggregation flow depends on the VDAF. Specifically:
   round trips.
 
 Note that it is possible to aggregate reports from one batch while reports from
-the next batch are coming in. This is because each report is validated
-independently.
+the next batch are coming in. This is because each report is validated independently.
 
 This process is illustrated below in {{aggregation-flow-illustration}}. In this
 example, the batch size is 20, but the leader opts to process the reports in
@@ -692,16 +697,16 @@ be cryptographically protected as described in {{agg-init}}.
 ~~~
 Leader                                                 Helper
 
-Aggregate request (Reports 1-10) ------------------------>  \
-<----------------------------- Aggregate response (State 1) | Reports
-Aggregate request (continued, State 1) ------------------>  | 1-10
-<----------------------------- Aggregate response (State 1) /
+Aggregate request (Reports 1-10, Job = N) --------------->  \
+<----------------------------- Aggregate response (Job = N) | Reports
+Aggregate request (continued, Job = N) ------------------>  | 1-10
+<----------------------------- Aggregate response (Job = N) /
 
 
-Aggregate request (Reports 11-20, State 1) -------------->  \
-<----------------------------- Aggregate response (State 1) | Reports
-Aggregate request (continued, State 2) ------------------>  | 11-20
-<----------------------------- Aggregate response (State 2) /
+Aggregate request (Reports 11-20, Job = M) -------------->  \
+<----------------------------- Aggregate response (Job = M) | Reports
+Aggregate request (continued, Job = M) ------------------>  | 11-20
+<----------------------------- Aggregate response (Job = M) /
 ~~~
 {: #aggregation-flow-illustration title="Aggregation Flow (batch size=20).
 Multiple aggregation flows can be executed at the same time."}
@@ -724,11 +729,17 @@ each valid input report share into an output share:
 
 ### Aggregate Initialization {#agg-init}
 
-The leader begins aggregation by choosing a set of candidate reports that pertain
-to the same PPM task. The leader can run this process for many candidate reports
-in parallel as needed. After choosing the set of candidates, the leader begins
-aggregation by splitting each report into "report shares", one for each aggregator.
-The leader and helpers then run the aggregate initialization flow to accomplish two tasks:
+The leader begins an aggregation job by choosing a set of candidate reports that pertain
+to the same PPM task and a unique job ID. The job ID is a 32-byte value, structured as follows:
+
+~~~
+opaque AggregationJobID[32];
+~~~
+
+The leader can run this process for many candidate reports in parallel as needed.
+After choosing the set of candidates, the leader begins aggregation by splitting each
+report into "report shares", one for each aggregator. The leader and helpers then run
+the aggregate initialization flow to accomplish two tasks:
 
 1. Recover and determine which input report shares are invalid.
 1. For each valid report share, initialize the VDAF preparation process.
@@ -753,6 +764,9 @@ The leader and helper initialization behavior is detailed below.
 The leader begins the aggregate initialization phase with the set of candidate report
 shares as follows:
 
+1. Generate a fresh AggregationJobID. This ID MUST be unique within the context of the
+   corresponding PPM task. It is RECOMMENDED that this be set to a random string output
+   by a cryptographically secure pseudorandom number generator.
 1. Decrypt the input share for each report share as described in {{input-share-decryption}}.
 1. Check that the resulting input share is valid as described in {{input-share-batch-validation}}.
 1. Initialize VDAF preparation as described in {{input-share-prep}}.
@@ -772,8 +786,8 @@ struct {
 
 struct {
   TaskID task_id;
+  AggregationJobID job_id;
   opaque agg_param<0..2^16-1>;
-  opaque helper_state<0..2^16>;
   ReportShare report_shares<1..2^16-1>;
 } AggregateInitReq;
 ~~~
@@ -785,8 +799,7 @@ uploaded by the client. The `encrypted_input_share` field is the `HpkeCiphertext
 whose index in `Report.encrypted_input_shares` is equal to the index of the aggregator
 in the task's `aggregator_endpoints` to which the AggregateInitReq is being sent.
 The `agg_param` field is an opaque, VDAF-specific aggregation parameter. The
-`helper_state` parameter contains the helper's state. This is an optional parameter
-of an aggregate request that the helper can use to carry state across requests and across aggregate flows.
+`job_id` parameter contains the leader's chosen AggregationJobID.
 
 Let `[aggregator]` denote the helper's API endpoint. The leader sends a POST
 request to `[aggregator]/aggregate` with its AggregateInitReq message as
@@ -833,20 +846,12 @@ struct {
 } PrepareStep;
 
 struct {
-  opaque helper_state<0..2^16>;
+  AggregationJobID job_id;
   PrepareStep prepare_steps<1..2^16-1>;
 } AggregateInitResp;
 ~~~
 
-The `helper_state` parameter contains the helper's initial state. This is an
-optional parameter of an aggregate request that the helper can use to carry
-state across requests. At least part of the state will usually need to be
-encrypted in order to protect user privacy. However, the details of precisely
-how the state is encrypted and the information that it carries is up to the
-helper implementation.
-
-[[OPEN ISSUE: we may end up removing helper_state. See #185]]
-
+The `job_id` parameter is equal to AggregateInitReq.job_id.
 The rest of the message is a sequence of PrepareStep values, the order of which
 matches that of the ReportShare values in `AggregateInitReq.report_shares`. Each report
 that was marked as invalid is assigned the PrepareStepResult `failed`. Otherwise, the
@@ -974,7 +979,7 @@ structured as follows:
 
 ~~~
 struct {
-  opaque helper_state<0..2^16>;
+  AggregationJobID job_id;
   PrepareStep prepare_shares<1..2^16-1>;
 } AggregateContinueReq;
 ~~~
@@ -1026,7 +1031,7 @@ to the leader in an AggregateContinueResp message, structured as follows:
 
 ~~~
 struct {
-  opaque helper_state<0..2^16>;
+  AggregationJobID job_id;
   PrepareStep prepare_shares<1..2^16-1>;
 } AggregateContinueResp;
 ~~~
@@ -1155,7 +1160,7 @@ struct {
   Interval batch_interval;
   uint64 report_count;
   opaque checksum[32];
-  opaque helper_state<0..2^16>;
+  AggregationJobID job_id;
 } AggregateShareReq;
 ~~~
 
@@ -1163,8 +1168,7 @@ struct {
 * `batch_interval` is the batch interval of the request.
 * `report_count` is the number of reports included in the aggregation.
 * `checksum` is the checksum computed over the set of client reports.
-* `helper_state` is the helper's state, which is carried across requests from
-  the leader.
+* `job_id` is the ID of the aggregation job.
 
 To handle the leader's request, the helper first ensures that the request meets
 the requirements for batch parameters following the procedure in
