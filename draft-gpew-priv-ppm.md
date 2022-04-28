@@ -885,7 +885,7 @@ error `hpke-decrypt-error`. Otherwise, it outputs the resulting `input_share`.
 #### Input Share Validation {#input-share-batch-validation}
 
 Validating an input share will either succeed or fail. In the case of failure,
-the input share is marked as invalid with a ReportShareError of type `vdaf-prep-error`.
+the input share is marked as invalid with a corresponding ReportShareError error.
 
 The validation checks are as follows.
 
