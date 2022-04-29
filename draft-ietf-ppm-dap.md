@@ -380,10 +380,10 @@ in the "type" field (within the PPM URN namespace "urn:ietf:params:ppm:error:"):
 | unrecognizedMessage     | The message type for a response was incorrect or the payload was malformed. |
 | unrecognizedTask        | An endpoint received a message with an unknown task ID. |
 | outdatedConfig          | The message was generated using an outdated configuration. |
-| staleReport             | Report could not be processed because it arrived too late. |
-| reportFromTheFuture     | Report could not be processed because its timestamp is too far in the future. |
+| reportTooLate           | Report could not be processed because it arrived too late. |
+| reportTooEarly          | Report could not be processed because its timestamp is too far in the future. |
 | batchInvalid            | A collect or aggregate-share request was made with invalid batch parameters. |
-| insufficientBatchSize   | There are not enough reports in the batch interval. |
+| insufficientBatchSize   | There are not enough reports in the batch interval to satisfy the task's minimum batch size. |
 | batchLifetimeExceeded   | The batch lifetime has been exceeded for one or more reports included in the batch interval. |
 | batchMismatch           | Aggregators disagree on the report shares that were aggregated in a batch. |
 
@@ -392,10 +392,10 @@ than those defined above. Servers MUST NOT use the PPM URN namespace for errors
 not listed in the appropriate IANA registry (see {{ppm-urn-space}}). Clients
 SHOULD display the "detail" field of all errors. The "instance" value MUST be
 the endpoint to which the request was targeted. The problem document MUST also
-include a "taskid" member which contains the associated PPM task ID, encoded
-in Base 64 using the URL and filename safe alphabet with no padding as defined
-in sections 5 and 3.2 of {{!RFC4648}} (this value is always known, see
-{{task-configuration}}).
+include a "taskid" member which contains the associated PPM task ID (this value
+is always known, see {{task-configuration}}), encoded in Base 64 using the URL
+and filename safe alphabet with no padding defined in sections 5 and 3.2 of
+{{!RFC4648}}.
 
 In the remainder of this document, we use the tokens in the table above to refer
 to error types, rather than the full URNs. For example, an "error of type
@@ -636,14 +636,14 @@ collector. (See {{collect-flow}}.) Otherwise, comparing the aggregate result to
 the previous aggregate result may result in a privacy violation. (Note that the
 helpers enforce this as well; see {{collect-flow}}.) In addition, the
 leader SHOULD abort the upload protocol and alert the client with error
-"staleReport".
+"reportTooLate".
 
 The leader MUST buffer reports while waiting to aggregate them. The
 leader SHOULD NOT accept reports whose timestamps are too far in the future.
 Implementors MAY provide for some small leeway, usually no more than a few
 minutes, to account for clock skew. If the leader rejects a report for this
 reason, it SHOULD abort the upload protocol and alert the client with error
-"reportFromTheFuture".
+"reportTooEarly".
 
 ### Upload Extensions {#upload-extensions}
 
