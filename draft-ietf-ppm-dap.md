@@ -380,7 +380,11 @@ in the "type" field (within the PPM URN namespace "urn:ietf:params:ppm:error:"):
 | unrecognizedMessage     | The message type for a response was incorrect or the payload was malformed. |
 | unrecognizedTask        | An endpoint received a message with an unknown task ID. |
 | outdatedConfig          | The message was generated using an outdated configuration. |
+| staleReport             | Report could not be processed because it arrived too late. |
+| reportFromTheFuture     | Report could not be processed because its timestamp is too far in the future. |
 | batchInvalid            | A collect or aggregate-share request was made with invalid batch parameters. |
+| insufficientBatchSize   | There are not enough reports in the batch interval. |
+| batchLifetimeExceeded   | The batch lifetime has been exceeded for one or more reports included in the batch interval. |
 | batchMismatch           | Aggregators disagree on the report shares that were aggregated in a batch. |
 
 This list is not exhaustive. The server MAY return errors set to a URI other
@@ -389,8 +393,9 @@ not listed in the appropriate IANA registry (see {{ppm-urn-space}}). Clients
 SHOULD display the "detail" field of all errors. The "instance" value MUST be
 the endpoint to which the request was targeted. The problem document MUST also
 include a "taskid" member which contains the associated PPM task ID, encoded
-with base64 using the standard alphabet {{!RFC4648}} (this value is always
-known, see {{task-configuration}}).
+in Base 64 using the URL and filename safe alphabet with no padding as defined
+in sections 5 and 3.2 of {{!RFC4648}} (this value is always known, see
+{{task-configuration}}).
 
 In the remainder of this document, we use the tokens in the table above to refer
 to error types, rather than the full URNs. For example, an "error of type
@@ -633,6 +638,13 @@ helpers enforce this as well; see {{collect-flow}}.) In addition, the
 leader SHOULD abort the upload protocol and alert the client with error
 "staleReport".
 
+The leader MUST buffer reports while waiting to aggregate them. The
+leader SHOULD NOT accept reports whose timestamps are too far in the future.
+Implementors MAY provide for some small leeway, usually no more than a few
+minutes, to account for clock skew. If the leader rejects a report for this
+reason, it SHOULD abort the upload protocol and alert the client with error
+"reportFromTheFuture".
+
 ### Upload Extensions {#upload-extensions}
 
 Each Report carries a list of extensions that clients may use to convey
@@ -656,13 +668,6 @@ encoded value of the following form:
 
 "extension_type" indicates the type of extension, and "extension_data" contains
 information specific to the extension.
-
-### Leader State {#leader-state}
-
-The leader MUST buffer reports while waiting to aggregate them. The
-leader SHOULD NOT accept reports whose timestamps are too far in the future.
-Implementors MAY provide for some small leeway, usually no more than a few
-minutes, to account for clock skew.
 
 ## Verifying and Aggregating Reports {#aggregate-flow}
 
@@ -1180,8 +1185,7 @@ struct {
 
 To handle the leader's request, the helper first ensures that the request meets
 the requirements for batch parameters following the procedure in
-{{batch-parameter-validation}}. If the batch parameters are invalid, then it
-MUST abort with error "batchInvalid".
+{{batch-parameter-validation}}.
 
 Next, it computes a checksum based on its view of the output shares included in
 the batch window, and checks that the `report_count` and `checksum` included in
@@ -1290,20 +1294,20 @@ First the aggregator checks that the request's batch interval respects the
 boundaries defined by the PPM task's parameters. Namely, it checks that both
 `batch_interval.start` and `batch_interval.duration` are divisible by
 `min_batch_duration` and that `batch_interval.duration >= min_batch_duration`.
-Unless both these conditions are true, it aborts and alerts the peer with
-"invalid batch interval".
+Unless both these conditions are true, the aggregator MUST abort and alert its
+peer with error "batchInvalid".
 
 Next, the aggregator checks that the request respects the generic privacy
 parameters of the PPM task. Let `X` denote the set of reports for which the
 aggregator has recovered a valid output share and which fall in the batch
 interval of the request.
 
-* If `len(X) < min_batch_size`, then the aggregator aborts and alerts the peer
-  with "insufficient batch size".
+* If `len(X) < min_batch_size`, then the aggregator MUST abort and alert its
+  peer with "insufficientBatchSize".
 * The aggregator keeps track of the number of times each report was added to the
   batch of an AggregateShareReq. If any report in `X` was added to at least
-  `max_batch_lifetime` previous batches, then the helper aborts and alerts the
-  peer with "request exceeds the batch's privacy budget".
+  `max_batch_lifetime` previous batches, then the aggregator MUST abort and
+  alert the peer with "batchLifetimeExceeded".
 
 ### Anti-replay {#anti-replay}
 
