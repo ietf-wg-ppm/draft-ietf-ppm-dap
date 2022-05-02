@@ -1444,34 +1444,63 @@ defined by the PPM parameters. (See {{batch-parameter-validation}}.)
 
 # Security Considerations {#sec-considerations}
 
-Prio assumes a powerful adversary with the ability to compromise an unbounded
-number of clients. In doing so, the adversary can provide malicious (yet
-truthful) inputs to the aggregation function. Prio also assumes that all but one
-server operates honestly, where a dishonest server does not execute the protocol
-faithfully as specified. The system also assumes that servers communicate over
-secure and mutually authenticated channels. In practice, this can be done by TLS
-or some other form of application-layer authentication.
+PPM assumes an active attacker that controls the network and has the ability to
+statically corrupt any number of clients, aggregators, and collectors. That is,
+the attacker can learn the secret state of any party prior to the start of its
+attack. For example, it may coerce a client into providing malicious input
+shares for aggregation or coerce an aggregator into diverting from the
+protocol specified (e.g., by divulging its input shares to the attacker).
 
-In the presence of this adversary, Prio provides two important properties for
-computing an aggregation function F:
+In the presence of this adversary, PPM aims to achieve the following high-level
+secure aggregation goals:
 
-1. Privacy. The aggregators and collector learn only the output of F computed
-   over all client inputs, and nothing else.
-1. Robustness. As long as the aggregators execute the input-validation protocol
-   correctly, a malicious client can skew the output of F only by reporting
-   false (untruthful) input. The output cannot be influenced in any other way.
+1. Privacy. Clients trust that some aggregator is honest. That is, as long as at
+   least one aggregator executes the protocol faithfully, the parties learn nothing
+   beyond the aggregate result (i.e., the output of the aggregation function computed over
+   the honest measurements).
+1. Correctness. The collector trusts that the aggregators execute the protocol
+   correctly. That is, as long as the aggregators execute the protocol faithfully,
+   a malicious client can skew the aggregate result only by reporting
+   a false (untruthful) measurement. The result cannot be influenced in any
+   other way.
 
-There are several additional constraints that a Prio deployment must satisfy in
-order to achieve these goals:
+Currently, the specification does not achieve these goals. In particular, there are several open
+issues that need to be addressed before these goals are met. Details for each issue are below.
 
-1. Minimum batch size. The aggregation batch size has an obvious impact on
-   privacy. (A batch size of one hides nothing of the input.)
-2. Aggregation function choice. Some aggregation functions leak slightly more
-   than the function output itself.
-
-[TODO: discuss these in more detail.]
+1. When crafted maliciously, collect requests may leak more information about
+   the measurements than the system intends. For example, the spec currently
+   allows sequences of collect requests to reveal an aggregate result for a
+   batch smaller than the minimum batch size. [OPEN ISSUE: See issue#195. This
+   also has implications for how we solve issue#183.]
+1. Even benign collect requests may leak information beyond what one might
+   expect intuitively. For example, the Poplar1 VDAF
+   {{?VDAF=I-D.draft-irtf-cfrg-vdaf}} can be used to compute the set of heavy
+   hitters among a set of arbitrary bit strings uploaded by clients. This
+   requires multiple evaluations of the VDAF, the results of which reveal
+   information to the aggregators and collector beyond what follows from the
+   heavy hitters themselves. Note that this leakage can be mitigated using
+   differential privacy. [OPEN ISSUE: We have yet not specified how to add DP.]
+1. The core PPM spec does not defend against Sybil attacks. In this type of
+   attack, the adversary adds to a batch a number of reports that skew the
+   aggregate result in its favor. For example: The result may reveal additional
+   information about the honest measurements, leading to a privacy violation; or
+   the result may have some property that is desirable to the adversary ("stats
+   poisoning"). The upload sub-protocol includes an extensions mechanism that
+   can be used to prevent --- or at least mitigate --- these types of attacks.
+   See {{upload-extensions}}. [OPEN ISSUE: No such extension has been
+   implemented, so we're not yet sure if the current mechanism is sufficient.]
+1. Attacks may also come from the network. Thus, it is required that the
+   aggregators and collector communicate with one another over mutually
+   authenticated and confidential channels. The core PPM spec does not specify
+   such a mechanism beyond requiring server authentication for HTTPS sessions.
+   Note that clients are not required to authenticate themselves. [OPEN ISSUE:
+   It might be better to be prescriptive about leader authentication in
+   leader-helper channels and collector authenticaiton in collector-leader
+   channels. For the latter we have issue#155.]
 
 ## Threat model
+
+[OPEN ISSUE: This subsection is a bit out-of-date.]
 
 In this section, we enumerate the actors participating in the Prio system and
 enumerate their assets (secrets that are either inherently valuable or which
