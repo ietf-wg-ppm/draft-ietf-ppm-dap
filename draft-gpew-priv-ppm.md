@@ -187,9 +187,9 @@ Server:
 
 {:br}
 
-This document uses the presentation language of {{!RFC8446}} to define messages 
-in the PPM protocol. Encoding and decoding of these messages as byte strings also 
-follows {{RFC8446}}.
+This document uses the presentation language of {{!RFC8446}} to define messages
+in the PPM protocol. Encoding and decoding of these messages as byte strings
+also follows {{RFC8446}}.
 
 # Overview {#overview}
 
