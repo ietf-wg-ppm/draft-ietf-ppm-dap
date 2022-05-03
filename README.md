@@ -1,6 +1,6 @@
-# Privacy Preserving Measurement Protocol
+# Distributed Aggregation Protocol for Privacy Preserving Measurement
 
-This is the working area for the individual Internet-Draft, "Privacy Preserving Measurement Protocol".
+This is the working area for the individual Internet-Draft, "Distributed Aggregation Protocol for Privacy Preserving Measurement".
 
 * [Editor's Copy](https://ietf-wg-ppm.github.io/ppm-specification/#go.draft-ietf-ppm-dap.html)
 * [Individual Draft](https://datatracker.ietf.org/doc/html/draft-ietf-ppm-dap)

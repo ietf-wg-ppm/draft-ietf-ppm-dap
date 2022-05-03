@@ -1,5 +1,5 @@
 ---
-title: "Privacy Preserving Measurement"
+title: "Distributed Aggregation Protocol for Privacy Preserving Measurement"
 docname: draft-ietf-ppm-dap-latest
 category: std
 ipr: trust200902
@@ -88,20 +88,21 @@ measurement is usually not interested in people's individual responses but
 rather in aggregated data. Conventional methods require collecting individual
 responses and then aggregating them, thus representing a threat to user privacy
 and rendering many such measurements difficult and impractical. This document
-describes a multi-party privacy preserving measurement (PPM) protocol which can
-be used to collect aggregate data without revealing any individual user's data.
+describes a multi-party distributed aggregation protocol (DAP) for privacy
+preserving measurement (PPM) which can be used to collect aggregate data without
+revealing any individual user's data.
 
 --- middle
 
 # Introduction
 
-This document describes a protocol for privacy preserving measurement. The
-protocol is executed by a large set of clients and a small set of servers. The
-servers' goal is to compute some aggregate statistic over the clients' inputs
-without learning the inputs themselves. This is made possible by distributing
-the computation among the servers in such a way that, as long as at least one of
-them executes the protocol honestly, no input is ever seen in the clear by any
-server.
+This document describes a distributed aggregation protocol for privacy
+preserving measurement. The protocol is executed by a large set of clients and a
+small set of servers. The servers' goal is to compute some aggregate statistic
+over the clients' inputs without learning the inputs themselves. This is made
+possible by distributing the computation among the servers in such a way that,
+as long as at least one of them executes the protocol honestly, no input is ever
+seen in the clear by any server.
 
 ## DISCLAIMER
 
