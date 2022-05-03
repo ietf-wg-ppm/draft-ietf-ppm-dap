@@ -1,5 +1,6 @@
 ---
 title: "Distributed Aggregation Protocol for Privacy Preserving Measurement"
+abbrev: DAP-PPM
 docname: draft-ietf-ppm-dap-latest
 category: std
 ipr: trust200902
