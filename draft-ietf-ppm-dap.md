@@ -360,7 +360,7 @@ client could not report 10^6s or -20s.
 
 Communications between PPM entities are carried over HTTPS {{!RFC2818}}. HTTPS
 provides server authentication and confidentiality. In addition, report shares
-are encrypted directly to the aggregators using HPKE {{!I-D.irtf-cfrg-hpke}}.
+are encrypted directly to the aggregators using HPKE {{!RFC9180}}.
 
 ## Errors
 
@@ -485,7 +485,7 @@ In addition, in order to facilitate the aggregation and collect protocols, each
 of the aggregators is configured with following parameters:
 
 * `collector_config`: The HPKE configuration of the collector (described in
-  {{key-config}}).
+  {{hpke-config}}).
 * `vdaf_verify_param`: The aggregator's VDAF verification parameter output by
   the setup algorithm computed jointly by the aggregators before the start of the
   PPM protocol {{?VDAF=I-D.draft-irtf-cfrg-vdaf}}). [OPEN ISSUE: This is yet to be
@@ -499,13 +499,21 @@ Finally, the collector is configured with the HPKE secret key corresponding to
 Clients periodically upload reports to the leader, which then distributes the
 individual shares to each helper.
 
-### Key Configuration Request {#key-config}
+### HPKE Configuration Request {#hpke-config}
 
 Before the client can upload its report to the leader, it must know the public
 key of each of the aggregators. These are retrieved from each aggregator by
-sending a request to `[aggregator]/key_config`, where `[aggregator]` is the
-aggregator's endpoint URL, obtained from the task parameters. The aggregator
-responds to well-formed requests with status 200 and an `HpkeConfig` value:
+sending a request to `[aggregator]/hpke_config?task_id=[task-id]`, where
+`[aggregator]` is the aggregator's endpoint URL, obtained from the task
+parameters, and `[task-id]` is the task ID obtained from the task parameters,
+encoded in Base 64 with URL and filename safe alphabet with no padding, as
+specified in sections 5 and 3.2 of {{!RFC4648}}. If the aggregator does not
+recognize the task ID, then it responds with HTTP error status 404 Not Found and
+an error of type `unrecognizedTask`. The aggregator responds to well-formed
+requests with status 200 and an `HpkeConfig` value:
+
+[TODO: Allow aggregators to return HTTP 403 Forbidden in deployments that use
+authentication to avoid leaking information about which tasks exist.]
 
 ~~~
 struct {
@@ -517,22 +525,22 @@ struct {
 } HpkeConfig;
 
 opaque HpkePublicKey<1..2^16-1>;
-uint16 HpkeAeadId; // Defined in I-D.irtf-cfrg-hpke
-uint16 HpkeKemId;  // Defined in I-D.irtf-cfrg-hpke
-uint16 HpkeKdfId;  // Defined in I-D.irtf-cfrg-hpke
+uint16 HpkeAeadId; // Defined in RFC9180
+uint16 HpkeKemId;  // Defined in RFC9180
+uint16 HpkeKdfId;  // Defined in RFC9180
 ~~~
 
 [OPEN ISSUE: Decide whether to expand the width of the id, or support multiple
 cipher suites (a la OHTTP/ECH).]
 
-The client MUST abort if any of the following happen for any `key_config`
+The client MUST abort if any of the following happen for any HPKE config
 request:
 
 * the client and aggregator failed to establish a secure,
   aggregator-authenticated channel;
-* the GET request failed or didn't return a valid key config; or
-* the key config specifies a KEM, KDF, or AEAD algorithm the client doesn't
-  recognize.
+* the GET request failed or didn't return a valid HPKE configuration; or
+* the HPKE configuration specifies a KEM, KDF, or AEAD algorithm the client
+  doesn't recognize.
 
 Aggregators SHOULD use HTTP caching to permit client-side caching of this
 resource {{!RFC5861}}. Aggregators SHOULD favor long cache lifetimes to avoid
@@ -580,7 +588,7 @@ This message is called the client's *report*. It contains the following fields:
 
 To generate the report, the client begins by sharding its measurement into a
 sequence of input shares as specified by the VDAF in use. To encrypt an input
-share, the client first generates an HPKE {{!I-D.irtf-cfrg-hpke}} context for
+share, the client first generates an HPKE {{!RFC9180}} context for
 the aggregator by running
 
 ~~~
@@ -1738,7 +1746,7 @@ the input shares and defeat privacy.
 This specification defines the following protocol messages, along with their
 corresponding media types types:
 
-- HpkeConfig {{task-configuration}}: "application/ppm-hpke-config"
+- HpkeConfig {{hpke-config}}: "application/ppm-hpke-config"
 - Report {{upload-request}}: "message/ppm-report"
 - AggregateInitReq {{collect-flow}}: "message/ppm-aggregate-init-req"
 - AggregateInitResp {{collect-flow}}: "message/ppm-aggregate-init-resp"
