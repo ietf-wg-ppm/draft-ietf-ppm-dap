@@ -359,8 +359,9 @@ client could not report 10^6s or -20s.
 # Message Transport
 
 Communications between PPM entities are carried over HTTPS {{!RFC2818}}. HTTPS
-provides server authentication and confidentiality. In addition, report shares
-are encrypted directly to the aggregators using HPKE {{!RFC9180}}.
+provides server authentication and confidentiality. When client authenticaiton
+is also required, the client uses the mechanism described in
+{{https-sender-auth}}.
 
 ## Errors
 
@@ -386,6 +387,7 @@ in the "type" field (within the PPM URN namespace "urn:ietf:params:ppm:error:"):
 | insufficientBatchSize   | There are not enough reports in the batch interval to satisfy the task's minimum batch size. |
 | batchLifetimeExceeded   | The batch lifetime has been exceeded for one or more reports included in the batch interval. |
 | batchMismatch           | Aggregators disagree on the report shares that were aggregated in a batch. |
+| unauthorizedRequest     | Authentication of an HTTP request failed (see {{https-sender-auth}}). |
 
 This list is not exhaustive. The server MAY return errors set to a URI other
 than those defined above. Servers MUST NOT use the PPM URN namespace for errors
@@ -405,6 +407,29 @@ to error types, rather than the full URNs. For example, an "error of type
 This document uses the verbs "abort" and "alert with `[some error message]`" to
 describe how protocol participants react to various error conditions.
 
+## HTTPS Sender Authentication {#https-sender-auth}
+
+Some HTTP requests in the PPM protocol require the sender to authenticate its
+request. It does so as described here.
+
+Prior to the start of the protocol, the sender and receiver arrange to share a
+secret sender-specific API token, which MUST be suitable for representation in
+an HTTP header.
+
+For requests requiring authentication, the sender includes a "DAP-Auth-Token"
+header in its HTTP request containing the API token.
+
+To authenticate the request, the receiver looks up the token for the
+sender as determined by the task configuration. (See {{task-configuration}}.) If
+the value of the "DAP-Auth-Token" header does not match the token, then
+the receiver MUST abort with error "unauthorizedRequest". The error code of the
+HTTP response MUST be 403.
+
+[OPEN ISSUE: This simple bearer-token scheme is meant to unblock interop
+testing. Eventually it should be replaced with a more secure authentication
+mechanism, e.g., TLS client certificates. See
+https://mailarchive.ietf.org/arch/msg/ppm/z65FK8kOU27Dt38WNhpI6apc2so/ for
+details.]
 
 # Protocol Definition
 
@@ -495,6 +520,11 @@ of the aggregators is configured with following parameters:
   the setup algorithm computed jointly by the aggregators before the start of the
   PPM protocol {{?VDAF=I-D.draft-irtf-cfrg-vdaf}}). [OPEN ISSUE: This is yet to be
   specified. See issue#161.]
+
+The helper stores a bearer token used to authenticate HTTP requests from the
+leader. Likewise, the leader stores a bearer token to authenticate HTTP request
+from the collector. The authentication mechanism is described in
+{{https-sender-auth}}.
 
 Finally, the collector is configured with the HPKE secret key corresponding to
 `collector_hpke_config`.
@@ -816,7 +846,8 @@ The `agg_param` field is an opaque, VDAF-specific aggregation parameter. The
 
 Let `[aggregator]` denote the helper's API endpoint. The leader sends a POST
 request to `[aggregator]/aggregate` with its AggregateInitReq message as
-the payload. The media type is "message/ppm-aggregate-init-req".
+the payload. The media type is "message/ppm-aggregate-init-req". In addition,
+this request MUST be authenticated as described in {{https-sender-auth}}.
 
 #### Helper Initialization
 
@@ -1000,7 +1031,8 @@ struct {
 For each aggregator endpoint `[aggregator]` in `AggregateContinueReq.task_id`'s
 parameters except its own, the leader sends a POST request to
 `[aggregator]/aggregate` with AggregateContinueReq as the payload and the media
-type set to "message/ppm-aggregate-continue-req".
+type set to "message/ppm-aggregate-continue-req". In addition, this request MUST
+be authenticated as described in {{https-sender-auth}}.
 
 #### Helper Continuation
 
@@ -1076,8 +1108,9 @@ Once complete, the collector computes the final aggregate result as specified in
 ### Collection Initialization {#collect-init}
 
 To initiate collection, the collector issues a POST request to `[leader]/collect`,
-where `[leader]` is the leader's endpoint URL. The body of the request is structured
-as follows:
+where `[leader]` is the leader's endpoint URL. The request MUST be authenticated
+as described in {{https-sender-auth}}. The body of the request is structured as
+follows:
 
 [OPEN ISSUE: Decide if and how the collector's request is authenticated. If not,
 then we need to ensure that collect job URIs are resistant to enumeration
@@ -1183,8 +1216,9 @@ struct {
 * `checksum` is the checksum computed over the set of client reports.
 * `job_id` is the ID of the aggregation job.
 
-To handle the leader's request, the helper first ensures that the request meets
-the requirements for batch parameters following the procedure in
+This request MUST be authenticated as described in {{https-sender-auth}}. To
+handle the leader's request, the helper first ensures that the request meets the
+requirements for batch parameters following the procedure in
 {{batch-parameter-validation}}.
 
 Next, it computes a checksum based on its view of the output shares included in
@@ -1507,12 +1541,7 @@ issues that need to be addressed before these goals are met. Details for each is
    implemented, so we're not yet sure if the current mechanism is sufficient.]
 1. Attacks may also come from the network. Thus, it is required that the
    aggregators and collector communicate with one another over mutually
-   authenticated and confidential channels. The core PPM spec does not specify
-   such a mechanism beyond requiring server authentication for HTTPS sessions.
-   Note that clients are not required to authenticate themselves. [OPEN ISSUE:
-   It might be better to be prescriptive about leader authentication in
-   leader-helper channels and collector authenticaiton in collector-leader
-   channels. For the latter we have issue#155.]
+   authenticated and confidential channels.
 
 ## Threat model
 
