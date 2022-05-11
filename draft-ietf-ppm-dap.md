@@ -374,7 +374,8 @@ MAY return status code 405 (Method Not Allowed).
 When the server responds with an error status, it SHOULD provide additional
 information using a problem document {{!RFC7807}}. To facilitate automatic
 response to errors, this document defines the following standard tokens for use
-in the "type" field (within the DAP URN namespace "urn:ietf:params:ppm:error:"):
+in the "type" field (within the DAP URN namespace
+"urn:ietf:params:ppm:dap:error:"):
 
 | Type                    | Description                                                                                  |
 |:------------------------|:---------------------------------------------------------------------------------------------|
@@ -402,7 +403,7 @@ and filename safe alphabet with no padding defined in sections 5 and 3.2 of
 In the remainder of this document, we use the tokens in the table above to refer
 to error types, rather than the full URNs. For example, an "error of type
 'unrecognizedMessage'" refers to an error document with "type" value
-"urn:ietf:params:ppm:error:unrecognizedMessage".
+"urn:ietf:params:ppm:dap:error:unrecognizedMessage".
 
 This document uses the verbs "abort" and "alert with `[some error message]`" to
 describe how protocol participants react to various error conditions.
@@ -627,7 +628,7 @@ share, the client first generates an HPKE {{!RFC9180}} context for
 the aggregator by running
 
 ~~~
-enc, context = SetupBaseS(pk, Report.task_id || "ppm-00 input share" ||
+enc, context = SetupBaseS(pk, Report.task_id || "dap-01 input share" ||
                               0x01 || server_role)
 ~~~
 
@@ -845,7 +846,7 @@ The `agg_param` field is an opaque, VDAF-specific aggregation parameter. The
 
 Let `[aggregator]` denote the helper's API endpoint. The leader sends a POST
 request to `[aggregator]/aggregate` with its AggregateInitializeReq message as
-the payload. The media type is "message/ppm-aggregate-initialize-req". In addition,
+the payload. The media type is "message/dap-aggregate-initialize-req". In addition,
 this request MUST be authenticated as described in {{https-sender-auth}}.
 
 #### Helper Initialization
@@ -902,7 +903,7 @@ PrepareStep is either marked as continued with the output `prep_msg`, or is mark
 as finished if the VDAF preparation process is finished for the report share.
 
 The helper's response to the leader is an HTTP 200 OK whose body is the
-AggregateInitializeResp and media type is "message/ppm-aggregate-initialize-resp".
+AggregateInitializeResp and media type is "message/dap-aggregate-initialize-resp".
 
 Upon receipt of a helper's AggregateInitializeResp message, the leader checks that the
 sequence of PrepareStep messages corresponds to the ReportShare sequence of the
@@ -924,7 +925,7 @@ Otherwise, it decrypts the payload with the following procedure:
 
 ~~~
 context = SetupBaseR(encrypted_input_share.enc, sk, task_id ||
-                     "ppm-00 input share" || 0x01 || server_role)
+                     "dap-01 input share" || 0x01 || server_role)
 
 input_share = context.Open(nonce || extensions,
                            encrypted_input_share.payload)
@@ -1030,7 +1031,7 @@ struct {
 For each aggregator endpoint `[aggregator]` in `AggregateContinueReq.task_id`'s
 parameters except its own, the leader sends a POST request to
 `[aggregator]/aggregate` with AggregateContinueReq as the payload and the media
-type set to "message/ppm-aggregate-continue-req". In addition, this request MUST
+type set to "message/dap-aggregate-continue-req". In addition, this request MUST
 be authenticated as described in {{https-sender-auth}}.
 
 #### Helper Continuation
@@ -1082,7 +1083,7 @@ struct {
 
 The order of AggregateContinueResp.prepare_shares MUST match that of the PrepareStep values in
 `AggregateContinueReq.prepare_shares`. The helper's response to the leader is an HTTP 200 OK whose body
-is the AggregateContinueResp and media type is "message/ppm-aggregate-continue-resp". The helper
+is the AggregateContinueResp and media type is "message/dap-aggregate-continue-resp". The helper
 then awaits the next message from the leader.
 
 [[OPEN ISSUE: consider relaxing this ordering constraint. See issue#217.]]
@@ -1293,7 +1294,7 @@ as follows:
 
 ~~~
 enc, context = SetupBaseS(pk, AggregateShareReq.task_id ||
-                              "ppm-00 aggregate share" || server_role || 0x00)
+                              "dap-01 aggregate share" || server_role || 0x00)
 
 encrypted_agg_share = context.Seal(AggregateShareReq.batch_interval,
                                    agg_share)
@@ -1308,7 +1309,7 @@ given batch interval, denoted `batch_interval`, decryption works as follows:
 
 ~~~
 context = SetupBaseR(enc_share.enc, sk,
-                     "ppm-00 aggregate share" ||
+                     "dap-01 aggregate share" ||
                      task_id || server_role || 0x00)
 agg_share = context.Open(batch_interval, enc_share.payload)
 ~~~
@@ -1811,16 +1812,16 @@ the input shares and defeat privacy.
 This specification defines the following protocol messages, along with their
 corresponding media types types:
 
-- HpkeConfig {{hpke-config}}: "application/ppm-hpke-config"
-- Report {{upload-request}}: "message/ppm-report"
-- AggregateInitializeReq {{collect-flow}}: "message/ppm-aggregate-initialize-req"
-- AggregateInitializeResp {{collect-flow}}: "message/ppm-aggregate-initialize-resp"
-- AggregateContinueReq {{collect-flow}}: "message/ppm-aggregate-continue-req"
-- AggregateContinueResp {{collect-flow}}: "message/ppm-aggregate-continue-resp"
-- AggregateShareReq {{collect-flow}}: "message/ppm-aggregate-share-req"
-- AggregateShareResp {{collect-flow}}: "message/ppm-aggregate-share-resp"
-- CollectReq {{collect-flow}}: "message/ppm-collect-req"
-- CollectResp {{collect-flow}}: "message/ppm-collect-resp"
+- HpkeConfig {{hpke-config}}: "application/dap-hpke-config"
+- Report {{upload-request}}: "message/dap-report"
+- AggregateInitializeReq {{collect-flow}}: "message/dap-aggregate-initialize-req"
+- AggregateInitializeResp {{collect-flow}}: "message/dap-aggregate-initialize-resp"
+- AggregateContinueReq {{collect-flow}}: "message/dap-aggregate-continue-req"
+- AggregateContinueResp {{collect-flow}}: "message/dap-aggregate-continue-resp"
+- AggregateShareReq {{collect-flow}}: "message/dap-aggregate-share-req"
+- AggregateShareResp {{collect-flow}}: "message/dap-aggregate-share-resp"
+- CollectReq {{collect-flow}}: "message/dap-collect-req"
+- CollectResp {{collect-flow}}: "message/dap-collect-resp"
 
 The definition for each media type is in the following subsections.
 
@@ -1833,7 +1834,7 @@ in this section for all media types listed above.
 
 [OPEN ISSUE: Solicit review of these allocations from domain experts.]
 
-### "application/ppm-hpke-config" media type
+### "application/dap-hpke-config" media type
 
 Type name:
 
@@ -1841,7 +1842,7 @@ Type name:
 
 Subtype name:
 
-: ppm-hpke-config
+: dap-hpke-config
 
 Required parameters:
 
@@ -1904,7 +1905,7 @@ Change controller:
 
 : IESG
 
-### "message/ppm-report" media type
+### "message/dap-report" media type
 
 Type name:
 
@@ -1912,7 +1913,7 @@ Type name:
 
 Subtype name:
 
-: ppm-report
+: dap-report
 
 Required parameters:
 
@@ -1975,7 +1976,7 @@ Change controller:
 
 : IESG
 
-### "message/ppm-aggregate-continue-req" media type
+### "message/dap-aggregate-continue-req" media type
 
 Type name:
 
@@ -1983,7 +1984,7 @@ Type name:
 
 Subtype name:
 
-: ppm-aggregate-initialize-req
+: dap-aggregate-initialize-req
 
 Required parameters:
 
@@ -2046,7 +2047,7 @@ Change controller:
 
 : IESG
 
-### "message/ppm-aggregate-initialize-resp" media type
+### "message/dap-aggregate-initialize-resp" media type
 
 Type name:
 
@@ -2054,7 +2055,7 @@ Type name:
 
 Subtype name:
 
-: ppm-aggregate-initialize-resp
+: dap-aggregate-initialize-resp
 
 Required parameters:
 
@@ -2117,7 +2118,7 @@ Change controller:
 
 : IESG
 
-### "message/ppm-aggregate-continue-req" media type
+### "message/dap-aggregate-continue-req" media type
 
 Type name:
 
@@ -2125,7 +2126,7 @@ Type name:
 
 Subtype name:
 
-: ppm-aggregate-continue-req
+: dap-aggregate-continue-req
 
 Required parameters:
 
@@ -2188,7 +2189,7 @@ Change controller:
 
 : IESG
 
-### "message/ppm-aggregate-continue-resp" media type
+### "message/dap-aggregate-continue-resp" media type
 
 Type name:
 
@@ -2196,7 +2197,7 @@ Type name:
 
 Subtype name:
 
-: ppm-aggregate-continue-resp
+: dap-aggregate-continue-resp
 
 Required parameters:
 
@@ -2259,7 +2260,7 @@ Change controller:
 
 : IESG
 
-### "message/ppm-aggregate-share-req" media type
+### "message/dap-aggregate-share-req" media type
 
 Type name:
 
@@ -2267,7 +2268,7 @@ Type name:
 
 Subtype name:
 
-: ppm-aggregate-share-req
+: dap-aggregate-share-req
 
 Required parameters:
 
@@ -2330,7 +2331,7 @@ Change controller:
 
 : IESG
 
-### "message/ppm-aggregate-share-resp" media type
+### "message/dap-aggregate-share-resp" media type
 
 Type name:
 
@@ -2338,7 +2339,7 @@ Type name:
 
 Subtype name:
 
-: ppm-aggregate-share-resp
+: dap-aggregate-share-resp
 
 Required parameters:
 
@@ -2401,7 +2402,7 @@ Change controller:
 
 : IESG
 
-### "message/ppm-collect-req" media type
+### "message/dap-collect-req" media type
 
 Type name:
 
@@ -2409,7 +2410,7 @@ Type name:
 
 Subtype name:
 
-: ppm-collect-req
+: dap-collect-req
 
 Required parameters:
 
@@ -2472,7 +2473,7 @@ Change controller:
 
 : IESG
 
-### "message/ppm-collect-req" media type
+### "message/dap-collect-req" media type
 
 Type name:
 
@@ -2480,7 +2481,7 @@ Type name:
 
 Subtype name:
 
-: ppm-collect-req
+: dap-collect-req
 
 Required parameters:
 
@@ -2550,18 +2551,18 @@ protocol. This registry should contain the following columns:
 
 [TODO: define how we want to structure this registry when the time comes]
 
-## URN Sub-namespace for DAP (urn:ietf:params:ppm) {#urn-space}
+## URN Sub-namespace for DAP (urn:ietf:params:ppm:dap) {#urn-space}
 
 The following value [will be/has been] registered in the "IETF URN
 Sub-namespace for Registered Protocol Parameter Identifiers" registry,
 following the template in {{!RFC3553}}:
 
 ~~~
-Registry name:  ppm
+Registry name:  dap
 
 Specification:  [[THIS DOCUMENT]]
 
-Repository:  http://www.iana.org/assignments/ppm
+Repository:  http://www.iana.org/assignments/dap
 
 Index value:  No transformation needed.
 ~~~
