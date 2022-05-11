@@ -668,12 +668,11 @@ helpers enforce this as well; see {{collect-flow}}.) In addition, the
 leader SHOULD abort the upload protocol and alert the client with error
 "reportTooLate".
 
-The leader MUST buffer reports while waiting to aggregate them. The
-leader SHOULD NOT accept reports whose timestamps are too far in the future.
-Implementors MAY provide for some small leeway, usually no more than a few
-minutes, to account for clock skew. If the leader rejects a report for this
-reason, it SHOULD abort the upload protocol and alert the client with error
-"reportTooEarly".
+Leaders can buffer reports while waiting to aggregate them. The leader SHOULD
+NOT accept reports whose timestamps are too far in the future. Implementors MAY
+provide for some small leeway, usually no more than a few minutes, to account
+for clock skew. If the leader rejects a report for this reason, it SHOULD abort
+the upload protocol and alert the client with error "reportTooEarly".
 
 ### Upload Extensions {#upload-extensions}
 
