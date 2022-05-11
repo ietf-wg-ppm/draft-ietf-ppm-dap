@@ -538,7 +538,7 @@ individual shares to each helper.
 
 Before the client can upload its report to the leader, it must know the public
 key of each of the aggregators. These are retrieved from each aggregator by
-sending a request to `[aggregator]/hpke_config?task_id=[task-id]`, where
+sending an HTTP GET request to `[aggregator]/hpke_config?task_id=[task-id]`, where
 `[aggregator]` is the aggregator's endpoint URL, obtained from the task
 parameters, and `[task-id]` is the task ID obtained from the task parameters,
 encoded in Base 64 with URL and filename safe alphabet with no padding, as
