@@ -369,7 +369,7 @@ Errors can be reported in DAP both at the HTTP layer and within challenge
 objects as defined in {{iana-considerations}}. DAP servers can return responses
 with an HTTP error response code (4XX or 5XX). For example, if the client
 submits a request using a method not allowed in this document, then the server
-MAY return status code 405 (Method Not Allowed).
+MAY return HTTP status code 405 Method Not Allowed.
 
 When the server responds with an error status, it SHOULD provide additional
 information using a problem document {{!RFC7807}}. To facilitate automatic
@@ -423,8 +423,8 @@ header in its HTTP request containing the API token.
 To authenticate the request, the receiver looks up the token for the
 sender as determined by the task configuration. (See {{task-configuration}}.) If
 the value of the "DAP-Auth-Token" header does not match the token, then
-the receiver MUST abort with error "unauthorizedRequest". The error code of the
-HTTP response MUST be 403.
+the receiver MUST abort with error "unauthorizedRequest" and HTTP status code
+403 Forbidden.
 
 [OPEN ISSUE: This simple bearer-token scheme is meant to unblock interop
 testing. Eventually it should be replaced with a more secure authentication
@@ -544,12 +544,12 @@ sending an HTTP GET request to `[aggregator]/hpke_config?task_id=[task-id]`, whe
 parameters, and `[task-id]` is the task ID obtained from the task parameters,
 encoded in Base 64 with URL and filename safe alphabet with no padding, as
 specified in sections 5 and 3.2 of {{!RFC4648}}. If the aggregator does not
-recognize the task ID, then it responds with HTTP error status 404 Not Found and
+recognize the task ID, then it responds with HTTP status code 404 and
 an error of type `unrecognizedTask`. The aggregator responds to well-formed
-requests with status 200 and an `HpkeConfig` value:
+requests with HTTP status code 200 OK and an `HpkeConfig` value:
 
-[TODO: Allow aggregators to return HTTP 403 Forbidden in deployments that use
-authentication to avoid leaking information about which tasks exist.]
+[TODO: Allow aggregators to return HTTP status code 403 Forbidden in deployments
+that use authentication to avoid leaking information about which tasks exist.]
 
 ~~~
 struct {
@@ -649,14 +649,14 @@ where `input_share` is the aggregator's input share and `nonce` and `extensions`
 are the corresponding fields of `Report`. Clients MUST NOT use the same `enc`
 for multiple reports.
 
-The leader responds to well-formed requests to `[leader]/upload` with status 200
-and an empty body. Malformed requests are handled as described in {{errors}}.
+The leader responds to well-formed requests to `[leader]/upload` with HTTP status
+code 200 OK and an empty body. Malformed requests are handled as described in {{errors}}.
 Clients SHOULD NOT upload the same measurement value in more than one report if
-the leader responds with status 200 and an empty body.
+the leader responds with HTTP status code 200 OK and an empty body.
 
 The leader responds to requests whose leader encrypted input share uses an
 out-of-date `HpkeConfig.id` value, indicated by `HpkeCiphertext.config_id`, with
-status 400 and an error of type 'outdatedConfig'. Clients SHOULD invalidate any
+HTTP status code 400 Bad Request and an error of type 'outdatedConfig'. Clients SHOULD invalidate any
 cached aggregator `HpkeConfig` and retry with a freshly generated Report. If
 this retried report does not succeed, clients MUST abort and discontinue
 retrying.
@@ -902,7 +902,7 @@ that was marked as invalid is assigned the PrepareStepResult `failed`. Otherwise
 PrepareStep is either marked as continued with the output `prep_msg`, or is marked
 as finished if the VDAF preparation process is finished for the report share.
 
-The helper's response to the leader is an HTTP 200 OK whose body is the
+The helper's response to the leader is an HTTP status code 200 OK whose body is the
 AggregateInitializeResp and media type is "message/dap-aggregate-initialize-resp".
 
 Upon receipt of a helper's AggregateInitializeResp message, the leader checks that the
@@ -1082,9 +1082,9 @@ struct {
 ~~~
 
 The order of AggregateContinueResp.prepare_shares MUST match that of the PrepareStep values in
-`AggregateContinueReq.prepare_shares`. The helper's response to the leader is an HTTP 200 OK whose body
-is the AggregateContinueResp and media type is "message/dap-aggregate-continue-resp". The helper
-then awaits the next message from the leader.
+`AggregateContinueReq.prepare_shares`. The helper's response to the leader is an HTTP status code
+200 OK whose body is the AggregateContinueResp and media type is "message/dap-aggregate-continue-resp".
+The helper then awaits the next message from the leader.
 
 [[OPEN ISSUE: consider relaxing this ordering constraint. See issue#217.]]
 
@@ -1157,7 +1157,7 @@ header field to suggest a pulling interval to the collector.
 If the leader has not yet obtained an aggregator share from each aggregator,
 the leader invokes the aggregate share request flow described in {{collect-aggregate}}.
 Otherwise, when all aggregator shares are successfully obtained, the leader responds
-to subsequent HTTP GET requests to the collect job's URI with HTTP status 200 OK
+to subsequent HTTP GET requests to the collect job's URI with HTTP status code 200 OK
 and a body consisting of a `CollectResp`:
 
 ~~~
@@ -1244,7 +1244,7 @@ key as described in {{aggregate-share-encrypt}}, yielding `encrypted_agg_share`.
 Encryption prevents the leader from learning the actual result, as it only has
 its own aggregate share and cannot compute the helper's.
 
-The helper responds to the leader with HTTP status 200 OK and a body consisting
+The helper responds to the leader with HTTP status code 200 OK and a body consisting
 of an `AggregateShareResp`:
 
 ~~~
