@@ -516,8 +516,8 @@ number generator. Each task has the following parameters associated with it:
 In addition, in order to facilitate the aggregation and collect protocols, each
 of the aggregators is configured with following parameters:
 
-* `collector_config`: The HPKE configuration of the collector (described in
-  {{hpke-config}}).
+* `collector_config`: The {{!HPKE=RFC9180}} configuration of the collector (described in
+  {{hpke-config}}); see {{compliance}} for information about the HPKE configuration algorithms.
 * `vdaf_verify_param`: The aggregator's VDAF verification parameter output by
   the setup algorithm computed jointly by the aggregators before the start of the
   DAP protocol {{?VDAF=I-D.draft-irtf-cfrg-vdaf-00}}). [OPEN ISSUE: This is yet
@@ -538,8 +538,11 @@ individual shares to each helper.
 
 ### HPKE Configuration Request {#hpke-config}
 
-Before the client can upload its report to the leader, it must know the public
-key of each of the aggregators. These are retrieved from each aggregator by
+Before the client can upload its report to the leader, it must know the HPKE
+configuration of each aggregator. See {{compliance}} for information on HPKE
+algorithm choices.
+
+Clients retrieve the HPKE configuration from each aggregator by
 sending an HTTP GET request to `[aggregator]/hpke_config?task_id=[task-id]`, where
 `[aggregator]` is the aggregator's endpoint URL, obtained from the task
 parameters, and `[task-id]` is the task ID obtained from the task parameters,
@@ -562,9 +565,9 @@ struct {
 } HpkeConfig;
 
 opaque HpkePublicKey<1..2^16-1>;
-uint16 HpkeAeadId; // Defined in RFC9180
-uint16 HpkeKemId;  // Defined in RFC9180
-uint16 HpkeKdfId;  // Defined in RFC9180
+uint16 HpkeAeadId; // Defined in [HPKE]
+uint16 HpkeKemId;  // Defined in [HPKE]
+uint16 HpkeKdfId;  // Defined in [HPKE]
 ~~~
 
 [OPEN ISSUE: Decide whether to expand the width of the id, or support multiple
@@ -591,7 +594,7 @@ this cached lifetime with the Cache-Control header, as follows:
 Clients SHOULD follow the usual HTTP caching {{!RFC7234}} semantics for key
 configurations.
 
-Note: Long cache lifetimes may result in clients using stale HPKE keys;
+Note: Long cache lifetimes may result in clients using stale HPKE configurations;
 aggregators SHOULD continue to accept reports with old keys for at least twice
 the cache lifetime in order to avoid rejecting reports.
 
@@ -625,8 +628,7 @@ This message is called the client's *report*. It contains the following fields:
 
 To generate the report, the client begins by sharding its measurement into a
 sequence of input shares as specified by the VDAF in use. To encrypt an input
-share, the client generates an HPKE {{!RFC9180}} ciphertext and encapsulated
-key for the aggregator by running
+share, the client first generates an {{HPKE}} ciphertext for the aggregator by running
 
 ~~~
 enc, payload = SealBase(pk, "dap-01 input share" || 0x01 || server_role,
@@ -1462,6 +1464,15 @@ aggregate share for each possible batch interval, along with the number of times
 the aggregate share was used in a batch. This is due to the requirement that the
 batch interval respect the boundaries defined by the DAP parameters. (See
 {{batch-parameter-validation}}.)
+
+# Compliance Requirements {#compliance}
+
+In the absence of an application or deployment-specific profile specifying otherwise,
+a compliant DAP application MUST implement the following HPKE cipher suite:
+
+- KEM: DHKEM(X25519, HKDF-SHA256) (see {{!HPKE, Section 7.1}})
+- KDF: HKDF-SHA256 (see {{!HPKE, Section 7.2}})
+- AEAD: AES-128-GCM (see {{!HPKE, Section 7.3}})
 
 # Security Considerations {#sec-considerations}
 
