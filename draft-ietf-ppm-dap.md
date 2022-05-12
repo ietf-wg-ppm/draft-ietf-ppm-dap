@@ -1494,7 +1494,7 @@ defined by the DAP parameters. (See {{batch-parameter-validation}}.)
 
 # Compliance Requirements {#compliance}
 
-In the absence of an application profile standard specifying otherwise,
+In the absence of an application or deployment-specific profile specifying otherwise,
 a compliant DAP application MUST implement the following HPKE cipher suite:
 
 - KEM: DHKEM(X25519, HKDF-SHA256) (see {{!HPKE, Section 7.1}})
