@@ -544,7 +544,7 @@ sending an HTTP GET request to `[aggregator]/hpke_config?task_id=[task-id]`, whe
 parameters, and `[task-id]` is the task ID obtained from the task parameters,
 encoded in Base 64 with URL and filename safe alphabet with no padding, as
 specified in sections 5 and 3.2 of {{!RFC4648}}. If the aggregator does not
-recognize the task ID, then it responds with HTTP status code 404 and
+recognize the task ID, then it responds with HTTP status code 404 Not Found and
 an error of type `unrecognizedTask`. The aggregator responds to well-formed
 requests with HTTP status code 200 OK and an `HpkeConfig` value:
 
