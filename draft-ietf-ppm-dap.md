@@ -537,8 +537,7 @@ individual shares to each helper.
 ### HPKE Configuration Request {#hpke-config}
 
 Before the client can upload its report to the leader, it must know the HPKE
-configuration of each aggregator. Each task ID corresponds to exactly one HPKE
-configuration. See {{compliance}} for information on HPKE configuration algorithms.
+configuration of each aggregator. See {{compliance}} for information on HPKE configuration algorithms.
 
 Clients retrieve the HPKE configuration from each aggregator by sending an HTTP
 GET request to `[aggregator]/hpke_config?task_id=[task-id]`, where `[aggregator]`
