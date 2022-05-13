@@ -105,11 +105,6 @@ possible by distributing the computation among the servers in such a way that,
 as long as at least one of them executes the protocol honestly, no input is ever
 seen in the clear by any server.
 
-## DISCLAIMER
-
-This document is a work in progress. We have not yet settled on the design of
-the protocol framework or the set of features we intend to support.
-
 ## Conventions and Definitions
 
 {::boilerplate bcp14-tagged}
@@ -257,7 +252,7 @@ The overall system architecture is shown in {{pa-topology}}.
 {: #pa-topology title="System Architecture"}
 
 [[OPEN ISSUE: This shows two helpers, but the document only allows one for now.
-https://github.com/ietf-wg-ppm/ppm-specification/issues/117]]
+https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/117]]
 
 
 The main participants in the protocol are as follows:
@@ -1790,7 +1785,7 @@ the protocol runs do not agree, then participants know that at least one
 aggregator is defective, and it may be possible to identify the defector (i.e.,
 if a majority of runs agree, and a single aggregator appears in every run that
 disagrees). See
-[#22](https://github.com/ietf-wg-ppm/ppm-specification/issues/22) for
+[#22](https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/22) for
 discussion.
 
 ## Infrastructure diversity
