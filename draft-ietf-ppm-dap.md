@@ -141,7 +141,7 @@ Input:
 
 Input share:
 : An aggregator's share of the output of the VDAF
-   {{?VDAF=I-D.draft-irtf-cfrg-vdaf}} sharding algorithm. This algorithm is run by
+   {{?VDAF=I-D.draft-irtf-cfrg-vdaf-00}} sharding algorithm. This algorithm is run by
    each client in order to cryptographically protect its measurement.
 
 Measurement:
@@ -168,7 +168,7 @@ Aggregate share:
 
 Output share:
 : An aggregator's share of the output of the VDAF
-   {{?VDAF=I-D.draft-irtf-cfrg-vdaf}} preparation step. Many output shares are
+   {{?VDAF=I-D.draft-irtf-cfrg-vdaf-00}} preparation step. Many output shares are
    combined into an aggregate share via the VDAF aggregation algorithm.
 
 Proof:
@@ -199,7 +199,7 @@ function `F` while revealing nothing else about the measurements.
 
 This protocol is extensible and allows for the addition of new cryptographic
 schemes that implement the VDAF interface specified in
-{{?VDAF=I-D.draft-irtf-cfrg-vdaf}}. Candidates include:
+{{?VDAF=I-D.draft-irtf-cfrg-vdaf-00}}. Candidates include:
 
 * Prio3, which allows for aggregate statistics such as sum, mean, histograms,
   etc. This class of VDAFs is based on Prio {{CGB17}} and includes improvements
@@ -323,7 +323,7 @@ individual clients.
 
 In order to address this problem, the aggregators engage in a secure,
 multi-party computation specified by the chosen VDAF
-{{?VDAF=I-D.draft-irtf-cfrg-vdaf}} in order to prepare a report for aggregation. At
+{{?VDAF=I-D.draft-irtf-cfrg-vdaf-00}} in order to prepare a report for aggregation. At
 the beginning of this computation, each aggregator is in possession of an input
 share uploaded by the client. At the end of the computation, each aggregator is
 in posession of either an "output share" that is ready to be aggregated or an
@@ -514,8 +514,8 @@ of the aggregators is configured with following parameters:
   {{hpke-config}}).
 * `vdaf_verify_param`: The aggregator's VDAF verification parameter output by
   the setup algorithm computed jointly by the aggregators before the start of the
-  DAP protocol {{?VDAF=I-D.draft-irtf-cfrg-vdaf}}). [OPEN ISSUE: This is yet to be
-  specified. See issue#161.]
+  DAP protocol {{?VDAF=I-D.draft-irtf-cfrg-vdaf-00}}). [OPEN ISSUE: This is yet
+  to be specified. See issue#161.]
 
 The helper stores a bearer token used to authenticate HTTP requests from the
 leader. Likewise, the leader stores a bearer token to authenticate HTTP request
@@ -1491,7 +1491,7 @@ issues that need to be addressed before these goals are met. Details for each is
    also has implications for how we solve issue#183.]
 1. Even benign collect requests may leak information beyond what one might
    expect intuitively. For example, the Poplar1 VDAF
-   {{?VDAF=I-D.draft-irtf-cfrg-vdaf}} can be used to compute the set of heavy
+   {{?VDAF=I-D.draft-irtf-cfrg-vdaf-00}} can be used to compute the set of heavy
    hitters among a set of arbitrary bit strings uploaded by clients. This
    requires multiple evaluations of the VDAF, the results of which reveal
    information to the aggregators and collector beyond what follows from the
