@@ -474,7 +474,7 @@ uint8 HpkeConfigId;
 /* An HPKE ciphertext. */
 struct {
   HpkeConfigId config_id;    // config ID
-  opaque enc<1..2^16-1>;     // encapsulated HPKE context
+  opaque enc<1..2^16-1>;     // encapsulated HPKE key
   opaque payload<1..2^16-1>; // ciphertext
 } HpkeCiphertext;
 ~~~
@@ -619,30 +619,18 @@ This message is called the client's *report*. It contains the following fields:
 
 To generate the report, the client begins by sharding its measurement into a
 sequence of input shares as specified by the VDAF in use. To encrypt an input
-share, the client first generates an HPKE {{!RFC9180}} context for
-the aggregator by running
+share, the client generates an HPKE {{!RFC9180}} ciphertext and encapsulated
+key for the aggregator by running
 
 ~~~
-enc, context = SetupBaseS(pk, Report.task_id || "dap-01 input share" ||
-                              0x01 || server_role)
+enc, payload = SealBase(pk, "dap-01 input share" || 0x01 || server_role,
+    task_id || nonce || extensions, input_share)
 ~~~
 
-where `pk` is the aggregator's public key and `server_role` is the Role of the
-intended recipient (`0x02` for the leader and `0x03` for the helper). In
-general, the info string for computing the HPKE context is suffixed by two
-bytes, the first of which identifies the role of the sender and the second of
-which identifies the role of the intended recipient.
-
-`enc` is the HPKE encapsulated key and `context` is the HPKE context used by the
-client for encryption. The payload is encrypted as
-
-~~~
-payload = context.Seal(nonce || extensions, input_share)
-~~~
-
-where `input_share` is the aggregator's input share and `nonce` and `extensions`
-are the corresponding fields of `Report`. Clients MUST NOT use the same `enc`
-for multiple reports.
+where `pk` is the aggregator's public key; `server_role` is the Role of the
+intended recipient (`0x02` for the leader and `0x03` for the helper);
+`task_id`, `nonce`, and `extensions` are the corresponding fields of `Report`;
+and `input_share` is the aggregator's input share.
 
 The leader responds to well-formed requests to `[leader]/upload` with HTTP status
 code 200 OK and an empty body. Malformed requests are handled as described in {{errors}}.
@@ -914,18 +902,15 @@ marks the report share as invalid with the error `hpke-unknown-config-id`.
 Otherwise, it decrypts the payload with the following procedure:
 
 ~~~
-context = SetupBaseR(encrypted_input_share.enc, sk, task_id ||
-                     "dap-01 input share" || 0x01 || server_role)
-
-input_share = context.Open(nonce || extensions,
-                           encrypted_input_share.payload)
+input_share = OpenBase(encrypted_input_share.enc, sk, "dap-01 input share" ||
+    0x01 || server_role, task_id || nonce || extensions,
+    encrypted_input_share.payload)
 ~~~
 
-where `sk` is the HPKE secret key, `task_id` is the task ID, `nonce` and
-`extensions` are the nonce and extensions of the report share respectively,
-and `server_role` is 0x02 if the aggregator is the leader and 0x03 otherwise.
-If decryption fails, the aggregator marks the report share as invalid with the
-error `hpke-decrypt-error`. Otherwise, it outputs the resulting `input_share`.
+where `sk` is the HPKE secret key, and `server_role` is the role of the
+aggregator (`0x02` for the leader and `0x03` for the helper). If decryption
+fails, the aggregator marks the report share as invalid with the error
+`hpke-decrypt-error`. Otherwise, it outputs the resulting `input_share`.
 
 #### Input Share Validation {#input-share-batch-validation}
 
@@ -1283,30 +1268,25 @@ Encrypting an aggregate share `agg_share` for a given `AggregateShareReq` is don
 as follows:
 
 ~~~
-enc, context = SetupBaseS(pk, AggregateShareReq.task_id ||
-                              "dap-01 aggregate share" || server_role || 0x00)
-
-encrypted_agg_share = context.Seal(AggregateShareReq.batch_interval,
-                                   agg_share)
+enc, payload = SealBase(pk, "dap-01 aggregate share" || server_role || 0x00,
+  AggregateShareReq.task_id || AggregateShareReq.batch_interval, agg_share)
 ~~~
 
 where `pk` is the HPKE public key encoded by the collector's HPKE key,
-and server_role is is `0x02` for the leader and `0x03` for a helper.
+`server_role` is `0x02` for the leader and `0x03` for a helper.
 
 The collector decrypts these aggregate shares using the opposite process.
 Specifically, given an encrypted input share, denoted `enc_share`, for a
 given batch interval, denoted `batch_interval`, decryption works as follows:
 
 ~~~
-context = SetupBaseR(enc_share.enc, sk,
-                     "dap-01 aggregate share" ||
-                     task_id || server_role || 0x00)
-agg_share = context.Open(batch_interval, enc_share.payload)
+agg_share = OpenBase(enc_share.enc, sk, "dap-01 aggregate share" ||
+    server_role || 0x00, task_id || batch_interval, enc_share.payload)
 ~~~
 
-where `sk` is the HPKE secret key, `task_id` is the task ID for a given collect
-request, and `server_role` is the role of the server that sent the aggregate share
-(`0x02` for the leader and `0x03` for the helper).
+where `sk` is the HPKE secret key, `task_id` is the task ID for the collect
+request, and `server_role` is the role of the server that sent the aggregate
+share (`0x02` for the leader and `0x03` for the helper).
 
 ### Validating Batch Parameters {#batch-parameter-validation}
 
