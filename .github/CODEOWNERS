@@ -1,2 +1,3 @@
-# Automatically generated CODEOWNERS file.
-draft-ppm-protocol.md over@therainbow.net
+# Automatically generated CODEOWNERS
+# Regenerate with `make update-codeowners`
+draft-ietf-ppm-dap.md timgeog+ietf@gmail.com chrispatton+ietf@gmail.com ekr@rtfm.com caw@heapingbits.net
