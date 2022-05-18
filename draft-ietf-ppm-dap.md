@@ -732,11 +732,6 @@ This process is illustrated below in {{aggregation-flow-illustration}}. In this
 example, the batch size is 20, but the leader opts to process the reports in
 sub-batches of 10. Each sub-batch takes two round-trips to process.
 
-In order to allow the helpers to retain minimal state, the helper can attach a
-state parameter to its response, with the leader returning the state value in
-the next request, thus offloading the state to the leader. This state value MUST
-be cryptographically protected as described in {{agg-init}}.
-
 ~~~
 Leader                                                 Helper
 
@@ -1410,9 +1405,8 @@ In addition, for each DAP task, helpers are required to:
 
 - Implement some form of batch-to-report index, as well as inter- and
   intra-batch replay mitigation storage, which includes some way of tracking
-  batch report size with optional support for state offloading. Some of this
-  state may be used for replay attack mitigation. The replay mitigation strategy
-  is described in {{anti-replay}}.
+  batch report size. Some of this state may be used for replay attack
+  mitigation. The replay mitigation strategy is described in {{anti-replay}}.
 
 Beyond the minimal capabilities required of helpers, leaders are generally
 required to:
@@ -1425,7 +1419,6 @@ In addition, for each DAP task, leaders are required to:
 
 - Implement and store state for the form of inter- and intra-batch replay
   mitigation in {{anti-replay}}; and
-- Store helper state.
 
 ### Collector capabilities
 
@@ -1487,10 +1480,9 @@ must store a batch as long as the batch has not been queried more than
 reports themselves. For schemes like Prio in which the input-validation protocol
 is only run once per report, each aggregator only needs to store its
 aggregate share for each possible batch interval, along with the number of times
-the aggregate share was used in a batch. (The helper may store its aggregate
-shares in its encrypted state, thereby offloading this state to the leader.)
-This is due to the requirement that the batch interval respect the boundaries
-defined by the DAP parameters. (See {{batch-parameter-validation}}.)
+the aggregate share was used in a batch. This is due to the requirement that the
+batch interval respect the boundaries defined by the DAP parameters. (See
+{{batch-parameter-validation}}.)
 
 # Security Considerations {#sec-considerations}
 
