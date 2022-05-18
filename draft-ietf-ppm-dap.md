@@ -1346,7 +1346,7 @@ pertaining to reports that were previously aggregated for a given task. If the
 leader receives a report from a client whose nonce is in this set, it simply
 ignores it. A helper who receives an encrypted input share whose nonce is
 in this set replies to the leader with an error as described in
-{{collect-flow}}.
+{{input-share-batch-validation}}.
 
 [OPEN ISSUE: This has the potential to require aggreagtors to store nonce sests
 indefinitely. See issue#180.]
