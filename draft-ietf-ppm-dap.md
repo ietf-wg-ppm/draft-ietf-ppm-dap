@@ -1204,17 +1204,17 @@ a POST request to `[aggregator]/aggregate_share` with the following message:
 struct {
   TaskID task_id;
   Interval batch_interval;
+  opaque agg_param<0..2^16-1>;
   uint64 report_count;
   opaque checksum[32];
-  AggregationJobID job_id;
 } AggregateShareReq;
 ~~~
 
 * `task_id` is the task ID associated with the DAP parameters.
 * `batch_interval` is the batch interval of the request.
+* `agg_param`, an aggregation parameter for the VDAF being executed.
 * `report_count` is the number of reports included in the aggregation.
 * `checksum` is the checksum computed over the set of client reports.
-* `job_id` is the ID of the aggregation job.
 
 This request MUST be authenticated as described in {{https-sender-auth}}. To
 handle the leader's request, the helper first ensures that the request meets the
