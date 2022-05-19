@@ -1013,6 +1013,7 @@ structured as follows:
 
 ~~~
 struct {
+  TaskID task_id;
   AggregationJobID job_id;
   PrepareStep prepare_shares<1..2^16-1>;
 } AggregateContinueReq;
