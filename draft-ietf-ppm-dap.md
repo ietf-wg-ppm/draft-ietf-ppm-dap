@@ -874,13 +874,11 @@ struct {
 } PrepareStep;
 
 struct {
-  AggregationJobID job_id;
   PrepareStep prepare_steps<1..2^16-1>;
 } AggregateInitializeResp;
 ~~~
 
-The `job_id` parameter is equal to AggregateInitializeReq.job_id.
-The rest of the message is a sequence of PrepareStep values, the order of which
+The message is a sequence of PrepareStep values, the order of which
 matches that of the ReportShare values in `AggregateInitializeReq.report_shares`. Each report
 that was marked as invalid is assigned the PrepareStepResult `failed`. Otherwise, the
 PrepareStep is either marked as continued with the output `prep_msg`, or is marked
@@ -1058,7 +1056,6 @@ to the leader in an AggregateContinueResp message, structured as follows:
 
 ~~~
 struct {
-  AggregationJobID job_id;
   PrepareStep prepare_shares<1..2^16-1>;
 } AggregateContinueResp;
 ~~~
