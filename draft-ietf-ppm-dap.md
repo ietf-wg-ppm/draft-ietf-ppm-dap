@@ -1786,15 +1786,15 @@ This specification defines the following protocol messages, along with their
 corresponding media types types:
 
 - HpkeConfig {{hpke-config}}: "application/dap-hpke-config"
-- Report {{upload-request}}: "message/dap-report"
-- AggregateInitializeReq {{collect-flow}}: "message/dap-aggregate-initialize-req"
-- AggregateInitializeResp {{collect-flow}}: "message/dap-aggregate-initialize-resp"
-- AggregateContinueReq {{collect-flow}}: "message/dap-aggregate-continue-req"
-- AggregateContinueResp {{collect-flow}}: "message/dap-aggregate-continue-resp"
-- AggregateShareReq {{collect-flow}}: "message/dap-aggregate-share-req"
-- AggregateShareResp {{collect-flow}}: "message/dap-aggregate-share-resp"
-- CollectReq {{collect-flow}}: "message/dap-collect-req"
-- CollectResp {{collect-flow}}: "message/dap-collect-resp"
+- Report {{upload-request}}: "application/dap-report"
+- AggregateInitializeReq {{collect-flow}}: "application/dap-aggregate-initialize-req"
+- AggregateInitializeResp {{collect-flow}}: "application/dap-aggregate-initialize-resp"
+- AggregateContinueReq {{collect-flow}}: "application/dap-aggregate-continue-req"
+- AggregateContinueResp {{collect-flow}}: "application/dap-aggregate-continue-resp"
+- AggregateShareReq {{collect-flow}}: "application/dap-aggregate-share-req"
+- AggregateShareResp {{collect-flow}}: "application/dap-aggregate-share-resp"
+- CollectReq {{collect-flow}}: "application/dap-collect-req"
+- CollectResp {{collect-flow}}: "application/dap-collect-resp"
 
 The definition for each media type is in the following subsections.
 
@@ -1878,11 +1878,11 @@ Change controller:
 
 : IESG
 
-### "message/dap-report" media type
+### "application/dap-report" media type
 
 Type name:
 
-: message
+: application
 
 Subtype name:
 
@@ -1949,11 +1949,11 @@ Change controller:
 
 : IESG
 
-### "message/dap-aggregate-continue-req" media type
+### "application/dap-aggregate-continue-req" media type
 
 Type name:
 
-: message
+: application
 
 Subtype name:
 
@@ -2020,11 +2020,11 @@ Change controller:
 
 : IESG
 
-### "message/dap-aggregate-initialize-resp" media type
+### "application/dap-aggregate-initialize-resp" media type
 
 Type name:
 
-: message
+: application
 
 Subtype name:
 
@@ -2091,11 +2091,11 @@ Change controller:
 
 : IESG
 
-### "message/dap-aggregate-continue-req" media type
+### "application/dap-aggregate-continue-req" media type
 
 Type name:
 
-: message
+: application
 
 Subtype name:
 
@@ -2162,11 +2162,11 @@ Change controller:
 
 : IESG
 
-### "message/dap-aggregate-continue-resp" media type
+### "application/dap-aggregate-continue-resp" media type
 
 Type name:
 
-: init
+: application
 
 Subtype name:
 
@@ -2233,11 +2233,11 @@ Change controller:
 
 : IESG
 
-### "message/dap-aggregate-share-req" media type
+### "application/dap-aggregate-share-req" media type
 
 Type name:
 
-: message
+: application
 
 Subtype name:
 
@@ -2304,11 +2304,11 @@ Change controller:
 
 : IESG
 
-### "message/dap-aggregate-share-resp" media type
+### "application/dap-aggregate-share-resp" media type
 
 Type name:
 
-: message
+: application
 
 Subtype name:
 
@@ -2375,11 +2375,11 @@ Change controller:
 
 : IESG
 
-### "message/dap-collect-req" media type
+### "application/dap-collect-req" media type
 
 Type name:
 
-: message
+: application
 
 Subtype name:
 
@@ -2446,11 +2446,11 @@ Change controller:
 
 : IESG
 
-### "message/dap-collect-req" media type
+### "application/dap-collect-req" media type
 
 Type name:
 
-: message
+: application
 
 Subtype name:
 
