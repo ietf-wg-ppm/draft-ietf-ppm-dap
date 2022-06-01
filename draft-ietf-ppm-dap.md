@@ -3,11 +3,16 @@ title: "Distributed Aggregation Protocol for Privacy Preserving Measurement"
 abbrev: DAP-PPM
 docname: draft-ietf-ppm-dap-latest
 category: std
-ipr: trust200902
-area: SEC
 
-stand_alone: yes
-pi: [toc, sortrefs, symrefs, docmapping]
+venue:
+  group: "Privacy Preserving Measurement"
+  type: "Working Group"
+  mail: "ppm@ietf.org"
+  arch: "https://mailarchive.ietf.org/arch/browse/ppm/"
+  github: "ietf-wg-ppm/draft-ietf-ppm-dap"
+  latest: "https://ietf-wg-ppm.github.io/draft-ietf-ppm-dap/draft-ietf-ppm-dap.html"
+
+v: 3
 
 author:
  -
