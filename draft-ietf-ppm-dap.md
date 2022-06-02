@@ -293,8 +293,7 @@ The basic unit of DAP is the "task" which represents a single measurement
 includes the following parameters:
 
 * The type of each measurement.
-* The aggregation function to compute (e.g., sum, mean, etc.) and an optional
-  aggregation parameter.
+* The aggregation function to compute (e.g., sum, mean, etc.).
 * The set of aggregators and necessary cryptographic keying material to use.
 * The VDAF to execute, which to some extent is dictated by the previous
   choices.
@@ -794,7 +793,7 @@ enum {
 
 The leader and helper initialization behavior is detailed below.
 
-#### Leader Initialization
+#### Leader Initialization {#leader-init}
 
 The leader begins the aggregate initialization phase with the set of candidate report
 shares as follows:
@@ -833,8 +832,10 @@ The `nonce` and `extensions` fields of each ReportShare match that in the Report
 uploaded by the client. The `encrypted_input_share` field is the `HpkeCiphertext`
 whose index in `Report.encrypted_input_shares` is equal to the index of the aggregator
 in the task's `aggregator_endpoints` to which the AggregateInitializeReq is being sent.
-The `agg_param` field is an opaque, VDAF-specific aggregation parameter. The
-`job_id` parameter contains the leader's chosen AggregationJobID.
+The `agg_param` field is an opaque, VDAF-specific aggregation parameter provided during a collection flow.
+The `job_id` parameter contains the leader's chosen AggregationJobID.
+
+[[OPEN ISSUE: Check that this handling of `agg_param` is appropriate when the definition of Poplar is done.]]
 
 Let `[aggregator]` denote the helper's API endpoint. The leader sends a POST
 request to `[aggregator]/aggregate` with its AggregateInitializeReq message as
@@ -1116,6 +1117,7 @@ The named parameters are:
 * `task_id`, the DAP task ID.
 * `batch_interval`, the request's batch interval.
 * `agg_param`, an aggregation parameter for the VDAF being executed.
+  This is the same value as in `AggregateInitializeReq` (see {{leader-init}}).
 
 Depending on the VDAF scheme and how the leader is configured, the leader and
 helper may already have prepared all the reports falling within `batch_interval`
@@ -1200,6 +1202,8 @@ struct {
 * `task_id` is the task ID associated with the DAP parameters.
 * `batch_interval` is the batch interval of the request.
 * `agg_param`, an aggregation parameter for the VDAF being executed.
+  This is the same value as in `AggregateInitializeReq` (see {{leader-init}})
+  and in `CollectReq` (see {{collect-init}}).
 * `report_count` is the number of reports included in the aggregation.
 * `checksum` is the checksum computed over the set of client reports.
 
