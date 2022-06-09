@@ -231,29 +231,29 @@ This provides two important properties:
 
 The overall system architecture is shown in {{pa-topology}}.
 
-~~~~
+~~~ aasvg
                     +------------+
                     |            |
 +--------+          |   Helper   |
 |        |          |            |
-| Client +----+     +-----^------+
-|        |    |           |
+| Client +----+     +------------+
+|        |    |           ^
 +--------+    |           |
-              |           |
-+--------+    |     +-----v------+         +-----------+
-|        |    +----->            |         |           |
-| Client +---------->   Leader   <---------> Collector |
-|        |    +----->            |         |           |
-+--------+    |     +-----^------+         +-----------+
-              |           |
+              |           v
++--------+    |     +------------+         +-----------+
+|        |    +---->|            |         |           |
+| Client +--------->|   Leader   |<------->| Collector |
+|        |    +---->|            |         |           |
++--------+    |     +------------+         +-----------+
+              |           ^
 +--------+    |           |
-|        |    |           |
-| Client +----+     +-----V------+
+|        |    |           v
+| Client +----+     +------------+
 |        |          |            |
 +--------+          |   Helper   |
                     |            |
                     +------------+
-~~~~
+~~~
 {: #pa-topology title="System Architecture"}
 
 [[OPEN ISSUE: This shows two helpers, but the document only allows one for now.
@@ -720,19 +720,19 @@ This process is illustrated below in {{aggregation-flow-illustration}}. In this
 example, the batch size is 20, but the leader opts to process the reports in
 sub-batches of 10. Each sub-batch takes two round-trips to process.
 
-~~~
+~~~ aasvg
 Leader                                                 Helper
 
-Aggregate request (Reports 1-10, Job = N) --------------->  \
-<----------------------------- Aggregate response (Job = N) | Reports
-Aggregate request (continued, Job = N) ------------------>  | 1-10
-<----------------------------- Aggregate response (Job = N) /
+   Aggregate request (Reports 1-10, Job = N) ------------>  ^
+   <-------------------------- Aggregate response (Job = N) | Reports
+   Aggregate request (continued, Job = N) --------------->  | 1-10
+   <-------------------------- Aggregate response (Job = N) v
 
 
-Aggregate request (Reports 11-20, Job = M) -------------->  \
-<----------------------------- Aggregate response (Job = M) | Reports
-Aggregate request (continued, Job = M) ------------------>  | 11-20
-<----------------------------- Aggregate response (Job = M) /
+   Aggregate request (Reports 11-20, Job = M) ----------->  ^
+   <-------------------------- Aggregate response (Job = M) | Reports
+   Aggregate request (continued, Job = M) --------------->  | 11-20
+   <-------------------------- Aggregate response (Job = M) v
 ~~~
 {: #aggregation-flow-illustration title="Aggregation Flow (batch size=20).
 Multiple aggregation flows can be executed at the same time."}
