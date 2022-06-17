@@ -302,7 +302,11 @@ includes the following parameters:
 * The rate at which measurements can be taken, i.e., the "minimum batch window".
 
 These parameters are distributed out of band to the clients and to the
-aggregators. Each task is identified by a unique 32-byte ID which is used to
+aggregators. They are distributed by the collecting entity in some authenticated
+form. The reason being, that the collecting entity (e.g. a company or group of
+companies providing some client software it wants to collect measurements from)
+is in a privileged position anyway, because it could simply chose not to use
+DAP at all. Each task is identified by a unique 32-byte ID which is used to
 refer to it in protocol messages.
 
 During the duration of the measurement, each client records its own value(s),
