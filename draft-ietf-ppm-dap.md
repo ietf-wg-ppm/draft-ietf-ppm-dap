@@ -1337,6 +1337,18 @@ interval of the request.
   `max_batch_lifetime` previous batches, then the aggregator MUST abort and
   alert the peer with "batchLifetimeExceeded".
 
+Finally, the aggregator checks that the batch interval defined by the collect
+request satisfies one of the conditions:
+
+1. The batch interval does not overlap with the batch interval of any prior
+   completed collect requests.
+1. The batch interval, including its start and duration values, match a prior
+   completed collect request.
+
+[[OPEN ISSUE: #195 tracks how we might relax this constraint to allow for more
+collect query flexibility. As of now, this is quite rigid and doesn't give the
+collector much room for mistakes.]]
+
 ### Anti-replay {#anti-replay}
 
 Using a client-provided report multiple times within a single batch, or using
