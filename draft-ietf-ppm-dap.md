@@ -481,7 +481,7 @@ uint8 HpkeConfigId;
 struct {
   HpkeConfigId config_id;    // config ID
   opaque enc<1..2^16-1>;     // encapsulated HPKE key
-  opaque payload<1..2^32-1>; // ciphertext
+  opaque payload<1..2^24-1>; // ciphertext
 } HpkeCiphertext;
 ~~~
 
