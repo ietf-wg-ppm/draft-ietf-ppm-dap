@@ -628,7 +628,7 @@ This message is called the client's report. It contains the following fields:
 To generate the report, the client begins by initializing the report nonce.
 Specifically, the client first sets `Nonce.rand` to 16 random bytes output from
 a cryptographically secure random number generator. It then sets `Nonce.time`
-to the current UNIX time rounded down to the nearest multiple of `min_batch_duration`.
+to the number of seconds elapsed since the start of the UNIX epoch, rounded down to the nearest multiple of `min_batch_duration`.
 This truncation is done to ensure that the report's timestamp cannot be used to
 link the report back to the originating client.
 
