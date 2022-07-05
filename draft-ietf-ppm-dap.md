@@ -377,18 +377,19 @@ response to errors, this document defines the following standard tokens for use
 in the "type" field (within the DAP URN namespace
 "urn:ietf:params:ppm:dap:error:"):
 
-| Type                    | Description                                                                                  |
-|:------------------------|:---------------------------------------------------------------------------------------------|
-| unrecognizedMessage     | The message type for a response was incorrect or the payload was malformed. |
-| unrecognizedTask        | An endpoint received a message with an unknown task ID. |
-| outdatedConfig          | The message was generated using an outdated configuration. |
-| reportTooLate           | Report could not be processed because it arrived too late. |
-| reportTooEarly          | Report could not be processed because its timestamp is too far in the future. |
-| batchInvalid            | A collect or aggregate-share request was made with invalid batch parameters. |
-| insufficientBatchSize   | There are not enough reports in the batch interval to satisfy the task's minimum batch size. |
-| batchLifetimeExceeded   | The batch lifetime has been exceeded for one or more reports included in the batch interval. |
-| batchMismatch           | Aggregators disagree on the report shares that were aggregated in a batch. |
-| unauthorizedRequest     | Authentication of an HTTP request failed (see {{https-sender-auth}}). |
+| Type                       | Description                                                                                  |
+|:---------------------------|:---------------------------------------------------------------------------------------------|
+| unrecognizedMessage        | The message type for a response was incorrect or the payload was malformed. |
+| unrecognizedTask           | An endpoint received a message with an unknown task ID. |
+| unrecognizedAggregationJob | An endpoint received a message with an unknown aggregation job ID. |
+| outdatedConfig             | The message was generated using an outdated configuration. |
+| reportTooLate              | Report could not be processed because it arrived too late. |
+| reportTooEarly             | Report could not be processed because its timestamp is too far in the future. |
+| batchInvalid               | A collect or aggregate-share request was made with invalid batch parameters. |
+| insufficientBatchSize      | There are not enough reports in the batch interval to satisfy the task's minimum batch size. |
+| batchLifetimeExceeded      | The batch lifetime has been exceeded for one or more reports included in the batch interval. |
+| batchMismatch              | Aggregators disagree on the report shares that were aggregated in a batch. |
+| unauthorizedRequest        | Authentication of an HTTP request failed (see {{https-sender-auth}}). |
 
 This list is not exhaustive. The server MAY return errors set to a URI other
 than those defined above. Servers MUST NOT use the DAP URN namespace for errors
