@@ -939,12 +939,12 @@ The validation checks are as follows.
    is marked as invalid with the error `batch-collected`. This prevents
    additional reports from being aggregated after its batch has already
    been collected.
-2. Check if the report has already been aggregated. If this check fails,
-   the input share is marked as invalid with the error `report-replayed`.
-   This is the case if the report was used in a previous aggregate request
-   and is therefore a replay. An aggregator may also choose to mark an
-   input share as invalid with the  error `report-dropped` under the conditions
-   prescribed in {{anti-replay}}.
+2. Check if the report has already been aggregated with this aggregation
+   parameter. If this check fails, the input share is marked as invalid with
+   the error `report-replayed`. This is the case if the report was used in a
+   previous aggregate request and is therefore a replay. An aggregator may also
+   choose to mark an input share as invalid with the  error `report-dropped`
+   under the conditions prescribed in {{anti-replay}}.
 
 If both checks succeed, the input share is not marked as invalid.
 
