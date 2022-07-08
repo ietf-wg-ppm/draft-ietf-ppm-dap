@@ -146,7 +146,7 @@ Input:
 
 Input share:
 : An aggregator's share of the output of the VDAF
-   {{?VDAF=I-D.draft-irtf-cfrg-vdaf-00}} sharding algorithm. This algorithm is run by
+   {{?VDAF=I-D.draft-irtf-cfrg-vdaf-01}} sharding algorithm. This algorithm is run by
    each client in order to cryptographically protect its measurement.
 
 Measurement:
@@ -173,7 +173,7 @@ Aggregate share:
 
 Output share:
 : An aggregator's share of the output of the VDAF
-   {{?VDAF=I-D.draft-irtf-cfrg-vdaf-00}} preparation step. Many output shares are
+   {{?VDAF=I-D.draft-irtf-cfrg-vdaf-01}} preparation step. Many output shares are
    combined into an aggregate share via the VDAF aggregation algorithm.
 
 Proof:
@@ -204,7 +204,7 @@ function `F` while revealing nothing else about the measurements.
 
 This protocol is extensible and allows for the addition of new cryptographic
 schemes that implement the VDAF interface specified in
-{{?VDAF=I-D.draft-irtf-cfrg-vdaf-00}}. Candidates include:
+{{?VDAF=I-D.draft-irtf-cfrg-vdaf-01}}. Candidates include:
 
 * Prio3, which allows for aggregate statistics such as sum, mean, histograms,
   etc. This class of VDAFs is based on Prio {{CGB17}} and includes improvements
@@ -328,7 +328,7 @@ individual clients.
 
 In order to address this problem, the aggregators engage in a secure,
 multi-party computation specified by the chosen VDAF
-{{?VDAF=I-D.draft-irtf-cfrg-vdaf-00}} in order to prepare a report for aggregation. At
+{{?VDAF=I-D.draft-irtf-cfrg-vdaf-01}} in order to prepare a report for aggregation. At
 the beginning of this computation, each aggregator is in possession of an input
 share uploaded by the client. At the end of the computation, each aggregator is
 in posession of either an "output share" that is ready to be aggregated or an
@@ -517,10 +517,10 @@ of the aggregators is configured with following parameters:
 
 * `collector_config`: The {{!HPKE=RFC9180}} configuration of the collector (described in
   {{hpke-config}}); see {{compliance}} for information about the HPKE configuration algorithms.
-* `vdaf_verify_param`: The aggregator's VDAF verification parameter output by
-  the setup algorithm computed jointly by the aggregators before the start of the
-  DAP protocol {{?VDAF=I-D.draft-irtf-cfrg-vdaf-00}}). [OPEN ISSUE: This is yet
-  to be specified. See issue#161.]
+* `vdaf_verify_key`: The VDAF verification key shared by the aggregators. This
+  key is used in the aggregation sub-protocol ({{aggregate-flow}}). [OPEN ISSUE:
+  The manner in which this key is distributed may be relevant to the VDAF's
+  security. See issue#161.]
 
 The helper stores a bearer token used to authenticate HTTP requests from the
 leader. Likewise, the leader stores a bearer token to authenticate HTTP request
@@ -962,24 +962,31 @@ Each aggregator runs this procedure for a given input share with corresponding n
 as follows:
 
 ~~~
-prep_state = VDAF.prep_init(vdaf_verify_param, agg_param, nonce, input_share)
+prep_state = VDAF.prep_init(vdaf_verify_key,
+                            agg_id,
+                            agg_param,
+                            nonce,
+                            input_share)
 out = VDAF.prep_next(prep_state, None)
 ~~~
 
-`vdaf_verify_param` is the public VDAF parameter, and `agg_param` is the opaque aggregation
-parameter. If either step fails, the aggregator marks the report as invalid with error
-`vdaf-prep-error`.
+`vdaf_verify_key` is the VDAF verification key shared by the aggregators;
+`agg_id` is the aggregator ID (`0x00` for the Leader and `0x01` for the helper);
+and `agg_param` is the opaque aggregation parameter distributed to the
+aggregtors by the collector.
 
-Otherwise, the value `out` is interpreted as follows. If this is the last round of the VDAF,
-then `out` is the aggregator's output share. Otherwise, `out` is the pair `(prep_state, prep_msg)`.
+If either step fails, the aggregator marks the report as invalid with error
+`vdaf-prep-error`. Otherwise, the value `out` is interpreted as follows. If this
+is the last round of the VDAF, then `out` is the aggregator's output share.
+Otherwise, `out` is the pair `(prep_state, prep_msg)`.
 
 ### Aggregate Continuation {#agg-continue-flow}
 
-In the continuation phase, the leader drives the VDAF preparation of each share in the
-candidate report set until the underlying VDAF moves into a terminal state, yielding
-an output share for all aggregators or an error. This phase may involve multiple rounds
-of interaction depending on the underlying VDAF parameters. Each round trip is initiated
-by the leader.
+In the continuation phase, the leader drives the VDAF preparation of each share
+in the candidate report set until the underlying VDAF moves into a terminal
+state, yielding an output share for all aggregators or an error. This phase may
+involve multiple rounds of interaction depending on the underlying VDAF. Each
+round trip is initiated by the leader.
 
 #### Leader Continuation
 
@@ -1517,7 +1524,7 @@ issues that need to be addressed before these goals are met. Details for each is
    also has implications for how we solve issue#183.]
 1. Even benign collect requests may leak information beyond what one might
    expect intuitively. For example, the Poplar1 VDAF
-   {{?VDAF=I-D.draft-irtf-cfrg-vdaf-00}} can be used to compute the set of heavy
+   {{?VDAF=I-D.draft-irtf-cfrg-vdaf-01}} can be used to compute the set of heavy
    hitters among a set of arbitrary bit strings uploaded by clients. This
    requires multiple evaluations of the VDAF, the results of which reveal
    information to the aggregators and collector beyond what follows from the
