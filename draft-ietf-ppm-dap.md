@@ -606,7 +606,7 @@ struct {
   TaskID task_id;
   Nonce nonce;
   Extension extensions<0..2^16-1>;
-  HpkeCiphertext encrypted_input_shares<1..2^16-1>;
+  HpkeCiphertext encrypted_input_shares<1..2^32-1>;
 } Report;
 ~~~
 
@@ -815,7 +815,7 @@ struct {
   TaskID task_id;
   AggregationJobID job_id;
   opaque agg_param<0..2^16-1>;
-  ReportShare report_shares<1..2^16-1>;
+  ReportShare report_shares<1..2^32-1>;
 } AggregateInitializeReq;
 ~~~
 
@@ -1141,7 +1141,7 @@ and a body consisting of a `CollectResp`:
 
 ~~~
 struct {
-  HpkeCiphertext encrypted_agg_shares<1..2^16-1>;
+  HpkeCiphertext encrypted_agg_shares<1..2^32-1>;
 } CollectResp;
 ~~~
 
