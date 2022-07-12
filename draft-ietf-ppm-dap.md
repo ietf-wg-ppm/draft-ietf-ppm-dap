@@ -867,14 +867,14 @@ struct {
   Nonce nonce;
   PrepareStepResult prepare_step_result;
   select (PrepareStep.prepare_step_result) {
-    case continued: opaque prep_msg<0..2^16-1>; // VDAF preparation message
+    case continued: opaque prep_msg<0..2^32-1>; // VDAF preparation message
     case finished:  Empty;
     case failed:    ReportShareError;
   }
 } PrepareStep;
 
 struct {
-  PrepareStep prepare_steps<1..2^16-1>;
+  PrepareStep prepare_steps<1..2^32-1>;
 } AggregateInitializeResp;
 ~~~
 
@@ -1004,7 +1004,7 @@ structured as follows:
 struct {
   TaskID task_id;
   AggregationJobID job_id;
-  PrepareStep prepare_shares<1..2^16-1>;
+  PrepareStep prepare_shares<1..2^32-1>;
 } AggregateContinueReq;
 ~~~
 
@@ -1056,7 +1056,7 @@ to the leader in an AggregateContinueResp message, structured as follows:
 
 ~~~
 struct {
-  PrepareStep prepare_shares<1..2^16-1>;
+  PrepareStep prepare_shares<1..2^32-1>;
 } AggregateContinueResp;
 ~~~
 
