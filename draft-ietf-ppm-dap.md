@@ -1159,11 +1159,13 @@ and a body consisting of a `CollectResp`:
 
 ~~~
 struct {
+  uint64 report_count;
   HpkeCiphertext encrypted_agg_shares<1..2^32-1>;
 } CollectResp;
 ~~~
 
-The `encrypted_agg_shares` field is the vector of encrypted aggregate shares.
+* `report_count` is the number of reports included in the aggregation.
+* `encrypted_agg_shares` is the vector of encrypted aggregate shares.
 They MUST appear in the same order as the aggregator endpoints list of the task
 parameters.
 
