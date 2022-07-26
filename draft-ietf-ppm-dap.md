@@ -1171,9 +1171,11 @@ If obtaining aggregate shares fails, then the leader responds to subsequent HTTP
 GET requests to the collect job URI with an HTTP error status and a problem
 document as described in {{errors}}.
 
-The leader MUST remove a collect job's results when the collector sends an HTTP
-DELETE request to the collect job URI. The leader responds with HTTP status 204
-No Content for requests to a collect job URI whose results have been removed.
+The collector may send an HTTP DELETE request to the collect job URI, to which
+the leader MUST respond with HTTP status 204 No Content. The leader MAY respond
+with HTTP status 204 No Content for requests to a collect job URI which has not
+received a DELETE request. The leader MUST respond to subsequent requests to
+the collect job URI with HTTP status 204 No Content.
 
 [OPEN ISSUE: Describe how intra-protocol errors yield collect errors (see
 issue#57). For example, how does a leader respond to a collect request if the
