@@ -1164,14 +1164,9 @@ If obtaining aggregate shares fails, then the leader responds to subsequent HTTP
 GET requests to the collect job URI with an HTTP error status and a problem
 document as described in {{errors}}.
 
-The leader MUST retain a collect job's results until the collector sends an HTTP
-DELETE request to the collect job URI, in which case the leader responds with
-HTTP status 204 No Content.
-
-[OPEN ISSUE: Allow the leader to drop aggregate shares after some reasonable
-amount of time has passed, but it's not clear how to specify that. ACME doesn't
-bother to say anything at all about this when describing how subscribers should
-fetch certificates: https://datatracker.ietf.org/doc/html/rfc8555#section-7.4.2]
+The leader MUST remove a collect job's results when the collector sends an HTTP
+DELETE request to the collect job URI. The leader responds with HTTP status 204
+No Content for requests to a collect job URI whose results have been removed.
 
 [OPEN ISSUE: Describe how intra-protocol errors yield collect errors (see
 issue#57). For example, how does a leader respond to a collect request if the
