@@ -1174,8 +1174,9 @@ document as described in {{errors}}.
 The collector may send an HTTP DELETE request to the collect job URI, to which
 the leader MUST respond with HTTP status 204 No Content. The leader MAY respond
 with HTTP status 204 No Content for requests to a collect job URI which has not
-received a DELETE request. The leader MUST respond to subsequent requests to
-the collect job URI with HTTP status 204 No Content.
+received a DELETE request, for example if the results have been deleted due to
+age. The leader MUST respond to subsequent requests to the collect job URI with
+HTTP status 204 No Content.
 
 [OPEN ISSUE: Describe how intra-protocol errors yield collect errors (see
 issue#57). For example, how does a leader respond to a collect request if the
