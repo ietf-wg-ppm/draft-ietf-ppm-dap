@@ -1986,7 +1986,7 @@ Change controller:
 
 : IESG
 
-### "application/dap-aggregate-continue-req" media type
+### "application/dap-aggregate-initialize-req" media type
 
 Type name:
 
