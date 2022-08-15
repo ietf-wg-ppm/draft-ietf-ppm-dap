@@ -744,7 +744,7 @@ encrypted input share of each of the Aggregators. The header consists of:
 
 * A timestamp representing the time at which the report was generated.
   Specifically, the `time` field is set to the number of seconds elapsed since
-  the start of the UNIX epoch. The client SHOULD round this value to the nearest
+  the start of the UNIX epoch. The client SHOULD round this value down to the nearest
   multiple of `time_precision` in order to ensure that that the timestamp cannot
   be used to link a report back to the Client that generated it.
 
