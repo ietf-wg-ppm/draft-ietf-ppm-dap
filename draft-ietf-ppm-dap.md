@@ -1546,7 +1546,7 @@ Next, the Aggregator checks that batch contains a valid number of reports. Let
 
 * For fixed-size tasks, the query configuration specifies the minimum batch
   size, `min_batch_size`, and maximum batch size. The Aggregator checks that
-  `len(X) >= min_batch_size` and `len(X) < max_batch_size`.
+  `len(X) >= min_batch_size` and `len(X) <= max_batch_size`.
 
 If the batch size check fails, then the Aggregator MUST abort with error
 "invalidBatchSize".
