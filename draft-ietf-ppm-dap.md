@@ -602,7 +602,7 @@ maximum batch size is intended to allow room for error. Typically the difference
 between the minimum and maximum batch size will be a small fraction of the
 target batch size for each batch.
 
-[OPEN ISSUE: It may be feasilble to require a fixed batch size, i.e.,
+[OPEN ISSUE: It may be feasible to require a fixed batch size, i.e.,
 `min_batch_size == max_batch_size`. We should know better once we've had some
 implementation/deployment experience.]
 
