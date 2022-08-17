@@ -447,19 +447,22 @@ We start with some basic type definitions used in other messages.
 /* ASCII encoded URL. e.g., "https://example.com" */
 opaque Url<1..2^16-1>;
 
-Duration uint64; /* Number of seconds elapsed between two instants */
-
 Time uint64; /* seconds elapsed since start of UNIX epoch */
 
-/* An interval of time of length duration, where start is included and (start +
-duration) is excluded. */
+/* A nonce used to uniquely identify a report in the context of a DAP task. It
+includes the (possibly-rounded) timestamp recording when the report was
+generated, and a random 16-byte value. Nonces are totally ordered: first by
+time (numerically), then by rand (lexicographically). */
 struct {
-  Time start;
-  Duration duration;
-} Interval;
+  Time time;
+  uint8 rand[16];
+} Nonce;
 
-/* A nonce used to uniquely identify a report in the context of a DAP task. */
-Nonce uint8[16];
+/* A batch is defined by a range of nonces, from start (inclusive) to end (exclusive). */
+struct {
+  Nonce start;
+  Nonce end;
+} Batch;
 
 /* The various roles in the DAP protocol. */
 enum {
@@ -480,132 +483,6 @@ struct {
 } HpkeCiphertext;
 ~~~
 
-## Queries {#query}
-
-DAP is designed to give the Collector control over which measurements are
-included in a batch for aggregation. However, since reports are uploaded to the
-Leader, the Collector cannot choose the batch directly. Instead, it issues a "query" used
-by the Aggregators to guide batch selection.
-
-This document defines the following query types:
-
-~~~
-enum {
-   reserved(0), // Reserved for testing purposes
-   time-interval(1),
-   fixed-size(2),
-   (65535)
-} QueryType;
-~~~
-
-Additional query types can be defined as needed. A query includes parameters
-used by the Aggregators to select a given batch of measurements specific to the
-given query type:
-
-~~~
-enum {
-    next-batch(0),
-    by-batch-id(1),
-} FixedSizeQueryType;
-
-opaque BatchId[32];
-
-struct {
-    FixedSizeQueryType fixed_size_query_type;
-    select (fixed_size_query_type) {
-        next-batch:  Empty;
-        by-batch-id: BatchId batch_id;
-    }
-} FixedSizeQuery;
-
-struct {
-    select (query_type) { // determined by query configuration
-        case time-interval: Interval batch_interval;
-        case fixed-size: FixedSizeQuery fixed_size_query;
-    }
-} Query;
-~~~
-
-The query is issued in-band as part of the collect sub-protocol
-({{collect-flow}}). Its content is determined by the "query type", which in turn
-is encoded by the "query configuration" configured out-of-band:
-
-~~~
-struct {
-    QueryType query_type;
-    Duration time_precision;
-    uint64 min_batch_size;
-    select (query_type) {
-        case time-interval:
-            Empty;
-        case fixed-size:
-            uint64 max_batch_size;
-    }
-} QueryConfig;
-~~~
-
-### Time-interval Queries
-
-The first query type, `time-interval`, is designed to support applications in
-which some process is observed over a long period of time. The Collector
-specifies a "batch interval" that determines the time range for measurements
-included in the batch: For each measurement in the batch, the time at which that
-measurement was generated (see {{upload-flow}}) must fall within the batch
-interval specified by the Collector.
-
-The configuration of this query type specifies two paramters:
-
-- `min_batch_size` - Is the smallest number of measurements the batch is allowed
-  to include. In a sense, this parameter controls the degree of privacy that
-  will be obtained: The larger the minimum batch size, the higher degree of
-  privacy. However, this ultimately depends on the application and the nature of
-  the measurements and aggregation function.
-
-- `time_precision` - The duration of the smallest permitted batch interval.
-  Additional restrictions apply; see {{batch-validation}}. In addition, Clients
-  use this value to truncate their report timestamps; see {{upload-flow}}.
-
-Typically the Collector issues queries for which the batch intervals are
-continuous, monotonically increasing, and have the same duration. For example,
-the sequence of batch intervals. For example, the sequence of batch intervals
-`(1659544000, 1000)`, `(1659545000, 1000)`, `(1659545000, 1000)`, `(1659546000,
-1000)` satisfies these conditions. (The first element of the pair denotes the
-start of the batch interval and the second denotes the duration.) Of course,
-there are cases in which Collector may need to issue queries out-of-order. For
-example, a previous batch might need to be queried again with a different
-aggregation parameter (e.g, for Poplar1). In addition, the Collector may need to
-vary the duration to adjust to changing measurement upload rates.
-
-### Fixed-size Queries
-
-The `fixed-size` query type is used to support applications in which the
-Collector needs the ability to strictly control the sample size. This is
-particularly important for controlling the amount of noise added to measurements
-by Clients (or added to aggregate shares by Aggregators) in order to achieve
-differential privacy.
-
-For this query type, the Aggregators batch measurements into arbitrary batches
-such that each batch has roughly the same number of reports. The configuration
-includes parameters `min_batch_size` and `max_batch_size` that determine,
-respectively, the minimum and maximum number of measurements per batch.
-
-To get the aggregate of the next batch, the Collector issues a query of type
-`next-batch`. (See FixedSizeQuery in {{query}}.) The response to this query (see
-{{collect-flow}}) includes a "batch ID", which can be used to query the same
-batch later on. This is done using the `by-batch-id` batch-query type.
-
-Implementation note: The goal for the Aggregators is to aggregate precisely
-`min_batch_size` measurements per batch. Doing so, however, may be challenging
-for Leader deployments in which multiple, independent nodes running the
-aggregate sub-protocol (see {{aggregate-flow}}) need to be coordinated. The
-maximum batch size is intended to allow room for error. Typically the difference
-between the minimum and maximum batch size will be a small fraction of the
-target batch size for each batch.
-
-[OPEN ISSUE: It may be feasible to require a fixed batch size, i.e.,
-`min_batch_size == max_batch_size`. We should know better once we've had some
-implementation/deployment experience.]
-
 ## Task Configuration {#task-configuration}
 
 Prior to the start of execution of the protocol, each participant must agree on
@@ -624,11 +501,20 @@ number generator. Each task has the following parameters associated with it:
   leader's endpoint MUST be the first in the list. The order of the
   `encrypted_input_shares` in a `Report` (see {{upload-flow}}) MUST be the
   same as the order in which aggregators appear in this list.
-* `query_config`: The query configuration (`QueryConfig`) for this task. This
-  determines the query type for batch selection and the properties that all
-  batches for this task must have.
+* `batch_generation_method`: The batch generation method determines how batches
+  of reports are generated & validated by the leader & helper for this task. It
+  can be either "fixed-interval" (in which case batches of reports are
+  generated over fixed intervals of time) or "fixed-size" (in which case
+  batches of reports are generated with a fixed number of reports).
+  * If `batch_generation_method` is fixed-interval, the `min_batch_duration`
+    paramater determines the duration & alignment of generated batches.
 * `max_batch_lifetime`: The maximum number of times a batch of reports may be
   queried by the Collector.
+* `min_batch_size`: The minimum number of reports that appear in a batch. (In a
+  fixed-size task, this will be the exact size of each batch.)
+* `time_precision`: A duration determining the granularity to which clients
+  truncate the timestamps included in reports. For fixed-interval tasks,
+  `time_precision` SHOULD be no greater than `min_batch_duration`.
 * A unique identifier for the VDAF instance used for the task, including the
   type of measurement associated with the task.
 
@@ -725,7 +611,6 @@ structured as follows:
 
 ~~~
 struct {
-    Time time;
     Nonce nonce;
     Extension extensions<0..2^16-1>;
 } ReportMetadata;
@@ -742,15 +627,14 @@ encrypted input share of each of the Aggregators. The header consists of:
 
 * The task ID for which the report is intended.
 
-* A timestamp representing the time at which the report was generated.
-  Specifically, the `time` field is set to the number of seconds elapsed since
-  the start of the UNIX epoch. The client SHOULD round this value down to the nearest
-  multiple of `time_precision` in order to ensure that that the timestamp cannot
-  be used to link a report back to the Client that generated it.
-
 * A nonce used by the Aggregators to ensure the report appears in at most one
-  batch. (See {{anti-replay}}.) The Client MUST generate this by generating 16
-  random bytes using a cryptographically secure random number gnerator.
+  batch. (See {{anti-replay}}.) The nonce's `time` field is set to the number
+  of seconds elapsed since the start of the UNIX epoch when the report was
+  generated; the client SHOULD truncate this value to the nearest multiple of
+  `time_precision` in order to ensure that the timestamp cannot be used to link
+  a report back to the Client that generated it. The nonce's `rand` field is
+  set to a random value; the Client MUST generate this random value using a
+  cryptographically-secure random number generator.
 
 * A list of extensions to be included with the report. (See
   {{upload-extensions}}.)
@@ -915,7 +799,6 @@ enum {
   hpke-unknown-config-id(3),
   hpke-decrypt-error(4),
   vdaf-prep-error(5),
-  batch-saturated(6),
 } ReportShareError;
 ~~~
 
@@ -949,10 +832,6 @@ struct {
   TaskID task_id;
   AggregationJobID job_id;
   opaque agg_param<0..2^16-1>;
-  select (query_type) { // determined by task configuration
-    time-interval: Empty;
-    fixed-size: BatchId batch_id;
-  }
   ReportShare report_shares<1..2^32-1>;
 } AggregateInitializeReq;
 ~~~
@@ -973,18 +852,6 @@ This message consists of:
 
   [[OPEN ISSUE: Check that this handling of `agg_param` is appropriate when the
   definition of Poplar is done.]]
-
-* Information used by the Aggregators to determine how to aggregate each report:
-
-    * For fixed-size tasks, the Leader specifies a "batch ID" that determines
-      the batch to which each report for this aggregation job belongs.
-
-      [OPEN ISSUE: For fixed-size tasks, the Leader is in complete control over
-      which batch a report is included in. For time-interval tasks, the Client has
-      some control, since the timestamp determines which batch window it falls
-      in. Is this desirable from a privacy perspective? If not, it might be
-      simpler to drop the timestamp altogether and have the agg init request
-      specify the batch window instead.]
 
 * The sequence of report shares to aggregate. The `encrypted_input_share` field
   of the report share is the `HpkeCiphertext` whose index in
@@ -1061,11 +928,11 @@ abort with error "unrecognizedMessage".
 
 #### Input Share Decryption {#input-share-decryption}
 
-Each report share has a corresponding task ID, report metadata (timestamp,
-nonce, and extensions), and encrypted input share. Let `task_id`, `metadata`,
-and `encrypted_input_share` denote these values, respectively. Given these
-values, an aggregator decrypts the input share as follows. First, the aggregator
-looks up the HPKE config and corresponding secret key indicated by
+Each report share has a corresponding task ID, report metadata (nonce and
+extensions), and encrypted input share. Let `task_id`, `metadata`, and
+`encrypted_input_share` denote these values, respectively. Given these values,
+an aggregator decrypts the input share as follows. First, the aggregator looks
+up the HPKE config and corresponding secret key indicated by
 `encrypted_input_share.config_id`. If not found, then it marks the report share
 as invalid with the error `hpke-unknown-config-id`. Otherwise, it decrypts the
 payload with the following procedure:
@@ -1086,27 +953,21 @@ fails, the aggregator marks the report share as invalid with the error
 Validating an input share will either succeed or fail. In the case of failure,
 the input share is marked as invalid with a corresponding ReportShareError error.
 
-The validation checks are as follows.
+The validation checks are as follows:
 
 1. Check if the report has never been aggregated but is contained by
    a batch that has been collected. If this check fails, the input share
    MUST be marked as invalid with the error `batch-collected`. This prevents
    additional reports from being aggregated after its batch has already
    been collected.
-2. Check if the report has already been aggregated with this aggregation
+1. Check if the report has already been aggregated with this aggregation
    parameter. If this check fails, the input share MUST be marked as invalid
    with the error `report-replayed`. This is the case if the report was used in
    a previous aggregate request and is therefore a replay. An aggregator may
    also choose to mark an input share as invalid with the error
    `report-dropped` under the conditions prescribed in {{anti-replay}}.
-3. Depending on the query type for the task, additional checks may be applicable:
-    * For fixed-size tasks, the Aggregators need to ensure that each batch is
-      roughly the same size. If the number of reports aggregated for the current
-      batch exceeds the maximum batch size (per the task configuration), the
-      Aggregator MAY mark the input share as invalid with the error
-      "batch-saturated". Note that this behavior is not strictly enforced here
-      but during the collect sub-protocol. (See {{batch-validation}}.)
-If both checks succeed, the input share is not marked as invalid.
+
+If these checks succeed, the input share is not marked as invalid.
 
 #### Input Share Preparation {#input-share-prep}
 
@@ -1249,10 +1110,10 @@ The helper then awaits the next message from the leader.
 
 In this phase, the Collector requests aggregate shares from each aggregator and
 then locally combines them to yield a single aggregate result. In particular,
-the Collector issues a query to the Leader ({{query}}), which the Aggregators
-use to select a batch of reports to aggregate. Each emits an aggregate share
-encrypted to the Collector so that it can decrypt and combine them to yield the
-aggregate result. This entire process is composed of two interactions:
+the Collector asks the Leader to collect and return the results for a given DAP
+task over a given interval. Each Aggregator emits an aggregate share encrypted
+to the Collector so that it can decrypt and combine them to yield the aggregate
+result. This entire process is composed of two interactions:
 
 1. Collect request and response between the collector and leader, specified
    in {{collect-init}}
@@ -1276,7 +1137,7 @@ attacks.]
 ~~~
 struct {
   TaskID task_id;
-  Query query;
+  Batch batch;
   opaque agg_param<0..2^16-1>; // VDAF aggregation parameter
 } CollectReq;
 ~~~
@@ -1284,15 +1145,20 @@ struct {
 The named parameters are:
 
 * `task_id`, the DAP task ID.
-* `query`, the Collector's query.
+* `batch`, the batch to collect.
 * `agg_param`, an aggregation parameter for the VDAF being executed.
   This is the same value as in `AggregateInitializeReq` (see {{leader-init}}).
 
+If the Collector's request includes a `batch` with both `start` and `end`
+having a zero `time` & and all-zero `nonce`, the Leader will choose a batch
+that has not yet been aggregated with the given aggregation parameter. The
+chosen batch will be included in the eventual `CollectResp`.
+
 Depending on the VDAF scheme and how the leader is configured, the leader and
-helper may already have prepared a sufficient number of reports satisfying the
-query and be ready to return the aggregate shares right away, but this cannot be
-guaranteed. In fact, for some VDAFs, it is not be possible to begin preparing
-inputs until the collector provides the aggregation parameter in the
+helper may have already prepared the reports contained in the requested batch
+and be ready to return the aggregate shares right away, but this cannot be
+guaranteed. In fact, for some VDAFs, it is not be possible to begin aggregating
+reports until the collector provides the aggregation parameter in the
 `CollectReq`. For these reasons, collect requests are handled asynchronously.
 
 Upon receipt of a `CollectReq`, the leader begins by checking that the request
@@ -1302,8 +1168,8 @@ response with HTTP status 303 See Other and a Location header containing a URI
 identifying the collect job that can be polled by the collector, called the
 "collect job URI".
 
-The leader then begins working with the helper to prepare the shares satisfying
-the query (or continues this process, depending on the VDAF) as described in
+The leader then begins working with the helper to prepare the reports contained
+in the batch (or continues this process, depending on the VDAF) as described in
 {{aggregate-flow}}.
 
 After receiving the response to its CollectReq, the collector makes an HTTP GET
@@ -1320,10 +1186,7 @@ and a body consisting of a `CollectResp`:
 
 ~~~
 struct {
-  select (query_type) { // determined by task configuration
-    time-interval: Empty;
-    fixed-size: BatchId batch_id;
-  }
+  Batch batch;
   uint64 report_count;
   HpkeCiphertext encrypted_agg_shares<1..2^32-1>;
 } CollectResp;
@@ -1331,8 +1194,7 @@ struct {
 
 This structure includes the following:
 
-* information used to bind the aggregate result to the query. For fixed-size
-  tasks, this includes the batch ID assigned to the batch by the Leader.
+* The batch being collected.
 
 * The number of reports included in the batch.
 
@@ -1369,15 +1231,8 @@ a POST request to `[aggregator]/aggregate_share` with the following message:
 
 ~~~
 struct {
-  select (query_type) { // determined by task configuration
-    time-interval: Interval batch_interval;
-    fixed-size: BatchId batch_id;
-  }
-} BatchSelector;
-
-struct {
   TaskID task_id;
-  BatchSelector batch_selector;
+  Batch batch;
   opaque agg_param<0..2^16-1>;
   uint64 report_count;
   opaque checksum[32];
@@ -1388,12 +1243,7 @@ The message contains the following parameters:
 
 * The task ID.
 
-* The "batch seletor", which encodes parameters used to determine the batch
-  being aggregated. The value depends on the query type for the task:
-
-    * For time-interval tasks, the request specifies the batch interval.
-
-    * For fixed-size tasks, the request specifies the batch ID.
+* The batch being aggregated.
 
 * The opaque aggregation parameter for the VDAF beging executed. This value MUST
   match the same value in the the `AggregateInitializeReq` message sent in at
@@ -1409,9 +1259,10 @@ handle the leader's request, the helper first ensures that the request meets the
 requirements for batch parameters following the procedure in
 {{batch-validation}}.
 
-Next, it computes a checksum based on the reports that satisfy the query, and
-checks that the `report_count` and `checksum` included in the request match its
-computed values. If not, then it MUST abort with error "batchMismatch".
+Next, it computes a checksum based on its view of the reports included in the
+batch, and checks that the `report_count` and `checksum` included in the
+request match its computed values. If not, then it MUST abort with error
+"batchMismatch".
 
 Next, it computes the aggregate share `agg_share` corresponding to the set of
 output shares, denoted `out_shares`, for the batch interval, as follows:
@@ -1448,15 +1299,15 @@ computed above and `encrypted_aggregate_share.ciphertext` is the ciphertext
 After receiving the helper's response, the leader uses the HpkeCiphertext to
 respond to a collect request (see {{collect-flow}}).
 
-After issuing an aggregate-share request for a given query, it is an error for
+After issuing an aggregate-share request for a given batch, it is an error for
 the leader to issue any more aggregation jobs for additional reports that
 satisfy the query. These reports will be rejected by helpers as described
 {{agg-init}}.
 
-Before completing the collect request, the leader also computes its own aggregate
-share `agg_share` by aggregating all of the prepared output shares that fall within
-the batch interval. Finally, it encrypts it under the collector's HPKE public key as
-described in {{aggregate-share-encrypt}}.
+Before completing the collect request, the leader also computes its own
+aggregate share `agg_share` by aggregating all of the prepared output shares
+that fall within the batch. Finally, it encrypts it under the collector's HPKE
+public key as described in {{aggregate-share-encrypt}}.
 
 ### Collection Finalization {#collect-finalization}
 
@@ -1481,7 +1332,7 @@ as follows:
 
 ~~~
 enc, payload = SealBase(pk, "dap-01 aggregate share" || server_role || 0x00,
-  AggregateShareReq.task_id || AggregateShareReq.batch_selector, agg_share)
+  AggregateShareReq.task_id || AggregateShareReq.batch, agg_share)
 ~~~
 
 where `pk` is the HPKE public key encoded by the collector's HPKE key,
@@ -1489,24 +1340,16 @@ where `pk` is the HPKE public key encoded by the collector's HPKE key,
 
 The collector decrypts these aggregate shares using the opposite process.
 Specifically, given an encrypted input share, denoted `enc_share`, for a
-given batch interval, denoted `batch_interval`, decryption works as follows:
+given batch, denoted `batch`, decryption works as follows:
 
 ~~~
 agg_share = OpenBase(enc_share.enc, sk, "dap-01 aggregate share" ||
-    server_role || 0x00, task_id || batch_selector, enc_share.payload)
+    server_role || 0x00, task_id || batch, enc_share.payload)
 ~~~
 
 where `sk` is the HPKE secret key, `task_id` is the task ID for the collect
 request, and `server_role` is the role of the server that sent the aggregate
-share (`0x02` for the leader and `0x03` for the helper). The value of
-`batch_selector` is computed by the Collector from its query and the response to
-its query:
-
-* For time-interval tasks, the batch selector is the batch interval specified in
-  the query.
-
-* For fixed-size tasks, the batch selector is the batch ID assigned sent in the
-  response.
+share (`0x02` for the leader and `0x03` for the helper).
 
 ### Batch Validation {#batch-validation}
 
@@ -1514,59 +1357,31 @@ Before an aggregator responds to a collect request or aggregate-share request,
 it must first check that the request does not violate the parameters associated
 with the DAP task. It does so as described here.
 
-First the aggregator checks that the request respects any batch "boundaries"
-determined by the query configuration:
-
-* For time-interval tasks, the query configuration specifies the "minimum batch
-  duration", which is determined by `time_precision`. For the `batch_interval`
-  included with the query, the Aggregator checks that both
-  `batch_interval.start` and `batch_interval.duration` are divisible by
-  `time_precision` and that `batch_interval.duration >= time_precision`.
-
-* For fixed-size tasks, the batch is assocaited with a "batch ID" selected by
-  the Leader. Thus the Aggregator needs to check that the query is associated
-  with a known batch ID:
-
-    * If the query contained in the CollectReq has type `by-batch-id`, the
-      Leader checks that the provided batch ID corresponds to a batch ID it
-      returned in a previous CollectResp for the task.
-
-    * The Helper checks that the batch ID provided by the leader in its
-      AggregateShareReq corresponds to a batch ID used in a previous
-      AggregateInitializeReq for the task.
-
-If the boundary check fails, then the Aggregator MUST abort with error
-"batchInvalid".
+First the aggregator checks that the request respects any batch "boundaries":
+for the `batch` included in the query, the Aggregator checks that
+`batch.end > batch.start`. For fixed-interval tasks, the Aggregator
+additionally checks that both `batch.start.time` and `batch.end.time` are
+divisible by `min_batch_duration`, and that
+`batch.end.time > batch.start.time`. If the boundary check fails, then the
+Aggregator MUST abort with error "batchInvalid".
 
 Next, the Aggregator checks that batch contains a valid number of reports. Let
-`X` denote the set of reports in the batch:
-
-* For time-interval tasks, the query configuration specifies the minimum batch
-  size, `min_batch_size`. The Aggregator checks that `len(X) >= min_batch_size`.
-
-* For fixed-size tasks, the query configuration specifies the minimum batch
-  size, `min_batch_size`, and maximum batch size. The Aggregator checks that
-  `len(X) >= min_batch_size` and `len(X) <= max_batch_size`.
-
-If the batch size check fails, then the Aggregator MUST abort with error
-"invalidBatchSize".
+`N` denote the number of reports in the batch. All tasks must satisfy that
+`N >= min_batch_size`. Fixed-size tasks must satisfy the stricter condition
+that `N = min_batch_size`. If the batch size check fails, then the Aggregator
+MUST abort with error "invalidBatchSize".
 
 Next, the Aggregator checks that the batch has not been aggregated too many
 times. This is determined by the maximum batch lifetime, `max_batch_lifetime`.
-Unless the query has been issued less than `max_batch_lifetime` times, the
+If the batch has been aggregated at least `max_batch_lifetime` times, the
 Aggregator MUST abort with error "batchLifetimeExceeded".
 
-Finally, the Aggregator checks that the batch does not contain a report that was
-included in any previous batch. If this batch intersection check fails, then the
-Aggregator MUST abort with error "batchOverlap".
-
-Depending on the query type, properly checking for batch intersections may be
-prohibitively expensive for some deployments. The following is sufficient (but
-not necessary):
-
-* For time-interval tasks, the Aggregator checks that the batch interval does not
-  overlap with the batch interval of any previous query. If this batch interval
-  check fails, then the Aggregator MAY abort with error "batchOverlap".
+Finally, the Aggregator checks that the batch does not contain a report that
+was included in any previous batch. If this batch intersection check fails,
+then the Aggregator MUST abort with error "batchOverlap". Properly checking for
+batch intersections may be prohibitively expensive for some deployments; a
+sufficient (but not necessary) check would be to ensure the batch does not
+overlap with any other batches that have been collected previously.
 
 [[OPEN ISSUE: #195 tracks how we might relax this constraint to allow for more
 collect query flexibility. As of now, this is quite rigid and doesn't give the
