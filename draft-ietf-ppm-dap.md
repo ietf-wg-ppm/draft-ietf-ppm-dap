@@ -622,6 +622,9 @@ number generator. Each task has the following parameters associated with it:
   task must have.
 * `max_batch_lifetime`: The maximum number of times a batch of reports may be
   queried by the Collector.
+* `task_expiration`: The time up to which clients are expected to upload to this
+  task. The task is considered completed after this time. Aggregators MAY
+  reject reports that have timestamps later than `task_expiration`.
 * A unique identifier for the VDAF instance used for the task, including the
   type of measurement associated with the task.
 
@@ -786,9 +789,11 @@ retrying.
 The Leader MUST ignore any report pertaining to a batch that has already been
 collected. (See {{input-share-batch-validation}} for details.) Otherwise,
 comparing the aggregate result to the previous aggregate result may result in a
-privacy violation. (Note that the Helpers enforce this as well.) In addition,
-the leader SHOULD abort the upload protocol and alert the client with error
-"reportTooLate".
+privacy violation. (Note that the Helpers enforce this as well.) The Leader MAY
+ignore any reports whose timestamp is past the task's `task_expiration`. When it does so,
+the leader SHOULD abort the upload protocol and alert the client with
+error "reportTooLate". Client MAY choose to opt out of the task if its own
+clock has passed `task_expiration`.
 
 Leaders can buffer reports while waiting to aggregate them. The leader SHOULD
 NOT accept reports whose timestamps are too far in the future. Implementors MAY
@@ -942,6 +947,7 @@ enum {
   hpke-decrypt-error(4),
   vdaf-prep-error(5),
   batch-saturated(6),
+  task-expired(7),
   (255)
 } ReportShareError;
 ~~~
@@ -1136,7 +1142,10 @@ The validation checks are as follows.
       Aggregator MAY mark the input share as invalid with the error
       "batch-saturated". Note that this behavior is not strictly enforced here
       but during the collect sub-protocol. (See {{batch-validation}}.)
-If both checks succeed, the input share is not marked as invalid.
+      If both checks succeed, the input share is not marked as invalid.
+4. Check if the report's timestamp has passed its task's `task_expiration`
+   time, if so the Aggregator MAY mark the input share as invalid with the error
+   "task-expired".
 
 #### Input Share Preparation {#input-share-prep}
 
@@ -1803,16 +1812,22 @@ designed to allow implementations to reduce operational costs in certain cases.
 
 ### Reducing storage requirements
 
-In general, the aggregators are required to keep state for all valid reports for
-as long as collect requests can be made for them. In particular, the aggregators
-must store a batch as long as the batch has not been queried more than
-`max_batch_lifetime` times. However, it is not always necessary to store the
-reports themselves. For schemes like Prio in which the input-validation protocol
-is only run once per report, each aggregator only needs to store its
+In general, the aggregators are required to keep state for tasks and all valid
+reports for as long as collect requests can be made for them. In particular,
+aggregators must store a batch as long as the batch has not been queried more
+than `max_batch_lifetime` times. However, it is not always necessary to store
+the reports themselves. For schemes like Prio3 {{!VDAF}} in which the input-validation
+protocol is only run once per report, each aggregator only needs to store its
 aggregate share for each possible batch interval, along with the number of times
 the aggregate share was used in a batch. This is due to the requirement that the
 batch interval respect the boundaries defined by the DAP parameters. (See
 {{batch-validation}}.)
+
+Furthermore, the aggregators must store data related to a task as long as the
+current time has not passed this task's `task_expiration`. Aggregator MAY delete
+the task and all data pertaining to this task after `task_expiration`.
+Implementors SHOULD provide for some leeway so the collector can collect the batch
+after some delay.
 
 # Compliance Requirements {#compliance}
 
