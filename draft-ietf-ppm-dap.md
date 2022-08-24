@@ -358,10 +358,112 @@ client could not report 10^6s or -20s.
 
 # Message Transport
 
-Communications between DAP entities are carried over HTTPS {{!RFC2818}}. HTTPS
-provides server authentication and confidentiality. When client authenticaiton
-is also required, the client uses the mechanism described in
-{{https-sender-auth}}.
+Communications between DAP participants are carried over HTTPS {{!RFC2818}}.
+HTTPS provides server authentication and confidentiality. Use of HTTPS is
+REQUIRED.
+
+## Request Authentication {#request-authentication}
+
+DAP is made up of several sub-protocols in which different subsets of the
+protocol's participants interact with each other. In this section we enumerate
+those interactions and their security requirements.
+
+In those cases where a channel between two participants is tunneled through
+another protocol participant, DAP mandates the use of authenticated encryption
+using {{!HPKE=RFC9180}} to ensure that only the intended recipient can see a
+message in the clear.
+
+In other cases, DAP requires client authentication. Any authentication scheme
+that is composable with HTTP is allowed. For example, {{!OAuth2=RFC6749}}
+credentials are presented in an Authorization HTTP header, which can be added to
+any DAP protocol message. This allows organizations deploying DAP to use
+existing well-known HTTP authentication mechanisms that they already supports.
+Discovering what authentication mechanisms are supported by a DAP participant
+is outside of this document's scope.
+
+### Client to aggregator
+
+Clients upload reports to aggregators, as detailed in {{upload-flow}}. The
+contents of each input share must be kept confidential from everyone but the
+client and the aggregator it is being sent to and clients must be able to
+authenticate the aggregator they upload to.
+
+The HTTPS channel provides confidentiality between the client and the leader,
+but this is not sufficient since the helper's report shares are relayed through
+the leader. Confidentiality of report shares is achieved by encrypting each
+report share to a public key held by the respective aggregator. Clients fetch
+the public keys from each aggregator over HTTPS, allowing them to authenticate
+the server.
+
+Aggregators MAY require clients to authenticate when uploading reports. This is
+an effective mitigation against Sybil attacks in deployments where it is
+practical for each client to have an identity provisioned (e.g., a user logged
+into an online service or a hardware device programmed with an identity). If it
+is used, client authentication MUST use a scheme that meets the requirements in
+{{request-authentication}}.
+
+In some deployments, it will not be practical to require clients to authenticate
+(e.g., a widely distributed application that does not require its users to login
+to any service), so client authentication is not mandatory in DAP. In the
+absence of client authentication, implementations SHOULD deploy some mitigation
+against Sybil attacks.
+
+### Inter-aggregator
+
+The leader and helper aggregators communicate to prepare input shares, as
+detailed in {{aggregate-flow}}, and to aggregate output shares into aggregate
+shares, as detailed in {{collect-aggregate}}. These messages must be
+confidential and mutually authenticated.
+
+The aggregate sub-protocol is driven by the leader acting as an HTTPS client,
+making requests to the helper's HTTPS server. HTTPS provides confidentiality and
+authenticates the helper to the leader.
+
+Leaders MUST authenticate their requests to helpers using a scheme that meets
+the requirements in {{request-authentication}}.
+
+### Collector to leader
+
+The collector makes requests to the leader in order to obtain aggregate shares,
+as detailed in {{collect-flow}}). Collect sub-protocol messages must be
+confidential and mutually authenticated.
+
+HTTPS provides confidentiality and authenticates the leader to the collector.
+Additionally, the leader encrypts its aggregate share to a public key held by
+the collector.
+
+Collectors MUST authenticate their requests to leaders using a scheme that meets
+the requirements in {{request-authentication}}.
+
+[[OPEN ISSUE: collector public key is currently in the task parameters, but this
+will have to change #102]]
+
+### Collector to helper
+
+The collector and helper never directly communicate with each other, but the
+helper does transmit an aggregate share to the collector through the leader, as
+detailed in {{collect-aggregate}}. The aggregate share must be confidential from
+everyone but the helper and the collector.
+
+Confidentiality is achieved by having the helper encrypt its aggregate share to
+a public key held by the collector.
+
+There is no authentication between the collector and the helper. This allows the
+leader to:
+
+* Send collect parameters to the helper that do not reflect the parameters
+  chosen by the collector
+* Discard the aggregate share computed by the helper and then fabricate
+  aggregate shares that combine into an arbitrary aggregate result
+
+These are both attacks on soundness, which we already assume to hold only if
+both aggregators are honest, which puts these malicious-leader attacks out of
+scope.
+
+[[OPEN ISSUE: Should we have authentication in either direction between the
+helper and the collector? #155]]
+[[OPEN ISSUE: DAP and/or VDAF should spell out what "soundness" and "privacy"
+mean]]
 
 ## Errors
 
@@ -389,7 +491,7 @@ in the "type" field (within the DAP URN namespace
 | invalidBatchSize           | There are an invalid number of reports in the batch. |
 | batchLifetimeExceeded      | The batch lifetime has been exceeded for one or more reports included in the batch. |
 | batchMismatch              | Aggregators disagree on the report shares that were aggregated in a batch. |
-| unauthorizedRequest        | Authentication of an HTTP request failed (see {{https-sender-auth}}). |
+| unauthorizedRequest        | Authentication of an HTTP request failed (see {{request-authentication}}). |
 | missingTaskID              | HPKE configuration was requested without specifying a task ID. |
 
 This list is not exhaustive. The server MAY return errors set to a URI other
@@ -410,29 +512,6 @@ to error types, rather than the full URNs. For example, an "error of type
 This document uses the verbs "abort" and "alert with `[some error message]`" to
 describe how protocol participants react to various error conditions.
 
-## HTTPS Sender Authentication {#https-sender-auth}
-
-Some HTTP requests in the DAP protocol require the sender to authenticate its
-request. It does so as described here.
-
-Prior to the start of the protocol, the sender and receiver arrange to share a
-secret sender-specific API token, which MUST be suitable for representation in
-an HTTP header.
-
-For requests requiring authentication, the sender includes a "DAP-Auth-Token"
-header in its HTTP request containing the API token.
-
-To authenticate the request, the receiver looks up the token for the
-sender as determined by the task configuration. (See {{task-configuration}}.) If
-the value of the "DAP-Auth-Token" header does not match the token, then
-the receiver MUST abort with error "unauthorizedRequest" and HTTP status code
-403 Forbidden.
-
-[OPEN ISSUE: This simple bearer-token scheme is meant to unblock interop
-testing. Eventually it should be replaced with a more secure authentication
-mechanism, e.g., TLS client certificates. See
-https://mailarchive.ietf.org/arch/msg/ppm/z65FK8kOU27Dt38WNhpI6apc2so/ for
-details.]
 
 # Protocol Definition
 
@@ -635,11 +714,6 @@ of the aggregators is configured with following parameters:
   The manner in which this key is distributed may be relevant to the VDAF's
   security. See issue#161.]
 
-The helper stores a bearer token used to authenticate HTTP requests from the
-leader. Likewise, the leader stores a bearer token to authenticate HTTP request
-from the collector. The authentication mechanism is described in
-{{https-sender-auth}}.
-
 Finally, the collector is configured with the HPKE secret key corresponding to
 `collector_hpke_config`.
 
@@ -697,8 +771,6 @@ cipher suites (a la OHTTP/ECH).]
 The client MUST abort if any of the following happen for any HPKE config
 request:
 
-* the client and aggregator failed to establish a secure,
-  aggregator-authenticated channel;
 * the GET request failed or didn't return a valid HPKE configuration; or
 * the HPKE configuration specifies a KEM, KDF, or AEAD algorithm the client
   doesn't recognize.
@@ -995,8 +1067,7 @@ This message consists of:
 
 Let `[aggregator]` denote the helper's API endpoint. The leader sends a POST
 request to `[aggregator]/aggregate` with its AggregateInitializeReq message as
-the payload. The media type is "message/dap-aggregate-initialize-req". In addition,
-this request MUST be authenticated as described in {{https-sender-auth}}.
+the payload. The media type is "message/dap-aggregate-initialize-req".
 
 #### Helper Initialization
 
@@ -1190,8 +1261,7 @@ struct {
 For each aggregator endpoint `[aggregator]` in `AggregateContinueReq.task_id`'s
 parameters except its own, the leader sends a POST request to
 `[aggregator]/aggregate` with AggregateContinueReq as the payload and the media
-type set to "message/dap-aggregate-continue-req". In addition, this request MUST
-be authenticated as described in {{https-sender-auth}}.
+type set to "message/dap-aggregate-continue-req".
 
 #### Helper Continuation
 
@@ -1266,9 +1336,8 @@ Once complete, the collector computes the final aggregate result as specified in
 ### Collection Initialization {#collect-init}
 
 To initiate collection, the collector issues a POST request to `[leader]/collect`,
-where `[leader]` is the leader's endpoint URL. The request MUST be authenticated
-as described in {{https-sender-auth}}. The body of the request is structured as
-follows:
+where `[leader]` is the leader's endpoint URL. The body of the request is
+structured as follows:
 
 [OPEN ISSUE: Decide if and how the collector's request is authenticated. If not,
 then we need to ensure that collect job URIs are resistant to enumeration
@@ -1405,9 +1474,8 @@ The message contains the following parameters:
 
 * The batch checksum.
 
-This request MUST be authenticated as described in {{https-sender-auth}}. To
-handle the leader's request, the helper first ensures that the request meets the
-requirements for batch parameters following the procedure in
+To handle the leader's request, the helper first ensures that the request meets
+the requirements for batch parameters following the procedure in
 {{batch-validation}}.
 
 Next, it computes a checksum based on the reports that satisfy the query, and
@@ -1789,9 +1857,6 @@ issues that need to be addressed before these goals are met. Details for each is
    can be used to prevent --- or at least mitigate --- these types of attacks.
    See {{upload-extensions}}. [OPEN ISSUE: No such extension has been
    implemented, so we're not yet sure if the current mechanism is sufficient.]
-1. Attacks may also come from the network. Thus, it is required that the
-   aggregators and collector communicate with one another over mutually
-   authenticated and confidential channels.
 
 ## Threat model
 
