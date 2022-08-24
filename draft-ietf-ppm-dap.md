@@ -365,8 +365,7 @@ REQUIRED.
 ## Request Authentication {#request-authentication}
 
 DAP is made up of several sub-protocols in which different subsets of the
-protocol's participants interact with each other. In this section we enumerate
-those interactions and their security requirements.
+protocol's participants interact with each other.
 
 In those cases where a channel between two participants is tunneled through
 another protocol participant, DAP mandates the use of authenticated encryption
@@ -380,90 +379,6 @@ any DAP protocol message. This allows organizations deploying DAP to use
 existing well-known HTTP authentication mechanisms that they already supports.
 Discovering what authentication mechanisms are supported by a DAP participant
 is outside of this document's scope.
-
-### Client to aggregator
-
-Clients upload reports to aggregators, as detailed in {{upload-flow}}. The
-contents of each input share must be kept confidential from everyone but the
-client and the aggregator it is being sent to and clients must be able to
-authenticate the aggregator they upload to.
-
-The HTTPS channel provides confidentiality between the client and the leader,
-but this is not sufficient since the helper's report shares are relayed through
-the leader. Confidentiality of report shares is achieved by encrypting each
-report share to a public key held by the respective aggregator. Clients fetch
-the public keys from each aggregator over HTTPS, allowing them to authenticate
-the server.
-
-Aggregators MAY require clients to authenticate when uploading reports. This is
-an effective mitigation against Sybil attacks in deployments where it is
-practical for each client to have an identity provisioned (e.g., a user logged
-into an online service or a hardware device programmed with an identity). If it
-is used, client authentication MUST use a scheme that meets the requirements in
-{{request-authentication}}.
-
-In some deployments, it will not be practical to require clients to authenticate
-(e.g., a widely distributed application that does not require its users to login
-to any service), so client authentication is not mandatory in DAP. In the
-absence of client authentication, implementations SHOULD deploy some mitigation
-against Sybil attacks.
-
-### Inter-aggregator
-
-The leader and helper aggregators communicate to prepare input shares, as
-detailed in {{aggregate-flow}}, and to aggregate output shares into aggregate
-shares, as detailed in {{collect-aggregate}}. These messages must be
-confidential and mutually authenticated.
-
-The aggregate sub-protocol is driven by the leader acting as an HTTPS client,
-making requests to the helper's HTTPS server. HTTPS provides confidentiality and
-authenticates the helper to the leader.
-
-Leaders MUST authenticate their requests to helpers using a scheme that meets
-the requirements in {{request-authentication}}.
-
-### Collector to leader
-
-The collector makes requests to the leader in order to obtain aggregate shares,
-as detailed in {{collect-flow}}). Collect sub-protocol messages must be
-confidential and mutually authenticated.
-
-HTTPS provides confidentiality and authenticates the leader to the collector.
-Additionally, the leader encrypts its aggregate share to a public key held by
-the collector.
-
-Collectors MUST authenticate their requests to leaders using a scheme that meets
-the requirements in {{request-authentication}}.
-
-[[OPEN ISSUE: collector public key is currently in the task parameters, but this
-will have to change #102]]
-
-### Collector to helper
-
-The collector and helper never directly communicate with each other, but the
-helper does transmit an aggregate share to the collector through the leader, as
-detailed in {{collect-aggregate}}. The aggregate share must be confidential from
-everyone but the helper and the collector.
-
-Confidentiality is achieved by having the helper encrypt its aggregate share to
-a public key held by the collector.
-
-There is no authentication between the collector and the helper. This allows the
-leader to:
-
-* Send collect parameters to the helper that do not reflect the parameters
-  chosen by the collector
-* Discard the aggregate share computed by the helper and then fabricate
-  aggregate shares that combine into an arbitrary aggregate result
-
-These are both attacks on soundness, which we already assume to hold only if
-both aggregators are honest, which puts these malicious-leader attacks out of
-scope.
-
-[[OPEN ISSUE: Should we have authentication in either direction between the
-helper and the collector? #155]]
-[[OPEN ISSUE: DAP and/or VDAF should spell out what "soundness" and "privacy"
-mean]]
 
 ## Errors
 
@@ -895,6 +810,31 @@ encoded value of the following form:
 "extension_type" indicates the type of extension, and "extension_data" contains
 information specific to the extension.
 
+### Upload Message Security
+
+The contents of each input share must be kept confidential from everyone but the
+client and the aggregator it is being sent to and clients must be able to
+authenticate the aggregator they upload to.
+
+HTTPS provides confidentiality between the client and the leader, but this is
+not sufficient since the helper's report shares are relayed through the leader.
+Confidentiality of report shares is achieved by encrypting each report share to
+a public key held by the respective aggregator. Clients fetch the public keys
+from each aggregator over HTTPS, allowing them to authenticate the server.
+
+Aggregators MAY require clients to authenticate when uploading reports. This is
+an effective mitigation against Sybil attacks in deployments where it is
+practical for each client to have an identity provisioned (e.g., a user logged
+into an online service or a hardware device programmed with an identity). If it
+is used, client authentication MUST use a scheme that meets the requirements in
+{{request-authentication}}.
+
+In some deployments, it will not be practical to require clients to authenticate
+(e.g., a widely distributed application that does not require its users to login
+to any service), so client authentication is not mandatory in DAP. In the
+absence of client authentication, implementations SHOULD deploy some mitigation
+against Sybil attacks.
+
 ## Verifying and Aggregating Reports {#aggregate-flow}
 
 Once a set of clients have uploaded their reports to the leader, the leader can
@@ -1316,6 +1256,17 @@ The helper then awaits the next message from the leader.
 
 [[OPEN ISSUE: consider relaxing this ordering constraint. See issue#217.]]
 
+### Aggregate Message Security
+
+Aggregate sub-protocol messages must be confidential and mutually authenticated.
+
+The aggregate sub-protocol is driven by the leader acting as an HTTPS client,
+making requests to the helper's HTTPS server. HTTPS provides confidentiality and
+authenticates the helper to the leader.
+
+Leaders MUST authenticate their requests to helpers using a scheme that meets
+the requirements in {{request-authentication}}.
+
 ## Collecting Results {#collect-flow}
 
 In this phase, the Collector requests aggregate shares from each aggregator and
@@ -1576,6 +1527,45 @@ its query:
 
 * For fixed-size tasks, the batch selector is the batch ID assigned sent in the
   response.
+
+### Collect Message Security
+
+Collect sub-protocol messages must be confidential and mutually authenticated.
+
+HTTPS provides confidentiality and authenticates the leader to the collector.
+Additionally, the leader encrypts its aggregate share to a public key held by
+the collector.
+
+Collectors MUST authenticate their requests to leaders using a scheme that meets
+the requirements in {{request-authentication}}.
+
+[[OPEN ISSUE: collector public key is currently in the task parameters, but this
+will have to change #102]]
+
+The collector and helper never directly communicate with each other, but the
+helper does transmit an aggregate share to the collector through the leader, as
+detailed in {{collect-aggregate}}. The aggregate share must be confidential from
+everyone but the helper and the collector.
+
+Confidentiality is achieved by having the helper encrypt its aggregate share to
+a public key held by the collector.
+
+There is no authentication between the collector and the helper. This allows the
+leader to:
+
+* Send collect parameters to the helper that do not reflect the parameters
+  chosen by the collector
+* Discard the aggregate share computed by the helper and then fabricate
+  aggregate shares that combine into an arbitrary aggregate result
+
+These are both attacks on soundness, which we already assume to hold only if
+both aggregators are honest, which puts these malicious-leader attacks out of
+scope.
+
+[[OPEN ISSUE: Should we have authentication in either direction between the
+helper and the collector? #155]]
+[[OPEN ISSUE: DAP and/or VDAF should spell out what "soundness" and "privacy"
+mean]]
 
 ### Batch Validation {#batch-validation}
 
