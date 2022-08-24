@@ -390,6 +390,7 @@ in the "type" field (within the DAP URN namespace
 | batchLifetimeExceeded      | The batch lifetime has been exceeded for one or more reports included in the batch. |
 | batchMismatch              | Aggregators disagree on the report shares that were aggregated in a batch. |
 | unauthorizedRequest        | Authentication of an HTTP request failed (see {{https-sender-auth}}). |
+| missingTaskID              | HPKE configuration was requested without specifying a task ID. |
 
 This list is not exhaustive. The server MAY return errors set to a URI other
 than those defined above. Servers MUST NOT use the DAP URN namespace for errors
@@ -654,14 +655,23 @@ configuration of each aggregator. See {{compliance}} for information on HPKE
 algorithm choices.
 
 Clients retrieve the HPKE configuration from each aggregator by
-sending an HTTP GET request to `[aggregator]/hpke_config?task_id=[task-id]`, where
-`[aggregator]` is the aggregator's endpoint URL, obtained from the task
-parameters, and `[task-id]` is the task ID obtained from the task parameters,
+sending an HTTP GET request to `[aggregator]/hpke_config`, where `[aggregator]`
+is the aggregator's endpoint URL, obtained from the task parameters.
+Clients MAY specify a query parameter `task_id` when sending an
+HTTP GET request to `[aggregator]/hpke_config?task_id=[task-id]`,
+where `[task-id]` is the task ID obtained from the task parameters,
 encoded in Base 64 with URL and filename safe alphabet with no padding, as
 specified in sections 5 and 3.2 of {{!RFC4648}}. If the aggregator does not
 recognize the task ID, then it responds with HTTP status code 404 Not Found and
-an error of type `unrecognizedTask`. The aggregator responds to well-formed
-requests with HTTP status code 200 OK and an `HpkeConfig` value:
+an error of type `unrecognizedTask`.
+
+An aggregator is free to use different HPKE configurations for each task with
+which it's configured. If the task ID is missing from a client's request,
+the aggregator MAY abort with an error of type `missingTaskID`, in which case
+the client SHOULD retry the request with a well-formed task ID included.
+
+An aggregator responds to well-formed requests with HTTP status code 200 OK
+and an `HpkeConfig` value:
 
 [TODO: Allow aggregators to return HTTP status code 403 Forbidden in deployments
 that use authentication to avoid leaking information about which tasks exist.]
