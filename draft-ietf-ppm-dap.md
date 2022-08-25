@@ -368,17 +368,18 @@ DAP is made up of several sub-protocols in which different subsets of the
 protocol's participants interact with each other.
 
 In those cases where a channel between two participants is tunneled through
-another protocol participant, DAP mandates the use of authenticated encryption
+another protocol participant, DAP mandates the use of public-key encryption
 using {{!HPKE=RFC9180}} to ensure that only the intended recipient can see a
 message in the clear.
 
 In other cases, DAP requires HTTPS client authentication. Any authentication
 scheme that is composable with HTTP is allowed. For example, {{!OAuth2=RFC6749}}
 credentials are presented in an Authorization HTTP header, which can be added to
-any DAP protocol message. This allows organizations deploying DAP to use
-existing well-known HTTP authentication mechanisms that they already support.
-Discovering what authentication mechanisms are supported by a DAP participant
-is outside of this document's scope.
+any DAP protocol message, or TLS client certificates are another viable
+solution. This allows organizations deploying DAP to use existing well-known
+HTTP authentication mechanisms that they already support. Discovering what
+authentication mechanisms are supported by a DAP participant is outside of this
+document's scope.
 
 ## Errors
 
