@@ -358,11 +358,11 @@ client could not report 10^6s or -20s.
 
 # Message Transport
 
-Communications between DAP participants are carried over HTTPS {{!RFC2818}}.
+Communications between DAP participants are carried over HTTPS {{!RFC9110}}.
 HTTPS provides server authentication and confidentiality. Use of HTTPS is
 REQUIRED.
 
-## Request Authentication {#request-authentication}
+## HTTPS Request Authentication {#request-authentication}
 
 DAP is made up of several sub-protocols in which different subsets of the
 protocol's participants interact with each other.
@@ -372,11 +372,11 @@ another protocol participant, DAP mandates the use of authenticated encryption
 using {{!HPKE=RFC9180}} to ensure that only the intended recipient can see a
 message in the clear.
 
-In other cases, DAP requires client authentication. Any authentication scheme
-that is composable with HTTP is allowed. For example, {{!OAuth2=RFC6749}}
+In other cases, DAP requires HTTPS client authentication. Any authentication
+scheme that is composable with HTTP is allowed. For example, {{!OAuth2=RFC6749}}
 credentials are presented in an Authorization HTTP header, which can be added to
 any DAP protocol message. This allows organizations deploying DAP to use
-existing well-known HTTP authentication mechanisms that they already supports.
+existing well-known HTTP authentication mechanisms that they already support.
 Discovering what authentication mechanisms are supported by a DAP participant
 is outside of this document's scope.
 
@@ -813,14 +813,15 @@ information specific to the extension.
 ### Upload Message Security
 
 The contents of each input share must be kept confidential from everyone but the
-client and the aggregator it is being sent to and clients must be able to
-authenticate the aggregator they upload to.
+client and the aggregator it is being sent to. In addition, clients must be able
+to authenticate the aggregator they upload to.
 
-HTTPS provides confidentiality between the client and the leader, but this is
-not sufficient since the helper's report shares are relayed through the leader.
-Confidentiality of report shares is achieved by encrypting each report share to
-a public key held by the respective aggregator. Clients fetch the public keys
-from each aggregator over HTTPS, allowing them to authenticate the server.
+HTTPS provides confidentiality between the DAP client and the leader, but this
+is not sufficient since the helper's report shares are relayed through the
+leader. Confidentiality of report shares is achieved by encrypting each report
+share to a public key held by the respective aggregator. Clients fetch the
+public keys from each aggregator over HTTPS, allowing them to authenticate the
+server.
 
 Aggregators MAY require clients to authenticate when uploading reports. This is
 an effective mitigation against Sybil attacks in deployments where it is
@@ -831,9 +832,11 @@ is used, client authentication MUST use a scheme that meets the requirements in
 
 In some deployments, it will not be practical to require clients to authenticate
 (e.g., a widely distributed application that does not require its users to login
-to any service), so client authentication is not mandatory in DAP. In the
-absence of client authentication, implementations SHOULD deploy some mitigation
-against Sybil attacks.
+to any service), so client authentication is not mandatory in DAP.
+
+[[OPEN ISSUE: deployments that don't have client auth will need to do something
+about Sybil attacks. Is there any useful guidance or SHOULDs we can provide?
+Sorta relevant: issue #89]]
 
 ## Verifying and Aggregating Reports {#aggregate-flow}
 
@@ -1558,9 +1561,9 @@ leader to:
 * Discard the aggregate share computed by the helper and then fabricate
   aggregate shares that combine into an arbitrary aggregate result
 
-These are both attacks on soundness, which we already assume to hold only if
+These are both attacks on correctness, which we already assume to hold only if
 both aggregators are honest, which puts these malicious-leader attacks out of
-scope.
+scope (see {{sec-considerations}}.
 
 [[OPEN ISSUE: Should we have authentication in either direction between the
 helper and the collector? #155]]
