@@ -1822,18 +1822,9 @@ attack. For example, it may coerce a client into providing malicious input
 shares for aggregation or coerce an aggregator into diverting from the
 protocol specified (e.g., by divulging its input shares to the attacker).
 
-In the presence of this adversary, DAP aims to achieve the following high-level
-secure aggregation goals:
-
-1. Privacy. Clients trust that some aggregator is honest. That is, as long as at
-   least one aggregator executes the protocol faithfully, the parties learn nothing
-   beyond the aggregate result (i.e., the output of the aggregation function computed over
-   the honest measurements).
-1. Correctness. The collector trusts that the aggregators execute the protocol
-   correctly. That is, as long as the aggregators execute the protocol faithfully,
-   a malicious client can skew the aggregate result only by reporting
-   a false (untruthful) measurement. The result cannot be influenced in any
-   other way.
+In the presence of this adversary, DAP aims to achieve the privacy and
+robustness security goals described in {{!VDAF}}'s Security Considerations
+section.
 
 Currently, the specification does not achieve these goals. In particular, there are several open
 issues that need to be addressed before these goals are met. Details for each issue are below.
@@ -2044,10 +2035,10 @@ We assume the existence of attackers on the network links between participants.
 
 [[OPEN ISSUE: The threat model for Prio --- as it's described in the original
 paper and {{BBCGGI19}} --- considers **either** a malicious client (attacking
-soundness) **or** a malicious subset of aggregators (attacking privacy). In
-particular, soundness isn't guaranteed if any one of the aggregators is
+robustness) **or** a malicious subset of aggregators (attacking privacy). In
+particular, robustness isn't guaranteed if any one of the aggregators is
 malicious; in theory it may be possible for a malicious client and aggregator to
-collude and break soundness. Is this a contingency we need to address? There are
+collude and break robustness. Is this a contingency we need to address? There are
 techniques in {{BBCGGI19}} that account for this; we need to figure out if they're
 practical.]]
 
