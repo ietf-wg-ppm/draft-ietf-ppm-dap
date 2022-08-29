@@ -1562,14 +1562,12 @@ leader to:
 * Discard the aggregate share computed by the helper and then fabricate
   aggregate shares that combine into an arbitrary aggregate result
 
-These are both attacks on correctness, which we already assume to hold only if
+These are both attacks on robustness, which we already assume to hold only if
 both aggregators are honest, which puts these malicious-leader attacks out of
 scope (see {{sec-considerations}}.
 
 [[OPEN ISSUE: Should we have authentication in either direction between the
 helper and the collector? #155]]
-[[OPEN ISSUE: DAP and/or VDAF should spell out what "soundness" and "privacy"
-mean]]
 
 ### Batch Validation {#batch-validation}
 
