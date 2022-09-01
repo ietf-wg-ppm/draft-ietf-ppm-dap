@@ -751,7 +751,7 @@ as specified by the VDAF. It then encrypts each input share as follows:
 
 ~~~
 enc, payload = SealBase(pk,
-    "dap-01 input share" || 0x01 || server_role,
+    "dap-02 input share" || 0x01 || server_role,
     task_id || metadata, input_share)
 ~~~
 
@@ -1063,7 +1063,7 @@ payload with the following procedure:
 
 ~~~
 input_share = OpenBase(encrypted_input_share.enc, sk,
-    "dap-01 input share" || 0x01 || server_role,
+    "dap-02 input share" || 0x01 || server_role,
     task_id || metadata, encrypted_input_share.payload)
 ~~~
 
@@ -1471,7 +1471,7 @@ Encrypting an aggregate share `agg_share` for a given `AggregateShareReq` is don
 as follows:
 
 ~~~
-enc, payload = SealBase(pk, "dap-01 aggregate share" || server_role || 0x00,
+enc, payload = SealBase(pk, "dap-02 aggregate share" || server_role || 0x00,
   AggregateShareReq.task_id || AggregateShareReq.batch_selector, agg_share)
 ~~~
 
@@ -1483,7 +1483,7 @@ Specifically, given an encrypted input share, denoted `enc_share`, for a
 given batch interval, denoted `batch_interval`, decryption works as follows:
 
 ~~~
-agg_share = OpenBase(enc_share.enc, sk, "dap-01 aggregate share" ||
+agg_share = OpenBase(enc_share.enc, sk, "dap-02 aggregate share" ||
     server_role || 0x00, task_id || batch_selector, enc_share.payload)
 ~~~
 
