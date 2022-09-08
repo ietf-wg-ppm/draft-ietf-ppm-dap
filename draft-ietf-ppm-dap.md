@@ -116,6 +116,13 @@ seen in the clear by any server.
 
 The following terms are used:
 
+Aggregate result:
+: The output of the aggregation function over a given set of reports.
+
+Aggregate share:
+: A share of the aggregate result emitted by an aggregator. Aggregate shares are
+   reassembled by the collector into the final output.
+
 Aggregation function:
 : The function computed over the users' inputs.
 
@@ -149,6 +156,10 @@ Input share:
    {{!VDAF=I-D.draft-irtf-cfrg-vdaf-03}} sharding algorithm. This algorithm is run by
    each client in order to cryptographically protect its measurement.
 
+Leader:
+: A distinguished aggregator that coordinates input validation and data
+   collection.
+
 Measurement:
 : A single value (e.g., a count) being reported by a client. Multiple
    measurements may be grouped into a single protocol input.
@@ -159,17 +170,6 @@ Minimum batch duration:
 
 Minimum batch size:
 : The minimum number of reports in a batch.
-
-Leader:
-: A distinguished aggregator that coordinates input validation and data
-   collection.
-
-Aggregate result:
-: The output of the aggregation function over a given set of reports.
-
-Aggregate share:
-: A share of the aggregate result emitted by an aggregator. Aggregate shares are
-   reassembled by the collector into the final output.
 
 Output share:
 : An aggregator's share of the output of the VDAF
