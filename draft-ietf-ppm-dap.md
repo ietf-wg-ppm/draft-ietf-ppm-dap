@@ -147,6 +147,9 @@ Client:
 Collector:
 : The endpoint that receives the output of the aggregation function.
 
+Helper:
+: Executes the protocol as instructed by the leader.
+
 Input:
 : The measurement (or measurements) emitted by a client, before any encryption
    or secret sharing scheme is applied.
