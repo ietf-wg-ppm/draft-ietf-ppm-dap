@@ -700,7 +700,7 @@ this cached lifetime with the Cache-Control header, as follows:
   Cache-Control: max-age=86400
 ~~~
 
-Clients SHOULD follow the usual HTTP caching {{!RFC7234}} semantics for key
+Clients SHOULD follow the usual HTTP caching {{!RFC9111}} semantics for key
 configurations.
 
 Note: Long cache lifetimes may result in clients using stale HPKE configurations;
