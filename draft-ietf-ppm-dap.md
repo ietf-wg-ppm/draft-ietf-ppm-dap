@@ -196,7 +196,7 @@ also follows {{RFC8446}}.
 # Overview {#overview}
 
 The protocol is executed by a large set of clients and a small set of servers.
-We call the servers the *aggregators*. Each client's input to the protocol is a
+Servers are referred to as *aggregators*. Each client's input to the protocol is a
 set of measurements (e.g., counts of some user behavior). Given the input set of
 measurements `x_1, ..., x_n` held by `n` users, the goal of a protocol for
 privacy preserving measurement is to compute `y = F(p, x_1, ..., x_n)` for some
@@ -217,11 +217,11 @@ schemes that implement the VDAF interface specified in
   in a privacy preserving manner.
 
 This protocol is designed to work with schemes that use secret sharing. Rather
-than send its input in the clear, each client shards its measurements into a
+than sending its input in the clear, each client shards its measurements into a
 sequence of *input shares* and sends an input share to each of the aggregators.
 This provides two important properties:
 
-* It's impossible to deduce the measurement without knowing *all* of the shares.
+* It is impossible to deduce the measurement without knowing *all* of the shares.
 
 * It allows the aggregators to compute the final output by first aggregating up
   their measurements shares locally, then combining the results to obtain the
@@ -343,9 +343,9 @@ However, they do not learn anything about the individual report other than that
 it is valid.
 
 The specific properties attested to in the proof vary depending on the
-measurement being taken. For instance, if we want to measure the time the user
+measurement being taken. For instance, to measure the time the user
 took performing a given task the proof might demonstrate that the value reported
-was within a certain range (e.g., 0-60 seconds). By contrast, if we wanted to
+was within a certain range (e.g., 0-60 seconds). By contrast, to
 report which of a set of N options the user select, the report might contain N
 integers and the proof would demonstrate that N-1 were 0 and the other was 1.
 
@@ -420,7 +420,7 @@ is always known, see {{task-configuration}}), encoded in Base 64 using the URL
 and filename safe alphabet with no padding defined in sections 5 and 3.2 of
 {{!RFC4648}}.
 
-In the remainder of this document, we use the tokens in the table above to refer
+In the remainder of this document, the tokens in the table above are used to refer
 to error types, rather than the full URNs. For example, an "error of type
 'unrecognizedMessage'" refers to an error document with "type" value
 "urn:ietf:params:ppm:dap:error:unrecognizedMessage".
@@ -437,7 +437,7 @@ DAP has three major interactions which need to be defined:
 * Computing the results of a given measurement, specified in {{aggregate-flow}}
 * Collecting aggregated results, specified in {{collect-flow}}
 
-We start with some basic type definitions used in other messages.
+The following are some basic type definitions used in other messages:
 
 ~~~
 /* ASCII encoded URL. e.g., "https://example.com" */
@@ -470,9 +470,9 @@ uint8 HpkeConfigId;
 
 /* An HPKE ciphertext. */
 struct {
-  HpkeConfigId config_id;    // config ID
-  opaque enc<1..2^16-1>;     // encapsulated HPKE key
-  opaque payload<1..2^32-1>; // ciphertext
+  HpkeConfigId config_id;    /* config ID */
+  opaque enc<1..2^16-1>;     /* encapsulated HPKE key */
+  opaque payload<1..2^32-1>; /* ciphertext */
 } HpkeCiphertext;
 ~~~
 
@@ -487,7 +487,7 @@ This document defines the following query types:
 
 ~~~
 enum {
-   reserved(0), // Reserved for testing purposes
+   reserved(0), /* Reserved for testing purposes */
    time-interval(1),
    fixed-size(2),
    (65535)
@@ -511,16 +511,16 @@ opaque BatchId[32];
 struct {
     FixedSizeQueryType fixed_size_query_type;
     select (fixed_size_query_type) {
-        next-batch:  Empty;
-        by-batch-id: BatchId batch_id;
-    }
+        case next-batch:  Empty;
+        case by-batch-id: BatchId batch_id;
+    };
 } FixedSizeQuery;
 
 struct {
-    select (query_type) { // determined by query configuration
+    select (query_type) { /* determined by query configuration */
         case time-interval: Interval batch_interval;
         case fixed-size: FixedSizeQuery fixed_size_query;
-    }
+    };
 } Query;
 ~~~
 
@@ -548,13 +548,13 @@ subsection below.
 The first query type, `time-interval`, is designed to support applications in
 which reports are collected over a long period of time. The Collector specifies
 a "batch interval" that determines the time range for reports included in the
-batch: For each report in the batch, the time at which that report was generated
+batch. For each report in the batch, the time at which that report was generated
 (see {{upload-flow}}) must fall within the batch interval specified by the
 Collector.
 
 Typically the Collector issues queries for which the batch intervals are
 continuous, monotonically increasing, and have the same duration. For example,
-the sequence of batch intervals. For example, the sequence of batch intervals
+the sequence of batch intervals
 `(1659544000, 1000)`, `(1659545000, 1000)`, `(1659545000, 1000)`, `(1659546000,
 1000)` satisfies these conditions. (The first element of the pair denotes the
 start of the batch interval and the second denotes the duration.) Of course,
@@ -656,7 +656,7 @@ recognize the task ID, then it responds with HTTP status code 404 Not Found and
 an error of type `unrecognizedTask`.
 
 An aggregator is free to use different HPKE configurations for each task with
-which it's configured. If the task ID is missing from a client's request,
+which it is configured. If the task ID is missing from a client's request,
 the aggregator MAY abort with an error of type `missingTaskID`, in which case
 the client SHOULD retry the request with a well-formed task ID included.
 
@@ -676,9 +676,9 @@ struct {
 } HpkeConfig;
 
 opaque HpkePublicKey<1..2^16-1>;
-uint16 HpkeAeadId; // Defined in [HPKE]
-uint16 HpkeKemId;  // Defined in [HPKE]
-uint16 HpkeKdfId;  // Defined in [HPKE]
+uint16 HpkeAeadId; /* Defined in [HPKE] */
+uint16 HpkeKemId;  /* Defined in [HPKE] */
+uint16 HpkeKdfId;  /* Defined in [HPKE] */
 ~~~
 
 [OPEN ISSUE: Decide whether to expand the width of the id, or support multiple
@@ -687,9 +687,9 @@ cipher suites (a la OHTTP/ECH).]
 The client MUST abort if any of the following happen for any HPKE config
 request:
 
-* the GET request failed or didn't return a valid HPKE configuration; or
+* the GET request failed or did not return a valid HPKE configuration; or
 * the HPKE configuration specifies a KEM, KDF, or AEAD algorithm the client
-  doesn't recognize.
+  does not recognize.
 
 Aggregators SHOULD use HTTP caching to permit client-side caching of this
 resource {{!RFC5861}}. Aggregators SHOULD favor long cache lifetimes to avoid
@@ -728,10 +728,10 @@ struct {
 } Report;
 ~~~
 
-This message is called the Client's report. It consists of the report metaata,
-the "public share" output by the VDAF's input-distribution algorithm, and the
-encrypted input share of each of the Aggregators. The header consists of the
-task ID and report "metadata". The metadata consists of the following fields:
+This message is called the Client's report. It consists of the task ID, report
+metadata, the "public share" output by the VDAF's input-distribution algorithm,
+and the encrypted input share of each of the Aggregators. The metadata consists
+of the following fields:
 
 * A timestamp representing the time at which the report was generated.
   Specifically, the `time` field is set to the number of seconds elapsed since
@@ -822,12 +822,12 @@ to authenticate the aggregator they upload to.
 HTTPS provides confidentiality between the DAP client and the leader, but this
 is not sufficient since the helper's report shares are relayed through the
 leader. Confidentiality of report shares is achieved by encrypting each report
-share to a public key held by the respective aggregator. Clients fetch the
-public keys from each aggregator over HTTPS, allowing them to authenticate the
-server.
+share to a public key held by the respective aggregator using [HPKE].
+Clients fetch the public keys from each aggregator over HTTPS, allowing them to
+authenticate the server.
 
 Aggregators MAY require clients to authenticate when uploading reports. This is
-an effective mitigation against Sybil attacks in deployments where it is
+an effective mitigation against Sybil {{Dou2}} attacks in deployments where it is
 practical for each client to have an identity provisioned (e.g., a user logged
 into an online service or a hardware device programmed with an identity). If it
 is used, client authentication MUST use a scheme that meets the requirements in
@@ -969,10 +969,10 @@ struct {
   TaskID task_id;
   AggregationJobID job_id;
   opaque agg_param<0..2^16-1>;
-  select (query_type) { // determined by task configuration
-    time-interval: Empty;
-    fixed-size: BatchId batch_id;
-  }
+  select (query_type) { /* determined by task configuration */
+    case time-interval: Empty;
+    case fixed-size: BatchId batch_id;
+  };
   ReportShare report_shares<1..2^32-1>;
 } AggregateInitializeReq;
 ~~~
@@ -1042,7 +1042,7 @@ structured as follows:
 ~~~
 enum {
   continued(0),
-  finished(1)
+  finished(1),
   failed(2),
 } PrepareStepResult;
 
@@ -1050,10 +1050,10 @@ struct {
   Nonce nonce;
   PrepareStepResult prepare_step_result;
   select (PrepareStep.prepare_step_result) {
-    case continued: opaque prep_msg<0..2^32-1>; // VDAF preparation message
+    case continued: opaque prep_msg<0..2^32-1>; /* VDAF preparation message */
     case finished:  Empty;
     case failed:    ReportShareError;
-  }
+  };
 } PrepareStep;
 
 struct {
@@ -1192,7 +1192,7 @@ out = VDAF.prep_next(prep_state, inbound)
 
 where [leader_outbound, helper_outbound] is a vector of two elements.
 If either of these operations fails, then the leader marks the report as invalid.
-Otherwise it interprets `out` as follows. If this is the last round of the VDAF,
+Otherwise it interprets `out` as follows: If this is the last round of the VDAF,
 then `out` is the aggregator's output share, in which case the aggregator finishes
 and stores its output share for further processing as described in {{collect-flow}}.
 Otherwise, `out` is the pair `(new_state, prep_msg)`, where `new_state` is its updated
@@ -1228,7 +1228,7 @@ step yields one of three outputs:
 
 To carry out this step, for each PrepareStep in AggregateContinueReq.prepare_shares received
 from the leader, the helper performs the following check to determine if the report share
-should continue being prepared.
+should continue being prepared:
 
 * If failed, then mark the report as failed and reply with a failed PrepareStep
   to the leader.
@@ -1245,12 +1245,13 @@ out = VDAF.prep_next(prep_state, inbound)
 
 where `inbound` is the previous VDAF preapre message sent by the leader and `prep_state` is
 the helper's current preparation state. If this operation fails, then the helper fails
-with error `vdaf-prep-error`. Otherwise, it interprets `out` as follows. If this
-is the last round of VDAF preparation phase, then `out` is the helper's output
-share, in which case the helper stores the output share for future collection.
-Otherwise, the helper interpets `out` as the tuple `(new_state, prep_msg)`, where
-`new_state` is its updated preparation state and `prep_msg` is its next VDAF
-message.
+with error `vdaf-prep-error`. Otherwise, it interprets `out` as follows:
+
+* If this is the last round of VDAF preparation phase, then `out` is the helper's output
+  share, in which case the helper stores the output share for future collection.
+* Otherwise, the helper interpets `out` as the tuple `(new_state, prep_msg)`, where
+  `new_state` is its updated preparation state and `prep_msg` is its next VDAF
+  message.
 
 This output message for each report in AggregateContinueReq.prepare_shares is then sent
 to the leader in an AggregateContinueResp message, structured as follows:
@@ -1310,7 +1311,7 @@ attacks.]
 struct {
   TaskID task_id;
   Query query;
-  opaque agg_param<0..2^16-1>; // VDAF aggregation parameter
+  opaque agg_param<0..2^16-1>; /* VDAF aggregation parameter */
 } CollectReq;
 ~~~
 
@@ -1353,10 +1354,10 @@ and a body consisting of a `CollectResp`:
 
 ~~~
 struct {
-  select (query_type) { // determined by task configuration
-    time-interval: Empty;
-    fixed-size: BatchId batch_id;
-  }
+  select (query_type) { /* determined by task configuration */
+    case time-interval: Empty;
+    case fixed-size: BatchId batch_id;
+  };
   uint64 report_count;
   HpkeCiphertext encrypted_agg_shares<1..2^32-1>;
 } CollectResp;
@@ -1392,9 +1393,9 @@ helper drops out?]
 The leader obtains each helper's encrypted aggregate share in order to respond
 to the collector's collect response. To do this, the leader first computes a
 checksum over the set of output shares included in the batch. The checksum is
-computed by taking the SHA256 hash of each nonce from the client reports
-included in the aggregation, then combining the hash values with a bitwise-XOR
-operation.
+computed by taking the SHA256 {{!SHS=DOI.10.6028/NIST.FIPS.180-4}} hash of each
+nonce from the client reports included in the aggregation, then combining the
+hash values with a bitwise-XOR operation.
 
 Then, for each aggregator endpoint `[aggregator]` in the parameters associated
 with `CollectReq.task_id` (see {{collect-flow}}) except its own, the leader sends
@@ -1402,10 +1403,10 @@ a POST request to `[aggregator]/aggregate_share` with the following message:
 
 ~~~
 struct {
-  select (query_type) { // determined by task configuration
-    time-interval: Interval batch_interval;
-    fixed-size: BatchId batch_id;
-  }
+  select (query_type) { /* determined by task configuration */
+    case time-interval: Interval batch_interval;
+    case fixed-size: BatchId batch_id;
+  };
 } BatchSelector;
 
 struct {
@@ -1443,7 +1444,7 @@ the requirements for batch parameters following the procedure in
 
 Next, it computes a checksum based on the reports that satisfy the query, and
 checks that the `report_count` and `checksum` included in the request match its
-computed values. If not, then it MUST abort with error "batchMismatch".
+computed values. If not, then it MUST abort with an error of type "batchMismatch".
 
 Next, it computes the aggregate share `agg_share` corresponding to the set of
 output shares, denoted `out_shares`, for the batch interval, as follows:
@@ -1549,7 +1550,7 @@ Collect sub-protocol messages must be confidential and mutually authenticated.
 
 HTTPS provides confidentiality and authenticates the leader to the collector.
 Additionally, the leader encrypts its aggregate share to a public key held by
-the collector.
+the collector using [HPKE].
 
 Collectors MUST authenticate their requests to leaders using a scheme that meets
 the requirements in {{request-authentication}}.
@@ -1563,7 +1564,7 @@ detailed in {{collect-aggregate}}. The aggregate share must be confidential from
 everyone but the helper and the collector.
 
 Confidentiality is achieved by having the helper encrypt its aggregate share to
-a public key held by the collector.
+a public key held by the collector using [HPKE].
 
 There is no authentication between the collector and the helper. This allows the
 leader to:
@@ -1573,9 +1574,9 @@ leader to:
 * Discard the aggregate share computed by the helper and then fabricate
   aggregate shares that combine into an arbitrary aggregate result
 
-These are both attacks on robustness, which we already assume to hold only if
+These are attacks on robustness, which we already assume to hold only if
 both aggregators are honest, which puts these malicious-leader attacks out of
-scope (see {{sec-considerations}}.
+scope (see {{sec-considerations}}).
 
 [[OPEN ISSUE: Should we have authentication in either direction between the
 helper and the collector? #155]]
@@ -1588,23 +1589,23 @@ DAP task. It does so as described here.
 
 First the Aggregator checks that the batch respects any "boundaries" determined
 by the query type. These are described in the subsections below. If the boundary
-check fails, then the Aggregator MUST abort with error "batchInvalid".
+check fails, then the Aggregator MUST abort with an error of type "batchInvalid".
 
 Next, the Aggregator checks that batch contains a valid number of reports, as
 determined by the query type. If the size check fails, then the Aggregator MUST
-abort with error "invalidBatchSize".
+abort with error of type "invalidBatchSize".
 
 Next, the Aggregator checks that the batch has not been aggregated too many
 times. This is determined by the maximum batch lifetime, `max_batch_lifetime`.
 Unless the query has been issued less than `max_batch_lifetime` times, the
-Aggregator MUST abort with error "batchLifetimeExceeded".
+Aggregator MUST abort with error of type "batchLifetimeExceeded".
 
 Finally, the Aggregator checks that the batch does not contain a report that was
 included in any previous batch. If this batch overlap check fails, then the
-Aggregator MUST abort with error "batchOverlap". For time-interval tasks, it is
+Aggregator MUST abort with error of type "batchOverlap". For time-interval tasks, it is
 sufficient (but not necessary) to check that the batch interval does not overlap
 with the batch interval of any previous query. If this batch interval check
-fails, then the Aggregator MAY abort with error "batchOverlap".
+fails, then the Aggregator MAY abort with error of type "batchOverlap".
 
 [[OPEN ISSUE: #195 tracks how we might relax this constraint to allow for more
 collect query flexibility. As of now, this is quite rigid and doesn't give the
@@ -1738,7 +1739,7 @@ required to:
 In addition, for each DAP task, leaders are required to:
 
 - Implement and store state for the form of inter- and intra-batch replay
-  mitigation in {{anti-replay}}; and
+  mitigation in {{anti-replay}}.
 
 ### Collector capabilities
 
@@ -1984,7 +1985,7 @@ output parts and so could request aggregations over few inputs.
 1. Known input injection. Collectors may collude with clients to send known
    input to the aggregators, allowing collectors to shrink the effective
    anonymity set by subtracting the known inputs from the final output. Sybil
-   attacks [Dou02] could be used to amplify this capability.
+   attacks {{Dou02}} could be used to amplify this capability.
 
 #### Mitigations
 
