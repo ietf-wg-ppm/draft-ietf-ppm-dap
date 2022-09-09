@@ -442,7 +442,7 @@ in the "type" field (within the DAP URN namespace
 | unrecognizedTask           | An endpoint received a message with an unknown task ID. |
 | unrecognizedAggregationJob | An endpoint received a message with an unknown aggregation job ID. |
 | outdatedConfig             | The message was generated using an outdated configuration. |
-| reportTooLate              | Report could not be processed because it arrived too late. |
+| reportRejected             | Report could not be processed for an unspecified reason. |
 | reportTooEarly             | Report could not be processed because its timestamp is too far in the future. |
 | batchInvalid               | A collect or aggregate-share request was made with invalid batch parameters. |
 | invalidBatchSize           | There are an invalid number of reports in the batch. |
@@ -867,23 +867,31 @@ with error of type 'outdatedConfig'. If the leader supports multiple HPKE
 configurations, it can use trial decryption with each configuration to determine
 if requests match a known HPKE configuration. When clients receive an 'outdatedConfig'
 error, they SHOULD invalidate any cached aggregator `HpkeConfigList` and retry with
-a freshly generated Report. If this retried report does not succeed, clients MUST
-abort and discontinue retrying.
+a freshly generated Report. If this retried report does not succeed, clients
+SHOULD abort and discontinue retrying.
+
+If a report's ID matches that of a previously uploaded report, the leader
+MUST ignore it and the leader MAY alert the client with error `reportRejected`.
+See the implementation note in {{input-share-validation}}.
 
 The Leader MUST ignore any report pertaining to a batch that has already been
-collected. (See {{input-share-validation}} for details.) Otherwise,
-comparing the aggregate result to the previous aggregate result may result in a
-privacy violation. (Note that the Helpers enforce this as well.) The Leader MAY
-ignore any reports whose timestamp is past the task's `task_expiration`. When it
-does so, the leader SHOULD abort the upload protocol and alert the client with
-error "reportTooLate". Client MAY choose to opt out of the task if its own clock
-has passed `task_expiration`.
+collected (see {{input-share-validation}} for details). Otherwise, comparing the
+aggregate result to the previous aggregate result may result in a privacy
+violation. Note that this is enforced by all Aggegators, not just the leader. In
+addition, the leader MAY abort the upload protocol and alert the client with
+error `reportRejected`.
+
+The Leader MAY ignore any reports whose timestamp is past the task's
+`task_expiration`. When it does so, the leader SHOULD abort the upload protocol
+and alert the client with error `reportRejected`. Client MAY choose to opt out
+of the task if its own clock has passed `task_expiration`.
 
 Leaders can buffer reports while waiting to aggregate them. The leader SHOULD
 NOT accept reports whose timestamps are too far in the future. Implementors MAY
 provide for some small leeway, usually no more than a few minutes, to account
 for clock skew. If the leader rejects a report for this reason, it SHOULD abort
-     the upload protocol and alert the client with error "reportTooEarly".
+the upload protocol and alert the client with error `reportTooEarly`. In this
+situation, clients MAY re-upload the report later on.
 
 If the Report contains an unrecognized extension, or of two extensions have the
 same ExtensionType, then the Leader MAY abort the upload request with error
