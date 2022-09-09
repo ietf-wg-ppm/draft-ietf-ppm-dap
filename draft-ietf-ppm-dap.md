@@ -466,6 +466,7 @@ enum {
   client(1),
   leader(2),
   helper(3),
+  (255)
 } Role;
 
 /* Identifier for a server's HPKE configuration */
@@ -507,6 +508,7 @@ given query type. A query is defined as follows:
 enum {
     next-batch(0),
     by-batch-id(1),
+    (255)
 } FixedSizeQueryType;
 
 opaque BatchId[32];
@@ -938,6 +940,7 @@ enum {
   hpke-decrypt-error(4),
   vdaf-prep-error(5),
   batch-saturated(6),
+  (255)
 } ReportShareError;
 ~~~
 
@@ -1047,6 +1050,7 @@ enum {
   continued(0),
   finished(1)
   failed(2),
+  (255)
 } PrepareStepResult;
 
 struct {
