@@ -515,7 +515,7 @@ opaque BatchId[32];
 
 struct {
     FixedSizeQueryType fixed_size_query_type;
-    select (fixed_size_query_type) {
+    select (FixedSizeQuery.fixed_size_query_type) {
         next-batch:  Empty;
         by-batch-id: BatchId batch_id;
     }
