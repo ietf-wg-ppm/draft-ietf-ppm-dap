@@ -668,7 +668,7 @@ that use authentication to avoid leaking information about which tasks exist.]
 
 ~~~
 struct {
-  HpkeConfigId id;
+  HpkeConfigId config_id;
   HpkeKemId kem_id;
   HpkeKdfId kdf_id;
   HpkeAeadKdfId aead_id;
