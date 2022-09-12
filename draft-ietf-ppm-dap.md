@@ -500,7 +500,7 @@ enum {
 
 The time-interval query type is described in {{time-interval-query}}; the
 fixed-size query type is described in {{fixed-size-query}}. Future
-specifications can introduce new query types as needed (see {{query-type-reg}}.
+specifications can introduce new query types as needed (see {{query-type-reg}}).
 A query includes parameters used by the Aggregators to select a batch of reports
 specific to the given query type. A query is defined as follows:
 
