@@ -1054,6 +1054,7 @@ enum {
 } PrepareStepResult;
 
 struct {
+  Time time;
   Nonce nonce;
   PrepareStepResult prepare_step_result;
   select (PrepareStep.prepare_step_result) {
