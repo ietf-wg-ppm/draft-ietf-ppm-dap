@@ -776,7 +776,7 @@ this retried report does not succeed, clients MUST abort and discontinue
 retrying.
 
 The Leader MUST ignore any report pertaining to a batch that has already been
-collected. (See {{input-share-batch-validation}} for details.) Otherwise,
+collected. (See {{early-input-share-validation}} for details.) Otherwise,
 comparing the aggregate result to the previous aggregate result may result in a
 privacy violation. (Note that the Helpers enforce this as well.) The Leader MAY
 ignore any reports whose timestamp is past the task's `task_expiration`. When it does so,
@@ -952,7 +952,7 @@ shares as follows:
    corresponding DAP task. It is RECOMMENDED that this be set to a random string output
    by a cryptographically secure pseudorandom number generator.
 1. Decrypt the input share for each report share as described in {{input-share-decryption}}.
-1. Check that the resulting input share is valid as described in {{input-share-batch-validation}}.
+1. Check that the resulting input share is valid as described in {{early-input-share-validation}}.
 1. Initialize VDAF preparation as described in {{input-share-prep}}.
 
 If any step yields an invalid report share, the leader removes the report share from
@@ -1037,10 +1037,10 @@ error "unrecognizedMessage". If this check succeeds, the helper then attempts to
 input share in `AggregateInitializeReq.report_shares` as follows:
 
 1. Decrypt the input share for each report share as described in {{input-share-decryption}}.
-1. Check that the resulting input share is valid as described in {{input-share-batch-validation}}.
+1. Check that the resulting input share is valid as described in {{early-input-share-validation}}.
 1. Initialize VDAF preparation and initial outputs as described in {{input-share-prep}}.
 
-[[OPEN ISSUE: consider moving the helper nonce check into #input-share-batch-validation]]
+[[OPEN ISSUE: consider moving the helper nonce check into #early-input-share-validation]]
 
 Once the helper has processed each valid report share in `AggregateInitializeReq.report_shares`, the
 helper then creates an AggregateInitializeResp message to complete its initialization. This message is
@@ -1110,25 +1110,24 @@ aggregator (`0x02` for the leader and `0x03` for the helper). If decryption
 fails, the aggregator marks the report share as invalid with the error
 `hpke-decrypt-error`. Otherwise, it outputs the resulting `input_share`.
 
-#### Input Share Validation {#input-share-batch-validation}
+#### Early Input Share Validation {#early-input-share-validation}
 
 Validating an input share will either succeed or fail. In the case of failure,
 the input share is marked as invalid with a corresponding ReportShareError error.
 
-The validation checks are as follows.
+Before beginning the preparation step, Aggregators are required to perform the
+following generic checks.
 
 1. Check if the report has never been aggregated but is contained by
    a batch that has been collected. If this check fails, the input share
    MUST be marked as invalid with the error `batch-collected`. This prevents
    additional reports from being aggregated after its batch has already
    been collected.
-2. Check if the report has already been aggregated with this aggregation
+1. Check if the report has already been aggregated with this aggregation
    parameter. If this check fails, the input share MUST be marked as invalid
    with the error `report-replayed`. This is the case if the report was used in
-   a previous aggregate request and is therefore a replay. An aggregator may
-   also choose to mark an input share as invalid with the error
-   `report-dropped` under the conditions prescribed in {{anti-replay}}.
-3. Depending on the query type for the task, additional checks may be applicable:
+   a previous aggregate request and is therefore a replay.
+1. Depending on the query type for the task, additional checks may be applicable:
     * For fixed-size tasks, the Aggregators need to ensure that each batch is
       roughly the same size. If the number of reports aggregated for the current
       batch exceeds the maximum batch size (per the task configuration), the
@@ -1136,9 +1135,16 @@ The validation checks are as follows.
       "batch-saturated". Note that this behavior is not strictly enforced here
       but during the collect sub-protocol. (See {{batch-validation}}.)
       If both checks succeed, the input share is not marked as invalid.
-4. Check if the report's timestamp has passed its task's `task_expiration`
+1. Check if the report's timestamp has passed its task's `task_expiration`
    time, if so the Aggregator MAY mark the input share as invalid with the error
    "task-expired".
+1. Finally, if an Aggregator cannot determine if an input share is valid. it
+   MUST mark the input share as invalid with error `report-dropped`. This
+   situation arises if, for example, the Aggregator has evicted from long-term
+   storage the state required to perform the check. (See
+   {{reducing-storage-requirements}} for details.)
+
+If all of the above checks succeed, the input share is not marked as invalid.
 
 #### Input Share Preparation {#input-share-prep}
 
@@ -1686,7 +1692,7 @@ pertaining to reports that were previously aggregated for a given task. If the
 leader receives a report from a client whose nonce is in this set, it either
 ignores it or aborts the upload sub-protocol as described in {{upload-flow}}. A
 Helper who receives an encrypted input share whose nonce is in this set rejects
-the report as described in {{input-share-batch-validation}}.
+the report as described in {{early-input-share-validation}}.
 
 [OPEN ISSUE: This has the potential to require aggreagtors to store nonce sests
 indefinitely. See issue#180.]
@@ -1731,7 +1737,7 @@ provisioned helper, i.e., one that has computation, bandwidth, and storage
 constraints. By design, leaders must be at least as capable as helpers, where
 helpers are generally required to:
 
-- Support the collect protocol, which includes validating and aggregating
+- Support the aggregate sub-protocol, which includes validating and aggregating
   reports; and
 - Publish and manage an HPKE configuration that can be used for the upload
   protocol.
@@ -1812,12 +1818,22 @@ In general, the aggregators are required to keep state for tasks and all valid
 reports for as long as collect requests can be made for them. In particular,
 aggregators must store a batch as long as the batch has not been queried more
 than `max_batch_lifetime` times. However, it is not always necessary to store
-the reports themselves. For schemes like Prio3 {{!VDAF}} in which the input-validation
-protocol is only run once per report, each aggregator only needs to store its
-aggregate share for each possible batch interval, along with the number of times
-the aggregate share was used in a batch. This is due to the requirement that the
-batch interval respect the boundaries defined by the DAP parameters. (See
+the reports themselves. For schemes like Prio3 {{!VDAF}} in which reports are
+verified only once, each aggregator only needs to store its aggregate share for
+each possible batch interval, along with the number of times the aggregate share
+was used in a batch. This is due to the requirement that the batch interval
+respect the boundaries defined by the DAP parameters. (See
 {{batch-validation}}.)
+
+However, Aggregators are also required to implement several per-report checks
+that require retaining a number of data artificts. For example, to detect replay
+attacks, it is necessary for each Aggregator to retain the set of nonces of
+reports that have been aggregated for the task so far. Depending on the task
+lifetime and report upload rate, this can result in high storage costs. To
+elliviate this burden, DAP allows Aggregators to drop this state as needed, so
+long as reports are droppped properly as described in
+{{early-input-share-validation}}. Aggregators SHOULD take steps to mitigate the
+risk of dropping reports (e.g., by evicting the oldest data first).
 
 Furthermore, the aggregators must store data related to a task as long as the
 current time has not passed this task's `task_expiration`. Aggregator MAY delete
