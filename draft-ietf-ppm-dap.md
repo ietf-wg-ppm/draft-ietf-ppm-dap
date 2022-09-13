@@ -735,8 +735,10 @@ struct {
 
 This message is called the Client's report. It consists of the task ID, report
 metadata, the "public share" output by the VDAF's input-distribution algorithm,
-and the encrypted input share of each of the Aggregators. The metadata consists
-of the following fields:
+and the encrypted input share of each of the Aggregators. (Note that the public
+share might be empty, depending on the VDAF. For example, Prio3 has an empty
+public share, but Poplar1 does not. See {{!VDAF}}.) The header consists of the
+task ID and report "metadata". The metadata consists of the following fields:
 
 * A timestamp representing the time at which the report was generated.
   Specifically, the `time` field is set to the number of seconds elapsed since
