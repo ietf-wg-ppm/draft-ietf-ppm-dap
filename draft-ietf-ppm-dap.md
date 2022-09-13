@@ -822,7 +822,7 @@ to authenticate the aggregator they upload to.
 HTTPS provides confidentiality between the DAP client and the leader, but this
 is not sufficient since the helper's report shares are relayed through the
 leader. Confidentiality of report shares is achieved by encrypting each report
-share to a public key held by the respective aggregator using [HPKE].
+share to a public key held by the respective aggregator using {{!HPKE}}.
 Clients fetch the public keys from each aggregator over HTTPS, allowing them to
 authenticate the server.
 
