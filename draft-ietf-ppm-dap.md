@@ -1564,7 +1564,7 @@ detailed in {{collect-aggregate}}. The aggregate share must be confidential from
 everyone but the helper and the collector.
 
 Confidentiality is achieved by having the helper encrypt its aggregate share to
-a public key held by the collector using [HPKE].
+a public key held by the collector using {{!HPKE}}.
 
 There is no authentication between the collector and the helper. This allows the
 leader to:
