@@ -1985,7 +1985,7 @@ output parts and so could request aggregations over few inputs.
 1. Known input injection. Collectors may collude with clients to send known
    input to the aggregators, allowing collectors to shrink the effective
    anonymity set by subtracting the known inputs from the final output. Sybil
-   attacks {{Dou02}} could be used to amplify this capability.
+   attacks {{?Dou02}} could be used to amplify this capability.
 
 #### Mitigations
 
