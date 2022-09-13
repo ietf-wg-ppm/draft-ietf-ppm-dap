@@ -116,6 +116,13 @@ seen in the clear by any server.
 
 The following terms are used:
 
+Aggregate result:
+: The output of the aggregation function over a given set of reports.
+
+Aggregate share:
+: A share of the aggregate result emitted by an aggregator. Aggregate shares are
+   reassembled by the collector into the final output.
+
 Aggregation function:
 : The function computed over the users' inputs.
 
@@ -140,6 +147,9 @@ Client:
 Collector:
 : The endpoint that receives the output of the aggregation function.
 
+Helper:
+: Executes the protocol as instructed by the leader.
+
 Input:
 : The measurement (or measurements) emitted by a client, before any encryption
    or secret sharing scheme is applied.
@@ -148,6 +158,10 @@ Input share:
 : An aggregator's share of the output of the VDAF
    {{!VDAF=I-D.draft-irtf-cfrg-vdaf-03}} sharding algorithm. This algorithm is run by
    each client in order to cryptographically protect its measurement.
+
+Leader:
+: A distinguished aggregator that coordinates input validation and data
+   collection.
 
 Measurement:
 : A single value (e.g., a count) being reported by a client. Multiple
@@ -159,17 +173,6 @@ Minimum batch duration:
 
 Minimum batch size:
 : The minimum number of reports in a batch.
-
-Leader:
-: A distinguished aggregator that coordinates input validation and data
-   collection.
-
-Aggregate result:
-: The output of the aggregation function over a given set of reports.
-
-Aggregate share:
-: A share of the aggregate result emitted by an aggregator. Aggregate shares are
-   reassembled by the collector into the final output.
 
 Output share:
 : An aggregator's share of the output of the VDAF
@@ -463,6 +466,7 @@ enum {
   client(1),
   leader(2),
   helper(3),
+  (255)
 } Role;
 
 /* Identifier for a server's HPKE configuration */
@@ -496,21 +500,22 @@ enum {
 
 The time-interval query type is described in {{time-interval-query}}; the
 fixed-size query type is described in {{fixed-size-query}}. Future
-specifications can introduce new query types as needed. A query includes
-parameters used by the Aggregators to select a batch of reports specific to the
-given query type. A query is defined as follows:
+specifications can introduce new query types as needed (see {{query-type-reg}}).
+A query includes parameters used by the Aggregators to select a batch of reports
+specific to the given query type. A query is defined as follows:
 
 ~~~
 enum {
     next-batch(0),
     by-batch-id(1),
+    (255)
 } FixedSizeQueryType;
 
 opaque BatchId[32];
 
 struct {
     FixedSizeQueryType fixed_size_query_type;
-    select (fixed_size_query_type) {
+    select (FixedSizeQuery.fixed_size_query_type) {
         case next-batch:  Empty;
         case by-batch-id: BatchId batch_id;
     };
@@ -700,7 +705,7 @@ this cached lifetime with the Cache-Control header, as follows:
   Cache-Control: max-age=86400
 ~~~
 
-Clients SHOULD follow the usual HTTP caching {{!RFC7234}} semantics for key
+Clients SHOULD follow the usual HTTP caching {{!RFC9111}} semantics for key
 configurations.
 
 Note: Long cache lifetimes may result in clients using stale HPKE configurations;
@@ -935,6 +940,7 @@ enum {
   hpke-decrypt-error(4),
   vdaf-prep-error(5),
   batch-saturated(6),
+  (255)
 } ReportShareError;
 ~~~
 
@@ -1044,6 +1050,7 @@ enum {
   continued(0),
   finished(1),
   failed(2),
+  (255)
 } PrepareStepResult;
 
 struct {
@@ -2853,6 +2860,13 @@ Author:
 Change controller:
 
 : IESG
+
+## Query Types Registry {#query-type-reg}
+
+This document requests creation of a new registry for Query Types. This registry
+should contain the following columns:
+
+[TODO: define how we want to structure this registry when the time comes]
 
 ## Upload Extension Registry
 
