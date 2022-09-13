@@ -1550,7 +1550,7 @@ Collect sub-protocol messages must be confidential and mutually authenticated.
 
 HTTPS provides confidentiality and authenticates the leader to the collector.
 Additionally, the leader encrypts its aggregate share to a public key held by
-the collector using [HPKE].
+the collector using {{!HPKE}}.
 
 Collectors MUST authenticate their requests to leaders using a scheme that meets
 the requirements in {{request-authentication}}.
