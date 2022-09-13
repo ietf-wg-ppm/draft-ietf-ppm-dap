@@ -832,7 +832,7 @@ Clients fetch the public keys from each aggregator over HTTPS, allowing them to
 authenticate the server.
 
 Aggregators MAY require clients to authenticate when uploading reports. This is
-an effective mitigation against Sybil {{?Dou2}} attacks in deployments where it is
+an effective mitigation against Sybil {{?Dou02}} attacks in deployments where it is
 practical for each client to have an identity provisioned (e.g., a user logged
 into an online service or a hardware device programmed with an identity). If it
 is used, client authentication MUST use a scheme that meets the requirements in
