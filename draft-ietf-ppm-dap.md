@@ -412,6 +412,7 @@ in the "type" field (within the DAP URN namespace
 | batchMismatch              | Aggregators disagree on the report shares that were aggregated in a batch. |
 | unauthorizedRequest        | Authentication of an HTTP request failed (see {{request-authentication}}). |
 | missingTaskID              | HPKE configuration was requested without specifying a task ID. |
+| queryMismatch              | Query type indicatd by a message does not match the task's query type. |
 
 This list is not exhaustive. The server MAY return errors set to a URI other
 than those defined above. Servers MUST NOT use the DAP URN namespace for errors
@@ -522,7 +523,8 @@ struct {
 } FixedSizeQuery;
 
 struct {
-    select (query_type) { /* determined by query configuration */
+    QueryType query_type;
+    select (Query.query_type) {
         case time-interval: Interval batch_interval;
         case fixed-size: FixedSizeQuery fixed_size_query;
     };
@@ -975,7 +977,8 @@ struct {
   TaskID task_id;
   AggregationJobID job_id;
   opaque agg_param<0..2^16-1>;
-  select (query_type) { /* determined by task configuration */
+  QueryType query_type;
+  select (AggreagteInitializeReq.query_type) {
     case time-interval: Empty;
     case fixed-size: BatchId batch_id;
   };
@@ -1011,6 +1014,9 @@ This message consists of:
       in. Is this desirable from a privacy perspective? If not, it might be
       simpler to drop the timestamp altogether and have the agg init request
       specify the batch window instead.]
+
+  The indicated query type MUST match the task's query type. Otherwise, the
+  Helper MUST abort with error "queryMismatch".
 
 * The sequence of report shares to aggregate. The `encrypted_input_share` field
   of the report share is the `HpkeCiphertext` whose index in
@@ -1325,7 +1331,8 @@ struct {
 The named parameters are:
 
 * `task_id`, the DAP task ID.
-* `query`, the Collector's query.
+* `query`, the Collector's query. The indicated query type MUST match the task's
+  query type. Otherwise, the Leader MUST abort with error "queryMismatch".
 * `agg_param`, an aggregation parameter for the VDAF being executed.
   This is the same value as in `AggregateInitializeReq` (see {{leader-init}}).
 
@@ -1361,7 +1368,8 @@ and a body consisting of a `CollectResp`:
 
 ~~~
 struct {
-  select (query_type) { /* determined by task configuration */
+  QueryType query_type;
+  select (CollectResp.query_type) {
     case time-interval: Empty;
     case fixed-size: BatchId batch_id;
   };
@@ -1372,8 +1380,11 @@ struct {
 
 This structure includes the following:
 
-* information used to bind the aggregate result to the query. For fixed-size
-  tasks, this includes the batch ID assigned to the batch by the Leader.
+* Information used to bind the aggregate result to the query. For fixed-size
+  tasks, this includes the batch ID assigned to the batch by the Leader. The
+  indicatd query type MUST match the task's query type.
+
+  [OPEN ISSUE: What should the Collector do if the query type doesn't match?]
 
 * The number of reports included in the batch.
 
@@ -1410,7 +1421,8 @@ a POST request to `[aggregator]/aggregate_share` with the following message:
 
 ~~~
 struct {
-  select (query_type) { /* determined by task configuration */
+  QueryType query_type;
+  select (BachSelector.query_type) {
     case time-interval: Interval batch_interval;
     case fixed-size: BatchId batch_id;
   };
@@ -1435,6 +1447,9 @@ The message contains the following parameters:
     * For time-interval tasks, the request specifies the batch interval.
 
     * For fixed-size tasks, the request specifies the batch ID.
+
+  The indicated query type MUST match the task's query type. Otherwise, the
+  Helper MUST abort with "queryMismatch".
 
 * The opaque aggregation parameter for the VDAF beging executed. This value MUST
   match the same value in the the `AggregateInitializeReq` message sent in at
