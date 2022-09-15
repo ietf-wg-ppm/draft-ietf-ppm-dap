@@ -321,7 +321,6 @@ measurement for the collector. Depending on the VDAF, it may be possible to
 incrementally process each report as it comes in, or may be necessary to wait
 until the entire batch of reports is received.
 
-
 ## Validating Inputs {#validating-inputs}
 
 An essential task of any data collection pipeline is ensuring that the data
@@ -357,7 +356,6 @@ instance, the user might have spent 30s on a task but the client might report
 60s. This is a problem with any measurement system and DAP does not attempt to
 address it; it merely ensures that the data is within acceptable limits, so the
 client could not report 10^6s or -20s.
-
 
 # Message Transport
 
@@ -506,28 +504,14 @@ A query includes parameters used by the Aggregators to select a batch of reports
 specific to the given query type. A query is defined as follows:
 
 ~~~
-enum {
-    next-batch(0),
-    by-batch-id(1),
-    (255)
-} FixedSizeQueryType;
-
-opaque BatchId[32];
-
-struct {
-    FixedSizeQueryType fixed_size_query_type;
-    select (FixedSizeQuery.fixed_size_query_type) {
-        case next-batch:  Empty;
-        case by-batch-id: BatchId batch_id;
-    };
-} FixedSizeQuery;
+opaque BatchID[32];
 
 struct {
     QueryType query_type;
     select (Query.query_type) {
         case time-interval: Interval batch_interval;
-        case fixed-size: FixedSizeQuery fixed_size_query;
-    };
+        case fixed-size: BatchID batch_id;
+    }
 } Query;
 ~~~
 
@@ -578,28 +562,31 @@ particularly important for controlling the amount of noise added to reports
 by Clients (or added to aggregate shares by Aggregators) in order to achieve
 differential privacy.
 
-To get the aggregate of the next batch, the Collector issues a query of type
-`next-batch`. (See FixedSizeQuery in {{query}}.) The response to this query (see
-{{collect-flow}}) includes a "batch ID", which can be used to query the same
-batch later on. This is done using the `by-batch-id` batch-query type.
-
 For this query type, the Aggregators group reports into arbitrary batches such
-that each batch has roughly the same number of reports. In addition to the
-minumum batch size common to all query types, the conifugration includes a
-"maximum batch size", `max_batch_size`, that determines maximum number of
-reports per batch.
+that each batch has roughly the same number of reports. These batches are
+identified by opaque "batch IDs", allocated in an arbitrary fashion by the
+Leader. To get the aggregate of a batch, the Collector issues a query
+specifying the batch ID of interest (see {{query}}).
+
+In addition to the minimum batch size common to all query types, the
+configuration includes a "maximum batch size", `max_batch_size`, that
+determines maximum number of reports per batch.
 
 Implementation note: The goal for the Aggregators is to aggregate precisely
 `min_batch_size` reports per batch. Doing so, however, may be challenging
 for Leader deployments in which multiple, independent nodes running the
 aggregate sub-protocol (see {{aggregate-flow}}) need to be coordinated. The
-maximum batch size is intended to allow room for error. Typically the difference
-between the minimum and maximum batch size will be a small fraction of the
-target batch size for each batch.
+maximum batch size is intended to allow room for error. Typically the
+difference between the minimum and maximum batch size will be a small fraction
+of the target batch size for each batch.
 
 [OPEN ISSUE: It may be feasible to require a fixed batch size, i.e.,
 `min_batch_size == max_batch_size`. We should know better once we've had some
 implementation/deployment experience.]
+
+[OPEN ISSUE: It may be desirable to allow Collectors to query for a current/
+recent batch ID. How important this is will be determined by deployment
+experience.]
 
 ## Task Configuration {#task-configuration}
 
@@ -988,7 +975,7 @@ struct {
   QueryType query_type;
   select (AggregateInitializeReq.query_type) {
     case time-interval: Empty;
-    case fixed-size: BatchId batch_id;
+    case fixed-size: BatchID batch_id;
   };
   ReportShare report_shares<1..2^32-1>;
 } AggregateInitializeReq;
@@ -1382,7 +1369,7 @@ struct {
   QueryType query_type;
   select (CollectResp.query_type) {
     case time-interval: Empty;
-    case fixed-size: BatchId batch_id;
+    case fixed-size: BatchID batch_id;
   };
   uint64 report_count;
   HpkeCiphertext encrypted_agg_shares<1..2^32-1>;
@@ -1435,7 +1422,7 @@ struct {
   QueryType query_type;
   select (BatchSelector.query_type) {
     case time-interval: Interval batch_interval;
-    case fixed-size: BatchId batch_id;
+    case fixed-size: BatchID batch_id;
   };
 } BatchSelector;
 
@@ -1452,7 +1439,7 @@ The message contains the following parameters:
 
 * The task ID.
 
-* The "batch seletor", which encodes parameters used to determine the batch
+* The "batch selector", which encodes parameters used to determine the batch
   being aggregated. The value depends on the query type for the task:
 
     * For time-interval tasks, the request specifies the batch interval.
@@ -1671,18 +1658,12 @@ reports in the batch.
 
 ##### Boundary Check
 
-For fixed-size tasks, the batch boundaries are defined by "batch IDs" selected
-by the Leader. Thus the Aggregator needs to check that the query is associated
-with a known batch ID:
+For fixed-size tasks, the batch boundaries are defined by opaque batch IDs.
+Thus the Aggregator needs to check that the query is associated with a known
+batch ID:
 
-* If the query contained in the CollectReq has type `by-batch-id`, the
-  Leader checks that the provided batch ID corresponds to a batch ID it
-  returned in a previous CollectResp for the task.
-
-  [OPEN ISSUE: Consider making batch IDs predictable. See issue #301.]
-
-* The Helper checks that the batch ID provided by the leader in its
-  AggregateShareReq corresponds to a batch ID used in a previous
+* For an AggregateShareReq, the Helper checks that the batch ID provided by the
+  Leader in its corresponds to a batch ID used in a previous
   AggregateInitializeReq for the task.
 
 ##### Size Check
