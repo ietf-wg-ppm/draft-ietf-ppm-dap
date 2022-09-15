@@ -978,7 +978,7 @@ struct {
   AggregationJobID job_id;
   opaque agg_param<0..2^16-1>;
   QueryType query_type;
-  select (AggreagteInitializeReq.query_type) {
+  select (AggregateInitializeReq.query_type) {
     case time-interval: Empty;
     case fixed-size: BatchId batch_id;
   };
@@ -1382,7 +1382,7 @@ This structure includes the following:
 
 * Information used to bind the aggregate result to the query. For fixed-size
   tasks, this includes the batch ID assigned to the batch by the Leader. The
-  indicatd query type MUST match the task's query type.
+  indicated query type MUST match the task's query type.
 
   [OPEN ISSUE: What should the Collector do if the query type doesn't match?]
 
@@ -1422,7 +1422,7 @@ a POST request to `[aggregator]/aggregate_share` with the following message:
 ~~~
 struct {
   QueryType query_type;
-  select (BachSelector.query_type) {
+  select (BatchSelector.query_type) {
     case time-interval: Interval batch_interval;
     case fixed-size: BatchId batch_id;
   };
