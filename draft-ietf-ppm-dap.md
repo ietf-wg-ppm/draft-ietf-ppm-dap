@@ -110,6 +110,41 @@ possible by distributing the computation among the servers in such a way that,
 as long as at least one of them executes the protocol honestly, no input is ever
 seen in the clear by any server.
 
+## Change Log
+
+(\*) Indicates a change that breaks wire compatibility with the previous draft.
+
+02:
+
+- Define a new task configuration parameter, called the "query type", that
+  allows tasks to partition reports into batches in different ways. In the
+  current draft, the Collector specifies a "query", which the Aggregators use to
+  guide selection of the batch. Two query types are defined: the "time-interval"
+  type captures the semantics of draft 01; and the "fixed-size" type allows the
+  Leader to partition the reports arbitrarily, subject to the constraint that
+  each batch is roughly the same size. (\*)
+
+- Define a new task configuration parameter, called the task "expiration", that
+  defines the lifetime of a given task.
+
+- Specify requirements for HTTP request authentication rather than a concrete
+  scheme. (Draft 01 required the use of the `DAP-Auth-Token` header; this is now
+  optional.)
+
+- Make "task_id" an optional parameter of the "/hpke_config" endpoint.
+
+- Add report count to CollectResp message. (\*)
+
+- Increase message payload sizes to accommodate VDAFs with input and aggregate
+  shares larger than 2^16-1 bytes. (\*)
+
+- Bump draft-irtf-cfrg-vdaf-01 to 03 {{!VDAF}}. (\*)
+
+- Bump version tag from "dap-01" to "dap-02". (\*)
+
+- Clarify when it is safe for an Aggregator to evict various data artifacts from
+  long-term storage.
+
 ## Conventions and Definitions
 
 {::boilerplate bcp14-tagged}
