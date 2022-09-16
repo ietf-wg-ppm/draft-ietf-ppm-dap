@@ -120,7 +120,7 @@ seen in the clear by any server.
   allows tasks to partition reports into batches in different ways. In the
   current draft, the Collector specifies a "query", which the Aggregators use to
   guide selection of the batch. Two query types are defined: the "time-interval"
-  type captures the semantics of draft 01; and the "fixed-size" type allows the
+  type captures the semantics of draft 01; and the "fixed_size" type allows the
   Leader to partition the reports arbitrarily, subject to the constraint that
   each batch is roughly the same size. (\*)
 
@@ -528,14 +528,14 @@ This document defines the following query types:
 ~~~
 enum {
    reserved(0), /* Reserved for testing purposes */
-   time-interval(1),
-   fixed-size(2),
+   time_interval(1),
+   fixed_size(2),
    (65535)
 } QueryType;
 ~~~
 
-The time-interval query type is described in {{time-interval-query}}; the
-fixed-size query type is described in {{fixed-size-query}}. Future
+The time_interval query type is described in {{time-interval-query}}; the
+fixed_size query type is described in {{fixed-size-query}}. Future
 specifications can introduce new query types as needed (see {{query-type-reg}}).
 A query includes parameters used by the Aggregators to select a batch of reports
 specific to the given query type. A query is defined as follows:
@@ -546,8 +546,8 @@ opaque BatchID[32];
 struct {
     QueryType query_type;
     select (Query.query_type) {
-        case time-interval: Interval batch_interval;
-        case fixed-size: BatchID batch_id;
+        case time_interval: Interval batch_interval;
+        case fixed_size: BatchID batch_id;
     }
 } Query;
 ~~~
@@ -573,7 +573,7 @@ subsection below.
 
 ### Time-interval Queries {#time-interval-query}
 
-The first query type, `time-interval`, is designed to support applications in
+The first query type, `time_interval`, is designed to support applications in
 which reports are collected over a long period of time. The Collector specifies
 a "batch interval" that determines the time range for reports included in the
 batch. For each report in the batch, the time at which that report was generated
@@ -593,7 +593,7 @@ report upload rates.
 
 ### Fixed-size Queries {#fixed-size-query}
 
-The `fixed-size` query type is used to support applications in which the
+The `fixed_size` query type is used to support applications in which the
 Collector needs the ability to strictly control the sample size. This is
 particularly important for controlling the amount of noise added to reports by
 Clients (or added to aggregate shares by Aggregators) in order to achieve
@@ -972,14 +972,14 @@ An invalid report share is marked with one of the following errors:
 
 ~~~
 enum {
-  batch-collected(0),
-  report-replayed(1),
-  report-dropped(2),
-  hpke-unknown-config-id(3),
-  hpke-decrypt-error(4),
-  vdaf-prep-error(5),
-  batch-saturated(6),
-  task-expired(7),
+  batch_collected(0),
+  report_replayed(1),
+  report_dropped(2),
+  hpke_unknown_config_id(3),
+  hpke_decrypt_error(4),
+  vdaf_prep_error(5),
+  batch_saturated(6),
+  task_expired(7),
   (255)
 } ReportShareError;
 ~~~
@@ -1019,8 +1019,8 @@ struct {
   opaque agg_param<0..2^16-1>;
   QueryType query_type;
   select (AggregateInitializeReq.query_type) {
-    case time-interval: Empty;
-    case fixed-size: BatchID batch_id;
+    case time_interval: Empty;
+    case fixed_size: BatchID batch_id;
   };
   ReportShare report_shares<1..2^32-1>;
 } AggregateInitializeReq;
@@ -1045,11 +1045,11 @@ This message consists of:
 
 * Information used by the Aggregators to determine how to aggregate each report:
 
-    * For fixed-size tasks, the Leader specifies a "batch ID" that determines
+    * For fixed_size tasks, the Leader specifies a "batch ID" that determines
       the batch to which each report for this aggregation job belongs.
 
-      [OPEN ISSUE: For fixed-size tasks, the Leader is in complete control over
-      which batch a report is included in. For time-interval tasks, the Client
+      [OPEN ISSUE: For fixed_size tasks, the Leader is in complete control over
+      which batch a report is included in. For time_interval tasks, the Client
       has some control, since the timestamp determines which batch window it
       falls in. Is this desirable from a privacy perspective? If not, it might
       be simpler to drop the timestamp altogether and have the agg init request
@@ -1149,7 +1149,7 @@ and `encrypted_input_share` denote these values, respectively. Given these
 values, an aggregator decrypts the input share as follows. First, the aggregator
 looks up the HPKE config and corresponding secret key indicated by
 `encrypted_input_share.config_id`. If not found, then it marks the report share
-as invalid with the error `hpke-unknown-config-id`. Otherwise, it decrypts the
+as invalid with the error `hpke_unknown_config_id`. Otherwise, it decrypts the
 payload with the following procedure:
 
 ~~~
@@ -1162,7 +1162,7 @@ input_share = OpenBase(encrypted_input_share.enc, sk,
 where `sk` is the HPKE secret key, and `server_role` is the role of the
 aggregator (`0x02` for the leader and `0x03` for the helper). If decryption
 fails, the aggregator marks the report share as invalid with the error
-`hpke-decrypt-error`. Otherwise, it outputs the resulting `input_share`.
+`hpke_decrypt_error`. Otherwise, it outputs the resulting `input_share`.
 
 #### Early Input Share Validation {#early-input-share-validation}
 
@@ -1175,26 +1175,26 @@ following generic checks.
 
 1. Check if the report has never been aggregated but is contained by a batch
    that has been collected. If this check fails, the input share MUST be marked
-   as invalid with the error `batch-collected`. This prevents additional reports
+   as invalid with the error `batch_collected`. This prevents additional reports
    from being aggregated after its batch has already been collected.
 1. Check if the report has already been aggregated with this aggregation
    parameter. If this check fails, the input share MUST be marked as invalid
-   with the error `report-replayed`. This is the case if the report was used in
+   with the error `report_replayed`. This is the case if the report was used in
    a previous aggregate request and is therefore a replay.
 1. Depending on the query type for the task, additional checks may be
    applicable:
-    * For fixed-size tasks, the Aggregators need to ensure that each batch is
+    * For fixed_size tasks, the Aggregators need to ensure that each batch is
       roughly the same size. If the number of reports aggregated for the current
       batch exceeds the maximum batch size (per the task configuration), the
       Aggregator MAY mark the input share as invalid with the error
-      "batch-saturated". Note that this behavior is not strictly enforced here
+      "batch_saturated". Note that this behavior is not strictly enforced here
       but during the collect sub-protocol. (See {{batch-validation}}.) If both
       checks succeed, the input share is not marked as invalid.
 1. Check if the report's timestamp has passed its task's `task_expiration` time,
    if so the Aggregator MAY mark the input share as invalid with the error
-   "task-expired".
+   "task_expired".
 1. Finally, if an Aggregator cannot determine if an input share is valid. it
-   MUST mark the input share as invalid with error `report-dropped`. This
+   MUST mark the input share as invalid with error `report_dropped`. This
    situation arises if, for example, the Aggregator has evicted from long-term
    storage the state required to perform the check. (See
    {{reducing-storage-requirements}} for details.)
@@ -1234,7 +1234,7 @@ distributed to each aggregator; and `input_share` is the aggregator's input
 share.
 
 If either step fails, the aggregator marks the report as invalid with error
-`vdaf-prep-error`. Otherwise, the value `out` is interpreted as follows. If this
+`vdaf_prep_error`. Otherwise, the value `out` is interpreted as follows. If this
 is the last round of the VDAF, then `out` is the aggregator's output share.
 Otherwise, `out` is the pair `(prep_state, prep_msg)`.
 
@@ -1322,7 +1322,7 @@ out = VDAF.prep_next(prep_state, inbound)
 
 where `inbound` is the previous VDAF prepare message sent by the leader and
 `prep_state` is the helper's current preparation state. If this operation fails,
-then the helper fails with error `vdaf-prep-error`. Otherwise, it interprets
+then the helper fails with error `vdaf_prep_error`. Otherwise, it interprets
 `out` as follows:
 
 * If this is the last round of VDAF preparation phase, then `out` is the
@@ -1437,8 +1437,8 @@ job's URI with HTTP status code 200 OK and a body consisting of a `CollectResp`:
 struct {
   QueryType query_type;
   select (CollectResp.query_type) {
-    case time-interval: Empty;
-    case fixed-size: BatchID batch_id;
+    case time_interval: Empty;
+    case fixed_size: BatchID batch_id;
   };
   uint64 report_count;
   HpkeCiphertext encrypted_agg_shares<1..2^32-1>;
@@ -1447,7 +1447,7 @@ struct {
 
 This structure includes the following:
 
-* Information used to bind the aggregate result to the query. For fixed-size
+* Information used to bind the aggregate result to the query. For fixed_size
   tasks, this includes the batch ID assigned to the batch by the Leader. The
   indicated query type MUST match the task's query type.
 
@@ -1491,8 +1491,8 @@ message:
 struct {
   QueryType query_type;
   select (BatchSelector.query_type) {
-    case time-interval: Interval batch_interval;
-    case fixed-size: BatchID batch_id;
+    case time_interval: Interval batch_interval;
+    case fixed_size: BatchID batch_id;
   };
 } BatchSelector;
 
@@ -1512,9 +1512,9 @@ The message contains the following parameters:
 * The "batch selector", which encodes parameters used to determine the batch
   being aggregated. The value depends on the query type for the task:
 
-    * For time-interval tasks, the request specifies the batch interval.
+    * For time_interval tasks, the request specifies the batch interval.
 
-    * For fixed-size tasks, the request specifies the batch ID.
+    * For fixed_size tasks, the request specifies the batch ID.
 
   The indicated query type MUST match the task's query type. Otherwise, the
   Helper MUST abort with "queryMismatch".
@@ -1628,10 +1628,10 @@ share (`0x02` for the leader and `0x03` for the helper). The value of
 `batch_selector` is computed by the Collector from its query and the response to
 its query:
 
-* For time-interval tasks, the batch selector is the batch interval specified in
+* For time_interval tasks, the batch selector is the batch interval specified in
   the query.
 
-* For fixed-size tasks, the batch selector is the batch ID assigned sent in the
+* For fixed_size tasks, the batch selector is the batch ID assigned sent in the
   response.
 
 ### Collect Message Security
@@ -1693,7 +1693,7 @@ Aggregator MUST abort with error of type "batchLifetimeExceeded".
 
 Finally, the Aggregator checks that the batch does not contain a report that was
 included in any previous batch. If this batch overlap check fails, then the
-Aggregator MUST abort with error of type "batchOverlap". For time-interval
+Aggregator MUST abort with error of type "batchOverlap". For time_interval
 tasks, it is sufficient (but not necessary) to check that the batch interval
 does not overlap with the batch interval of any previous query. If this batch
 interval check fails, then the Aggregator MAY abort with error of type
@@ -1730,7 +1730,7 @@ reports in the batch.
 
 ##### Boundary Check
 
-For fixed-size tasks, the batch boundaries are defined by opaque batch IDs. Thus
+For fixed_size tasks, the batch boundaries are defined by opaque batch IDs. Thus
 the Aggregator needs to check that the query is associated with a known batch
 ID:
 
