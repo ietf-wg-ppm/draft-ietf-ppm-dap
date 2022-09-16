@@ -1223,7 +1223,7 @@ structured as follows:
 struct {
   TaskID task_id;
   AggregationJobID job_id;
-  PrepareStep prepare_shares<1..2^32-1>;
+  PrepareStep prepare_steps<1..2^32-1>;
 } AggregateContinueReq;
 ~~~
 
@@ -1243,7 +1243,7 @@ step yields one of three outputs:
    as described in {{collect-flow}}.
 1. An updated VDAF state and preparation message, denoted `(prep_state, prep_msg)`.
 
-To carry out this step, for each PrepareStep in AggregateContinueReq.prepare_shares received
+To carry out this step, for each PrepareStep in AggregateContinueReq.prepare_steps received
 from the leader, the helper performs the following check to determine if the report share
 should continue being prepared:
 
@@ -1270,19 +1270,19 @@ with error `vdaf-prep-error`. Otherwise, it interprets `out` as follows:
   `new_state` is its updated preparation state and `prep_msg` is its next VDAF
   message.
 
-This output message for each report in AggregateContinueReq.prepare_shares is then sent
+This output message for each report in AggregateContinueReq.prepare_steps is then sent
 to the leader in an AggregateContinueResp message, structured as follows:
 
 ~~~
 struct {
-  PrepareStep prepare_shares<1..2^32-1>;
+  PrepareStep prepare_steps<1..2^32-1>;
 } AggregateContinueResp;
 ~~~
 
-The order of AggregateContinueResp.prepare_shares MUST match that of the PrepareStep values in
-`AggregateContinueReq.prepare_shares`. The helper's response to the leader is an HTTP status code
-200 OK whose body is the AggregateContinueResp and media type is "message/dap-aggregate-continue-resp".
-The helper then awaits the next message from the leader.
+The order of AggregateContinueResp.prepare_steps MUST match that of the PrepareStep values in
+`AggregateContinueReq.prepare_steps`. The helper's response to the leader is an HTTP status code
+200 OK whose body is the AggregateContinueResp and media type is
+"message/dap-aggregate-continue-resp". The helper then awaits the next message from the leader.
 
 [[OPEN ISSUE: consider relaxing this ordering constraint. See issue#217.]]
 
