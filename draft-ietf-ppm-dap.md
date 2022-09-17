@@ -1551,7 +1551,7 @@ where `pk` is the HPKE public key encoded by the collector's HPKE key,
 
 The collector decrypts these aggregate shares using the opposite process.
 Specifically, given an encrypted input share, denoted `enc_share`, for a
-given batch interval, denoted `batch_interval`, decryption works as follows:
+given batch selector, denoted `batch_selector`, decryption works as follows:
 
 ~~~
 agg_share = OpenBase(enc_share.enc, sk, "dap-02 aggregate share" ||
