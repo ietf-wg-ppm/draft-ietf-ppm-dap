@@ -1014,14 +1014,18 @@ struct {
 } ReportShare;
 
 struct {
-  TaskID task_id;
-  AggregationJobID job_id;
-  opaque agg_param<0..2^16-1>;
   QueryType query_type;
-  select (AggregateInitializeReq.query_type) {
+  select (PartialBatchSelector.query_type) {
     case time_interval: Empty;
     case fixed_size: BatchID batch_id;
   };
+} PartialBatchSelector;
+
+struct {
+  TaskID task_id;
+  AggregationJobID job_id;
+  opaque agg_param<0..2^16-1>;
+  PartialBatchSelector part_batch_selector;
   ReportShare report_shares<1..2^32-1>;
 } AggregateInitializeReq;
 ~~~
@@ -1435,11 +1439,7 @@ job's URI with HTTP status code 200 OK and a body consisting of a `CollectResp`:
 
 ~~~
 struct {
-  QueryType query_type;
-  select (CollectResp.query_type) {
-    case time_interval: Empty;
-    case fixed_size: BatchID batch_id;
-  };
+  PartialBatchSelector part_batch_selector;
   uint64 report_count;
   HpkeCiphertext encrypted_agg_shares<1..2^32-1>;
 } CollectResp;
