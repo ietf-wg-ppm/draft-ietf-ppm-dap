@@ -530,7 +530,7 @@ enum {
   reserved(0), /* Reserved for testing purposes */
   time_interval(1),
   fixed_size(2),
-  (65535)
+  (255)
 } QueryType;
 ~~~
 
