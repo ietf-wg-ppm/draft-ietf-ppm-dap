@@ -527,10 +527,10 @@ This document defines the following query types:
 
 ~~~
 enum {
-   reserved(0), /* Reserved for testing purposes */
-   time_interval(1),
-   fixed_size(2),
-   (65535)
+  reserved(0), /* Reserved for testing purposes */
+  time_interval(1),
+  fixed_size(2),
+  (65535)
 } QueryType;
 ~~~
 
@@ -544,11 +544,11 @@ specific to the given query type. A query is defined as follows:
 opaque BatchID[32];
 
 struct {
-    QueryType query_type;
-    select (Query.query_type) {
-        case time_interval: Interval batch_interval;
-        case fixed_size: BatchID batch_id;
-    }
+  QueryType query_type;
+  select (Query.query_type) {
+    case time_interval: Interval batch_interval;
+    case fixed_size: BatchID batch_id;
+  }
 } Query;
 ~~~
 
@@ -749,9 +749,9 @@ structured as follows:
 
 ~~~
 struct {
-    Time time;
-    Nonce nonce;
-    Extension extensions<0..2^16-1>;
+  Time time;
+  Nonce nonce;
+  Extension extensions<0..2^16-1>;
 } ReportMetadata;
 
 struct {
@@ -788,8 +788,8 @@ as specified by the VDAF. It then encrypts each input share as follows:
 
 ~~~
 enc, payload = SealBase(pk,
-    "dap-02 input share" || 0x01 || server_role,
-    task_id || metadata || public_share, input_share)
+  "dap-02 input share" || 0x01 || server_role,
+  task_id || metadata || public_share, input_share)
 ~~~
 
 where `pk` is the aggregator's public key; `server_role` is the Role of the
@@ -839,15 +839,15 @@ for defeating Sybil attacks. See issue#89.] Each extension is a tag-length
      encoded value of the following form:
 
 ~~~
-  struct {
-      ExtensionType extension_type;
-      opaque extension_data<0..2^16-1>;
-  } Extension;
+struct {
+  ExtensionType extension_type;
+  opaque extension_data<0..2^16-1>;
+} Extension;
 
-  enum {
-      TBD(0),
-      (65535)
-  } ExtensionType;
+enum {
+  TBD(0),
+  (65535)
+} ExtensionType;
 ~~~
 
 "extension_type" indicates the type of extension, and "extension_data" contains
@@ -1154,9 +1154,9 @@ payload with the following procedure:
 
 ~~~
 input_share = OpenBase(encrypted_input_share.enc, sk,
-    "dap-02 input share" || 0x01 || server_role,
-    task_id || metadata || public_share,
-    encrypted_input_share.payload)
+  "dap-02 input share" || 0x01 || server_role,
+  task_id || metadata || public_share,
+  encrypted_input_share.payload)
 ~~~
 
 where `sk` is the HPKE secret key, and `server_role` is the role of the
@@ -1559,7 +1559,7 @@ consisting of an `AggregateShareResp`:
 
 ~~~
 struct {
-    HpkeCiphertext encrypted_aggregate_share;
+  HpkeCiphertext encrypted_aggregate_share;
 } AggregateShareResp;
 ~~~
 
@@ -1619,7 +1619,7 @@ batch selector, denoted `batch_selector`, decryption works as follows:
 
 ~~~
 agg_share = OpenBase(enc_share.enc, sk, "dap-02 aggregate share" ||
-    server_role || 0x00, task_id || batch_selector, enc_share.payload)
+  server_role || 0x00, task_id || batch_selector, enc_share.payload)
 ~~~
 
 where `sk` is the HPKE secret key, `task_id` is the task ID for the collect
