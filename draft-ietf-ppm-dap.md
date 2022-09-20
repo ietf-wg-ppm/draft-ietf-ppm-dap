@@ -491,10 +491,10 @@ Prior to the start of execution of the protocol, each participant must agree on
 the configuration for each task. A task is uniquely identified by its task ID:
 
 ~~~
-opaque TaskId[32];
+opaque TaskID[32];
 ~~~
 
-A `TaskId` is a globally unique sequence of bytes. It is RECOMMENDED that this
+A `TaskID` is a globally unique sequence of bytes. It is RECOMMENDED that this
 be set to a random string output by a cryptographically secure pseudorandom
 number generator. Each task has the following parameters associated with it:
 
