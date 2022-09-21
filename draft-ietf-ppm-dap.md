@@ -493,8 +493,8 @@ struct {
   Duration duration;
 } Interval;
 
-/* A nonce used to uniquely identify a report in the context of a DAP task. */
-Nonce uint8[16];
+/* An ID used to uniquely identify a report in the context of a DAP task. */
+ReportID uint8[16];
 
 /* The various roles in the DAP protocol. */
 enum {
@@ -749,8 +749,8 @@ structured as follows:
 
 ~~~
 struct {
+  ReportID report_id;
   Time time;
-  Nonce nonce;
   Extension extensions<0..2^16-1>;
 } ReportMetadata;
 
@@ -769,16 +769,16 @@ share might be empty, depending on the VDAF. For example, Prio3 has an empty
 public share, but Poplar1 does not. See {{!VDAF}}.) The header consists of the
 task ID and report "metadata". The metadata consists of the following fields:
 
+* A report ID used by the Aggregators to ensure the report appears in at most
+  one batch. (See {{anti-replay}}.) The Client MUST generate this by generating
+  16 random bytes using a cryptographically secure random number generator.
+
 * A timestamp representing the time at which the report was generated.
   Specifically, the `time` field is set to the number of seconds elapsed since
   the start of the UNIX epoch. The client SHOULD round this value down to the
   nearest multiple of `time_precision` in order to ensure that that the
   timestamp cannot be used to link a report back to the Client that generated
   it.
-
-* A nonce used by the Aggregators to ensure the report appears in at most one
-  batch. (See {{anti-replay}}.) The Client MUST generate this by generating 16
-  random bytes using a cryptographically secure random number generator.
 
 * A list of extensions to be included with the report. (See
   {{upload-extensions}}.)
@@ -1076,9 +1076,9 @@ from the leader. It attempts to recover and validate the corresponding input
 shares similar to the leader, and eventually returns a response to the leader
 carrying a VDAF-specific message for each report share.
 
-To begin this process, the helper first checks that the nonces in
+To begin this process, the helper first checks that the report IDs in
 `AggregateInitializeReq.report_shares` are all distinct. If two ReportShare
-values have the same nonce, then the helper MUST abort with error
+values have the same report ID, then the helper MUST abort with error
 "unrecognizedMessage". If this check succeeds, the helper then attempts to
 recover each input share in `AggregateInitializeReq.report_shares` as follows:
 
@@ -1089,7 +1089,7 @@ recover each input share in `AggregateInitializeReq.report_shares` as follows:
 1. Initialize VDAF preparation and initial outputs as described in
    {{input-share-prep}}.
 
-[[OPEN ISSUE: consider moving the helper nonce check into
+[[OPEN ISSUE: consider moving the helper report ID check into
 {{early-input-share-validation}}]]
 
 Once the helper has processed each valid report share in
@@ -1106,7 +1106,7 @@ enum {
 } PrepareStepResult;
 
 struct {
-  Nonce nonce;
+  ReportID report_id;
   PrepareStepResult prepare_step_result;
   select (PrepareStep.prepare_step_result) {
     case continued: opaque prep_msg<0..2^32-1>; /* VDAF preparation message */
@@ -1131,19 +1131,19 @@ The helper's response to the leader is an HTTP status code 200 OK whose body is
 the AggregateInitializeResp and media type is
 "message/dap-aggregate-initialize-resp".
 
-Upon receipt of a helper's AggregateInitializeResp message, the leader checks
-that the sequence of PrepareStep messages corresponds to the ReportShare
-sequence of the AggregateInitializeReq. If any message appears out of order, is
-missing, has an unrecognized nonce, or if two messages have the same nonce, then
-the leader MUST abort with error "unrecognizedMessage".
+Upon receipt of a helper's AggregateInitializeResp message, the leader checks that the
+sequence of PrepareStep messages corresponds to the ReportShare sequence of the
+AggregateInitializeReq. If any message appears out of order, is missing, has an
+unrecognized report ID, or if two messages have the same report ID, then the leader
+MUST abort with error "unrecognizedMessage".
 
 [[OPEN ISSUE: the leader behavior here is sort of bizarre -- to whom does it
 abort?]]
 
 #### Input Share Decryption {#input-share-decryption}
 
-Each report share has a corresponding task ID, report metadata (timestamp,
-nonce, and extensions), the public share sent to each Aggregator, and the
+Each report share has a corresponding task ID, report metadata (report ID,
+timestamp, and extensions), the public share sent to each Aggregator, and the
 recipient's encrypted input share. Let `task_id`, `metadata`, `public_share`,
 and `encrypted_input_share` denote these values, respectively. Given these
 values, an aggregator decrypts the input share as follows. First, the aggregator
@@ -1213,14 +1213,13 @@ transition. This produces three possible values:
 1. An initial VDAF state and preparation message, denoted `(prep_state,
    prep_msg)`.
 
-Each aggregator runs this procedure for a given input share with corresponding
-nonce as follows:
+Each aggregator runs this procedure for a given input share with corresponding report ID as follows:
 
 ~~~
 prep_state = VDAF.prep_init(vdaf_verify_key,
                             agg_id,
                             agg_param,
-                            nonce,
+                            report_id,
                             public_share,
                             input_share)
 out = VDAF.prep_next(prep_state, None)
@@ -1479,8 +1478,8 @@ The leader obtains each helper's encrypted aggregate share in order to respond
 to the collector's collect response. To do this, the leader first computes a
 checksum over the set of output shares included in the batch. The checksum is
 computed by taking the SHA256 {{!SHS=DOI.10.6028/NIST.FIPS.180-4}} hash of each
-nonce from the client reports included in the aggregation, then combining the
-hash values with a bitwise-XOR operation.
+report ID from the client reports included in the aggregation, then combining
+the hash values with a bitwise-XOR operation.
 
 Then, for each aggregator endpoint `[aggregator]` in the parameters associated
 with `CollectReq.task_id` (see {{collect-flow}}) except its own, the leader
@@ -1753,21 +1752,22 @@ about the client's measurement, violating the privacy goal of DAP. To prevent
 such replay attacks, this specification requires the aggregators to detect and
 filter out replayed reports.
 
-To detect replay attacks, each aggregator keeps track of the set of nonces
+To detect replay attacks, each aggregator keeps track of the set of report IDs
 pertaining to reports that were previously aggregated for a given task. If the
-leader receives a report from a client whose nonce is in this set, it either
-ignores it or aborts the upload sub-protocol as described in {{upload-flow}}. A
-Helper who receives an encrypted input share whose nonce is in this set rejects
-the report as described in {{early-input-share-validation}}.
+leader receives a report from a client whose report ID is in this set, it
+either ignores it or aborts the upload sub-protocol as described in
+{{upload-flow}}. A Helper who receives an encrypted input share whose report ID
+is in this set rejects the report as described in
+{{early-input-share-validation}}.
 
-[OPEN ISSUE: This has the potential to require aggregators to store nonce sets
-indefinitely. See issue#180.]
+[OPEN ISSUE: This has the potential to require aggreagtors to store report ID
+sets indefinitely. See issue#180.]
 
-A malicious aggregator may attempt to force a replay by replacing the nonce
-generated by the client with a nonce its peer has not yet seen. To prevent this,
-clients incorporate the nonce into the AAD for HPKE encryption, ensuring that
-the output share is only recovered if the aggregator is given the correct nonce.
-(See {{upload-request}}.)
+A malicious aggregator may attempt to force a replay by replacing the report ID
+generated by the client with a report ID its peer has not yet seen. To prevent
+this, clients incorporate the report ID into the AAD for HPKE encryption,
+ensuring that the output share is only recovered if the aggregator is given the
+correct report ID. (See {{upload-request}}.)
 
 Aggregators prevent the same report from being used in multiple batches (except
 as required by the protocol) by only responding to valid collect requests, as
@@ -1892,8 +1892,8 @@ respect the boundaries defined by the DAP parameters. (See
 {{batch-validation}}.)
 
 However, Aggregators are also required to implement several per-report checks
-that require retaining a number of data artifacts. For example, to detect replay
-attacks, it is necessary for each Aggregator to retain the set of nonces of
+that require retaining a number of data artificts. For example, to detect replay
+attacks, it is necessary for each Aggregator to retain the set of report IDs of
 reports that have been aggregated for the task so far. Depending on the task
 lifetime and report upload rate, this can result in high storage costs. To
 alleviate this burden, DAP allows Aggregators to drop this state as needed, so
