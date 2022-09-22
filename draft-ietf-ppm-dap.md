@@ -443,7 +443,7 @@ in the "type" field (within the DAP URN namespace
 | reportTooEarly             | Report could not be processed because its timestamp is too far in the future. |
 | batchInvalid               | A collect or aggregate-share request was made with invalid batch parameters. |
 | invalidBatchSize           | There are an invalid number of reports in the batch. |
-| batchLifetimeExceeded      | The batch lifetime has been exceeded for one or more reports included in the batch. |
+| batchLifetimeExceeded      | The maximum number of batch queries has been exceeded for one or more reports included in the batch. |
 | batchMismatch              | Aggregators disagree on the report shares that were aggregated in a batch. |
 | unauthorizedRequest        | Authentication of an HTTP request failed (see {{request-authentication}}). |
 | missingTaskID              | HPKE configuration was requested without specifying a task ID. |
@@ -646,7 +646,7 @@ number generator. Each task has the following parameters associated with it:
 * The query configuration for this task (see {{query}}). This determines the
   query type for batch selection and the properties that all batches for this
   task must have.
-* `max_batch_lifetime`: The maximum number of times a batch of reports may be
+* `max_batch_query_count`: The maximum number of times a batch of reports may be
   queried by the Collector.
 * `task_expiration`: The time up to which clients are expected to upload to this
   task. The task is considered completed after this time. Aggregators MAY reject
@@ -1687,9 +1687,10 @@ determined by the query type. If the size check fails, then the Aggregator MUST
 abort with error of type "invalidBatchSize".
 
 Next, the Aggregator checks that the batch has not been aggregated too many
-times. This is determined by the maximum batch lifetime, `max_batch_lifetime`.
-Unless the query has been issued less than `max_batch_lifetime` times, the
-Aggregator MUST abort with error of type "batchLifetimeExceeded".
+times. This is determined by the maximum number of times a batch can be queried,
+`max_batch_query_count`. Unless the query has been issued less than
+`max_batch_query_count` times, the Aggregator MUST abort with error of type
+"batchLifetimeExceeded".
 
 Finally, the Aggregator checks that the batch does not contain a report that was
 included in any previous batch. If this batch overlap check fails, then the
@@ -1883,7 +1884,7 @@ designed to allow implementations to reduce operational costs in certain cases.
 In general, the aggregators are required to keep state for tasks and all valid
 reports for as long as collect requests can be made for them. In particular,
 aggregators must store a batch as long as the batch has not been queried more
-than `max_batch_lifetime` times. However, it is not always necessary to store
+than `max_batch_query_count` times. However, it is not always necessary to store
 the reports themselves. For schemes like Prio3 {{!VDAF}} in which reports are
 verified only once, each aggregator only needs to store its aggregate share for
 each possible batch interval, along with the number of times the aggregate share
