@@ -142,6 +142,9 @@ seen in the clear by any server.
 
 - Bump version tag from "dap-01" to "dap-02". (\*)
 
+- Rename the report nonce to the "report ID" and move it to the top of the
+  structure. (\*)
+
 - Clarify when it is safe for an Aggregator to evict various data artifacts from
   long-term storage.
 
