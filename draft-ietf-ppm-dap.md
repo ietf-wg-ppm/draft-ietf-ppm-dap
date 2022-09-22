@@ -443,7 +443,7 @@ in the "type" field (within the DAP URN namespace
 | reportTooEarly             | Report could not be processed because its timestamp is too far in the future. |
 | batchInvalid               | A collect or aggregate-share request was made with invalid batch parameters. |
 | invalidBatchSize           | There are an invalid number of reports in the batch. |
-| batchLifetimeExceeded      | The maximum number of batch queries has been exceeded for one or more reports included in the batch. |
+| batchQueriedTooManyTimes   | The maximum number of batch queries has been exceeded for one or more reports included in the batch. |
 | batchMismatch              | Aggregators disagree on the report shares that were aggregated in a batch. |
 | unauthorizedRequest        | Authentication of an HTTP request failed (see {{request-authentication}}). |
 | missingTaskID              | HPKE configuration was requested without specifying a task ID. |
@@ -1690,7 +1690,7 @@ Next, the Aggregator checks that the batch has not been aggregated too many
 times. This is determined by the maximum number of times a batch can be queried,
 `max_batch_query_count`. Unless the query has been issued less than
 `max_batch_query_count` times, the Aggregator MUST abort with error of type
-"batchLifetimeExceeded".
+"batchQueriedTooManyTimes".
 
 Finally, the Aggregator checks that the batch does not contain a report that was
 included in any previous batch. If this batch overlap check fails, then the
