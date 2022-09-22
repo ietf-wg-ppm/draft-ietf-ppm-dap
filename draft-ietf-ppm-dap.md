@@ -1135,11 +1135,11 @@ The helper's response to the leader is an HTTP status code 200 OK whose body is
 the AggregateInitializeResp and media type is
 "message/dap-aggregate-initialize-resp".
 
-Upon receipt of a helper's AggregateInitializeResp message, the leader checks that the
-sequence of PrepareStep messages corresponds to the ReportShare sequence of the
-AggregateInitializeReq. If any message appears out of order, is missing, has an
-unrecognized report ID, or if two messages have the same report ID, then the leader
-MUST abort with error "unrecognizedMessage".
+Upon receipt of a helper's AggregateInitializeResp message, the leader checks
+that the sequence of PrepareStep messages corresponds to the ReportShare
+sequence of the AggregateInitializeReq. If any message appears out of order, is
+missing, has an unrecognized report ID, or if two messages have the same report
+ID, then the leader MUST abort with error "unrecognizedMessage".
 
 [[OPEN ISSUE: the leader behavior here is sort of bizarre -- to whom does it
 abort?]]
@@ -1760,7 +1760,7 @@ either ignores it or aborts the upload sub-protocol as described in
 is in this set rejects the report as described in
 {{early-input-share-validation}}.
 
-[OPEN ISSUE: This has the potential to require aggreagtors to store report ID
+[OPEN ISSUE: This has the potential to require aggregators to store report ID
 sets indefinitely. See issue#180.]
 
 A malicious aggregator may attempt to force a replay by replacing the report ID
@@ -1892,7 +1892,7 @@ respect the boundaries defined by the DAP parameters. (See
 {{batch-validation}}.)
 
 However, Aggregators are also required to implement several per-report checks
-that require retaining a number of data artificts. For example, to detect replay
+that require retaining a number of data artifacts. For example, to detect replay
 attacks, it is necessary for each Aggregator to retain the set of report IDs of
 reports that have been aggregated for the task so far. Depending on the task
 lifetime and report upload rate, this can result in high storage costs. To
