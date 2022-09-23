@@ -485,9 +485,9 @@ The following are some basic type definitions used in other messages:
 /* ASCII encoded URL. e.g., "https://example.com" */
 opaque Url<1..2^16-1>;
 
-Duration uint64; /* Number of seconds elapsed between two instants */
+uint64 Duration; /* Number of seconds elapsed between two instants */
 
-Time uint64; /* seconds elapsed since start of UNIX epoch */
+uint64 Time; /* seconds elapsed since start of UNIX epoch */
 
 /* An interval of time of length duration, where start is included and (start +
 duration) is excluded. */
@@ -497,7 +497,7 @@ struct {
 } Interval;
 
 /* An ID used to uniquely identify a report in the context of a DAP task. */
-ReportID uint8[16];
+uint8 ReportID[16];
 
 /* The various roles in the DAP protocol. */
 enum {
@@ -708,7 +708,7 @@ struct {
   HpkeConfigId id;
   HpkeKemId kem_id;
   HpkeKdfId kdf_id;
-  HpkeAeadKdfId aead_id;
+  HpkeAeadId aead_id;
   HpkePublicKey public_key;
 } HpkeConfig;
 
