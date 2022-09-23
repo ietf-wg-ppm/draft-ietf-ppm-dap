@@ -119,7 +119,7 @@ seen in the clear by any server.
 - Define a new task configuration parameter, called the "query type", that
   allows tasks to partition reports into batches in different ways. In the
   current draft, the Collector specifies a "query", which the Aggregators use to
-  guide selection of the batch. Two query types are defined: the "time-interval"
+  guide selection of the batch. Two query types are defined: the "time_interval"
   type captures the semantics of draft 01; and the "fixed_size" type allows the
   Leader to partition the reports arbitrarily, subject to the constraint that
   each batch is roughly the same size. (\*)
