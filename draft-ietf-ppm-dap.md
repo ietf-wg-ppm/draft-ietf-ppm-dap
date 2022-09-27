@@ -690,7 +690,7 @@ specify a query parameter `task_id` when sending an HTTP GET request to
 obtained from the task parameters, encoded in Base 64 with URL and filename safe
 alphabet with no padding, as specified in sections 5 and 3.2 of {{!RFC4648}}. If
 the aggregator does not recognize the task ID, then it responds with HTTP status
-code 404 Not Found and an error of type `unrecognizedTask`.
+code 400 Bad Request and an error of type `unrecognizedTask`.
 
 An aggregator is free to use different HPKE configurations for each task with
 which it is configured. If the task ID is missing from a client's request, the
@@ -809,6 +809,9 @@ status code 200 OK and an empty body. Malformed requests are handled as
 described in {{errors}}. Clients SHOULD NOT upload the same measurement value in
 more than one report if the leader responds with HTTP status code 200 OK and an
 empty body.
+
+If the leader does not recognize the task ID, then it responds with HTTP status
+code 400 Bad Request and an error of type `unrecognizedTask`.
 
 The leader responds to requests whose leader encrypted input share uses an
 out-of-date `HpkeConfig.id` value, indicated by `HpkeCiphertext.config_id`, with
@@ -1083,7 +1086,9 @@ from the leader. It attempts to recover and validate the corresponding input
 shares similar to the leader, and eventually returns a response to the leader
 carrying a VDAF-specific message for each report share.
 
-To begin this process, the helper first checks that the report IDs in
+To begin this process, the helper first checks if it recognizes the task ID, if
+not then it responds with HTTP status code 400 Bad Request and an error of type
+`unrecognizedTask`. Then the helper checks that the report IDs in
 `AggregateInitializeReq.report_shares` are all distinct. If two ReportShare
 values have the same report ID, then the helper MUST abort with error
 "unrecognizedMessage". If this check succeeds, the helper then attempts to
@@ -1298,8 +1303,11 @@ type set to "message/dap-aggregate-continue-req".
 
 #### Helper Continuation
 
-The helper continues with preparation for a report share by combining the
-leader's input message in `AggregateContinueReq` and its current preparation
+If the helper does not recognize the task ID, then it aborts preparation with
+HTTP status code 400 Bad Request and an error of type `unrecognizedTask`.
+
+Otherwise, the helper continues with preparation for a report share by combining
+the leader's input message in `AggregateContinueReq` and its current preparation
 state (`prep_state`). This step yields one of three outputs:
 
 1. An error, in which case the input report share is marked as invalid.
@@ -1404,7 +1412,8 @@ struct {
 
 The named parameters are:
 
-* `task_id`, the DAP task ID.
+* `task_id`, the DAP task ID. If the Leader does not recognize the task ID, it
+  MUST abort with HTTP status code 400 Bad Request and error `unrecognizedTask`.
 * `query`, the Collector's query. The indicated query type MUST match the task's
   query type. Otherwise, the Leader MUST abort with error "queryMismatch".
 * `agg_param`, an aggregation parameter for the VDAF being executed. This is the
@@ -1509,7 +1518,8 @@ struct {
 
 The message contains the following parameters:
 
-* The task ID.
+* The DAP task ID. If the Helper does not recognize the task ID, it MUST abort
+  with HTTP status code 400 Bad Request and error `unrecognizedTask`.
 
 * The "batch selector", which encodes parameters used to determine the batch
   being aggregated. The value depends on the query type for the task:
