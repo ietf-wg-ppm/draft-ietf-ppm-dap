@@ -518,6 +518,9 @@ struct {
   opaque enc<1..2^16-1>;     /* encapsulated HPKE key */
   opaque payload<1..2^32-1>; /* ciphertext */
 } HpkeCiphertext;
+
+/* Represent a zero byte empty data type. */
+struct {} Empty;
 ~~~
 
 ## Queries {#query}
