@@ -9,9 +9,9 @@ DAP is structured as an HTTP-based application with the following resources:
 - Aggregate shares (and lists thereof)
 - Collections (and lists thereof)
 
-A resource's path is resolved relative to a server's base URL to construct a resource URI. Deployments may host resource paths arbitrarily deep relative to their domain. Paths are generally structured as `/resource-type/resource-id`. Anywhere `resource-id` (e.g., `task-id` or `report-id`) occurs in a URI is to be understood as the URL-safe, unpadded base64 representation of the resource's identifier, which itself is usually 16 random bytes (some are 32, but https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/349 will normalize them to 16).
+A resource's path is resolved relative to a server's base URL to construct a resource URI. Deployments may host resource paths arbitrarily deep relative to their domain. Paths are generally structured as `/resource-type/{resource-id}`. Anywhere `{resource-id}` (e.g., `{task-id}` or `{report-id}`) occurs in a URI is to be understood as the URL-safe, unpadded base64 representation of the resource's identifier, which itself is usually 16 random bytes (some are 32, but https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/349 will normalize them to 16).
 
-Some resources are owned by another resource, and so their URI will contain two identifiers. For instance, a report belongs to a task, so the URI is `[base]/tasks/task-id/reports/report-id`.
+Some resources are owned by another resource, and so their URI will contain two identifiers. For instance, a report belongs to a task, so the URI is `[base]/tasks/{task-id}/reports/{report-id}`.
 
 Generally, if a resource supports the `GET` method, it also supports `HEAD`. The response to `HEAD` is exactly the same as `GET`, but the response contains no body.
 
@@ -41,7 +41,7 @@ An HPKE config has an ID, so we could use a path `hpke_configs/hpke-config-id`. 
 
 `GET /hpke_config` could redirect to `/hpke_config/current-hpke-config-id`, which would make this mostly transparent to clients, assuming they handle 3xx redirects properly.
 
-Instead of providing the task ID as a query parameter, we could also include it in the path, like `/tasks/task-id/hpke_config`, on the premise that the task ID is part of the resource's permanent identity. However, it's awkward to solve the global HPKE config case with this formulation. We could include a special task ID "global" so that clients could query `/tasks/global/hpke_config`.
+Instead of providing the task ID as a query parameter, we could also include it in the path, like `/tasks/{task-id}/hpke_config`, on the premise that the task ID is part of the resource's permanent identity. However, it's awkward to solve the global HPKE config case with this formulation. We could include a special task ID "global" so that clients could query `/tasks/global/hpke_config`.
 
 #### Representation
 
@@ -67,7 +67,7 @@ The response body is a `struct HpkeConfig` representing the `hpke_config`.
 
 #### Path
 
-`/tasks/task-id/reports/report-id`
+`/tasks/{task-id}/reports/{report-id}`
 
 `report-id` uniquely identifies a report in a task. It is chosen by the client when uploading a report.
 
@@ -104,7 +104,7 @@ Only the helper supports this resource.
 
 #### Path
 
-`/tasks/task-id/aggregation_jobs/aggregation-job-id`
+`/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}`
 
 `aggregation-job-id` uniquely identifies an aggregation job. It is chosen by the leader when it dispatches a job to the helper.
 
@@ -180,17 +180,17 @@ The idea here is that all the values in `struct AggregateJobPutReq` never need t
 
 POST to an aggregate job is how the leader steps an aggregate job. The request body is a `struct AggregateJob` where `prepare_steps` contains the leader's current-round prepare messages, and `round` is the number of the current round. The response is a `struct AggregateJob` where `prepare_steps` contains the helper's next-round prepare messages. The response's `round` field will be one more than the request's `round`.
 
-We use a POST here because this request is _not_ idempotent. Suppose the leader sends `POST /tasks/task-id/aggregate_jobs/aggregation-job-id` where the body has `round = 1`, and that this is successfully handled by the helper. Besides generating the response, this will have the side effect of advancing the state in the helper to round 2. If the leader were to resend the `POST /tasks/task-id/aggregate_jobs/aggregation-job-id` with `round = 1`, then the request should be rejected by the helper, because it has advanced to the next round.
+We use a POST here because this request is _not_ idempotent. Suppose the leader sends `POST /tasks/{task-id}/aggregate_jobs/{aggregation-job-id}` where the body has `round = 1`, and that this is successfully handled by the helper. Besides generating the response, this will have the side effect of advancing the state in the helper to round 2. If the leader were to resend the `POST /tasks/{task-id}/aggregate_jobs/{aggregation-job-id}` with `round = 1`, then the request should be rejected by the helper, because it has advanced to the next round.
 
 This is analogous to DAP-02's `POST /aggregate` with an `AggregateContinueReq`.
 
 ###### Context for the `round` field
 
-The `round` field is needed so that the leader can recover from a response being lost. Suppose a 2-round VDAF is being executed, and that the leader does `PUT /tasks/task-id/aggregate_jobs/aggregation-job-id` and that request succeeds, so the helper responds with its first-round prepare messages. Then, the leader does `POST /tasks/task-id/aggregate_jobs/aggregation-job-id` with the first-round broadcast prepare message, but the helper's response gets lost during network transit.
+The `round` field is needed so that the leader can recover from a response being lost. Suppose a 2-round VDAF is being executed, and that the leader does `PUT /tasks/{task-id}/aggregate_jobs/{aggregation-job-id}` and that request succeeds, so the helper responds with its first-round prepare messages. Then, the leader does `POST /tasks/{task-id}/aggregate_jobs/{aggregation-job-id}` with the first-round broadcast prepare message, but the helper's response gets lost during network transit.
 
-If the helper received the `POST` and advanced its state to the second round, then the leader should do `GET /tasks/task-id/aggregate_jobs/aggregation-job-id` so it can compute the second round broadcast message and then do `POST /tasks/task-id/aggregate_jobs/aggregation-job-id` to have the helper move to the finished state. If the helper did not receive the `POST`, then the leader should re-send the first-round broadcast prepare message.
+If the helper received the `POST` and advanced its state to the second round, then the leader should do `GET /tasks/{task-id}/aggregate_jobs/{aggregation-job-id}` so it can compute the second round broadcast message and then do `POST /tasks/{task-id}/aggregate_jobs/{aggregation-job-id}` to have the helper move to the finished state. If the helper did not receive the `POST`, then the leader should re-send the first-round broadcast prepare message.
 
-But in DAP-02, the leader has no way to know what happened in the helper, leaving it unable to recover from this state. Adding a `round` field to the `AggregateJob` message enables the leader to reliably and idempotently find out what state the helper is in by doing `GET /tasks/task-id/aggregate_jobs/aggregation-job-id`, and then taking the appropriate next step.
+But in DAP-02, the leader has no way to know what happened in the helper, leaving it unable to recover from this state. Adding a `round` field to the `AggregateJob` message enables the leader to reliably and idempotently find out what state the helper is in by doing `GET /tasks/{task-id}/aggregate_jobs/{aggregation-job-id}`, and then taking the appropriate next step.
 
 ##### DELETE
 
@@ -198,38 +198,13 @@ Instructs the helper to abandon the aggregate job and allows it to discard all s
 
 Requiring this would solve https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/241
 
-### Aggregation jobs
-
-Only the helper supports this resource.
-
-#### Path
-
-`/tasks/task-id/aggregation_jobs`
-
-#### Representation
-
-A paginated list of aggregation jobs for the task.
-
-```
-struct {
-  u64 page;
-  AggregateJob aggregate_jobs<0..2^16-1>
-} AggregationJobList
-```
-
-#### Required HTTP methods
-
-##### GET/HEAD
-
-The request takes an optional query parameter for the page. The response body is a `struct AggregationJobList`.
-
 ### An aggregate share
 
 Only the helper supports this resource.
 
 #### Path
 
-`/tasks/task-id/aggregate_shares/aggregate-share-id`
+`/tasks/{task-id}/aggregate_shares/{aggregate-share-id}`
 
 `aggregate-share-id` uniquely identifies an aggregate share. It is chosen by the leader when it requests an aggregate share by the helper.
 
@@ -278,38 +253,11 @@ This is analogous to DAP-02's `POST /aggregate_share`.
 
 In DAP-02, a `BatchSelector` with `query_type = fixed_size` contains a `BatchID`. In this API, the batch ID hoisted up into the resource URI. This implies that `time_interval`-type queries now also have a batch ID, chosen by the leader. While aggregate shares will often (always?) be 1:1 with collections, the IDs do not have to match.
 
-Note also that `AggregateShareReq` should use a `Query` (https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/366).
-
 TODO: timg to read more about chunky DAP and think about how it intersects with this proposal, especially https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/342
 
 ##### DELETE
 
 Instructs the helper to abandon the aggregate share and allows the helper to discard all state related to it. This is akin to DELETE on a collection for the leader.
-
-### Aggregate shares
-
-Only the helper supports this resource.
-
-#### Path
-
-`/tasks/task-id/aggregate_shares`
-
-#### Representation
-
-A paginated list of aggregation jobs for the task.
-
-```
-struct {
-  u64 page;
-  AggregateShare aggregate_shares<0..2^16-1>
-} AggregateShareList
-```
-
-#### Required HTTP methods
-
-##### GET/HEAD
-
-The request takes an optional query parameter for the page. The response body is a `struct AggregateShareList`.
 
 ### A collection
 
@@ -317,7 +265,7 @@ Only the leader supports this resource.
 
 #### Path
 
-`/tasks/task-id/collections/collection-id`
+`/tasks/{task-id}/collections/{collection-id}`
 
 `collection-id` uniquely identifies a collection. It is chosen by the collector when it POSTs to the resource.
 
@@ -378,37 +326,12 @@ This is analogous to DAP-02's `DELETE` on a collect job URI.
 
 This proposal introduces the notion of a `collection-id`, which is chosen by the collector when it sends `CollectReq` to helper. In DAP-02, a collection is already uniquely identified by the combination of the aggregation parameter and the query, meaning we can get by without `collection-id`. Let's sketch out what the API would look like so we can weigh pros and cons.
 
-`POST /tasks/task-id/collections`
+`POST /tasks/{task-id}/collections`
 
 The body is a `CollectReq`, defined as above. The request method is `POST` instead of `PUT` because I don't think this request can be idempotent. Let's say a collector makes a time interval query over some interval _i_ and it is received by the leader at time _t1_. At _t1_, the leader has _n1_ reports that fall into the interval _i_. Then, suppose at least one more report that falls into _i_ arrives and the leader and helper prepare it. Then, at _t2 > t1_, the collector sends a query with the same interval _i_ again.
 
 Should the leader serve up the results it computed at time _t1_? Or should it make a new collection, consuming another unit of max batch query, that includes the reports that arrived and were prepared between _t1_ and _t2_?
 
-If collections are identified by `collection-id`, then there's no ambiguity: the collector can poll `GET /tasks/task-id/collections/collection-id` to obtain the same collection over and over again. `PUT /tasks/task-id/collections/collection-id` with the same `collection-id` is also unambiguous, and if the collector wants to make a new query with the same interval, it can choose a new `collection-id` and `PUT` that, which the leader will service if the task's parameters allow it.
+If collections are identified by `collection-id`, then there's no ambiguity: the collector can poll `GET /tasks/{task-id}/collections/{collection-id}` to obtain the same collection over and over again. `PUT /tasks/{task-id}/collections/{collection-id}` with the same `collection-id` is also unambiguous, and if the collector wants to make a new query with the same interval, it can choose a new `collection-id` and `PUT` that, which the leader will service if the task's parameters allow it.
 
-The cons of `collection-id` is that an aggregation parameter and a `struct Query` don't uniquely identify a collection. So if a collector wants to find out if there's an existing collect job that meets its parameter, it has to enumerate all of them using `GET /tasks/task-id/collections`. We could improve this either with [HTTP QUERY](https://www.ietf.org/archive/id/draft-ietf-httpbis-safe-method-w-body-02.html) or query params on `GET /tasks/task-id/collections`.
-
-### Collections
-
-Only the leader supports this resource.
-
-#### Path
-
-`/tasks/task-id/collections`
-
-#### Representation
-
-A paginated list of collections for the task.
-
-```
-struct {
-  u64 page;
-  Collection collections<0..2^16-1>
-} CollectionList
-```
-
-#### Required HTTP methods
-
-##### GET/HEAD
-
-The request takes an optional query parameter for the page. The response body is a `struct CollectionList`.
+The cons of `collection-id` is that an aggregation parameter and a `struct Query` don't uniquely identify a collection. So if a collector wants to find out if there's an existing collect job that meets its parameter, it has to enumerate all of them using `GET /tasks/{task-id}/collections`. We could improve this either with [HTTP QUERY](https://www.ietf.org/archive/id/draft-ietf-httpbis-safe-method-w-body-02.html) or query params on `GET /tasks/{task-id}/collections`.
