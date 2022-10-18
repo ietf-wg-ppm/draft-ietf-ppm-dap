@@ -5,9 +5,9 @@ DAP is structured as an HTTP-based application with the following resources:
 - (TODO) Tasks
 - HPKE configurations
 - Reports
-- Aggregation jobs (and lists thereof)
-- Aggregate shares (and lists thereof)
-- Collections (and lists thereof)
+- Aggregation jobs
+- Aggregate shares
+- Collections
 
 A resource's path is resolved relative to a server's base URL to construct a resource URI. Deployments may host resource paths arbitrarily deep relative to their domain. Paths are generally structured as `/resource-type/{resource-id}`. Anywhere `{resource-id}` (e.g., `{task-id}` or `{report-id}`) occurs in a URI is to be understood as the URL-safe, unpadded base64 representation of the resource's identifier, which itself is usually 16 random bytes (some are 32, but https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/349 will normalize them to 16).
 
