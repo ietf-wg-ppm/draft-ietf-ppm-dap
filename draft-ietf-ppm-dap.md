@@ -1079,7 +1079,7 @@ This message consists of:
 
 Let `[aggregator]` denote the helper's API endpoint. The leader sends a POST
 request to `[aggregator]/aggregate` with its AggregateInitializeReq message as
-the payload. The media type is "message/dap-aggregate-initialize-req".
+the payload. The media type is "application/dap-aggregate-initialize-req".
 
 #### Helper Initialization
 
@@ -1144,7 +1144,7 @@ for the report share.
 
 The helper's response to the leader is an HTTP status code 200 OK whose body is
 the AggregateInitializeResp and media type is
-"message/dap-aggregate-initialize-resp".
+"application/dap-aggregate-initialize-resp".
 
 Upon receipt of a helper's AggregateInitializeResp message, the leader checks
 that the sequence of PrepareStep messages corresponds to the ReportShare
@@ -1302,7 +1302,7 @@ struct {
 For each aggregator endpoint `[aggregator]` in `AggregateContinueReq.task_id`'s
 parameters except its own, the leader sends a POST request to
 `[aggregator]/aggregate` with AggregateContinueReq as the payload and the media
-type set to "message/dap-aggregate-continue-req".
+type set to "application/dap-aggregate-continue-req".
 
 #### Helper Continuation
 
@@ -1362,7 +1362,7 @@ struct {
 The order of AggregateContinueResp.prepare_steps MUST match that of the
 PrepareStep values in `AggregateContinueReq.prepare_steps`. The helper's
 response to the leader is an HTTP status code 200 OK whose body is the
-AggregateContinueResp and media type is "message/dap-aggregate-continue-resp".
+AggregateContinueResp and media type is "application/dap-aggregate-continue-resp".
 The helper then awaits the next message from the leader.
 
 [[OPEN ISSUE: consider relaxing this ordering constraint. See issue#217.]]
