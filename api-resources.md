@@ -20,7 +20,7 @@ We use HTTP `PUT` requests for idempotent creation of resources. Server response
 
 Finally, a quick reminder of some HTTP semantics: `GET` and `PUT` are idempotent (i.e., the same request may be made multiple times without changing state in the server more than once, and the response will be the same each time). `POST` is not idempotent. `GET` requests may not have bodies.
 
-We care a lot about idempotence because we need to account for cases where a client makes a request but never sees the response, and thus needs a way to recover from this state of uncertainty.
+We care a lot about idempotence because we need to account for cases where an HTTP client (e.g., the collector obtaining aggregate shares from the leader, or the leader driving the aggregation sub-protocol in the helper) makes a request but never sees the response, and thus needs a way to recover from this state of uncertainty.
 
 ### HPKE configurations
 
