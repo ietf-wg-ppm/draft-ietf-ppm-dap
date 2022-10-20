@@ -2,7 +2,6 @@
 
 DAP is structured as an HTTP-based application with the following resources:
 
-- (TODO) Tasks
 - HPKE configurations
 - Reports
 - Aggregation jobs
@@ -22,10 +21,6 @@ We use HTTP `PUT` requests for idempotent creation of resources. Server response
 Finally, a quick reminder of some HTTP semantics: `GET` and `PUT` are idempotent (i.e., the same request may be made multiple times without changing state in the server more than once, and the response will be the same each time). `POST` is not idempotent. `GET` requests may not have bodies.
 
 We care a lot about idempotence because we need to account for cases where a client makes a request but never sees the response, and thus needs a way to recover from this state of uncertainty.
-
-### Tasks
-
-TODO: do we want a task resource that we can GET and PUT in the protocol? Does this collide with https://wangshan.github.io/draft-wang-ppm-dap-taskprov/draft-wang-ppm-dap-taskprov.html or https://github.com/divergentdave/draft-dcook-ppm-dap-interop-test-design?
 
 ### HPKE configurations
 
