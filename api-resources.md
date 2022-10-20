@@ -77,10 +77,6 @@ struct {
 
 #### Required HTTP methods
 
-##### GET/HEAD
-
-The response body is a `struct Report` representing the report.
-
 ##### PUT
 
 Idempotent upload of a report to an aggregator. The request body is a `struct Report`.
