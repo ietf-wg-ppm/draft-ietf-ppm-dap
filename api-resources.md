@@ -79,7 +79,7 @@ struct {
 
 ##### PUT
 
-Idempotent upload of a report to an aggregator. The request body is a `struct Report`.
+Idempotent upload of a report to an aggregator. The request body is a `struct Report`. Once uploaded, a report is immutable, meaning that subsequent `PUT` requests to a particular report resource that vary fields of `struct Report` MUST be rejected by the leader.
 
 This is analogous to DAP-02's `POST /upload`.
 
@@ -154,6 +154,8 @@ struct {
 ```
 
 If successful, the helper's response is a `struct AggregateJob` where `prepare_steps` contains the helper's first-round VDAF prepare messages for the report shares in `AggregateJobPutReq`, or errors if `vdaf.prepare` failed for any report.
+
+Once created, an aggregation job resource cannot be mutated with `PUT` requests. Subsequent `PUT` requests to an aggregation job MUST be rejected by helpers.
 
 This is analogous to DAP-02's `POST /aggregate` with an `AggregateInitReq`.
 
@@ -232,6 +234,8 @@ struct {
 
 If successful, the response from the helper is a `struct AggregateShare`. That same share may later be obtained by a GET request on the resource.
 
+Once it is created, an aggregate share cannot be mutated with a further `PUT` request. Subsequent `PUT` requests MUST be rejected by the helper.
+
 This is analogous to DAP-02's `POST /aggregate_share`.
 
 ###### A note on `BatchSelector.fixed_size`
@@ -294,6 +298,8 @@ struct {
 ```
 
 If successful, the response from the helper is a `struct Collection`. That same share may later be obtained by a GET request on the resource.
+
+Once created, a collection cannot be mutated with a further `PUT` request. Leaders MUST reject subsequent `PUT` requests to a collection resource.
 
 This is analogous to DAP-02's `POST /collect`.
 
