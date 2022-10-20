@@ -24,19 +24,13 @@ We care a lot about idempotence because we need to account for cases where an HT
 
 ### HPKE configurations
 
+This proposal deliberately does not address any of the open questions or issues around multiple HPKE configurations or negotiation (see #248) and preserves the existing `hpke_config` endpoint unchanged, in the interest of containing the scope of this proposal.
+
 #### Path
 
 `/hpke_config[?task_id=task-id]`
 
 The `task_id` query parameter is optional, as described in https://www.ietf.org/archive/id/draft-ietf-ppm-dap-02.html#section-4.3.1.
-
-##### Alternatives
-
-An HPKE config has an ID, so we could use a path `hpke_configs/hpke-config-id`. However, a client should never need to get any HPKE config except for the "current" one, so does it make sense to expand the API surface with a path param for HPKE config ID?
-
-`GET /hpke_config` could redirect to `/hpke_config/current-hpke-config-id`, which would make this mostly transparent to clients, assuming they handle 3xx redirects properly.
-
-Instead of providing the task ID as a query parameter, we could also include it in the path, like `/tasks/{task-id}/hpke_config`, on the premise that the task ID is part of the resource's permanent identity. However, it's awkward to solve the global HPKE config case with this formulation. We could include a special task ID "global" so that clients could query `/tasks/global/hpke_config`.
 
 #### Representation
 
