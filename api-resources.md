@@ -50,7 +50,7 @@ struct {
 
 ##### GET/HEAD
 
-The response body is a `struct HpkeConfig` representing the `hpke_config`.
+The response body is a `struct HpkeConfig` representing the server's current `hpke_config`.
 
 ### Reports
 
@@ -125,7 +125,7 @@ See "POST", below, for explanation and justification of the `round` field.
 
 ##### GET/HEAD
 
-The response body is a `struct AggregateJob` representing the current state of the reports in the job.
+The response body is a `struct AggregateJob` representing the current state of the reports in the job. The server mays return an error if no aggregation job is known to it for the aggregation job ID, or if the aggregation job results have been discarded, whether in response to a `DELETE` request on the resource, the task having expired, or any other garbage collection policy the server implements.
 
 ##### PUT
 
@@ -207,7 +207,7 @@ struct {
 
 ##### GET/HEAD
 
-If the aggregate share is available, the result is a `struct AggregateShare`. Otherwise the server can return something like HTTP 202 Accepted to indicate it's not ready yet, or HTTP 404 if no such aggregate share is known to the helper.
+If the aggregate share is available, the result is a `struct AggregateShare`. Otherwise the server can return something like HTTP 202 Accepted to indicate it's not ready yet, or HTTP 404 if no such aggregate share is known to the helper. The server may also return an error if the aggregate share was discarded in response to a `DELETE` request on the resource, the task expiring or some other garbage collection policy implemented by the server.
 
 ##### PUT
 
@@ -272,7 +272,7 @@ struct {
 
 ##### GET/HEAD
 
-If the collection is available, the response body is a `struct Collection`. Otherwise the server can return something like HTTP 202 Accepted to indicate it's not ready yet, or HTTP 404 if no such aggregate share request is known to the server.
+If the collection is available, the response body is a `struct Collection`. Otherwise the server can return something like HTTP 202 Accepted to indicate it's not ready yet, or HTTP 404 if no such aggregate share request is known to the server. The server may also return an error if the collection was discarded due to a `DELETE` request on the resource, the task having expired, or some other garbage collection policy implemented by the server.
 
 This is analogous to DAP-02's `GET` on a collect job URI.
 
