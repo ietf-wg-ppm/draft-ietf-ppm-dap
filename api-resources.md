@@ -141,7 +141,7 @@ struct {
 struct {
   QueryType query_type;
   select (PartialBatchSelector.query_type) {
-    case time_interval: Empty;
+    case time_interval: Interval batch_interval;
     case fixed_size: BatchID batch_id;
   };
 } PartialBatchSelector;
@@ -160,6 +160,8 @@ Once created, an aggregation job resource cannot be mutated with `PUT` requests.
 This is analogous to DAP-02's `POST /aggregate` with an `AggregateInitReq`.
 
 This request is idempotent, so if a helper receives multiple PUT requests for some aggregation job and the members of `AggregateJobPutReq` don't change, the helper can return 200 OK.
+
+If the task has expired, then the helper should reject the request.
 
 The idea here is that all the values in `struct AggregateJobPutReq` never need to be transmitted again during the handling of an aggregate job, which is why the message is not `struct AggregateJob`.
 
@@ -185,15 +187,67 @@ Instructs the helper to abandon the aggregate job and allows it to discard all s
 
 Requiring this would solve https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/241
 
+### Aggregate shares
+
+Only the helper supports this resource.
+
+#### Path
+
+`/tasks/{task-id}/aggregate_shares`
+
+##### PUT
+
+PUT to the aggregate shares resource is how the leader instructs the helper to compute an aggregate share. The request is an idempotent PUT, because if an aggregate share for the parameters in the request already exists, its representation can be returned by the helper without further state mutation.
+
+The body of the request is an `AggregateShareReq`:
+
+```
+struct {
+  QueryType query_type;
+  select (BatchSelector.query_type) {
+    case time_interval: Interval batch_interval;
+    case fixed_size: BatchID batch_id;
+  };
+} BatchSelector;
+
+struct {
+  BatchSelector batch_selector;
+  opaque agg_param<0..2^16-1>;
+  uint64 report_count;
+  opaque checksum[32];
+} AggregateShareReq;
+```
+
+If successful, the response from the helper is a redirect to a URI for the aggregate share. See "An aggregate share" resource for discussion.
+
+If the task has expired, or if for some other reason the helper has discarded the data needed to compute the aggregate share request, the helper should refuse the request.
+
+Note that contrary to the report and aggregation job resources, which each have an ID assigned by the client and leader respectively, there's no aggregate share ID in the resource. This is because the `batch_selector` and `agg_param` in `struct AggregateShareReq` already uniquely identify a batch (recall that `current-batch` cannot occur in `AggregateShareReq`; a real batch ID is always provided). So a further unique ID is not needed, and would introduce ambiguities: what if a leader referred to an existing aggregate share ID, but with a different `agg_param` or `batch_selector`?
+
+This is analogous to DAP-02's `POST /aggregate_share`.
+
+###### Alternatives: return the struct AggregateShare from `PUT /tasks/{task-id}/aggregate_shares`
+
+In DAP-02, the helper's `/aggregate_share` endpoint is expected to synchronously return the aggregate share. In this API, `PUT /tasks/{task-id}/aggregate_shares` instead yields an aggregate share URI which may then be polled.
+
+The pros of this approach:
+- enables asynchronous handling of helper aggregate share computation, since that could take a while if aggregation jobs are pending
+- makes the helper's aggregate share handling look more like the leader's collection handling
+- the URI for an aggregate share is a nice place to define the DELETE verb
+
+The cons of the this approach:
+- It's more API surface for implementations to deal with
+- It forces an extra leader->helper request/response in the case where the aggregate share is ready right away, because the leader has to PUT to get a collection URI and then GET that collection URI
+
+An alternative to this design would be to handle this similarly to how DAP-02 does it. `PUT /tasks/{task-id}/aggregate_shares` could instead return `struct AggregateShare` on success. To delete an aggregate share, leader would send `DELETE /tasks/{task-id}/aggregate_shares` with an `AggregateShareReq` in the body. The `BatchSelector` and `agg_param` uniquely identify an aggregate share, so the helper can use those values to decide what data to delete.
+
 ### An aggregate share
 
 Only the helper supports this resource.
 
 #### Path
 
-`/tasks/{task-id}/aggregate_shares/{aggregate-share-id}`
-
-`aggregate-share-id` uniquely identifies an aggregate share. It is chosen by the leader when it requests an aggregate share by the helper.
+Implementation defined (see `PUT` on the aggregate shares resource)
 
 #### Representation
 
@@ -209,76 +263,23 @@ struct {
 
 If the aggregate share is available, the result is a `struct AggregateShare`. Otherwise the server can return something like HTTP 202 Accepted to indicate it's not ready yet, or HTTP 404 if no such aggregate share is known to the helper. The server may also return an error if the aggregate share was discarded in response to a `DELETE` request on the resource, the task expiring or some other garbage collection policy implemented by the server.
 
-##### PUT
-
-PUT to an aggregate share resource is how the leader instructs the helper to compute aggregate shares. The request is an idempotent PUT, because if an aggregate share with the provided ID already exists, its representation can be returned by the helper without further state mutation.
-
-The body of the request is an `AggregateShareReq`:
-
-```
-struct {
-  QueryType query_type;
-  select (BatchSelector.query_type) {
-    case time_interval: Interval batch_interval;
-    case fixed_size: Empty;
-  };
-} BatchSelector;
-
-struct {
-  BatchSelector batch_selector;
-  opaque agg_param<0..2^16-1>;
-  uint64 report_count;
-  opaque checksum[32];
-} AggregateShareReq;
-```
-
-If successful, the response from the helper is a `struct AggregateShare`. That same share may later be obtained by a GET request on the resource.
-
-Once it is created, an aggregate share cannot be mutated with a further `PUT` request. Subsequent `PUT` requests MUST be rejected by the helper.
-
-This is analogous to DAP-02's `POST /aggregate_share`.
-
-###### A note on `BatchSelector.fixed_size`
-
-In DAP-02, a `BatchSelector` with `query_type = fixed_size` contains a `BatchID`. In this API, the batch ID hoisted up into the resource URI. This implies that `time_interval`-type queries now also have a batch ID, chosen by the leader. While aggregate shares will often (always?) be 1:1 with collections, the IDs do not have to match.
-
-TODO: timg to read more about chunky DAP and think about how it intersects with this proposal, especially https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/342
-
 ##### DELETE
 
 Instructs the helper to abandon the aggregate share and allows the helper to discard all state related to it. This is akin to DELETE on a collection for the leader.
 
-### A collection
+### Collections
 
-Only the leader supports this resource.
+Only the leader supports this resource
 
 #### Path
 
-`/tasks/{task-id}/collections/{collection-id}`
-
-`collection-id` uniquely identifies a collection. It is chosen by the collector when it POSTs to the resource.
-
-#### Representation
-
-```
-struct {
-  PartialBatchSelector part_batch_selector;
-  uint64 report_count;
-  HpkeCiphertext encrypted_agg_shares<1..2^32-1>;
-} Collection;
-```
+`/tasks/{task-id}/collections`
 
 #### Required HTTP methods
 
-##### GET/HEAD
-
-If the collection is available, the response body is a `struct Collection`. Otherwise the server can return something like HTTP 202 Accepted to indicate it's not ready yet, or HTTP 404 if no such aggregate share request is known to the server. The server may also return an error if the collection was discarded due to a `DELETE` request on the resource, the task having expired, or some other garbage collection policy implemented by the server.
-
-This is analogous to DAP-02's `GET` on a collect job URI.
-
 ##### PUT
 
-PUT to a collection resource is how the collector instructs the leader to assemble the aggregate shares. The request is an idempotent PUT, because if a collection with the provided ID already exists, its representation can be returned by the helper without further state mutation.
+PUT to the collections resource is how the collector instructs the leader to assemble the aggregate shares. The request is an idempotent PUT, because if a collection corresponding to the provided `Query` and aggregation parameter already exists, its representation can be returned by the helper without further state mutation.
 
 The request body is a `CollectReq`:
 
@@ -297,15 +298,43 @@ struct {
 } CollectReq;
 ```
 
-If successful, the response from the helper is a `struct Collection`. That same share may later be obtained by a GET request on the resource.
+If successful, the response from the helper is a redirect to a URI for the collection. See "A collection" resource for discussion.
 
-Once created, a collection cannot be mutated with a further `PUT` request. Leaders MUST reject subsequent `PUT` requests to a collection resource.
+Similarly to the aggregate share resource, there's no collection ID chosen by the collector. This is because a collection is already uniquely identified by the aggregation parameter and the query, making a unique collection ID redundant.
 
 This is analogous to DAP-02's `POST /collect`.
 
-###### A note on `Query.fixed_size`
+### A collection
 
-`struct Query` is essentially identical to `struct BatchSelector`, so the note about `BatchSelector.fixed_size` from `PUT aggregate_share` applies here, except that a collection's ID is chosen by the collector.
+Only the leader supports this resource.
+
+#### Path
+
+Implementation defined (see `PUT` on the collections resource)
+
+This resource is analogous to the collect URI in DAP-02.
+
+#### Representation
+
+```
+struct {
+  PartialBatchSelector part_batch_selector;
+  uint64 report_count;
+  HpkeCiphertext encrypted_agg_shares<1..2^32-1>;
+} Collection;
+```
+
+#### Required HTTP methods
+
+##### POST
+
+If the collection is available, the response body is a `struct Collection`. Otherwise the server can return something like HTTP 202 Accepted to indicate it's not ready yet, or HTTP 404 if no such collection is known to the server. The server may also return an error if the collection was discarded due to a `DELETE` request on the resource, the task having expired, or some other garbage collection policy implemented by the server.
+
+Even after receiving a `struct Collection`, the collector MAY continue to send `POST` requests to a collect URI and the respones should still be the `struct Collection` (if it is still available and hasn't been garbage collected).
+
+See "Viewing fixed-size batches as a message queue" for discussion.
+
+This is analogous to DAP-02's `GET` on a collect job URI.
 
 ##### DELETE
 
@@ -313,16 +342,24 @@ Instructs the leader to abandon the collection and allows the leader to discard 
 
 This is analogous to DAP-02's `DELETE` on a collect job URI.
 
-#### Alternatives: `collection-id`, `PUT` vs. `POST` and idempotence?
+### Viewing fixed-size batches as a message queue
 
-This proposal introduces the notion of a `collection-id`, which is chosen by the collector when it sends `CollectReq` to helper. In DAP-02, a collection is already uniquely identified by the combination of the aggregation parameter and the query, meaning we can get by without `collection-id`. Let's sketch out what the API would look like so we can weigh pros and cons.
+For tasks that use time interval queries, the collection sub-protocol is driven by the collector. It knows what time intervals it cares about and it sends the queries that then cause the leader and helper to construct aggregate shares.
 
-`POST /tasks/{task-id}/collections`
+But fixed-size query batches are fundamentally different: it's the leader that decides what reports belong to which batch and then makes those batches available to the collector. The leader _produces_ batches (by assigning reports to batch IDs), and the collector _consumes_ them (by providing an aggregation parameter and then receiving the collection computed using that aggregation parameter). Further, the leader maintains some state about the stream of batches so that it can respond to `current-batch` queries. This could be a cursor into an ordered stream of batches (it is up to the leader to decide how to order them) or the leader could maintain a set of never-yet-collected batches that are eligible to be "current".
 
-The body is a `CollectReq`, defined as above. The request method is `POST` instead of `PUT` because I don't think this request can be idempotent. Let's say a collector makes a time interval query over some interval _i_ and it is received by the leader at time _t1_. At _t1_, the leader has _n1_ reports that fall into the interval _i_. Then, suppose at least one more report that falls into _i_ arrives and the leader and helper prepare it. Then, at _t2 > t1_, the collector sends a query with the same interval _i_ again.
+I think the right way to think about the stream of batches being delivered from the leader to the collector is the publisher/subscriber design pattern. The stream of batches created by the leader is a message queue with an at-least-once delivery guarantee. Note that popular message queues don't guarantee in-order message delivery; you have to pay Amazon extra for a FIFO queue. Fixed-size DAP does not require that batches be delivered in order, but the protocol does need to make it possible for implementations to provide an at-least-once delivery guarantee.
 
-Should the leader serve up the results it computed at time _t1_? Or should it make a new collection, consuming another unit of max batch query, that includes the reports that arrived and were prepared between _t1_ and _t2_?
+The way that message queue systems like Google PubSub or AWS SNS/SQS provide the at-least-once guarantee is that the producer does not consider a message to have been delivered until the consumer explicitly acknowledges receipt. This accounts for the scenario where the consumer crashes while handling the message. If the producer delivers a message to a consumer and does not get an ack within some delay, it can assume the consumer failed somehow and the producer will redeliver the message the next time a consumer reads from the queue.
 
-If collections are identified by `collection-id`, then there's no ambiguity: the collector can poll `GET /tasks/{task-id}/collections/{collection-id}` to obtain the same collection over and over again. `PUT /tasks/{task-id}/collections/{collection-id}` with the same `collection-id` is also unambiguous, and if the collector wants to make a new query with the same interval, it can choose a new `collection-id` and `PUT` that, which the leader will service if the task's parameters allow it.
+The guarantee is at-least-once and _not_ exactly-once. Exactly-once delivery guarantees are too difficult to achieve to be considered for DAP.
 
-The cons of `collection-id` is that an aggregation parameter and a `struct Query` don't uniquely identify a collection. So if a collector wants to find out if there's an existing collect job that meets its parameter, it has to enumerate all of them using `GET /tasks/{task-id}/collections`. We could improve this either with [HTTP QUERY](https://www.ietf.org/archive/id/draft-ietf-httpbis-safe-method-w-body-02.html) or query params on `GET /tasks/{task-id}/collections`.
+In the fixed-size query DAP API, `PUT /tasks/{task-id}/collections` where the `CollectReq` asks for `current-batch` is akin to pulling a message from a message queue: the leader will find an undelivered batch, construct a collection URI and give that to the collector.
+
+The eventual collector request to `POST {collect-uri}` is akin to acknowledging a message in a message queue: the collector is implying that it has durably persisted the collect URI, and so now the leader can safely remove the batch from those considered eligible to be "current".
+
+This last point is why the request to the collect URI is a `POST` and not a `GET`. `GET` must be idempotent, but we just saw how a `POST {collect-uri}` can have the side effect of changing what response a client would get from `PUT /tasks/{task-id}/collections`. Thus we need a non-idempotent `POST`.
+
+Using a `POST` here is awkward for the time-interval case, where `GET` would be much more natural, and in particular would make it easier to cache responses. This mild awkwardness is a consequence of our desire to capture both fixed-size and time interval query semantics in a single API.
+
+We could choose to make the two behave differently. Perhaps a collection resource could also support the `GET` method, but only if the relevant task uses time-interval. A `GET` request on a collection resource in a fixed-size task would yield HTTP 405 Method Not Allowed. The tradeoff is additional API surface, and implementations will need extra code specific to one or another query mode.
