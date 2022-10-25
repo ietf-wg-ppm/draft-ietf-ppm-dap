@@ -119,7 +119,7 @@ seen in the clear by any server.
 - Define a new task configuration parameter, called the "query type", that
   allows tasks to partition reports into batches in different ways. In the
   current draft, the Collector specifies a "query", which the Aggregators use to
-  guide selection of the batch. Two query types are defined: the "time-interval"
+  guide selection of the batch. Two query types are defined: the "time_interval"
   type captures the semantics of draft 01; and the "fixed_size" type allows the
   Leader to partition the reports arbitrarily, subject to the constraint that
   each batch is roughly the same size. (\*)
@@ -543,11 +543,24 @@ specific to the given query type. A query is defined as follows:
 ~~~
 opaque BatchID[32];
 
+enum {
+  by_batch_id(0),
+  current_batch(1),
+} FixedSizeQueryType;
+
+struct {
+  FixedSizeQueryType query_type;
+  select (query_type) {
+    by_batch_id: BatchID batch_id;
+    current_batch: Empty;
+  }
+} FixedSizeQuery;
+
 struct {
   QueryType query_type;
   select (Query.query_type) {
     case time_interval: Interval batch_interval;
-    case fixed_size: BatchID batch_id;
+    case fixed_size: FixedSizeQuery fixed_size_query;
   }
 } Query;
 ~~~
@@ -602,12 +615,17 @@ differential privacy.
 For this query type, the Aggregators group reports into arbitrary batches such
 that each batch has roughly the same number of reports. These batches are
 identified by opaque "batch IDs", allocated in an arbitrary fashion by the
-Leader. To get the aggregate of a batch, the Collector issues a query specifying
-the batch ID of interest (see {{query}}).
+Leader.
+
+To get the aggregate of a batch, the Collector issues a query specifying the
+batch ID of interest (see {{query}}). The Collector may not know which batch ID
+it is interested in; in this case, it can also issue a query of type
+`current_batch`, which allows the Leader to select a recent batch to aggregate.
+The leader SHOULD select a batch which has not yet began collection.
 
 In addition to the minimum batch size common to all query types, the
-configuration includes a "maximum batch size", `max_batch_size`, that determines
-maximum number of reports per batch.
+configuration includes a "maximum batch size", `max_batch_size`, that
+determines maximum number of reports per batch.
 
 Implementation note: The goal for the Aggregators is to aggregate precisely
 `min_batch_size` reports per batch. Doing so, however, may be challenging for
@@ -620,10 +638,6 @@ for each batch.
 [OPEN ISSUE: It may be feasible to require a fixed batch size, i.e.,
 `min_batch_size == max_batch_size`. We should know better once we've had some
 implementation/deployment experience.]
-
-[OPEN ISSUE: It may be desirable to allow Collectors to query for a current/
-recent batch ID. How important this is will be determined by deployment
-experience.]
 
 ## Task Configuration {#task-configuration}
 
@@ -1730,13 +1744,17 @@ reports in the batch.
 
 ##### Boundary Check
 
-For fixed_size tasks, the batch boundaries are defined by opaque batch IDs. Thus
-the Aggregator needs to check that the query is associated with a known batch
-ID:
+For fixed_size tasks, the batch boundaries are defined by opaque batch IDs.
+Thus the Aggregator needs to check that the query is associated with a known
+batch ID:
+
+* For a CollectReq containing a query of type `by_batch_id`, the Leader checks
+  that the provided batch ID corresponds to a batch ID it returned in a
+  previous CollectResp for the task.
 
 * For an AggregateShareReq, the Helper checks that the batch ID provided by the
-  Leader in its corresponds to a batch ID used in a previous
-  AggregateInitializeReq for the task.
+  Leader corresponds to a batch ID used in a previous AggregateInitializeReq
+  for the task.
 
 ##### Size Check
 
