@@ -1649,28 +1649,38 @@ done as follows:
 
 ~~~
 enc, payload = SealBase(pk, "dap-02 aggregate share" || server_role || 0x00,
-  AggregateShareReq.task_id || AggregateShareReq.batch_selector, agg_share)
+  agg_share_aad, agg_share)
 ~~~
 
 where `pk` is the HPKE public key encoded by the collector's HPKE key,
-`server_role` is `0x02` for the leader and `0x03` for a helper. The `SealBase()`
-function is as specified in {{!HPKE, Section 6.1}} for the ciphersuite indicated
-by the HPKE configuration.
+`server_role` is `0x02` for the leader and `0x03` for a helper, and
+`agg_share_aad` is a value of type `AggregateShareAad` with its values set from
+the corresponding fields of the `AggregateShareReq`. The `SealBase()` function
+is as specified in {{!HPKE, Section 6.1}} for the ciphersuite indicated by the
+HPKE configuration.
+
+~~~
+struct {
+  TaskID task_id;
+  BatchSelector batch_selector;
+} AggregateShareAad;
+~~~
 
 The collector decrypts these aggregate shares using the opposite process.
 Specifically, given an encrypted input share, denoted `enc_share`, for a given
-batch selector, denoted `batch_selector`, decryption works as follows:
+batch selector, decryption works as follows:
 
 ~~~
 agg_share = OpenBase(enc_share.enc, sk, "dap-02 aggregate share" ||
-  server_role || 0x00, task_id || batch_selector, enc_share.payload)
+  server_role || 0x00, agg_share_aad, enc_share.payload)
 ~~~
 
-where `sk` is the HPKE secret key, `task_id` is the task ID for the collect
-request, and `server_role` is the role of the server that sent the aggregate
-share (`0x02` for the leader and `0x03` for the helper). The value of
-`batch_selector` is computed by the Collector from its query and the response to
-its query:
+where `sk` is the HPKE secret key, `server_role` is the role of the server that
+sent the aggregate share (`0x02` for the leader and `0x03` for the helper), and
+`agg_share_aad` is an `AggregateShareAad` message constructed from the task ID
+in the collect request and a batch selector. The value of the batch selector
+used in `agg_share_aad` is computed by the Collector from its query and the
+response to its query as follows:
 
 * For time_interval tasks, the batch selector is the batch interval specified in
   the query.
