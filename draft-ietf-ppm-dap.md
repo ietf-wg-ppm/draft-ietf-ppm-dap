@@ -810,14 +810,23 @@ as specified by the VDAF. It then encrypts each input share as follows:
 ~~~
 enc, payload = SealBase(pk,
   "dap-02 input share" || 0x01 || server_role,
-  task_id || metadata || public_share, input_share)
+  input_share_aad, input_share)
 ~~~
 
 where `pk` is the aggregator's public key; `server_role` is the Role of the
-intended recipient (`0x02` for the leader and `0x03` for the helper), `task_id`
-is the task ID, `metadata` is the report metadata, and `input_share` is the
-Aggregator's input share. The `SealBase()` function is as specified in {{!HPKE,
-Section 6.1}} for the ciphersuite indicated by the HPKE configuration.
+intended recipient (`0x02` for the leader and `0x03` for the helper),
+`input_share` is the Aggregator's input share, and `input_share_aad` is an
+encoded message of type `InputShareAad`, constructed from the same values as the
+corresponding fields in the report. The `SealBase()` function is as specified in
+{{!HPKE, Section 6.1}} for the ciphersuite indicated by the HPKE configuration.
+
+~~~
+struct {
+  TaskID task_id;
+  ReportMetadata metadata;
+  opaque public_share<0..2^32-1>;
+} InputShareAad;
+~~~
 
 The order of the encrypted input shares appear MUST match the order of the
 task's `aggregator_endpoints`. That is, the first share should be the leader's,
@@ -1179,14 +1188,15 @@ and `encrypted_input_share` denote these values, respectively. Given these
 values, an aggregator decrypts the input share as follows. First, the aggregator
 looks up the HPKE config and corresponding secret key indicated by
 `encrypted_input_share.config_id`. If not found, then it marks the report share
-as invalid with the error `hpke_unknown_config_id`. Otherwise, it decrypts the
-payload with the following procedure:
+as invalid with the error `hpke_unknown_config_id`. Otherwise, it constructs an
+`InputShareAad` message from `task_id`, `metadata`, and `public_share`. Let
+this be denoted by `input_share_aad`. It then decrypts the payload with the
+following procedure:
 
 ~~~
 input_share = OpenBase(encrypted_input_share.enc, sk,
   "dap-02 input share" || 0x01 || server_role,
-  task_id || metadata || public_share,
-  encrypted_input_share.payload)
+  input_share_aad, encrypted_input_share.payload)
 ~~~
 
 where `sk` is the HPKE secret key, and `server_role` is the role of the
