@@ -772,7 +772,6 @@ structured as follows:
 struct {
   ReportID report_id;
   Time time;
-  Extension extensions<0..2^16-1>;
 } ReportMetadata;
 
 struct {
@@ -801,24 +800,37 @@ task ID and report "metadata". The metadata consists of the following fields:
   timestamp cannot be used to link a report back to the Client that generated
   it.
 
-* A list of extensions to be included with the report. (See
-  {{upload-extensions}}.)
+To generate a report, the Client begins by sharding its measurement into input
+shares as specified by the VDAF. It then wraps each input share in the following
+structure:
 
-To generate a report, the Client first shards its measurement into input shares
-as specified by the VDAF. It then encrypts each input share as follows:
+~~~
+struct {
+  Extension extensions<0..2^16-1>;
+  opaque payload<0..2^32-1>;
+} PlaintextInputShare;
+~~~
+
+Field `extensions` is set to the list of extensions intended to be consumed by
+the given Aggregator. (See {{upload-extensions}}.) Field `payload` is set to the
+Aggregator's input share output by the VDAF sharding algorithm.
+
+Next, the Client encrypts each PlaintextInputShare `plaintext_input_share` as
+follows:
 
 ~~~
 enc, payload = SealBase(pk,
   "dap-02 input share" || 0x01 || server_role,
-  input_share_aad, input_share)
+  input_share_aad, plaintext_input_share)
 ~~~
 
 where `pk` is the aggregator's public key; `server_role` is the Role of the
 intended recipient (`0x02` for the leader and `0x03` for the helper),
-`input_share` is the Aggregator's input share, and `input_share_aad` is an
-encoded message of type `InputShareAad`, constructed from the same values as the
-corresponding fields in the report. The `SealBase()` function is as specified in
-{{!HPKE, Section 6.1}} for the ciphersuite indicated by the HPKE configuration.
+`plaintext_input_share` is the Aggregator's PlaintextInputShare, and
+`input_share_aad` is an encoded message of type `InputShareAad`, constructed
+from the same values as the corresponding fields in the report. The `SealBase()`
+function is as specified in {{!HPKE, Section 6.1}} for the ciphersuite indicated
+by the HPKE configuration.
 
 ~~~
 struct {
@@ -862,14 +874,20 @@ provide for some small leeway, usually no more than a few minutes, to account
 for clock skew. If the leader rejects a report for this reason, it SHOULD abort
      the upload protocol and alert the client with error "reportTooEarly".
 
+If the Report contains an unrecognized extension, then the Leader MAY abort the
+upload request with error "unrecognizedMessage". Note that this behavior is not
+mandatory because it requires the Leader to decrypt its input share.
+
 ### Upload Extensions {#upload-extensions}
 
-Each Report carries a list of extensions that clients may use to convey
-additional, authenticated information in the report. [OPEN ISSUE: The extensions
-aren't authenticated. It's probably a good idea to be a bit more clear about how
-we envision extensions being used. Right now this includes client attestation
-for defeating Sybil attacks. See issue#89.] Each extension is a tag-length
-     encoded value of the following form:
+Each PlaintextInputShare carries a list of extensions that Clients use to convey
+additional information to the Aggregator. Some extensions might be intended for
+all Aggregators; others may only be intended for a specific Aggregator. (For
+example, a DAP deployment might use some out-of-band mechanism for an Aggregator
+to verify that Reports come from authenticated Clients. It will likely be useful
+to bind the extension to the input share via HPKE encryption.)
+
+Each extension is a tag-length encoded value of the following form:
 
 ~~~
 struct {
@@ -883,8 +901,12 @@ enum {
 } ExtensionType;
 ~~~
 
-"extension_type" indicates the type of extension, and "extension_data" contains
-information specific to the extension.
+Field "extension_type" indicates the type of extension, and "extension_data"
+contains information specific to the extension.
+
+Extensions are mandatory-to-implement: If an Aggregator receives a Report
+containing an extension it does not recognize, then it MUST reject the Report.
+(See {{early-input-share-validation}} for details.)
 
 ### Upload Message Security
 
@@ -1013,6 +1035,7 @@ enum {
   vdaf_prep_error(5),
   batch_saturated(6),
   task_expired(7),
+  unrecognized_message(8),
   (255)
 } ReportShareError;
 ~~~
@@ -1181,20 +1204,20 @@ abort?]]
 
 #### Input Share Decryption {#input-share-decryption}
 
-Each report share has a corresponding task ID, report metadata (report ID,
-timestamp, and extensions), the public share sent to each Aggregator, and the
-recipient's encrypted input share. Let `task_id`, `metadata`, `public_share`,
-and `encrypted_input_share` denote these values, respectively. Given these
-values, an aggregator decrypts the input share as follows. First, the aggregator
-looks up the HPKE config and corresponding secret key indicated by
+Each report share has a corresponding task ID, report metadata (report ID and,
+timestamp), the public share sent to each Aggregator, and the recipient's
+encrypted input share. Let `task_id`, `metadata`, `public_share`, and
+`encrypted_input_share` denote these values, respectively. Given these values,
+an aggregator decrypts the input share as follows. First, the aggregator looks
+up the HPKE config and corresponding secret key indicated by
 `encrypted_input_share.config_id`. If not found, then it marks the report share
 as invalid with the error `hpke_unknown_config_id`. Otherwise, it constructs an
-`InputShareAad` message from `task_id`, `metadata`, and `public_share`. Let
-this be denoted by `input_share_aad`. It then decrypts the payload with the
-following procedure:
+`InputShareAad` message from `task_id`, `metadata`, and `public_share`. Let this
+be denoted by `input_share_aad`. It then decrypts the payload with the following
+procedure:
 
 ~~~
-input_share = OpenBase(encrypted_input_share.enc, sk,
+plaintext_input_share = OpenBase(encrypted_input_share.enc, sk,
   "dap-02 input share" || 0x01 || server_role,
   input_share_aad, encrypted_input_share.payload)
 ~~~
@@ -1202,9 +1225,9 @@ input_share = OpenBase(encrypted_input_share.enc, sk,
 where `sk` is the HPKE secret key, and `server_role` is the role of the
 aggregator (`0x02` for the leader and `0x03` for the helper). If decryption
 fails, the aggregator marks the report share as invalid with the error
-`hpke_decrypt_error`. Otherwise, it outputs the resulting `input_share`. The
-`OpenBase()` function is as specified in {{!HPKE, Section 6.1}} for the
-ciphersuite indicated by the HPKE configuration.
+`hpke_decrypt_error`. Otherwise, it outputs the resulting PlaintextInputShare
+`plaintext_input_share`. The `OpenBase()` function is as specified in {{!HPKE,
+Section 6.1}} for the
 
 #### Early Input Share Validation {#early-input-share-validation}
 
@@ -1235,6 +1258,9 @@ following generic checks.
 1. Check if the report's timestamp has passed its task's `task_expiration` time,
    if so the Aggregator MAY mark the input share as invalid with the error
    "task_expired".
+1. Check if the PlaintextInputShare contains unrecognized extensions. If so,
+   then the Aggregator MUST mark the input share as invalid with error
+   "unrecognized_message".
 1. Finally, if an Aggregator cannot determine if an input share is valid. it
    MUST mark the input share as invalid with error `report_dropped`. This
    situation arises if, for example, the Aggregator has evicted from long-term
@@ -1263,7 +1289,7 @@ prep_state = VDAF.prep_init(vdaf_verify_key,
                             agg_param,
                             report_id,
                             public_share,
-                            input_share)
+                            plaintext_input_share.payload)
 out = VDAF.prep_next(prep_state, None)
 ~~~
 
@@ -1271,8 +1297,8 @@ out = VDAF.prep_next(prep_state, None)
 `agg_id` is the aggregator ID (`0x00` for the Leader and `0x01` for the helper);
 `agg_param` is the opaque aggregation parameter distributed to the aggregators by
 the collector; `public_share` is the public share generated by the client and
-distributed to each aggregator; and `input_share` is the aggregator's input
-share.
+distributed to each aggregator; and `plaintext_input_share` is the aggregator's
+PlaintextInputShare.
 
 If either step fails, the aggregator marks the report as invalid with error
 `vdaf_prep_error`. Otherwise, the value `out` is interpreted as follows. If this
