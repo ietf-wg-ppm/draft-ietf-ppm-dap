@@ -816,7 +816,8 @@ enc, payload = SealBase(pk,
 where `pk` is the aggregator's public key; `server_role` is the Role of the
 intended recipient (`0x02` for the leader and `0x03` for the helper), `task_id`
 is the task ID, `metadata` is the report metadata, and `input_share` is the
-Aggregator's input share.
+Aggregator's input share. The `SealBase()` function is as specified in {{!HPKE,
+Section 6.1}} for the ciphersuite indicated by the HPKE configuration.
 
 The order of the encrypted input shares appear MUST match the order of the
 task's `aggregator_endpoints`. That is, the first share should be the leader's,
@@ -1191,7 +1192,9 @@ input_share = OpenBase(encrypted_input_share.enc, sk,
 where `sk` is the HPKE secret key, and `server_role` is the role of the
 aggregator (`0x02` for the leader and `0x03` for the helper). If decryption
 fails, the aggregator marks the report share as invalid with the error
-`hpke_decrypt_error`. Otherwise, it outputs the resulting `input_share`.
+`hpke_decrypt_error`. Otherwise, it outputs the resulting `input_share`. The
+`OpenBase()` function is as specified in {{!HPKE, Section 6.1}} for the
+ciphersuite indicated by the HPKE configuration.
 
 #### Early Input Share Validation {#early-input-share-validation}
 
@@ -1640,7 +1643,9 @@ enc, payload = SealBase(pk, "dap-02 aggregate share" || server_role || 0x00,
 ~~~
 
 where `pk` is the HPKE public key encoded by the collector's HPKE key,
-`server_role` is `0x02` for the leader and `0x03` for a helper.
+`server_role` is `0x02` for the leader and `0x03` for a helper. The `SealBase()`
+function is as specified in {{!HPKE, Section 6.1}} for the ciphersuite indicated
+by the HPKE configuration.
 
 The collector decrypts these aggregate shares using the opposite process.
 Specifically, given an encrypted input share, denoted `enc_share`, for a given
@@ -1662,6 +1667,9 @@ its query:
 
 * For fixed_size tasks, the batch selector is the batch ID assigned sent in the
   response.
+
+The `OpenBase()` function is as specified in {{!HPKE, Section 6.1}} for the
+ciphersuite indicated by the HPKE configuration.
 
 ### Collect Message Security
 
