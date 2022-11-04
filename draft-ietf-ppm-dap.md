@@ -1047,7 +1047,7 @@ struct {
 struct {
   TaskID task_id;
   AggregationJobID job_id;
-  opaque agg_param<0..2^16-1>;
+  opaque agg_param<0..2^32-1>;
   PartialBatchSelector part_batch_selector;
   ReportShare report_shares<1..2^32-1>;
 } AggregateInitializeReq;
@@ -1423,7 +1423,7 @@ attacks.]
 struct {
   TaskID task_id;
   Query query;
-  opaque agg_param<0..2^16-1>; /* VDAF aggregation parameter */
+  opaque agg_param<0..2^32-1>; /* VDAF aggregation parameter */
 } CollectReq;
 ~~~
 
@@ -1527,7 +1527,7 @@ struct {
 struct {
   TaskID task_id;
   BatchSelector batch_selector;
-  opaque agg_param<0..2^16-1>;
+  opaque agg_param<0..2^32-1>;
   uint64 report_count;
   opaque checksum[32];
 } AggregateShareReq;
