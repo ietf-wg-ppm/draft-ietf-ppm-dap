@@ -874,9 +874,10 @@ provide for some small leeway, usually no more than a few minutes, to account
 for clock skew. If the leader rejects a report for this reason, it SHOULD abort
      the upload protocol and alert the client with error "reportTooEarly".
 
-If the Report contains an unrecognized extension, then the Leader MAY abort the
-upload request with error "unrecognizedMessage". Note that this behavior is not
-mandatory because it requires the Leader to decrypt its input share.
+If the Report contains an unrecognized extension, or of two extensions have the
+same ExtensionType, then the Leader MAY abort the upload request with error
+"unrecognizedMessage". Note that this behavior is not mandatory because it
+requires the Leader to decrypt its input share.
 
 ### Upload Extensions {#upload-extensions}
 
@@ -1261,7 +1262,10 @@ following generic checks.
 1. Check if the PlaintextInputShare contains unrecognized extensions. If so,
    then the Aggregator MUST mark the input share as invalid with error
    "unrecognized_message".
-1. Finally, if an Aggregator cannot determine if an input share is valid. it
+1. Check if the ExtensionType of any two extensions in PlaintextInputShare is
+   the same. If so, then the Aggregator MUST mark the input share as invalid
+   with error "unrecognized_message".
+1. Finally, if an Aggregator cannot determine if an input share is valid, it
    MUST mark the input share as invalid with error `report_dropped`. This
    situation arises if, for example, the Aggregator has evicted from long-term
    storage the state required to perform the check. (See
