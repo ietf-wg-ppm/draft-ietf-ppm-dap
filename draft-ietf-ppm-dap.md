@@ -689,6 +689,31 @@ of the aggregators is configured with following parameters:
 Finally, the collector is configured with the HPKE secret key corresponding to
 `collector_hpke_config`.
 
+## Extensions {#protocol-extensions}
+
+Some DAP messages include a list of protocol extensions that are used to modify
+the behavior the core protocol. Each extension is a tag-length encoded value of
+the following form:
+
+~~~
+struct {
+  ExtensionType extension_type;
+  opaque extension_data<0..2^16-1>;
+} Extension;
+
+enum {
+  TBD(0),
+  (65535)
+} ExtensionType;
+~~~
+
+Field "extension_type" indicates the type of extension, and "extension_data"
+contains information specific to the extension.
+
+Extensions are mandatory-to-implement: If a party receives a message containing
+an extension it does not recognize, then it MUST handle it as an error.
+Precisely how the error is handled depends on the context.
+
 ## Uploading Reports {#upload-flow}
 
 Clients periodically upload reports to the leader, which then distributes the
@@ -811,9 +836,14 @@ struct {
 } PlaintextInputShare;
 ~~~
 
-Field `extensions` is set to the list of extensions intended to be consumed by
-the given Aggregator. (See {{upload-extensions}}.) Field `payload` is set to the
-Aggregator's input share output by the VDAF sharding algorithm.
+* Field `extensions` is set to the list of extensions intended to be consumed by
+  the given Aggregator. Reports with unrecognized or repeated extensions will be
+  rejected during aggregation as specified in {{early-input-share-validation}}.
+  Additionally, the Leader MAY abort the upload request with error
+  "unrecognizedMessage".
+
+* Field `payload` is set to the Aggregator's input share output by the VDAF
+  sharding algorithm.
 
 Next, the Client encrypts each PlaintextInputShare `plaintext_input_share` as
 follows:
@@ -873,40 +903,6 @@ NOT accept reports whose timestamps are too far in the future. Implementors MAY
 provide for some small leeway, usually no more than a few minutes, to account
 for clock skew. If the leader rejects a report for this reason, it SHOULD abort
      the upload protocol and alert the client with error "reportTooEarly".
-
-If the Report contains an unrecognized extension, then the Leader MAY abort the
-upload request with error "unrecognizedMessage". Note that this behavior is not
-mandatory because it requires the Leader to decrypt its input share.
-
-### Upload Extensions {#upload-extensions}
-
-Each PlaintextInputShare carries a list of extensions that Clients use to convey
-additional information to the Aggregator. Some extensions might be intended for
-all Aggregators; others may only be intended for a specific Aggregator. (For
-example, a DAP deployment might use some out-of-band mechanism for an Aggregator
-to verify that Reports come from authenticated Clients. It will likely be useful
-to bind the extension to the input share via HPKE encryption.)
-
-Each extension is a tag-length encoded value of the following form:
-
-~~~
-struct {
-  ExtensionType extension_type;
-  opaque extension_data<0..2^16-1>;
-} Extension;
-
-enum {
-  TBD(0),
-  (65535)
-} ExtensionType;
-~~~
-
-Field "extension_type" indicates the type of extension, and "extension_data"
-contains information specific to the extension.
-
-Extensions are mandatory-to-implement: If an Aggregator receives a Report
-containing an extension it does not recognize, then it MUST reject the Report.
-(See {{early-input-share-validation}} for details.)
 
 ### Upload Message Security
 
@@ -1080,6 +1076,7 @@ struct {
 struct {
   TaskID task_id;
   AggregationJobID job_id;
+  Extension extensions<0..2^16-1>;
   opaque agg_param<0..2^32-1>;
   PartialBatchSelector part_batch_selector;
   ReportShare report_shares<1..2^32-1>;
@@ -1096,6 +1093,10 @@ This message consists of:
 * The ID of the task for which the reports will be aggregated.
 
 * The aggregation job ID.
+
+* A list of protocol extensions ({{protocol-extensions}}). If the Helper does
+  not recognize one of these extensions, or if two extensions have the same
+  ExtensionType, it MUST abort the request with error "unrecognizedMessage".
 
 * The opaque, VDAF-specific aggregation parameter provided during the collection
   flow (`agg_param`),
@@ -1461,6 +1462,7 @@ attacks.]
 ~~~
 struct {
   TaskID task_id;
+  Extension extensions<0..2^16-1>;
   Query query;
   opaque agg_param<0..2^32-1>; /* VDAF aggregation parameter */
 } CollectReq;
@@ -1470,6 +1472,10 @@ The named parameters are:
 
 * `task_id`, the DAP task ID. If the Leader does not recognize the task ID, it
   MUST abort with error `unrecognizedTask`.
+* `extensions`, a list of protocol extensions ({{protocol-extensions}}). If the
+  Leader does not recognize one of the extensions, or if two extensions have the
+  same ExtensionType, it MUST abort the request with error
+  "unrecognizedMessage".
 * `query`, the Collector's query. The indicated query type MUST match the task's
   query type. Otherwise, the Leader MUST abort with error "queryMismatch".
 * `agg_param`, an aggregation parameter for the VDAF being executed. This is the
@@ -2043,8 +2049,8 @@ Details for each issue are below.
    the result may have some property that is desirable to the adversary ("stats
    poisoning"). The upload sub-protocol includes an extensions mechanism that
    can be used to prevent --- or at least mitigate --- these types of attacks.
-   See {{upload-extensions}}. [OPEN ISSUE: No such extension has been
-   implemented, so we're not yet sure if the current mechanism is sufficient.]
+   See {{upload-flow}}. [OPEN ISSUE: No such extension has been implemented, so
+   we're not yet sure if the current mechanism is sufficient.]
 
 ## Threat model
 
