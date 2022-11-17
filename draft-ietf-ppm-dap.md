@@ -820,7 +820,7 @@ follows:
 
 ~~~
 enc, payload = SealBase(pk,
-  "dap-02 input share" || 0x01 || server_role,
+  "dap-03 input share" || 0x01 || server_role,
   input_share_aad, plaintext_input_share)
 ~~~
 
@@ -1219,7 +1219,7 @@ procedure:
 
 ~~~
 plaintext_input_share = OpenBase(encrypted_input_share.enc, sk,
-  "dap-02 input share" || 0x01 || server_role,
+  "dap-03 input share" || 0x01 || server_role,
   input_share_aad, encrypted_input_share.payload)
 ~~~
 
@@ -1678,7 +1678,7 @@ Encrypting an aggregate share `agg_share` for a given `AggregateShareReq` is
 done as follows:
 
 ~~~
-enc, payload = SealBase(pk, "dap-02 aggregate share" || server_role || 0x00,
+enc, payload = SealBase(pk, "dap-03 aggregate share" || server_role || 0x00,
   agg_share_aad, agg_share)
 ~~~
 
@@ -1701,7 +1701,7 @@ Specifically, given an encrypted input share, denoted `enc_share`, for a given
 batch selector, decryption works as follows:
 
 ~~~
-agg_share = OpenBase(enc_share.enc, sk, "dap-02 aggregate share" ||
+agg_share = OpenBase(enc_share.enc, sk, "dap-03 aggregate share" ||
   server_role || 0x00, agg_share_aad, enc_share.payload)
 ~~~
 
