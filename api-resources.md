@@ -125,7 +125,7 @@ See "POST", below, for explanation and justification of the `round` field.
 
 ##### GET/HEAD
 
-The response body is a `struct AggregateJob` representing the current state of the reports in the job. The server mays return an error if no aggregation job is known to it for the aggregation job ID, or if the aggregation job results have been discarded, whether in response to a `DELETE` request on the resource, the task having expired, or any other garbage collection policy the server implements.
+The response body is a `struct AggregateJob` representing the current state of the reports in the job. The server may return an error if no aggregation job is known to it for the aggregation job ID, or if the aggregation job results have been discarded, whether in response to a `DELETE` request on the resource, the task having expired, or any other garbage collection policy the server implements.
 
 ##### PUT
 
@@ -330,7 +330,7 @@ struct {
 
 If the collection is available, the response body is a `struct Collection`. Otherwise the server can return something like HTTP 202 Accepted to indicate it's not ready yet, or HTTP 404 if no such collection is known to the server. The server may also return an error if the collection was discarded due to a `DELETE` request on the resource, the task having expired, or some other garbage collection policy implemented by the server.
 
-Even after receiving a `struct Collection`, the collector MAY continue to send `POST` requests to a collect URI and the respones should still be the `struct Collection` (if it is still available and hasn't been garbage collected).
+Even after receiving a `struct Collection`, the collector MAY continue to send `POST` requests to a collect URI and the responses should still be the `struct Collection` (if it is still available and hasn't been garbage collected).
 
 See "Viewing fixed-size batches as a message queue" for discussion.
 
