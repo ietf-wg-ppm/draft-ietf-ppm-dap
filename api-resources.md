@@ -83,30 +83,66 @@ Idempotent upload of a report to an aggregator. The request body is a `struct Re
 
 This is analogous to DAP-02's `POST /upload`.
 
+### Aggregation jobs
+
+Only the helper supports this resource.
+
+#### Path
+
+`/tasks/{task-id}/aggregation_jobs`
+
+##### PUT
+
+PUT to the aggregation jobs resource is how the leader creates an aggregate job in the helper. The body is an `AggregateJob` (see resource "An aggregation job", below) where `round` is 0 and `prepare_steps` is a list of `struct PrepareStep`s in state `PrepareStepState::start`.
+
+If successful, the helper's response is a redirect to a URI for the aggregation job, whose body is a `struct AggregateJob` where round is 1 and `prepare_steps` is a list of `struct PrepareStep`s in state `PrepareStepState::continued` that contains the helper's first-round VDAF prepare messages, or errors if `vdaf.prepare` failed for any report.
+
+Once created, an aggregation job resource cannot be mutated with `PUT` requests.
+
+This is analogous to DAP-02's `POST /aggregate` with an `AggregateInitReq`.
+
+This request is idempotent (a `PartialBatchSelector` and `agg_param` uniquely identify an aggregation job), so if a helper receives multiple PUT requests for some aggregation job and the members of `AggregateJobPutReq` don't change, the helper can return 200 OK.
+
+If the task has expired, then the helper should reject the request.
+
 ### An aggregation job
 
 Only the helper supports this resource.
 
 #### Path
 
-`/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}`
-
-`aggregation-job-id` uniquely identifies an aggregation job. It is chosen by the leader when it dispatches a job to the helper.
+Implementation defined (see PUT on the "Aggregation jobs" resource).
 
 #### Representation
 
 ```
+struct {
+  QueryType query_type;
+  select (PartialBatchSelector.query_type) {
+    case time_interval: Interval batch_interval;
+    case fixed_size: BatchID batch_id;
+  };
+} PartialBatchSelector;
+
 enum {
-  continued(0),
-  finished(1),
-  failed(2),
+  start(0),
+  continued(1),
+  finished(2),
+  failed(3),
   (255),
 } PrepareStepState;
+
+struct {
+  ReportMetadata metadata;
+  opaque public_share<0..2^32-1>;
+  HpkeCiphertext encrypted_input_share;
+} ReportShare;
 
 struct {
   ReportID report_id;
   PrepareStepState prepare_step_state;
   select (PrepareStep.prepare_step_state) {
+    case start: ReportShare;
     case continued: opaque prep_msg<0..2^32-1>; /* VDAF preparation message */
     case finished: Empty;
     case failed: ReportShareError;
@@ -114,6 +150,8 @@ struct {
 } PrepareStep;
 
 struct {
+  PartialBatchSelector part_batch_selector;
+  opaque agg_param<0..2^16-1>;
   u16 round;
   PrepareStep prepare_steps<1..2^32-1>;
 } AggregateJob
@@ -123,63 +161,21 @@ See "POST", below, for explanation and justification of the `round` field.
 
 #### Required HTTP methods
 
-##### GET/HEAD
-
-The response body is a `struct AggregateJob` representing the current state of the reports in the job. The server may return an error if no aggregation job is known to it for the aggregation job ID, or if the aggregation job results have been discarded, whether in response to a `DELETE` request on the resource, the task having expired, or any other garbage collection policy the server implements.
-
-##### PUT
-
-PUT to an aggregate job is how the leader creates an aggregate job in the helper. The body is an `AggregateJobPutReq`:
-
-```
-struct {
-  ReportMetadata metadata;
-  opaque public_share<0..2^32-1>;
-  HpkeCiphertext encrypted_input_share;
-} ReportShare;
-
-struct {
-  QueryType query_type;
-  select (PartialBatchSelector.query_type) {
-    case time_interval: Interval batch_interval;
-    case fixed_size: BatchID batch_id;
-  };
-} PartialBatchSelector;
-
-struct {
-  opaque agg_param<0..2^16-1>;
-  PartialBatchSelector part_batch_selector;
-  ReportShare report_shares<1..2^32-1>;
-} AggregateJobPutReq;
-```
-
-If successful, the helper's response is a `struct AggregateJob` where `prepare_steps` contains the helper's first-round VDAF prepare messages for the report shares in `AggregateJobPutReq`, or errors if `vdaf.prepare` failed for any report.
-
-Once created, an aggregation job resource cannot be mutated with `PUT` requests. Subsequent `PUT` requests to an aggregation job MUST be rejected by helpers.
-
-This is analogous to DAP-02's `POST /aggregate` with an `AggregateInitReq`.
-
-This request is idempotent, so if a helper receives multiple PUT requests for some aggregation job and the members of `AggregateJobPutReq` don't change, the helper can return 200 OK.
-
-If the task has expired, then the helper should reject the request.
-
-The idea here is that all the values in `struct AggregateJobPutReq` never need to be transmitted again during the handling of an aggregate job, which is why the message is not `struct AggregateJob`.
-
 ##### POST
 
 POST to an aggregate job is how the leader steps an aggregate job. The request body is a `struct AggregateJob` where `prepare_steps` contains the leader's current-round prepare messages, and `round` is the number of the current round. The response is a `struct AggregateJob` where `prepare_steps` contains the helper's next-round prepare messages. The response's `round` field will be one more than the request's `round`.
 
-We use a POST here because this request is _not_ idempotent. Suppose the leader sends `POST /tasks/{task-id}/aggregate_jobs/{aggregation-job-id}` where the body has `round = 1`, and that this is successfully handled by the helper. Besides generating the response, this will have the side effect of advancing the state in the helper to round 2. If the leader were to resend the `POST /tasks/{task-id}/aggregate_jobs/{aggregation-job-id}` with `round = 1`, then the request should be rejected by the helper, because it has advanced to the next round.
+We use a POST here because this request is _not_ idempotent. Suppose the leader sends `POST {aggregation-job-uri}` where the body has `round = 2`, and that this is successfully handled by the helper. Besides generating the response, this will have the side effect of advancing the state in the helper to round 3. If the leader were to resend the `POST /tasks/{task-id}/aggregate_jobs/{aggregation-job-id}` with `round = 1`, then the request should be rejected by the helper, because it has advanced to the next round and may not have retained the first-round messages needed to respond to that request.
 
 This is analogous to DAP-02's `POST /aggregate` with an `AggregateContinueReq`.
 
 ###### Context for the `round` field
 
-The `round` field is needed so that the leader can recover from a response being lost. Suppose a 2-round VDAF is being executed, and that the leader does `PUT /tasks/{task-id}/aggregate_jobs/{aggregation-job-id}` and that request succeeds, so the helper responds with its first-round prepare messages. Then, the leader does `POST /tasks/{task-id}/aggregate_jobs/{aggregation-job-id}` with the first-round broadcast prepare message, but the helper's response gets lost during network transit.
+The `round` field is needed so that the leader can recover from a response being lost. Suppose a many round VDAF is being executed, and that the leader does `PUT /tasks/{task-id}/aggregate_jobs` and that request succeeds, so the helper responds with its first-round prepare messages, and advances its own preparation state to round 1 for the relevant reports. Then, the leader does `POST {aggregation-job-uri}` with the first-round broadcast prepare message, but the helper's response (its second-round prepare messages) gets lost during network transit.
 
-If the helper received the `POST` and advanced its state to the second round, then the leader should do `GET /tasks/{task-id}/aggregate_jobs/{aggregation-job-id}` so it can compute the second round broadcast message and then do `POST /tasks/{task-id}/aggregate_jobs/{aggregation-job-id}` to have the helper move to the finished state. If the helper did not receive the `POST`, then the leader should re-send the first-round broadcast prepare message.
+The leader will now re-send `POST {aggregation-job-uri}` with the first-round broadcast prepare messages, and the helper has to decide: are these the first-round broadcast prepare messages (in which case the helper should respond with the previously computed second-round prepare messages) OR are these the second-round broadcast prepare messages (in which case the helper should compute its third-round prepare messages and respond with those)?
 
-But in DAP-02, the leader has no way to know what happened in the helper, leaving it unable to recover from this state. Adding a `round` field to the `AggregateJob` message enables the leader to reliably and idempotently find out what state the helper is in by doing `GET /tasks/{task-id}/aggregate_jobs/{aggregation-job-id}`, and then taking the appropriate next step.
+In DAP-02, there's no way for the helper to know what to do here unless it retains a full transcript of the prepare protocol so it can match the leader request against a previously seen state. Adding a `round` field to the `AggregateJob` message enables the helper to figure out how to respond to repeated `POST` requests to the same aggregation job.
 
 ##### DELETE
 
@@ -222,7 +218,7 @@ If successful, the response from the helper is a redirect to a URI for the aggre
 
 If the task has expired, or if for some other reason the helper has discarded the data needed to compute the aggregate share request, the helper should refuse the request.
 
-Note that contrary to the report and aggregation job resources, which each have an ID assigned by the client and leader respectively, there's no aggregate share ID in the resource. This is because the `batch_selector` and `agg_param` in `struct AggregateShareReq` already uniquely identify a batch (recall that `current-batch` cannot occur in `AggregateShareReq`; a real batch ID is always provided). So a further unique ID is not needed, and would introduce ambiguities: what if a leader referred to an existing aggregate share ID, but with a different `agg_param` or `batch_selector`?
+Note that contrary to the report resource, which has an ID assigned by the client respectively, there's no aggregate share ID in the resource. This is because the `batch_selector` and `agg_param` in `struct AggregateShareReq` already uniquely identify a batch (recall that `current-batch` cannot occur in `AggregateShareReq`; a real batch ID is always provided). So a further unique ID is not needed, and would introduce ambiguities: what if a leader referred to an existing aggregate share ID, but with a different `agg_param` or `batch_selector`?
 
 This is analogous to DAP-02's `POST /aggregate_share`.
 
