@@ -790,8 +790,9 @@ public share, but Poplar1 does not. See {{!VDAF}}.) The header consists of the
 task ID and report "metadata". The metadata consists of the following fields:
 
 * A report ID used by the Aggregators to ensure the report appears in at most
-  one batch. (See {{anti-replay}}.) The Client MUST generate this by generating
-  16 random bytes using a cryptographically secure random number generator.
+  one batch. (See {{input-share-validation}}.) The Client MUST generate this by
+  generating 16 random bytes using a cryptographically secure random number
+  generator.
 
 * A timestamp representing the time at which the report was generated.
   Specifically, the `time` field is set to the number of seconds elapsed since
@@ -860,7 +861,7 @@ error of type 'outdatedConfig'. Clients SHOULD invalidate any cached aggregator
 does not succeed, clients MUST abort and discontinue retrying.
 
 The Leader MUST ignore any report pertaining to a batch that has already been
-collected. (See {{early-input-share-validation}} for details.) Otherwise,
+collected. (See {{input-share-validation}} for details.) Otherwise,
 comparing the aggregate result to the previous aggregate result may result in a
 privacy violation. (Note that the Helpers enforce this as well.) The Leader MAY
 ignore any reports whose timestamp is past the task's `task_expiration`. When it
@@ -907,7 +908,7 @@ contains information specific to the extension.
 
 Extensions are mandatory-to-implement: If an Aggregator receives a Report
 containing an extension it does not recognize, then it MUST reject the Report.
-(See {{early-input-share-validation}} for details.)
+(See {{input-share-validation}} for details.)
 
 ### Upload Message Security
 
@@ -1054,7 +1055,7 @@ report shares as follows:
 1. Decrypt the input share for each report share as described in
    {{input-share-decryption}}.
 1. Check that the resulting input share is valid as described in
-   {{early-input-share-validation}}.
+   {{input-share-validation}}.
 1. Initialize VDAF preparation as described in {{input-share-prep}}.
 
 If any step yields an invalid report share, the leader removes the report share
@@ -1148,12 +1149,12 @@ as follows:
 1. Decrypt the input share for each report share as described in
    {{input-share-decryption}}.
 1. Check that the resulting input share is valid as described in
-   {{early-input-share-validation}}.
+   {{input-share-validation}}.
 1. Initialize VDAF preparation and initial outputs as described in
    {{input-share-prep}}.
 
 [[OPEN ISSUE: consider moving the helper report ID check into
-{{early-input-share-validation}}]]
+{{input-share-validation}}]]
 
 Once the helper has processed each valid report share in
 `AggregateInitializeReq.report_shares`, the helper then creates an
@@ -1230,7 +1231,7 @@ fails, the aggregator marks the report share as invalid with the error
 `plaintext_input_share`. The `OpenBase()` function is as specified in {{!HPKE,
 Section 6.1}} for the
 
-#### Early Input Share Validation {#early-input-share-validation}
+#### Input Share Validation {#input-share-validation}
 
 Validating an input share will either succeed or fail. In the case of failure,
 the input share is marked as invalid with a corresponding ReportShareError
@@ -1239,14 +1240,22 @@ error.
 Before beginning the preparation step, Aggregators are required to perform the
 following generic checks.
 
-1. Check if the report has never been aggregated but is contained by a batch
-   that has been collected. If this check fails, the input share MUST be marked
-   as invalid with the error `batch_collected`. This prevents additional reports
-   from being aggregated after its batch has already been collected.
 1. Check if the report has already been aggregated with this aggregation
    parameter. If this check fails, the input share MUST be marked as invalid
    with the error `report_replayed`. This is the case if the report was used in
    a previous aggregate request and is therefore a replay.
+    * Implementation note: To detect replay attacks, each Aggregator is required
+      to keep track of the set of reports it has processed for a given task.
+      Because honest Clients choose the report ID at random, it is sufficient to
+      store the set of IDs of processed reports. However, implementations may
+      find it helpful to track additional information, like the timestamp, so
+      that the storage used for anti-replay can be sharded efficiently.
+
+1. Check if the report has never been aggregated but is contained by a batch
+   that has been collected. If this check fails, the input share MUST be marked
+   as invalid with the error `batch_collected`. This prevents additional reports
+   from being aggregated after its batch has already been collected.
+
 1. Depending on the query type for the task, additional checks may be
    applicable:
     * For fixed_size tasks, the Aggregators need to ensure that each batch is
@@ -1256,15 +1265,19 @@ following generic checks.
       "batch_saturated". Note that this behavior is not strictly enforced here
       but during the collect sub-protocol. (See {{batch-validation}}.) If both
       checks succeed, the input share is not marked as invalid.
+
 1. Check if the report's timestamp has passed its task's `task_expiration` time,
    if so the Aggregator MAY mark the input share as invalid with the error
    "task_expired".
+
 1. Check if the PlaintextInputShare contains unrecognized extensions. If so,
    then the Aggregator MUST mark the input share as invalid with error
    "unrecognized_message".
+
 1. Check if the ExtensionType of any two extensions in PlaintextInputShare is
    the same. If so, then the Aggregator MUST mark the input share as invalid
    with error "unrecognized_message".
+
 1. Finally, if an Aggregator cannot determine if an input share is valid, it
    MUST mark the input share as invalid with error `report_dropped`. This
    situation arises if, for example, the Aggregator has evicted from long-term
@@ -1837,35 +1850,6 @@ maximum batch size, `max_batch_size`. The Aggregator checks that `len(X) >=
 min_batch_size` and `len(X) <= max_batch_size`, where `X` is the set of reports
 in the batch.
 
-### Anti-replay {#anti-replay}
-
-Using a client-provided report multiple times within a single batch, or using
-the same report in multiple batches, may allow a server to learn information
-about the client's measurement, violating the privacy goal of DAP. To prevent
-such replay attacks, this specification requires the aggregators to detect and
-filter out replayed reports.
-
-To detect replay attacks, each aggregator keeps track of the set of report IDs
-pertaining to reports that were previously aggregated for a given task. If the
-leader receives a report from a client whose report ID is in this set, it
-either ignores it or aborts the upload sub-protocol as described in
-{{upload-flow}}. A Helper who receives an encrypted input share whose report ID
-is in this set rejects the report as described in
-{{early-input-share-validation}}.
-
-[OPEN ISSUE: This has the potential to require aggregators to store report ID
-sets indefinitely. See issue#180.]
-
-A malicious aggregator may attempt to force a replay by replacing the report ID
-generated by the client with a report ID its peer has not yet seen. To prevent
-this, clients incorporate the report ID into the AAD for HPKE encryption,
-ensuring that the output share is only recovered if the aggregator is given the
-correct report ID. (See {{upload-request}}.)
-
-Aggregators prevent the same report from being used in multiple batches (except
-as required by the protocol) by only responding to valid collect requests, as
-described in {{batch-validation}}.
-
 # Operational Considerations {#operational-capabilities}
 
 The DAP protocol has inherent constraints derived from the tradeoff between
@@ -1906,7 +1890,8 @@ In addition, for each DAP task, helpers are required to:
 - Implement some form of batch-to-report index, as well as inter- and
   intra-batch replay mitigation storage, which includes some way of tracking
   batch report size. Some of this state may be used for replay attack
-  mitigation. The replay mitigation strategy is described in {{anti-replay}}.
+  mitigation. The replay mitigation strategy is described in
+  {{input-share-validation}}.
 
 Beyond the minimal capabilities required of helpers, leaders are generally
 required to:
@@ -1918,7 +1903,7 @@ required to:
 In addition, for each DAP task, leaders are required to:
 
 - Implement and store state for the form of inter- and intra-batch replay
-  mitigation in {{anti-replay}}.
+  mitigation in {{input-share-validation}}.
 
 ### Collector capabilities
 
@@ -1991,7 +1976,7 @@ reports that have been aggregated for the task so far. Depending on the task
 lifetime and report upload rate, this can result in high storage costs. To
 alleviate this burden, DAP allows Aggregators to drop this state as needed, so
 long as reports are dropped properly as described in
-{{early-input-share-validation}}. Aggregators SHOULD take steps to mitigate the
+{{input-share-validation}}. Aggregators SHOULD take steps to mitigate the
 risk of dropping reports (e.g., by evicting the oldest data first).
 
 Furthermore, the aggregators must store data related to a task as long as the
