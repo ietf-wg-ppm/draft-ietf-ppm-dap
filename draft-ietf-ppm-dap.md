@@ -454,13 +454,14 @@ in the "type" field (within the DAP URN namespace
 
 This list is not exhaustive. The server MAY return errors set to a URI other
 than those defined above. Servers MUST NOT use the DAP URN namespace for errors
-not listed in the appropriate IANA registry (see {{urn-space}}). Clients SHOULD
-display the "detail" field of all errors. The "instance" value MUST be the
-endpoint to which the request was targeted. The problem document MUST also
-include a "taskid" member which contains the associated DAP task ID (this value
-is always known, see {{task-configuration}}), encoded in Base 64 using the URL
-and filename safe alphabet with no padding defined in sections 5 and 3.2 of
-{{!RFC4648}}.
+not listed in the appropriate IANA registry (see {{urn-space}}). The "detail"
+member of the Problem Details document includes additional diagnostic
+information.
+
+When the task ID is known (see {{task-configuration}}), the problem document SHOULD
+include an additional "taskid" member containing the ID encoded in Base 64 using
+the URL and filename safe alphabet with no padding defined in sections 5 and 3.2
+of {{!RFC4648}}.
 
 In the remainder of this document, the tokens in the table above are used to
 refer to error types, rather than the full URNs. For example, an "error of type
