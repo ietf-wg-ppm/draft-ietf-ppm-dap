@@ -853,10 +853,9 @@ task's `aggregator_endpoints`. That is, the first share should be the leader's,
 the second share should be for the first helper, and so on.
 
 The leader responds to well-formed requests to `[leader]/upload` with HTTP
-status code 200 OK and an empty body. Malformed requests are handled as
-described in {{errors}}. Clients SHOULD NOT upload the same measurement value in
-more than one report if the leader responds with HTTP status code 200 OK and an
-empty body.
+status code 200 OK. Malformed requests are handled as described in {{errors}}.
+Clients SHOULD NOT upload the same measurement value in more than one report if
+the leader responds with HTTP status code 200 OK.
 
 If the leader does not recognize the task ID, then it MUST abort with error
 `unrecognizedTask`.
