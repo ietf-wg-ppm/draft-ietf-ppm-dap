@@ -458,7 +458,7 @@ not listed in the appropriate IANA registry (see {{urn-space}}). The "detail"
 member of the Problem Details document includes additional diagnostic
 information.
 
-When the task ID is known (see {{task-configuration}}), the problem document SHOULD
+When the task ID is known (see {{task-configuration}}), the problem document MAY
 include an additional "taskid" member containing the ID encoded in Base 64 using
 the URL and filename safe alphabet with no padding defined in sections 5 and 3.2
 of {{!RFC4648}}.
