@@ -114,6 +114,45 @@ seen in the clear by any server.
 
 (\*) Indicates a change that breaks wire compatibility with the previous draft.
 
+03:
+
+- Enrich the "fixed_size" query type to allow the Collector to request a
+  recently aggregated batch without knowing the batch ID in advance. ID
+  discovery was previously done out-of-band. (\*)
+
+- Allow Aggregators to advertise multiple HPKE configurations. (\*)
+
+- Clarify requirements for enforcing anti-replay. Namely, while it is sufficient
+  to detect repeeated report IDs, it is also enough to detect repeated IDs and
+  timestamps.
+
+- Remove the extensions from the Report and add extensions to the plaintext
+  payload of each ReportShare. (\*)
+
+- Clarify that extensions are mandatory to implement: If an Aggregator does not
+  recongize a ReportShare's extension, it must reject it.
+
+- Clarify that Aggregators must reject any ReportShare with repeated extension
+  types.
+
+- Specify explicitly how to serialize the Additional Authenticated Data (AAD)
+  string for HPKE encryption. This clarifies an ambiguity in the previous
+  version. (\*)
+
+- Change the length tag for the aggregation parameter to 32 bits. (\*)
+
+- Use the same prefix ("application") for all media types. (\*)
+
+- Make input share validation more explicit, including adding a new
+  ReportShareError variant, "report_too_early", for handling reports too far in
+  the future. (\*)
+
+- Improve alignment of problem details usage with {{!RFC7807}}. Replace
+  "reportTooLate" problem document type with "repjortRejected" and clarify
+  handling of rejected reports in the upload sub-protocool. (\*)
+
+- Bump version tag from "dap-02" to "dap-03". (\*)
+
 02:
 
 - Define a new task configuration parameter, called the "query type", that
