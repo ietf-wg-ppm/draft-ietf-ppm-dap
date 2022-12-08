@@ -1235,7 +1235,7 @@ where `sk` is the HPKE secret key, and `server_role` is the role of the
 aggregator (`0x02` for the leader and `0x03` for the helper). The
 `OpenBase()` function is as specified in {{!HPKE, Section 6.1}} for the
 ciphersuite indicated by the HPKE configuration. If the leader supports
-multiple HPKE configurations, it can use trial decryption with each
+multiple HPKE configurations with non-distinct configuration identifiers, it can use trial decryption with each
 configuration. If decryption fails, the aggregator marks the report share
 as invalid with the error `hpke_decrypt_error`. Otherwise, the aggregator
 outputs the resulting PlaintextInputShare `plaintext_input_share`.
