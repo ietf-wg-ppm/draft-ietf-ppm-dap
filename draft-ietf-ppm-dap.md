@@ -716,12 +716,16 @@ aggregator MAY abort with an error of type `missingTaskID`, in which case the
 client SHOULD retry the request with a well-formed task ID included.
 
 An aggregator responds to well-formed requests with HTTP status code 200 OK and
-an `HpkeConfig` value:
+an `HpkeConfigList` value. The `HpkeConfigList` structure contains one or more
+`HpkeConfig` structures in decreasing order of preference. This allows a server
+to support multiple HPKE configurations simultaneously.
 
 [TODO: Allow aggregators to return HTTP status code 403 Forbidden in deployments
 that use authentication to avoid leaking information about which tasks exist.]
 
 ~~~
+HpkeConfig HpkeConfigList<1..2^16-1>;
+
 struct {
   HpkeConfigId id;
   HpkeKemId kem_id;
@@ -736,8 +740,11 @@ uint16 HpkeKemId;  /* Defined in [HPKE] */
 uint16 HpkeKdfId;  /* Defined in [HPKE] */
 ~~~
 
-[OPEN ISSUE: Decide whether to expand the width of the id, or support multiple
-cipher suites (a la OHTTP/ECH).]
+[OPEN ISSUE: Decide whether to expand the width of the id.]
+
+Aggregators SHOULD allocate distinct id values for each `HpkeConfig` in a `HpkeConfigList`.
+The RECOMMENDED strategy for generating these values is via rejection sampling, i.e., to
+randomly select an id value repeatedly until it does not match any known `HpkeConfig`.
 
 The client MUST abort if any of the following happen for any HPKE config
 request:
@@ -854,10 +861,13 @@ If the leader does not recognize the task ID, then it MUST abort with error
 `unrecognizedTask`.
 
 The leader responds to requests whose leader encrypted input share uses an
-out-of-date `HpkeConfig.id` value, indicated by `HpkeCiphertext.config_id`, with
-error of type 'outdatedConfig'. Clients SHOULD invalidate any cached aggregator
-`HpkeConfig` and retry with a freshly generated Report. If this retried report
-does not succeed, clients MUST abort and discontinue retrying.
+out-of-date or unknown `HpkeConfig.id` value, indicated by `HpkeCiphertext.config_id`,
+with error of type 'outdatedConfig'. If the leader supports multiple HPKE
+configurations, it can use trial decryption with each configuration to determine
+if requests match a known HPKE configuration. When clients receive an 'outdatedConfig'
+error, they SHOULD invalidate any cached aggregator `HpkeConfigList` and retry with
+a freshly generated Report. If this retried report does not succeed, clients MUST
+abort and discontinue retrying.
 
 The Leader MUST ignore any report pertaining to a batch that has already been
 collected. (See {{early-input-share-validation}} for details.) Otherwise,
@@ -1209,13 +1219,11 @@ Each report share has a corresponding task ID, report metadata (report ID and,
 timestamp), the public share sent to each Aggregator, and the recipient's
 encrypted input share. Let `task_id`, `metadata`, `public_share`, and
 `encrypted_input_share` denote these values, respectively. Given these values,
-an aggregator decrypts the input share as follows. First, the aggregator looks
-up the HPKE config and corresponding secret key indicated by
-`encrypted_input_share.config_id`. If not found, then it marks the report share
-as invalid with the error `hpke_unknown_config_id`. Otherwise, it constructs an
+an aggregator decrypts the input share as follows. First, it constructs an
 `InputShareAad` message from `task_id`, `metadata`, and `public_share`. Let this
-be denoted by `input_share_aad`. It then decrypts the payload with the following
-procedure:
+be denoted by `input_share_aad`. Then, the aggregator looks up the HPKE config
+and corresponding secret key indicated by `encrypted_input_share.config_id`
+and attempts decryption of the payload with the following procedure:
 
 ~~~
 plaintext_input_share = OpenBase(encrypted_input_share.enc, sk,
@@ -1224,11 +1232,13 @@ plaintext_input_share = OpenBase(encrypted_input_share.enc, sk,
 ~~~
 
 where `sk` is the HPKE secret key, and `server_role` is the role of the
-aggregator (`0x02` for the leader and `0x03` for the helper). If decryption
-fails, the aggregator marks the report share as invalid with the error
-`hpke_decrypt_error`. Otherwise, it outputs the resulting PlaintextInputShare
-`plaintext_input_share`. The `OpenBase()` function is as specified in {{!HPKE,
-Section 6.1}} for the
+aggregator (`0x02` for the leader and `0x03` for the helper). The
+`OpenBase()` function is as specified in {{!HPKE, Section 6.1}} for the
+ciphersuite indicated by the HPKE configuration. If the leader supports
+multiple HPKE configurations, it can use trial decryption with each
+configuration. If decryption fails, the aggregator marks the report share
+as invalid with the error `hpke_decrypt_error`. Otherwise, the aggregator
+outputs the resulting PlaintextInputShare `plaintext_input_share`.
 
 #### Early Input Share Validation {#early-input-share-validation}
 
@@ -2319,7 +2329,7 @@ the input shares and defeat privacy.
 This specification defines the following protocol messages, along with their
 corresponding media types types:
 
-- HpkeConfig {{hpke-config}}: "application/dap-hpke-config"
+- HpkeConfigList {{hpke-config}}: "application/dap-hpke-config-list"
 - Report {{upload-request}}: "application/dap-report"
 - AggregateInitializeReq {{collect-flow}}: "application/dap-aggregate-initialize-req"
 - AggregateInitializeResp {{collect-flow}}: "application/dap-aggregate-initialize-resp"
@@ -2341,7 +2351,7 @@ in this section for all media types listed above.
 
 [OPEN ISSUE: Solicit review of these allocations from domain experts.]
 
-### "application/dap-hpke-config" media type
+### "application/dap-hpke-config-list" media type
 
 Type name:
 
@@ -2349,7 +2359,7 @@ Type name:
 
 Subtype name:
 
-: dap-hpke-config
+: dap-hpke-config-list
 
 Required parameters:
 
