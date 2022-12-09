@@ -123,14 +123,14 @@ seen in the clear by any server.
 - Allow Aggregators to advertise multiple HPKE configurations. (\*)
 
 - Clarify requirements for enforcing anti-replay. Namely, while it is sufficient
-  to detect repeeated report IDs, it is also enough to detect repeated IDs and
+  to detect repeated report IDs, it is also enough to detect repeated IDs and
   timestamps.
 
 - Remove the extensions from the Report and add extensions to the plaintext
   payload of each ReportShare. (\*)
 
 - Clarify that extensions are mandatory to implement: If an Aggregator does not
-  recongize a ReportShare's extension, it must reject it.
+  recognize a ReportShare's extension, it must reject it.
 
 - Clarify that Aggregators must reject any ReportShare with repeated extension
   types.
@@ -149,7 +149,7 @@ seen in the clear by any server.
 
 - Improve alignment of problem details usage with {{!RFC7807}}. Replace
   "reportTooLate" problem document type with "repjortRejected" and clarify
-  handling of rejected reports in the upload sub-protocool. (\*)
+  handling of rejected reports in the upload sub-protocol. (\*)
 
 - Bump version tag from "dap-02" to "dap-03". (\*)
 
@@ -916,7 +916,7 @@ See the implementation note in {{input-share-validation}}.
 The Leader MUST ignore any report pertaining to a batch that has already been
 collected (see {{input-share-validation}} for details). Otherwise, comparing the
 aggregate result to the previous aggregate result may result in a privacy
-violation. Note that this is enforced by all Aggegators, not just the leader. In
+violation. Note that this is enforced by all Aggregators, not just the leader. In
 addition, the leader MAY abort the upload protocol and alert the client with
 error `reportRejected`.
 
