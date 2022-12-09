@@ -1048,6 +1048,7 @@ enum {
   batch_saturated(6),
   task_expired(7),
   unrecognized_message(8),
+  report_too_early(9),
   (255)
 } ReportShareError;
 ~~~
@@ -1152,7 +1153,7 @@ To begin this process, the helper first checks if it recognizes the task ID, if
 not then it MUST abort with error `unrecognizedTask`. Then the helper checks
 that the report IDs in `AggregateInitializeReq.report_shares` are all distinct.
 If two ReportShare values have the same report ID, then the helper MUST abort
-with error "unrecognizedMessage". If this check succeeds, the helper then
+with error `unrecognizedMessage`. If this check succeeds, the helper then
 attempts to recover each input share in `AggregateInitializeReq.report_shares`
 as follows:
 
@@ -1250,6 +1251,9 @@ error.
 Before beginning the preparation step, Aggregators are required to perform the
 following generic checks.
 
+1. Check that the decrypted input share can be decoded. If not, the input share
+   MUST be marked as invalid with the error `unrecognized_message`.
+
 1. Check if the report has already been aggregated with this aggregation
    parameter. If this check fails, the input share MUST be marked as invalid
    with the error `report_replayed`. This is the case if the report was used in
@@ -1275,6 +1279,11 @@ following generic checks.
       "batch_saturated". Note that this behavior is not strictly enforced here
       but during the collect sub-protocol. (See {{batch-validation}}.) If both
       checks succeed, the input share is not marked as invalid.
+
+1. Check if the report is too far into the future. Implementors can provide for
+   some small leeway, usually no more than a few minutes, to account for clock
+   skew. If a report is rejected for this reason, the Aggregator SHOULD mark
+   the input share as invalid with the error `report_too_early`.
 
 1. Check if the report's timestamp has passed its task's `task_expiration` time,
    if so the Aggregator MAY mark the input share as invalid with the error
@@ -1344,11 +1353,16 @@ round trip is initiated by the leader.
 
 The leader begins each round of continuation for a report share based on its
 locally computed prepare message and the previous PrepareStep from the helper.
-If PrepareStep is of type "failed", then the leader marks the report as failed
-and removes it from the candidate report set and does not process it further. If
-the type is "finished", then the leader aborts with "unrecognizedMessage".
-[[OPEN ISSUE: This behavior is not specified.]] If the type is "continued", then
-the leader proceeds as follows.
+If PrepareStep is of type `failed`, then the leader acts based on the value of
+the `ReportShareError`:
+
+  - If the error is `ReportShareError.report_too_early`, then the leader MAY try
+    to re-send the report in a later `AggregateInitializeReq`.
+  - For any other error, the leader marks the report as failed, removes it from
+    the candidate report set and does not process it further.
+
+If the type is `finished`, then the leader aborts with `unrecognizedMessage`. If
+the type is `continued`, then the leader proceeds as follows.
 
 Let `leader_outbound` denote the leader's prepare message and `helper_outbound`
 denote the helper's. The leader computes the next state transition as follows:
