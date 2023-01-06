@@ -570,7 +570,7 @@ struct {
 /* An ID used to uniquely identify a report in the context of a DAP task. */
 uint8 ReportID[16];
 
-/* Metadata describing a report. */
+/* Public metadata describing a report. */
 struct {
   ReportID report_id;
   Time time;
@@ -816,9 +816,6 @@ The `HpkeConfigList` structure contains one or more `HpkeConfig` structures in
 decreasing order of preference. This allows a server to support multiple HPKE
 configurations simultaneously.
 
-[TODO: Allow aggregators to return HTTP status code 403 Forbidden in deployments
-that use authentication to avoid leaking information about which tasks exist.]
-
 Aggregators SHOULD allocate distinct `id` values for each `HpkeConfig` in an
 `HpkeConfigList`. The RECOMMENDED strategy for generating these values is via
 rejection sampling, i.e., to randomly select an `id` value repeatedly until it
@@ -871,7 +868,8 @@ shares and computing the public share using the VDAF's
 `measurement_to_input_shares` algorithm ({{!VDAF, Section 5.1}}):
 
 ~~~
-(public_share, input_shares) = VDAF.measurement_to_input_shares(measurement)
+(public_share, input_shares) =
+  VDAF.measurement_to_input_shares(measurement)
 ~~~
 
 [TODO: in VDAF-04, `measurement_to_input_shares` will take a nonce argument, for
@@ -930,9 +928,7 @@ struct {
   order to ensure that that the timestamp cannot be used to link a report back
   to the Client that generated it.
 
-* `public_share` is the `public_share` output by
-  `VDAF.measurement_to_input_shares`. Note that some VDAFs, like Prio3, have an
-  empty public share (see {{!VDAF}}).
+* `public_share` is the `public_share` output by the VDAF sharding algorithm.
 
 * `encrypted_input_shares` is the encrypted input share of each of the
    Aggregators. The order of the encrypted input shares appear MUST match the
@@ -985,7 +981,7 @@ Each `PlaintextInputShare` carries a list of extensions that Clients use to
 convey additional information to the Aggregator. Some extensions might be
 intended for all Aggregators; others may only be intended for a specific
 Aggregator. For example, a DAP deployment might use some out-of-band mechanism
-for an Aggregator to verify that `Reports` come from authenticated Clients. It
+for an Aggregator to verify that reports come from authenticated Clients. It
 will likely be useful to bind the extension to the input share via HPKE
 encryption.
 
@@ -1058,7 +1054,7 @@ Specifically:
 
 * Some VDAFs (e.g., Prio3) allow the Leader to start aggregating reports
   proactively before all the reports in a batch are received. Others (e.g.,
-  Poplar1) cannot be prepared until the collector provides the aggregation
+  Poplar1) cannot be prepared until the Collector provides the aggregation
   parameter.
 
 * Processing the reports -- especially validating them -- may require multiple
@@ -1108,7 +1104,7 @@ The Leader begins an aggregation job by choosing a set of candidate reports that
 pertain to the same DAP task. The Leader can prepare many reports in parallel by
 concurrently creating multiple aggregation jobs. After choosing the set of
 candidates, the Leader begins aggregation by splitting each report into "report
-shares", one for each aggregator. The Leader and Helpers then run the aggregate
+shares", one for each Aggregator. The Leader and Helpers then run the aggregate
 initialization flow to accomplish two tasks:
 
 1. Recover report shares and determine which are invalid.
