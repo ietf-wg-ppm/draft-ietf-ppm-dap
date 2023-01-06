@@ -568,7 +568,7 @@ struct {
 } Interval;
 
 /* An ID used to uniquely identify a report in the context of a DAP task. */
-uint8 ReportID[16];
+opaque ReportID[16];
 
 /* Public metadata describing a report. */
 struct {
@@ -1422,7 +1422,7 @@ check on their state. Only the Helper supports this resource.
 ##### Representation {#aggregation-job-representation}
 
 ~~~
-uint8 AggregationJobId[16];
+opaque AggregationJobId[16];
 
 struct {
   ReportMetadata metadata;
