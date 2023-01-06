@@ -1763,30 +1763,18 @@ The message contains the following fields:
   reports included in the aggregation, then combining the hash values with a
   bitwise-XOR operation.
 
+The Leader SHOULD wait until all the aggregation jobs needed to compute an
+aggregate share are complete before sending an aggregate share request, as
+otherwise the Helper will not be able to immediately respond.
+
 The Helper first checks that it recognizes the task ID in the request path. If
 not, it MUST abort with error `unrecognizedTask`. It then ensures that the
 request meets the requirements for batch parameters following the procedure in
 {{batch-validation}}.
 
-If the request is valid, the Helper immediately responds to the Leader with
-status 303 See Other and a Location header containing a URI for the individual
-aggregate share that can be polled by the Leader, as described in
-{{aggregate-share-resource}}. The structure of this URI is not specified, so
-implementations may use any unique identifier they wish for aggregate shares.
-
-After issuing an aggregate-share request for a given query, it is an error for
-the Leader to issue any more aggregation jobs for additional reports that
-satisfy the query. These reports will be rejected by Helpers as described
-{{agg-init}}.
-
-#### Required Methods
-
-##### GET `{aggregate share URI}`
-
-To check whether an aggregate share is available, the Leader makes a GET request
-to the aggregate share resource. If all the output shares needed to construct
-the aggregate share are available, then the Helper computes an aggregate share
-as follows:
+If the request is valid and all the output shares needed to construct the
+aggregate share are available, then the Helper computes an aggregate share as
+follows:
 
 First, it computes a checksum based on the reports that satisfy the query, and
 checks that the `report_count` and `checksum` included in the
@@ -1803,7 +1791,7 @@ agg_share = VDAF.out_shares_to_agg_share(agg_param, out_shares)
 Note that for most VDAFs, it is possible to aggregate output shares as they
 arrive rather than wait until the batch is collected. To do so however, it is
 necessary to enforce the batch parameters as described in {{batch-validation}}
-so that the aggregator knows which aggregate share to update.
+so that the Aggregator knows which aggregate share to update.
 
 The Helper then encrypts `agg_share` under the Collector's HPKE public key as
 described in {{aggregate-share-encrypt}}, yielding `encrypted_aggregate_share`.
@@ -1818,13 +1806,21 @@ struct {
 } AggregateShare;
 ~~~
 
-`encrypted_aggregate_share.config_id` is set to the collector's HPKE config ID.
+`encrypted_aggregate_share.config_id` is set to the Collector's HPKE config ID.
 `encrypted_aggregate_share.enc` is set to the encapsulated HPKE context `enc`
 computed above and `encrypted_aggregate_share.ciphertext` is the ciphertext
 `encrypted_agg_share` computed above.
 
-After receiving the Helper's response, the leader uses the HpkeCiphertext to
+After receiving the Helper's response, the Leader uses the HpkeCiphertext to
 respond to a collect request (see {{collection-resource}}).
+
+After issuing an aggregate-share request for a given query, it is an error for
+the Leader to issue any more aggregation jobs for additional reports that
+satisfy the query. These reports will be rejected by Helpers as described in
+{{agg-init}}.
+
+[[OPEN ISSUE: do we need a DELETE request on aggregate shares? If so, do we
+need an aggregate-share-id to construct a URI for an aggregate share?]]
 
 ### Collection Finalization {#collect-finalization}
 
