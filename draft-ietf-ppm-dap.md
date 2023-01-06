@@ -853,6 +853,7 @@ the Helper during the aggregate sub-protocol ({{aggregate-flow}}).
 
 ##### PUT `/tasks/{task-id}/reports/{report-id}`
 
+`task-id` is the ID of the task to which the report is being uploaded.
 `report-id` is a `ReportId` used by the Aggregators to ensure the report appears
 in at most one batch (see {{input-share-validation}}). The Client MUST generate
 this using a cryptographically secure random number generator.
@@ -1421,6 +1422,8 @@ check on their state. Only the Helper supports this resource.
 ##### Representation {#aggregation-job-representation}
 
 ~~~
+uint8 AggregationJobId[16];
+
 struct {
   ReportMetadata metadata;
   opaque public_share<0..2^32-1>;
@@ -1509,7 +1512,11 @@ An `AggregationJob` consists of:
 
 #### Required methods
 
-##### PUT `/tasks/{task-id}/aggregation_jobs` {#aggregation-job-put}
+##### PUT `/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}` {#aggregation-job-put}
+
+`task-id` is the ID of the task that the aggregation job belongs to.
+`aggregation-job-id` is an `AggregationJobId` chosen by the leader to uniquely
+identify an aggregation job across the rounds of the aggregation sub-protocol.
 
 The Leader begins an aggregation job by choosing a set of candidate reports that
 pertain to the same DAP task and compiling them into an `AggregationJob` (see
@@ -1520,20 +1527,17 @@ each `PrepareStep.prepare_step_state` MUST be set to `PrepareStepState.start`
 and the `PrepareStep` MUST contain a `ReportShare`. `AggregationJob.round` MUST
 be 0.
 
-If successful, the Helper's responds with HTTP status 303 See Other and a
-Location header containing a URI for the aggregation job. The structure of this
-URI is not specified, so implementations may use any unique identifier they wish
-for aggregation jobs. The body of the response MUST be a `struct AggregationJob`
-whose `round` field is 1 and whose `prepare_steps` is a list of
-`struct PrepareStep`s in state `continued` if initialization succeeded or errors
-if any report was invalid.
+If successful, the Helper's responds with a `struct AggregationJob` whose
+`round` field is 1 and whose `prepare_steps` is a list of `struct PrepareStep`s
+in state `continued` if initialization succeeded or errors if any report was
+invalid.
 
-##### POST `{aggregation job URI}` {#aggregation-job-post}
+##### POST `/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}` {#aggregation-job-post}
 
 The Leader drives the continuation of input preparation using POST requests to
 aggregation job resources (see {{agg-continue-flow}}).
 
-###### DELETE `{aggregation job URI}`
+###### DELETE `/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}`
 
 Once an aggregation job is deleted, the Helper MAY abandon it and discard all
 state related to it (e.g., report shares, prepare messages, preparation state).
