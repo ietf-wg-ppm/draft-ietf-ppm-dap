@@ -789,9 +789,10 @@ does not match any known `HpkeConfig`.
 The client MUST abort if any of the following happen for any HPKE config
 request:
 
-* the GET request failed or did not return a valid HPKE configuration; or
-* the HPKE configuration specifies a KEM, KDF, or AEAD algorithm the client does
-  not recognize.
+* the GET request failed or did not return a valid HPKE config list;
+* the HPKE config list is empty; or
+* no HPKE config advertised by the aggregator specifies a supported a KEM, KDF,
+  or AEAD algorithm triple.
 
 Aggregators SHOULD use HTTP caching to permit client-side caching of this
 resource {{!RFC5861}}. Aggregators SHOULD favor long cache lifetimes to avoid
