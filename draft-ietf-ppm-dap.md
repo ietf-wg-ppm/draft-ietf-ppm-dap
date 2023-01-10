@@ -1615,8 +1615,7 @@ Collector, as described in {{collection-resource}}. The structure of this URI is
 not specified, so implementations may use any unique identifier they wish for
 collections.
 
-The Leader then asynchronously begins working with the Helper to prepare the
-input shares satisfying the query (or continues this process, depending on the
+The Leader then asynchronously begins working with the Helper to aggregate the reports satisfying the query (or continues this process, depending on the
 VDAF) as described in {{aggregate-flow}}, and then invokes the aggregate share
 request flow described in {{aggregate-share-resource}} to gather aggregate
 shares from Helpers.
