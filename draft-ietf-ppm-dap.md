@@ -1191,7 +1191,7 @@ abort?]]
 #### Input Share Decryption {#input-share-decryption}
 
 Each report share has a corresponding task ID, report metadata (report ID and
-timestamp), the public share sent to each Aggregator, and the recipient's
+timestamp), a public share sent to each Aggregator, and the recipient's
 encrypted input share. Let `task_id`, `metadata`, `public_share`, and
 `encrypted_input_share` denote these values, respectively. Given these values,
 an aggregator decrypts the input share as follows. First, it constructs an
