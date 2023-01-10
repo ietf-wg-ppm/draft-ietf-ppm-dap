@@ -1680,7 +1680,7 @@ problem document as described in {{errors}}.
 The Leader MAY respond with 204 No Content for requests to a collection if the
 results have been deleted due to age.
 
-###### A note on idempotence
+###### A Note on Idempotence
 
 The reason we use a POST instead of a GET to poll the state of a collection is
 because of the fixed-size query mode (see {{fixed-size-query}}). Collectors may
