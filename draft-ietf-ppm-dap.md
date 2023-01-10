@@ -781,7 +781,7 @@ by accessing the HPKE configuration resource.
 
 #### Required methods
 
-##### GET `/hpke_config[?task_id={task-id}]`
+##### GET `/hpke_configs[?task_id={task-id}]`
 
 An aggregator is free to use different HPKE configurations for each task with
 which it is configured. Clients MAY specify a query parameter `task_id` whose
