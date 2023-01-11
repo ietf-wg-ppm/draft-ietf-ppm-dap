@@ -522,7 +522,7 @@ or sub-protocols:
 * Computing the aggregate over sets of reports, using the aggregation job
   resource ({{aggregation-job-resource}}), as described in {{aggregate-flow}}.
 * Collecting aggregation results, using the aggregate share
-  ({{aggregate-share-resource}}) and collection ({{collection-resource}})
+  ({{aggregate-share-resource}}) and collect job ({{collect-job-resource}})
   resources, as described in {{collect-flow}}.
 
 In this section, we discuss each of the resources and the messages used to act
@@ -1086,7 +1086,7 @@ Aggregate request (continued, Job = M) ------------------>  | 11-20
 {: #aggregation-flow-illustration title="Aggregation Flow (batch size=20).
 Multiple aggregation flows can be executed at the same time."}
 
-The aggregation flow can be thought of as having three phases for transforming
+The aggregation flow can be thought of as having two phases for transforming
 each valid input report share into an output share:
 
 - Initialization: Begin the aggregation flow by sharing report shares with each
@@ -1096,10 +1096,42 @@ each valid input report share into an output share:
 - Continuation: Continue the aggregation flow by exchanging messages produced by
   the underlying VDAF instance until aggregation completes or an error occurs.
   These messages do not replay the shares.
-- Completion: Finish the aggregate flow, yielding an output share corresponding
-  to each input report share in the batch.
 
-### Aggregate Initialization {#agg-init}
+### Aggregation Job Resource {#aggregation-job-resource}
+
+Executing the aggregation flow consists of the Leader interacting with the
+Helper's aggregate job resource. Only the Helper supports this resource.
+
+#### Representation {#aggregation-job-representation}
+
+~~~
+enum {
+  continued(0),
+  finished(1),
+  failed(2),
+  (255),
+} PrepareStepState;
+
+struct {
+  ReportID report_id;
+  PrepareStepState prepare_step_state;
+  select (PrepareStep.prepare_step_state) {
+    case start: ReportShare;
+    case continued: opaque prep_msg<0..2^32-1>;
+    case finished: Empty;
+    case failed: ReportShareError;
+  }
+} PrepareStep;
+
+struct {
+  u16 round;
+  PrepareStep prepare_steps<1..2^32-1>;
+} AggregationJob;
+~~~
+
+#### Required methods
+
+##### PUT `/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}` {#aggregation-job-put}
 
 The Leader begins an aggregation job by choosing a set of candidate reports that
 pertain to the same DAP task. The Leader can prepare many reports in parallel by
@@ -1111,9 +1143,7 @@ initialization flow to accomplish two tasks:
 1. Recover report shares and determine which are invalid.
 1. For each valid report share, initialize the VDAF preparation process.
 
-The Leader and Helper initialization behavior is detailed below.
-
-#### Leader Initialization {#leader-init}
+###### Leader Initialization {#leader-init}
 
 The Leader begins the aggregate initialization phase with the set of candidate
 report shares as follows:
@@ -1127,18 +1157,94 @@ report shares as follows:
 If any step yields an invalid report share, the Leader removes the report share
 from the set of candidate reports. Once the Leader has initialized this state
 for all valid candidate report shares, it then creates an aggregation job in the
-Helper as described in {{aggregation-job-put}}.
+Helper by making a PUT request to the aggregation job resource. The Leader
+chooses the `AggregationJobID` and uses it to construct the aggregation job
+resource URI. This ID MUST be unique within the context of the corresponding DAP
+task. It is RECOMMENDED that this be set to a random string output by a
+cryptographically secure pseudorandomnumber generator. The body of the request
+is an `AggregationJobInitializeReq`:
+
+~~~
+opaque AggregationJobId[32];
+
+struct {
+  ReportMetadata metadata;
+  opaque public_share<0..2^32-1>;
+  HpkeCiphertext encrypted_input_share;
+} ReportShare;
+
+struct {
+  QueryType query_type;
+  select (PartialBatchSelector.query_type) {
+    case time_interval: Empty;
+    case fixed_size: BatchID batch_id;
+  };
+} PartialBatchSelector;
+
+enum {
+  batch_collected(0),
+  report_replayed(1),
+  report_dropped(2),
+  hpke_unknown_config_id(3),
+  hpke_decrypt_error(4),
+  vdaf_prep_error(5),
+  batch_saturated(6),
+  task_expired(7),
+  unrecognized_message(8),
+  report_too_early(9),
+  (255)
+} ReportShareError;
+
+struct {
+  opaque agg_param<0..2^32-1>;
+  PartialBatchSelector part_batch_selector;
+  ReportShares report_shares<1..2^32-1>;
+} AggregationJobInitializeReq;
+~~~
+
+An `AggregationJobInitializeReq` consists of:
+
+* The opaque, VDAF-specific aggregation parameter provided during the collection
+  flow (`agg_param`),
+
+  [[OPEN ISSUE: Check that this handling of `agg_param` is appropriate when the
+  definition of Poplar is done.]]
+
+* Information used by the Aggregators to determine how to aggregate each report:
+
+    * For fixed_size tasks, the Leader specifies a "batch ID" that determines
+      the batch to which each report for this aggregation job belongs.
+
+      [OPEN ISSUE: For fixed_size tasks, the Leader is in complete control over
+      which batch a report is included in. For time_interval tasks, the Client
+      has some control, since the timestamp determines which batch window it
+      falls in. Is this desirable from a privacy perspective? If not, it might
+      be simpler to drop the timestamp altogether and have the agg init request
+      specify the batch window instead.]
+
+  The indicated query type MUST match the task's query type. Otherwise, the
+  Helper MUST abort with error "queryMismatch".
+
+* The sequence of report shares to aggregate. The `encrypted_input_share` field
+  of the report share is the `HpkeCiphertext` whose index in
+  `Report.encrypted_input_shares` is equal to the index of the aggregator in the
+  task's `aggregator_endpoints` to which the `AggregationJobInitializeReq` is
+  being sent.
 
 [[OPEN ISSUE: Consider sending report shares separately (in parallel) to the
 aggregate instructions. Right now, aggregation parameters and the corresponding
 report shares are sent at the same time, but this may not be strictly
 necessary.]]
 
-#### Helper Initialization
+The Helper's response consists of an `AggregationJob` (see
+{{aggregation-job-representation}}). The Leader now moves to the aggregation job
+continuation phase, described in {#aggregation-job-post}.
+
+###### Helper Initialization
 
 Each Helper begins their portion of the aggregate initialization phase with the
-set of candidate report shares obtained in an `AggregationJob` created by the
-Leader (see {{aggregation-job-put}}). The Helper attempts to recover and validate
+set of candidate report shares obtained in an `AggregationJobInitializeReq` sent
+by the Leader (see {{leader-init}}). The Helper attempts to recover and validate
 the corresponding input shares similarly to the Leader, and eventually returns a
 response to the Leader carrying a VDAF-specific message for each report share.
 
@@ -1147,15 +1253,11 @@ valid:
 
 * If the Helper does not recognize the task ID, it MUST abort with error
   `unrecognizedTask`.
-* If `AggregationJob.round` is not 0, the Helper MUST abort with error
-  `roundMismatch`.
-* The report IDs in `AggregationJob.prepare_steps` must all be distinct. If not,
-  then the Helper MUST abort with error `unrecognizedMessage`.
-* In each `PrepareStep`, `prepare_step_state` should be `start`. If not, then
-  the Helper MUST abort with error `unrecognizedMessage`.
+* The report IDs in `AggregationJobInitializeReq.report_shares` must all be
+  distinct. If not, then the Helper MUST abort with error `unrecognizedMessage`.
 
 If these checks succeed, the Helper then attempts to recover each input share in
-`AggregationJob.prepare_steps` as follows:
+`AggregationJobInitializeReq.report_shares` as follows:
 
 1. Decrypt the input share for each report share as described in
    {{input-share-decryption}}.
@@ -1167,26 +1269,155 @@ If these checks succeed, the Helper then attempts to recover each input share in
 [[OPEN ISSUE: consider moving the helper report ID check into
 {{input-share-validation}}]]
 
-Once the Helper has processed each valid report share in
-`AggregationJob.prepare_steps`, it responds with an `AggregationJob` (see
-{{aggregation-job-representation}}). The order of its `prepare_steps` MUST match
-the Leader's request. Each report that was marked as invalid is assigned the
+Once the Helper has processed each valid report share in, it responds with an
+`AggregationJob` (see {{aggregation-job-representation}}). The `round` field
+MUST be 0. The order of the `prepare_steps` MUST match that of the
+`report_shares` in the Leader's request (ordered by either structure's
+`report_id` field). Each report that was marked as invalid is assigned the
 `PrepareStepState` `failed`. Otherwise, the `PrepareStepState` is either
 `continued` with the output `prep_msg`, or `finished` if the VDAF preparation
 process is finished for the report share.
 
-The Helper SHOULD store each report share's current preparation state and round.
+The Helper SHOULD store each report share's current preparation state and the
+aggregation job's round.
 
-Upon receipt of a Helper's `AggregationJob` message, the Leader checks that the
-sequence of `PrepareStep` messages corresponds to the `PrepareStep` sequence of
-the request. If any `PrepareStep` appears out of order, is missing, has an
-unrecognized report ID, is in the `start` state, or if two prepare steps have
-the same report ID, then the Leader MUST abort with error `unrecognizedMessage`.
-If `AggregationJob.round` is not 1, then the Leader MUST abort with error
-`roundMismatch`.
+##### POST `/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}` {#aggregation-job-post}
 
-[[OPEN ISSUE: the leader behavior here is sort of bizarre -- to whom does it
-abort?]]
+In the continuation phase, the Leader drives the VDAF preparation of each share
+in the candidate report set until the underlying VDAF moves into a terminal
+state, yielding an output share for all aggregators or an error. This phase may
+involve multiple rounds of interaction depending on the underlying VDAF. Each
+round trip is initiated by the Leader making a POST request to an aggregation
+job resource.
+
+###### Leader Continuation {#aggregation-leader-continuation}
+
+The Leader begins each round of continuation with an `AggregationJob` received
+from the Helper. It first validates that the `AggregationJob` is well-formed:
+
+* The Helper's `prepare_steps` MUST include exactly the same report IDs in the
+  same order (by report ID) as either the `report_shares` in the Leader's
+  `AggregationJobInitReq` (if this is the first round of continuation) or the
+  `prepare_steps` in the Leader's `AggregationJob` (if this is a subsequent
+  round).
+* The Helper MUST advance to the same round as the Leader. That is, the Helper's
+ `AggregationJob.round` MUST be 0 if this is the first round of continuation or
+  MUST be equal the Leader's `AggregationJob.round` if this is a subsequent
+  round).
+
+If either condition does not hold, the Leader should abandon further processing
+of the aggregation job.
+
+Once the Helper's `AggregationJob` is validated, the Leader can continue the
+preparation of each report share in the aggregation job based on its locally
+computed prepare message and the `PrepareStep` from the Helper.
+
+If `PrepareStep` is of type `failed`, then the Leader acts based on the value of
+the `ReportShareError`:
+
+* If the error is `ReportShareError.report_too_early`, then the Leader MAY try
+  to re-send the report in a later `AggregationJob`.
+* For any other error, the Leader marks the report as failed, removes it from
+  the candidate report set and does not process it further.
+
+If the Helper's `PrepareStep` is of type is `finished` and the Leader's
+preparation of this report share is also finished, then the report share is
+aggregated and can now be collected (see {{collect-flow}}). If the Leader is not
+finished, then the report cannot be processed further and MUST be abandoned.
+
+If the Helper's `PrepareStep` is of type `continued`, then the Leader proceeds
+as follows.
+
+Let `leader_outbound` denote the Leader's prepare message and `helper_outbound`
+denote the Helper's. The Leader advances its aggregation job to the next round
+by computes the next state transition as follows:
+
+~~~
+inbound = VDAF.prep_shares_to_prep(agg_param, [leader_outbound, helper_outbound])
+out = VDAF.prep_next(prep_state, inbound)
+~~~
+
+where `[leader_outbound, helper_outbound]` is a vector of two elements. If
+either of these operations fails, then the Leader marks the report as invalid.
+Otherwise, if the VDAF has reached the finished state, then `out` will be the
+Leader's output share, in which case the Leader finishes and stores its output
+share for further processing as described in {{collect-flow}}. Otherwise, `out`
+is the pair `(new_state, prep_msg)`, where `new_state` is the Leader's updated
+state and `prep_msg` is the next VDAF message (which will be `leader_outbound`
+in the next round of continuation). For the latter case, the Leader sets
+`prep_state` to `new_state`.
+
+The Leader SHOULD store each report share's current preparation state and the
+aggregation job's round.
+
+The Leader then instructs the Helper to advance the aggregation job to the round
+the Leader has just reached by sending the new `inbound` prepare messages to the
+Helper in a POST request to the aggregation job resource. The body of the
+request is an `AggregationJob` (see {{aggregation-job-representation}}).
+`AggregationJob.round` MUST be set to the Leader's current round (i.e., one more
+than the `round` value in the Helper's latest `AggregationJob` message) and the
+`prepare_steps` field MUST be a sequence of `PrepareStep`s in the `continued`
+state containing the corresponding `inbound` prepare message.
+
+###### Helper Continuation
+
+If the Helper does not recognize the task ID, then it MUST abort with error
+`unrecognizedTask`.
+
+Otherwise, for each `PrepareStep` received from the Leader in
+`AggregationJob.prepare_steps`, the Helper checks
+`PrepareStep.prepare_step_state` to determine if the report share should
+continue being prepared. If the report share is in state `failed` or `finished`,
+then the Helper marks the report as failed with error `unrecognized_message`.
+
+If the state is `continued`, then the Helper continues with preparation for the
+report share. The Helper MUST check its current preparation state against the
+Leader's `AggregationJob.round` value. If the Leader is one round ahead of the
+Helper, then the Helper can combine the Leader's prepare message and the
+Helper's current preparation state (`prep_state`) as follows:
+
+~~~
+out = VDAF.prep_next(prep_state, inbound)
+~~~
+
+where `inbound` is the previous VDAF prepare message sent by the Leader and
+`prep_state` is the Helper's current preparation state. This step yields one of
+three outputs:
+
+1. An error, in which case the input report share is marked as failed and the
+   Helper replies to the Leader with a `PrepareStep` in the `failed` state.
+1. An output share, in which case the Helper stores the output share for future
+   collection as described in {{collect-flow}} and replies to the Leader with a
+   `PrepareStep` in the `finished` state. The Helper expects no further requests
+   from the Leader for a report in the `finished` state.
+1. An updated VDAF state and preparation message, denoted
+   `(prep_state, prep_msg)`, in which case the Helper replies to the leader with
+   `PrepareStep` in the `continued` state containing `prep_msg`.
+
+After computing each report share's preparation state and prepare message, the
+Helper SHOULD store them, tagged with the round they were computed in, so that
+the Leader can recover from losing the Helper's response.
+
+If the `round` in the Leader's request is equal to the Helper's current round
+(i.e., this is not the first time the Leader has sent this request), then the
+Helper can either re-compute the current round prepare message or re-transmit a
+previously computed message. The Helper MUST verify that the contents of the
+`AggregationJob` are identical to the previous message (i.e., containing the
+same set of reports).
+
+If the Leader's `round` is behind or more than one round ahead of the Helper's
+current round, then the Helper MUST abort with an error of type `roundMismatch`.
+
+The Helper's response to the Leader is an `AggregationJob` (see
+{{aggregation-job-representation}}) compiled from the `PrepareStep`s. The order
+of the Helper's `prepare_steps` MUST match that of the Leader's.
+
+[[OPEN ISSUE: consider relaxing this ordering constraint. See issue#217.]]
+
+##### DELETE `/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}`
+
+Once an aggregation job is deleted, the Helper MAY abandon it and discard all
+state related to it (e.g., report shares, prepare messages, preparation state).
 
 #### Input Share Decryption {#input-share-decryption}
 
@@ -1315,233 +1546,6 @@ If either step fails, the aggregator marks the report as invalid with error
 is the last round of the VDAF, then `out` is the aggregator's output share.
 Otherwise, `out` is the pair `(prep_state, prep_msg)`.
 
-### Aggregate Continuation {#agg-continue-flow}
-
-In the continuation phase, the Leader drives the VDAF preparation of each share
-in the candidate report set until the underlying VDAF moves into a terminal
-state, yielding an output share for all aggregators or an error. This phase may
-involve multiple rounds of interaction depending on the underlying VDAF. Each
-round trip is initiated by the Leader.
-
-#### Leader Continuation
-
-The Leader begins each round of continuation for a report share based on its
-locally computed prepare message and the previous `PrepareStep` from the Helper.
-If `PrepareStep` is of type `failed`, then the Leader acts based on the value of
-the `ReportShareError`:
-
-* If the error is `ReportShareError.report_too_early`, then the Leader MAY try
-  to re-send the report in a later `AggregationJob`.
-* For any other error, the Leader marks the report as failed, removes it from
-  the candidate report set and does not process it further.
-
-If the type is `finished`, then the Leader aborts with `unrecognizedMessage`. If
-the type is `continued`, then the Leader proceeds as follows.
-
-Let `leader_outbound` denote the Leader's prepare message and `helper_outbound`
-denote the Helper's. The Leader computes the next state transition as follows:
-
-~~~
-inbound = VDAF.prep_shares_to_prep(agg_param, [leader_outbound, helper_outbound])
-out = VDAF.prep_next(prep_state, inbound)
-~~~
-
-where `[leader_outbound, helper_outbound]` is a vector of two elements. If
-either of these operations fails, then the Leader marks the report as invalid.
-Otherwise it interprets `out` as follows: If this is the last round of the VDAF,
-then `out` is the aggregator's output share, in which case the aggregator
-finishes and stores its output share for further processing as described in
-{{collect-flow}}. Otherwise, `out` is the pair `(new_state, prep_msg)`, where
-`new_state` is the Leader's updated state and `prep_msg` is the next VDAF
-message (which will be `leader_outbound` in the next round of continuation).
-For the latter case, the Leader sets `prep_state` to `new_state`.
-
-The Leader then sends the updated `PrepareStep`s to the Helper in a POST request
-to the `AggregationJob` (see {{aggregation-job-post}}). `AggregationJob.round`
-MUST be incremented to the current round.
-
-#### Helper Continuation
-
-If the Helper does not recognize the task ID, then it MUST abort with error
-`unrecognizedTask`.
-
-Otherwise, for each `PrepareStep` received from the Leader in
-`AggregationJob.prepare_steps`, the Helper checks
-`PrepareStep.prepare_step_state` to determine if the report share should
-continue being prepared. If the report share is in state `start`, `failed` or
-`finished`, then the Helper marks the report as failed with error
-`unrecognized_message`.
-
-If the state is `continued`, then the Helper continues with preparation for the
-report share. The Helper MUST check its current preparation state against the
-Leader's `AggregationJob.round` value. If the Leader is one round ahead of the
-Helper, then the Helper can combine the Leader's prepare message and the
-Helper's current preparation state (`prep_state`) as follows:
-
-~~~
-out = VDAF.prep_next(prep_state, inbound)
-~~~
-
-where `inbound` is the previous VDAF prepare message sent by the Leader and
-`prep_state` is the Helper's current preparation state. This step yields one of
-three outputs:
-
-1. An error, in which case the input report share is marked as failed and the
-   Helper replies to the Leader with a `PrepareStep` in the `failed` state.
-1. An output share, in which case the Helper stores the output share for future
-   collection as described in {{collect-flow}} and replies to the Leader with a
-   `PrepareStep` in the `finished` state. The Helper expects no further requests
-   from the Leader for a report in the `finished` state.
-1. An updated VDAF state and preparation message, denoted
-   `(prep_state, prep_msg)`, in which case the Helper replies to the leader with
-   `prep_msg` inside a `PrepareStep` in the `continued` state.
-
-After computing each report share's preparation state and prepare message, the
-Helper SHOULD durably store them, tagged with the round they were computed in,
-so that the Leader can recover from losing the Helper's response.
-
-If the Leader and Helper are on the same round (i.e., this is not the first time
-the Leader has sent this request), then the Helper can either re-compute the
-current round prepare message or re-transmit a previously computed message.
-
-If the Leader's round is too far out of sync with the Helper's for the Helper to
-step the `AggregationJob`, then the Helper MUST abort with an error of type
-`roundMismatch`.
-
-The Helper compiles its `PrepareStep`s into an `AggregationJob` that it sends to
-the Leader. The order of the Helper's `prepare_steps` MUST match that of the
-Leader's. The Helper then awaits the next message from the Leader.
-
-[[OPEN ISSUE: consider relaxing this ordering constraint. See issue#217.]]
-
-### Aggregate Job Resource {#aggregation-job-resource}
-
-This resource allows the Leader to create aggregation jobs in the Helper and
-check on their state. Only the Helper supports this resource.
-
-##### Representation {#aggregation-job-representation}
-
-~~~
-opaque AggregationJobId[16];
-
-struct {
-  ReportMetadata metadata;
-  opaque public_share<0..2^32-1>;
-  HpkeCiphertext encrypted_input_share;
-} ReportShare;
-
-struct {
-  QueryType query_type;
-  select (PartialBatchSelector.query_type) {
-    case time_interval: Empty;
-    case fixed_size: BatchID batch_id;
-  };
-} PartialBatchSelector;
-
-enum {
-  start(0),
-  continued(1),
-  finished(2),
-  failed(3),
-  (255),
-} PrepareStepState;
-
-enum {
-  batch_collected(0),
-  report_replayed(1),
-  report_dropped(2),
-  hpke_unknown_config_id(3),
-  hpke_decrypt_error(4),
-  vdaf_prep_error(5),
-  batch_saturated(6),
-  task_expired(7),
-  unrecognized_message(8),
-  report_too_early(9),
-  (255)
-} ReportShareError;
-
-struct {
-  ReportID report_id;
-  PrepareStepState prepare_step_state;
-  select (PrepareStep.prepare_step_state) {
-    case start: ReportShare;
-    case continued: opaque prep_msg<0..2^32-1>;
-    case finished: Empty;
-    case failed: ReportShareError;
-  }
-} PrepareStep;
-
-struct {
-  u16 round;
-  opaque agg_param<0..2^32-1>;
-  PartialBatchSelector part_batch_selector;
-  PrepareStep prepare_steps<1..2^32-1>;
-} AggregationJob;
-~~~
-
-An `AggregationJob` consists of:
-
-* The current round of the VDAF preparation protocol.
-
-* The opaque, VDAF-specific aggregation parameter provided during the collection
-  flow (`agg_param`),
-
-  [[OPEN ISSUE: Check that this handling of `agg_param` is appropriate when the
-  definition of Poplar is done.]]
-
-* Information used by the Aggregators to determine how to aggregate each report:
-
-    * For fixed_size tasks, the Leader specifies a "batch ID" that determines
-      the batch to which each report for this aggregation job belongs.
-
-      [OPEN ISSUE: For fixed_size tasks, the Leader is in complete control over
-      which batch a report is included in. For time_interval tasks, the Client
-      has some control, since the timestamp determines which batch window it
-      falls in. Is this desirable from a privacy perspective? If not, it might
-      be simpler to drop the timestamp altogether and have the agg init request
-      specify the batch window instead.]
-
-  The indicated query type MUST match the task's query type. Otherwise, the
-  Helper MUST abort with error "queryMismatch".
-
-* The sequence of report shares to aggregate. The `encrypted_input_share` field
-  of the report share is the `HpkeCiphertext` whose index in
-  `Report.encrypted_input_shares` is equal to the index of the aggregator in the
-  task's `aggregator_endpoints` to which the AggregateInitializeReq is being
-  sent.
-
-#### Required methods
-
-##### PUT `/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}` {#aggregation-job-put}
-
-`task-id` is the ID of the task that the aggregation job belongs to.
-`aggregation-job-id` is an `AggregationJobId` chosen by the leader to uniquely
-identify an aggregation job across the rounds of the aggregation sub-protocol.
-
-The Leader begins an aggregation job by choosing a set of candidate reports that
-pertain to the same DAP task and compiling them into an `AggregationJob` (see
-{{aggregation-job-representation}}. The Leader can prepare many reports in
-parallel by concurrently creating multiple aggregation jobs. Creating
-aggregation jobs is how the Leader transmits report shares to the helper, so
-each `PrepareStep.prepare_step_state` MUST be set to `PrepareStepState.start`
-and the `PrepareStep` MUST contain a `ReportShare`. `AggregationJob.round` MUST
-be 0.
-
-If successful, the Helper's responds with a `struct AggregationJob` whose
-`round` field is 1 and whose `prepare_steps` is a list of `struct PrepareStep`s
-in state `continued` if initialization succeeded or errors if any report was
-invalid.
-
-##### POST `/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}` {#aggregation-job-post}
-
-The Leader drives the continuation of input preparation using POST requests to
-aggregation job resources (see {{agg-continue-flow}}).
-
-###### DELETE `/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}`
-
-Once an aggregation job is deleted, the Helper MAY abandon it and discard all
-state related to it (e.g., report shares, prepare messages, preparation state).
-
 ### Aggregate Message Security
 
 Aggregate sub-protocol messages must be confidential and mutually authenticated.
@@ -1564,24 +1568,24 @@ select a batch of reports to aggregate. Each emits an aggregate share encrypted
 to the Collector so that it can decrypt and combine them to yield the aggregate
 result. This entire process revolves around two resources:
 
-1. The Collector uses the collections resource exposed by the Leader (see
-   {{collection-resource}}).
+1. The Collector uses the collect jobs resource exposed by the Leader (see
+   {{collect-job-resource}}).
 1. The Leader uses the aggregate shares resource exposed by the Helper (see
    {{aggregate-share-resource}}).
 
 Once complete, the collector computes the final aggregate result as specified in
 {{collect-finalization}}.
 
-### Collection Resource {#collection-resource}
+### Collect Job Resource {#collect-job-resource}
 
-This resource allows the Collector to create new collections in the Leader and
+This resource allows the Collector to create new collect jobs in the Leader and
 check on their state. Only the Leader supports this resource.
 
 #### Required Methods
 
-##### PUT `/tasks/{task-id}/collections` {#collections-put}
+##### PUT `/tasks/{task-id}/collect_jobs` {#collect-job-put}
 
-To initiate collection, the Collector issues a PUT request to the collections
+To initiate collection, the Collector issues a PUT request to the collect jobs
 resource. The request body is a `CollectReq`:
 
 ~~~
@@ -1610,31 +1614,32 @@ inputs until the collector provides the aggregation parameter in the
 Upon receipt of a `CollectReq`, the Leader begins by checking that the query is
 valid using the procedure in {{batch-validation}}. If so, it immediately sends
 the Collector a response with HTTP status 303 See Other and a Location header
-containing a URI for the individual collection that can be polled by the
-Collector, as described in {{collection-resource}}. The structure of this URI is
+containing a URI for the individual collect job that can be polled by the
+Collector, as described in {{collect-job-resource}}. The structure of this URI is
 not specified, so implementations may use any unique identifier they wish for
-collections.
+collect jobs.
 
-The Leader then asynchronously begins working with the Helper to aggregate the reports satisfying the query (or continues this process, depending on the
+The Leader then asynchronously begins working with the Helper to aggregate the
+reports satisfying the query (or continues this process, depending on the
 VDAF) as described in {{aggregate-flow}}, and then invokes the aggregate share
 request flow described in {{aggregate-share-resource}} to gather aggregate
 shares from Helpers.
 
-##### POST `{collection URI}`
+##### POST `{collect job URI}`
 
-The collector makes a POST request to the collection resource to check whether
-it is available yet. A collection is available if:
+The collector makes a POST request to the collect job resource to check whether
+it is available yet. A collect job is available if:
 
 * The Leader has all the output shares it needed to construct its own aggregate
   share.
 * The Leader has obtained the Helper's aggregate share (see
   {{aggregate-share-resource}}).
 
-If the collection is known to the Leader but is not available yet, the Leader
+If the collect job is known to the Leader but is not available yet, the Leader
 responds with HTTP status 202 Accepted, and MAY include a Retry-After header
 to suggest a polling interval to the collector.
 
-If the collection is available, then the Leader computes its own aggregate share
+If the collect job is available, then the Leader computes its own aggregate share
 by aggregating all of the prepared output shares that fall within the batch
 interval:
 
@@ -1673,30 +1678,30 @@ This structure includes the following:
   in the same order as the aggregator endpoints list of the task parameters.
 
 If obtaining Helper aggregate shares fails, then the Leader responds to
-subsequent POST requests to the collection with an HTTP error status and a
+subsequent POST requests to the collect job with an HTTP error status and a
 problem document as described in {{errors}}.
 
-The Leader MAY respond with 204 No Content for requests to a collection if the
+The Leader MAY respond with 204 No Content for requests to a collect job if the
 results have been deleted due to age.
 
 ###### A Note on Idempotence
 
-The reason we use a POST instead of a GET to poll the state of a collection is
+The reason we use a POST instead of a GET to poll the state of a collect job is
 because of the fixed-size query mode (see {{fixed-size-query}}). Collectors may
 make a query against the current batch, and it is the Leader's responsibility to
-keep track of what batch is current for some task. Polling a collection is the
+keep track of what batch is current for some task. Polling a collect job is the
 only point at which it is safe for the Leader to change its current batch, since
 it constitutes acknowledgement on the Collector's part that it received the
-response to some previous PUT request to the collections resource.
+response to some previous PUT request to the collect jobs resource.
 
-This means that polling a collection can have the side effect of changing the
+This means that polling a collect job can have the side effect of changing the
 current batch in the Leader, and thus using a GET is inappropriate.
 
-##### DELETE `{collection URI}`
+##### DELETE `{collect job URI}`
 
-Instructs the Leader to abandon the collection and allows the Leader to discard
+Instructs the Leader to abandon the collect job and allows the Leader to discard
 all state related to it. This is akin to DELETE on a Helper's aggregate share.
-After deleting a collection, the Leader MUST respond to subsequent requests to
+After deleting a collect job, the Leader MUST respond to subsequent requests to
 that resource with 204 No Content.
 
 There is no body for this request.
@@ -1709,7 +1714,7 @@ helper drops out?]
 
 This resource allows the Leader to request the creation of aggregate shares in
 the Helper and check on their state. Aggregate shares are then used to service
-requests to collection resources. Only the Helper supports this resource.
+requests to collect job resources. Only the Helper supports this resource.
 
 #### Required Methods
 
@@ -1753,7 +1758,7 @@ The message contains the following fields:
 * The opaque aggregation parameter for the VDAF being executed. This value MUST
   match the same value in the `AggregationJob` message sent in at least one
   run of the aggregate sub-protocol (see {{aggregation-job-representation}}) and
-  in `CollectReq` (see {{collections-put}}).
+  in `CollectReq` (see {{collect-job-put}}).
 
 * The number number of reports included in the batch.
 
@@ -2461,14 +2466,12 @@ corresponding media types types:
 
 - HpkeConfigList {{hpke-config-resource}}: "application/dap-hpke-config-list"
 - Report {{report-resource}}: "application/dap-report"
-- AggregateInitializeReq {{collect-flow}}: "application/dap-aggregate-initialize-req"
-- AggregateInitializeResp {{collect-flow}}: "application/dap-aggregate-initialize-resp"
-- AggregateContinueReq {{collect-flow}}: "application/dap-aggregate-continue-req"
-- AggregateContinueResp {{collect-flow}}: "application/dap-aggregate-continue-resp"
+- AggregationJobInitializeReq {{aggregate-flow}}: "application/dap-aggregation-job-initialize-req"
+- AggregationJob {{aggregate-flow}}: "application/dap-aggregation-job"
 - AggregateShareReq {{collect-flow}}: "application/dap-aggregate-share-req"
 - AggregateShareResp {{collect-flow}}: "application/dap-aggregate-share-resp"
 - CollectReq {{collect-flow}}: "application/dap-collect-req"
-- CollectResp {{collect-flow}}: "application/dap-collect-resp"
+- Collection {{collect-flow}}: "application/dap-collection"
 
 The definition for each media type is in the following subsections.
 
@@ -2623,7 +2626,7 @@ Change controller:
 
 : IESG
 
-### "application/dap-aggregate-initialize-req" media type
+### "application/dap-aggregation-job-initialize-req" media type
 
 Type name:
 
@@ -2631,7 +2634,7 @@ Type name:
 
 Subtype name:
 
-: dap-aggregate-initialize-req
+: dap-aggregation-job-initialize-req
 
 Required parameters:
 
@@ -2694,7 +2697,7 @@ Change controller:
 
 : IESG
 
-### "application/dap-aggregate-initialize-resp" media type
+### "application/dap-aggregation-job" media type
 
 Type name:
 
@@ -2702,149 +2705,7 @@ Type name:
 
 Subtype name:
 
-: dap-aggregate-initialize-resp
-
-Required parameters:
-
-: N/A
-
-Optional parameters:
-
-: None
-
-Encoding considerations:
-
-: only "8bit" or "binary" is permitted
-
-Security considerations:
-
-: see {{collect-flow}}
-
-Interoperability considerations:
-
-: N/A
-
-Published specification:
-
-: this specification
-
-Applications that use this media type:
-
-: N/A
-
-Fragment identifier considerations:
-
-: N/A
-
-Additional information:
-
-: <dl>
-  <dt>Magic number(s):</dt><dd>N/A</dd>
-  <dt>Deprecated alias names for this type:</dt><dd>N/A</dd>
-  <dt>File extension(s):</dt><dd>N/A</dd>
-  <dt>Macintosh file type code(s):</dt><dd>N/A</dd>
-  </dl>
-
-Person and email address to contact for further information:
-
-: see Authors' Addresses section
-
-Intended usage:
-
-: COMMON
-
-Restrictions on usage:
-
-: N/A
-
-Author:
-
-: see Authors' Addresses section
-
-Change controller:
-
-: IESG
-
-### "application/dap-aggregate-continue-req" media type
-
-Type name:
-
-: application
-
-Subtype name:
-
-: dap-aggregate-continue-req
-
-Required parameters:
-
-: N/A
-
-Optional parameters:
-
-: None
-
-Encoding considerations:
-
-: only "8bit" or "binary" is permitted
-
-Security considerations:
-
-: see {{collect-flow}}
-
-Interoperability considerations:
-
-: N/A
-
-Published specification:
-
-: this specification
-
-Applications that use this media type:
-
-: N/A
-
-Fragment identifier considerations:
-
-: N/A
-
-Additional information:
-
-: <dl>
-  <dt>Magic number(s):</dt><dd>N/A</dd>
-  <dt>Deprecated alias names for this type:</dt><dd>N/A</dd>
-  <dt>File extension(s):</dt><dd>N/A</dd>
-  <dt>Macintosh file type code(s):</dt><dd>N/A</dd>
-  </dl>
-
-Person and email address to contact for further information:
-
-: see Authors' Addresses section
-
-Intended usage:
-
-: COMMON
-
-Restrictions on usage:
-
-: N/A
-
-Author:
-
-: see Authors' Addresses section
-
-Change controller:
-
-: IESG
-
-### "application/dap-aggregate-continue-resp" media type
-
-Type name:
-
-: application
-
-Subtype name:
-
-: dap-aggregate-continue-resp
+: dap-aggregation-job
 
 Required parameters:
 
