@@ -517,7 +517,7 @@ DAP is structured as an HTTP application consisting of three major interactions
 or sub-protocols:
 
 * Uploading reports from the client to the aggregators, using the HPKE
-  configuration ({{hpke-config-resource}}) and report ({{report-resource}})
+  configuration ({{hpke-configs-resource}}) and report ({{report-resource}})
   resources, as described in {{upload-flow}}.
 * Computing the aggregate over sets of reports, using the aggregation job
   resource ({{aggregation-job-resource}}), as described in {{aggregate-flow}}.
@@ -772,12 +772,12 @@ individual shares to each Helper. The upload sub-protocol involves the HPKE
 configurations ({{hpke-config-resource}}) and reports ({{report-resource}})
 resources.
 
-### HPKE Configuration Resource {#hpke-config-resource}
+### HPKE Configurations Resource {#hpke-configs-resource}
 
-Before the client can upload its report to the leader, it must know the HPKE
-configuration of each aggregator. See {{compliance}} for information on HPKE
-algorithm choices. Clients retrieve the HPKE configuration from each aggregator
-by accessing the HPKE configuration resource.
+Before the client can upload its report to the leader, it must know each
+Aggregator's supported HPKE configurations. See {{compliance}} for information
+on HPKE algorithm choices. Clients retrieve the HPKE configurations from each
+Aggregator by accessing the HPKE configurations resource.
 
 #### Required methods
 
