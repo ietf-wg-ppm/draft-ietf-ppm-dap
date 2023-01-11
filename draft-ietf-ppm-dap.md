@@ -1362,7 +1362,10 @@ state containing the corresponding `inbound` prepare message.
 ###### Helper Continuation
 
 If the Helper does not recognize the task ID, then it MUST abort with error
-`unrecognizedTask`.
+`unrecognizedTask`. If the Helper does not recognize the aggregation job, then
+it MUST abort with error `unrecognizedAggregationJob`. This could occur because
+the aggregation job never existed, but also if it was deleted (see
+{{aggregation-job-delete}}).
 
 Otherwise, for each `PrepareStep` received from the Leader in
 `AggregationJob.prepare_steps`, the Helper checks
@@ -1414,10 +1417,15 @@ of the Helper's `prepare_steps` MUST match that of the Leader's.
 
 [[OPEN ISSUE: consider relaxing this ordering constraint. See issue#217.]]
 
-##### DELETE `/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}`
+##### DELETE `/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}` {#aggregation-job-delete}
 
-Once an aggregation job is deleted, the Helper MAY abandon it and discard all
-state related to it (e.g., report shares, prepare messages, preparation state).
+Indicates to the Helper that it MAY abandon the aggregation job and discard all
+state related to it. Whether or not it deletes any data, the Helper MUST respond
+with status 204 No Content.
+
+Helpers MAY delete aggregation jobs and their related state ahead of an explicit
+DELETE request, as part of a garbage collection scheme. DELETE requests to an
+already-deleted aggregation job SHOULD yield a 204 No Content response.
 
 #### Input Share Decryption {#input-share-decryption}
 
