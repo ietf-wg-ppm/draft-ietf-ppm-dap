@@ -755,7 +755,7 @@ In addition, in order to facilitate the aggregation and collect protocols, each
 of the aggregators is configured with following parameters:
 
 * `collector_config`: The {{!HPKE=RFC9180}} configuration of the collector
-  (described in {{hpke-config-resource}}); see {{compliance}} for information
+  (described in {{hpke-configs-resource}}); see {{compliance}} for information
   about the HPKE configuration algorithms.
 * `vdaf_verify_key`: The VDAF verification key shared by the aggregators. This
   key is used in the aggregation sub-protocol ({{aggregate-flow}}). [OPEN ISSUE:
@@ -769,7 +769,7 @@ Finally, the collector is configured with the HPKE secret key corresponding to
 
 Clients periodically upload reports to the Leader, which then distributes the
 individual shares to each Helper. The upload sub-protocol involves the HPKE
-configurations ({{hpke-config-resource}}) and reports ({{report-resource}})
+configurations ({{hpke-configs-resource}}) and reports ({{report-resource}})
 resources.
 
 ### HPKE Configurations Resource {#hpke-configs-resource}
@@ -1824,12 +1824,12 @@ computed above and `encrypted_aggregate_share.ciphertext` is the ciphertext
 `encrypted_agg_share` computed above.
 
 After receiving the Helper's response, the Leader uses the HpkeCiphertext to
-respond to a collect request (see {{collection-resource}}).
+respond to a collect request (see {{collect-job-resource}}).
 
 After issuing an aggregate-share request for a given query, it is an error for
 the Leader to issue any more aggregation jobs for additional reports that
 satisfy the query. These reports will be rejected by Helpers as described in
-{{agg-init}}.
+{{aggregation-job-put}}.
 
 [[OPEN ISSUE: do we need a DELETE request on aggregate shares? If so, do we
 need an aggregate-share-id to construct a URI for an aggregate share?]]
@@ -2472,7 +2472,7 @@ the input shares and defeat privacy.
 This specification defines the following protocol messages, along with their
 corresponding media types types:
 
-- HpkeConfigList {{hpke-config-resource}}: "application/dap-hpke-config-list"
+- HpkeConfigList {{hpke-configs-resource}}: "application/dap-hpke-config-list"
 - Report {{report-resource}}: "application/dap-report"
 - AggregationJobInitializeReq {{aggregate-flow}}: "application/dap-aggregation-job-initialize-req"
 - AggregationJob {{aggregate-flow}}: "application/dap-aggregation-job"
