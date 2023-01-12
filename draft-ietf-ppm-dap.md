@@ -1282,9 +1282,6 @@ MUST be 0. The order of the `prepare_steps` MUST match that of the
 `continued` with the output `prep_msg`, or `finished` if the VDAF preparation
 process is finished for the report share.
 
-The Helper SHOULD store each report share's current preparation state and the
-aggregation job's round.
-
 ##### POST `/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}` {#aggregation-job-post}
 
 In the continuation phase, the Leader drives the VDAF preparation of each share
@@ -1333,9 +1330,6 @@ is the pair `(new_state, prep_msg)`, where `new_state` is the Leader's updated
 state and `prep_msg` is the next VDAF message (which will be `leader_outbound`
 in the next round of continuation). For the latter case, the Leader sets
 `prep_state` to `new_state`.
-
-The Leader SHOULD store each report share's current preparation state and the
-aggregation job's round.
 
 The Leader then instructs the Helper to advance the aggregation job to the round
 the Leader has just reached by sending the new `inbound` prepare messages to the
@@ -1392,16 +1386,11 @@ three outputs:
    `(prep_state, prep_msg)`, in which case the Helper replies to the leader with
    `PrepareStep` in the `continued` state containing `prep_msg`.
 
-Helpers SHOULD store the most recent preparation state and prepare messages for
-each report share, tagged with the round they were computed for, so that the
-Aggregators may recover from the Leader losing the Helper's response.
-
 If the `round` in the Leader's request is equal to the Helper's current round
 (i.e., this is not the first time the Leader has sent this request), then the
-Helper can either re-compute the current round prepare message or re-transmit a
-previously computed message. The Helper MUST verify that the contents of the
-`AggregationJob` are identical to the previous message (i.e., containing the
-same set of reports).
+Helper responds with the current round's prepare messages. The Helper MUST
+verify that the contents of the `AggregationJob` are identical to the previous
+message (see {{aggregation-round-skew-recovery}}).
 
 If the Leader's `round` is behind or more than one round ahead of the Helper's
 current round, then the Helper MUST abort with an error of type `roundMismatch`.
@@ -1571,6 +1560,33 @@ from the Helper. It first validates that the `AggregationJob` is well-formed:
 
 If either condition does not hold, the Leader should abandon further processing
 of the aggregation job.
+
+#### Recovering From Round Skew {#aggregation-round-skew-recovery}
+
+`AggregationJob` messages contain a `round` field, allowing Aggregators to
+ensure that their peer is on an exected round of the VDAF preparation
+algorithm. In particular, the intent is to allow recovery from a scenario where
+the Helper successfully advances from round _n_ to _n+1_, but its
+`AggregationJob` response to the Leader gets dropped due to something like a
+transient network failure. The Leader could then resend the request to have the
+Helper advance to round _n+1_ and the Helper should be able to retransmit the
+`AggregationJob` that was previously dropped. To make that kind of recovery
+possible, Aggregator implementations SHOULD checkpoint preparation state to
+durable storage such that Leaders can re-construct continuation requests and
+Helpers can re-construct continuation responses as needed.
+
+When implementing a round skew recovery strategy, it is important for Helpers to
+ensure that the Leader's `AggregationJob` message did not change when it was
+re-sent (i.e., the two messages must contain the same set of report IDs and
+prepare messages). This rules out attacks in which the Leader could violate the
+privacy of a report by re-running a VDAF preparation round with different
+prepare messages. One way a Helper could address this would be to store a digest
+of the Leader's request, indexed by aggregation job ID and round, and refuse to
+service a request for a given aggregation job round unless it matches the
+previously seen request (if any).
+
+As there are several implementation strategies for round skew recovery,
+specifying a solution is outside of this document's scope.
 
 ### Aggregate Message Security
 
