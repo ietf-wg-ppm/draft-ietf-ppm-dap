@@ -1142,7 +1142,7 @@ initialization flow to accomplish two tasks:
 1. Recover report shares and determine which are invalid.
 1. For each valid report share, initialize the VDAF preparation process.
 
-###### Leader Initialization {#leader-init}
+###### Leader Initialization {#aggregation-leader-init}
 
 The Leader begins the aggregate initialization phase with the set of candidate
 report shares as follows:
@@ -1236,16 +1236,21 @@ report shares are sent at the same time, but this may not be strictly
 necessary.]]
 
 The Helper's response consists of an `AggregationJob` (see
-{{aggregation-job-representation}}). The Leader now moves to the aggregation job
-continuation phase, described in {#aggregation-job-post}.
+{{aggregation-job-representation}}). The Leader validates this message according
+to the criteria in {{aggregation-job-validation}}. If the message is valid, the
+Leader now moves to the aggregation job continuation phase with the enclosed
+prepare steps, as described in {#aggregation-job-post}. Otherwise, the Leader
+can either retry creation of the aggregation job (should the Helper response
+indicate that a retry might work) or abandon the aggregation job entirely.
 
 ###### Helper Initialization
 
 Each Helper begins their portion of the aggregate initialization phase with the
 set of candidate report shares obtained in an `AggregationJobInitializeReq` sent
-by the Leader (see {{leader-init}}). The Helper attempts to recover and validate
-the corresponding input shares similarly to the Leader, and eventually returns a
-response to the Leader carrying a VDAF-specific message for each report share.
+by the Leader (see {{aggregation-leader-init}}). The Helper attempts to recover
+and validate the corresponding input shares similarly to the Leader, and
+eventually returns a response to the Leader carrying a VDAF-specific message for
+each report share.
 
 To begin this process, the Helper first checks that the aggregation job is
 valid:
@@ -1291,25 +1296,8 @@ job resource.
 
 ###### Leader Continuation {#aggregation-leader-continuation}
 
-The Leader begins each round of continuation with an `AggregationJob` received
-from the Helper. It first validates that the `AggregationJob` is well-formed:
-
-* The Helper's `prepare_steps` MUST include exactly the same report IDs in the
-  same order (by report ID) as either the `report_shares` in the Leader's
-  `AggregationJobInitReq` (if this is the first round of continuation) or the
-  `prepare_steps` in the Leader's `AggregationJob` (if this is a subsequent
-  round).
-* The Helper MUST advance to the same round as the Leader. That is, the Helper's
- `AggregationJob.round` MUST be 0 if this is the first round of continuation or
-  MUST be equal the Leader's `AggregationJob.round` if this is a subsequent
-  round).
-
-If either condition does not hold, the Leader should abandon further processing
-of the aggregation job.
-
-Once the Helper's `AggregationJob` is validated, the Leader can continue the
-preparation of each report share in the aggregation job based on its locally
-computed prepare message and the `PrepareStep` from the Helper.
+The Leader begins each round of continuation with a sequence of `PrepareStep`s
+received from the Helper and its locally computed prepare message.
 
 If `PrepareStep` is of type `failed`, then the Leader acts based on the value of
 the `ReportShareError`:
@@ -1357,6 +1345,14 @@ request is an `AggregationJob` (see {{aggregation-job-representation}}).
 than the `round` value in the Helper's latest `AggregationJob` message) and the
 `prepare_steps` field MUST be a sequence of `PrepareStep`s in the `continued`
 state containing the corresponding `inbound` prepare message.
+
+The Helper's response consists of an `AggregationJob` (see
+{{aggregation-job-representation}}). The Leader validates this message according
+to the criteria in {{aggregation-job-validation}}. If the message is valid, the
+Leader can move to the next round of the continuation phase with the enclosed
+prepare steps. Otherwise, the Leader can either retry stepping the aggregation
+job (should the Helper response indicate that a retry might work) or abandon the
+aggregation job entirely.
 
 ###### Helper Continuation
 
@@ -1552,6 +1548,29 @@ If either step fails, the aggregator marks the report as invalid with error
 `vdaf_prep_error`. Otherwise, the value `out` is interpreted as follows. If this
 is the last round of the VDAF, then `out` is the aggregator's output share.
 Otherwise, `out` is the pair `(prep_state, prep_msg)`.
+
+#### Aggregation Job Validation {#aggregation-job-validation}
+
+During the aggregation job initialization ({{aggregation-leader-init}}) or
+continuation ({{aggregation-leader-continuation}}) phases, the Leader will
+receive an `AggregationJob` message from the Helper, which should be validated
+before the Leader can move to the next phase of the aggregation protocol.
+
+The Leader begins each round of continuation with an `AggregationJob` received
+from the Helper. It first validates that the `AggregationJob` is well-formed:
+
+* The Helper's `prepare_steps` MUST include exactly the same report IDs in the
+  same order (by report ID) as either the `report_shares` in the Leader's
+  `AggregationJobInitReq` (if this is the first round of continuation) or the
+  `prepare_steps` in the Leader's `AggregationJob` (if this is a subsequent
+  round).
+* The Helper MUST be on the same round as the Leader. That is, the Helper's
+ `AggregationJob.round` MUST be 0 if this is the first round of continuation or
+  MUST be equal the Leader's `AggregationJob.round` if this is a subsequent
+  round).
+
+If either condition does not hold, the Leader should abandon further processing
+of the aggregation job.
 
 ### Aggregate Message Security
 
