@@ -1040,7 +1040,7 @@ of relevant: issue #89]]
 Once a set of Clients have uploaded their reports to the Leader, the Leader can
 send them to the Helpers to be verified and aggregated. Verification of a set of
 reports is referred to as an aggregation job. Each aggregation job is associated
-with exactly one DAP task, and a DAP task will have many aggregation jobs. In
+with exactly one DAP task, and a DAP task can have many aggregation jobs. In
 order to enable the system to handle very large batches of reports, this process
 can be parallelized by dividing the preparation of a batch's reports into
 multiple aggregation jobs.
@@ -1100,7 +1100,7 @@ each valid input report share into an output share:
 ### Aggregation Job Resource {#aggregation-job-resource}
 
 Executing the aggregation flow consists of the Leader interacting with the
-Helper's aggregate job resource. Only the Helper supports this resource.
+Helper's aggregation job resource. Only the Helper supports this resource.
 
 #### Representation {#aggregation-job-representation}
 
@@ -1116,7 +1116,6 @@ struct {
   ReportID report_id;
   PrepareStepState prepare_step_state;
   select (PrepareStep.prepare_step_state) {
-    case start: ReportShare;
     case continued: opaque prep_msg<0..2^32-1>;
     case finished: Empty;
     case failed: ReportShareError;
@@ -1397,9 +1396,9 @@ three outputs:
    `(prep_state, prep_msg)`, in which case the Helper replies to the leader with
    `PrepareStep` in the `continued` state containing `prep_msg`.
 
-After computing each report share's preparation state and prepare message, the
-Helper SHOULD store them, tagged with the round they were computed in, so that
-the Leader can recover from losing the Helper's response.
+Helpers SHOULD store the most recent preparation state and prepare messages for
+each report share, tagged with the round they were computed for, so that the
+Aggregators may recover from the Leader losing the Helper's response.
 
 If the `round` in the Leader's request is equal to the Helper's current round
 (i.e., this is not the first time the Leader has sent this request), then the
@@ -1420,8 +1419,8 @@ of the Helper's `prepare_steps` MUST match that of the Leader's.
 ##### DELETE `/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}` {#aggregation-job-delete}
 
 Indicates to the Helper that it MAY abandon the aggregation job and discard all
-state related to it. Whether or not it deletes any data, the Helper MUST respond
-with status 204 No Content.
+state related to it. If the Helper successfully handles this request, it MUST
+respond with status 204 No Content.
 
 Helpers MAY delete aggregation jobs and their related state ahead of an explicit
 DELETE request, as part of a garbage collection scheme. DELETE requests to an
