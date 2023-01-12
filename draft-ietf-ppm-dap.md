@@ -1374,7 +1374,7 @@ continue being prepared. If the report share is in state `failed` or `finished`,
 then the Helper marks the report as failed with error `unrecognized_message`.
 
 If the state is `continued`, then the Helper continues with preparation for the
-report share. The Helper MUST check its current preparation state against the
+report share. The Helper MUST check its current round against the
 Leader's `AggregationJob.round` value. If the Leader is one round ahead of the
 Helper, then the Helper can combine the Leader's prepare message and the
 Helper's current preparation state (`prep_state`) as follows:
