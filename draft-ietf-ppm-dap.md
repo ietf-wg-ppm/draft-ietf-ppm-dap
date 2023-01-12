@@ -1198,7 +1198,7 @@ enum {
 struct {
   opaque agg_param<0..2^32-1>;
   PartialBatchSelector part_batch_selector;
-  ReportShares report_shares<1..2^32-1>;
+  ReportShare report_shares<1..2^32-1>;
 } AggregationJobInitializeReq;
 ~~~
 
