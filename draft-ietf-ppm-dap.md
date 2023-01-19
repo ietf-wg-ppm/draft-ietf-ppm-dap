@@ -871,8 +871,18 @@ IDs.]
    Aggregators.
 
 To generate a report, the Client begins by sharding its measurement into input
-shares as specified by the VDAF. It then wraps each input share in the following
-structure:
+shares and the public share using the VDAF's sharding algorithm
+({{!VDAF, Section 5.1}}):
+
+~~~
+(public_share, input_shares) =
+  VDAF.measurement_to_input_shares(measurement)
+~~~
+
+[TODO: in VDAF-04, `measurement_to_input_shares` will take a nonce argument, for
+which we will use the report ID #394]
+
+The Client then wraps each input share in the following structure:
 
 [TODO: this should explicitly show the call to VDAF.measurement_to_input_shares]
 
