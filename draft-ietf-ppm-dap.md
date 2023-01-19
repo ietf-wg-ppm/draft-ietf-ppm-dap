@@ -1082,9 +1082,6 @@ Aggregate request (continued, Job = M) ------------------>  | 11-20
 {: #aggregation-flow-illustration title="Aggregation Flow (batch size=20).
 Multiple aggregation flows can be executed at the same time."}
 
-[OPEN ISSUE: Should there be an indication of whether a given aggregate request
-is a continuation of a previous sub-batch?]
-
 The aggregation flow can be thought of as having three phases for transforming
 each valid input report share into an output share:
 
