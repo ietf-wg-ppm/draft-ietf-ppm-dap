@@ -489,6 +489,7 @@ in the "type" field (within the DAP URN namespace
 | unauthorizedRequest        | Authentication of an HTTP request failed (see {{request-authentication}}). |
 | missingTaskID              | HPKE configuration was requested without specifying a task ID. |
 | queryMismatch              | Query type indicated by a message does not match the task's query type. |
+| roundMismatch              | The aggregators disagree on the current round of the VDAF preparation protocol. |
 
 This list is not exhaustive. The server MAY return errors set to a URI other
 than those defined above. Servers MUST NOT use the DAP URN namespace for errors
@@ -1207,13 +1208,21 @@ This message consists of:
 * The sequence of report shares to aggregate. The `encrypted_input_share` field
   of the report share is the `HpkeCiphertext` whose index in
   `Report.encrypted_input_shares` is equal to the index of the aggregator in the
-  task's `aggregator_endpoints` to which the AggregateInitializeReq is being
+  task's `aggregator_endpoints` to which the `AggregationJobInitReq` is being
   sent.
 
-Let `{aggregator}` denote the helper's API endpoint. The leader sends a PUT
+Let `{aggregator}` denote the Helper's API endpoint. The Leader sends a PUT
 request to `{aggregator}/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}`
 with its `AggregationJobInitReq` message as the payload. The media type is
-"application/dap-aggregation-job-init-req".
+"application/dap-aggregation-job-init-req". The Leader's aggregation job is now
+in round 0.
+
+The Helper's response will be an `AggregationJobResp` message (see
+{{aggregation-helper-init}}, which the Leader validates according to the
+criteria in {{aggregation-job-validation}}. If the message is valid, the Leader
+moves to the aggregation job continuation phase with the enclosed prepare steps,
+as described in {{agg-continue-flow}}. Otherwise, the Leader should abandon the
+aggregation job entirely.
 
 #### Helper Initialization {#aggregation-helper-init}
 
@@ -1225,10 +1234,10 @@ carrying a VDAF-specific message for each report share.
 
 To begin this process, the helper first checks if it recognizes the task ID, if
 not then it MUST abort with error `unrecognizedTask`. Then the helper checks
-that the report IDs in `AggregateInitializeReq.report_shares` are all distinct.
+that the report IDs in `AggregationJobInitReq.report_shares` are all distinct.
 If two ReportShare values have the same report ID, then the helper MUST abort
 with error `unrecognizedMessage`. If this check succeeds, the helper then
-attempts to recover each input share in `AggregateInitializeReq.report_shares`
+attempts to recover each input share in `AggregationJobInitReq.report_shares`
 as follows:
 
 1. Decrypt the input share for each report share as described in
@@ -1243,7 +1252,7 @@ as follows:
 
 Once the helper has processed each valid report share in
 `AggregationJobInitReq.report_shares`, the helper then creates an
-`AggregationJob` message to complete its initialization. This message is
+`AggregationJobResp` message to complete its initialization. This message is
 structured as follows:
 
 ~~~
@@ -1266,7 +1275,7 @@ struct {
 
 struct {
   PrepareStep prepare_steps<1..2^32-1>;
-} AggregationJob;
+} AggregationJobResp;
 ~~~
 
 The message is a sequence of PrepareStep values, the order of which matches that
@@ -1274,20 +1283,11 @@ of the ReportShare values in `AggregationJobInitReq.report_shares`. Each report
 that was marked as invalid is assigned the `PrepareStepState` `failed`.
 Otherwise, the `PrepareStep` is either marked as continued with the output
 `prep_msg`, or is marked as finished if the VDAF preparation process is finished
-for the report share.
+for the report share. The Helper's aggregation job is now in round 0.
 
 On success, the helper responds to the leader with HTTP status code 201 Created
-and a body consisting of the `AggregationJob`, with media type
-"application/dap-aggregation-job".
-
-Upon receipt of a helper's `AggregationJob` message, the leader checks
-that the sequence of `PrepareStep` messages corresponds to the `ReportShare`
-sequence of the `AggregationJobInitReq`. If any message appears out of order, is
-missing, has an unrecognized report ID, or if two messages have the same report
-ID, then the leader MUST abort with error `unrecognizedMessage`.
-
-[[OPEN ISSUE: the leader behavior here is sort of bizarre -- to whom does it
-abort?]]
+and a body consisting of the `AggregationJobResp`, with media type
+"application/dap-aggregation-job-resp".
 
 #### Input Share Decryption {#input-share-decryption}
 
@@ -1416,6 +1416,23 @@ If either step fails, the aggregator marks the report as invalid with error
 is the last round of the VDAF, then `out` is the aggregator's output share.
 Otherwise, `out` is the pair `(prep_state, prep_msg)`.
 
+#### Aggregation Job Validation {#aggregation-job-validation}
+
+During the aggregation job initialization ({{leader-init}}) or continuation
+({{agg-continue-flow}}) phases, the Leader will receive an `AggregationJobResp`
+message from the Helper, which should be validated before the Leader can move to
+the next phase of the aggregation protocol.
+
+An `AggregationJobResp` is valid only if it satisfies the following requirement:
+
+* The Helper's `prepare_steps` MUST include exactly the same report IDs in the
+  same order as either the `report_shares` in the Leader's
+  `AggregationJobInitReq` (if this is the first round of continuation) or the
+  `prepare_steps` in the Leader's `AggregationJobContinueReq` (if this is a
+  subsequent round).
+
+[[OPEN ISSUE: consider relaxing this ordering constraint. See issue#217.]]
+
 ### Aggregate Continuation {#agg-continue-flow}
 
 In the continuation phase, the leader drives the VDAF preparation of each share
@@ -1424,7 +1441,7 @@ state, yielding an output share for all aggregators or an error. This phase may
 involve multiple rounds of interaction depending on the underlying VDAF. Each
 round trip is initiated by the leader.
 
-#### Leader Continuation
+#### Leader Continuation {#aggregation-leader-continuation}
 
 The leader begins each round of continuation for a report share based on its
 locally computed prepare message and the previous PrepareStep from the helper.
@@ -1432,7 +1449,7 @@ If PrepareStep is of type `failed`, then the leader acts based on the value of
 the `ReportShareError`:
 
   - If the error is `ReportShareError.report_too_early`, then the leader MAY try
-    to re-send the report in a later `AggregateInitializeReq`.
+    to re-send the report in a later `AggregationJobInitReq`.
   - For any other error, the leader marks the report as failed, removes it from
     the candidate report set and does not process it further.
 
@@ -1452,8 +1469,8 @@ inbound = VDAF.prep_shares_to_prep(agg_param, [leader_outbound, helper_outbound]
 out = VDAF.prep_next(prep_state, inbound)
 ~~~
 
-where [leader_outbound, helper_outbound] is a vector of two elements. If either
-of these operations fails, then the leader marks the report as invalid.
+where `[leader_outbound, helper_outbound]` is a vector of two elements. If
+either of these operations fails, then the leader marks the report as invalid.
 Otherwise it interprets `out` as follows: If this is the last round of the VDAF,
 then `out` is the aggregator's output share, in which case the aggregator
 finishes and stores its output share for further processing as described in
@@ -1462,19 +1479,41 @@ finishes and stores its output share for further processing as described in
 will be `leader_outbound` in the next round of continuation). For the latter
 case, the helper sets `prep_state` to `new_state`.
 
-The Leader then sends a POST request to the aggregation job URI used during
-initialization (see {{leader-init}}). The body is an `AggregationJob` message
-(see {{aggregation-helper-init}}) containing the `PrepareStep`s. The media type
-is set to "application/dap-aggregation-job".
+The Leader now advances its aggregation job to the next round (round 1 if this
+is the first continuation after initialization) and then instructs the Helper to
+advance the aggregation job to the round the Leader has just reached by sending
+the new `inbound` prepare messages to the Helper in a POST request to the
+aggregation job URI used during initialization (see {{leader-init}}). The body
+of the request is an `AggregationJobContinueReq`:
 
-#### Helper Continuation
+~~~
+struct {
+  u16 round;
+  PrepareStep prepare_steps<1..2^32-1>;
+} AggregationJobContinueReq;
+~~~
+
+The `round` field is the round of VDAF preparation that the Leader just reached
+and wants the Helper to advance to.
+
+The `prepare_steps` field MUST be a sequence of `PrepareStep`s in the
+`continued` state containing the corresponding `inbound` prepare message. The
+media type is set to "application/dap-aggregation-job-continue-req".
+
+The Helper's response will be an `AggregationJobResp` message (see
+{{aggregation-helper-init}}), which the Leader validates according to
+the criteria in {{aggregation-job-validation}}. If the message is valid, the
+Leader moves to the next round of continuation with the enclosed prepare steps.
+Otherwise, the Leader should abandon the aggregation job entirely.
+
+#### Helper Continuation {#aggregation-helper-continuation}
 
 If the helper does not recognize the task ID, then it MUST abort with error
 `unrecognizedTask`.
 
-Otherwise, the helper continues with preparation for a report share by combining
-the leader's input message in `AggregationJob` and its current preparation state
-(`prep_state`). This step yields one of three outputs:
+Otherwise, the Helper continues with preparation for a report share by combining
+the Leader's input message in `AggregationJobReq` and its current preparation
+state (`prep_state`). This step yields one of three outputs:
 
 1. An error, in which case the input report share is marked as invalid.
 1. An output share, in which case the helper stores the output share for future
@@ -1492,33 +1531,75 @@ if it should continue preparing the report share:
   PrepareStep to the leader. The helper then stores the output share and awaits
   for collection; see {{collect-flow}}.
 
-Otherwise, preparation continues. In this case, the helper computes its updated
-state and output message as follows:
+Otherwise, preparation continues. The Helper MUST check its current round
+against the Leader's `AggregationJobContinueReq.round` value. If the Leader is
+one round ahead of the Helper, then the Helper combines the Leader's prepare
+message and the Helper's current preparation state as follows:
 
 ~~~
 out = VDAF.prep_next(prep_state, inbound)
 ~~~
 
 where `inbound` is the previous VDAF prepare message sent by the leader and
-`prep_state` is the helper's current preparation state. If this operation fails,
-then the helper fails with error `vdaf_prep_error`. Otherwise, it interprets
-`out` as follows:
+`prep_state` is the helper's current preparation state. This step yields one of
+three outputs:
 
-* If this is the last round of VDAF preparation phase, then `out` is the
-  helper's output share, in which case the helper stores the output share for
-  future collection.
-* Otherwise, the helper interprets `out` as the tuple `(new_state, prep_msg)`,
-  where `new_state` is its updated preparation state and `prep_msg` is its next
-  VDAF message.
+* An error, in which case the report share is marked as failed and the Helper
+  replies to the Leader with a `PrepareStep` in the `failed` state.
+* An output share, in which case the Helper stores the output share for future
+  collection as described in {{collect-flow}} and replies to the Leader with a
+  `PrepareStep` in the `finished` state.
+* An updated VDAF state and preparation message, denoted
+  `(prep_state, prep_msg)`, in which case the Helper replies to the Leader with
+  a `PrepareStep` in the `continued` state containing `prep_msg`.
 
-If successful, the helper responds to the leader with HTTP status 200 OK, media
-type `application/dap-aggregation-job` and a body consisting of an
-`AggregationJob` (see {{aggregation-helper-init}}) compiled from the stepped
-`PrepareStep`s. The order of the steps MUST match that of the `PrepareStep`
-values in the leader's `AggregationJob`. The helper then awaits the next
-message from the leader.
+After stepping each state, the Helper advances its aggregation job to the
+Leader's `AggregationJobContinueReq.round`.
 
-[[OPEN ISSUE: consider relaxing this ordering constraint. See issue#217.]]
+If the `round` in the Leader's request is equal to the Helper's current round
+(i.e., this is not the first time the Leader has sent this request), then the
+Helper responds with the current round's prepare messages. The Helper SHOULD
+verify that the contents of the `AggregationJobContinueReq` are identical to the
+previous message (see {{aggregation-round-skew-recovery}}).
+
+If the Leader's `round` is behind or more than one round ahead of the Helper's
+current round, then the Helper MUST abort with an error of type `roundMismatch`.
+
+If successful, the Helper responds to the Leader with HTTP status 200 OK, media
+type `application/dap-aggregation-job-resp` and a body consisting of an
+`AggregationJobResp` (see {{aggregation-helper-init}}) compiled from the stepped
+`PrepareStep`s.
+
+#### Recovering From Round Skew {#aggregation-round-skew-recovery}
+
+`AggregationJobContinueReq` messages contain a `round` field, allowing
+Aggregators to ensure that their peer is on an expected round of the VDAF
+preparation algorithm. In particular, the intent is to allow recovery from a
+scenario where the Helper successfully advances from round `n` to `n+1`, but its
+`AggregationJobResp` response to the Leader gets dropped due to something like a
+transient network failure. The Leader could then resend the request to have the
+Helper advance to round `n+1` and the Helper should be able to retransmit the
+`AggregationJobContinueReq` that was previously dropped. To make that kind of
+recovery possible, Aggregator implementations SHOULD checkpoint the most recent
+round's preparation state and messages to durable storage such that Leaders can
+re-construct continuation requests and Helpers can re-construct continuation
+responses as needed.
+
+When implementing a round skew recovery strategy, Helpers SHOULD ensure that the
+Leader's `AggregationJobContinueReq` message did not change when it was re-sent
+(i.e., the two messages must contain the same set of report IDs and prepare
+messages). This prevents the Leader from re-winding an aggregation job and
+re-running a round with different parameters.
+
+[[OPEN ISSUE: Allowing the Leader to "rewind" aggregation job state of an may
+allow an attack on privacy. For instance, if the VDAF verification key changes,
+the preparation shares in the Helper's response would change even if the
+consistency check is made. Security analysis is required. See #401.]]
+
+One way a Helper could address this would be to store a digest of the Leader's
+request, indexed by aggregation job ID and round, and refuse to service a
+request for a given aggregation job round unless it matches the previously seen
+request (if any).
 
 ### Aggregate Message Security
 
@@ -1714,7 +1795,7 @@ The message contains the following parameters:
   Helper MUST abort with "queryMismatch".
 
 * The opaque aggregation parameter for the VDAF being executed. This value MUST
-  match the same value in the the `AggregateInitializeReq` message sent in at
+  match the same value in the the `AggregationJobInitReq` message sent in at
   least one run of the aggregate sub-protocol. (See {{leader-init}}). and in
   `CollectReq` (see {{collect-init}}).
 
@@ -1951,8 +2032,8 @@ ID:
   CollectResp for the task.
 
 * For an AggregateShareReq, the Helper checks that the batch ID provided by the
-  Leader corresponds to a batch ID used in a previous AggregateInitializeReq for
-  the task.
+  Leader corresponds to a batch ID used in a previous `AggregationJobInitReq`
+  for the task.
 
 ##### Size Check
 
@@ -2418,7 +2499,8 @@ corresponding media types types:
 - HpkeConfigList {{hpke-config}}: "application/dap-hpke-config-list"
 - Report {{upload-request}}: "application/dap-report"
 - AggregationJobInitReq {{leader-init}}: "application/dap-aggregation-job-init-req"
-- AggregationJob {{aggregation-helper-init}}: "application/dap-aggregation-job"
+- AggregationJobResp {{aggregation-helper-init}}: "application/dap-aggregation-job-resp"
+- AggregationJobContinueReq {{aggregation-leader-continuation}}: "application/dap-aggregation-job-continue-req"
 - AggregateShareReq {{collect-flow}}: "application/dap-aggregate-share-req"
 - AggregateShare {{collect-flow}}: "application/dap-aggregate-share"
 - CollectReq {{collect-flow}}: "application/dap-collect-req"
@@ -2648,7 +2730,7 @@ Change controller:
 
 : IESG
 
-### "application/dap-aggregation-job" media type
+### "application/dap-aggregation-job-resp" media type
 
 Type name:
 
@@ -2656,7 +2738,78 @@ Type name:
 
 Subtype name:
 
-: dap-aggregation-job
+: dap-aggregation-job-resp
+
+Required parameters:
+
+: N/A
+
+Optional parameters:
+
+: None
+
+Encoding considerations:
+
+: only "8bit" or "binary" is permitted
+
+Security considerations:
+
+: see {{collect-flow}}
+
+Interoperability considerations:
+
+: N/A
+
+Published specification:
+
+: this specification
+
+Applications that use this media type:
+
+: N/A
+
+Fragment identifier considerations:
+
+: N/A
+
+Additional information:
+
+: <dl>
+  <dt>Magic number(s):</dt><dd>N/A</dd>
+  <dt>Deprecated alias names for this type:</dt><dd>N/A</dd>
+  <dt>File extension(s):</dt><dd>N/A</dd>
+  <dt>Macintosh file type code(s):</dt><dd>N/A</dd>
+  </dl>
+
+Person and email address to contact for further information:
+
+: see Authors' Addresses section
+
+Intended usage:
+
+: COMMON
+
+Restrictions on usage:
+
+: N/A
+
+Author:
+
+: see Authors' Addresses section
+
+Change controller:
+
+: IESG
+
+### "application/dap-aggregation-job-continue-req" media type
+
+Type name:
+
+: application
+
+Subtype name:
+
+: dap-aggregation-job-continue-req
 
 Required parameters:
 
