@@ -1417,8 +1417,13 @@ the `ReportShareError`:
   - For any other error, the leader marks the report as failed, removes it from
     the candidate report set and does not process it further.
 
-If the type is `finished`, then the leader aborts with `unrecognizedMessage`. If
-the type is `continued`, then the leader proceeds as follows.
+If the type is `finished` and the Leader's preparation of this report share is
+also finished, then the report share is aggregated and can now be collected (see
+{{collect-flow}}). If the Leader is not finished, then the report cannot be
+processed further and MUST be removed from the candidate set.
+
+If the Helper's `PrepareStep` is of type `continued`, then the Leader proceeds
+as follows.
 
 Let `leader_outbound` denote the leader's prepare message and `helper_outbound`
 denote the helper's. The leader computes the next state transition as follows:
