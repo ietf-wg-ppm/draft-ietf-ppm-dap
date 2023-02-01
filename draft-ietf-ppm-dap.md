@@ -1617,6 +1617,7 @@ job with HTTP status code 200 OK and a body consisting of a `Collection`:
 struct {
   PartialBatchSelector part_batch_selector;
   uint64 report_count;
+  Interval interval;
   HpkeCiphertext encrypted_agg_shares<1..2^32-1>;
 } Collection;
 ~~~
@@ -1630,6 +1631,12 @@ This structure includes the following:
   [OPEN ISSUE: What should the Collector do if the query type doesn't match?]
 
 * The number of reports included in the batch.
+
+* The smallest interval of time that contains the timestamps of all reports
+  included in the batch, such that the interval's start and duration are
+  both multiples of the task's `time_precision` parameter. Note that in the case
+  of a `time_interval` type query (see {{query}}), this interval can be smaller
+  than the one in the corresponding `CollectionReq.query`.
 
 * The vector of encrypted aggregate shares. They MUST appear in the same order
   as the aggregator endpoints list of the task parameters.
