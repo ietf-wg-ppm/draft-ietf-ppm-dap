@@ -1323,36 +1323,10 @@ the input share is marked as invalid with a corresponding ReportShareError
 error.
 
 Before beginning the preparation step, Aggregators are required to perform the
-following generic checks.
+following checks:
 
 1. Check that the decrypted input share can be decoded. If not, the input share
    MUST be marked as invalid with the error `unrecognized_message`.
-
-1. Check if the report has already been aggregated with this aggregation
-   parameter. If this check fails, the input share MUST be marked as invalid
-   with the error `report_replayed`. This is the case if the report was used in
-   a previous aggregate request and is therefore a replay.
-    * Implementation note: To detect replay attacks, each Aggregator is required
-      to keep track of the set of reports it has processed for a given task.
-      Because honest Clients choose the report ID at random, it is sufficient to
-      store the set of IDs of processed reports. However, implementations may
-      find it helpful to track additional information, like the timestamp, so
-      that the storage used for anti-replay can be sharded efficiently.
-
-1. Check if the report has never been aggregated but is contained by a batch
-   that has been collected. If this check fails, the input share MUST be marked
-   as invalid with the error `batch_collected`. This prevents additional reports
-   from being aggregated after its batch has already been collected.
-
-1. Depending on the query type for the task, additional checks may be
-   applicable:
-    * For fixed_size tasks, the Aggregators need to ensure that each batch is
-      roughly the same size. If the number of reports aggregated for the current
-      batch exceeds the maximum batch size (per the task configuration), the
-      Aggregator MAY mark the input share as invalid with the error
-      "batch_saturated". Note that this behavior is not strictly enforced here
-      but during the collect sub-protocol. (See {{batch-validation}}.) If both
-      checks succeed, the input share is not marked as invalid.
 
 1. Check if the report is too far into the future. Implementors can provide for
    some small leeway, usually no more than a few minutes, to account for clock
@@ -1371,11 +1345,53 @@ following generic checks.
    the same. If so, then the Aggregator MUST mark the input share as invalid
    with error "unrecognized_message".
 
+1. Check if the report may still be aggregated with the current aggregation
+   parameter. This can be done by looking up all aggregation parameters
+   previously used for this report and calling
+
+   ~~~
+   VDAF.is_valid(current_agg_param, previous_agg_params)
+   ~~~
+
+   If this returns false, the input share MUST be marked as invalid with the
+   error `report_replayed`.
+
+    * Implementation note: To detect replay attacks, each Aggregator is required
+      to keep track of the set of reports it has processed for a given task.
+      Because honest Clients choose the report ID at random, it is sufficient to
+      store the set of IDs of processed reports. However, implementations may
+      find it helpful to track additional information, like the timestamp, so
+      that the storage used for anti-replay can be sharded efficiently.
+
+1. Check that a report is only aggregated in a batch if it was included in all
+   previous collections for the batch. Some VDAFs allow a batch to be collected
+   multiple times; the aggregators must check that the exact same set of reports
+   is being aggregated each time. Checking that no reports are omitted
+   from a batch is covered in {{batch-validation}}.
+   If this check fails, the input share MUST be marked as invalid with the error
+   `batch_collected`. This prevents collectors from learning anything about
+   small numbers of reports that are uploaded between two collections of a
+   batch.
+   The helper must consider a batch as collected when it has sent the
+   `AggregateShare` to the leader.
+   [TODO: If a section to clarify report and batch states is added this can be
+   removed. See Issue #384]
+
+1. Depending on the query type for the task, additional checks may be
+   applicable:
+    * For fixed_size tasks, the Aggregators need to ensure that each batch is
+      roughly the same size. If the number of reports aggregated for the current
+      batch exceeds the maximum batch size (per the task configuration), the
+      Aggregator MAY mark the input share as invalid with the error
+      "batch_saturated". Note that this behavior is not strictly enforced here
+      but during the collect sub-protocol. (See {{batch-validation}}.) If both
+      checks succeed, the input share is not marked as invalid.
+
 1. Finally, if an Aggregator cannot determine if an input share is valid, it
-   MUST mark the input share as invalid with error `report_dropped`. This
-   situation arises if, for example, the Aggregator has evicted from long-term
-   storage the state required to perform the check. (See
-   {{reducing-storage-requirements}} for details.)
+   MUST mark the input share as invalid with error `report_dropped`. For
+   example, if the Aggregator has evicted the state required to perform the
+   check from long-term storage. (See {{reducing-storage-requirements}} for
+   details.)
 
 If all of the above checks succeed, the input share is not marked as invalid.
 
