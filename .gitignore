@@ -9,6 +9,8 @@
 .tags
 .targets.mk
 /*-[0-9][0-9].xml
+/node_modules/
+/package-lock.json
 archive.json
 draft-ietf-ppm-dap.xml
 lib
