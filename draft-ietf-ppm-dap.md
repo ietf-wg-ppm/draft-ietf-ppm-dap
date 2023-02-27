@@ -583,7 +583,7 @@ struct {} Empty;
 ~~~
 
 DAP uses the 16 byte `ReportID` as the nonce parameter for the VDAF
-`measurement_to_input_shares` and `prep_init` methods (see {{!VDAF, Section 5}}.
+`measurement_to_input_shares` and `prep_init` methods (see {{!VDAF, Section 5}}).
 Thus for a VDAF to be compatible with DAP, it MUST specify a `NONCE_SIZE` of 16
 bytes.
 
