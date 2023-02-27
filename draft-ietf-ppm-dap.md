@@ -582,6 +582,11 @@ struct {
 struct {} Empty;
 ~~~
 
+DAP uses the 16 byte `ReportID` as the nonce parameter for the VDAF
+`measurement_to_input_shares` and `prep_init` methods (see {{!VDAF, Section 5}}.
+Thus for a VDAF to be compatible with DAP, it MUST specify a `NONCE_SIZE` of 16
+bytes.
+
 ## Queries {#query}
 
 Aggregated results are computed based on sets of report, called batches. The
@@ -853,12 +858,6 @@ struct {
       this by generating 16 random bytes using a cryptographically secure random
       number generator.
 
-[Note/TODO: it's important that the _Client_ chooses the report ID. We use the
-report ID as the nonce, and VDAF-04 will include some guidance explaining that
-if the report ID is chosen with knowledge of the VDAF verify key, privacy could
-be violated. For that reason, we can't allow either aggregator to choose report
-IDs.]
-
     * `time` is the time at which the report was generated. The Client SHOULD
       round this value down to the nearest multiple of the task's
       `time_precision` in order to ensure that that the timestamp cannot be used
@@ -873,19 +872,14 @@ IDs.]
 
 To generate a report, the Client begins by sharding its measurement into input
 shares and the public share using the VDAF's sharding algorithm
-({{!VDAF, Section 5.1}}):
+({{!VDAF, Section 5.1}}), using the report ID as the nonce:
 
 ~~~
 (public_share, input_shares) =
-  VDAF.measurement_to_input_shares(measurement)
+  VDAF.measurement_to_input_shares(measurement, report_id)
 ~~~
 
-[TODO: in VDAF-04, `measurement_to_input_shares` will take a nonce argument, for
-which we will use the report ID #394]
-
 The Client then wraps each input share in the following structure:
-
-[TODO: this should explicitly show the call to VDAF.measurement_to_input_shares]
 
 ~~~
 struct {
