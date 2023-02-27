@@ -741,9 +741,8 @@ of the aggregators is configured with following parameters:
   (described in {{hpke-config}}); see {{compliance}} for information about the
   HPKE configuration algorithms.
 * `vdaf_verify_key`: The VDAF verification key shared by the aggregators. This
-  key is used in the aggregation sub-protocol ({{aggregate-flow}}). [OPEN ISSUE:
-  The manner in which this key is distributed may be relevant to the VDAF's
-  security. See issue#161.]
+  key is used in the aggregation sub-protocol ({{aggregate-flow}}). The security
+  requirements are described in {{verification-key}}.
 
 Finally, the collector is configured with the HPKE secret key corresponding to
 `collector_hpke_config`.
@@ -2476,6 +2475,17 @@ if a majority of runs agree, and a single aggregator appears in every run that
 disagrees). See
 [#22](https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/22) for
 discussion.
+
+## Verification key requirements {#verification-key}
+
+The verification key for a task SHOULD be chosen before any reports are generated.
+It SHOULD be fixed for the lifetime of the task and not be rotated. One way
+to ensure this is to include the verification key in a derivation of the task ID.
+
+This consideration comes from current security analysis for existing VDAFs. For example,
+to ensure that the security proofs for Prio3 hold, the verification key MUST be
+chosen independently of the generated reports. This can be achieved as
+recommended above.
 
 ## Infrastructure diversity
 
