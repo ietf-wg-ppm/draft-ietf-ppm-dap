@@ -2235,6 +2235,26 @@ Details for each issue are below.
    can be used to prevent --- or at least mitigate --- these types of attacks.
    See {{upload-extensions}}. [OPEN ISSUE: No such extension has been
    implemented, so we're not yet sure if the current mechanism is sufficient.]
+1. The choice of VDAF can impact the computation required for a DAP Task. For
+   instance, the Poplar1 VDAF {{!VDAF}} when configured to compute a set of
+   heavy hitters requires each measurement to be of the same bit-length which
+   all parties need to agree on prior to VDAF execution. The computation
+   required for such tasks can increase superlinearly as multiple rounds of
+   evaluation are needed for each bit of the measurement value.
+
+   When dealing with variable length inputs (e.g domain names), it is
+   necessary to pad them to convert into fixed-size measurements. When
+   computing the heavy hitters from a batch of such measurements, we can
+   early-abort the Poplar1 execution once we have reached the padding region
+   for a candidate measurement. For smaller length inputs, this significantly
+   reduces the cost of communication between Aggregators and the steps
+   required for the computation. However, malicious Clients can still generate
+   maximum length inputs forcing the system to always operate at worst-case
+   performance.
+
+   Therefore, care must be taken that a DAP deployment can comfortably handle
+   computation of measurements for arbitrarily large sizes, otherwise, it may
+   result in a DoS possibility for the entire system.
 
 ## Threat model
 
