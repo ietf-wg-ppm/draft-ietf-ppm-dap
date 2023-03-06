@@ -102,7 +102,7 @@ revealing any individual user's data.
 
 # Introduction
 
-This document describes a distributed aggregation protocol for privacy
+This document describes the Distributed Aggregation Protocol (DAP) for privacy
 preserving measurement. The protocol is executed by a large set of clients and a
 small set of servers. The servers' goal is to compute some aggregate statistic
 over the clients' inputs without learning the inputs themselves. This is made
