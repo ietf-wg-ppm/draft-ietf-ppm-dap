@@ -520,16 +520,17 @@ implies HTTP status code 400 Bad Request unless explicitly specified otherwise.
 
 DAP has three major interactions which need to be defined:
 
-* Uploading reports from the client to the aggregators, specified in
+* Uploading reports from the Client to the Aggregators, specified in
   {{upload-flow}}
-* Computing the results of a given measurement, specified in {{aggregate-flow}}
+* Computing the results for a given measurement task, specified in
+  {{aggregate-flow}}
 * Collecting aggregated results, specified in {{collect-flow}}
 
-In this section, we discuss each of the resources and the messages used to act
-on these resources. A resource's path is resolved relative to a server's
-endpoint to construct a resource URI.
+Each of these interactions is defined in terms of "resources". In this section
+we define these resources and the messages used to act on them.
 
-Resource paths are specified as templates like:
+A resource's path is resolved relative to a server's endpoint to construct a
+resource URI. Resource paths are specified as templates like:
 
 ~~~
 {role}/resource_type/{resource-id}
@@ -540,9 +541,9 @@ Resource paths are specified as templates like:
 endpoint.
 
 DAP resource identifiers are opaque byte strings, so any occurrence of
-`{resource-id}` in a URL template (e.g., `{task-id}` or `{report-id}`) MUST
-be expanded to the URL-safe, unpadded Base 64 representation of the corresponding resource
-identifier, as specified in sections 5 and 3.2 of {{!RFC4648}}.
+`{resource-id}` in a URL template (e.g., `{task-id}` or `{report-id}`) MUST be
+expanded to the URL-safe, unpadded Base 64 representation of the corresponding
+resource identifier, as specified in {{Sections 5 and 3.2 of !RFC4648}}.
 
 The following are some basic type definitions used in other messages:
 
@@ -583,18 +584,18 @@ struct {
   opaque payload<1..2^32-1>; /* ciphertext */
 } HpkeCiphertext;
 
-/* Represent a zero byte empty data type. */
+/* Represent a zero-length byte string. */
 struct {} Empty;
 ~~~
 
-DAP uses the 16 byte `ReportID` as the nonce parameter for the VDAF
-`measurement_to_input_shares` and `prep_init` methods (see {{!VDAF, Section 5}}).
-Thus for a VDAF to be compatible with DAP, it MUST specify a `NONCE_SIZE` of 16
-bytes.
+DAP uses the 16-byte `ReportID` as the nonce parameter for the VDAF
+`measurement_to_input_shares` and `prep_init` methods (see {{!VDAF, Section
+5}}). Thus for a VDAF to be compatible with DAP, it MUST specify a `NONCE_SIZE`
+of 16 bytes.
 
 ## Queries {#query}
 
-Aggregated results are computed based on sets of report, called batches. The
+Aggregated results are computed based on sets of reports, called "batches". The
 Collector influences which reports are used in a batch via a "query." The
 Aggregators use this query to carry out the aggregation flow and produce
 aggregate shares encrypted to the Collector.
@@ -612,7 +613,7 @@ enum {
 
 The time_interval query type is described in {{time-interval-query}}; the
 fixed_size query type is described in {{fixed-size-query}}. Future
-specifications can introduce new query types as needed (see {{query-type-reg}}).
+specifications may introduce new query types as needed (see {{query-type-reg}}).
 A query includes parameters used by the Aggregators to select a batch of reports
 specific to the given query type. A query is defined as follows:
 
@@ -651,7 +652,7 @@ All query types have the following configuration parameters in common:
   include. In a sense, this parameter controls the degree of privacy that will
   be obtained: The larger the minimum batch size, the higher degree of privacy.
   However, this ultimately depends on the application and the nature of the
-  reports and aggregation function.
+  measurements and aggregation function.
 
 - `time_precision` - Clients use this value to truncate their report timestamps;
   see {{upload-flow}}. Additional semantics may apply, depending on the query
@@ -666,7 +667,7 @@ The first query type, `time_interval`, is designed to support applications in
 which reports are collected over a long period of time. The Collector specifies
 a "batch interval" that determines the time range for reports included in the
 batch. For each report in the batch, the time at which that report was generated
-(see {{upload-flow}}) must fall within the batch interval specified by the
+(see {{upload-flow}}) MUST fall within the batch interval specified by the
 Collector.
 
 Typically the Collector issues queries for which the batch intervals are
@@ -700,8 +701,8 @@ it is interested in; in this case, it can also issue a query of type
 The leader SHOULD select a batch which has not yet began collection.
 
 In addition to the minimum batch size common to all query types, the
-configuration includes a "maximum batch size", `max_batch_size`, that determines
-maximum number of reports per batch.
+configuration includes a parameter `max_batch_size` that determines maximum
+number of reports per batch.
 
 Implementation note: The goal for the Aggregators is to aggregate precisely
 `min_batch_size` reports per batch. Doing so, however, may be challenging for
@@ -728,9 +729,9 @@ A `TaskID` is a globally unique sequence of bytes. It is RECOMMENDED that this
 be set to a random string output by a cryptographically secure pseudorandom
 number generator. Each task has the following parameters associated with it:
 
-* `aggregator_endpoints`: A list of URLs relative to which an aggregator's API
+* `aggregator_endpoints`: A list of URLs relative to which each Aggregator's API
   endpoints can be found. Each endpoint's list MUST be in the same order. The
-  leader's endpoint MUST be the first in the list. The order of the
+  Leader's endpoint MUST be the first in the list. The order of the
   `encrypted_input_shares` in a `Report` (see {{upload-flow}}) MUST be the same
   as the order in which aggregators appear in this list.
 * The query configuration for this task (see {{query}}). This determines the
@@ -741,20 +742,20 @@ number generator. Each task has the following parameters associated with it:
 * `task_expiration`: The time up to which clients are expected to upload to this
   task. The task is considered completed after this time. Aggregators MAY reject
   reports that have timestamps later than `task_expiration`.
-* A unique identifier for the VDAF instance used for the task, including the
-  type of measurement associated with the task.
+* A unique identifier for the VDAF in use for the task, e.g., one of the VDAFs
+  defined in {{Section 10 of !VDAF}}.
 
 In addition, in order to facilitate the aggregation and collect protocols, each
-of the aggregators is configured with following parameters:
+of the Aggregators is configured with following parameters:
 
-* `collector_config`: The {{!HPKE=RFC9180}} configuration of the collector
+* `collector_config`: The {{!HPKE=RFC9180}} configuration of the Collector
   (described in {{hpke-config}}); see {{compliance}} for information about the
   HPKE configuration algorithms.
-* `vdaf_verify_key`: The VDAF verification key shared by the aggregators. This
+* `vdaf_verify_key`: The VDAF verification key shared by the Aggregators. This
   key is used in the aggregation sub-protocol ({{aggregate-flow}}). The security
   requirements are described in {{verification-key}}.
 
-Finally, the collector is configured with the HPKE secret key corresponding to
+Finally, the Collector is configured with the HPKE secret key corresponding to
 `collector_hpke_config`.
 
 ## Uploading Reports {#upload-flow}
