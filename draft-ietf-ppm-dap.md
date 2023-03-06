@@ -452,10 +452,14 @@ using {{!HPKE=RFC9180}} to ensure that only the intended recipient can see a
 message in the clear.
 
 In other cases, DAP requires HTTPS client authentication. Any authentication
-scheme that is composable with HTTP is allowed. For example, {{!OAuth2=RFC6749}}
-credentials are presented in an Authorization HTTP header, which can be added to
-any DAP protocol message, or TLS client certificates are another viable
-solution. This allows organizations deploying DAP to use existing well-known
+scheme that is composable with HTTP is allowed. For example:
+
+* {{!OAuth2=RFC6749}} credentials are presented in an Authorization HTTP header,
+  which can be added to any DAP protocol message.
+
+* TLS client certificates can be used to authenticate the underlying transport.
+
+This flexibility allows organizations deploying DAP to use existing well-known
 HTTP authentication mechanisms that they already support. Discovering what
 authentication mechanisms are supported by a DAP participant is outside of this
 document's scope.
@@ -482,7 +486,7 @@ in the "type" field (within the DAP URN namespace
 | outdatedConfig             | The message was generated using an outdated configuration. |
 | reportRejected             | Report could not be processed for an unspecified reason. |
 | reportTooEarly             | Report could not be processed because its timestamp is too far in the future. |
-| batchInvalid               | A collect or aggregate-share request was made with invalid batch parameters. |
+| batchInvalid               | The batch boundary check for collector's query failed. |
 | invalidBatchSize           | There are an invalid number of reports in the batch. |
 | batchQueriedTooManyTimes   | The maximum number of batch queries has been exceeded for one or more reports included in the batch. |
 | batchMismatch              | Aggregators disagree on the report shares that were aggregated in a batch. |
@@ -499,15 +503,15 @@ information.
 
 When the task ID is known (see {{task-configuration}}), the problem document
 SHOULD include an additional "taskid" member containing the ID encoded in Base
-64 using the URL and filename safe alphabet with no padding defined in sections
-5 and 3.2 of {{!RFC4648}}.
+64 using the URL and filename safe alphabet with no padding defined in
+{{Sections 5 and 3.2 of !RFC4648}}.
 
 In the remainder of this document, the tokens in the table above are used to
 refer to error types, rather than the full URNs. For example, an "error of type
 'unrecognizedMessage'" refers to an error document with "type" value
 "urn:ietf:params:ppm:dap:error:unrecognizedMessage".
 
-This document uses the verbs "abort" and "alert with `[some error message]`" to
+This document uses the verbs "abort" and "alert with [some error message]" to
 describe how protocol participants react to various error conditions. This
 implies HTTP status code 400 Bad Request unless explicitly specified otherwise.
 
