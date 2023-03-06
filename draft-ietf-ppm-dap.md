@@ -193,7 +193,7 @@ seen in the clear by any server.
 
 Aggregate result:
 : The output of the aggregation function over a given set of measurements and
-  aggregation parameter. As defined in {{!VDAF=I-D.draft-irtf-cfrg-vdaf-03}}.
+  aggregation parameter. As defined in {{!VDAF}}.
 
 Aggregate share:
 : A share of the aggregate result emitted by an Aggregator. Aggregate shares are
@@ -262,6 +262,11 @@ Public share:
 
 Report:
 : A cryptographically protected measurement uploaded to the Leader by a Client.
+  Comprised of a set of report shares.
+
+Report Share:
+: An encrypted input share comprising a piece of a report.
+
 
 {:br}
 
@@ -271,42 +276,42 @@ also follows {{RFC8446}}.
 
 # Overview {#overview}
 
-The protocol is executed by a large set of clients and a small set of servers.
-Servers are referred to as *aggregators*. Each client's input to the protocol is
-a set of measurements (e.g., counts of some user behavior). Given the input set
-of measurements `x_1, ..., x_n` held by `n` users, the goal of a protocol for
-privacy preserving measurement is to compute `y = F(p, x_1, ..., x_n)` for some
-function `F` while revealing nothing else about the measurements.
+The protocol is executed by a large set of Clients and a small set of servers.
+Servers are referred to as "Aggregators". Each Client's input to the protocol is
+its measurement (or set of measurements, e.g., counts of some user behavior).
+Given the input set of measurements `x_1, ..., x_n` held by `n` users, the goal
+of DAP is to compute `y = F(p, x_1, ..., x_n)` for some function `F` while
+revealing nothing else about the measurements. We call `F` the "aggregation
+function".
 
 This protocol is extensible and allows for the addition of new cryptographic
 schemes that implement the VDAF interface specified in
 {{!VDAF=I-D.draft-irtf-cfrg-vdaf-03}}. Candidates include:
 
-* Prio3, which allows for aggregate statistics such as sum, mean, histograms,
-  etc. This class of VDAFs is based on Prio {{CGB17}} and includes improvements
-  described in {{BBCGGI19}}.
+* Prio3 ({{Section 7 of !VDAF}}), which allows for aggregate statistics such as
+  sum, mean, histograms, etc.
 
-* Poplar1, which allows for finding the most popular strings among a collection
-  of clients (e.g., the URL of their home page) as well as counting the number
-  of clients that hold a given string. This VDAF is the basis of the Poplar
-  protocol of {{BBCGGI21}}, which is designed to solve the heavy hitters problem
-  in a privacy preserving manner.
+* Poplar1 ({{Section 8 of !VDAF}}), which allows for finding the most popular
+  strings uploaded by a set of Clients (e.g., the URL of their home page) as
+  well as counting the number of Clients that hold a given string. This VDAF is
+  the basis of the Poplar protocol of {{BBCGGI21}}, which is designed to solve
+  the heavy hitters problem in a privacy preserving manner.
 
-This protocol is designed to work with schemes that use secret sharing. Rather
+VDAFs rely on secret sharing to protect the privacy of the measurements. Rather
 than sending its input in the clear, each client shards its measurements into a
-sequence of *input shares* and sends an input share to each of the aggregators.
+sequence of "input shares" and sends an input share to each of the Aggregators.
 This provides two important properties:
 
-* It is impossible to deduce the measurement without knowing *all* of the
-  shares.
+* Given only a subset of the input shares, it is impossible to deduce the
+  plaintext measurement from which they were generated.
 
-* It allows the aggregators to compute the final output by first aggregating up
-  their measurements shares locally, then combining the results to obtain the
-  final output.
+* It allows the Aggregators to compute the aggregation function by first
+  aggregating up their input shares locally into "aggregate shares", then
+  combining the aggregate shares into the aggregate result.
 
 ## System Architecture {#system-architecture}
 
-The overall system architecture is shown in {{pa-topology}}.
+The overall system architecture is shown in {{dap-topology}}.
 
 ~~~~
                     +------------+
@@ -331,17 +336,16 @@ The overall system architecture is shown in {{pa-topology}}.
                     |            |
                     +------------+
 ~~~~
-{: #pa-topology title="System Architecture"}
+{: #dap-topology title="System Architecture"}
 
 [[OPEN ISSUE: This shows two helpers, but the document only allows one for now.
 https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/117]]
 
-
 The main participants in the protocol are as follows:
 
 Collector:
-: The entity which wants to take the measurement and ultimately receives the
-  results. Any given measurement will have a single collector.
+: The entity which wants to obtain the aggregate of the measurements generated
+  by the Clients. Any given measurement task will have a single Collector.
 
 Client(s):
 : The endpoints which directly take the measurement(s) and report them to the
@@ -349,49 +353,50 @@ Client(s):
   a large number of clients.
 
 Aggregator:
-: An endpoint which receives report shares. Each aggregator works with the other
-  aggregators to compute the final aggregate. This protocol defines two types of
-  aggregators: Leaders and Helpers. For each measurement, there is a single
-  leader and helper.
+: An endpoint which receives report shares. Each Aggregator works with the other
+  Aggregators to compute the aggregate result. This protocol defines two types of
+  Aggregators: Leaders and Helpers. For each measurement task, there is a single
+  Leader and Helper.
 
 Leader:
-: The leader is responsible for coordinating the protocol. It receives the
-  encrypted shares, distributes them to the helpers, and orchestrates the
-  process of computing the final measurement as requested by the collector.
+: The Aggregator responsible for coordinating the protocol. It receives the
+  reports, splits them into report shares, and distributes the report shares to
+  the Helpers, and orchestrates the process of computing the aggregate result as
+  requested by the Collector.
 
 Helper:
 : Helpers are responsible for executing the protocol as instructed by the
-  leader. The protocol is designed so that helpers can be relatively
-  lightweight, with most of the state held at the leader.
+  Leader. The protocol is designed so that Helpers can be relatively
+  lightweight, with most of the state held at the Leader.
 
 {:br}
 
 The basic unit of DAP is the "task" which represents a single measurement
-(though potentially taken over multiple time windows). The definition of a task
-includes the following parameters:
+process (though potentially taken over multiple time windows). The definition of
+a task includes the following parameters:
 
 * The type of each measurement.
 * The aggregation function to compute (e.g., sum, mean, etc.).
-* The set of aggregators and necessary cryptographic keying material to use.
+* The set of Aggregators and necessary cryptographic keying material to use.
 * The VDAF to execute, which to some extent is dictated by the previous choices.
 * The minimum "batch size" of reports which can be aggregated.
-* The rate at which measurements can be taken, i.e., the "minimum batch window".
+* The rate at which measurements can be taken, i.e., the "minimum batch
+  duration".
 
-These parameters are distributed out of band to the clients and to the
-aggregators. They are distributed by the collecting entity in some authenticated
-form. Each task is identified by a unique 32-byte ID which is used to refer to
-it in protocol messages.
+These parameters are distributed out of band to the Clients and to the
+Aggregators. They are distributed by the Collector in some authenticated form.
+Each task is identified by a unique 32-byte ID which is used to refer to it in
+protocol messages.
 
-During the duration of the measurement, each client records its own value(s),
-packages them up into a report, and sends them to the leader. Each share is
-separately encrypted for each aggregator so that even though they pass through
-the leader, the leader is unable to see or modify them. Depending on the
-measurement, the client may only send one report or may send many reports over
-time.
+During the duration of the task, each Client records its own measurement
+value(s), packages them up into a report, and sends them to the leader. Each
+share is separately encrypted for each Aggregator so that even though they pass
+through the Leader, the Leader is unable to see or modify them. Depending on the
+task, the Client may only send one report or may send many reports over time.
 
-The leader distributes the shares to the helpers and orchestrates the process of
+The Leader distributes the shares to the Helpers and orchestrates the process of
 verifying them (see {{validating-inputs}}) and assembling them into a final
-measurement for the collector. Depending on the VDAF, it may be possible to
+aggregate result for the Collector. Depending on the VDAF, it may be possible to
 incrementally process each report as it comes in, or may be necessary to wait
 until the entire batch of reports is received.
 
@@ -399,22 +404,22 @@ until the entire batch of reports is received.
 
 An essential task of any data collection pipeline is ensuring that the data
 being aggregated is "valid". In DAP, input validation is complicated by the fact
-that none of the entities other than the client ever sees the values for
-individual clients.
+that none of the entities other than the Client ever sees that client's
+plaintext measurement.
 
 In order to address this problem, the aggregators engage in a secure,
 multi-party computation specified by the chosen VDAF
 {{!VDAF=I-D.draft-irtf-cfrg-vdaf-03}} in order to prepare a report for
-aggregation. At the beginning of this computation, each aggregator is in
+aggregation. At the beginning of this computation, each Aggregator is in
 possession of an input share uploaded by the client. At the end of the
-computation, each aggregator is in possession of either an "output share" that
+computation, each Aggregator is in possession of either an "output share" that
 is ready to be aggregated or an indication that a valid output share could not
 be computed.
 
 To facilitate this computation, the input shares generated by the client include
 information used by the aggregators during aggregation in order to validate
 their corresponding output shares. For example, Prio3 includes a distributed
-zero-knowledge proof of the input's validity {{BBCGGI19}} which the aggregators
+zero-knowledge proof of the input's validity {{BBCGGI19}} which the Aggregators
 can jointly verify and reject the report if it cannot be verified. However, they
 do not learn anything about the individual report other than that it is valid.
 
@@ -422,8 +427,8 @@ The specific properties attested to in the proof vary depending on the
 measurement being taken. For instance, to measure the time the user took
 performing a given task the proof might demonstrate that the value reported was
 within a certain range (e.g., 0-60 seconds). By contrast, to report which of a
-set of N options the user select, the report might contain N integers and the
-proof would demonstrate that N-1 were 0 and the other was 1.
+set of `N` options the user select, the report might contain `N` integers and
+the proof would demonstrate that `N-1` were `0` and the other was `1`.
 
 It is important to recognize that "validity" is distinct from "correctness". For
 instance, the user might have spent 30s on a task but the client might report
