@@ -759,30 +759,30 @@ Finally, the collector is configured with the HPKE secret key corresponding to
 
 ## Uploading Reports {#upload-flow}
 
-Clients periodically upload reports to the leader, which then distributes the
-individual shares to each helper.
+Clients periodically upload reports to the Leader, which then distributes the
+individual report shares to each Helper.
 
 ### HPKE Configuration Request {#hpke-config}
 
-Before the client can upload its report to the leader, it must know the HPKE
-configuration of each aggregator. See {{compliance}} for information on HPKE
+Before the Client can upload its report to the Leader, it must know the HPKE
+configuration of each Aggregator. See {{compliance}} for information on HPKE
 algorithm choices.
 
 Clients retrieve the HPKE configuration from each aggregator by sending an HTTP
 GET request to `{aggregator}/hpke_config`. Clients MAY specify a query parameter
 `task_id` whose value is the task ID whose HPKE configuration they want. If the
-aggregator does not recognize the task ID, then it MUST abort with error
+Aggregator does not recognize the task ID, then it MUST abort with error
 `unrecognizedTask`.
 
-An aggregator is free to use different HPKE configurations for each task with
-which it is configured. If the task ID is missing from a client's request, the
-aggregator MAY abort with an error of type `missingTaskID`, in which case the
-client SHOULD retry the request with a well-formed task ID included.
+An Aggregator is free to use different HPKE configurations for each task with
+which it is configured. If the task ID is missing from  the Client's request,
+the Aggregator MAY abort with an error of type `missingTaskID`, in which case
+the Client SHOULD retry the request with a well-formed task ID included.
 
-An aggregator responds to well-formed requests with HTTP status code 200 OK and
+An Aggregator responds to well-formed requests with HTTP status code 200 OK and
 an `HpkeConfigList` value. The `HpkeConfigList` structure contains one or more
-`HpkeConfig` structures in decreasing order of preference. This allows a server
-to support multiple HPKE configurations simultaneously.
+`HpkeConfig` structures in decreasing order of preference. This allows an
+Aggregator to support multiple HPKE configurations simultaneously.
 
 [TODO: Allow aggregators to return HTTP status code 403 Forbidden in deployments
 that use authentication to avoid leaking information about which tasks exist.]
@@ -811,7 +811,7 @@ Aggregators SHOULD allocate distinct id values for each `HpkeConfig` in a
 rejection sampling, i.e., to randomly select an id value repeatedly until it
 does not match any known `HpkeConfig`.
 
-The client MUST abort if any of the following happen for any HPKE config
+The Client MUST abort if any of the following happen for any HPKE config
 request:
 
 * the GET request failed or did not return a valid HPKE config list;
@@ -828,18 +828,18 @@ this cached lifetime with the Cache-Control header, as follows:
   Cache-Control: max-age=86400
 ~~~
 
-Clients SHOULD follow the usual HTTP caching {{!RFC9111}} semantics for key
+Clients SHOULD follow the usual HTTP caching {{!RFC9111}} semantics for HPKE
 configurations.
 
 Note: Long cache lifetimes may result in clients using stale HPKE
-configurations; aggregators SHOULD continue to accept reports with old keys for
+configurations; Aggregators SHOULD continue to accept reports with old keys for
 at least twice the cache lifetime in order to avoid rejecting reports.
 
 ### Upload Request
 
 Clients upload reports by using an HTTP PUT to
 `{leader}/tasks/{task-id}/reports`, where `{leader}` is the first entry in the
-task's aggregator endpoints.
+task's Aggregator endpoints.
 
 The payload is structured as follows:
 
@@ -857,6 +857,7 @@ struct {
 ~~~
 
 * `report_metadata` is public metadata describing the report.
+
     * `report_id` is used by the Aggregators to ensure the report appears in at
       most one batch (see {{input-share-validation}}). The Client MUST generate
       this by generating 16 random bytes using a cryptographically secure random
@@ -868,15 +869,14 @@ struct {
       to link a report back to the Client that generated it.
 
 * `public_share` is the public share output by the VDAF sharding algorithm. Note
-  that the public share might be empty, depending on the VDAF. For example,
-  Prio3 has an empty public share, but Poplar1 does not. See {{!VDAF}}.
+  that the public share might be empty, depending on the VDAF.
 
-* `encrypted_input_shares` is the encrypted input shares for each of the
-   Aggregators.
+* `encrypted_input_shares` is the sequence of input shares encrypted to each of
+  the Aggregators.
 
 To generate a report, the Client begins by sharding its measurement into input
-shares and the public share using the VDAF's sharding algorithm
-({{!VDAF, Section 5.1}}), using the report ID as the nonce:
+shares and the public share using the VDAF's sharding algorithm ({{Section 5.1
+of !VDAF}}), using the report ID as the nonce:
 
 ~~~
 (public_share, input_shares) =
@@ -905,13 +905,13 @@ enc, payload = SealBase(pk,
   input_share_aad, plaintext_input_share)
 ~~~
 
-where `pk` is the aggregator's public key; `server_role` is the Role of the
-intended recipient (`0x02` for the leader and `0x03` for the helper),
+where `pk` is the Aggregator's public key; `server_role` is the Role of the
+intended recipient (`0x02` for the Leader and `0x03` for the Helper),
 `plaintext_input_share` is the Aggregator's PlaintextInputShare, and
-`input_share_aad` is an encoded message of type `InputShareAad`, constructed
-from the same values as the corresponding fields in the report. The `SealBase()`
-function is as specified in {{!HPKE, Section 6.1}} for the ciphersuite indicated
-by the HPKE configuration.
+`input_share_aad` is an encoded message of type InputShareAad defined below,
+constructed from the same values as the corresponding fields in the report. The
+`SealBase()` function is as specified in {{!HPKE, Section 6.1}} for the
+ciphersuite indicated by the HPKE configuration.
 
 ~~~
 struct {
@@ -922,53 +922,55 @@ struct {
 ~~~
 
 The order of the encrypted input shares appear MUST match the order of the
-task's `aggregator_endpoints`. That is, the first share should be the leader's,
-the second share should be for the first helper, and so on.
+task's `aggregator_endpoints`. That is, the first share should be the Leader's,
+the second share should be for the first Helper, and so on.
 
-The leader responds to well-formed requests with HTTP status code 201
+The Leader responds to well-formed requests with HTTP status code 201
 Created. Malformed requests are handled as described in {{errors}}.
 Clients SHOULD NOT upload the same measurement value in more than one report if
-the leader responds with HTTP status code 201 Created.
+the Leader responds with HTTP status code 201 Created.
 
 If the leader does not recognize the task ID, then it MUST abort with error
 `unrecognizedTask`.
 
-The leader responds to requests whose leader encrypted input share uses an
+The Leader responds to requests whose leader encrypted input share uses an
 out-of-date or unknown `HpkeConfig.id` value, indicated by
 `HpkeCiphertext.config_id`, with error of type 'outdatedConfig'. If the leader
 supports multiple HPKE configurations, it can use trial decryption with each
 configuration to determine if requests match a known HPKE configuration. When
-clients receive an 'outdatedConfig' error, they SHOULD invalidate any cached
-aggregator `HpkeConfigList` and retry with a freshly generated Report. If this
-retried report does not succeed, clients SHOULD abort and discontinue retrying.
+the Client receives an 'outdatedConfig' error, it SHOULD invalidate any cached
+HpkeConfigList and retry with a freshly generated Report. If this retried upload
+does not succeed, the Client SHOULD abort and discontinue retrying.
 
-If a report's ID matches that of a previously uploaded report, the leader MUST
-ignore it and the leader MAY alert the client with error `reportRejected`. See
+If a report's ID matches that of a previously uploaded report, the Leader MUST
+ignore it. In addition, it MAY alert the client with error `reportRejected`. See
 the implementation note in {{input-share-validation}}.
 
 The Leader MUST ignore any report pertaining to a batch that has already been
 collected (see {{input-share-validation}} for details). Otherwise, comparing the
 aggregate result to the previous aggregate result may result in a privacy
-violation. Note that this is enforced by all Aggregators, not just the leader.
-In addition, the leader MAY abort the upload protocol and alert the client with
-error `reportRejected`.
+violation. Note that this is enforced by all Aggregators, not just the Leader.
+The Leader MAY also abort the upload protocol and alert the client with error
+`reportRejected`.
 
-The Leader MAY ignore any reports whose timestamp is past the task's
-`task_expiration`. When it does so, the leader SHOULD abort the upload protocol
-and alert the client with error `reportRejected`. Client MAY choose to opt out
-of the task if its own clock has passed `task_expiration`.
+The Leader MAY ignore any report whose timestamp is past the task's
+`task_expiration`. When it does so, it SHOULD also abort the upload protocol and
+alert the Client with error `reportRejected`. Client MAY choose to opt out of
+the task if its own clock has passed `task_expiration`.
 
-Leaders can buffer reports while waiting to aggregate them. The leader SHOULD
-NOT accept reports whose timestamps are too far in the future. Implementors MAY
-provide for some small leeway, usually no more than a few minutes, to account
-for clock skew. If the leader rejects a report for this reason, it SHOULD abort
-the upload protocol and alert the client with error `reportTooEarly`. In this
-situation, clients MAY re-upload the report later on.
+The Leader may need to buffer reports while waiting to aggregate them (e.g.,
+while waiting for an aggregation parameter from the Collector; see
+{{collect-flow}}). The Leader SHOULD NOT accept reports whose timestamps are too
+far in the future. Implementors MAY provide for some small leeway, usually no
+more than a few minutes, to account for clock skew. If the Leader rejects a
+report for this reason, it SHOULD abort the upload protocol and alert the Client
+with error `reportTooEarly`. In this situation, the Client MAY re-upload the
+report later on.
 
-If the Report contains an unrecognized extension, or of two extensions have the
-same ExtensionType, then the Leader MAY abort the upload request with error
-"unrecognizedMessage". Note that this behavior is not mandatory because it
-requires the Leader to decrypt its input share.
+If the Leader's ReportShare contains an unrecognized extension, or if two
+extensions have the same ExtensionType, then the Leader MAY abort the upload
+request with error "unrecognizedMessage". Note that this behavior is not
+mandatory because it requires the Leader to decrypt its ReportShare.
 
 ### Upload Extensions {#upload-extensions}
 
@@ -1003,8 +1005,8 @@ containing an extension it does not recognize, then it MUST reject the Report.
 ### Upload Message Security
 
 The contents of each input share must be kept confidential from everyone but the
-client and the aggregator it is being sent to. In addition, clients must be able
-to authenticate the aggregator they upload to.
+Client and the Aggregator it is being sent to. In addition, Clients must be able
+to authenticate the Aggregator they upload to.
 
 HTTPS provides confidentiality between the DAP client and the leader, but this
 is not sufficient since the helper's report shares are relayed through the
@@ -1015,14 +1017,14 @@ authenticate the server.
 
 Aggregators MAY require clients to authenticate when uploading reports. This is
 an effective mitigation against Sybil {{Dou02}} attacks in deployments where it
-is practical for each client to have an identity provisioned (e.g., a user
+is practical for each Client to have an identity provisioned (e.g., a user
 logged into an online service or a hardware device programmed with an identity).
-If it is used, client authentication MUST use a scheme that meets the
+If it is used, Client authentication MUST use a scheme that meets the
 requirements in {{request-authentication}}.
 
-In some deployments, it will not be practical to require clients to authenticate
+In some deployments, it will not be practical to require Clients to authenticate
 (e.g., a widely distributed application that does not require its users to login
-to any service), so client authentication is not mandatory in DAP.
+to any service), so Client authentication is not mandatory in DAP.
 
 [[OPEN ISSUE: deployments that don't have client auth will need to do something
 about Sybil attacks. Is there any useful guidance or SHOULD we can provide? Sort
