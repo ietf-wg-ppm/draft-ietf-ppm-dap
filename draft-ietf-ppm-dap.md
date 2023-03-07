@@ -880,9 +880,17 @@ shares and the public share using the VDAF's sharding algorithm ({{Section 5.1
 of !VDAF}}), using the report ID as the nonce:
 
 ~~~
-(public_share, input_shares) =
-  VDAF.measurement_to_input_shares(measurement, report_id)
+(public_share, input_shares) = VDAF.measurement_to_input_shares(
+    measurement, /* plaintext measurement */
+    report_id,   /* nonce */
+    rand,        /* randomness for sharding algorithm */
+)
 ~~~
+
+The last input comprises the randomness consumed by the sharding algorithm. The
+sharding randomness is a random byte string of length specified by the VDAF. The
+Client MUST generate this using a cryptographicallly secure random number
+generator.
 
 The Client then wraps each input share in the following structure:
 
