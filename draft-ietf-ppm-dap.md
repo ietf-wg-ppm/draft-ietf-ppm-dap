@@ -889,7 +889,7 @@ of !VDAF}}), using the report ID as the nonce:
 
 The last input comprises the randomness consumed by the sharding algorithm. The
 sharding randomness is a random byte string of length specified by the VDAF. The
-Client MUST generate this using a cryptographicallly secure random number
+Client MUST generate this using a cryptographically secure random number
 generator.
 
 The Client then wraps each input share in the following structure:
