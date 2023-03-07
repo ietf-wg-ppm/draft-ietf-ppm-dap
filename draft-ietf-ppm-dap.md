@@ -1631,7 +1631,7 @@ the requirements in {{request-authentication}}.
 
 ## Collecting Results {#collect-flow}
 
-In this phase, the Collector requests aggregate shares from each aggregator and
+In this phase, the Collector requests aggregate shares from each Aggregator and
 then locally combines them to yield a single aggregate result. In particular,
 the Collector issues a query to the Leader ({{query}}), which the Aggregators
 use to select a batch of reports to aggregate. Each emits an aggregate share
@@ -1646,11 +1646,11 @@ aggregate result. This entire process is composed of two interactions:
 Once complete, the collector computes the final aggregate result as specified in
 {{collect-finalization}}.
 
-This overall process is referred to as a _collection job_.
+This overall process is referred to as a "collection job".
 
 ### Collection Job Initialization {#collect-init}
 
-First, the collector chooses a collection job ID:
+First, the Collector chooses a collection job ID:
 
 ~~~
 opaque CollectionJobID[16];
@@ -1660,11 +1660,11 @@ This ID MUST be unique within the context of the corresponding DAP task. It is
 RECOMMENDED that this be set to a random string output by a cryptographically
 secure pseudorandom number generator.
 
-To initiate the collection job, the collector then issues a PUT request to
+To initiate the collection job, the collector issues a PUT request to
 `{leader}/tasks/{task-id}/collection_jobs/{collection-job-id}`. The body of the
 request is structured as follows:
 
-[OPEN ISSUE: Decide if and how the collector's request is authenticated. If not,
+[OPEN ISSUE: Decide if and how the Collector's request is authenticated. If not,
 then we need to ensure that collection job URIs are resistant to enumeration
 attacks.]
 
@@ -1682,34 +1682,38 @@ The named parameters are:
 * `agg_param`, an aggregation parameter for the VDAF being executed. This is the
   same value as in `AggregationJobInitReq` (see {{leader-init}}).
 
-Depending on the VDAF scheme and how the leader is configured, the leader and
-helper may already have prepared a sufficient number of reports satisfying the
-query and be ready to return the aggregate shares right away, but this cannot be
-guaranteed. In fact, for some VDAFs, it is not be possible to begin preparing
-inputs until the collector provides the aggregation parameter in the
-`CollectionReq`. For these reasons, collect requests are handled asynchronously.
+Depending on the VDAF scheme and how the Leader is configured, the Leader and
+Helper may already have prepared a sufficient number of reports satisfying the
+query and be ready to return the aggregate shares right away. However, this is
+not always the case. In fact, for some VDAFs, it is not be possible to begin
+running aggregation jobs ({{aggregate-flow}}) until the Collector initiates a
+collection job. This is because, in general, the aggregation parameter is not
+known until this point. In certain situations it is possible to predict the
+aggregation parameter in advance. For example, for Prio3 the only valid
+aggregation parameter is the empty string. For these reasons, the collection
+job is handled asynchronously.
 
-Upon receipt of a `CollectionReq`, the leader begins by checking that it
+Upon receipt of a `CollectionReq`, the Leader begins by checking that it
 recognizes the task ID in the request path. If not, it MUST abort with error
-`unrecognizedTask`. Then, the leader verifies that the request meets the
+`unrecognizedTask`. Then, the Leader verifies that the request meets the
 requirements of the batch parameters using the procedure in
 {{batch-validation}}. If so, it immediately responds with HTTP status 201.
 
-The leader then begins working with the helper to prepare the shares satisfying
-the query (or continues this process, depending on the VDAF) as described in
-{{aggregate-flow}}.
+The Leader then begins working with the Helper to aggregate the reports
+satisfying the query (or continues this process, depending on the VDAF) as
+described in {{aggregate-flow}}.
 
-After receiving the response to its `CollectionReq`, the collector makes an HTTP
+After receiving the response to its `CollectionReq`, the Collector makes an HTTP
 `POST` request to the collection job URI to check on the status of the collect
-job and eventually obtain the result. If the collection  job is not finished
-yet, the leader responds with HTTP status 202 Accepted. The response MAY include
-a Retry-After header field to suggest a polling interval to the collector.
+job and eventually obtain the result. If the collection job is not finished
+yet, the Leader responds with HTTP status 202 Accepted. The response MAY include
+a Retry-After header field to suggest a polling interval to the Collector.
 
-If the leader has not yet obtained an aggregator share from each aggregator, the
-leader invokes the aggregate share request flow described in
-{{collect-aggregate}}. Otherwise, when all aggregator shares are successfully
-obtained, the leader responds to subsequent HTTP POST requests to the collection
-job with HTTP status code 200 OK and a body consisting of a `Collection`:
+The Leader obtains each Helper's aggregate share following the
+aggregate-share request flow described in {{collect-aggregate}}. When all
+aggregate shares are successfully obtained, the Leader responds to subsequent
+HTTP POST requests to the collection job with HTTP status code 200 OK and a body
+consisting of a `Collection`:
 
 ~~~
 struct {
@@ -1722,9 +1726,9 @@ struct {
 
 This structure includes the following:
 
-* Information used to bind the aggregate result to the query. For fixed_size
-  tasks, this includes the batch ID assigned to the batch by the Leader. The
-  indicated query type MUST match the task's query type.
+* `part_batch_selector`: Information used to bind the aggregate result to the
+  query. For fixed_size tasks, this includes the batch ID assigned to the batch
+  by the Leader. The indicated query type MUST match the task's query type.
 
   [OPEN ISSUE: What should the Collector do if the query type doesn't match?]
 
@@ -1750,10 +1754,6 @@ The collector can send an HTTP DELETE request to the collection job, which
 indicates to the leader that it can abandon the collection job and discard all
 state related to it.
 
-[OPEN ISSUE: Describe how intra-protocol errors yield collect errors (see
-issue#57). For example, how does a leader respond to a collect request if the
-helper drops out?]
-
 #### A Note on Idempotence
 
 The reason we use a POST instead of a GET to poll the state of a collection job
@@ -1768,17 +1768,17 @@ jobs resource.
 This means that polling a collection job can have the side effect of changing
 the current batch in the Leader, and thus using a GET is inappropriate.
 
-### Collection Aggregation {#collect-aggregate}
+### Obtaining Aggregate Shares {#collect-aggregate}
 
-The leader obtains each helper's encrypted aggregate share in order to respond
-to the collector's collect response. To do this, the leader first computes a
-checksum over the set of output shares included in the batch. The checksum is
-computed by taking the SHA256 {{!SHS=DOI.10.6028/NIST.FIPS.180-4}} hash of each
-report ID from the client reports included in the aggregation, then combining
-the hash values with a bitwise-XOR operation.
+The Leader obtains each Helper's encrypted aggregate share before it completes a
+collection job. To do this, the Leader first computes a checksum over the set of
+output shares included in the batch. The checksum is computed by taking the
+SHA256 {{!SHS=DOI.10.6028/NIST.FIPS.180-4}} hash of each report ID from the
+client reports included in the aggregation, then combining the hash values with
+a bitwise-XOR operation.
 
-Then, for each aggregator endpoint `{aggregator}` in the parameters associated
-with `CollectReq.task_id` (see {{collect-flow}}) except its own, the leader
+Then, for each Aggregator endpoint `{aggregator}` in the parameters associated
+with `CollectReq.task_id` (see {{collect-flow}}) except its own, the Leader
 sends a POST request to `{aggregator}/tasks/{task-id}/aggregate_shares` with the
 following message:
 
@@ -1801,8 +1801,9 @@ struct {
 
 The message contains the following parameters:
 
-* The "batch selector", which encodes parameters used to determine the batch
-  being aggregated. The value depends on the query type for the task:
+* `batch_selector`: The "batch selector", which encodes parameters used to
+  determine the batch being aggregated. The value depends on the query type for
+  the task:
 
     * For time_interval tasks, the request specifies the batch interval.
 
@@ -1811,18 +1812,19 @@ The message contains the following parameters:
   The indicated query type MUST match the task's query type. Otherwise, the
   Helper MUST abort with "queryMismatch".
 
-* The opaque aggregation parameter for the VDAF being executed. This value MUST
-  match the same value in the the `AggregationJobInitReq` message sent in at
-  least one run of the aggregate sub-protocol. (See {{leader-init}}). and in
-  `CollectReq` (see {{collect-init}}).
+* `agg_param`: The opaque aggregation parameter for the VDAF being executed.
+  This value MUST match the AggregationJobInitReq message for each aggregation
+  job used to compute the aggregate shares (see {{leader-init}}) and the
+  aggregation parameter indicated by the Collector in the CollectionReq message
+  (see {{collect-init}}).
 
-* The number number of reports included in the batch.
+* `report_count`: The number number of reports included in the batch.
 
-* The batch checksum.
+* `checksum`: The batch checksum.
 
-To handle the leader's request, the helper first ensures that it recognizes the
+To handle the Leader's request, the Helper first ensures that it recognizes the
 task ID in the request path. If not, it MUST abort with error
-`unrecognizedTask`. The helper then verifies that the request meets the
+`unrecognizedTask`. The Helper then verifies that the request meets the
 requirements for batch parameters following the procedure in
 {{batch-validation}}.
 
@@ -1838,17 +1840,18 @@ output shares, denoted `out_shares`, for the batch interval, as follows:
 agg_share = VDAF.out_shares_to_agg_share(agg_param, out_shares)
 ~~~
 
-Note that for most VDAFs, it is possible to aggregate output shares as they
-arrive rather than wait until the batch is collected. To do so however, it is
-necessary to enforce the batch parameters as described in {{batch-validation}}
-so that the aggregator knows which aggregate share to update.
+Implementation note: For most VDAFs, it is possible to aggregate output shares
+as they arrive rather than wait until the batch is collected. To do so however,
+it is necessary to enforce the batch parameters as described in
+{{batch-validation}} so that the aggregator knows which aggregate share to
+update.
 
-The helper then encrypts `agg_share` under the collector's HPKE public key as
+The Helper then encrypts `agg_share` under the collector's HPKE public key as
 described in {{aggregate-share-encrypt}}, yielding `encrypted_agg_share`.
-Encryption prevents the leader from learning the actual result, as it only has
-its own aggregate share and cannot compute the helper's.
+Encryption prevents the Leader from learning the actual result, as it only has
+its own aggregate share and cannot compute the Helper's.
 
-The helper responds to the leader with HTTP status code 200 OK and a body
+The Helper responds to the Leader with HTTP status code 200 OK and a body
 consisting of an `AggregateShare`:
 
 ~~~
@@ -1857,18 +1860,18 @@ struct {
 } AggregateShare;
 ~~~
 
-`encrypted_aggregate_share.config_id` is set to the collector's HPKE config ID.
+`encrypted_aggregate_share.config_id` is set to the Collector's HPKE config ID.
 `encrypted_aggregate_share.enc` is set to the encapsulated HPKE context `enc`
 computed above and `encrypted_aggregate_share.ciphertext` is the ciphertext
 `encrypted_agg_share` computed above.
 
-After receiving the helper's response, the leader uses the HpkeCiphertext to
-complete a collection job (see {{collect-flow}}).
+After receiving the Helper's response, the Leader uses the HpkeCiphertext to
+finialize a collection job (see {{collect-finalization}}).
 
-After issuing an aggregate-share request for a given query, it is an error for
-the leader to issue any more aggregation jobs for additional reports that
-satisfy the query. These reports will be rejected by helpers as described
-{{agg-init}}.
+Once an AggregateShareReq has been issued for the batch determined by a given
+query, it is an error for the Leader to issue any more aggregation jobs for
+additional reports that satisfy the query. These reports will be rejected by
+helpers as described {{input-share-validation}}.
 
 Before completing the collection job, the leader also computes its own
 aggregate share `agg_share` by aggregating all of the prepared output shares
@@ -1877,16 +1880,15 @@ collector's HPKE public key as described in {{aggregate-share-encrypt}}.
 
 ### Collection Job Finalization {#collect-finalization}
 
-Once the collector has received a collection job from the leader, it can decrypt
-the aggregate shares and produce an aggregate result. The collector decrypts
-each aggregate share as described in {{aggregate-share-encrypt}}. If the
-collector successfully decrypts all aggregate shares, the collector then
-unshards the aggregate shares into an aggregate result using the VDAF's
-`agg_shares_to_result` algorithm. In particular, let `agg_shares` denote the
-ordered sequence of aggregator shares, ordered by aggregator index, let
-`report_count` denote the report count sent by the Leader, and let `agg_param`
-be the opaque aggregation parameter. The final aggregate result is computed as
-follows:
+Once the Collector has received a collection job from the leader, it can decrypt
+the aggregate shares and produce an aggregate result. The Collector decrypts
+each aggregate share as described in {{aggregate-share-encrypt}}. Once the
+Collector successfully decrypts all aggregate shares, it unshards the aggregate
+shares into an aggregate result using the VDAF's `agg_shares_to_result`
+algorithm. In particular, let `agg_shares` denote the ordered sequence of
+aggregator shares, ordered by aggregator index, let `report_count` denote the
+report count sent by the Leader, and let `agg_param` be the opaque aggregation
+parameter. The final aggregate result is computed as follows:
 
 ~~~
 agg_result = VDAF.agg_shares_to_result(agg_param,
@@ -1905,7 +1907,7 @@ enc, payload = SealBase(pk, "dap-03 aggregate share" || server_role || 0x00,
 ~~~
 
 where `pk` is the HPKE public key encoded by the collector's HPKE key,
-`server_role` is `0x02` for the leader and `0x03` for a helper, and
+`server_role` is `0x02` for the Leader and `0x03` for a Helper, and
 `agg_share_aad` is a value of type `AggregateShareAad` with its values set from
 the corresponding fields of the `AggregateShareReq`. The `SealBase()` function
 is as specified in {{!HPKE, Section 6.1}} for the ciphersuite indicated by the
@@ -1918,7 +1920,7 @@ struct {
 } AggregateShareAad;
 ~~~
 
-The collector decrypts these aggregate shares using the opposite process.
+The Collector decrypts these aggregate shares using the opposite process.
 Specifically, given an encrypted input share, denoted `enc_share`, for a given
 batch selector, decryption works as follows:
 
@@ -1947,11 +1949,11 @@ ciphersuite indicated by the HPKE configuration.
 
 Collect sub-protocol messages must be confidential and mutually authenticated.
 
-HTTPS provides confidentiality and authenticates the leader to the collector.
-Additionally, the leader encrypts its aggregate share to a public key held by
-the collector using {{!HPKE}}.
+HTTPS provides confidentiality and authenticates the Leader to the Collector.
+Additionally, the Leader encrypts its aggregate share to a public key held by
+the Collector using {{!HPKE}}.
 
-Collectors MUST authenticate their requests to leaders using a scheme that meets
+Collectors MUST authenticate their requests to Leaders using a scheme that meets
 the requirements in {{request-authentication}}.
 
 [[OPEN ISSUE: collector public key is currently in the task parameters, but this
