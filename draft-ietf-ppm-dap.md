@@ -925,7 +925,7 @@ ciphersuite indicated by the HPKE configuration.
 ~~~
 struct {
   TaskID task_id;
-  ReportMetadata metadata;
+  ReportMetadata report_metadata;
   opaque public_share<0..2^32-1>;
 } InputShareAad;
 ~~~
@@ -1167,7 +1167,7 @@ message for each Helper to initialize the preparation of this candidate set. The
 
 ~~~
 struct {
-  ReportMetadata metadata;
+  ReportMetadata report_metadata;
   opaque public_share<0..2^32-1>;
   HpkeCiphertext encrypted_input_share;
 } ReportShare;
@@ -1304,13 +1304,14 @@ and a body consisting of the `AggregationJobResp`, with media type
 
 Each report share has a corresponding task ID, report metadata (report ID and,
 timestamp), the public share sent to each Aggregator, and the recipient's
-encrypted input share. Let `task_id`, `metadata`, `public_share`, and
+encrypted input share. Let `task_id`, `report_metadata`, `public_share`, and
 `encrypted_input_share` denote these values, respectively. Given these values,
 an aggregator decrypts the input share as follows. First, it constructs an
-`InputShareAad` message from `task_id`, `metadata`, and `public_share`. Let this
-be denoted by `input_share_aad`. Then, the aggregator looks up the HPKE config
-and corresponding secret key indicated by `encrypted_input_share.config_id` and
-attempts decryption of the payload with the following procedure:
+`InputShareAad` message from `task_id`, `report_metadata`, and `public_share`.
+Let this be denoted by `input_share_aad`. Then, the aggregator looks up the
+HPKE config and corresponding secret key indicated by
+`encrypted_input_share.config_id` and attempts decryption of the payload with
+the following procedure:
 
 ~~~
 plaintext_input_share = OpenBase(encrypted_input_share.enc, sk,
@@ -1383,7 +1384,7 @@ following checks:
    batch.
 
     * Implementation note: The Leader considers a batch to be collected once it
-      has completed a collection job for a CollectReq message from the
+      has completed a collection job for a CollectionReq message from the
       Collector; the Helper considers a batch to be collected once it has
       responded to an AggregateShareReq message from the Leader. A batches is
       determined by query ({{query}}) conveyed in these messages. Queries must
@@ -1801,7 +1802,7 @@ client reports included in the aggregation, then combining the hash values with
 a bitwise-XOR operation.
 
 Then, for each Aggregator endpoint `{aggregator}` in the parameters associated
-with `CollectReq.task_id` (see {{collect-flow}}) except its own, the Leader
+with `CollectionReq.task_id` (see {{collect-flow}}) except its own, the Leader
 sends a POST request to `{aggregator}/tasks/{task-id}/aggregate_shares` with the
 following message:
 
@@ -2007,7 +2008,7 @@ helper and the collector? #155]]
 
 ### Batch Validation {#batch-validation}
 
-Before an Aggregator responds to a CollectReq or AggregateShareReq, it must
+Before an Aggregator responds to a CollectionReq or AggregateShareReq, it must
 first check that the request does not violate the parameters associated with the
 DAP task. It does so as described here.
 
@@ -2069,9 +2070,9 @@ For fixed_size tasks, the batch boundaries are defined by opaque batch IDs. Thus
 the Aggregator needs to check that the query is associated with a known batch
 ID:
 
-* For a CollectReq containing a query of type `by_batch_id`, the Leader checks
-  that the provided batch ID corresponds to a batch ID it returned in a previous
-  CollectResp for the task.
+* For a CollectionReq containing a query of type `by_batch_id`, the Leader
+  checks that the provided batch ID corresponds to a batch ID it returned in a
+  previous Collection for the task.
 
 * For an AggregateShareReq, the Helper checks that the batch ID provided by the
   Leader corresponds to a batch ID used in a previous `AggregationJobInitReq`
@@ -2556,7 +2557,7 @@ corresponding media types types:
 - AggregationJobContinueReq {{aggregation-leader-continuation}}: "application/dap-aggregation-job-continue-req"
 - AggregateShareReq {{collect-flow}}: "application/dap-aggregate-share-req"
 - AggregateShare {{collect-flow}}: "application/dap-aggregate-share"
-- CollectReq {{collect-flow}}: "application/dap-collect-req"
+- CollectionReq {{collect-flow}}: "application/dap-collect-req"
 - Collection {{collect-flow}}: "application/dap-collection"
 
 The definition for each media type is in the following subsections.
