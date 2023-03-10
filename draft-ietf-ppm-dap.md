@@ -116,15 +116,15 @@ seen in the clear by any server.
 
 04:
 
-- Resource oriented HTTP API. (#278, #398, #400) (\*)
+- Introduce resource oriented HTTP API. (#278, #398, #400) (\*)
 
-- Clarify security requirements for choosing VDAF verify key (#407, #411).
+- Clarify security requirements for choosing VDAF verify key. (#407, #411)
 
-- Clients must provide nonce and random input when sharding inputs. (#394, #425)
-  (\*)
+- Require clients to provide nonce and random input when sharding inputs. (#394,
+  #425) (\*)
 
-- Collection message now includes interval of time spanned by constituent
-  reports. (#397, #403) (\*)
+- Add interval of time spanned by constituent reports to Collection message.
+  (#397, #403) (\*)
 
 - Update share validation requirements based on latest security analysis. (#408,
   #410)
