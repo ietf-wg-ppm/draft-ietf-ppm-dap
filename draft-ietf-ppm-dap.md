@@ -209,7 +209,7 @@ Aggregation parameter:
   {{!VDAF}}.
 
 Aggregator:
-: An endpoint that recieves input shares from Clients and validates and
+: An endpoint that receives input shares from Clients and validates and
   aggregates them with the help of the other Aggregators.
 
 Batch:
@@ -1890,7 +1890,7 @@ computed above and `encrypted_aggregate_share.ciphertext` is the ciphertext
 `encrypted_agg_share` computed above.
 
 After receiving the Helper's response, the Leader uses the HpkeCiphertext to
-finialize a collection job (see {{collect-finalization}}).
+finalize a collection job (see {{collect-finalization}}).
 
 Once an AggregateShareReq has been issued for the batch determined by a given
 query, it is an error for the Leader to issue any more aggregation jobs for
