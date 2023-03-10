@@ -1556,6 +1556,9 @@ three outputs:
 After stepping each state, the Helper advances its aggregation job to the
 Leader's `AggregationJobContinueReq.round`.
 
+If the `round` in the Leader's request is 0, then the Helper MUST abort with an
+error of type `unrecognizedMessage`.
+
 If the `round` in the Leader's request is equal to the Helper's current round
 (i.e., this is not the first time the Leader has sent this request), then the
 Helper responds with the current round's prepare messages. The Helper SHOULD
