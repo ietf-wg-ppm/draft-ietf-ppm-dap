@@ -12,7 +12,7 @@ venue:
   github: "ietf-wg-ppm/draft-ietf-ppm-dap"
   latest: "https://ietf-wg-ppm.github.io/draft-ietf-ppm-dap/draft-ietf-ppm-dap.html"
 
-v: 3
+v: 4
 
 author:
  -
@@ -113,6 +113,25 @@ seen in the clear by any server.
 ## Change Log
 
 (\*) Indicates a change that breaks wire compatibility with the previous draft.
+
+04:
+
+- Resource oriented HTTP API. (#278, #398, #400) (\*)
+
+- Clarify security requirements for choosing VDAF verify key (#407, #411).
+
+- Clients must provide nonce and random input when sharding inputs. (#394, #425)
+  (\*)
+
+- Collection message now includes interval of time spanned by constituent
+  reports. (#397, #403) (\*)
+
+- Update share validation requirements based on latest security analysis. (#408,
+  #410)
+
+- Bump draft-irtf-cfrg-vdaf-03 to 05 {{!VDAF}}. (#429) (\*)
+
+- Bump version tag from "dap-03" to "dap-04". (#424) (\*)
 
 03:
 
