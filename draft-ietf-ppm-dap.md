@@ -1060,69 +1060,149 @@ of relevant: issue #89]]
 ## Verifying and Aggregating Reports {#aggregate-flow}
 
 Once a set of Clients have uploaded their reports to the Leader, the Leader can
-begin the process of verifying and aggregating them with the Helpers. To enable
-the system to handle very large batches of reports, this process can be
-parallelized across smaller sets of reports. Verification of a set of reports is
-referred to as an "aggregation job". Each aggregation job is associated with
-exactly one DAP task, and a DAP task can have many aggregation jobs. Each job is
-associated with an ID that is unique within the context of a DAP task in order
-to distinguish different jobs from one another. Each aggregator uses this ID as
-an index into per-job storage, e.g., to keep track of report shares that belong
-to a given aggregation job.
+begin the process of validating and aggregating them with the Helper. To enable
+the system to handle large batches of reports, this process can be parallelized
+across many "aggregation jobs" in which small subsets of the reports are
+processed independently. Each aggregation job is associated with exactly one
+DAP task, but a task can have many aggregation jobs.
 
-To run an aggregation job, the Leader sends a request to each Helper containing
-the report shares in the job. Each Helper then processes them (verifying the
-proofs and incorporating their values into the ongoing aggregate) and responds
-to the Leader.
+The primary objective of an aggregation job is to run the VDAF preparation
+process described in {{!VDAF, Section 5.2}} for each report in the job.
+Preparation has two purposes:
 
-The exact structure of the aggregation job flow depends on the VDAF.
-Specifically:
+1. To "refine" the input shares into "output shares" that have the desired
+   aggregatable form. For some VDAFs, like Prio3, the mapping from input to
+   output shares is some fixed, linear operation, but in general the mapping is
+   controlled dynamically by the Collector and can be highly non-linear. In
+   Poplar1, for example, the refinement process involves a sequence of
+   "candidate prefixes" and the output consists of a sequence of zeros and
+   ones, each indicating whether the corresponding candidate is a prefix of the
+   measurement from which the input shares were generated.
 
-* Some VDAFs (e.g., Prio3) allow the leader to start aggregating reports
-  proactively before all the reports in a batch are received. Others (e.g.,
-  Poplar1) require all the reports to be present and must be initiated by the
-  collector.
+1. To verify that the output shares, when combined, correspond to a valid,
+   refined measurement, where validity is determined by the VDAF itself. For
+   example, the Prio3Sum variant of Prio3 ({{Section 7.4.2 of !VDAF}}) requires
+   that the output shares sum up to an integer in a specific range; for
+   Poplar1, the output shares are required to sum up to a vector that is
+   non-zero in at most one position.
 
-* Processing the reports -- especially validating them -- may require multiple
-  round trips.
+In general, refinement and verification are not distinct computations, since
+for some VDAFs, verification may only be achieved implicitly as a result of the
+refinement process. We instead think of these as properties of the output
+shares themselves: if preparation succeeds, then the resulting output
+shares are guaranteed to combine into a valid, refined measurement.
 
-Note that it is possible to aggregate reports from one batch while reports from
-the next batch are coming in. This is because each report is validated
-independently.
+As shown in Figure 6 of {{!VDAF}}, the preparation process is organized into a
+sequence of rounds (at least one). At the start of each round, each Aggregator
+produces a value called a preparation message-share; we refer to this value as
+a "prep share" for short. The prep shares are combined into the preparation
+message, or "prep message", which is used as input for the next round. The
+value output in the final round is the Aggregator's output share.
 
-This process is illustrated below in {{aggregation-flow-illustration}}. In this
-example, the batch size is 20, but the Leader opts to process the reports in
-sub-batches of 10. Each sub-batch takes two round-trips to process.
+VDAF preparation is mapped onto an aggregation job as illustrated in
+{{agg-flow}}. The protocol is comprised of a sequence of HTTP requests from the
+Leader to the Helper, the first of which includes the aggregation parameter,
+the Helper's report shares, and the Leader's round-1 prep share corresponding
+to each report in the aggregation job. The remaining requests and responses
+carry prep messages and prep shares for each report.
 
 ~~~
-Leader                                                 Helper
+    report, agg_param
+     |
+     v
+  +--------+                                         +--------+
+  | Leader |                                         | Helper |
+  +--------+                                         +--------+
+     | AggregationJobInitReq                               |
+   I | agg_param, helper_report_share, leader_prep_share_1 |
+  N1 |---------------------------------------------------->| I
+     |                                  AggregationJobResp | N1
+     |                   prep_msg_1, [helper_prep_share_2] | P1
+     |<----------------------------------------------------| [N2]
+  N2 | AggregationJobContinueReq                           |
+  P2 | prep_msg_2, [leader_prep_share_3]                   |
+[N3] |---------------------------------------------------->| P2
+     |                                  AggregationJobResp | [N3]
+     |                 [prep_msg_3, {helper_prep_share_4}] | [P3]
+  P3 |<----------------------------------------------------| {N4}
+  N4 | AggregationJobContinueReq                           |
+  P4 | prep_msg_4, [leader_prep_share_5]                   |
+[N5] |---------------------------------------------------->| P4
+     |                                  AggregationJobResp | [N5]
+     |                 [prep_msg_5, {helper_prep_share_6}] | [P5]
+     |<----------------------------------------------------| {N6}
+     |                                                     |
+    ...                                                   ...
+Pr-2 |                                                     |
+Nr-1 | AggregationJobContinueReq                           |
+Pr-1 | prep_msg_r-1, [leader_prep_share_r]                 |
+[Nr] |---------------------------------------------------->| Pr-1
+     |                                  AggregationJobResp | [Nr]
+     |                               [helper_prep_share_r] | [Pr]
+   F |<----------------------------------------------------| F
+     |                                                     |
+     v                                                     v
+    leader_out_share                         helper_out_share
 
-Aggregate request (Reports 1-10, Job = N) --------------->  \
-<----------------------------- Aggregate response (Job = N) | Reports
-Aggregate request (continued, Job = N) ------------------>  | 1-10
-<----------------------------- Aggregate response (Job = N) /
-
-
-Aggregate request (Reports 11-20, Job = M) -------------->  \
-<----------------------------- Aggregate response (Job = M) | Reports
-Aggregate request (continued, Job = M) ------------------>  | 11-20
-<----------------------------- Aggregate response (Job = M) /
+      [] - Indicates a field that is only sent if the VDAF
+           requires at least one more round.
+      {} - Indicates a field that is only sent if the VDAF
+           requires at least two more rounds.
+       I - Produce first-round prep-share.
+       P - Combine prep shares into prep message.
+       N - Produce next prep share.
+       F - Produce output share.
 ~~~
-{: #aggregation-flow-illustration title="Aggregation Flow (batch size=20).
-Multiple aggregation flows can be executed at the same time."}
+{: #agg-flow title="Mapping of VDAF preparation to the DAP aggregation sub-protocol."}
 
-The aggregation flow can be thought of as having three phases for transforming
-each valid input report share into an output share:
+The exact protocol structure depends on the number of rounds of preparation
+that are required by the VDAF. (The number of rounds is a constant parameter
+specified by the VDAF itself: Prio3 has just one round, but Poplar1 requires
+two.) The high-level idea is that the Aggregators take turns running the
+computation locally until input from their peer is required:
 
-- Initialization: Begin the aggregation flow by sharing report shares with each
-  Helper. Each Aggregator, including the Leader, initializes the underlying VDAF
-  instance using these report shares and the VDAF configured for the
-  corresponding measurement task.
-- Continuation: Continue the aggregation flow by exchanging messages produced by
-  the underlying VDAF instance until aggregation completes or an error occurs.
-  These messages do not replay the shares.
+* For a 1-round VDAF, The Leader sends its prep share to the Helper, who
+  computes the prep message locally (the computations are specified in the
+  following sections), commits to its output share, then sends the prep message
+  to the Leader.
+
+* For a 2-round VDAF, the Leader sends its first-round prep share to the
+  Helper, who replies with the first-round prep message and its second-round
+  prep share. In the next request, the Leader computes its second-round
+  prep share locally, commits and sends the second-round prep message.
+
+* In general, each request includes the Leader's prep share for the previous
+  round and/or the prep message for the current round; correspondingly, each
+  response consists of the prep message for the current round and the Helper's
+  prep share for the next round.
+
+The Aggregators proceed in this ping-ponging fashion until a step of the
+computation fails, indicating the report is invalid and should be rejected, or
+the last round is reached and each Aggregator computes an output share. All
+told there there are `ceil((ROUNDS+1)/2)` HTTP requests sent, where `ROUNDS` is
+the number of rounds specified by the VDAF.
+
+[OPEN ISSUE: For the moment we don't have an example of a VDAF that requires
+more than two rounds. Eventually we may want to specialize the spec to
+accommodate 1-2 rounds (or even just 1).]
+
+In general, reports cannot be aggregated until the Collector specifies an
+aggregation parameter. However, in some situations it is possible to begin
+aggregation as soon as reports arrive. For example, Prio3 has just one valid
+aggregation parameter (the empty string). And there are use cases for Poplar1
+in which aggregation can begin immediately (i.e., those for which the candidate
+prefixes/strings are fixed in advance).
+
+The aggregation flow can be thought of as having three phases:
+
+- Initialization: Begin the aggregation flow by disseminating report shares and
+  initializing the VDAF preparation state for each report.
+- Continuation: Continue the aggregation flow by exchanging prep shares and
+  messages until preparation completes or an error occurs.
 - Completion: Finish the aggregate flow, yielding an output share corresponding
-  for each input report share in the batch.
+  to each report report share in the batch.
+
+These phases are described in the following subsections.
 
 ### Aggregate Initialization {#agg-init}
 
