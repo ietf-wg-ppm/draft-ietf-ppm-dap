@@ -749,9 +749,10 @@ number generator. Each task has the following parameters associated with it:
 
 * `aggregator_endpoints`: A list of URLs relative to which each Aggregator's API
   endpoints can be found. Each endpoint's list MUST be in the same order. The
-  Leader's endpoint MUST be the first in the list. The order of the
-  `encrypted_input_shares` in a `Report` (see {{upload-flow}}) MUST be the same
-  as the order in which aggregators appear in this list.
+  Leader's endpoint MUST be the first in the list; subsequent items contain
+  Helper endpoints. The order of the `encrypted_input_shares` in a `Report`
+  (see {{upload-flow}}) MUST be the same as the order in which aggregators
+  appear in this list.
 * The query configuration for this task (see {{query}}). This determines the
   query type for batch selection and the properties that all batches for this
   task must have.
@@ -1322,8 +1323,8 @@ This message consists of:
   aggregator in the task's `aggregator_endpoints` to which the
   `AggregationJobInitReq` is being sent.
 
-Let `{aggregator}` denote the Helper's API endpoint. The Leader sends a PUT
-request to `{aggregator}/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}`
+Let `{helper}` denote the Helper's API endpoint. The Leader sends a PUT
+request to `{helper}/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}`
 with its `AggregationJobInitReq` message as the payload. The media type is
 "application/dap-aggregation-job-init-req". The Leader's aggregation job is now
 in round 0.
@@ -1902,10 +1903,9 @@ SHA256 {{!SHS=DOI.10.6028/NIST.FIPS.180-4}} hash of each report ID from the
 client reports included in the aggregation, then combining the hash values with
 a bitwise-XOR operation.
 
-Then, for each Aggregator endpoint `{aggregator}` in the parameters associated
-with `CollectionReq.task_id` (see {{collect-flow}}) except its own, the Leader
-sends a POST request to `{aggregator}/tasks/{task-id}/aggregate_shares` with the
-following message:
+Then, for each Helper endpoint, `{helper}`, associated with the task (see
+{{task-configuration}}), the Leader sends a POST request to
+`{helper}/tasks/{task-id}/aggregate_shares` with the following message:
 
 ~~~
 struct {
