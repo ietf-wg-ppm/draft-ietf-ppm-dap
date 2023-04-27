@@ -691,7 +691,7 @@ Collector.
 Typically the Collector issues queries for which the batch intervals are
 continuous, monotonically increasing, and have the same duration. For example,
 the sequence of batch intervals `(1659544000, 1000)`, `(1659545000, 1000)`,
-`(1659545000, 1000)`, `(1659546000, 1000)` satisfies these conditions. (The
+`(1659546000, 1000)`, `(1659547000, 1000)` satisfies these conditions. (The
 first element of the pair denotes the start of the batch interval and the second
 denotes the duration.) Of course, there are cases in which Collector may need to
 issue queries out-of-order. For example, a previous batch might need to be
