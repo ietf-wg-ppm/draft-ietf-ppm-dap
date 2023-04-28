@@ -547,22 +547,6 @@ DAP has three major interactions which need to be defined:
 Each of these interactions is defined in terms of "resources". In this section
 we define these resources and the messages used to act on them.
 
-A resource's path is resolved relative to a server's endpoint to construct a
-resource URI. Resource paths are specified as templates like:
-
-~~~
-{role}/resource_type/{resource-id}
-~~~
-
-`{role}` is one of the API endpoints in the task's `aggregator_endpoints` (see
-{{task-configuration}}). The remainder of the path is resolved relative to the
-endpoint.
-
-DAP resource identifiers are opaque byte strings, so any occurrence of
-`{resource-id}` in a URL template (e.g., `{task-id}` or `{report-id}`) MUST be
-expanded to the URL-safe, unpadded Base 64 representation of the corresponding
-resource identifier, as specified in {{Sections 5 and 3.2 of !RFC4648}}.
-
 The following are some basic type definitions used in other messages:
 
 ~~~
@@ -777,6 +761,29 @@ of the Aggregators is configured with following parameters:
 Finally, the Collector is configured with the HPKE secret key corresponding to
 `collector_hpke_config`.
 
+## Resource URIs
+
+DAP is defined in terms of "resources", such as reports ({{upload-flow}}),
+aggregation jobs ({{aggregate-flow}}), and collection jobs ({{collect-flow}}).
+Each resource has an associated URI. Resource URIs are specified by a sequence
+of string literals and variables. Variables are expanded into strings according
+to the following rules:
+
+* Variables `{leader}` and `{helper}` are replaced with the base URL of the
+  Leader and Helper respectively (the base URL is defined in
+  {{task-configuration}}).
+* Variables `{task-id}`, `{aggregation-job-id}`, and `{collection-job-id}` are
+  replaced with the task ID ({{task-configuration}}), aggregation job ID
+  ({{agg-init}}), and collection job ID ({{collect-init}}) respectively. The
+  value MUST be encoded in its URL-safe, unpadded Base 64 representation as
+  specified in {{Sections 5 and 3.2 of !RFC4648}}.
+
+For example, resource URI `{leader}/tasks/{task-id}/reports` might be expanded
+into:
+~~~
+https://example.com/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/reports
+~~~
+
 ## Uploading Reports {#upload-flow}
 
 Clients periodically upload reports to the Leader, which then distributes the
@@ -788,11 +795,12 @@ Before the Client can upload its report to the Leader, it must know the HPKE
 configuration of each Aggregator. See {{compliance}} for information on HPKE
 algorithm choices.
 
-Clients retrieve the HPKE configuration from each aggregator by sending an HTTP
-GET request to `{aggregator}/hpke_config`. Clients MAY specify a query parameter
-`task_id` whose value is the task ID whose HPKE configuration they want. If the
-Aggregator does not recognize the task ID, then it MUST abort with error
-`unrecognizedTask`.
+Clients retrieve the HPKE configuration from the Leader by sending an HTTP GET
+request to `{leader}/hpke_config`. Similarly, Clients retrieve the HPKE
+configuration from the Helper by sending an HTTP GET request to
+`{helper}/hpke_config`. Clients MAY specify a query parameter `task_id` whose
+value is the task ID whose HPKE configuration they want. If the Aggregator does
+not recognize the task ID, then it MUST abort with error `unrecognizedTask`.
 
 An Aggregator is free to use different HPKE configurations for each task with
 which it is configured. If the task ID is missing from  the Client's request,
