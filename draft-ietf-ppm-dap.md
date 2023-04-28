@@ -825,10 +825,8 @@ uint16 HpkeKdfId;  /* Defined in [HPKE] */
 
 [OPEN ISSUE: Decide whether to expand the width of the id.]
 
-Aggregators SHOULD allocate distinct id values for each `HpkeConfig` in a
-`HpkeConfigList`. The RECOMMENDED strategy for generating these values is via
-rejection sampling, i.e., to randomly select an id value repeatedly until it
-does not match any known `HpkeConfig`.
+Aggregators MUST allocate distinct id values for each `HpkeConfig` in a
+`HpkeConfigList`.
 
 The Client MUST abort if any of the following happen for any HPKE config
 request:
@@ -962,9 +960,7 @@ If the leader does not recognize the task ID, then it MUST abort with error
 
 The Leader responds to requests whose leader encrypted input share uses an
 out-of-date or unknown `HpkeConfig.id` value, indicated by
-`HpkeCiphertext.config_id`, with error of type 'outdatedConfig'. If the leader
-supports multiple HPKE configurations, it can use trial decryption with each
-configuration to determine if requests match a known HPKE configuration. When
+`HpkeCiphertext.config_id`, with error of type 'outdatedConfig'. When
 the Client receives an 'outdatedConfig' error, it SHOULD invalidate any cached
 HpkeConfigList and retry with a freshly generated Report. If this retried upload
 does not succeed, the Client SHOULD abort and discontinue retrying.
@@ -1420,9 +1416,7 @@ plaintext_input_share = OpenBase(encrypted_input_share.enc, sk,
 where `sk` is the HPKE secret key, and `server_role` is the role of the
 aggregator (`0x02` for the leader and `0x03` for the helper). The `OpenBase()`
 function is as specified in {{!HPKE, Section 6.1}} for the ciphersuite indicated
-by the HPKE configuration. If the leader supports multiple HPKE configurations
-with non-distinct configuration identifiers, it can use trial decryption with
-each configuration. If decryption fails, the aggregator marks the report share
+by the HPKE configuration. If decryption fails, the aggregator marks the report share
 as invalid with the error `hpke_decrypt_error`. Otherwise, the aggregator
 outputs the resulting PlaintextInputShare `plaintext_input_share`.
 
