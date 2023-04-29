@@ -727,9 +727,8 @@ the configuration for each task. A task is uniquely identified by its task ID:
 opaque TaskID[32];
 ~~~
 
-A `TaskID` is a globally unique sequence of bytes. It is RECOMMENDED that this
-be set to a random string output by a cryptographically secure pseudorandom
-number generator. Each task has the following parameters associated with it:
+The task ID value MUST be a globally unique sequence of bytes. Each task has
+the following parameters associated with it:
 
 * `aggregator_endpoints`: A list of URLs relative to which each Aggregator's API
   endpoints can be found. Each endpoint's list MUST be in the same order. The
@@ -1253,9 +1252,8 @@ The Leader and Helper initialization behavior is detailed below.
 The Leader begins the aggregate initialization phase with the set of candidate
 report shares as follows:
 
-1. Generate a fresh AggregationJobID. This ID MUST be unique within the context
-   of the corresponding DAP task. It is RECOMMENDED that this be set to a random
-   string output by a cryptographically secure pseudorandom number generator.
+1. Generate a fresh AggregationJobID. The ID value MUST be unique within the
+   scope of the corresponding DAP task.
 1. Decrypt the input share for each report share as described in
    {{input-share-decryption}}.
 1. Check that the resulting input share is valid as described in
@@ -1784,9 +1782,7 @@ First, the Collector chooses a collection job ID:
 opaque CollectionJobID[16];
 ~~~
 
-This ID MUST be unique within the context of the corresponding DAP task. It is
-RECOMMENDED that this be set to a random string output by a cryptographically
-secure pseudorandom number generator.
+This ID value MUST be unique within the scope of the corresponding DAP task.
 
 To initiate the collection job, the collector issues a PUT request to
 `{leader}/tasks/{task-id}/collection_jobs/{collection-job-id}`. The body of the
