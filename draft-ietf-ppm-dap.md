@@ -825,7 +825,7 @@ uint16 HpkeKdfId;  /* Defined in [HPKE] */
 
 [OPEN ISSUE: Decide whether to expand the width of the id.]
 
-Aggregators MUST allocate distinct id values for each `HpkeConfig` in a
+Aggregators MUST allocate distinct id values for each `HpkeConfig` in an
 `HpkeConfigList`.
 
 The Client MUST abort if any of the following happen for any HPKE config
