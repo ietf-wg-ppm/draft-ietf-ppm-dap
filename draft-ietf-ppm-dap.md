@@ -1099,99 +1099,52 @@ refinement process. We instead think of these as properties of the output
 shares themselves: if preparation succeeds, then the resulting output
 shares are guaranteed to combine into a valid, refined measurement.
 
-As shown in Figure 6 of {{!VDAF}}, the preparation process is organized into a
-sequence of rounds (at least one). At the start of each round, each Aggregator
-produces a value called a preparation message-share; we refer to this value as
-a "prep share" for short. The prep shares are combined into the preparation
-message, or "prep message", which is used as input for the next round. The
-value output in the final round is the Aggregator's output share.
-
 VDAF preparation is mapped onto an aggregation job as illustrated in
 {{agg-flow}}. The protocol is comprised of a sequence of HTTP requests from the
 Leader to the Helper, the first of which includes the aggregation parameter,
-the Helper's report shares, and the Leader's round-1 prep share corresponding
-to each report in the aggregation job. The remaining requests and responses
-carry prep messages and prep shares for each report.
+the Helper's report share for each report in the job, and for each report the
+initialization step for preparation. The Helper's response, along with each
+subsequent request and response, carries the remaining messages exchanged
+during preparation.
 
+~~~ ladder
+  report, agg_param
+   |
+   v
++--------+                                         +--------+
+| Leader |                                         | Helper |
++--------+                                         +--------+
+   | AggregationJobInitReq                               |
+   | agg_param, report_share, prep_step(initialize)      |
+   |---------------------------------------------------->|
+   |                                  AggregationJobResp |
+   |                          prep_step(continue|finish) |
+   |<----------------------------------------------------|
+   | AggregationJobContinueReq                           |
+   | prep_step(continue|finish)                          |
+   |---------------------------------------------------->|
+   |                                  AggregationJobResp |
+   |                          prep_step(continue|finish) |
+   |<----------------------------------------------------|
+   |                                                     |
+  ...                                                   ...
+   |                                                     |
+   | AggregationJobContinueReq                           |
+   | prep_step(continue|finish)                          |
+   |---------------------------------------------------->|
+   |                                  AggregationJobResp |
+   |                          prep_step(finish|finished) |
+   |<----------------------------------------------------|
+   |                                                     |
+   v                                                     v
+  leader_out_share                         helper_out_share
 ~~~
-    report, agg_param
-     |
-     v
-  +--------+                                         +--------+
-  | Leader |                                         | Helper |
-  +--------+                                         +--------+
-     | AggregationJobInitReq                               |
-   I | agg_param, helper_report_share, leader_prep_share_1 |
-  N1 |---------------------------------------------------->| I
-     |                                  AggregationJobResp | N1
-     |                   prep_msg_1, [helper_prep_share_2] | P1
-     |<----------------------------------------------------| [N2]
-  N2 | AggregationJobContinueReq                           |
-  P2 | prep_msg_2, [leader_prep_share_3]                   |
-[N3] |---------------------------------------------------->| P2
-     |                                  AggregationJobResp | [N3]
-     |                 [prep_msg_3, {helper_prep_share_4}] | [P3]
-  P3 |<----------------------------------------------------| {N4}
-  N4 | AggregationJobContinueReq                           |
-  P4 | prep_msg_4, [leader_prep_share_5]                   |
-[N5] |---------------------------------------------------->| P4
-     |                                  AggregationJobResp | [N5]
-     |                 [prep_msg_5, {helper_prep_share_6}] | [P5]
-     |<----------------------------------------------------| {N6}
-     |                                                     |
-    ...                                                   ...
-Pr-2 |                                                     |
-Nr-1 | AggregationJobContinueReq                           |
-Pr-1 | prep_msg_r-1, [leader_prep_share_r]                 |
-[Nr] |---------------------------------------------------->| Pr-1
-     |                                  AggregationJobResp | [Nr]
-     |                               [helper_prep_share_r] | [Pr]
-   F |<----------------------------------------------------| F
-     |                                                     |
-     v                                                     v
-    leader_out_share                         helper_out_share
+{: #agg-flow title="Overview of the DAP aggregation sub-protocol."}
 
-      [] - Indicates a field that is only sent if the VDAF
-           requires at least one more round.
-      {} - Indicates a field that is only sent if the VDAF
-           requires at least two more rounds.
-       I - Produce first-round prep-share.
-       P - Combine prep shares into prep message.
-       N - Produce next prep share.
-       F - Produce output share.
-~~~
-{: #agg-flow title="Mapping of VDAF preparation to the DAP aggregation sub-protocol."}
-
-The exact protocol structure depends on the number of rounds of preparation
-that are required by the VDAF. (The number of rounds is a constant parameter
-specified by the VDAF itself: Prio3 has just one round, but Poplar1 requires
-two.) The high-level idea is that the Aggregators take turns running the
-computation locally until input from their peer is required:
-
-* For a 1-round VDAF, The Leader sends its prep share to the Helper, who
-  computes the prep message locally (the computations are specified in the
-  following sections), commits to its output share, then sends the prep message
-  to the Leader.
-
-* For a 2-round VDAF, the Leader sends its first-round prep share to the
-  Helper, who replies with the first-round prep message and its second-round
-  prep share. In the next request, the Leader computes its second-round
-  prep share locally, commits and sends the second-round prep message.
-
-* In general, each request includes the Leader's prep share for the previous
-  round and/or the prep message for the current round; correspondingly, each
-  response consists of the prep message for the current round and the Helper's
-  prep share for the next round.
-
-The Aggregators proceed in this ping-ponging fashion until a step of the
-computation fails, indicating the report is invalid and should be rejected, or
-the last round is reached and each Aggregator computes an output share. All
-told there there are `ceil((ROUNDS+1)/2)` HTTP requests sent, where `ROUNDS` is
-the number of rounds specified by the VDAF.
-
-[OPEN ISSUE: For the moment we don't have an example of a VDAF that requires
-more than two rounds. Eventually we may want to specialize the spec to
-accommodate 1-2 rounds (or even just 1).]
+Each of these "preparation steps", or "prep steps" for short, has an associated
+type: one of "initialize", "continue", "finish", or "finished". The type of
+each step, and how many steps there are, depends on the VDAF. The message
+structure and processing rules are specified in {{preparation-messages}}.
 
 In general, reports cannot be aggregated until the Collector specifies an
 aggregation parameter. However, in some situations it is possible to begin
@@ -1209,7 +1162,230 @@ The aggregation flow can be thought of as having three phases:
 - Completion: Finish the aggregate flow, yielding an output share corresponding
   to each report report share in the batch.
 
-These phases are described in the following subsections.
+These phases are described in {{agg-init}} and {{agg-continue-flow}}.
+
+### Preparation Messages
+
+[TODO: Replace definitions of ReportShareError, PrepareStepState, and
+PrepareStep with backward references to this section.]
+
+At any point in the preparation process, a report can be rejected by one of the
+Aggregators and removed from the aggregation job. When a report is rejected, it
+is replaced by a `ReportShareError`:
+
+~~~ message
+enum {
+  batch_collected(0),
+  report_replayed(1),
+  report_dropped(2),
+  hpke_unknown_config_id(3),
+  hpke_decrypt_error(4),
+  vdaf_prep_error(5),
+  batch_saturated(6),
+  task_expired(7),
+  unrecognized_message(8),
+  report_too_early(9),
+  (255)
+} ReportShareError;
+~~~
+
+As shown in Figure 6 of {{!VDAF}}, the preparation process is organized into a
+sequence of rounds. At the start of each round, each Aggregator produces a
+value called a "preparation message-share", or "prep share" for short. The prep
+shares are combined into the preparation message, or "prep message", which is
+used as input for the next round. (The value output in the final round is the
+Aggregator's output share.)
+
+Each step of the aggregation sub-protocol is encoded as a `PrepareStep` message
+as follows:
+
+~~~ message
+enum {
+  initialize(0),
+  continue(1),
+  finish(2),
+  finished(3),
+  reject(4),
+  (255)
+} PrepareStepState;
+
+struct {
+  PrepareStepState prepare_step_state;
+  select (PrepareStep.prepare_step_state) {
+    case initialize:
+      opaque prep_share<0..2^32-1>;
+    case continue:
+      opaque prep_msg<0..2^32-1>;
+      opaque prep_share<0..2^32-1>;
+    case finish:
+      opaque prep_msg<0..2^32-1>;
+    case finished:
+      Empty;
+    case reject:
+      ReportShareError report_share_error;
+  };
+} PrepareStep;
+~~~
+
+* "initialize" - Used to convey the Leader's first-round prep share to the
+  Helper in the first request of the aggregation job.
+
+* "continue" - Used to convey a prep message from one Aggregator to the other,
+  along with the sender's prep share for the next round. This type is used in
+  VDAFs with more than one round.
+
+* "finish" - Used to convey the final prep message from one Aggregator to the
+  other.
+
+* "finished" - Used by the Helper to acknowledge that the report is prepared
+  for aggregation (i.e., an output share has been recovered). This type is used
+  if the VDAF consists of an even number of rounds.
+
+* "reject" - Used by the Helper to convery rejection of a report.
+
+#### Processing Rules
+
+[TODO: Update protocol definitions to use DAPPrepInit() and DAPPrepNext().]
+
+The precise structure of the aggregation sub-protocol depends on the number of
+rounds of preparation that are required by the VDAF. The number of rounds is a
+constant parameter specified by the VDAF itself: Prio3 has just one round, but
+Poplar1 requires two. The high-level idea is that the Aggregators take turns
+running the computation locally until input from their peer is required:
+
+* For a 1-round VDAF, The Leader sends its prep share to the Helper, who
+  computes the prep message locally (the computations are specified in the
+  following sections), computes its output share, then sends the prep message
+  to the Leader.
+
+* For a 2-round VDAF, the Leader sends its first-round prep share to the
+  Helper, who replies with the first-round prep message and its second-round
+  prep share. In the next request, the Leader computes its second-round prep
+  share locally, computes its output share, and sends the second-round prep
+  message to the Helper. Finally, the Helper computes its own output share.
+
+* In general, each request includes the Leader's prep share for the previous
+  round and/or the prep message for the current round; correspondingly, each
+  response consists of the prep message for the current round and the Helper's
+  prep share for the next round.
+
+The Aggregators proceed in this ping-ponging fashion until a step of the
+computation fails, indicating the report is invalid and should be rejected, or
+the last round is reached and each Aggregator computes an output share. All
+told there there are `ceil((ROUNDS+1)/2)` HTTP requests sent, where `ROUNDS` is
+the number of rounds specified by the VDAF.
+
+The state machine for VDAF preparation is shown in {{vdaf-prep-state-machine}}.
+
+~~~ state
+ START --> CONTINUED(round, host_prep_state)
+  |                |                    |
+  |                |                    v
+  +--> REJECTED <--+     FINISHED(out_share)
+~~~
+{: #vdaf-prep-state-machine title="State machine for VDAF preparation."}
+
+State transitions are made when the state is acted upon by the host's local
+inputs and/or a prep step sent by the peer. The initial state is `START`.
+
+~~~ transition
+State START
+
+Input
+
+  vdaf_verify_key: VDAF verification key associated with the task
+  is_leader: boolean indicating whether the host is the Leader
+  agg_param: aggregation parameter for the aggregation job
+  report_id: report ID
+  public_share: report public share
+  host_input_share: host's input share for the report
+
+def DAPPrepInit(vdaf_verify_key,
+                is_leader,
+                agg_param,
+                report_id,
+                public_share,
+                host_input_share):
+01   try:
+02     host_prep_state = VDAF.prep_init(
+03       vdaf_verify_key,
+04       0 if is_leader else 1,
+05       agg_param,
+06       report_id,
+07       public_share,
+08       host_input_share,
+10    )
+11    state CONTINUED(0, host_prep_state)
+12  except:
+13    state REJECTED
+~~~
+
+If the state is `REJECTED`, then processing halts. Otherwise, if the state is
+`CONTINUE`, then processing continues using the following transition rule until
+a terminal state is reached.
+
+~~~ transition
+State CONTINUED(round, host_prep_state)
+
+Input
+
+  is_leader: boolean indicating whether the host is the Leader
+  agg_param: aggregation parameter for the aggregation job
+  inbound: PrepareStep (or None)
+
+Output
+
+  outbound: PrepareStep (or None)
+
+def DAPPrepNext(is_leader, agg_param, inbound):
+01  if type(inbound) == PrepareStep.initialize:
+02    prep_msg, peer_prep_share = None, inbound.prep_share
+03  elif type(inbound) = PrepareStep.continue:
+04    prep_msg, peer_prep_share = inbound.prep_msg, inbound.prep_share
+05  elif type(inbound) = PrepareStep.finish:
+06    prep_msg, peer_prep_share = inbound.prep_msg, None
+07  else:
+08    prep_msg, peer_prep_share = None, None
+09
+10  try:
+11    /* If prep_msg == None then this is the start of the
+12     * first round. Otherwise, this is the prep message
+13     * from the end of the previous round. */
+14    out = VDAF.prep_next(host_prep_state, prep_msg)
+15    if round == VDAF.ROUNDS:
+16      state FINISHED(out)
+17      /* The Leader reaches this state upon processing a response
+18       * from the Helper, so there is no outbound message. */
+19      return None if is_leader else PrepareStep.finished
+20    (host_prep_state, host_prep_share) = out
+21    round += 1
+22
+23    if peer_prep_share != None:
+24      prep_shares = [peer_prep_share, host_prep_share]
+25      if is_leader:
+26        prep_shares.reverse()
+27      prep_msg = VDAF.prep_shares_to_prep(
+28        agg_param,
+29        prep_shares,
+30      )
+31      out = VDAF.prep_next(host_prep_state, prep_msg)
+32      if round == VDAF.ROUNDS:
+33        state FINISHED(out)
+34        return PrepareStep.finish(prep_msg)
+35      (host_prep_state, host_prep_share) = out
+36
+37    state CONTINUED(round, host_prep_state)
+38    if is_leader and round == 1:
+39      return PrepareStep.initialize(host_prep_share)
+40    else:
+41      return PrepareStep.continue(prep_msg, host_prep_share)
+42  except:
+43    state REJECT
+44    return None
+~~~
+
+State `FINISHED` represents the state in which an output share (denoted
+`out_share`) was successfully computed by the host.
 
 ### Aggregate Initialization {#agg-init}
 
