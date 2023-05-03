@@ -808,9 +808,10 @@ the Aggregator MAY abort with an error of type `missingTaskID`, in which case
 the Client SHOULD retry the request with a well-formed task ID included.
 
 An Aggregator responds to well-formed requests with HTTP status code 200 OK and
-an `HpkeConfigList` value. The `HpkeConfigList` structure contains one or more
-`HpkeConfig` structures in decreasing order of preference. This allows an
-Aggregator to support multiple HPKE configurations simultaneously.
+an `HpkeConfigList` value, with media type "application/dap-hpke-config-list".
+The `HpkeConfigList` structure contains one or more `HpkeConfig` structures in
+decreasing order of preference. This allows an Aggregator to support multiple
+HPKE configurations simultaneously.
 
 [TODO: Allow aggregators to return HTTP status code 403 Forbidden in deployments
 that use authentication to avoid leaking information about which tasks exist.]
@@ -867,7 +868,8 @@ Clients upload reports by using an HTTP PUT to
 `{leader}/tasks/{task-id}/reports`, where `{leader}` is the first entry in the
 task's Aggregator endpoints.
 
-The payload is structured as follows:
+The payload is a `Report`, with media type "application/dap-report", structured
+as follows:
 
 ~~~
 struct {
@@ -1637,8 +1639,9 @@ The `round` field is the round of VDAF preparation that the Leader just reached
 and wants the Helper to advance to.
 
 The `prepare_steps` field MUST be a sequence of `PrepareStep`s in the
-`continued` state containing the corresponding `inbound` prepare message. The
-media type is set to "application/dap-aggregation-job-continue-req".
+`continued` state containing the corresponding `inbound` prepare message.
+
+The media type is set to "application/dap-aggregation-job-continue-req".
 
 The Helper's response will be an `AggregationJobResp` message (see
 {{aggregation-helper-init}}), which the Leader validates according to
@@ -1787,7 +1790,8 @@ This ID value MUST be unique within the scope of the corresponding DAP task.
 
 To initiate the collection job, the collector issues a PUT request to
 `{leader}/tasks/{task-id}/collection_jobs/{collection-job-id}`. The body of the
-request is structured as follows:
+request has media type "application/dap-collect-req", and it is structured as
+follows:
 
 [OPEN ISSUE: Decide if and how the Collector's request is authenticated. If not,
 then we need to ensure that collection job URIs are resistant to enumeration
@@ -1849,7 +1853,8 @@ struct {
 } Collection;
 ~~~
 
-This structure includes the following:
+The body's media type is "application/dap-collection". The `Collection`
+structure includes the following:
 
 * `part_batch_selector`: Information used to bind the aggregate result to the
   query. For fixed_size tasks, this includes the batch ID assigned to the batch
@@ -1923,7 +1928,8 @@ struct {
 } AggregateShareReq;
 ~~~
 
-The message contains the following parameters:
+The media type of the request is "application/dap-aggregate-share-req". The
+message contains the following parameters:
 
 * `batch_selector`: The "batch selector", which encodes parameters used to
   determine the batch being aggregated. The value depends on the query type for
@@ -1976,7 +1982,8 @@ Encryption prevents the Leader from learning the actual result, as it only has
 its own aggregate share and cannot compute the Helper's.
 
 The Helper responds to the Leader with HTTP status code 200 OK and a body
-consisting of an `AggregateShare`:
+consisting of an `AggregateShare`, with media type
+"application/dap-aggregate-share":
 
 ~~~
 struct {
