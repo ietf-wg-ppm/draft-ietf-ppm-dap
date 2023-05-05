@@ -513,6 +513,7 @@ in the "type" field (within the DAP URN namespace
 | missingTaskID              | HPKE configuration was requested without specifying a task ID. |
 | queryMismatch              | Query type indicated by a message does not match the task's query type. |
 | roundMismatch              | The aggregators disagree on the current round of the VDAF preparation protocol. |
+| batchOverlap               | A request's query includes reports that were previously collected in a different batch. |
 
 This list is not exhaustive. The server MAY return errors set to a URI other
 than those defined above. Servers MUST NOT use the DAP URN namespace for errors
