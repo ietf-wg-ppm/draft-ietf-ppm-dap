@@ -499,7 +499,7 @@ in the "type" field (within the DAP URN namespace
 
 | Type                       | Description                                                                                  |
 |:---------------------------|:---------------------------------------------------------------------------------------------|
-| unrecognizedMessage        | The message type for a response was incorrect or the payload was malformed. |
+| invalidMessage             | A message received by a protocol participant could not be parsed or otherwise was invalid. |
 | unrecognizedTask           | An endpoint received a message with an unknown task ID. |
 | unrecognizedAggregationJob | An endpoint received a message with an unknown aggregation job ID. |
 | outdatedConfig             | The message was generated using an outdated configuration. |
@@ -528,8 +528,8 @@ SHOULD include an additional "taskid" member containing the ID encoded in Base
 
 In the remainder of this document, the tokens in the table above are used to
 refer to error types, rather than the full URNs. For example, an "error of type
-'unrecognizedMessage'" refers to an error document with "type" value
-"urn:ietf:params:ppm:dap:error:unrecognizedMessage".
+'invalidMessage'" refers to an error document with "type" value
+"urn:ietf:params:ppm:dap:error:invalidMessage".
 
 This document uses the verbs "abort" and "alert with [some error message]" to
 describe how protocol participants react to various error conditions. This
@@ -1003,8 +1003,8 @@ report later on.
 
 If the Leader's ReportShare contains an unrecognized extension, or if two
 extensions have the same ExtensionType, then the Leader MAY abort the upload
-request with error "unrecognizedMessage". Note that this behavior is not
-mandatory because it requires the Leader to decrypt its ReportShare.
+request with error "invalidMessage". Note that this behavior is not mandatory
+because it requires the Leader to decrypt its ReportShare.
 
 ### Upload Extensions {#upload-extensions}
 
@@ -1242,7 +1242,7 @@ enum {
   vdaf_prep_error(5),
   batch_saturated(6),
   task_expired(7),
-  unrecognized_message(8),
+  invalid_message(8),
   report_too_early(9),
   (255)
 } ReportShareError;
@@ -1354,9 +1354,8 @@ To begin this process, the Helper first checks if it recognizes the task ID. If
 not, then it MUST abort with error `unrecognizedTask`. Then the Helper checks
 that the report IDs in `AggregationJobInitReq.report_shares` are all distinct.
 If two ReportShare values have the same report ID, then the helper MUST abort
-with error `unrecognizedMessage`. If this check succeeds, the helper then
-attempts to recover each input share in `AggregationJobInitReq.report_shares` as
-follows:
+with error `invalidMessage`. If this check succeeds, the helper then attempts to
+recover each input share in `AggregationJobInitReq.report_shares` as follows:
 
 1. Decrypt the input share for each report share as described in
    {{input-share-decryption}}.
@@ -1441,7 +1440,7 @@ following checks:
 
 1. Check that the input share can be decoded as specified by the VDAF. If not,
    the input share MUST be marked as invalid with the error
-   `unrecognized_message`.
+   `invalid_message`.
 
 1. Check if the report is too far into the future. Implementors can provide for
    some small leeway, usually no more than a few minutes, to account for clock
@@ -1454,11 +1453,11 @@ following checks:
 
 1. Check if the PlaintextInputShare contains unrecognized extensions. If so, the
    Aggregator MUST mark the input share as invalid with error
-   "unrecognized_message".
+   "invalid_message".
 
 1. Check if the ExtensionType of any two extensions in PlaintextInputShare are
    the same. If so, the Aggregator MUST mark the input share as invalid with
-   error "unrecognized_message".
+   error "invalid_message".
 
 1. Check if the report may still be aggregated with the current aggregation
    parameter. This can be done by looking up all aggregation parameters
@@ -1701,7 +1700,7 @@ After stepping each state, the Helper advances its aggregation job to the
 Leader's `AggregationJobContinueReq.round`.
 
 If the `round` in the Leader's request is 0, then the Helper MUST abort with an
-error of type `unrecognizedMessage`.
+error of type `invalidMessage`.
 
 If the `round` in the Leader's request is equal to the Helper's current round
 (i.e., this is not the first time the Leader has sent this request), then the
