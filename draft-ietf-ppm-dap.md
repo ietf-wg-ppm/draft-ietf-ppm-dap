@@ -1314,7 +1314,7 @@ This message consists of:
       specify the batch window instead.]
 
   The indicated query type MUST match the task's query type. Otherwise, the
-  Helper MUST abort with error "unrecognizedMessage".
+  Helper MUST abort with error "invalidMessage".
 
   This field is called the "partial" batch selector because, depending on the
   query type, it may not determine a batch. In particular, if the query type is
@@ -1805,7 +1805,7 @@ struct {
 The named parameters are:
 
 * `query`, the Collector's query. The indicated query type MUST match the task's
-  query type. Otherwise, the Leader MUST abort with error "unrecognizedMessage".
+  query type. Otherwise, the Leader MUST abort with error "invalidMessage".
 * `agg_param`, an aggregation parameter for the VDAF being executed. This is the
   same value as in `AggregationJobInitReq` (see {{leader-init}}).
 
@@ -1938,7 +1938,7 @@ message contains the following parameters:
     * For fixed_size tasks, the request specifies the batch ID.
 
   The indicated query type MUST match the task's query type. Otherwise, the
-  Helper MUST abort with "unrecognizedMessage".
+  Helper MUST abort with "invalidMessage".
 
 * `agg_param`: The opaque aggregation parameter for the VDAF being executed.
   This value MUST match the AggregationJobInitReq message for each aggregation
