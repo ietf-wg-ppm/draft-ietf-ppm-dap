@@ -1114,26 +1114,26 @@ during preparation.
 +--------+                                         +--------+
 | Leader |                                         | Helper |
 +--------+                                         +--------+
-   | AggregationJobInitReq                               |
-   | agg_param, report_share, prep_step(initialize)      |
+   | AggregationJobInitReq:                              |
+   |   agg_param, report_share, prep_step(initialize)    |
    |---------------------------------------------------->|
-   |                                  AggregationJobResp |
-   |                          prep_step(continue|finish) |
+   |                                 AggregationJobResp: |
+   |                        prep_step(continue|finish)   |
    |<----------------------------------------------------|
-   | AggregationJobContinueReq                           |
-   | prep_step(continue|finish)                          |
+   | AggregationJobContinueReq:                          |
+   |   prep_step(continue|finish)                        |
    |---------------------------------------------------->|
-   |                                  AggregationJobResp |
-   |                          prep_step(continue|finish) |
+   |                                 AggregationJobResp: |
+   |                        prep_step(continue|finish)   |
    |<----------------------------------------------------|
    |                                                     |
   ...                                                   ...
    |                                                     |
-   | AggregationJobContinueReq                           |
-   | prep_step(continue|finish)                          |
+   | AggregationJobContinueReq:                          |
+   |   prep_step(continue|finish)                        |
    |---------------------------------------------------->|
-   |                                  AggregationJobResp |
-   |                          prep_step(finish|finished) |
+   |                                 AggregationJobResp: |
+   |                        prep_step(finish|finished)   |
    |<----------------------------------------------------|
    |                                                     |
    v                                                     v
