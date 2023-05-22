@@ -511,7 +511,6 @@ in the "type" field (within the DAP URN namespace
 | batchMismatch              | Aggregators disagree on the report shares that were aggregated in a batch. |
 | unauthorizedRequest        | Authentication of an HTTP request failed (see {{request-authentication}}). |
 | missingTaskID              | HPKE configuration was requested without specifying a task ID. |
-| queryMismatch              | Query type indicated by a message does not match the task's query type. |
 | roundMismatch              | The aggregators disagree on the current round of the VDAF preparation protocol. |
 | batchOverlap               | A request's query includes reports that were previously collected in a different batch. |
 
@@ -1315,7 +1314,7 @@ This message consists of:
       specify the batch window instead.]
 
   The indicated query type MUST match the task's query type. Otherwise, the
-  Helper MUST abort with error "queryMismatch".
+  Helper MUST abort with error "unrecognizedMessage".
 
   This field is called the "partial" batch selector because, depending on the
   query type, it may not determine a batch. In particular, if the query type is
@@ -1806,7 +1805,7 @@ struct {
 The named parameters are:
 
 * `query`, the Collector's query. The indicated query type MUST match the task's
-  query type. Otherwise, the Leader MUST abort with error "queryMismatch".
+  query type. Otherwise, the Leader MUST abort with error "unrecognizedMessage".
 * `agg_param`, an aggregation parameter for the VDAF being executed. This is the
   same value as in `AggregationJobInitReq` (see {{leader-init}}).
 
@@ -1939,7 +1938,7 @@ message contains the following parameters:
     * For fixed_size tasks, the request specifies the batch ID.
 
   The indicated query type MUST match the task's query type. Otherwise, the
-  Helper MUST abort with "queryMismatch".
+  Helper MUST abort with "unrecognizedMessage".
 
 * `agg_param`: The opaque aggregation parameter for the VDAF being executed.
   This value MUST match the AggregationJobInitReq message for each aggregation
