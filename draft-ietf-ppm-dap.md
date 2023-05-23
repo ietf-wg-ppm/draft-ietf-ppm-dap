@@ -1144,7 +1144,7 @@ during preparation.
 Each of these "preparation steps", or "prep steps" for short, has an associated
 type: one of "initialize", "continue", "finish", or "finished". The type of
 each step, and how many steps there are, depends on the VDAF. The message
-structure and processing rules are specified in {{preparation-messages}}.
+structure and processing rules are specified in the following subsections.
 
 In general, reports cannot be aggregated until the Collector specifies an
 aggregation parameter. However, in some situations it is possible to begin
