@@ -751,6 +751,10 @@ of the Aggregators is configured with following parameters:
 Finally, the Collector is configured with the HPKE secret key corresponding to
 `collector_hpke_config`.
 
+A task's parameters are immutable for the lifetime of that task. The only way to
+change parameters or to rotate secret values like collector HPKE configuration
+and the VDAF verification key is to define a new task.
+
 ## Resource URIs
 
 DAP is defined in terms of "resources", such as reports ({{upload-flow}}),
