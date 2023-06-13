@@ -2039,6 +2039,11 @@ struct {
 computed above and `encrypted_aggregate_share.ciphertext` is the ciphertext
 `encrypted_agg_share` computed above.
 
+The helper's handling of this request MUST be idempotent. That is, if multiple
+identical, valid `AggregateShareReq`s are received, they should all yield the
+same response while only consuming one unit of the task's
+`max_batch_query_count` (see {{batch-validation}}).
+
 After receiving the Helper's response, the Leader uses the HpkeCiphertext to
 finalize a collection job (see {{collect-finalization}}).
 
