@@ -1468,6 +1468,16 @@ The Helper responds to the Leader with HTTP status code 201 Created and a body
 consisting of the `AggregationJobResp`, with media type
 "application/dap-aggregation-job-resp".
 
+Changing an aggregation job's parameters is illegal, so further requests to
+`PUT /tasks/{tasks}/aggregation_jobs/{aggregation-job-id}` for the same
+`aggregation-job-id` but with a different `AggregationJobInitReq` in the body
+MUST fail with an HTTP client error status code.
+
+Additionally, it is not possible to rewind or reset the state of an aggregation
+job. Once an aggregation job has been continued at least once (see
+{{agg-continue-flow}}), further requests to initialize that aggregation job MUST
+fail with an HTTP client error status code.
+
 Finally, if `state == Continued(prep_state)`, then the Helper stores `state` to
 prepare for the next continuation step ({{aggregation-helper-continuation}}).
 Otherwise, if `state == Finished(out_share)`, then the Helper stores `out_share`
@@ -1876,6 +1886,11 @@ requirements of the batch parameters using the procedure in
 The Leader then begins working with the Helper to aggregate the reports
 satisfying the query (or continues this process, depending on the VDAF) as
 described in {{aggregate-flow}}.
+
+Changing a collection job's parameters is illegal, so further requests to
+`PUT /tasks/{tasks}/collection_jobs/{collection-job-id}` for the same
+`collection-job-id` but with a different `CollectionReq` in the body MUST fail
+with an HTTP client error status code.
 
 After receiving the response to its `CollectionReq`, the Collector makes an HTTP
 `POST` request to the collection job URI to check on the status of the collect
