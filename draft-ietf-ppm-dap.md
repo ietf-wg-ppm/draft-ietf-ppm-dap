@@ -578,6 +578,9 @@ struct {
   opaque enc<1..2^16-1>;     /* encapsulated HPKE key */
   opaque payload<1..2^32-1>; /* ciphertext */
 } HpkeCiphertext;
+
+/* Represent a zero-length byte string. */
+struct {} Empty;
 ~~~
 
 DAP uses the 16-byte `ReportID` as the nonce parameter for the VDAF
@@ -621,6 +624,7 @@ struct {
   FixedSizeQueryType query_type;
   select (FixedSizeQuery.query_type) {
     by_batch_id: BatchID batch_id;
+    current_batch: Empty;
   }
 } FixedSizeQuery;
 
@@ -1247,6 +1251,7 @@ follows:
 struct {
   QueryType query_type;
   select (PartialBatchSelector.query_type) {
+    case time_interval: Empty;
     case fixed_size: BatchID batch_id;
   };
 } PartialBatchSelector;
@@ -1376,6 +1381,7 @@ struct {
   PrepareRespState prepare_resp_state;
   select (PrepareResp.prepare_resp_state) {
     case continue: opaque payload<0..2^32-1>;
+    case finished: Empty;
     case reject:   PrepareError prepare_error;
   };
 } PrepareResp;
