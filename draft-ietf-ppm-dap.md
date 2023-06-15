@@ -1369,14 +1369,14 @@ enum {
   invalid_message(8),
   report_too_early(9),
   (255)
-} ReportShareError;
+} PrepareError;
 
 struct {
   ReportId report_id;
   PrepareRespState prepare_resp_state;
   select (PrepareResp.prepare_resp_state) {
     case continue: opaque payload<0..2^32-1>;
-    case reject:   ReportShareError report_share_error;
+    case reject:   PrepareError prepare_error;
   };
 } PrepareResp;
 ~~~
@@ -1395,12 +1395,12 @@ response to
 struct {
   ReportId report_id;
   PrepareRespState prepare_resp_state = reject;
-  ReportShareError report_share_error;
+  PrepareError prepare_error;
 } PrepareResp;
 ~~~
 
-where `report_id` is the report ID and `report_share_error` is the indicated
-error. For all other reports it initializes the VDAF prep state as follows (let
+where `report_id` is the report ID and `prepare_error` is the indicated error.
+For all other reports it initializes the VDAF prep state as follows (let
 `inbound` denote the payload of the prep step sent by the Leader):
 
 ~~~
@@ -1431,7 +1431,7 @@ then the Helper responds with
 struct {
   ReportId report_id;
   PrepareRespState prepare_resp_state = reject;
-  ReportShareError report_share_error = vdaf_prep_error;
+  PrepareError prepare_error = vdaf_prep_error;
 } PrepareResp;
 ~~~
 
@@ -1494,8 +1494,7 @@ outputs the resulting PlaintextInputShare `plaintext_input_share`.
 #### Input Share Validation {#input-share-validation}
 
 Validating an input share will either succeed or fail. In the case of failure,
-the input share is marked as invalid with a corresponding ReportShareError
-error.
+the input share is marked as invalid with a corresponding PrepareError.
 
 Before beginning the preparation step, Aggregators are required to perform the
 following checks:
@@ -1721,7 +1720,7 @@ If `state == Rejected()`, then the Helper's response is
 struct {
   ReportId report_id;
   PrepareRespState prepare_resp_state = reject;
-  ReportShareError report_share_error = vdaf_prep_error;
+  PrepareError prepare_error = vdaf_prep_error;
 } PrepareResp;
 ~~~
 
