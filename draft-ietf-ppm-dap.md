@@ -619,7 +619,7 @@ enum {
 
 struct {
   FixedSizeQueryType query_type;
-  select (query_type) {
+  select (FixedSizeQuery.query_type) {
     by_batch_id: BatchID batch_id;
   }
 } FixedSizeQuery;
