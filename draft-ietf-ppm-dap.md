@@ -1377,7 +1377,7 @@ enum {
 } PrepareError;
 
 struct {
-  ReportId report_id;
+  ReportID report_id;
   PrepareRespState prepare_resp_state;
   select (PrepareResp.prepare_resp_state) {
     case continue: opaque payload<0..2^32-1>;
@@ -1399,7 +1399,7 @@ response to
 
 ~~~
 struct {
-  ReportId report_id;
+  ReportID report_id;
   PrepareRespState prepare_resp_state = reject;
   PrepareError prepare_error;
 } PrepareResp;
@@ -1435,7 +1435,7 @@ then the Helper responds with
 
 ~~~
 struct {
-  ReportId report_id;
+  ReportID report_id;
   PrepareRespState prepare_resp_state = reject;
   PrepareError prepare_error = vdaf_prep_error;
 } PrepareResp;
@@ -1445,7 +1445,7 @@ Otherwise the Helper responds with
 
 ~~~
 struct {
-  ReportId report_id;
+  ReportID report_id;
   PrepareRespState prepare_resp_state = continue;
   opaque payload<0..2^32-1> = outbound;
 } PrepareResp;
@@ -1617,7 +1617,7 @@ report the Leader constructs a preparation continuation message:
 
 ~~~
 struct {
-  ReportId report_id;
+  ReportID report_id;
   opaque payload<0..2^32-1>;
 } PrepareContinue;
 ~~~
@@ -1724,7 +1724,7 @@ If `state == Rejected()`, then the Helper's response is
 
 ~~~
 struct {
-  ReportId report_id;
+  ReportID report_id;
   PrepareRespState prepare_resp_state = reject;
   PrepareError prepare_error = vdaf_prep_error;
 } PrepareResp;
@@ -1734,7 +1734,7 @@ Otherwise, if `outbound != None`, then the Helper's response is
 
 ~~~
 struct {
-  ReportId report_id;
+  ReportID report_id;
   PrepareRespState prepare_resp_state = continue;
   opaque payload<0..2^32-1> = outbound;
 } PrepareResp;
@@ -1744,7 +1744,7 @@ Otherwise, if `outbound == None`, then the Helper's resposne is
 
 ~~~
 struct {
-  ReportId report_id;
+  ReportID report_id;
   PrepareRespState prepare_resp_state = finished;
 } PrepareResp;
 ~~~
