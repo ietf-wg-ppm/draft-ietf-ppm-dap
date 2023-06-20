@@ -304,7 +304,7 @@ else about the measurements. We call `F` the "aggregation function."
 
 This protocol is extensible and allows for the addition of new cryptographic
 schemes that implement the VDAF interface specified in
-{{!VDAF=I-D.draft-irtf-cfrg-vdaf-05}}. Candidates include:
+{{!VDAF=I-D.draft-irtf-cfrg-vdaf-06}}. Candidates include:
 
 * Prio3 ({{Section 7 of !VDAF}}), which allows for aggregate statistics such as
   sum, mean, histograms, etc.
@@ -1211,14 +1211,11 @@ where:
 * `public_share` is the report's public share
 * `plaintext_input_share` is the Leader's `PlaintextInputShare`
 
-The methods are defined in {{!VDAF}}. This process determines the initial
-per-report `state`, as well as the initial `outbound` message to send to the
-Helper. (These are coalesced into a single HTTP request to the Helper as
-described below.) If `state == Rejected()`, then the report is rejected and
-removed from the set of candidate reports.
-
-[[OPEN ISSUE #470: update references to the ping-pong API, once a VDAF draft is
-published which describes it.]]
+The methods are defined in {{Section 5.8 of !VDAF}}. This process determines
+the initial per-report `state`, as well as the initial `outbound` message to
+send to the Helper. (These are coalesced into a single HTTP request to the
+Helper as described below.) If `state == Rejected()`, then the report is
+rejected and removed from the set of candidate reports.
 
 Next, for each candidate report the Leader constructs a `PrepareInit` message
 structured as follows:
