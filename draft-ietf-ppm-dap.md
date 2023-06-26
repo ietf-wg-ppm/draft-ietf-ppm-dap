@@ -1711,7 +1711,7 @@ to the previous request, then the Helper MAY abort with error `invalidMessage`.
 (Note that a report may be missing, in which case the Helper should assume the
 Leader rejected it.)
 
-[OPEN ISSUE: Issue 448: It may be useful for the Leader to explicitly signal
+[OPEN ISSUE: Issue 438: It may be useful for the Leader to explicitly signal
 rejection.]
 
 Next, the Helper checks if the continuation step indicated by the request is
