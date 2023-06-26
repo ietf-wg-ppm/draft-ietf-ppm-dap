@@ -2236,7 +2236,7 @@ shares recovered during the aggregation sub-protocol.
 ##### Size Check
 
 The query configuration specifies the minimum batch size, `min_batch_size`. The
-Aggregator checks that `len(X) >= min_batch_size`, where `X` is the set of
+Aggregator checks that `len(X) >= min_batch_size`, where `X` is the set of valid
 reports in the batch.
 
 #### Fixed-size Queries {#fixed-size-batch-validation}
