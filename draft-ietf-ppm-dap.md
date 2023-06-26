@@ -1642,7 +1642,7 @@ initialization (see {{leader-init}}) with media type
 
 ~~~
 struct {
-  u16 step;
+  uint16 step;
   PrepareContinue prepare_continues<1..2^32-1>;
 } AggregationJobContinueReq;
 ~~~
