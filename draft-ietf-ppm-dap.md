@@ -1304,9 +1304,11 @@ Finally, the Leader sends a PUT request to
 "application/dap-aggregation-job-init-req".
 
 The Helper's response will be an `AggregationJobResp` message (see
-{{aggregation-helper-init}}, which the Leader validates according to the
-criteria in {{aggregation-job-validation}}. If the message is invalid, the
-Leader MUST abort the aggregation job.
+{{aggregation-helper-init}}. The response's `preapre_resps` must include exactly
+the same report IDs in the same order as the Leader's `AggregationJobInitReq`.
+Otherwise, the Leader MUST abort the aggregation job.
+
+[[OPEN ISSUE: consider relaxing this ordering constraint. See issue#217.]]
 
 Otherwise, the Leader proceeds as follows with each report:
 
@@ -1591,23 +1593,6 @@ following checks:
 
 If all of the above checks succeed, the input share is not marked as invalid.
 
-#### Aggregation Job Validation {#aggregation-job-validation}
-
-During the aggregation job initialization ({{leader-init}}) or continuation
-({{agg-continue-flow}}) phases, the Leader will receive an `AggregationJobResp`
-message from the Helper, which needs to be validated before the Leader can move
-to the next phase of the aggregation protocol.
-
-An `AggregationJobResp` is valid only if it satisfies the following requirement:
-
-* The Helper's `prepare_resps` MUST include exactly the same report IDs in the
-  same order as either the `prepare_inits` in the Leader's
-  `AggregationJobInitReq` (if this is the first step of the aggregation job) or
-  the `prepare_continues` in the Leader's `AggregationJobContinueReq` (if this
-  is a subsequent step).
-
-[[OPEN ISSUE: consider relaxing this ordering constraint. See issue#217.]]
-
 ### Aggregate Continuation {#agg-continue-flow}
 
 In the continuation phase, the Leader drives the VDAF preparation of each share
@@ -1653,9 +1638,12 @@ preparation continuation messages constructed in the previous step. The
 `PrepareContinue`s MUST be in the same order as the previous aggregate request.
 
 The Helper's response will be an `AggregationJobResp` message (see
-{{aggregation-helper-init}}), which the Leader validates according to the
-criteria in {{aggregation-job-validation}}. If the message is invalid, the
-Leader MUST abort the aggregation job.
+{{aggregation-helper-init}}). The response's `prepare_resps` must include
+exactly the same report IDs in the same order as the Leader's
+`AggregationJobContinueReq`. Otherwise, the Leader MUST abort the aggregation
+job.
+
+[[OPEN ISSUE: consider relaxing this ordering constraint. See issue#217.]]
 
 Otherwise, the Leader proceeds as follows with each report:
 
