@@ -1879,9 +1879,16 @@ job is handled asynchronously.
 
 Upon receipt of a `CollectionReq`, the Leader begins by checking that it
 recognizes the task ID in the request path. If not, it MUST abort with error
-`unrecognizedTask`. Then, the Leader verifies that the request meets the
-requirements of the batch parameters using the procedure in
-{{batch-validation}}. If so, it immediately responds with HTTP status 201.
+`unrecognizedTask`.
+
+The Leader MAY further validate the request according to the requirements in
+{{batch-validation}} and abort with the indicated error, though some conditions
+such as the number of valid reports may not be verifiable while handling the
+CollectionReq message, and the batch will have to be re-validated later on
+regardless.
+
+If the Leader finds the CollectionReq to be valid, it immediately responds with
+HTTP status 201.
 
 The Leader then begins working with the Helper to aggregate the reports
 satisfying the query (or continues this process, depending on the VDAF) as
@@ -1898,11 +1905,17 @@ job and eventually obtain the result. If the collection job is not finished
 yet, the Leader responds with HTTP status 202 Accepted. The response MAY include
 a Retry-After header field to suggest a polling interval to the Collector.
 
-The Leader obtains the Helper's aggregate share following the aggregate-share
-request flow described in {{collect-aggregate}}. When all aggregate shares are
-successfully obtained, the Leader responds to subsequent HTTP POST requests to
-the collection job with HTTP status code 200 OK and a body consisting of a
-`Collection`:
+Asynchronously from any request from the Collector, the Leader attempts to run
+the collection job. It first checks whether it can construct a batch for the
+collection job by applying the requirements in {{batch-validation}}. If so, then
+the Leader obtains the Helper's aggregate share following the aggregate-share
+request flow described in {{collect-aggregate}}. If not, it either aborts the
+collection job or tries again later, depending on which requirement in
+{{batch-validation}} was not met.
+
+Once both aggregate shares are successfully obtained, the Leader responds to
+subsequent HTTP POST requests to the collection job with HTTP status code 200 OK
+and a body consisting of a `Collection`:
 
 ~~~
 struct {
@@ -2185,9 +2198,14 @@ Helper and the Collector? #155]]
 
 ### Batch Validation {#batch-validation}
 
-Before an Aggregator responds to a CollectionReq or AggregateShareReq, it must
-first check that the request does not violate the parameters associated with the
-DAP task. It does so as described here.
+Before a Leader runs a collection job or a Helper responds to an
+AggregateShareReq, it must first check that the job or request does not violate
+the parameters associated with the DAP task. It does so as described here. Where
+we say that an Aggregator MUST abort with some error, then:
+
+- Leaders should respond to subsequent HTTP POST requests to the collection job
+  with the indicated error.
+- Helpers should respond to the AggregateShareReq with the indicated error.
 
 First the Aggregator checks that the batch respects any "boundaries" determined
 by the query type. These are described in the subsections below. If the boundary
@@ -2195,8 +2213,9 @@ check fails, then the Aggregator MUST abort with an error of type
 "batchInvalid".
 
 Next, the Aggregator checks that batch contains a valid number of reports, as
-determined by the query type. If the size check fails, then the Aggregator MUST
-abort with error of type "invalidBatchSize".
+determined by the query type. If the size check fails, then Helpers MUST abort
+with an error of type "invalidBatchSize". Leaders SHOULD wait for more reports
+to be validated and try the collection job again later.
 
 Next, the Aggregator checks that the batch has not been aggregated too many
 times. This is determined by the maximum number of times a batch can be queried,
