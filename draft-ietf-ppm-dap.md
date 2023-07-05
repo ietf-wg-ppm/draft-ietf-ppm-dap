@@ -114,6 +114,27 @@ seen in the clear by any server.
 
 (\*) Indicates a change that breaks wire compatibility with the previous draft.
 
+05:
+
+- Bump draft-irtf-cfrg-vdaf-05 to 06 {{!VDAF}}. (\*)
+
+- Specialize the protocol for two-party VDAFs (i.e., one Leader and One
+  Helper). Accordingly, update the aggregation sub-protocol to use the new
+  "ping-pong" interface for two-party VDAFs introduced in
+  draft-irtf-cfrg-vdaf-06. (\*)
+
+- Allow the following actions to be safely retried: aggregation job creation,
+  collection job creation, and requesting the Helper's aggregate share.
+
+- Merge error types that are related.
+
+- Drop recommendation to generate IDs using a cryptographically secure
+  pseudorandom number generator wherever pseudorandomness is not required.
+
+- Require HPKE config identifiers to be unique.
+
+- Bump version tag from "dap-04" to "dap-05". (\*)
+
 04:
 
 - Introduce resource oriented HTTP API. (#278, #398, #400) (\*)
@@ -211,8 +232,8 @@ seen in the clear by any server.
 {::boilerplate bcp14-tagged}
 
 Aggregate result:
-: The output of the aggregation function over a given set of measurements and
-  aggregation parameter. As defined in {{!VDAF}}.
+: The output of the aggregation function computed over a batch of measurements
+  and an aggregation parameter. As defined in {{!VDAF}}.
 
 Aggregate share:
 : A share of the aggregate result emitted by an Aggregator. Aggregate shares are
@@ -232,7 +253,8 @@ Aggregator:
   aggregates them with the help of the other Aggregators.
 
 Batch:
-: A set of reports that are aggregated into an aggregate result.
+: A set of reports (i.e., measurements) that are aggregated into an aggregate
+  result.
 
 Batch duration:
 : The time difference between the oldest and newest report in a batch.
@@ -249,7 +271,7 @@ Collector:
   aggregate result.
 
 Helper:
-: An Aggregator that executes the aggregation and collection sub-protocols as
+: The Aggregator that executes the aggregation and collection sub-protocols as
   instructed by the Leader.
 
 Input share:
@@ -257,10 +279,9 @@ Input share:
   VDAF sharding algorithm. As defined in {{!VDAF}}.
 
 Output share:
-: An Aggregator's share of the prepared measurement resulting from successful
+: An Aggregator's share of the refined measurement resulting from successful
   execution of the VDAF preparation phase. Many output shares are combined into
-  an aggregate share during the VDAF aggregation phase. As defined in
-  {{!VDAF}}.
+  an aggregate share during the VDAF aggregation phase. As defined in {{!VDAF}}.
 
 Leader:
 : The Aggregator that coordinates aggregation and collection with the Helper.
@@ -316,7 +337,7 @@ schemes that implement the VDAF interface specified in
   the heavy hitters problem in a privacy preserving manner.
 
 VDAFs rely on secret sharing to protect the privacy of the measurements. Rather
-than sending its input in the clear, each Client shards its measurements into a
+than sending its input in the clear, each Client shards its measurement into a
 pair of "input shares" and sends an input share to each of the Aggregators. This
 provides two important properties:
 
@@ -377,15 +398,15 @@ Leader:
   requested by the Collector.
 
 Helper:
-: Helpers are responsible for executing the protocol as instructed by the
-  Leader. The protocol is designed so that Helpers can be relatively
-  lightweight, with most of the state held by the Leader.
+: The Aggregator assisting the Leader with the computation. The protocol is
+  designed so that the Helper is relatively lightweight, with most of the
+  operational burdern born by the Leader.
 
 {:br}
 
 The basic unit of DAP is the "task" which represents a single measurement
-process (though potentially taken over multiple time windows). The definition of
-a task includes the following parameters:
+process (though potentially aggregating multiple batches of measurements). The
+definition of a task includes the following parameters:
 
 * The type of each measurement.
 * The aggregation function to compute (e.g., sum, mean, etc.).
@@ -395,16 +416,18 @@ a task includes the following parameters:
 * The rate at which measurements can be taken, i.e., the "minimum batch
   duration".
 
-These parameters are distributed out of band to the Clients and to the
-Aggregators. They are distributed by the Collector in some authenticated form.
-Each task is identified by a unique 32-byte ID which is used to refer to it in
-protocol messages.
+These parameters are distributed to the Clients, Aggregators, and Collector
+before the task begins. This document does not specify a distribution
+mechanism, but it is important that all protocol participants agree on the
+task's configuration. Each task is identified by a unique 32-byte ID which is
+used to refer to it in protocol messages.
 
-During the duration of the task, each Client records its own measurement
+During the lifetime of a task, each Client records its own measurement
 value(s), packages them up into a report, and sends them to the Leader. Each
 share is separately encrypted for each Aggregator so that even though they pass
-through the Leader, the Leader is unable to see or modify them. Depending on the
-task, the Client may only send one report or may send many reports over time.
+through the Leader, the Leader is unable to see or modify them. Depending on
+the task, the Client may only send one report or may send many reports over
+time.
 
 The Leader distributes the shares to the Helper and orchestrates the process of
 verifying them (see {{validating-inputs}}) and assembling them into a final
@@ -427,12 +450,13 @@ of the computation, each Aggregator is in possession of either an "output share"
 that is ready to be aggregated or an indication that a valid output share could
 not be computed.
 
-To facilitate this computation, the input shares generated by the Client include
-information used by the Aggregators during aggregation in order to validate
-their corresponding output shares. For example, Prio3 includes a distributed
-zero-knowledge proof of the input's validity {{BBCGGI19}} which the Aggregators
-can jointly verify and reject the report if it cannot be verified. However, they
-do not learn anything about the individual report other than that it is valid.
+To facilitate this computation, the input shares generated by the Client
+include information used by the Aggregators during aggregation in order to
+validate their corresponding output shares. For example, Prio3 includes a
+zero-knowledge proof of the input's validity (see {{Section 7.1 of !VDAF}}).
+which the Aggregators can jointly verify and reject the report if it cannot be
+verified. However, they do not learn anything about the individual report other
+than that it is valid.
 
 The specific properties attested to in the proof vary depending on the
 measurement being taken. For instance, to measure the time the user took
@@ -753,7 +777,7 @@ Finally, the Collector is configured with the HPKE secret key corresponding to
 
 A task's parameters are immutable for the lifetime of that task. The only way to
 change parameters or to rotate secret values like collector HPKE configuration
-and the VDAF verification key is to define a new task.
+or the VDAF verification key is to configure a new task.
 
 ## Resource URIs
 
@@ -780,8 +804,10 @@ https://example.com/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/reports
 
 ## Uploading Reports {#upload-flow}
 
-Clients periodically upload reports to the Leader, which then distributes the
-individual report shares to each Helper.
+Clients periodically upload reports to the Leader. Each report contains two
+"report shares", one for the Leader and another for the Helper. The Helper's
+report share is transmitted by the Leader during the aggregation sub-protocol
+(see {{aggregate-flow}}).
 
 ### HPKE Configuration Request {#hpke-config}
 
@@ -858,11 +884,8 @@ at least twice the cache lifetime in order to avoid rejecting reports.
 ### Upload Request
 
 Clients upload reports by using an HTTP PUT to
-`{leader}/tasks/{task-id}/reports`, where `{leader}` is the task's
-`leader_aggregator_endpoint`.
-
-The payload is a `Report`, with media type "application/dap-report", structured
-as follows:
+`{leader}/tasks/{task-id}/reports`. The payload is a `Report`, with media type
+"application/dap-report", structured as follows:
 
 ~~~
 struct {
@@ -932,7 +955,7 @@ follows:
 
 ~~~
 enc, payload = SealBase(pk,
-  "dap-04 input share" || 0x01 || server_role,
+  "dap-05 input share" || 0x01 || server_role,
   input_share_aad, plaintext_input_share)
 ~~~
 
@@ -972,11 +995,11 @@ ignore it. In addition, it MAY alert the Client with error `reportRejected`. See
 the implementation note in {{input-share-validation}}.
 
 The Leader MUST ignore any report pertaining to a batch that has already been
-collected (see {{input-share-validation}} for details). Otherwise, comparing the
-aggregate result to the previous aggregate result may result in a privacy
-violation. Note that this is enforced by all Aggregators, not just the Leader.
-The Leader MAY also abort the upload protocol and alert the Client with error
-`reportRejected`.
+collected (see {{input-share-validation}} for details). Otherwise, comparing
+the aggregate result to the previous aggregate result may result in a privacy
+violation. Note that this is also enforced by the Helper during the aggregation
+sub-protocol. The Leader MAY also abort the upload protocol and alert the
+Client with error `reportRejected`.
 
 The Leader MAY ignore any report whose timestamp is past the task's
 `task_expiration`. When it does so, it SHOULD also abort the upload protocol and
@@ -1001,7 +1024,7 @@ because it requires the Leader to decrypt its input share.
 
 Each PlaintextInputShare carries a list of extensions that Clients use to convey
 additional information to the Aggregator. Some extensions might be intended for
-all Aggregators; others may only be intended for a specific Aggregator. (For
+both Aggregators; others may only be intended for a specific Aggregator. (For
 example, a DAP deployment might use some out-of-band mechanism for an Aggregator
 to verify that reports come from authenticated Clients. It will likely be useful
 to bind the extension to the input share via HPKE encryption.)
@@ -1071,7 +1094,7 @@ Preparation has two purposes:
 1. To "refine" the input shares into "output shares" that have the desired
    aggregatable form. For some VDAFs, like Prio3, the mapping from input to
    output shares is some fixed, linear operation, but in general the mapping is
-   controlled dynamically by the Collector and can be highly non-linear. In
+   controlled dynamically by the Collector and can be non-linear. In
    Poplar1, for example, the refinement process involves a sequence of
    "candidate prefixes" and the output consists of a sequence of zeros and ones,
    each indicating whether the corresponding candidate is a prefix of the
@@ -1244,7 +1267,6 @@ Each of these messages is constructed as follows:
 
   * `payload` is set to the `outbound` message computed by the previous step.
 
-
 Next, the Leader creates an `AggregationJobInitReq` message structured as
 follows:
 
@@ -1298,9 +1320,8 @@ This message consists of:
   previous step.
 
 Finally, the Leader sends a PUT request to
-`{helper}/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}`, where
-`{helper}` denotes the Helper's API endpoint. The payload is set to
-`AggregationJobInitReq` and the media type is set to
+`{helper}/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}`. The payload
+is set to `AggregationJobInitReq` and the media type is set to
 "application/dap-aggregation-job-init-req".
 
 The Helper's response will be an `AggregationJobResp` message (see
@@ -1499,7 +1520,7 @@ attempts decryption of the payload with the following procedure:
 
 ~~~
 plaintext_input_share = OpenBase(encrypted_input_share.enc, sk,
-  "dap-04 input share" || 0x01 || server_role,
+  "dap-05 input share" || 0x01 || server_role,
   input_share_aad, encrypted_input_share.payload)
 ~~~
 
@@ -1595,11 +1616,13 @@ If all of the above checks succeed, the input share is not marked as invalid.
 
 ### Aggregate Continuation {#agg-continue-flow}
 
-In the continuation phase, the Leader drives the VDAF preparation of each share
+In the continuation phase, the Leader drives the VDAF preparation of each report
 in the candidate report set until the underlying VDAF moves into a terminal
-state, yielding an output share for both Aggregators or a rejection. This phase
-may involve multiple HTTP requests from Leader to Helper depending on the
-underlying VDAF.
+state, yielding an output share for both Aggregators or a rejection.
+
+Whether this phase is reached depends on the VDAF: for 1-round VDAFs, like
+Prio3, processing has already completed. Continuation is required for VDAFs
+that require more than one round.
 
 #### Leader Continuation {#aggregation-leader-continuation}
 
@@ -1832,9 +1855,9 @@ opaque CollectionJobID[16];
 This ID value MUST be unique within the scope of the corresponding DAP task.
 
 To initiate the collection job, the collector issues a PUT request to
-`{leader}/tasks/{task-id}/collection_jobs/{collection-job-id}`, where `{leader}`
-is the task's `leader_aggregator_endpoint`. The body of the request has media
-type "application/dap-collect-req", and it is structured as follows:
+`{leader}/tasks/{task-id}/collection_jobs/{collection-job-id}`. The body of the
+request has media type "application/dap-collect-req", and it is structured as
+follows:
 
 [OPEN ISSUE: Decide if and how the Collector's request is authenticated. If not,
 then we need to ensure that collection job URIs are resistant to enumeration
@@ -1951,9 +1974,9 @@ state related to it.
 
 #### A Note on Idempotence
 
-The reason we use a POST instead of a GET to poll the state of a collection job
-is because of the fixed-size query mode (see {{fixed-size-query}}). Collectors
-may make a query against the current batch, and it is the Leader's
+The reason a POST is used to poll the state of a collection job instead of a
+GET is because of the fixed-size query mode (see {{fixed-size-query}}).
+Collectors may make a query against the current batch, and it is the Leader's
 responsibility to keep track of what batch is current for some task. Polling a
 collection job is the only point at which it is safe for the Leader to change
 its set of current batches, since it constitutes acknowledgement on the
@@ -1965,16 +1988,15 @@ the set of current batches in the Leader, and thus using a GET is inappropriate.
 
 ### Obtaining Aggregate Shares {#collect-aggregate}
 
-The Leader obtains the Helper's encrypted aggregate share before it completes a
-collection job. To do this, the Leader first computes a checksum over the set of
-output shares included in the batch. The checksum is computed by taking the
+The Leader must obtain the Helper's encrypted aggregate share before it can
+complete a collection job. To do this, the Leader first computes a checksum
+over the reports included in the batch. The checksum is computed by taking the
 SHA256 {{!SHS=DOI.10.6028/NIST.FIPS.180-4}} hash of each report ID from the
 Client reports included in the aggregation, then combining the hash values with
 a bitwise-XOR operation.
 
 Then the Leader sends a POST request to
-`{helper}/tasks/{task-id}/aggregate_shares`, where `{helper}` is the task's
-`helper_aggregator_endpoint`, with the following message:
+`{helper}/tasks/{task-id}/aggregate_shares` with the following message:
 
 ~~~
 struct {
@@ -2104,7 +2126,7 @@ Encrypting an aggregate share `agg_share` for a given `AggregateShareReq` is
 done as follows:
 
 ~~~
-enc, payload = SealBase(pk, "dap-04 aggregate share" || server_role || 0x00,
+enc, payload = SealBase(pk, "dap-05 aggregate share" || server_role || 0x00,
   agg_share_aad, agg_share)
 ~~~
 
@@ -2127,7 +2149,7 @@ Specifically, given an encrypted input share, denoted `enc_share`, for a given
 batch selector, decryption works as follows:
 
 ~~~
-agg_share = OpenBase(enc_share.enc, sk, "dap-04 aggregate share" ||
+agg_share = OpenBase(enc_share.enc, sk, "dap-05 aggregate share" ||
   server_role || 0x00, agg_share_aad, enc_share.payload)
 ~~~
 
