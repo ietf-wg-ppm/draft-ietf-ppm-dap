@@ -797,10 +797,8 @@ to the following rules:
   specified in {{Sections 5 and 3.2 of !RFC4648}}.
 
 For example, resource URI `{leader}/tasks/{task-id}/reports` might be expanded
-into:
-~~~
-https://example.com/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/reports
-~~~
+into
+`https://example.com/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/reports`
 
 ## Uploading Reports {#upload-flow}
 
