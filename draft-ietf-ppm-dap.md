@@ -1323,7 +1323,7 @@ is set to `AggregationJobInitReq` and the media type is set to
 "application/dap-aggregation-job-init-req".
 
 The Helper's response will be an `AggregationJobResp` message (see
-{{aggregation-helper-init}}. The response's `preapre_resps` must include exactly
+{{aggregation-helper-init}}. The response's `prepare_resps` must include exactly
 the same report IDs in the same order as the Leader's `AggregationJobInitReq`.
 Otherwise, the Leader MUST abort the aggregation job.
 
