@@ -2452,7 +2452,7 @@ exchanged all shared parameters over some unspecified secure channel.
 1. Aggregate shares.
 1. Aggregator identity.
 
-#### Capabilities
+#### Capabilities and mitigations
 
 1. Aggregators may defeat the robustness of the system by emitting incorrect
    aggregate shares.
@@ -2498,7 +2498,7 @@ published.]]
 The Leader is also an Aggregator, and so all the assets, capabilities and
 mitigations available to Aggregators also apply to the Leader.
 
-#### Capabilities
+#### Capabilities and mitigations
 
 1. Shrinking the anonymity set. The Leader instructs the Helper to construct
    aggregate shares and so could request aggregations over dangerously few
@@ -2515,6 +2515,8 @@ mitigations available to Aggregators also apply to the Leader.
    These messages are not authenticated, meaning the leader can:
    1. Send collect parameters to the Helper that do not reflect the parameters
       chosen by the Collector
+      * This is partially mitigated by including the `BatchSelector` in the AAD
+        used to encrypt aggregate shares.
    1. Discard the aggregate share computed by the Helper and then fabricate
       aggregate shares that combine into an arbitrary aggregate result
    * These are attacks on robustness, which we already assume to hold only if
@@ -2523,6 +2525,8 @@ mitigations available to Aggregators also apply to the Leader.
 
 [[OPEN ISSUE: Should we have authentication in either direction between the
 Helper and the Collector? #155]]
+[[OPEN ISSUE: Should the aggregation parameter be included in the
+AggregateShareAad? #493]]
 
 ### Aggregator collusion
 
@@ -2666,6 +2670,9 @@ measurement. For smaller length measurements, this significantly reduces the
 cost of communication between Aggregators and the steps required for the
 computation. However, malicious Clients can still generate maximum length
 measurements forcing the system to always operate at worst-case performance.
+
+[[TODO: Revisit this paragraph once https://github.com/cfrg/draft-irtf-cfrg-vdaf/issues/273
+is resolved.]]
 
 Therefore, care must be taken that a DAP deployment can comfortably handle
 computation of measurements for arbitrarily large sizes, otherwise, it may
