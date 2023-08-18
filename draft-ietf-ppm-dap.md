@@ -931,7 +931,7 @@ shares and the public share using the VDAF's sharding algorithm ({{Section 5.1
 of !VDAF}}), using the report ID as the nonce:
 
 ~~~
-(public_share, input_shares) = VDAF.measurement_to_input_shares(
+(public_share, input_shares) = Vdaf.measurement_to_input_shares(
     measurement, /* plaintext measurement */
     report_id,   /* nonce */
     rand,        /* randomness for sharding algorithm */
@@ -1193,14 +1193,12 @@ it from the set of candidate reports.
 Next, for each report the Leader executes the following procedure:
 
 ~~~
-state = VDAF.ping_pong_start(vdaf_verify_key,
-                             True,
-                             agg_param,
-                             report_id,
-                             public_share,
-                             plaintext_input_share.payload)
-if state != Rejected():
-  (state, outbound) = VDAF.ping_pong_req(agg_param, state, None)
+(state, outbound) = Vdaf.ping_pong_leader_init(
+    vdaf_verify_key,
+    agg_param,
+    report_id,
+    public_share,
+    plaintext_input_share.payload)
 ~~~
 
 where:
@@ -1214,12 +1212,12 @@ where:
 
 The methods are defined in {{Section 5.8 of !VDAF}}. This process determines
 the initial per-report `state`, as well as the initial `outbound` message to
-send to the Helper. (These are coalesced into a single HTTP request to the
-Helper as described below.) If `state == Rejected()`, then the report is
-rejected and removed from the set of candidate reports.
+send to the Helper. If `state` is of type `Rejected`, then the report is
+rejected and removed from the set of candidate reports, and no message is sent
+to the Helper.
 
-Next, for each candidate report the Leader constructs a `PrepareInit` message
-structured as follows:
+If `state` is of type `Continued`, then  the Leader constructs a `PrepareInit`
+message structured as follows:
 
 ~~~
 struct {
@@ -1245,8 +1243,11 @@ Each of these messages is constructed as follows:
 
   * `payload` is set to the `outbound` message computed by the previous step.
 
-Next, the Leader creates an `AggregationJobInitReq` message structured as
-follows:
+It is not possible for `state` to be of type `Finished` during Leader
+initialization.
+
+Once all the report shares have been initialized, the Leader creates an
+`AggregationJobInitReq` message structured as follows:
 
 ~~~
 struct {
@@ -1314,17 +1315,26 @@ Otherwise, the Leader MUST abort the aggregation job.
 
 Otherwise, the Leader proceeds as follows with each report:
 
-1. If the inbound prep step has type "continue", then the Leader computes
+1. If the inbound prep response has type "continue", then the Leader computes
 
    ~~~
-   (state, outbound) = VDAF.ping_pong_req(agg_param, state, inbound)
+   (state, outbound) = Vdaf.ping_pong_leader_continued(agg_param,
+                                                       prev_state,
+                                                       inbound)
    ~~~
 
-   where `inbound` is the message payload. If `outbound != None`, then the
-   Leader stores `state` and `outbound` and proceeds to
-   {{aggregation-leader-continuation}}. If `outbound == None`, then the
-   preparation process is complete: either `state == Rejected()`, in which case
-   the Leader rejects the report and removes it from the candidate set; or
+   where:
+
+   * `agg_param` is the VDAF aggregation parameter provided by the Collector (see
+     {{collect-flow}})
+   * `prev_state` is the state computed earlier by calling
+     `Vdaf.ping_pong_leader_init` or `Vdaf.ping_pong_leader_continued`
+   * `inbound` is the message payload in the `PrepareResp`
+
+   If `outbound != None`, then the Leader stores `state` and `outbound` and
+   proceeds to {{aggregation-leader-continuation}}. If `outbound == None`, then
+   the preparation process is complete: either `state == Rejected()`, in which
+   case the Leader rejects the report and removes it from the candidate set; or
    `state == Finished(out_share)`, in which case preparation is complete and the
    Leader stores the output share for use in the collection sub-protocol
    {{collect-flow}}.
@@ -1415,14 +1425,11 @@ For all other reports it initializes the VDAF prep state as follows (let
 `inbound` denote the payload of the prep step sent by the Leader):
 
 ~~~
-state = VDAF.ping_pong_start(vdaf_verify_key,
-                             False,
-                             agg_param,
-                             report_id,
-                             public_share,
-                             plaintext_input_share.payload)
-if state != Rejected():
-  (state, outbound) = VDAF.ping_pong_resp(agg_param, state, inbound)
+(state, outbound) = Vdaf.ping_pong_helper_init(vdaf_verify_key,
+                                               agg_param,
+                                               report_id,
+                                               public_share,
+                                               plaintext_input_share.payload)
 ~~~
 
 where:
@@ -1435,8 +1442,8 @@ where:
 * `plaintext_input_share` is the Helper's `PlaintextInputShare`
 
 This procedure determines the initial per-report `state`, as well as the
-initial `outbound` to send in response to the Leader. If `state == Rejected()`,
-then the Helper responds with
+initial `outbound` to send in response to the Leader. If `state` is of type
+`Rejected`, then the Helper responds with
 
 ~~~
 struct {
@@ -1544,7 +1551,7 @@ following checks:
    previously used for this report and calling
 
    ~~~
-   VDAF.is_valid(current_agg_param, previous_agg_params)
+   Vdaf.is_valid(current_agg_param, previous_agg_params)
    ~~~
 
    If this returns false, the input share MUST be marked as invalid with the
@@ -1654,11 +1661,13 @@ job.
 
 Otherwise, the Leader proceeds as follows with each report:
 
-1. If the inbound prep step type is "continue" and the state is
+1. If the inbound prep response type is "continue" and the state is
    `Continued(prep_state)`, then the Leader computes
 
    ~~~
-   (state, outbound) = VDAF.ping_pong_req(agg_param, state, inbound)
+   (state, outbound) = Vdaf.ping_pong_leader_continued(agg_param,
+                                                       state,
+                                                       inbound)
    ~~~
 
    where `inbound` is the message payload. If `outbound != None`, then the
@@ -1723,7 +1732,9 @@ The Helper is now ready to continue preparation for each report. Let `inbound`
 denote the payload of the prep step. The Helper computes the following:
 
 ~~~
-(state, outbound) = VDAF.ping_pong_resp(agg_param, state, inbound)
+(state, outbound) = Vdaf.ping_pong_helper_continued(agg_param,
+                                                    state,
+                                                    inbound)
 ~~~
 
 If `state == Rejected()`, then the Helper's response is
@@ -2029,7 +2040,7 @@ Next, it computes the aggregate share `agg_share` corresponding to the set of
 output shares, denoted `out_shares`, for the batch interval, as follows:
 
 ~~~
-agg_share = VDAF.out_shares_to_agg_share(agg_param, out_shares)
+agg_share = Vdaf.out_shares_to_agg_share(agg_param, out_shares)
 ~~~
 
 Implementation note: For most VDAFs, it is possible to aggregate output shares
@@ -2090,7 +2101,7 @@ be the opaque aggregation parameter. The final aggregate result is computed as
 follows:
 
 ~~~
-agg_result = VDAF.agg_shares_to_result(agg_param,
+agg_result = Vdaf.agg_shares_to_result(agg_param,
                                        [leader_agg_share, helper_agg_share],
                                        report_count)
 ~~~
