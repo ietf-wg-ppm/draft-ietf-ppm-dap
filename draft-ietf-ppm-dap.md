@@ -2165,11 +2165,11 @@ determined by the query type. If the size check fails, then Helpers MUST abort
 with an error of type "invalidBatchSize". Leaders SHOULD wait for more reports
 to be validated and try the collection job again later.
 
-Next, the Aggregator checks that the batch has not been aggregated too many
-times. This is determined by the maximum number of times a batch can be queried,
-`max_batch_query_count`. Unless the query has been issued less than
-`max_batch_query_count` times, the Aggregator MUST abort with error of type
-"batchQueriedTooManyTimes".
+Next, the Aggregator checks that the batch has not been queried too many times.
+This is determined by the maximum number of times a batch can be queried,
+`max_batch_query_count`. If the batch has been queried with more than
+`max_batch_query_count` distinct aggregation parameters, the Aggregator MUST
+abort with error of type "batchQueriedTooManyTimes".
 
 Finally, the Aggregator checks that the batch does not contain a report that was
 included in any previous batch. If this batch overlap check fails, then the
