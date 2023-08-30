@@ -12,7 +12,7 @@ venue:
   github: "ietf-wg-ppm/draft-ietf-ppm-dap"
   latest: "https://ietf-wg-ppm.github.io/draft-ietf-ppm-dap/draft-ietf-ppm-dap.html"
 
-v: 4
+v: 3
 
 author:
  -
@@ -113,6 +113,18 @@ seen in the clear by any server.
 ## Change Log
 
 (\*) Indicates a change that breaks wire compatibility with the previous draft.
+
+06:
+
+- Bump draft-irtf-cfrg-vdaf-06 to 07 {{!VDAF}}. (\*)
+
+- Overhaul security considerations (#488).
+
+- Adopt revised ping-pong interface in draft-irtf-cfrg-vdaf-07 (#494).
+
+- Add aggregation parameter to `AggregateShareAad` (#498). (\*)
+
+- Bump version tag from "dap-05" to "dap-06". (\*)
 
 05:
 
@@ -325,7 +337,7 @@ else about the measurements. We call `F` the "aggregation function."
 
 This protocol is extensible and allows for the addition of new cryptographic
 schemes that implement the VDAF interface specified in
-{{!VDAF=I-D.draft-irtf-cfrg-vdaf-06}}. Candidates include:
+{{!VDAF=I-D.draft-irtf-cfrg-vdaf-07}}. Candidates include:
 
 * Prio3 ({{Section 7 of !VDAF}}), which allows for aggregate statistics such as
   sum, mean, histograms, etc.
@@ -961,7 +973,7 @@ follows:
 
 ~~~
 enc, payload = SealBase(pk,
-  "dap-05 input share" || 0x01 || server_role,
+  "dap-06 input share" || 0x01 || server_role,
   input_share_aad, plaintext_input_share)
 ~~~
 
@@ -1501,7 +1513,7 @@ attempts decryption of the payload with the following procedure:
 
 ~~~
 plaintext_input_share = OpenBase(encrypted_input_share.enc, sk,
-  "dap-05 input share" || 0x01 || server_role,
+  "dap-06 input share" || 0x01 || server_role,
   input_share_aad, encrypted_input_share.payload)
 ~~~
 
@@ -2101,7 +2113,7 @@ Encrypting an aggregate share `agg_share` for a given `AggregateShareReq` is
 done as follows:
 
 ~~~
-enc, payload = SealBase(pk, "dap-05 aggregate share" || server_role || 0x00,
+enc, payload = SealBase(pk, "dap-06 aggregate share" || server_role || 0x00,
   agg_share_aad, agg_share)
 ~~~
 
@@ -2124,7 +2136,7 @@ Specifically, given an encrypted input share, denoted `enc_share`, for a given
 batch selector, decryption works as follows:
 
 ~~~
-agg_share = OpenBase(enc_share.enc, sk, "dap-05 aggregate share" ||
+agg_share = OpenBase(enc_share.enc, sk, "dap-06 aggregate share" ||
   server_role || 0x00, agg_share_aad, enc_share.payload)
 ~~~
 
