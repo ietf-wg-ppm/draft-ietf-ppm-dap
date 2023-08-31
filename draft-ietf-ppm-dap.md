@@ -2107,17 +2107,23 @@ enc, payload = SealBase(pk, "dap-05 aggregate share" || server_role || 0x00,
 
 where `pk` is the HPKE public key encoded by the Collector's HPKE key,
 `server_role` is the role of the encrypting server (`0x02` for the Leader and
-`0x03` for a Helper), and `agg_share_aad` is a value of type `AggregateShareAad`
-with its values set from the corresponding fields of the `AggregateShareReq`.
-The `SealBase()` function is as specified in {{!HPKE, Section 6.1}} for the
-ciphersuite indicated by the HPKE configuration.
+`0x03` for a Helper), and `agg_share_aad` is a value of type
+`AggregateShareAad`. The `SealBase()` function is as specified in
+{{!HPKE, Section 6.1}} for the ciphersuite indicated by the HPKE configuration.
 
 ~~~
 struct {
   TaskID task_id;
+  opaque agg_param<0..2^32-1>;
   BatchSelector batch_selector;
 } AggregateShareAad;
 ~~~
+
+* `task_id` is the ID of the task the aggregate share was computed in.
+* `agg_param` is the aggregation parameter used to compute the aggregate share.
+* `batch_selector` is the is the batch selector from the `AggregateShareReq`
+  (for the Helper) or the batch selector computed from the Collector's query
+  (for the Leader).
 
 The Collector decrypts these aggregate shares using the opposite process.
 Specifically, given an encrypted input share, denoted `enc_share`, for a given
@@ -2131,9 +2137,9 @@ agg_share = OpenBase(enc_share.enc, sk, "dap-05 aggregate share" ||
 where `sk` is the HPKE secret key, `server_role` is the role of the server that
 sent the aggregate share (`0x02` for the Leader and `0x03` for the Helper), and
 `agg_share_aad` is an `AggregateShareAad` message constructed from the task ID
-in the collect request and a batch selector. The value of the batch selector
-used in `agg_share_aad` is computed by the Collector from its query and the
-response to its query as follows:
+and the aggregation parameter in the collect request, and a batch selector. The
+value of the batch selector used in `agg_share_aad` is computed by the Collector
+from its query and the response to its query as follows:
 
 * For time_interval tasks, the batch selector is the batch interval specified in
   the query.
@@ -2515,8 +2521,8 @@ mitigations available to Aggregators also apply to the Leader.
    These messages are not authenticated, meaning the leader can:
    1. Send collect parameters to the Helper that do not reflect the parameters
       chosen by the Collector
-      * This is partially mitigated by including the `BatchSelector` in the AAD
-        used to encrypt aggregate shares.
+      * This is mitigated by including the `BatchSelector` and aggregation
+        parameter in the AAD used to encrypt aggregate shares.
    1. Discard the aggregate share computed by the Helper and then fabricate
       aggregate shares that combine into an arbitrary aggregate result
    * These are attacks on robustness, which we already assume to hold only if
@@ -2525,8 +2531,6 @@ mitigations available to Aggregators also apply to the Leader.
 
 [[OPEN ISSUE: Should we have authentication in either direction between the
 Helper and the Collector? #155]]
-[[OPEN ISSUE: Should the aggregation parameter be included in the
-AggregateShareAad? #493]]
 
 ### Aggregator collusion
 
