@@ -114,6 +114,12 @@ seen in the clear by any server.
 
 (\*) Indicates a change that breaks wire compatibility with the previous draft.
 
+07:
+
+- Bump version tag from "dap-06" to "dap-07". This is a bug-fix revision: the
+  editors overlooked some changes we intended to pick up in the previous
+  version. (\*)
+
 06:
 
 - Bump draft-irtf-cfrg-vdaf-06 to 07 {{!VDAF}}. (\*)
@@ -973,7 +979,7 @@ follows:
 
 ~~~
 enc, payload = SealBase(pk,
-  "dap-06 input share" || 0x01 || server_role,
+  "dap-07 input share" || 0x01 || server_role,
   input_share_aad, plaintext_input_share)
 ~~~
 
@@ -1520,7 +1526,7 @@ attempts decryption of the payload with the following procedure:
 
 ~~~
 plaintext_input_share = OpenBase(encrypted_input_share.enc, sk,
-  "dap-06 input share" || 0x01 || server_role,
+  "dap-07 input share" || 0x01 || server_role,
   input_share_aad, encrypted_input_share.payload)
 ~~~
 
@@ -2124,7 +2130,7 @@ Encrypting an aggregate share `agg_share` for a given `AggregateShareReq` is
 done as follows:
 
 ~~~
-enc, payload = SealBase(pk, "dap-06 aggregate share" || server_role || 0x00,
+enc, payload = SealBase(pk, "dap-07 aggregate share" || server_role || 0x00,
   agg_share_aad, agg_share)
 ~~~
 
@@ -2153,7 +2159,7 @@ Specifically, given an encrypted input share, denoted `enc_share`, for a given
 batch selector, decryption works as follows:
 
 ~~~
-agg_share = OpenBase(enc_share.enc, sk, "dap-06 aggregate share" ||
+agg_share = OpenBase(enc_share.enc, sk, "dap-07 aggregate share" ||
   server_role || 0x00, agg_share_aad, enc_share.payload)
 ~~~
 
