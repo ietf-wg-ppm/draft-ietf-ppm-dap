@@ -630,9 +630,8 @@ struct {} Empty;
 ~~~
 
 DAP uses the 16-byte `ReportID` as the nonce parameter for the VDAF
-`measurement_to_input_shares` and `prep_init` methods (see {{!VDAF, Section
-5}}). Thus for a VDAF to be compatible with DAP, it MUST specify a `NONCE_SIZE`
-of 16 bytes.
+`shard` and `prep_init` methods (see {{!VDAF, Section 5}}). Thus for a VDAF to
+be compatible with DAP, it MUST specify a `NONCE_SIZE` of 16 bytes.
 
 ## Queries {#query}
 
@@ -949,7 +948,7 @@ shares and the public share using the VDAF's sharding algorithm ({{Section 5.1
 of !VDAF}}), using the report ID as the nonce:
 
 ~~~
-(public_share, input_shares) = Vdaf.measurement_to_input_shares(
+(public_share, input_shares) = Vdaf.shard(
     measurement, /* plaintext measurement */
     report_id,   /* nonce */
     rand,        /* randomness for sharding algorithm */
@@ -2058,7 +2057,7 @@ Next, it computes the aggregate share `agg_share` corresponding to the set of
 output shares, denoted `out_shares`, for the batch interval, as follows:
 
 ~~~
-agg_share = Vdaf.out_shares_to_agg_share(agg_param, out_shares)
+agg_share = Vdaf.aggregate(agg_param, out_shares)
 ~~~
 
 Implementation note: For most VDAFs, it is possible to aggregate output shares
@@ -2111,17 +2110,16 @@ Once the Collector has received a collection job from the Leader, it can decrypt
 the aggregate shares and produce an aggregate result. The Collector decrypts
 each aggregate share as described in {{aggregate-share-encrypt}}. Once the
 Collector successfully decrypts all aggregate shares, it unshards the aggregate
-shares into an aggregate result using the VDAF's `agg_shares_to_result`
-algorithm. In particular, let `leader_agg_share` denote the Leader's aggregate
-share, `helper_agg_share` denote the Helper's aggregate share, let
-`report_count` denote the report count sent by the Leader, and let `agg_param`
-be the opaque aggregation parameter. The final aggregate result is computed as
-follows:
+shares into an aggregate result using the VDAF's `unshard` algorithm. In
+particular, let `leader_agg_share` denote the Leader's aggregate share,
+`helper_agg_share` denote the Helper's aggregate share, let `report_count`
+denote the report count sent by the Leader, and let `agg_param` be the opaque
+aggregation parameter. The final aggregate result is computed as follows:
 
 ~~~
-agg_result = Vdaf.agg_shares_to_result(agg_param,
-                                       [leader_agg_share, helper_agg_share],
-                                       report_count)
+agg_result = Vdaf.unshard(agg_param,
+                          [leader_agg_share, helper_agg_share],
+                          report_count)
 ~~~
 
 ### Aggregate Share Encryption {#aggregate-share-encrypt}
