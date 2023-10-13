@@ -682,11 +682,10 @@ struct {
 } Query;
 ~~~
 
-The parameters pertaining to each query type are described in one of the
-subsections below. The query is issued in-band as part of the collect
-sub-protocol ({{collect-flow}}). Its content is determined by the "query type",
-which in turn is encoded by the "query configuration" configured out-of-band.
-All query types have the following configuration parameters in common:
+The query is issued in-band as part of the collect sub-protocol
+({{collect-flow}}). Its content is determined by the "query type", which in
+turn is encoded by the "query configuration" configured out-of-band. All query
+types have the following configuration parameters in common:
 
 - `min_batch_size` - The smallest number of reports the batch is allowed to
   include. In a sense, this parameter controls the degree of privacy that will
