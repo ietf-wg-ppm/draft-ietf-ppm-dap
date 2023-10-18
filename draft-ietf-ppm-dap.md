@@ -1458,8 +1458,8 @@ where:
 * `plaintext_input_share` is the Helper's `PlaintextInputShare`
 
 This procedure determines the initial per-report `state`, as well as the
-initial `outbound` to send in response to the Leader. If `state` is of type
-`Rejected`, then the Helper responds with
+initial `outbound` message to send in response to the Leader. If `state` is of
+type `Rejected`, then the Helper responds with
 
 ~~~
 struct {
