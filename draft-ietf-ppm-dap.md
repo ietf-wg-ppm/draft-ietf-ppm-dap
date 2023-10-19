@@ -1988,13 +1988,7 @@ the set of current batches in the Leader, and thus using a GET is inappropriate.
 ### Obtaining Aggregate Shares {#collect-aggregate}
 
 The Leader must obtain the Helper's encrypted aggregate share before it can
-complete a collection job. To do this, the Leader first computes a checksum
-over the reports included in the batch. The checksum is computed by taking the
-SHA256 {{!SHS=DOI.10.6028/NIST.FIPS.180-4}} hash of each report ID from the
-Client reports included in the aggregation, then combining the hash values with
-a bitwise-XOR operation.
-
-Then the Leader sends a POST request to
+complete a collection job. To do this, the Leader sends a POST request to
 `{helper}/tasks/{task-id}/aggregate_shares` with the following message:
 
 ~~~
@@ -2010,7 +2004,6 @@ struct {
   BatchSelector batch_selector;
   opaque agg_param<0..2^32-1>;
   uint64 report_count;
-  opaque checksum[32];
 } AggregateShareReq;
 ~~~
 
@@ -2036,10 +2029,15 @@ message contains the following parameters:
 
 * `report_count`: The number number of reports included in the batch.
 
-* `checksum`: The batch checksum.
-
 Leaders MUST authenticate their requests to Helpers using a scheme that meets
 the requirements in {{request-authentication}}.
+
+Leaders can optionally include a checksum over the reports included in the batch.
+The checksum is computed by taking the SHA256 {{!SHS=DOI.10.6028/NIST.FIPS.180-4}}
+hash of each report ID from the Client reports included in the aggregation, then
+combining the hash values with a bitwise-XOR operation. The checksum would then
+be base64url-encoded {{?RFC4648}} and provided as a query parameter with the name
+"checksum", i.e., `{helper}/tasks/{task-id}/aggregate_shares?checksum={checksum}`.
 
 To handle the Leader's request, the Helper first ensures that it recognizes the
 task ID in the request path. If not, it MUST abort with error
@@ -2047,10 +2045,12 @@ task ID in the request path. If not, it MUST abort with error
 requirements for batch parameters following the procedure in
 {{batch-validation}}.
 
-Next, it computes a checksum based on the reports that satisfy the query, and
-checks that the `report_count` and `checksum` included in the request match its
-computed values. If not, then it MUST abort with an error of type
-"batchMismatch".
+Next, the Leader checks that the `report_count` included in the request match
+its computed value. If not, then it MUST abort with an error of type
+"batchMismatch". If the Leader provided a checksum parameter, the Helper
+additionally computes a checksum based on the reports that satisfy the query,
+and checks that `checksum` included in the request query parameter matches its
+computed value. If not, then it MUST abort with an error of type "batchMismatch".
 
 Next, it computes the aggregate share `agg_share` corresponding to the set of
 output shares, denoted `out_shares`, for the batch interval, as follows:
