@@ -531,7 +531,7 @@ submits a request using a method not allowed in this document, then the server
 MAY return HTTP status code 405 Method Not Allowed.
 
 When the server responds with an error status, it SHOULD provide additional
-information using a problem document {{!RFC7807}}. To facilitate automatic
+information using a problem detail object {{!RFC9457}}. To facilitate automatic
 response to errors, this document defines the following standard tokens for use
 in the "type" field (within the DAP URN namespace
 "urn:ietf:params:ppm:dap:error:"):
