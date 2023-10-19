@@ -1458,8 +1458,8 @@ where:
 * `plaintext_input_share` is the Helper's `PlaintextInputShare`
 
 This procedure determines the initial per-report `state`, as well as the
-initial `outbound` to send in response to the Leader. If `state` is of type
-`Rejected`, then the Helper responds with
+initial `outbound` message to send in response to the Leader. If `state` is of
+type `Rejected`, then the Helper responds with
 
 ~~~
 struct {
@@ -2615,7 +2615,8 @@ be measuring the heights of a human population and configure a VDAF to prove
 that measurements are values in the range of 80-250 cm. A malicious Client would not
 be able to claim a height of 400 cm, but they could submit multiple bogus
 reports inside the acceptable range, which would yield incorrect averages. More
-generally, DAP deployments are susceptible to Sybil attacks {{Dou02}}.
+generally, DAP deployments are susceptible to Sybil attacks {{Dou02}}, especially
+when carried out by the Leader.
 
 In this type of attack, the adversary adds to a batch a number of reports that
 skew the aggregate result in its favor. For example, sending known measurements
@@ -2625,17 +2626,24 @@ reveal additional information about the honest measurements, leading to a
 privacy violation; or the result may have some property that is desirable to the
 adversary ("stats poisoning").
 
+Depending on the deployment and threat model, there are different ways to address
+Sybil attacks, including, though not limited to:
+
+1. Authenticating clients, as described in {{client-auth}};
+1. Removing client-specific metadata on individual reports, such as through the
+   use of anonymizing proxies in the upload flow, as described in {{anon-proxy}}; or
+1. Applying differential privacy protections, as described in {{dp}}.
+
 ### Client authentication {#client-auth}
 
 In settings where it is practical for each Client to have an identity
 provisioned (e.g., a user logged into a backend service or a hardware device
-programmed with an identity), Client authentication is a highly effective way
-for the Aggregators (or an authenticating proxy deployed between clients and the
-Aggregators; see {{anon-proxy}}) to ensure that all reports come from authentic
-Clients and to enforce policy on things like upload rates. Note that because the
-Helper never handles messages directly from the Clients, reports would have to
-use an extension ({{upload-extensions}}) to convey authentication information to
-the Helper.
+programmed with an identity), Client authentication can help Aggregators (or an
+authenticating proxy deployed between clients and the Aggregators; see
+{{anon-proxy}}) ensure that all reports come from authentic Clients. Note that
+because the Helper never handles messages directly from the Clients, reports
+would have to use an extension ({{upload-extensions}}) to convey authentication
+information to the Helper.
 
 However, in some deployments, it will not be practical to require Clients to
 authenticate, so Client authentication is not mandatory in DAP. For example, a
