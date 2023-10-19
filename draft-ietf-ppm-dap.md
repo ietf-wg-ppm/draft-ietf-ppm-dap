@@ -2665,14 +2665,29 @@ minimum batch size of 1 report).
 ### Verification key requirements {#verification-key}
 
 The verification key for a task SHOULD be chosen before any reports are
-generated. It SHOULD be fixed for the lifetime of the task and not be rotated.
-One way to ensure this is to include the verification key in a derivation of the
-task ID.
+generated so that it is independent of any reports. Moreover, it SHOULD be
+fixed for the lifetime of the task and not be rotated. One way to ensure
+that the key is independent is to derive the verification key (verify_key)
+based on the task ID (task_id) and some previously agreed upon secret
+(verify_key_seed) between Aggregators, as follows:
 
-This consideration comes from current security analysis for existing VDAFs. For
-example, to ensure that the security proofs for Prio3 hold, the verification key
-MUST be chosen independently of the generated reports. This can be achieved as
-recommended above.
+~~~
+verify_key = HKDF-Expand(
+    HKDF-Extract(
+        "verify_key",    # salt
+        verify_key_seed, # IKM
+    ),
+    task_id,             # info
+    VERIFY_KEY_SIZE,     # L
+)
+~~~
+
+Here, VERIFY_KEY_SIZE is the length of the verification key, and HKDF-Extract
+and HKDF-Expand are as defined in {{?RFC5869}}.
+
+This requirement comes from current security analysis for existing VDAFs. In
+particular, the security proofs for Prio3 require that the verification key is
+chosen independently of the generated reports.
 
 ### Batch parameters
 
