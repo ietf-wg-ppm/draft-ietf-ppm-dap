@@ -3443,19 +3443,42 @@ Change controller:
 
 : IESG
 
-## Query Types Registry {#query-type-reg}
+## DAP Type Registries
+
+This document also requests creation of a new "Distributed Aggregation Protocol
+Parameters" page. This page will contain several new registries, described in the
+following sections.
+
+### Query Types Registry {#query-type-reg}
 
 This document requests creation of a new registry for Query Types. This registry
 should contain the following columns:
 
 [TODO: define how we want to structure this registry when the time comes]
 
-## Upload Extension Registry
+### Upload Extension Registry
 
 This document requests creation of a new registry for extensions to the Upload
 protocol. This registry should contain the following columns:
 
 [TODO: define how we want to structure this registry when the time comes]
+
+### Prepare Error Registry {#prepare-error-reg}
+
+This document requests creation of a new registry for PrepareError values. This
+registry should contain the following columns:
+
+Name:
+: The name of the PrepareError value
+
+Value:
+: The 1-byte value of the PrepareError value
+
+Reference:
+: A reference to where the PrepareError type is defined.
+
+The initial contents of this registry are as defined in {{aggregation-helper-init}},
+with this document as the reference.
 
 ## URN Sub-namespace for DAP (urn:ietf:params:ppm:dap) {#urn-space}
 
