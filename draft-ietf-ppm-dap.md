@@ -834,10 +834,12 @@ configuration of each Aggregator. See {{compliance}} for information on HPKE
 algorithm choices.
 
 Clients retrieve the HPKE configuration from each Aggregator by sending an HTTP
-GET request to `{aggregator}/hpke_config`. Clients MAY specify a query parameter
-`task_id` whose value is the task ID whose HPKE configuration they want. If the
-Aggregator does not recognize the task ID, then it MUST abort with error
-`unrecognizedTask`.
+GET request to `{aggregator}/tasks/{task-id}/hpke_config`. If the Aggregator
+does not recognize the task ID, then it MUST abort with error `unrecognizedTask`
+and return the HTTP status code 404 Not Found. The Aggregator can choose to
+deny clients access to the HPKE configuration depending on the deployment model,
+e.g., if only authenticated clients can obtain HPKE configurations. In these
+cases, the Aggregator returns the HTTP status code 403 Forbidden.
 
 An Aggregator is free to use different HPKE configurations for each task with
 which it is configured. If the task ID is missing from  the Client's request,
@@ -849,9 +851,6 @@ an `HpkeConfigList` value, with media type "application/dap-hpke-config-list".
 The `HpkeConfigList` structure contains one or more `HpkeConfig` structures in
 decreasing order of preference. This allows an Aggregator to support multiple
 HPKE configurations simultaneously.
-
-[TODO: Allow Aggregators to return HTTP status code 403 Forbidden in deployments
-that use authentication to avoid leaking information about which tasks exist.]
 
 ~~~
 HpkeConfig HpkeConfigList<1..2^16-1>;
