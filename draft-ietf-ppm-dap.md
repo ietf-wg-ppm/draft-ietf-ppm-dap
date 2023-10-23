@@ -114,6 +114,16 @@ seen in the clear by any server.
 
 (\*) Indicates a change that breaks wire compatibility with the previous draft.
 
+08:
+
+- Clarify requirements for initializing aggregation jobs.
+
+- Add more considerations for Sybil attacks.
+
+- Expand guidance around choosing the VDAF verification key.
+
+- Add an error type registry for the aggregation sub-protocol.
+
 07:
 
 - Bump version tag from "dap-06" to "dap-07". This is a bug-fix revision: the
