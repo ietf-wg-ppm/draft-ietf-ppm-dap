@@ -1940,10 +1940,8 @@ collection job or tries again later, depending on which requirement in
 {{batch-validation}} was not met. If the Leader has a pending aggregation job
 that overlaps with the batch for the collection job, the Leader MUST first
 complete the aggregation job before proceeding and requesting an aggregate share
-from the Helper. After the collection job has been created, the Leader MUST NOT
-schedule new aggregation jobs that overlap with the batch for the collection
-job. This avoids a race condition between aggregation and collection jobs that
-can yield trivial batch mismatch errors.
+from the Helper. This avoids a race condition between aggregation and collection
+jobs that can yield trivial batch mismatch errors.
 
 Once both aggregate shares are successfully obtained, the Leader responds to
 subsequent HTTP POST requests to the collection job with HTTP status code 200 OK
