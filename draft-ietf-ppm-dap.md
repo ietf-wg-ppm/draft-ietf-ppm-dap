@@ -991,13 +991,14 @@ enc, payload = SealBase(pk,
   input_share_aad, plaintext_input_share)
 ~~~
 
-where `pk` is the Aggregator's public key; `server_role` is the Role of the
-intended recipient (`0x02` for the Leader and `0x03` for the Helper),
-`plaintext_input_share` is the Aggregator's PlaintextInputShare, and
-`input_share_aad` is an encoded message of type InputShareAad defined below,
-constructed from the same values as the corresponding fields in the report. The
-`SealBase()` function is as specified in {{!HPKE, Section 6.1}} for the
-ciphersuite indicated by the HPKE configuration.
+where `pk` is the Aggregator's public key; `0x01` represents the Role of the
+sender (always the Client); `server_role` is the Role of the intended recipient
+(`0x02` for the Leader and `0x03` for the Helper), `plaintext_input_share` is
+the Aggregator's PlaintextInputShare, and `input_share_aad` is an encoded
+message of type InputShareAad defined below, constructed from the same values as
+the corresponding fields in the report. The `SealBase()` function is as
+specified in {{!HPKE, Section 6.1}} for the ciphersuite indicated by the HPKE
+configuration.
 
 ~~~
 struct {
@@ -1538,12 +1539,13 @@ plaintext_input_share = OpenBase(encrypted_input_share.enc, sk,
   input_share_aad, encrypted_input_share.payload)
 ~~~
 
-where `sk` is the HPKE secret key, and `server_role` is the role of the
-Aggregator (`0x02` for the Leader and `0x03` for the Helper). The `OpenBase()`
-function is as specified in {{!HPKE, Section 6.1}} for the ciphersuite indicated
-by the HPKE configuration. If decryption fails, the Aggregator marks the report
-share as invalid with the error `hpke_decrypt_error`. Otherwise, the Aggregator
-outputs the resulting PlaintextInputShare `plaintext_input_share`.
+where `sk` is the HPKE secret key, `0x01` represents the Role of the sender
+(always the Client), and `server_role` is the Role of the recipient Aggregator
+(`0x02` for the Leader and `0x03` for the Helper). The `OpenBase()` function is
+as specified in {{!HPKE, Section 6.1}} for the ciphersuite indicated by the HPKE
+configuration. If decryption fails, the Aggregator marks the report share as
+invalid with the error `hpke_decrypt_error`. Otherwise, the Aggregator outputs
+the resulting PlaintextInputShare `plaintext_input_share`.
 
 #### Input Share Validation {#input-share-validation}
 
@@ -2152,10 +2154,11 @@ enc, payload = SealBase(pk, "dap-07 aggregate share" || server_role || 0x00,
 ~~~
 
 where `pk` is the HPKE public key encoded by the Collector's HPKE key,
-`server_role` is the role of the encrypting server (`0x02` for the Leader and
-`0x03` for a Helper), and `agg_share_aad` is a value of type
-`AggregateShareAad`. The `SealBase()` function is as specified in
-{{!HPKE, Section 6.1}} for the ciphersuite indicated by the HPKE configuration.
+`server_role` is the Role of the encrypting server (`0x02` for the Leader and
+`0x03` for a Helper), `0x00` represents the Role of the recipient (always the
+Collector), and `agg_share_aad` is a value of type `AggregateShareAad`. The
+`SealBase()` function is as specified in {{!HPKE, Section 6.1}} for the
+ciphersuite indicated by the HPKE configuration.
 
 ~~~
 struct {
@@ -2180,8 +2183,9 @@ agg_share = OpenBase(enc_share.enc, sk, "dap-07 aggregate share" ||
   server_role || 0x00, agg_share_aad, enc_share.payload)
 ~~~
 
-where `sk` is the HPKE secret key, `server_role` is the role of the server that
-sent the aggregate share (`0x02` for the Leader and `0x03` for the Helper), and
+where `sk` is the HPKE secret key, `server_role` is the Role of the server that
+sent the aggregate share (`0x02` for the Leader and `0x03` for the Helper),
+`0x00` represents the Role of the recipient (always the Collector), and
 `agg_share_aad` is an `AggregateShareAad` message constructed from the task ID
 and the aggregation parameter in the collect request, and a batch selector. The
 value of the batch selector used in `agg_share_aad` is computed by the Collector
