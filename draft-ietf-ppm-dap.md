@@ -1803,6 +1803,10 @@ prepare for the next continuation step ({{aggregation-helper-continuation}}).
 Otherwise, if `state == Finished(out_share)`, then the Helper stores `out_share`
 for use in the collection sub-protocol ({{collect-flow}}).
 
+If for whatever reason the Leader must abandon the aggregation job, it SHOULD
+send an HTTP DELETE request to the aggregation job URI so that the Helper knows
+it can clean up its state.
+
 #### Recovering from Aggregation Step Skew {#aggregation-step-skew-recovery}
 
 `AggregationJobContinueReq` messages contain a `step` field, allowing
