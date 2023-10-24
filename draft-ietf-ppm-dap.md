@@ -1938,10 +1938,11 @@ the Leader obtains the Helper's aggregate share following the aggregate-share
 request flow described in {{collect-aggregate}}. If not, it either aborts the
 collection job or tries again later, depending on which requirement in
 {{batch-validation}} was not met. If the Leader has a pending aggregation job
-that overlaps with the batch for the collection job, the Leader MUST first
-complete the aggregation job before proceeding and requesting an aggregate share
-from the Helper. This avoids a race condition between aggregation and collection
-jobs that can yield trivial batch mismatch errors.
+that overlaps with the batch and aggregation parameter for the collection job,
+the Leader MUST first complete the aggregation job before proceeding and
+requesting an aggregate share from the Helper. This avoids a race condition
+between aggregation and collection jobs that can yield trivial batch mismatch
+errors.
 
 Once both aggregate shares are successfully obtained, the Leader responds to
 subsequent HTTP POST requests to the collection job with HTTP status code 200 OK
