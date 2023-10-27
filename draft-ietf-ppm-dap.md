@@ -2695,6 +2695,10 @@ minimum batch size of 1 report).
 
 ### Verification key requirements {#verification-key}
 
+The verification key is shared between aggregators and must be kept secret from
+clients. If a client gains access, they can create reports with invalid values
+which will pass verification.
+
 The verification key for a task SHOULD be chosen before any reports are
 generated so that it is independent of any reports. Moreover, it SHOULD be
 fixed for the lifetime of the task and not be rotated. One way to ensure
