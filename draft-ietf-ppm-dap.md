@@ -663,9 +663,12 @@ enum {
 
 The time_interval query type is described in {{time-interval-query}}; the
 fixed_size query type is described in {{fixed-size-query}}. Future
-specifications may introduce new query types as needed (see {{query-type-reg}}).
-A query includes parameters used by the Aggregators to select a batch of reports
-specific to the given query type. A query is defined as follows:
+specifications may introduce new query types as needed (see
+{{query-type-reg}}). Implementations are free to implement only a subset of the
+available query types.
+
+A query includes parameters used by the Aggregators to select a batch of
+reports specific to the given query type. A query is defined as follows:
 
 ~~~
 opaque BatchID[32];
@@ -783,7 +786,8 @@ the following parameters associated with it:
   endpoints can be found.
 * The query configuration for this task (see {{query}}). This determines the
   query type for batch selection and the properties that all batches for this
-  task must have.
+  task must have. The party MUST NOT configure the task if it does not
+  recognize the query type.
 * `max_batch_query_count`: The maximum number of times a batch of reports may be
   queried by the Collector.
 * `task_expiration`: The time up to which Clients are expected to upload to this
