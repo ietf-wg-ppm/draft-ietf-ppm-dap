@@ -2796,6 +2796,24 @@ participating Aggregators stored unencrypted input shares on the same cloud
 object storage service, then that cloud vendor would be able to reassemble all
 the input shares and defeat privacy.
 
+## Task Configuration Agreement and Consistency
+
+In order to execute a DAP task, it is necessary for honest parties to ensure
+they agree on the configuration of the task. The process by which tasks are
+configured is not in scope of this document. This means that, in general, it is
+possible for a party to participate in a task without knowing all of the
+relevant parameters. For example, a Client can upload a report
+({{upload-flow}}) without knowing the minimum batch size that is enforced by
+the Aggregators during collection ({{collect-flow}}).
+
+Depending on the deployment model, agreement can require that task parameters
+are visible to all parties such that each party can choose whether to participate
+based on the value of any parameter. This includes the parameters enumerated
+in {{task-configuration}} and any additional parameters implied by upload
+extensions {{upload-extensions}} used by the task. Since meaningful privacy
+requires that multiple clients contribute to a task, they should also share a
+consistent view of the task configuration.
+
 # IANA Considerations
 
 ## Protocol Message Media Types
