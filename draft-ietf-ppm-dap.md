@@ -2796,10 +2796,6 @@ participating Aggregators stored unencrypted input shares on the same cloud
 object storage service, then that cloud vendor would be able to reassemble all
 the input shares and defeat privacy.
 
-## System requirements {#operational-requirements}
-
-### Data types
-
 # IANA Considerations
 
 ## Protocol Message Media Types
