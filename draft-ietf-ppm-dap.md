@@ -2439,9 +2439,8 @@ shares for aggregation or coerce an Aggregator into diverting from the protocol
 specified (e.g., by divulging its input shares to the attacker).
 
 In the presence of this adversary, DAP aims to achieve the privacy and
-robustness security goals described in {{!VDAF}}'s Security Considerations
-section. Even if DAP achieves those goals, there are still some threats it does
-not defend against:
+robustness security goals described in {{Section 9 of !VDAF}}. Even if DAP
+achieves those goals, there are still some threats it does not defend against:
 
 1. Even benign collect requests may leak information beyond what one might
    expect intuitively. For example, the Poplar1 VDAF {{!VDAF}} can be used to
