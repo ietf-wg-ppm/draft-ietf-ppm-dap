@@ -676,6 +676,7 @@ opaque BatchID[32];
 enum {
   by_batch_id(0),
   current_batch(1),
+  (255)
 } FixedSizeQueryType;
 
 struct {
