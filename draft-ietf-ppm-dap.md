@@ -353,7 +353,7 @@ else about the measurements. We call `F` the "aggregation function."
 
 This protocol is extensible and allows for the addition of new cryptographic
 schemes that implement the VDAF interface specified in
-{{!VDAF=I-D.draft-irtf-cfrg-vdaf-07}}. Candidates include:
+{{!VDAF=I-D.draft-irtf-cfrg-vdaf-08}}. Candidates include:
 
 * Prio3 ({{Section 7 of !VDAF}}), which allows for aggregate statistics such as
   sum, mean, histograms, etc.
