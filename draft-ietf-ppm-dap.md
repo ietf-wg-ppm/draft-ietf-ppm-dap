@@ -1380,10 +1380,10 @@ Otherwise, the Leader proceeds as follows with each report:
    Leader stores the output share for use in the collection sub-protocol
    {{collect-flow}}.
 
-1. Else if the type is "rejected", then the Leader rejects the report and
-   removes it from the candidate set. The Leader MUST NOT include the report in
-   a subsequent aggregation job, unless the error is `report_too_early`, in
-   which case the Leader MAY include the report in a subsequent aggregation job.
+1. Else if the type is "reject", then the Leader rejects the report and removes
+   it from the candidate set. The Leader MUST NOT include the report in a
+   subsequent aggregation job, unless the error is `report_too_early`, in which
+   case the Leader MAY include the report in a subsequent aggregation job.
 
 1. Else the type is invalid, in which case the Leader MUST abort the
    aggregation job.
