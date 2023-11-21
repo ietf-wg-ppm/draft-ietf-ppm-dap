@@ -737,7 +737,7 @@ report upload rates.
 ### Fixed-size Queries {#fixed-size-query}
 
 The `fixed_size` query type is used to support applications in which the
-Collector needs the ability to strictly control the sample size. This is
+Collector needs the ability to strictly control the batch size. This is
 particularly important for controlling the amount of noise added to reports by
 Clients (or added to aggregate shares by Aggregators) in order to achieve
 differential privacy.
@@ -754,8 +754,15 @@ it is interested in; in this case, it can also issue a query of type
 The Leader SHOULD select a batch which has not yet began collection.
 
 In addition to the minimum batch size common to all query types, the
-configuration includes a parameter `max_batch_size` that determines maximum
+configuration may include a parameter `max_batch_size` that determines maximum
 number of reports per batch.
+
+If the configuration does not include `max_batch_size`, then the Aggregators
+can output any batch size that is larger than or equal to `min_batch_size`.
+This is useful for applications that are not concerned with sample size, i.e.,
+the privacy guarantee is not affected by the sampling rate of the population,
+therefore a larger than expected batch size does not weaken the designed privacy
+guarantee.
 
 Implementation note: The goal for the Aggregators is to aggregate precisely
 `min_batch_size` reports per batch. Doing so, however, may be challenging for
@@ -763,7 +770,9 @@ Leader deployments in which multiple, independent nodes running the aggregate
 sub-protocol (see {{aggregate-flow}}) need to be coordinated. The maximum batch
 size is intended to allow room for error. Typically the difference between the
 minimum and maximum batch size will be a small fraction of the target batch size
-for each batch.
+for each batch. If `max_batch_size` is not specified, the goal for Aggregators
+is to output the batch once it meets `min_batch_size`. How soon the batch should
+be output is deployment specific.
 
 [OPEN ISSUE: It may be feasible to require a fixed batch size, i.e.,
 `min_batch_size == max_batch_size`. We should know better once we've had some
@@ -1624,8 +1633,11 @@ following checks:
       batch exceeds the maximum batch size (per the task configuration), the
       Aggregator MAY mark the input share as invalid with the error
       `batch_saturated`. Note that this behavior is not strictly enforced here
-      but during the collect sub-protocol. (See {{batch-validation}}.) If both
-      checks succeed, the input share is not marked as invalid.
+      but during the collect sub-protocol. (See {{batch-validation}}.) If
+      maximum batch size is not provided, then Aggregators only need to ensure
+      the current batch exceeds the minimum batch size (per the task
+      configuration). If both checks succeed, the input share is not marked as
+      invalid.
 
 1. Finally, if an Aggregator cannot determine if an input share is valid, it
    MUST mark the input share as invalid with error `report_dropped`. For
@@ -2285,9 +2297,10 @@ ID:
 ##### Size Check
 
 The query configuration specifies the minimum batch size, `min_batch_size`, and
-maximum batch size, `max_batch_size`. The Aggregator checks that `len(X) >=
-min_batch_size` and `len(X) <= max_batch_size`, where `X` is the set of reports
-successfully aggregated into the batch.
+optionally the maximum batch size, `max_batch_size`. The Aggregator checks that
+`len(X) >= min_batch_size`. And if `max_batch_size` is specified, also
+`len(X) <= max_batch_size`, where `X` is the set of reports successfully
+aggregated into the batch.
 
 # Operational Considerations {#operational-capabilities}
 
