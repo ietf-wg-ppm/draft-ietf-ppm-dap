@@ -682,8 +682,8 @@ enum {
 struct {
   FixedSizeQueryType query_type;
   select (FixedSizeQuery.query_type) {
-    by_batch_id: BatchID batch_id;
-    current_batch: Empty;
+    case by_batch_id: BatchID batch_id;
+    case current_batch: Empty;
   }
 } FixedSizeQuery;
 
