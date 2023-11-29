@@ -639,9 +639,19 @@ struct {
 struct {} Empty;
 ~~~
 
-DAP uses the 16-byte `ReportID` as the nonce parameter for the VDAF
-`shard` and `prep_init` methods (see {{!VDAF, Section 5}}). Thus for a VDAF to
-be compatible with DAP, it MUST specify a `NONCE_SIZE` of 16 bytes.
+DAP uses the 16-byte `ReportID` as the nonce parameter for the VDAF `shard` and
+`prep_init` methods (see {{!VDAF, Section 5}}). Additionally, DAP includes
+messages defined in the VDAF specification encoded as opaque byte strings within
+various DAP messages. Thus, for a VDAF to be compatible with DAP, it MUST
+specify a `NONCE_SIZE` of 16 bytes, and MUST specify encodings for the following
+VDAF types:
+
+* PublicShare
+* InputShare
+* AggParam
+* AggShare
+* PrepShare
+* PrepMessage
 
 ## Queries {#query}
 
@@ -982,6 +992,10 @@ The last input comprises the randomness consumed by the sharding algorithm. The
 sharding randomness is a random byte string of length specified by the VDAF. The
 Client MUST generate this using a cryptographically secure random number
 generator.
+
+The sharding algorithm will return two input shares. The first input share
+returned from the sharding algorithm is considered to be the Leader's input
+share, and the second input share is considered to be the Helper's input share.
 
 The Client then wraps each input share in the following structure:
 
