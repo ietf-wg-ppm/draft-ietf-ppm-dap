@@ -120,6 +120,20 @@ seen in the clear by any server.
 
 (\*) Indicates a change that breaks wire compatibility with the previous draft.
 
+09:
+
+- Fixed-size queries: make the maximum batch size optional.
+
+- Clarify requirements for compatible VDAFs.
+
+- Clarify rules around creating and abandoning aggregation jobs.
+
+- Recommend that all task parameters are visible to all parties.
+
+- Bump draft-irtf-cfrg-vdaf-07 to 08 {{!VDAF}}. (\*)
+
+- Bump version tag from "dap-07" to "dap-09". (\*)
+
 08:
 
 - Clarify requirements for initializing aggregation jobs.
