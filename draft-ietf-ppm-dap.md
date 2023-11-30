@@ -3565,7 +3565,48 @@ Index value:  No transformation needed.
 Initial contents: The types and descriptions in the table in {{errors}} above,
 with the Reference field set to point to this specification.
 
-# Acknowledgments
 
-The text in {{message-transport}} is based extensively on {{?RFC8555}}
+# Contributors
+{:numbered="false"}
+~~~
+    Josh Aas
+    ISRG
+    josh@abetterinternet.org
+
+    Junye Chen
+    Apple
+    junyec@apple.com
+
+    David Cook
+    ISRG
+    dcook@divviup.org
+
+    Charlie Harrison
+    Google
+    csharrison@chromium.org
+
+    Brandon Pitman
+    ISRG
+    bran@divviup.org
+
+    Peter Saint-Andre
+    stpeter@gmail.com
+
+    Shivan Sahib
+    Brave
+    shivankaulsahib@gmail.com
+
+    Phillipp Schoppmann
+    Google
+    schoppmann@google.com
+
+    Martin Thomson
+    Mozilla
+    mt@mozilla.com
+
+    Shan Wang
+    Apple
+    shan_wang@apple.com
+~~~
+
 --- back
