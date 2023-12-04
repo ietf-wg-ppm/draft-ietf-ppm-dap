@@ -28,6 +28,12 @@ author:
        email: chrispatton+ietf@gmail.com
 
  -
+       ins: B. Pitman
+       name: Brandon Pitman
+       organization: ISRG
+       email: bran@bran.land
+
+ -
        ins: E. Rescorla
        name: Eric Rescorla
        organization: Mozilla
