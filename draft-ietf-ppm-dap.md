@@ -3591,10 +3591,6 @@ with the Reference field set to point to this specification.
     Google
     csharrison@chromium.org
 
-    Brandon Pitman
-    ISRG
-    bran@divviup.org
-
     Peter Saint-Andre
     stpeter@gmail.com
 
