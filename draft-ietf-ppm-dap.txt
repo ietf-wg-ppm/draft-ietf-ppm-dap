@@ -5,12 +5,12 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 1 June 2024                                          Cloudflare
+Expires: 6 June 2024                                          Cloudflare
                                                              E. Rescorla
                                                                  Mozilla
                                                               C. A. Wood
                                                               Cloudflare
-                                                        29 November 2023
+                                                         4 December 2023
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -61,7 +61,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 1 June 2024.
+   This Internet-Draft will expire on 6 June 2024.
 
 Copyright Notice
 
@@ -152,10 +152,10 @@ Table of Contents
        8.2.2.  Upload Extension Registry
        8.2.3.  Prepare Error Registry
      8.3.  URN Sub-namespace for DAP (urn:ietf:params:ppm:dap)
-   9.  Acknowledgments
-   10. References
-     10.1.  Normative References
-     10.2.  Informative References
+   Contributors
+   References
+     Normative References
+     Informative References
    Authors' Addresses
 
 1.  Introduction
@@ -3576,13 +3576,50 @@ enc, payload = SealBase(pk, "dap-09 aggregate share" || server_role || 0x00,
    Section 3.2 above, with the Reference field set to point to this
    specification.
 
-9.  Acknowledgments
+Contributors
 
-   The text in Section 3 is based extensively on [RFC8555]
+       Josh Aas
+       ISRG
+       josh@abetterinternet.org
 
-10.  References
+       Junye Chen
+       Apple
+       junyec@apple.com
 
-10.1.  Normative References
+       David Cook
+       ISRG
+       dcook@divviup.org
+
+       Charlie Harrison
+       Google
+       csharrison@chromium.org
+
+       Brandon Pitman
+       ISRG
+       bran@divviup.org
+
+       Peter Saint-Andre
+       stpeter@gmail.com
+
+       Shivan Sahib
+       Brave
+       shivankaulsahib@gmail.com
+
+       Phillipp Schoppmann
+       Google
+       schoppmann@google.com
+
+       Martin Thomson
+       Mozilla
+       mt@mozilla.com
+
+       Shan Wang
+       Apple
+       shan_wang@apple.com
+
+References
+
+Normative References
 
    [HPKE]     Barnes, R., Bhargavan, K., Lipp, B., and C. Wood, "Hybrid
               Public Key Encryption", RFC 9180, DOI 10.17487/RFC9180,
@@ -3652,7 +3689,7 @@ enc, payload = SealBase(pk, "dap-09 aggregate share" || server_role || 0x00,
               November 2023, <https://datatracker.ietf.org/doc/html/
               draft-irtf-cfrg-vdaf-08>.
 
-10.2.  Informative References
+Informative References
 
    [BBCGGI19] Boneh, D., Boyle, E., Corrigan-Gibbs, H., Gilboa, N., and
               Y. Ishai, "Zero-Knowledge Proofs on Secret-Shared Data via
@@ -3683,11 +3720,6 @@ enc, payload = SealBase(pk, "dap-09 aggregate share" || server_role || 0x00,
               Key Derivation Function (HKDF)", RFC 5869,
               DOI 10.17487/RFC5869, May 2010,
               <https://www.rfc-editor.org/rfc/rfc5869>.
-
-   [RFC8555]  Barnes, R., Hoffman-Andrews, J., McCarney, D., and J.
-              Kasten, "Automatic Certificate Management Environment
-              (ACME)", RFC 8555, DOI 10.17487/RFC8555, March 2019,
-              <https://www.rfc-editor.org/rfc/rfc8555>.
 
    [Vad16]    Vadhan, S., "The Complexity of Differential Privacy", 9
               August 2016,
