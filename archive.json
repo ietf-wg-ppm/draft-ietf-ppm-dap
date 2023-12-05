@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2023-12-03T00:59:41.002384+00:00",
+  "timestamp": "2023-12-05T00:57:27.784619+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -63737,7 +63737,7 @@
       "labels": [],
       "body": "Previously, the Leader could assign the same batch to an arbitrary number of current-batch queries, which required the Collector to dedupe. Now, each batch is assigned to exactly one current-batch collection request.\r\n\r\nCloses https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/526.",
       "createdAt": "2023-11-27T23:12:27Z",
-      "updatedAt": "2023-12-01T02:11:03Z",
+      "updatedAt": "2023-12-04T18:44:24Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "67d23efe7e3ac293e118883bef20f8653200be56",
@@ -63879,6 +63879,26 @@
               "updatedAt": "2023-11-30T22:21:23Z"
             }
           ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5pF37q",
+          "commit": {
+            "abbreviatedOid": "b8a0eb3"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "In response to the earlier discussion on what happens if the collector loses collection job IDs: another solution besides requiring the collector to remember collection job IDs would be a leader endpoint `GET /tasks/{task-id}/collection_jobs` that would return a (paginated?) list of collection jobs for the task. I'm not sure if we want to go so far as to make this a MUST for implementations, but maybe it could go in `{{operational-capabilities}}`? Actually, discussion of collectors durably storing collection job IDs could go in \"Operational Considerations/Collector capabilities\".",
+          "createdAt": "2023-12-04T18:41:21Z",
+          "updatedAt": "2023-12-04T18:44:24Z",
+          "comments": [
+            {
+              "originalPosition": 5,
+              "body": "Should this be \"begun\" instead of \"began\"?\r\n\r\nMore substantialy: are we being sufficiently clear about what it means for a batch to have begun collection? I think that once the leader has successfully handled `PUT /tasks/{task-id}/collection_jobs/{collection-job-id}` (regardless of whether the collector ever saw the response), the batch has \"beg[u]n collection\", but I'm not sure if we say that. Maybe it'd be better to say \"a batch for which a collection job exists\", because I think that's easier to understand in terms of the relation between a batch and a collection job resource?",
+              "createdAt": "2023-12-04T18:41:22Z",
+              "updatedAt": "2023-12-04T18:44:24Z"
+            }
+          ]
         }
       ]
     },
@@ -63894,7 +63914,7 @@
       "labels": [],
       "body": "Mostly, I condense the information in the threat model section into the top-level security considerations section. I also moved a few sections around, eliminated a couple of no-longer-relevant sections, and gave the entire security considerations section a basic editorial pass.",
       "createdAt": "2023-11-29T02:16:04Z",
-      "updatedAt": "2023-12-01T18:34:09Z",
+      "updatedAt": "2023-12-04T18:53:17Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "9dd5fedd8653abde45e8cdcfbbbbc6779f41e611",
@@ -64197,6 +64217,19 @@
           "createdAt": "2023-12-01T18:15:51Z",
           "updatedAt": "2023-12-01T18:15:51Z",
           "comments": []
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5pF8ZG",
+          "commit": {
+            "abbreviatedOid": "b61a380"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2023-12-04T18:53:17Z",
+          "updatedAt": "2023-12-04T18:53:17Z",
+          "comments": []
         }
       ]
     },
@@ -64231,24 +64264,26 @@
       "id": "PR_kwDOFEJYQs5g1PO0",
       "title": "Add contributors section",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/535",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "cjpatton",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "",
       "createdAt": "2023-11-30T22:34:06Z",
-      "updatedAt": "2023-12-01T01:34:58Z",
+      "updatedAt": "2023-12-04T16:30:52Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "0ac3b865d8bb91371d3eb1807f6dbe2801a3e131",
       "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "headRefName": "cjpatton/next-dap-ack",
       "headRefOid": "60597c7e49cbe134690eadb2c13bb271bd0e1045",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "closedAt": "2023-12-04T16:30:52Z",
+      "mergedAt": "2023-12-04T16:30:52Z",
+      "mergedBy": "cjpatton",
+      "mergeCommit": {
+        "oid": "cb2c4baacedd0b89cb83c63b183fd5ea22ff833a"
+      },
       "comments": [],
       "reviews": [
         {
@@ -64262,6 +64297,144 @@
           "body": "",
           "createdAt": "2023-12-01T01:34:58Z",
           "updatedAt": "2023-12-01T01:34:58Z",
+          "comments": []
+        }
+      ]
+    },
+    {
+      "number": 536,
+      "id": "PR_kwDOFEJYQs5hE-Y3",
+      "title": "Add Brandon Pitman as a DAP author",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/536",
+      "state": "MERGED",
+      "author": "tgeoghegan",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Per consensus of the existing DAP authors and the PPM chairs, this commit adds Brandon Pitman as an author of the Distributed Aggregation Protocol.",
+      "createdAt": "2023-12-04T16:46:52Z",
+      "updatedAt": "2023-12-04T17:30:39Z",
+      "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "baseRefName": "main",
+      "baseRefOid": "cb2c4baacedd0b89cb83c63b183fd5ea22ff833a",
+      "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "headRefName": "timg/add-bran-author",
+      "headRefOid": "b678dafec1410423a89d472d3fc2617eb8852dcd",
+      "closedAt": "2023-12-04T16:47:29Z",
+      "mergedAt": "2023-12-04T16:47:29Z",
+      "mergedBy": "chris-wood",
+      "mergeCommit": {
+        "oid": "c0cfab7c566409283b20d8fb3316f93891ce4547"
+      },
+      "comments": [
+        {
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "body": "@branlwyd Would you please double check that I've put in your information correctly?",
+          "createdAt": "2023-12-04T16:47:15Z",
+          "updatedAt": "2023-12-04T16:47:15Z"
+        },
+        {
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Oops, Tim's comment crossed the air as I merged. ",
+          "createdAt": "2023-12-04T16:47:56Z",
+          "updatedAt": "2023-12-04T16:47:56Z"
+        },
+        {
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> Oops, Tim's comment crossed the air as I merged.\r\n\r\n\ud83e\udd37\ud83c\udffb We can make another change to correct errors.",
+          "createdAt": "2023-12-04T16:52:14Z",
+          "updatedAt": "2023-12-04T16:52:14Z"
+        },
+        {
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "body": "No worries, y'all got it right.",
+          "createdAt": "2023-12-04T16:54:59Z",
+          "updatedAt": "2023-12-04T16:54:59Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "We also need to remove him from the contributor's list.",
+          "createdAt": "2023-12-04T16:55:02Z",
+          "updatedAt": "2023-12-04T16:55:02Z"
+        },
+        {
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> We also need to remove him from the contributor's list.\r\n\r\nhttps://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/537",
+          "createdAt": "2023-12-04T17:30:39Z",
+          "updatedAt": "2023-12-04T17:30:39Z"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "PRR_kwDOFEJYQs5pFBUP",
+          "commit": {
+            "abbreviatedOid": "b678daf"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2023-12-04T16:47:25Z",
+          "updatedAt": "2023-12-04T16:47:25Z",
+          "comments": []
+        }
+      ]
+    },
+    {
+      "number": 537,
+      "id": "PR_kwDOFEJYQs5hFQAL",
+      "title": "Remove Brandon (now author) from contributors",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/537",
+      "state": "OPEN",
+      "author": "tgeoghegan",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Add them to CODEOWNERS, too, so they get tagged on PRs.",
+      "createdAt": "2023-12-04T17:30:31Z",
+      "updatedAt": "2023-12-04T17:43:40Z",
+      "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "baseRefName": "main",
+      "baseRefOid": "c0cfab7c566409283b20d8fb3316f93891ce4547",
+      "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "headRefName": "timg/remove-bran-contributor",
+      "headRefOid": "abd48fb2178376693b4d363478eaef5e19c4ba16",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOFEJYQs5pFY8q",
+          "commit": {
+            "abbreviatedOid": "17ef2de"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2023-12-04T17:35:03Z",
+          "updatedAt": "2023-12-04T17:35:03Z",
+          "comments": []
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5pFcuB",
+          "commit": {
+            "abbreviatedOid": "abd48fb"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2023-12-04T17:43:40Z",
+          "updatedAt": "2023-12-04T17:43:40Z",
           "comments": []
         }
       ]
