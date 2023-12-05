@@ -5,12 +5,12 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 2 June 2024                                          Cloudflare
+Expires: 7 June 2024                                          Cloudflare
                                                              E. Rescorla
                                                                  Mozilla
                                                               C. A. Wood
                                                               Cloudflare
-                                                        30 November 2023
+                                                         5 December 2023
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -61,7 +61,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 2 June 2024.
+   This Internet-Draft will expire on 7 June 2024.
 
 Copyright Notice
 
@@ -176,7 +176,7 @@ Table of Contents
 
    09:
 
-   *  Fixed-size queries: make the maximum bath size optional.
+   *  Fixed-size queries: make the maximum batch size optional.
 
    *  Clarify requirements for compatible VDAFs.
 
