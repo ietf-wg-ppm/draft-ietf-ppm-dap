@@ -1452,198 +1452,219 @@ seen in the clear by any server.<a href="#section-1-1" class="pilcrow">¶</a></p
 <a href="#section-1.1" class="section-number selfRef">1.1. </a><a href="#name-change-log" class="section-name selfRef">Change Log</a>
         </h3>
 <p id="section-1.1-1">(*) Indicates a change that breaks wire compatibility with the previous draft.<a href="#section-1.1-1" class="pilcrow">¶</a></p>
-<p id="section-1.1-2">08:<a href="#section-1.1-2" class="pilcrow">¶</a></p>
+<p id="section-1.1-2">09:<a href="#section-1.1-2" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-1.1-3.1">
-            <p id="section-1.1-3.1.1">Clarify requirements for initializing aggregation jobs.<a href="#section-1.1-3.1.1" class="pilcrow">¶</a></p>
+            <p id="section-1.1-3.1.1">Fixed-size queries: make the maximum batch size optional.<a href="#section-1.1-3.1.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-1.1-3.2">
-            <p id="section-1.1-3.2.1">Add more considerations for Sybil attacks.<a href="#section-1.1-3.2.1" class="pilcrow">¶</a></p>
+            <p id="section-1.1-3.2.1">Clarify requirements for compatible VDAFs.<a href="#section-1.1-3.2.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-1.1-3.3">
-            <p id="section-1.1-3.3.1">Expand guidance around choosing the VDAF verification key.<a href="#section-1.1-3.3.1" class="pilcrow">¶</a></p>
+            <p id="section-1.1-3.3.1">Clarify rules around creating and abandoning aggregation jobs.<a href="#section-1.1-3.3.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-1.1-3.4">
-            <p id="section-1.1-3.4.1">Add an error type registry for the aggregation sub-protocol.<a href="#section-1.1-3.4.1" class="pilcrow">¶</a></p>
+            <p id="section-1.1-3.4.1">Recommend that all task parameters are visible to all parties.<a href="#section-1.1-3.4.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-1.1-3.5">
+            <p id="section-1.1-3.5.1">Bump draft-irtf-cfrg-vdaf-07 to 08 <span>[<a href="#VDAF" class="cite xref">VDAF</a>]</span>. (*)<a href="#section-1.1-3.5.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-1.1-3.6">
+            <p id="section-1.1-3.6.1">Bump version tag from "dap-07" to "dap-09". (*)<a href="#section-1.1-3.6.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
-<p id="section-1.1-4">07:<a href="#section-1.1-4" class="pilcrow">¶</a></p>
+<p id="section-1.1-4">08:<a href="#section-1.1-4" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-1.1-5.1">
-            <p id="section-1.1-5.1.1">Bump version tag from "dap-06" to "dap-07". This is a bug-fix revision: the
-editors overlooked some changes we intended to pick up in the previous
-version. (*)<a href="#section-1.1-5.1.1" class="pilcrow">¶</a></p>
+            <p id="section-1.1-5.1.1">Clarify requirements for initializing aggregation jobs.<a href="#section-1.1-5.1.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-1.1-5.2">
+            <p id="section-1.1-5.2.1">Add more considerations for Sybil attacks.<a href="#section-1.1-5.2.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-1.1-5.3">
+            <p id="section-1.1-5.3.1">Expand guidance around choosing the VDAF verification key.<a href="#section-1.1-5.3.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-1.1-5.4">
+            <p id="section-1.1-5.4.1">Add an error type registry for the aggregation sub-protocol.<a href="#section-1.1-5.4.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
-<p id="section-1.1-6">06:<a href="#section-1.1-6" class="pilcrow">¶</a></p>
+<p id="section-1.1-6">07:<a href="#section-1.1-6" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-1.1-7.1">
-            <p id="section-1.1-7.1.1">Bump draft-irtf-cfrg-vdaf-06 to 07 <span>[<a href="#VDAF" class="cite xref">VDAF</a>]</span>. (*)<a href="#section-1.1-7.1.1" class="pilcrow">¶</a></p>
-</li>
-          <li class="normal" id="section-1.1-7.2">
-            <p id="section-1.1-7.2.1">Overhaul security considerations (#488).<a href="#section-1.1-7.2.1" class="pilcrow">¶</a></p>
-</li>
-          <li class="normal" id="section-1.1-7.3">
-            <p id="section-1.1-7.3.1">Adopt revised ping-pong interface in draft-irtf-cfrg-vdaf-07 (#494).<a href="#section-1.1-7.3.1" class="pilcrow">¶</a></p>
-</li>
-          <li class="normal" id="section-1.1-7.4">
-            <p id="section-1.1-7.4.1">Add aggregation parameter to <code>AggregateShareAad</code> (#498). (*)<a href="#section-1.1-7.4.1" class="pilcrow">¶</a></p>
-</li>
-          <li class="normal" id="section-1.1-7.5">
-            <p id="section-1.1-7.5.1">Bump version tag from "dap-05" to "dap-06". (*)<a href="#section-1.1-7.5.1" class="pilcrow">¶</a></p>
+            <p id="section-1.1-7.1.1">Bump version tag from "dap-06" to "dap-07". This is a bug-fix revision: the
+editors overlooked some changes we intended to pick up in the previous
+version. (*)<a href="#section-1.1-7.1.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
-<p id="section-1.1-8">05:<a href="#section-1.1-8" class="pilcrow">¶</a></p>
+<p id="section-1.1-8">06:<a href="#section-1.1-8" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-1.1-9.1">
-            <p id="section-1.1-9.1.1">Bump draft-irtf-cfrg-vdaf-05 to 06 <span>[<a href="#VDAF" class="cite xref">VDAF</a>]</span>. (*)<a href="#section-1.1-9.1.1" class="pilcrow">¶</a></p>
+            <p id="section-1.1-9.1.1">Bump draft-irtf-cfrg-vdaf-06 to 07 <span>[<a href="#VDAF" class="cite xref">VDAF</a>]</span>. (*)<a href="#section-1.1-9.1.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-1.1-9.2">
-            <p id="section-1.1-9.2.1">Specialize the protocol for two-party VDAFs (i.e., one Leader and One
-Helper). Accordingly, update the aggregation sub-protocol to use the new
-"ping-pong" interface for two-party VDAFs introduced in
-draft-irtf-cfrg-vdaf-06. (*)<a href="#section-1.1-9.2.1" class="pilcrow">¶</a></p>
+            <p id="section-1.1-9.2.1">Overhaul security considerations (#488).<a href="#section-1.1-9.2.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-1.1-9.3">
-            <p id="section-1.1-9.3.1">Allow the following actions to be safely retried: aggregation job creation,
-collection job creation, and requesting the Helper's aggregate share.<a href="#section-1.1-9.3.1" class="pilcrow">¶</a></p>
+            <p id="section-1.1-9.3.1">Adopt revised ping-pong interface in draft-irtf-cfrg-vdaf-07 (#494).<a href="#section-1.1-9.3.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-1.1-9.4">
-            <p id="section-1.1-9.4.1">Merge error types that are related.<a href="#section-1.1-9.4.1" class="pilcrow">¶</a></p>
+            <p id="section-1.1-9.4.1">Add aggregation parameter to <code>AggregateShareAad</code> (#498). (*)<a href="#section-1.1-9.4.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-1.1-9.5">
-            <p id="section-1.1-9.5.1">Drop recommendation to generate IDs using a cryptographically secure
-pseudorandom number generator wherever pseudorandomness is not required.<a href="#section-1.1-9.5.1" class="pilcrow">¶</a></p>
-</li>
-          <li class="normal" id="section-1.1-9.6">
-            <p id="section-1.1-9.6.1">Require HPKE config identifiers to be unique.<a href="#section-1.1-9.6.1" class="pilcrow">¶</a></p>
-</li>
-          <li class="normal" id="section-1.1-9.7">
-            <p id="section-1.1-9.7.1">Bump version tag from "dap-04" to "dap-05". (*)<a href="#section-1.1-9.7.1" class="pilcrow">¶</a></p>
+            <p id="section-1.1-9.5.1">Bump version tag from "dap-05" to "dap-06". (*)<a href="#section-1.1-9.5.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
-<p id="section-1.1-10">04:<a href="#section-1.1-10" class="pilcrow">¶</a></p>
+<p id="section-1.1-10">05:<a href="#section-1.1-10" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-1.1-11.1">
-            <p id="section-1.1-11.1.1">Introduce resource oriented HTTP API. (#278, #398, #400) (*)<a href="#section-1.1-11.1.1" class="pilcrow">¶</a></p>
+            <p id="section-1.1-11.1.1">Bump draft-irtf-cfrg-vdaf-05 to 06 <span>[<a href="#VDAF" class="cite xref">VDAF</a>]</span>. (*)<a href="#section-1.1-11.1.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-1.1-11.2">
-            <p id="section-1.1-11.2.1">Clarify security requirements for choosing VDAF verify key. (#407, #411)<a href="#section-1.1-11.2.1" class="pilcrow">¶</a></p>
+            <p id="section-1.1-11.2.1">Specialize the protocol for two-party VDAFs (i.e., one Leader and One
+Helper). Accordingly, update the aggregation sub-protocol to use the new
+"ping-pong" interface for two-party VDAFs introduced in
+draft-irtf-cfrg-vdaf-06. (*)<a href="#section-1.1-11.2.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-1.1-11.3">
-            <p id="section-1.1-11.3.1">Require Clients to provide nonce and random input when sharding inputs. (#394,
-#425) (*)<a href="#section-1.1-11.3.1" class="pilcrow">¶</a></p>
+            <p id="section-1.1-11.3.1">Allow the following actions to be safely retried: aggregation job creation,
+collection job creation, and requesting the Helper's aggregate share.<a href="#section-1.1-11.3.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-1.1-11.4">
-            <p id="section-1.1-11.4.1">Add interval of time spanned by constituent reports to Collection message.
-(#397, #403) (*)<a href="#section-1.1-11.4.1" class="pilcrow">¶</a></p>
+            <p id="section-1.1-11.4.1">Merge error types that are related.<a href="#section-1.1-11.4.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-1.1-11.5">
-            <p id="section-1.1-11.5.1">Update share validation requirements based on latest security analysis. (#408,
-#410)<a href="#section-1.1-11.5.1" class="pilcrow">¶</a></p>
+            <p id="section-1.1-11.5.1">Drop recommendation to generate IDs using a cryptographically secure
+pseudorandom number generator wherever pseudorandomness is not required.<a href="#section-1.1-11.5.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-1.1-11.6">
-            <p id="section-1.1-11.6.1">Bump draft-irtf-cfrg-vdaf-03 to 05 <span>[<a href="#VDAF" class="cite xref">VDAF</a>]</span>. (#429) (*)<a href="#section-1.1-11.6.1" class="pilcrow">¶</a></p>
+            <p id="section-1.1-11.6.1">Require HPKE config identifiers to be unique.<a href="#section-1.1-11.6.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-1.1-11.7">
-            <p id="section-1.1-11.7.1">Bump version tag from "dap-03" to "dap-04". (#424) (*)<a href="#section-1.1-11.7.1" class="pilcrow">¶</a></p>
+            <p id="section-1.1-11.7.1">Bump version tag from "dap-04" to "dap-05". (*)<a href="#section-1.1-11.7.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
-<p id="section-1.1-12">03:<a href="#section-1.1-12" class="pilcrow">¶</a></p>
+<p id="section-1.1-12">04:<a href="#section-1.1-12" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-1.1-13.1">
-            <p id="section-1.1-13.1.1">Enrich the "fixed_size" query type to allow the Collector to request a
-recently aggregated batch without knowing the batch ID in advance. ID
-discovery was previously done out-of-band. (*)<a href="#section-1.1-13.1.1" class="pilcrow">¶</a></p>
+            <p id="section-1.1-13.1.1">Introduce resource oriented HTTP API. (#278, #398, #400) (*)<a href="#section-1.1-13.1.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-1.1-13.2">
-            <p id="section-1.1-13.2.1">Allow Aggregators to advertise multiple HPKE configurations. (*)<a href="#section-1.1-13.2.1" class="pilcrow">¶</a></p>
+            <p id="section-1.1-13.2.1">Clarify security requirements for choosing VDAF verify key. (#407, #411)<a href="#section-1.1-13.2.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-1.1-13.3">
-            <p id="section-1.1-13.3.1">Clarify requirements for enforcing anti-replay. Namely, while it is sufficient
-to detect repeated report IDs, it is also enough to detect repeated IDs and
-timestamps.<a href="#section-1.1-13.3.1" class="pilcrow">¶</a></p>
+            <p id="section-1.1-13.3.1">Require Clients to provide nonce and random input when sharding inputs. (#394,
+#425) (*)<a href="#section-1.1-13.3.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-1.1-13.4">
-            <p id="section-1.1-13.4.1">Remove the extensions from the Report and add extensions to the plaintext
-payload of each ReportShare. (*)<a href="#section-1.1-13.4.1" class="pilcrow">¶</a></p>
+            <p id="section-1.1-13.4.1">Add interval of time spanned by constituent reports to Collection message.
+(#397, #403) (*)<a href="#section-1.1-13.4.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-1.1-13.5">
-            <p id="section-1.1-13.5.1">Clarify that extensions are mandatory to implement: If an Aggregator does not
-recognize a ReportShare's extension, it must reject it.<a href="#section-1.1-13.5.1" class="pilcrow">¶</a></p>
+            <p id="section-1.1-13.5.1">Update share validation requirements based on latest security analysis. (#408,
+#410)<a href="#section-1.1-13.5.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-1.1-13.6">
-            <p id="section-1.1-13.6.1">Clarify that Aggregators must reject any ReportShare with repeated extension
-types.<a href="#section-1.1-13.6.1" class="pilcrow">¶</a></p>
+            <p id="section-1.1-13.6.1">Bump draft-irtf-cfrg-vdaf-03 to 05 <span>[<a href="#VDAF" class="cite xref">VDAF</a>]</span>. (#429) (*)<a href="#section-1.1-13.6.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-1.1-13.7">
-            <p id="section-1.1-13.7.1">Specify explicitly how to serialize the Additional Authenticated Data (AAD)
-string for HPKE encryption. This clarifies an ambiguity in the previous
-version. (*)<a href="#section-1.1-13.7.1" class="pilcrow">¶</a></p>
-</li>
-          <li class="normal" id="section-1.1-13.8">
-            <p id="section-1.1-13.8.1">Change the length tag for the aggregation parameter to 32 bits. (*)<a href="#section-1.1-13.8.1" class="pilcrow">¶</a></p>
-</li>
-          <li class="normal" id="section-1.1-13.9">
-            <p id="section-1.1-13.9.1">Use the same prefix ("application") for all media types. (*)<a href="#section-1.1-13.9.1" class="pilcrow">¶</a></p>
-</li>
-          <li class="normal" id="section-1.1-13.10">
-            <p id="section-1.1-13.10.1">Make input share validation more explicit, including adding a new
-ReportShareError variant, "report_too_early", for handling reports too far in
-the future. (*)<a href="#section-1.1-13.10.1" class="pilcrow">¶</a></p>
-</li>
-          <li class="normal" id="section-1.1-13.11">
-            <p id="section-1.1-13.11.1">Improve alignment of problem details usage with <span>[<a href="#RFC7807" class="cite xref">RFC7807</a>]</span>. Replace
-"reportTooLate" problem document type with "repjortRejected" and clarify
-handling of rejected reports in the upload sub-protocol. (*)<a href="#section-1.1-13.11.1" class="pilcrow">¶</a></p>
-</li>
-          <li class="normal" id="section-1.1-13.12">
-            <p id="section-1.1-13.12.1">Bump version tag from "dap-02" to "dap-03". (*)<a href="#section-1.1-13.12.1" class="pilcrow">¶</a></p>
+            <p id="section-1.1-13.7.1">Bump version tag from "dap-03" to "dap-04". (#424) (*)<a href="#section-1.1-13.7.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
-<p id="section-1.1-14">02:<a href="#section-1.1-14" class="pilcrow">¶</a></p>
+<p id="section-1.1-14">03:<a href="#section-1.1-14" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-1.1-15.1">
-            <p id="section-1.1-15.1.1">Define a new task configuration parameter, called the "query type", that
+            <p id="section-1.1-15.1.1">Enrich the "fixed_size" query type to allow the Collector to request a
+recently aggregated batch without knowing the batch ID in advance. ID
+discovery was previously done out-of-band. (*)<a href="#section-1.1-15.1.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-1.1-15.2">
+            <p id="section-1.1-15.2.1">Allow Aggregators to advertise multiple HPKE configurations. (*)<a href="#section-1.1-15.2.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-1.1-15.3">
+            <p id="section-1.1-15.3.1">Clarify requirements for enforcing anti-replay. Namely, while it is sufficient
+to detect repeated report IDs, it is also enough to detect repeated IDs and
+timestamps.<a href="#section-1.1-15.3.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-1.1-15.4">
+            <p id="section-1.1-15.4.1">Remove the extensions from the Report and add extensions to the plaintext
+payload of each ReportShare. (*)<a href="#section-1.1-15.4.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-1.1-15.5">
+            <p id="section-1.1-15.5.1">Clarify that extensions are mandatory to implement: If an Aggregator does not
+recognize a ReportShare's extension, it must reject it.<a href="#section-1.1-15.5.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-1.1-15.6">
+            <p id="section-1.1-15.6.1">Clarify that Aggregators must reject any ReportShare with repeated extension
+types.<a href="#section-1.1-15.6.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-1.1-15.7">
+            <p id="section-1.1-15.7.1">Specify explicitly how to serialize the Additional Authenticated Data (AAD)
+string for HPKE encryption. This clarifies an ambiguity in the previous
+version. (*)<a href="#section-1.1-15.7.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-1.1-15.8">
+            <p id="section-1.1-15.8.1">Change the length tag for the aggregation parameter to 32 bits. (*)<a href="#section-1.1-15.8.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-1.1-15.9">
+            <p id="section-1.1-15.9.1">Use the same prefix ("application") for all media types. (*)<a href="#section-1.1-15.9.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-1.1-15.10">
+            <p id="section-1.1-15.10.1">Make input share validation more explicit, including adding a new
+ReportShareError variant, "report_too_early", for handling reports too far in
+the future. (*)<a href="#section-1.1-15.10.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-1.1-15.11">
+            <p id="section-1.1-15.11.1">Improve alignment of problem details usage with <span>[<a href="#RFC7807" class="cite xref">RFC7807</a>]</span>. Replace
+"reportTooLate" problem document type with "repjortRejected" and clarify
+handling of rejected reports in the upload sub-protocol. (*)<a href="#section-1.1-15.11.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-1.1-15.12">
+            <p id="section-1.1-15.12.1">Bump version tag from "dap-02" to "dap-03". (*)<a href="#section-1.1-15.12.1" class="pilcrow">¶</a></p>
+</li>
+        </ul>
+<p id="section-1.1-16">02:<a href="#section-1.1-16" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-1.1-17.1">
+            <p id="section-1.1-17.1.1">Define a new task configuration parameter, called the "query type", that
 allows tasks to partition reports into batches in different ways. In the
 current draft, the Collector specifies a "query", which the Aggregators use to
 guide selection of the batch. Two query types are defined: the "time_interval"
 type captures the semantics of draft 01; and the "fixed_size" type allows the
 Leader to partition the reports arbitrarily, subject to the constraint that
-each batch is roughly the same size. (*)<a href="#section-1.1-15.1.1" class="pilcrow">¶</a></p>
+each batch is roughly the same size. (*)<a href="#section-1.1-17.1.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-1.1-15.2">
-            <p id="section-1.1-15.2.1">Define a new task configuration parameter, called the task "expiration", that
-defines the lifetime of a given task.<a href="#section-1.1-15.2.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-1.1-17.2">
+            <p id="section-1.1-17.2.1">Define a new task configuration parameter, called the task "expiration", that
+defines the lifetime of a given task.<a href="#section-1.1-17.2.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-1.1-15.3">
-            <p id="section-1.1-15.3.1">Specify requirements for HTTP request authentication rather than a concrete
+          <li class="normal" id="section-1.1-17.3">
+            <p id="section-1.1-17.3.1">Specify requirements for HTTP request authentication rather than a concrete
 scheme. (Draft 01 required the use of the <code>DAP-Auth-Token</code> header; this is now
-optional.)<a href="#section-1.1-15.3.1" class="pilcrow">¶</a></p>
+optional.)<a href="#section-1.1-17.3.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-1.1-15.4">
-            <p id="section-1.1-15.4.1">Make "task_id" an optional parameter of the "/hpke_config" endpoint.<a href="#section-1.1-15.4.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-1.1-17.4">
+            <p id="section-1.1-17.4.1">Make "task_id" an optional parameter of the "/hpke_config" endpoint.<a href="#section-1.1-17.4.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-1.1-15.5">
-            <p id="section-1.1-15.5.1">Add report count to CollectResp message. (*)<a href="#section-1.1-15.5.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-1.1-17.5">
+            <p id="section-1.1-17.5.1">Add report count to CollectResp message. (*)<a href="#section-1.1-17.5.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-1.1-15.6">
-            <p id="section-1.1-15.6.1">Increase message payload sizes to accommodate VDAFs with input and aggregate
-shares larger than 2^16-1 bytes. (*)<a href="#section-1.1-15.6.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-1.1-17.6">
+            <p id="section-1.1-17.6.1">Increase message payload sizes to accommodate VDAFs with input and aggregate
+shares larger than 2^16-1 bytes. (*)<a href="#section-1.1-17.6.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-1.1-15.7">
-            <p id="section-1.1-15.7.1">Bump draft-irtf-cfrg-vdaf-01 to 03 <span>[<a href="#VDAF" class="cite xref">VDAF</a>]</span>. (*)<a href="#section-1.1-15.7.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-1.1-17.7">
+            <p id="section-1.1-17.7.1">Bump draft-irtf-cfrg-vdaf-01 to 03 <span>[<a href="#VDAF" class="cite xref">VDAF</a>]</span>. (*)<a href="#section-1.1-17.7.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-1.1-15.8">
-            <p id="section-1.1-15.8.1">Bump version tag from "dap-01" to "dap-02". (*)<a href="#section-1.1-15.8.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-1.1-17.8">
+            <p id="section-1.1-17.8.1">Bump version tag from "dap-01" to "dap-02". (*)<a href="#section-1.1-17.8.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-1.1-15.9">
-            <p id="section-1.1-15.9.1">Rename the report nonce to the "report ID" and move it to the top of the
-structure. (*)<a href="#section-1.1-15.9.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-1.1-17.9">
+            <p id="section-1.1-17.9.1">Rename the report nonce to the "report ID" and move it to the top of the
+structure. (*)<a href="#section-1.1-17.9.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-1.1-15.10">
-            <p id="section-1.1-15.10.1">Clarify when it is safe for an Aggregator to evict various data artifacts from
-long-term storage.<a href="#section-1.1-15.10.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-1.1-17.10">
+            <p id="section-1.1-17.10.1">Clarify when it is safe for an Aggregator to evict various data artifacts from
+long-term storage.<a href="#section-1.1-17.10.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 </section>
