@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2023-12-05T00:57:27.784619+00:00",
+  "timestamp": "2023-12-07T00:56:49.423589+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -63737,18 +63737,26 @@
       "labels": [],
       "body": "Previously, the Leader could assign the same batch to an arbitrary number of current-batch queries, which required the Collector to dedupe. Now, each batch is assigned to exactly one current-batch collection request.\r\n\r\nCloses https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/526.",
       "createdAt": "2023-11-27T23:12:27Z",
-      "updatedAt": "2023-12-04T18:44:24Z",
+      "updatedAt": "2023-12-06T16:45:58Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "67d23efe7e3ac293e118883bef20f8653200be56",
       "headRepository": "branlwyd/draft-ietf-ppm-dap",
       "headRefName": "bran/current-batch",
-      "headRefOid": "b8a0eb399e667b3d76c3f73f74625721f290f398",
+      "headRefOid": "ad2a56487656251c3a9d15a7137b49f7977cfefa",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
       "mergeCommit": null,
-      "comments": [],
+      "comments": [
+        {
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> IMO: this idea is nice in that it potentially removes statefulness in Collector implementations, at the cost of adding a fair bit of complexity (& request traffic) to Aggregator implementations. One downside is that it's a lot of additional API surface to specify, and unless it's a MUST a generic DAP Collector can't make use of it & therefore must still be stateful.\r\n\r\nYeah, I agree that specifying such an endpoint would be complicated, and I'm not sure DAP wants to do it, which is why I think gesturing at it in operational considerations would suffice. In any case we don't need to solve that here.\r\n\r\n",
+          "createdAt": "2023-12-06T16:45:36Z",
+          "updatedAt": "2023-12-06T16:45:36Z"
+        }
+      ],
       "reviews": [
         {
           "id": "PRR_kwDOFEJYQs5ogJVa",
@@ -63899,6 +63907,59 @@
               "updatedAt": "2023-12-04T18:44:24Z"
             }
           ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5pRlnn",
+          "commit": {
+            "abbreviatedOid": "b8a0eb3"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "> In response to the earlier discussion on what happens if the collector loses collection job IDs: another solution besides requiring the collector to remember collection job IDs would be a leader endpoint `GET /tasks/{task-id}/collection_jobs` that would return a (paginated?) list of collection jobs for the task. I'm not sure if we want to go so far as to make this a MUST for implementations, but maybe it could go in `{{operational-capabilities}}`?\r\n\r\nI think this API is \"a list of _uncollected_ collection jobs which are ready for collection\", right? Otherwise we end up with unbounded growth in the result set (up to GC).\r\n\r\nIMO: this idea is nice in that it potentially removes statefulness in Collector implementations, at the cost of adding a fair bit of complexity (& request traffic) to Aggregator implementations. One downside is that it's a lot of additional API surface to specify, and unless it's a MUST a generic DAP Collector can't make use of it & therefore must still be stateful.\r\n\r\nIf we wanted to permit stateless Collector implementations, this would be one way to do so. OTOH, it's plausible that Collector implementations will need to store per-collection-job state anyway for implementation-specific reasons. (For example, even with the proposed list-of-collection-jobs API, if there are several independent Collector processes running they will need some form of coordination to avoid repeatedly collecting the same batch; without coordination, there is a race condition s.t. two different Collector processes list collection jobs & decide to collect the same job.)\r\n\r\nBut ultimately, I think this idea is orthogonal to this PR. Let's either file an issue or just write a separate PR for this, if we think it's a good idea?",
+          "createdAt": "2023-12-05T22:23:30Z",
+          "updatedAt": "2023-12-05T22:43:03Z",
+          "comments": [
+            {
+              "originalPosition": 5,
+              "body": "I think you're right that it's \"begun\" rather than \"began\".\r\n\r\nI updated the text to clarify that the selected batch \"has not yet been associated with a collection job\", which I think clarifies any ambiguity. I think that an aggregator implementation can choose when to associate a given `current-batch` collection request to a specific batch -- e.g. it might immediately do so as part of the `PUT` request handling, or it might choose to do so later -- but this text handles both of those choices.\r\n\r\nOn a side note: I think it's worth calling out that this leaves open whether we need to care about aggregation parameters here. That is, should the semantics be \"the aggregator must select a batch which has not yet begun collection _for any aggregation parameter_\" (which are the semantics we have as-written) or \"not yet begun collection for the aggregation parameter in the collection request\". IMO: I'm OK with going with any aggregation parameter, as this works just fine for all existing uses of DAP & the other choice is harder to implement and harder to understand.",
+              "createdAt": "2023-12-05T22:23:30Z",
+              "updatedAt": "2023-12-05T22:34:31Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5pYwh0",
+          "commit": {
+            "abbreviatedOid": "b8a0eb3"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2023-12-06T16:44:13Z",
+          "updatedAt": "2023-12-06T16:44:13Z",
+          "comments": [
+            {
+              "originalPosition": 5,
+              "body": "I think it's got to be \"for any aggregation parameter\", because otherwise that allows a leader to return the same batch forever.",
+              "createdAt": "2023-12-06T16:44:13Z",
+              "updatedAt": "2023-12-06T16:44:13Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5pYxW-",
+          "commit": {
+            "abbreviatedOid": "ad2a564"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2023-12-06T16:45:58Z",
+          "updatedAt": "2023-12-06T16:45:58Z",
+          "comments": []
         }
       ]
     },
@@ -64238,26 +64299,62 @@
       "id": "PR_kwDOFEJYQs5g1Hq-",
       "title": "Update Change Log for draft09",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/534",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "cjpatton",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "cc/ @branlwyd for review\r\n* Please update the change log (in a new PR) after merging:\r\n   * https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/532\r\n   * https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/533 (note any non-editorial changes, i.e., any security considerations that have been removed, modified, or added)\r\n\r\ncc/ @wangshan for review",
       "createdAt": "2023-11-30T22:05:11Z",
-      "updatedAt": "2023-11-30T22:05:21Z",
+      "updatedAt": "2023-12-05T17:12:44Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
-      "baseRefOid": "0ac3b865d8bb91371d3eb1807f6dbe2801a3e131",
+      "baseRefOid": "2225230fcbf662280031e6d527d9c720814b1ba8",
       "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "headRefName": "cjpatton/next-dap-cl",
-      "headRefOid": "c4cb669dfddf2bbd660bbfd9b87b709da187a903",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "headRefOid": "00a6bde0ad41e4208814928648ce31c769e9593f",
+      "closedAt": "2023-12-05T17:12:43Z",
+      "mergedAt": "2023-12-05T17:12:43Z",
+      "mergedBy": "cjpatton",
+      "mergeCommit": {
+        "oid": "b015359e95daaa79f7a527876d6b0fb74e873ecd"
+      },
       "comments": [],
-      "reviews": []
+      "reviews": [
+        {
+          "id": "PRR_kwDOFEJYQs5pPcph",
+          "commit": {
+            "abbreviatedOid": "c4cb669"
+          },
+          "author": "wangshan",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2023-12-05T16:58:12Z",
+          "updatedAt": "2023-12-05T16:58:12Z",
+          "comments": []
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5pPjZG",
+          "commit": {
+            "abbreviatedOid": "c4cb669"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2023-12-05T17:10:05Z",
+          "updatedAt": "2023-12-05T17:10:23Z",
+          "comments": [
+            {
+              "originalPosition": 6,
+              "body": "```suggestion\r\n- Fixed-size queries: make the maximum batch size optional.\r\n```",
+              "createdAt": "2023-12-05T17:10:06Z",
+              "updatedAt": "2023-12-05T17:10:23Z"
+            }
+          ]
+        }
+      ]
     },
     {
       "number": 535,
@@ -64391,24 +64488,26 @@
       "id": "PR_kwDOFEJYQs5hFQAL",
       "title": "Remove Brandon (now author) from contributors",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/537",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "tgeoghegan",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "Add them to CODEOWNERS, too, so they get tagged on PRs.",
       "createdAt": "2023-12-04T17:30:31Z",
-      "updatedAt": "2023-12-04T17:43:40Z",
+      "updatedAt": "2023-12-05T01:20:34Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "c0cfab7c566409283b20d8fb3316f93891ce4547",
       "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "headRefName": "timg/remove-bran-contributor",
       "headRefOid": "abd48fb2178376693b4d363478eaef5e19c4ba16",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "closedAt": "2023-12-05T01:20:34Z",
+      "mergedAt": "2023-12-05T01:20:34Z",
+      "mergedBy": "tgeoghegan",
+      "mergeCommit": {
+        "oid": "2225230fcbf662280031e6d527d9c720814b1ba8"
+      },
       "comments": [],
       "reviews": [
         {
