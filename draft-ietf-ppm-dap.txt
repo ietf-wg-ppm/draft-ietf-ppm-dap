@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 7 June 2024                                          Cloudflare
+Expires: 17 June 2024                                         Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                                  Mozilla
                                                               C. A. Wood
                                                               Cloudflare
-                                                         5 December 2023
+                                                        15 December 2023
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -63,7 +63,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 7 June 2024.
+   This Internet-Draft will expire on 17 June 2024.
 
 Copyright Notice
 
@@ -899,8 +899,8 @@ struct {} Empty;
    specifying the batch ID of interest (see Section 4.1).  The Collector
    may not know which batch ID it is interested in; in this case, it can
    also issue a query of type current_batch, which allows the Leader to
-   select a recent batch to aggregate.  The Leader SHOULD select a batch
-   which has not yet began collection.
+   select a recent batch to aggregate.  The Leader MUST select a batch
+   that has not yet been associated with a collection job.
 
    In addition to the minimum batch size common to all query types, the
    configuration may include a parameter max_batch_size that determines
@@ -2210,22 +2210,6 @@ struct {} Empty;
    The Collector can send an HTTP DELETE request to the collection job,
    which indicates to the Leader that it can abandon the collection job
    and discard all state related to it.
-
-4.6.1.1.  A Note on Idempotence
-
-   The reason a POST is used to poll the state of a collection job
-   instead of a GET is because of the fixed-size query mode (see
-   Section 4.1.2).  Collectors may make a query against the current
-   batch, and it is the Leader's responsibility to keep track of what
-   batch is current for some task.  Polling a collection job is the only
-   point at which it is safe for the Leader to change its set of current
-   batches, since it constitutes acknowledgement on the Collector's part
-   that it received the response to some previous PUT request to the
-   collection jobs resource.
-
-   This means that polling a collection job can have the side effect of
-   changing the set of current batches in the Leader, and thus using a
-   GET is inappropriate.
 
 4.6.2.  Obtaining Aggregate Shares
 
