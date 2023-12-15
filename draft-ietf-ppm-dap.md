@@ -124,11 +124,15 @@ seen in the clear by any server.
 
 - Fixed-size queries: make the maximum batch size optional.
 
+- Fixed-size queries: require current-batch queries to return distinct batches.
+
 - Clarify requirements for compatible VDAFs.
 
 - Clarify rules around creating and abandoning aggregation jobs.
 
 - Recommend that all task parameters are visible to all parties.
+
+- Revise security considerations section.
 
 - Bump draft-irtf-cfrg-vdaf-07 to 08 {{!VDAF}}. (\*)
 
