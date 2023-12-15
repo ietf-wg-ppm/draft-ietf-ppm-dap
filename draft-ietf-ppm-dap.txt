@@ -110,33 +110,25 @@ Table of Contents
        4.6.4.  Aggregate Share Encryption
        4.6.5.  Batch Validation
    5.  Operational Considerations
-     5.1.  Protocol participant capabilities
-       5.1.1.  Client capabilities
-       5.1.2.  Aggregator capabilities
-       5.1.3.  Collector capabilities
-     5.2.  Data resolution limitations
-     5.3.  Aggregation utility and soft batch deadlines
-     5.4.  Protocol-specific optimizations
-       5.4.1.  Reducing storage requirements
+     5.1.  Protocol Participant Capabilities
+       5.1.1.  Client Capabilities
+       5.1.2.  Aggregator Capabilities
+       5.1.3.  Collector Capabilities
+     5.2.  VDAFs and Compute Requirements
+     5.3.  Aggregation Utility and Soft Batch Deadlines
+     5.4.  Protocol-specific Optimizations
+       5.4.1.  Reducing Storage Requirements
    6.  Compliance Requirements
    7.  Security Considerations
-     7.1.  Threat model
-       7.1.1.  Client/user
-       7.1.2.  Aggregator
-       7.1.3.  Leader
-       7.1.4.  Aggregator collusion
-       7.1.5.  Attacker on the network
-     7.2.  Sybil attacks
-       7.2.1.  Client authentication
-     7.3.  Anonymizing proxies
-     7.4.  Task parameters
-       7.4.1.  Verification key requirements
-       7.4.2.  Batch parameters
-       7.4.3.  VDAFs and compute requirements
-     7.5.  Differential privacy
-     7.6.  Robustness in the presence of malicious servers
-     7.7.  Infrastructure diversity
-     7.8.  Task Configuration Agreement and Consistency
+     7.1.  Sybil Attacks
+     7.2.  Client Authentication
+     7.3.  Anonymizing Proxies
+     7.4.  Differential Privacy
+     7.5.  Task Parameters
+       7.5.1.  VDAF Verification Key Requirements
+       7.5.2.  Batch Parameters
+       7.5.3.  Task Configuration Agreement and Consistency
+     7.6.  Infrastructure Diversity
    8.  IANA Considerations
      8.1.  Protocol Message Media Types
        8.1.1.  "application/dap-hpke-config-list" media type
@@ -973,7 +965,7 @@ struct {} Empty;
    *  vdaf_verify_key: The VDAF verification key shared by the
       Aggregators.  This key is used in the aggregation sub-protocol
       (Section 4.5).  The security requirements are described in
-      Section 7.4.1.
+      Section 7.5.1.
 
    Finally, the Collector is configured with the HPKE secret key
    corresponding to collector_hpke_config.
@@ -1129,8 +1121,8 @@ struct {} Empty;
       share.
 
    Aggregators MAY require clients to authenticate when uploading
-   reports (see Section 7.2.1).  If it is used, Client authentication
-   MUST use a scheme that meets the requirements in Section 3.1.
+   reports (see Section 7.2).  If it is used, Client authentication MUST
+   use a scheme that meets the requirements in Section 3.1.
 
    To generate a report, the Client begins by sharding its measurement
    into input shares and the public share using the VDAF's sharding
@@ -2502,14 +2494,14 @@ enc, payload = SealBase(pk, "dap-09 aggregate share" || server_role || 0x00,
    tradeoffs influence how applications may choose to utilize services
    implementing the specification.
 
-5.1.  Protocol participant capabilities
+5.1.  Protocol Participant Capabilities
 
    The design in this document has different assumptions and
    requirements for different protocol participants, including Clients,
    Aggregators, and Collectors.  This section describes these
    capabilities in more detail.
 
-5.1.1.  Client capabilities
+5.1.1.  Client Capabilities
 
    Clients have limited capabilities and requirements.  Their only
    inputs to the protocol are (1) the parameters configured out of band
@@ -2519,7 +2511,7 @@ enc, payload = SealBase(pk, "dap-09 aggregate share" || server_role || 0x00,
    document is robust against individual Client upload failures since
    the protocol output is an aggregate over all inputs.
 
-5.1.2.  Aggregator capabilities
+5.1.2.  Aggregator Capabilities
 
    Leaders and Helpers have different operational requirements.  The
    design in this document assumes an operationally competent Leader,
@@ -2556,7 +2548,7 @@ enc, payload = SealBase(pk, "dap-09 aggregate share" || server_role || 0x00,
    *  Implement and store state for the form of inter- and intra-batch
       replay mitigation in Section 4.5.1.4.
 
-5.1.3.  Collector capabilities
+5.1.3.  Collector Capabilities
 
    Collectors statefully interact with Aggregators to produce an
    aggregate output.  Their input to the protocol is the task
@@ -2569,28 +2561,44 @@ enc, payload = SealBase(pk, "dap-09 aggregate share" || server_role || 0x00,
    which includes key material associated with the HPKE key
    configuration.
 
-5.2.  Data resolution limitations
+5.2.  VDAFs and Compute Requirements
 
-   Privacy comes at the cost of computational complexity.  While affine-
-   aggregatable encodings (AFEs) can compute many useful statistics,
-   they require more bandwidth and CPU cycles to account for finite-
-   field arithmetic during input-validation.  The increased work from
-   verifying inputs decreases the throughput of the system or the inputs
-   processed per unit time.  Throughput is related to the verification
-   circuit's complexity and the available compute-time to each
-   Aggregator.
+   The choice of VDAF can impact the computation required for a DAP
+   task.  For instance, the Poplar1 VDAF [VDAF] when configured to
+   compute a set of heavy hitters requires each measurement to be of the
+   same bit-length which all parties need to agree on prior to VDAF
+   execution.  The computation required for such tasks increases
+   superlinearly as a function of the chosen bit-length, as multiple
+   rounds of collection are needed for each bit of the measurement
+   value, and each bit of the measurement value requires computation
+   which scales with the chosen bit-length.
 
-   Applications that utilize proofs with a large number of
-   multiplication gates or a high frequency of inputs may need to limit
-   inputs into the system to meet bandwidth or compute constraints.
-   Some methods of overcoming these limitations include choosing a
-   better representation for the data or introducing sampling into the
-   data collection methodology.
+   When dealing with variable length measurements (e.g domain names), it
+   is necessary to pad them to convert into fixed-length measurements.
+   When computing the heavy hitters from a batch of such measurements,
+   VDAF execution can be terminated early once once the padding region
+   is reached for a given measurement: at this point, the padded
+   measurement can be included in the last set of candidate prefixes.
+   For smaller length measurements, this significantly reduces the cost
+   of communication between Aggregators and the steps required for the
+   computation.  However, malicious Clients can still generate maximum
+   length measurements forcing the system to always operate at worst-
+   case performance.
+
+   Therefore, care must be taken that a DAP deployment can handle VDAF
+   execution of all possible measurement values for any tasks that the
+   deployment is configured for.  Otherwise, an attacker may deny
+   service by uploading many expensive reports.
+
+   Applications which require computationally-expensive VDAFs can
+   mitigate the computation cost of aggregation in a few ways, such as
+   producing aggregates over a sample of the data or choosing a
+   representation of the data permitting a simpler aggregation scheme.
 
    [[TODO: Discuss explicit key performance indicators, here or
    elsewhere.]]
 
-5.3.  Aggregation utility and soft batch deadlines
+5.3.  Aggregation Utility and Soft Batch Deadlines
 
    A soft real-time system should produce a response within a deadline
    to be useful.  This constraint may be relevant when the value of an
@@ -2610,13 +2618,13 @@ enc, payload = SealBase(pk, "dap-09 aggregate share" || server_role || 0x00,
    samples can be collected, balanced against the urgency of responding
    to a soft deadline.
 
-5.4.  Protocol-specific optimizations
+5.4.  Protocol-specific Optimizations
 
    Not all DAP tasks have the same operational requirements, so the
    protocol is designed to allow implementations to reduce operational
    costs in certain cases.
 
-5.4.1.  Reducing storage requirements
+5.4.1.  Reducing Storage Requirements
 
    In general, the Aggregators are required to keep state for tasks and
    all valid reports for as long as collect requests can be made for
@@ -2661,268 +2669,88 @@ enc, payload = SealBase(pk, "dap-09 aggregate share" || server_role || 0x00,
 
 7.  Security Considerations
 
-   DAP assumes an active attacker that controls the network and has the
-   ability to statically corrupt any number of Clients, Aggregators, and
-   Collectors.  That is, the attacker can learn the secret state of any
-   party prior to the start of its attack.  For example, it may coerce a
-   Client into providing malicious input shares for aggregation or
-   coerce an Aggregator into diverting from the protocol specified
-   (e.g., by divulging its input shares to the attacker).
+   DAP aims to achieve the privacy and robustness security goals defined
+   in Section 9 of [VDAF], even in the presence of an active attacker.
+   It is assumed that the attacker may control the network and have the
+   ability to control a subset of of Clients, one of the Aggregators,
+   and the Collector for a given task.
 
-   In the presence of this adversary, DAP aims to achieve the privacy
-   and robustness security goals described in Section 9 of [VDAF].  Even
-   if DAP achieves those goals, there are still some threats it does not
-   defend against:
+   In the presence of this adversary, there are some threats DAP does
+   not defend against and which are considered outside of DAP's threat
+   model.  These are enumerated below, along with potential mitigations.
 
-   1.  Even benign collect requests may leak information beyond what one
-       might expect intuitively.  For example, the Poplar1 VDAF [VDAF]
-       can be used to compute the set of heavy hitters among a set of
-       arbitrary bit strings uploaded by Clients.  This requires
-       multiple evaluations of the VDAF, the results of which reveal
-       information to the Aggregators and Collector beyond what follows
-       from the heavy hitters themselves.  Or the result of the Prio3Sum
-       VDAF could leak information about outlier values.  Note that this
-       leakage can be mitigated using differential privacy
-       (Section 7.5).
+   Attacks on robustness:
 
-   2.  On its own, DAP does not defend against Sybil attacks.  See
-       Section 7.2 for discussion and potential mitigations.
-
-7.1.  Threat model
-
-   In this section, we enumerate the actors participating in a
-   Distributed Aggregation Protocol deployment, enumerate their assets
-   (secrets that are either inherently valuable or which confer some
-   capability that enables further attack on the system), the
-   capabilities that a malicious or compromised actor has, and potential
-   mitigations for attacks enabled by those capabilities.
-
-   This model assumes that all participants have previously agreed upon
-   and exchanged all shared parameters over some unspecified secure
-   channel.
-
-7.1.1.  Client/user
-
-7.1.1.1.  Assets
-
-   1.  Unsharded measurements.  Clients are the only actor that can ever
-       see the original measurements.
-
-   2.  Unencrypted input shares.
-
-7.1.1.2.  Capabilities and mitigations
-
-   1.  Individual users can reveal their own measurement and compromise
-       their own privacy.
+   1.  Aggregators can defeat robustness by emitting incorrect aggregate
+       shares, by omitting reports from the aggregation process, or by
+       manipulating the VDAF preparation process for a single report.
+       DAP follows VDAF in providing robustness only if both Aggregators
+       honestly follow the protocol.
 
    2.  Clients may affect the quality of aggregate results by reporting
-       false measurements.
+       false measurements.  A VDAF can only verify that a submitted
+       measurement is valid, not that it is true.
 
-       *  Prio can only prove that a submitted measurement is valid, not
-          that it is true.  False measurements can be mitigated
-          orthogonally to the Prio protocol (e.g., by requiring that
-          batches include a minimum number of contributions) and so
-          these attacks are considered to be outside of the threat
-          model.
+   3.  An attacker can impersonate multiple Clients, or a single
+       malicious Client can upload an unexpectedly-large number of
+       reports, in order to skew aggregate results or to reduce the
+       number of measurements from honest Clients in a batch below the
+       minimum batch size.  See Section 7.1 for discussion and potential
+       mitigations.
 
-   3.  Clients may upload reports to a task multiple times.  The VDAF
-       will prove that each report is valid, but the results of a VDAF
-       like Prio3Sum can be skewed if a Client submits many valid
-       reports.  Attackers may also attempt ballot stuffing attacks,
-       trying to produce aggregations over batches containing nothing
-       but synthetic reports with a known value and a single, legitimate
-       report whose privacy is then compromised.
+   Attacks on privacy:
 
-       *  This attack can be mitigated if DAP deployments require
-          Clients to authenticate when uploading (see Section 7.2.1),
-          which would allow enforcing policy like a maximum number of
-          uploads per day.
+   1.  Clients can intentionally leak their own measurements and
+       compromise their own privacy.
 
-       *  Applying differential privacy to either measurements before
-          sharding them into reports or to aggregate shares
-          (Section 7.5) can protect isolated legitimate measurements.
+   2.  Both Aggregators together can, purposefully or accidentally,
+       share unencrypted input shares in order to defeat the privacy of
+       individual reports.  DAP follows VDAF in providing privacy only
+       if at least one Aggregator honestly follows the protocol.
 
-7.1.2.  Aggregator
+   Attacks on other properties of the system:
 
-7.1.2.1.  Assets
+   1.  Both Aggregators together can, purposefully or accidentally,
+       share unencrypted aggregate shares in order to reveal the
+       aggregation result for a given batch.
 
-   1.  Unencrypted input shares.
+   2.  Aggregators, or a passive network attacker between the Clients
+       and the Leader, can examine metadata such as client IP in order
+       to infer which Clients are submitting reports.  Depending on the
+       particulars of the deployment, this may be used to infer
+       sensitive information about the Client.  This can be mitigated
+       for the Aggregator by deploying an anonymizing proxy (see
+       Section 7.3), or in general by requiring Clients to submit
+       reports at regular intervals independently of the measurement
+       value such that the existence of a report does not imply the
+       occurrence of a sensitive event.
 
-   2.  Input share decryption keys.
+   3.  Aggregators can deny service by refusing to respond to collection
+       requests or aggregate share requests.
 
-   3.  Client identifying information.
+   4.  Collection requests may leak information beyond the collection
+       results.  For example, the Poplar1 VDAF [VDAF] can be used to
+       compute the set of heavy hitters among a set of arbitrary bit
+       strings uploaded by Clients.  This requires multiple evaluations
+       of the VDAF, the results of which reveal information to the
+       Aggregators and Collector beyond what follows from the heavy
+       hitters themselves.  Or the result could leak information about
+       outlier values.  This leakage can be mitigated using differential
+       privacy (Section 7.4).
 
-   4.  Aggregate shares.
+7.1.  Sybil Attacks
 
-   5.  Aggregator identity.
+   Several attacks on privacy or robustness involve malicious Clients
+   uploading reports that are valid under the chosen VDAF but incorrect.
 
-7.1.2.2.  Capabilities and mitigations
-
-   1.  Aggregators may defeat the robustness of the system by emitting
-       incorrect aggregate shares.
-
-       *  There is no way for aggregators to detect a fraudulent
-          aggregate shares except by applying heuristics to aggregate
-          results that are outside of DAP's scope.  For instance it may
-          be apparent from the aggregate result that one or more
-          aggregators have emitted an incorrect aggregate share.
-
-   2.  If Clients reveal identifying information to Aggregators (such as
-       a trusted identity during Client authentication), Aggregators can
-       learn which Clients are contributing reports.
-
-       1.  Aggregators may reveal that a particular Client contributed
-           reports.
-
-       2.  Aggregators may attack robustness by selectively omitting
-           reports from certain Clients.
-
-           *  For example, omitting submissions from a particular
-              geographic region to falsely suggest that a particular
-              localization is not being used.  * Exposing metadata to
-              Aggregators can be mitigated by deploying an anonymizing
-              proxy (see Section 7.3).
-
-   3.  Individual Aggregators may compromise availability of the system
-       by refusing to emit aggregate shares.
-
-       *  The DAP and VDAF threat model already assumes that robustness
-          only holds if both aggregators are honest, so a loss of
-          availability is no worse.
-
-   4.  Violate robustness.  Any Aggregator can collude with a malicious
-       Client to craft a proof that will fool honest Aggregators into
-       accepting invalid measurements.
-
-       *  The VDAF threat model already assumes that robustness only
-          holds if both aggregators are honest.
-
-   5.  Aggregators (and the Collector) can count the total number of
-       input shares, which could compromise user privacy (and
-       differential privacy Section 7.5) if the presence or absence of a
-       share for a given user is sensitive.
-
-       *  Clients can ensure that aggregate counts are non-sensitive by
-          generating reports independently of user behavior (see
-          Section 7.1.5.
-
-       *  Clients, especially in deployments that cannot schedule report
-          uploads at a fixed time (e.g., an application that does not
-          run persistently) can also apply local differential privacy to
-          measurements before constructing reports.
-
-   [[TODO: link to the Shan et al.  I-D on differential privacy in DAP
-   once it is published.]]
-
-7.1.3.  Leader
-
-   The Leader is also an Aggregator, and so all the assets, capabilities
-   and mitigations available to Aggregators also apply to the Leader.
-
-7.1.3.1.  Capabilities and mitigations
-
-   1.  Shrinking the anonymity set.  The Leader instructs the Helper to
-       construct aggregate shares and so could request aggregations over
-       dangerously few reports.
-
-       1.  This capability is particularly strong in the case of fixed-
-           size queries (Section 4.1.2), because in that setting, the
-           Leader is responsible for assigning reports to batches and so
-           can craft batches to target certain contributions. * This is
-           mitigated by choosing a sufficient minimum batch size for the
-           task. * If aggregate shares emitted by Aggregators satisfy
-           differential privacy Section 7.5, then genuine records are
-           protected regardless of the size of the anonymity set.
-
-   2.  Relaying messages between Helper and Collector in the collect
-       sub-protocol.  These messages are not authenticated, meaning the
-       leader can:
-
-       1.  Send collect parameters to the Helper that do not reflect the
-           parameters chosen by the Collector
-
-           *  This is mitigated by including the BatchSelector and
-              aggregation parameter in the AAD used to encrypt aggregate
-              shares.
-
-       2.  Discard the aggregate share computed by the Helper and then
-           fabricate aggregate shares that combine into an arbitrary
-           aggregate result * These are attacks on robustness, which we
-           already assume to hold only if both Aggregators are honest,
-           putting these malicious-Leader attacks out of scope.
-
-   [[OPEN ISSUE: Should we have authentication in either direction
-   between the Helper and the Collector? #155]]
-
-7.1.4.  Aggregator collusion
-
-   If all Aggregators collude (e.g. by promiscuously sharing unencrypted
-   input shares), then none of the properties of the system hold.
-   Accordingly, such scenarios are outside of the threat model.
-
-7.1.5.  Attacker on the network
-
-   We assume the existence of attackers on the network links between
-   participants.  Most passive network attacks are mitigated by DAP's
-   requirement of HTTPS for all traffic and mutual authentication for
-   key protocol interactions (see Section 3).  Nonetheless, there remain
-   information leaks that deployments should be aware of.
-
-7.1.5.1.  Capabilities
-
-   1.  Attackers may observe messages exchanged between participants at
-       the IP layer.
-
-       1.  The attacker can observe source and destination IP addresses,
-           potentially revealing the existence of Clients and
-           Aggregators.
-
-       2.  The time of upload of reports by Clients could reveal
-           information about user activity.  For example, if a user opts
-           into a new feature, and the Client immediately reports this
-           to Aggregators, then just by observing network traffic, the
-           attacker can infer what the user did.
-
-       3.  Observation of message size could allow the attacker to learn
-           how many reports are being uploaded by a Client.  For
-           example, if the attacker observes an encrypted message of
-           some size, they can infer the size of the plaintext, plus or
-           minus the cipher block size.  From this they may be able to
-           infer which VDAF is in use and perhaps which task the Client
-           is uploading reports for. * These attacks can be mitigated by
-           requiring Clients to submit reports at regular intervals and
-           independently of whether the event that the task is tracking
-           has not occurred, so that the absence of reports cannot be
-           distinguished from their presence.
-
-   2.  Tampering with network traffic.  Attackers may drop messages or
-       inject new messages into communications between participants.
-
-       *  DAP mitigates this by using standard HTTP semantics to allow
-          requests to be retried.  However attacks that completely deny
-          network access to participants are outside of DAP's scope.
-
-   [[OPEN ISSUE: The threat model for Prio --- as it's described in the
-   original paper and [BBCGGI19] --- considers *either* a malicious
-   Client (attacking robustness) *or* a malicious subset of Aggregators
-   (attacking privacy).  In particular, robustness isn't guaranteed if
-   any one of the Aggregators is malicious; in theory it may be possible
-   for a malicious Client and Aggregator to collude and break
-   robustness.  Is this a contingency we need to address?  There are
-   techniques in [BBCGGI19] that account for this; we need to figure out
-   if they're practical.]]
-
-7.2.  Sybil attacks
-
-   Several attacks on privacy involve malicious clients uploading
-   reports that are valid under the chosen VDAF but incorrect.  For
-   example, a DAP deployment might be measuring the heights of a human
-   population and configure a VDAF to prove that measurements are values
-   in the range of 80-250 cm.  A malicious Client would not be able to
-   claim a height of 400 cm, but they could submit multiple bogus
-   reports inside the acceptable range, which would yield incorrect
-   averages.  More generally, DAP deployments are susceptible to Sybil
-   attacks [Dou02], especially when carried out by the Leader.
+   For example, a DAP deployment might be measuring the heights of a
+   human population and configure a variant of Prio3 to prove that
+   measurements are values in the range of 80-250 cm.  A malicious
+   Client would not be able to claim a height of 400 cm, but they could
+   submit multiple bogus reports inside the acceptable range, which
+   would yield incorrect averages.  More generally, DAP deployments are
+   susceptible to Sybil attacks [Dou02], especially when carried out by
+   the Leader.
 
    In this type of attack, the adversary adds to a batch a number of
    reports that skew the aggregate result in its favor.  For example,
@@ -2933,29 +2761,32 @@ enc, payload = SealBase(pk, "dap-09 aggregate share" || server_role || 0x00,
    privacy violation; or the result may have some property that is
    desirable to the adversary ("stats poisoning").
 
-   Depending on the deployment and threat model, there are different
-   ways to address Sybil attacks, including, though not limited to:
+   Depending on the deployment and the specific threat being mitigated,
+   there are different ways to address Sybil attacks, such as:
 
-   1.  Authenticating clients, as described in Section 7.2.1;
+   1.  Implementing Client authentication, as described in Section 7.2,
+       likely paired with rate-limiting uploads from individual Clients.
 
-   2.  Removing client-specific metadata on individual reports, such as
+   2.  Removing Client-specific metadata on individual reports, such as
        through the use of anonymizing proxies in the upload flow, as
-       described in Section 7.3; or
+       described in Section 7.3.
 
-   3.  Applying differential privacy protections, as described in
-       Section 7.5.
+   3.  Differential privacy (Section 7.4) can help mitigate Sybil
+       attacks to some extent.
 
-7.2.1.  Client authentication
+7.2.  Client Authentication
 
    In settings where it is practical for each Client to have an identity
    provisioned (e.g., a user logged into a backend service or a hardware
    device programmed with an identity), Client authentication can help
-   Aggregators (or an authenticating proxy deployed between clients and
+   Aggregators (or an authenticating proxy deployed between Clients and
    the Aggregators; see Section 7.3) ensure that all reports come from
    authentic Clients.  Note that because the Helper never handles
-   messages directly from the Clients, reports would have to use an
+   messages directly from the Clients, reports would need to include an
    extension (Section 4.4.3) to convey authentication information to the
-   Helper.
+   Helper.  For example, a deployment might include a Privacy Pass token
+   ([I-D.draft-ietf-privacypass-architecture-16]) in an extension to
+   allow both Aggregators to independently verify the Client's identity.
 
    However, in some deployments, it will not be practical to require
    Clients to authenticate, so Client authentication is not mandatory in
@@ -2963,41 +2794,56 @@ enc, payload = SealBase(pk, "dap-09 aggregate share" || server_role || 0x00,
    require its users to log in to any service has no obvious way to
    authenticate its report uploads.
 
-7.3.  Anonymizing proxies
+7.3.  Anonymizing Proxies
 
    Client reports can contain auxiliary information such as source IP,
-   HTTP user agent or in deployments which use it, Client authentication
-   information, which could be used by Aggregators to identify
-   participating Clients or permit some attacks on robustness.  This
-   auxiliary information could be removed by having Clients submit
-   reports to an anonymizing proxy server which would then use Oblivious
-   HTTP [I-D.draft-ietf-ohai-ohttp-08] to forward reports to the DAP
-   Leader, without requiring any server participating in DAP to be aware
-   of whatever Client authentication or attestation scheme is in use.
+   HTTP user agent, or Client authentication information (in deployments
+   which use it, see Section 7.2).  This metadata can be used by
+   Aggregators to identify participating Clients or permit some attacks
+   on robustness.  This auxiliary information can be removed by having
+   Clients submit reports to an anonymizing proxy server which would
+   then use Oblivious HTTP [I-D.draft-ietf-ohai-ohttp-10] to forward
+   reports to the DAP Leader.  In this scenario, Client authentication
+   would be performed by the proxy rather than any of the participants
+   in the DAP protocol.
 
-7.4.  Task parameters
+7.4.  Differential Privacy
 
-   Selection and distribution of DAP task parameters is out of band from
-   DAP itself and thus not discussed in this document, but we must
-   nonetheless discuss the security implications of some task parameter
-   choices.  Generally, attacks involving crafted DAP task parameters
-   can be mitigated by having the the Aggregators refuse shared
-   parameters that are trivially insecure (e.g., a minimum batch size of
-   1 report).
+   DAP deployments can choose to ensure their aggregate results achieve
+   differential privacy ([Vad16]).  A simple approach would require the
+   Aggregators to add two-sided noise (e.g. sampled from a two-sided
+   geometric distribution) to aggregate shares.  Since each Aggregator
+   is adding noise independently, privacy can be guaranteed even if all
+   but one of the Aggregators is malicious.  Differential privacy is a
+   strong privacy definition, and protects users in extreme
+   circumstances: even if an adversary has prior knowledge of every
+   measurement in a batch except for one, that one measurement is still
+   formally protected.
 
-7.4.1.  Verification key requirements
+7.5.  Task Parameters
 
-   The verification key is shared between aggregators and must be kept
-   secret from clients.  If a client gains access, they can create
-   reports with invalid values which will pass verification.
+   Distribution of DAP task parameters is out of band from DAP itself
+   and thus not discussed in this document.  This section examines the
+   security tradeoffs involved in the selection of the DAP task
+   parameters.  Generally, attacks involving crafted DAP task parameters
+   can be mitigated by having the Aggregators refuse shared parameters
+   that are trivially insecure (e.g., a minimum batch size of 1 report).
 
-   The verification key for a task SHOULD be chosen before any reports
-   are generated so that it is independent of any reports.  Moreover, it
-   SHOULD be fixed for the lifetime of the task and not be rotated.  One
-   way to ensure that the key is independent is to derive the
-   verification key (verify_key) based on the task ID (task_id) and some
-   previously agreed upon secret (verify_key_seed) between Aggregators,
-   as follows:
+7.5.1.  VDAF Verification Key Requirements
+
+   Knowledge of the verification key would allow a Client to forge a
+   report with invalid values that will nevertheless pass verification.
+   Therefore, the verification key must be kept secret from Clients.
+
+   Furthermore, for a given report, it may be possible to craft a
+   verification key which leaks information about that report's
+   measurement during VDAF preparation.  Therefore, the verification key
+   for a task SHOULD be chosen before any reports are generated.
+   Moreover, it SHOULD be fixed for the lifetime of the task and not be
+   rotated.  One way to ensure that the verification key is generated
+   independently from any given report is to derive the key based on the
+   task ID and some previously agreed upon secret (verify_key_seed)
+   between Aggregators, as follows:
 
    verify_key = HKDF-Expand(
        HKDF-Extract(
@@ -3015,101 +2861,44 @@ enc, payload = SealBase(pk, "dap-09 aggregate share" || server_role || 0x00,
    VDAFs.  In particular, the security proofs for Prio3 require that the
    verification key is chosen independently of the generated reports.
 
-7.4.2.  Batch parameters
+7.5.2.  Batch Parameters
 
    An important parameter of a DAP deployment is the minimum batch size.
    If a batch includes too few reports, then the aggregate result can
-   reveal information about individual participants.  Aggregators must
-   enforce the agreed-upon minimum batch size during the collect
-   protocol, but implementations may also opt out of participating in a
-   DAP task if the minimum batch size is too small.  This document does
-   not specify how to choose minimum batch sizes.
+   reveal information about individual measurements.  Aggregators
+   enforce the agreed-upon minimum batch size during the collection
+   protocol, but implementations SHOULD also opt out of participating in
+   a DAP task if the minimum batch size is too small.  This document
+   does not specify how to choose an appropriate minimum batch size, but
+   an appropriate value may be determined from the differential privacy
+   (Section 7.4) parameters in use, if any.
 
-7.4.3.  VDAFs and compute requirements
+7.5.3.  Task Configuration Agreement and Consistency
 
-   The choice of VDAF can impact the computation required for a DAP
-   Task.  For instance, the Poplar1 VDAF [VDAF] when configured to
-   compute a set of heavy hitters requires each measurement to be of the
-   same bit-length which all parties need to agree on prior to VDAF
-   execution.  The computation required for such tasks can increase
-   superlinearly as multiple rounds of evaluation are needed for each
-   bit of the measurement value.
-
-   When dealing with variable length measurements (e.g domain names), it
-   is necessary to pad them to convert into fixed-size measurements.
-   When computing the heavy hitters from a batch of such measurements,
-   we can early-abort the Poplar1 execution once we have reached the
-   padding region for a candidate measurement.  For smaller length
-   measurements, this significantly reduces the cost of communication
-   between Aggregators and the steps required for the computation.
-   However, malicious Clients can still generate maximum length
-   measurements forcing the system to always operate at worst-case
-   performance.
-
-   [[TODO: Revisit this paragraph once https://github.com/cfrg/draft-
-   irtf-cfrg-vdaf/issues/273 is resolved.]]
-
-   Therefore, care must be taken that a DAP deployment can comfortably
-   handle computation of measurements for arbitrarily large sizes,
-   otherwise, it may result in a DoS possibility for the entire system.
-
-7.5.  Differential privacy
-
-   Optionally, DAP deployments can choose to ensure their aggregate
-   results achieve differential privacy [Vad16].  A simple approach
-   would require the Aggregators to add two-sided noise (e.g. sampled
-   from a two-sided geometric distribution) to aggregate shares.  Since
-   each Aggregator is adding noise independently, privacy can be
-   guaranteed even if all but one of the Aggregators is malicious.
-   Differential privacy is a strong privacy definition, and protects
-   users in extreme circumstances: even if an adversary has prior
-   knowledge of every measurement in a batch except for one, that one
-   record is still formally protected.
-
-7.6.  Robustness in the presence of malicious servers
-
-   Most DAP protocols, including Prio and Poplar, are robust against
-   malicious clients, but are not robust against malicious servers.  Any
-   Aggregator can simply emit bogus aggregate shares and undetectably
-   spoil aggregates.  If enough Aggregators were available, this could
-   be mitigated by running the protocol multiple times with distinct
-   subsets of Aggregators chosen so that no Aggregator appears in all
-   subsets and checking all the aggregate results against each other.
-   If all the protocol runs do not agree, then participants know that at
-   least one Aggregator is defective, and it may be possible to identify
-   the defector (i.e., if a majority of runs agree, and a single
-   Aggregator appears in every run that disagrees).  See #22
-   (https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/22) for
-   discussion.
-
-7.7.  Infrastructure diversity
-
-   Prio deployments should ensure that Aggregators do not have common
-   dependencies that would enable a single vendor to reassemble
-   measurements.  For example, if all participating Aggregators stored
-   unencrypted input shares on the same cloud object storage service,
-   then that cloud vendor would be able to reassemble all the input
-   shares and defeat privacy.
-
-7.8.  Task Configuration Agreement and Consistency
-
-   In order to execute a DAP task, it is necessary for honest parties to
-   ensure they agree on the configuration of the task.  The process by
-   which tasks are configured is not in scope of this document.  This
-   means that, in general, it is possible for a party to participate in
-   a task without knowing all of the relevant parameters.  For example,
-   a Client can upload a report (Section 4.4) without knowing the
-   minimum batch size that is enforced by the Aggregators during
-   collection (Section 4.6).
+   In order to execute a DAP task, it is necessary for all parties to
+   ensure they agree on the configuration of the task.  However, it is
+   possible for a party to participate in the execution of DAP without
+   knowing all of the task's parameters.  For example, a Client can
+   upload a report (Section 4.4) without knowing the minimum batch size
+   that is enforced by the Aggregators during collection (Section 4.6).
 
    Depending on the deployment model, agreement can require that task
    parameters are visible to all parties such that each party can choose
    whether to participate based on the value of any parameter.  This
    includes the parameters enumerated in Section 4.2 and any additional
    parameters implied by upload extensions Section 4.4.3 used by the
-   task.  Since meaningful privacy requires that multiple clients
+   task.  Since meaningful privacy requires that multiple Clients
    contribute to a task, they should also share a consistent view of the
    task configuration.
+
+7.6.  Infrastructure Diversity
+
+   DAP deployments should ensure that Aggregators do not have common
+   dependencies that would enable a single vendor to reassemble
+   measurements.  For example, if all participating Aggregators stored
+   unencrypted input shares on the same cloud object storage service,
+   then that cloud vendor would be able to reassemble all the input
+   shares and defeat privacy.
 
 8.  IANA Considerations
 
@@ -3621,11 +3410,11 @@ Normative References
               Public Key Encryption", RFC 9180, DOI 10.17487/RFC9180,
               February 2022, <https://www.rfc-editor.org/rfc/rfc9180>.
 
-   [I-D.draft-ietf-ohai-ohttp-08]
+   [I-D.draft-ietf-ohai-ohttp-10]
               Thomson, M. and C. A. Wood, "Oblivious HTTP", Work in
-              Progress, Internet-Draft, draft-ietf-ohai-ohttp-08, 15
-              March 2023, <https://datatracker.ietf.org/doc/html/draft-
-              ietf-ohai-ohttp-08>.
+              Progress, Internet-Draft, draft-ietf-ohai-ohttp-10, 25
+              August 2023, <https://datatracker.ietf.org/doc/html/draft-
+              ietf-ohai-ohttp-10>.
 
    [OAuth2]   Hardt, D., Ed., "The OAuth 2.0 Authorization Framework",
               RFC 6749, DOI 10.17487/RFC6749, October 2012,
@@ -3711,6 +3500,13 @@ Informative References
               test-design-04, 14 June 2023,
               <https://datatracker.ietf.org/doc/html/draft-dcook-ppm-
               dap-interop-test-design-04>.
+
+   [I-D.draft-ietf-privacypass-architecture-16]
+              Davidson, A., Iyengar, J., and C. A. Wood, "The Privacy
+              Pass Architecture", Work in Progress, Internet-Draft,
+              draft-ietf-privacypass-architecture-16, 25 September 2023,
+              <https://datatracker.ietf.org/doc/html/draft-ietf-
+              privacypass-architecture-16>.
 
    [RFC5869]  Krawczyk, H. and P. Eronen, "HMAC-based Extract-and-Expand
               Key Derivation Function (HKDF)", RFC 5869,
