@@ -781,7 +781,8 @@ To get the aggregate of a batch, the Collector issues a query specifying the
 batch ID of interest (see {{query}}). The Collector may not know which batch ID
 it is interested in; in this case, it can also issue a query of type
 `current_batch`, which allows the Leader to select a recent batch to aggregate.
-The Leader SHOULD select a batch which has not yet began collection.
+The Leader MUST select a batch that has not yet been associated with a
+collection job.
 
 In addition to the minimum batch size common to all query types, the
 configuration may include a parameter `max_batch_size` that determines maximum
@@ -1977,10 +1978,10 @@ Changing a collection job's parameters is illegal, so further requests to
 with an HTTP client error status code.
 
 After receiving the response to its `CollectionReq`, the Collector makes an HTTP
-`POST` request to the collection job URI to check on the status of the collect
-job and eventually obtain the result. If the collection job is not finished
-yet, the Leader responds with HTTP status 202 Accepted. The response MAY include
-a Retry-After header field to suggest a polling interval to the Collector.
+POST request to the collection job URI to check on the status of the collect job
+and eventually obtain the result. If the collection job is not finished yet, the
+Leader responds with HTTP status 202 Accepted. The response MAY include a
+Retry-After header field to suggest a polling interval to the Collector.
 
 Asynchronously from any request from the Collector, the Leader attempts to run
 the collection job. It first checks whether it can construct a batch for the
@@ -2042,20 +2043,6 @@ collection job if the results have been deleted.
 The Collector can send an HTTP DELETE request to the collection job, which
 indicates to the Leader that it can abandon the collection job and discard all
 state related to it.
-
-#### A Note on Idempotence
-
-The reason a POST is used to poll the state of a collection job instead of a
-GET is because of the fixed-size query mode (see {{fixed-size-query}}).
-Collectors may make a query against the current batch, and it is the Leader's
-responsibility to keep track of what batch is current for some task. Polling a
-collection job is the only point at which it is safe for the Leader to change
-its set of current batches, since it constitutes acknowledgement on the
-Collector's part that it received the response to some previous PUT request to
-the collection jobs resource.
-
-This means that polling a collection job can have the side effect of changing
-the set of current batches in the Leader, and thus using a GET is inappropriate.
 
 ### Obtaining Aggregate Shares {#collect-aggregate}
 
