@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2023-12-14T00:56:20.437647+00:00",
+  "timestamp": "2023-12-17T01:00:44.707811+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -10314,7 +10314,7 @@
       "id": "I_kwDOFEJYQs53Fe1l",
       "title": "Potential simplification of current-batch collection request semantics",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/526",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "branlwyd",
       "authorAssociation": "COLLABORATOR",
       "assignees": [
@@ -10323,8 +10323,8 @@
       "labels": [],
       "body": "In the fixed-size query type, `current-batch` collection requests allow the Leader to choose an outstanding batch to associate with the request.\r\n\r\nThe current semantics are that the Leader can associate the same batch to multiple `current-batch` collection requests (DAP-07 4.1.2):\r\n\r\n```\r\nThe Collector may not know which batch ID it is interested in; in this case, it can also issue a query of type current_batch, which allows the Leader to select a recent batch to aggregate. The Leader SHOULD select a batch which has not yet began collection.\r\n```\r\n\r\nThe reason these semantics were chosen was to avoid data loss in the case that a Collector issued a collection request, then crashed before recording the collection job ID. Janus, for example, can associate the same batch to an arbitrary number of `current-batch` collection requests, until at least one of those collection requests is polled for the first time.\r\n\r\n===\r\n\r\nHowever, since the above semantics were chosen, DAP changed such that the Collector now determines the collection job ID itself (as part of the changes for the resource-oriented API). This means that we could similarly avoid data loss if we expect the Collector to durably store the collection job ID _before_ making the collection request for that ID, and lean on either idempotency or appropriate error codes to allow recovery in the face of process failure. This would allow aggregator implementations to associate each batch to exactly one `current-batch` request.\r\n\r\nThe upside of making this change is that Collectors would no longer need to deduplicate `current-batch` requests that happen to be mapped to the same batch. Along with the simplified aggregator semantics, I think this is pretty likely to be an overall complexity win.",
       "createdAt": "2023-11-16T22:50:50Z",
-      "updatedAt": "2023-11-20T13:02:44Z",
-      "closedAt": null,
+      "updatedAt": "2023-12-15T00:04:43Z",
+      "closedAt": "2023-12-15T00:04:43Z",
       "comments": [
         {
           "author": "branlwyd",
@@ -63730,24 +63730,26 @@
       "id": "PR_kwDOFEJYQs5gfjsv",
       "title": "Require current-batch queries to return distinct batches.",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/532",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "branlwyd",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "Previously, the Leader could assign the same batch to an arbitrary number of current-batch queries, which required the Collector to dedupe. Now, each batch is assigned to exactly one current-batch collection request.\r\n\r\nCloses https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/526.",
       "createdAt": "2023-11-27T23:12:27Z",
-      "updatedAt": "2023-12-06T16:45:58Z",
+      "updatedAt": "2023-12-15T00:04:50Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
-      "baseRefOid": "67d23efe7e3ac293e118883bef20f8653200be56",
+      "baseRefOid": "b015359e95daaa79f7a527876d6b0fb74e873ecd",
       "headRepository": "branlwyd/draft-ietf-ppm-dap",
       "headRefName": "bran/current-batch",
-      "headRefOid": "ad2a56487656251c3a9d15a7137b49f7977cfefa",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "headRefOid": "5b0ba59068325aeea51c10957dcf81be4bd7aeb5",
+      "closedAt": "2023-12-15T00:04:42Z",
+      "mergedAt": "2023-12-15T00:04:42Z",
+      "mergedBy": "branlwyd",
+      "mergeCommit": {
+        "oid": "571988ca27bc65dad3cd97544c340623330333b8"
+      },
       "comments": [
         {
           "author": "tgeoghegan",
@@ -63951,14 +63953,14 @@
         {
           "id": "PRR_kwDOFEJYQs5pYxW-",
           "commit": {
-            "abbreviatedOid": "ad2a564"
+            "abbreviatedOid": "5b0ba59"
           },
           "author": "tgeoghegan",
           "authorAssociation": "COLLABORATOR",
           "state": "APPROVED",
           "body": "",
           "createdAt": "2023-12-06T16:45:58Z",
-          "updatedAt": "2023-12-06T16:45:58Z",
+          "updatedAt": "2023-12-15T00:01:59Z",
           "comments": []
         }
       ]
@@ -63968,24 +63970,26 @@
       "id": "PR_kwDOFEJYQs5gns4r",
       "title": "Revise security considerations section.",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/533",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "branlwyd",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "Mostly, I condense the information in the threat model section into the top-level security considerations section. I also moved a few sections around, eliminated a couple of no-longer-relevant sections, and gave the entire security considerations section a basic editorial pass.",
       "createdAt": "2023-11-29T02:16:04Z",
-      "updatedAt": "2023-12-04T18:53:17Z",
+      "updatedAt": "2023-12-15T00:09:48Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
-      "baseRefOid": "9dd5fedd8653abde45e8cdcfbbbbc6779f41e611",
+      "baseRefOid": "571988ca27bc65dad3cd97544c340623330333b8",
       "headRepository": "branlwyd/draft-ietf-ppm-dap",
       "headRefName": "bran/threat-model",
-      "headRefOid": "b61a380c4d060d6d52905ef48c6800ec7f4ab42d",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "headRefOid": "e3229a8047e99646cb9a6f6d4bc72dfce4161754",
+      "closedAt": "2023-12-15T00:09:41Z",
+      "mergedAt": "2023-12-15T00:09:41Z",
+      "mergedBy": "branlwyd",
+      "mergeCommit": {
+        "oid": "390bd712c2c5e21fbf52f8478b2860344ad26e35"
+      },
       "comments": [],
       "reviews": [
         {
@@ -64282,14 +64286,14 @@
         {
           "id": "PRR_kwDOFEJYQs5pF8ZG",
           "commit": {
-            "abbreviatedOid": "b61a380"
+            "abbreviatedOid": "e3229a8"
           },
           "author": "tgeoghegan",
           "authorAssociation": "COLLABORATOR",
           "state": "APPROVED",
           "body": "",
           "createdAt": "2023-12-04T18:53:17Z",
-          "updatedAt": "2023-12-04T18:53:17Z",
+          "updatedAt": "2023-12-15T00:08:20Z",
           "comments": []
         }
       ]
@@ -64534,6 +64538,48 @@
           "body": "",
           "createdAt": "2023-12-04T17:43:40Z",
           "updatedAt": "2023-12-04T17:43:40Z",
+          "comments": []
+        }
+      ]
+    },
+    {
+      "number": 538,
+      "id": "PR_kwDOFEJYQs5iDld8",
+      "title": "Further update changelog for DAP-09.",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/538",
+      "state": "MERGED",
+      "author": "branlwyd",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "The added lines correspond to changes #532 & #533.",
+      "createdAt": "2023-12-15T00:28:56Z",
+      "updatedAt": "2023-12-15T00:43:02Z",
+      "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "baseRefName": "main",
+      "baseRefOid": "390bd712c2c5e21fbf52f8478b2860344ad26e35",
+      "headRepository": "branlwyd/draft-ietf-ppm-dap",
+      "headRefName": "bran/changelog",
+      "headRefOid": "490a67acc5067cc5da90d49a4bf3f90e75167ef3",
+      "closedAt": "2023-12-15T00:42:59Z",
+      "mergedAt": "2023-12-15T00:42:59Z",
+      "mergedBy": "branlwyd",
+      "mergeCommit": {
+        "oid": "1d40f97e89a5147acc6706776dd6785a34682391"
+      },
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOFEJYQs5qRfMd",
+          "commit": {
+            "abbreviatedOid": "490a67a"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2023-12-15T00:42:14Z",
+          "updatedAt": "2023-12-15T00:42:14Z",
           "comments": []
         }
       ]
