@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2023-12-17T01:00:44.707811+00:00",
+  "timestamp": "2023-12-19T00:56:44.540635+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -63286,7 +63286,7 @@
       "labels": [],
       "body": "Specifically, call out that the sharding algorithm will return two input shares, and the first one is the Leader's.\r\n\r\nAlso describe that DAP only works with VDAFs which have defined encodings for the various VDAF types which DAP embeds into its own types as opaque byte strings. I purposefully leave the set of messages which require a defined encoding ambiguous in hopes that this avoids the possibility of forgetting to update the list as the specification is changed.",
       "createdAt": "2023-11-16T22:05:56Z",
-      "updatedAt": "2023-11-29T16:51:27Z",
+      "updatedAt": "2023-12-18T23:27:24Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "15527a8c92552cf55c63611f8406902ad14c6fbf",
