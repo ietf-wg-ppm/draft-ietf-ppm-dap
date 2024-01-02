@@ -452,7 +452,7 @@ Leader:
 Helper:
 : The Aggregator assisting the Leader with the computation. The protocol is
   designed so that the Helper is relatively lightweight, with most of the
-  operational burdern born by the Leader.
+  operational burden borne by the Leader.
 
 {:br}
 
@@ -1841,7 +1841,7 @@ struct {
 } PrepareResp;
 ~~~
 
-Otherwise, if `outbound == None`, then the Helper's resposne is
+Otherwise, if `outbound == None`, then the Helper's response is
 
 ~~~
 struct {
