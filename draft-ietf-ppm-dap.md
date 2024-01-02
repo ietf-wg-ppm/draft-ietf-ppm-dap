@@ -529,9 +529,9 @@ Client could not report 10^6s or -20s.
 
 # Message Transport {#message-transport}
 
-Communications between DAP participants are carried over HTTPS {{!RFC9110}}.
-HTTPS provides server authentication and confidentiality. Use of HTTPS is
-REQUIRED.
+Communications between DAP participants are carried over HTTP {{!RFC9110}}. Use
+of HTTPS {{!RFC8446}} is REQUIRED to provide server authentication and
+confidentiality.
 
 ## HTTPS Request Authentication {#request-authentication}
 
@@ -543,7 +543,7 @@ another protocol participant, DAP mandates the use of public-key encryption
 using {{!HPKE=RFC9180}} to ensure that only the intended recipient can see a
 message in the clear.
 
-In other cases, DAP requires HTTPS client authentication as well as server
+In other cases, DAP requires HTTP client authentication as well as server
 authentication. Any authentication scheme that is composable with HTTP is
 allowed. For example:
 
