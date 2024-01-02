@@ -941,7 +941,7 @@ Aggregators MUST allocate distinct id values for each `HpkeConfig` in an
 The Client MUST abort if any of the following happen for any HPKE config
 request:
 
-* the GET request failed or did not return a valid HPKE config list;
+* the GET request did not return a valid HPKE config list;
 * the HPKE config list is empty; or
 * no HPKE config advertised by the Aggregator specifies a supported a KEM, KDF,
   or AEAD algorithm triple.
