@@ -327,7 +327,7 @@ Collector:
   result.
 
 Helper:
-: The Aggregator that executes the aggregation and collection sub-protocols as
+: The Aggregator that executes the aggregation and collection interactions as
   instructed by the Leader.
 
 Input share:
@@ -535,7 +535,7 @@ confidentiality.
 
 ## HTTPS Request Authentication {#request-authentication}
 
-DAP is made up of several sub-protocols in which different subsets of the
+DAP is made up of several interactions in which different subsets of the
 protocol's participants interact with each other.
 
 In those cases where a channel between two participants is tunneled through
@@ -734,7 +734,7 @@ struct {
 } Query;
 ~~~
 
-The query is issued in-band as part of the collect sub-protocol
+The query is issued in-band as part of the collect interaction
 ({{collect-flow}}). Its content is determined by the "query type", which in
 turn is encoded by the "query configuration" configured out-of-band. All query
 types have the following configuration parameters in common:
@@ -806,7 +806,7 @@ guarantee.
 Implementation note: The goal for the Aggregators is to aggregate precisely
 `min_batch_size` reports per batch. Doing so, however, may be challenging for
 Leader deployments in which multiple, independent nodes running the aggregate
-sub-protocol (see {{aggregate-flow}}) need to be coordinated. The maximum batch
+interaction (see {{aggregate-flow}}) need to be coordinated. The maximum batch
 size is intended to allow room for error. Typically the difference between the
 minimum and maximum batch size will be a small fraction of the target batch size
 for each batch. If `max_batch_size` is not specified, the goal for Aggregators
@@ -852,7 +852,7 @@ of the Aggregators is configured with following parameters:
   (described in {{hpke-config}}); see {{compliance}} for information about the
   HPKE configuration algorithms.
 * `vdaf_verify_key`: The VDAF verification key shared by the Aggregators. This
-  key is used in the aggregation sub-protocol ({{aggregate-flow}}). The security
+  key is used in the aggregation interaction ({{aggregate-flow}}). The security
   requirements are described in {{verification-key}}.
 
 Finally, the Collector is configured with the HPKE secret key corresponding to
@@ -887,7 +887,7 @@ into
 
 Clients periodically upload reports to the Leader. Each report contains two
 "report shares", one for the Leader and another for the Helper. The Helper's
-report share is transmitted by the Leader during the aggregation sub-protocol
+report share is transmitted by the Leader during the aggregation interaction
 (see {{aggregate-flow}}).
 
 ### HPKE Configuration Request {#hpke-config}
@@ -1089,7 +1089,7 @@ The Leader MUST ignore any report pertaining to a batch that has already been
 collected (see {{input-share-validation}} for details). Otherwise, comparing
 the aggregate result to the previous aggregate result may result in a privacy
 violation. Note that this is also enforced by the Helper during the aggregation
-sub-protocol. The Leader MAY also abort the upload protocol and alert the
+interaction. The Leader MAY also abort the upload protocol and alert the
 Client with error `reportRejected`.
 
 The Leader MAY ignore any report whose timestamp is past the task's
@@ -1216,7 +1216,7 @@ preparation.
    v                                                     v
   leader_out_share                         helper_out_share
 ~~~
-{: #agg-flow title="Overview of the DAP aggregation sub-protocol."}
+{: #agg-flow title="Overview of the DAP aggregation interaction."}
 
 The number of steps, and the type of the responses, depends on the VDAF. The
 message structures and processing rules are specified in the following
@@ -1421,7 +1421,7 @@ Otherwise, the Leader proceeds as follows with each report:
    the preparation process is complete: either `state == Rejected()`, in which
    case the Leader rejects the report and removes it from the candidate set; or
    `state == Finished(out_share)`, in which case preparation is complete and the
-   Leader stores the output share for use in the collection sub-protocol
+   Leader stores the output share for use in the collection interaction
    {{collect-flow}}.
 
 1. Else if the type is "reject", then the Leader rejects the report and removes
@@ -1577,7 +1577,7 @@ fail with an HTTP client error status code.
 Finally, if `state == Continued(prep_state)`, then the Helper stores `state` to
 prepare for the next continuation step ({{aggregation-helper-continuation}}).
 Otherwise, if `state == Finished(out_share)`, then the Helper stores `out_share`
-for use in the collection sub-protocol ({{collect-flow}}).
+for use in the collection interaction ({{collect-flow}}).
 
 #### Input Share Decryption {#input-share-decryption}
 
@@ -1677,7 +1677,7 @@ following checks:
       batch exceeds the maximum batch size (per the task configuration), the
       Aggregator MAY mark the input share as invalid with the error
       `batch_saturated`. Note that this behavior is not strictly enforced here
-      but during the collect sub-protocol. (See {{batch-validation}}.) If
+      but during the collect interaction. (See {{batch-validation}}.) If
       maximum batch size is not provided, then Aggregators only need to ensure
       the current batch exceeds the minimum batch size (per the task
       configuration). If both checks succeed, the input share is not marked as
@@ -1765,7 +1765,7 @@ Otherwise, the Leader proceeds as follows with each report:
    `state == Rejected()`, in which case the Leader rejects the report and
    removes it from the candidate set; or `state == Finished(out_share)`, in
    which case preparation is complete and the Leader stores the output share for
-   use in the collection sub-protocol {{collect-flow}}.
+   use in the collection interaction {{collect-flow}}.
 
 1. Else if the type is "finished" and `state == Finished(out_share)`, then
    preparation is complete and the Leader stores the output share for use in
@@ -1864,7 +1864,7 @@ the `AggregationJobResp`.
 Finally, if `state == Continued(prep_state)`, then the Helper stores `state` to
 prepare for the next continuation step ({{aggregation-helper-continuation}}).
 Otherwise, if `state == Finished(out_share)`, then the Helper stores `out_share`
-for use in the collection sub-protocol ({{collect-flow}}).
+for use in the collection interaction ({{collect-flow}}).
 
 If for whatever reason the Leader must abandon the aggregation job, it SHOULD
 send an HTTP DELETE request to the aggregation job URI so that the Helper knows
@@ -2300,7 +2300,7 @@ checks that:
   `time_precision`
 
 These measures ensure that Aggregators can efficiently "pre-aggregate" output
-shares recovered during the aggregation sub-protocol.
+shares recovered during the aggregation interaction.
 
 ##### Size Check
 
@@ -2362,7 +2362,7 @@ provisioned Helper, i.e., one that has computation, bandwidth, and storage
 constraints. By design, Leaders must be at least as capable as Helpers, where
 Helpers are generally required to:
 
-- Support the aggregate sub-protocol, which includes validating and aggregating
+- Support the aggregate interaction, which includes validating and aggregating
   reports; and
 - Publish and manage an HPKE configuration that can be used for the upload
   protocol.
