@@ -301,8 +301,8 @@ Aggregation parameter:
   {{!VDAF}}.
 
 Aggregator:
-: An endpoint that receives input shares from Clients and validates and
-  aggregates them with the help of the other Aggregators.
+: A server that receives input shares from Clients and validates and aggregates
+  them with the help of the other Aggregators.
 
 Batch:
 : A set of reports (i.e., measurements) that are aggregated into an aggregate
@@ -319,8 +319,8 @@ Client:
 : A party that uploads a report.
 
 Collector:
-: The endpoint that selects the aggregation parameter and receives the
-  aggregate result.
+: The party that selects the aggregation parameter and receives the aggregate
+  result.
 
 Helper:
 : The Aggregator that executes the aggregation and collection sub-protocols as
@@ -434,12 +434,12 @@ Collector:
   by the Clients. Any given measurement task will have a single Collector.
 
 Client(s):
-: The endpoints which directly take the measurement(s) and report them to the
+: The parties which directly take the measurement(s) and report them to the
   DAP protocol. In order to provide reasonable levels of privacy, there must be
   a large number of Clients.
 
 Aggregator:
-: An endpoint which receives report shares. Each Aggregator works with its
+: A server which receives report shares. Each Aggregator works with its
   co-Aggregator to compute the aggregate result. Any given measurement task
   will have two Aggregators: a Leader and a Helper.
 
@@ -573,8 +573,8 @@ in the "type" field (within the DAP URN namespace
 | Type                       | Description                                                                                  |
 |:---------------------------|:---------------------------------------------------------------------------------------------|
 | invalidMessage             | A message received by a protocol participant could not be parsed or otherwise was invalid. |
-| unrecognizedTask           | An endpoint received a message with an unknown task ID. |
-| unrecognizedAggregationJob | An endpoint received a message with an unknown aggregation job ID. |
+| unrecognizedTask           | A server received a message with an unknown task ID. |
+| unrecognizedAggregationJob | A server received a message with an unknown aggregation job ID. |
 | outdatedConfig             | The message was generated using an outdated configuration. |
 | reportRejected             | Report could not be processed for an unspecified reason. |
 | reportTooEarly             | Report could not be processed because its timestamp is too far in the future. |
@@ -825,10 +825,10 @@ opaque TaskID[32];
 The task ID value MUST be a globally unique sequence of bytes. Each task has
 the following parameters associated with it:
 
-* `leader_aggregator_endpoint`: A URL relative to which the Leader's API
-  endpoints can be found.
-* `helper_aggregator_endpoint`: A URL relative to which the Helper's API
-  endpoints can be found.
+* `leader_aggregator_server`: A URL relative to which the Leader's API resources
+   can be found.
+* `helper_aggregator_server`: A URL relative to which the Helper's API resources
+  can be found.
 * The query configuration for this task (see {{query}}). This determines the
   query type for batch selection and the properties that all batches for this
   task must have. The party MUST NOT configure the task if it does not
