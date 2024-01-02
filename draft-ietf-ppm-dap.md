@@ -110,11 +110,11 @@ revealing any individual user's data.
 
 This document describes the Distributed Aggregation Protocol (DAP) for privacy
 preserving measurement. The protocol is executed by a large set of clients and a
-small set of servers. The servers' goal is to compute some aggregate statistic
-over the clients' inputs without learning the inputs themselves. This is made
-possible by distributing the computation among the servers in such a way that,
-as long as at least one of them executes the protocol honestly, no input is ever
-seen in the clear by any server.
+small set of aggregator servers. The aggregators' goal is to compute some
+aggregate statistic over the clients' inputs without learning the inputs
+themselves. This is made possible by distributing the computation among the
+aggregators in such a way that, as long as at least one of them executes the
+protocol honestly, no input is ever seen in the clear by any aggregator.
 
 ## Change Log
 
@@ -316,7 +316,11 @@ Batch interval:
   of the reports in the batch.
 
 Client:
-: A party that uploads a report.
+: DAP protocol role identifying a party that uploads a report. Note the
+  distinction between a DAP Client (distinguished in this document by the
+  capital "C") and an HTTP client (distinguished in this document by the phrase
+  HTTP client), as the DAP Client is not the only role that sometimes acts as an
+  HTTP client.
 
 Collector:
 : The party that selects the aggregation parameter and receives the aggregate
@@ -560,9 +564,9 @@ document's scope.
 
 Errors can be reported in DAP both at the HTTP layer and within challenge
 objects as defined in {{iana-considerations}}. DAP servers can return responses
-with an HTTP error response code (4XX or 5XX). For example, if the Client
-submits a request using a method not allowed in this document, then the server
-MAY return HTTP status code 405 Method Not Allowed.
+with an HTTP error response code (4XX or 5XX). For example, if the HTTP client
+sends a request using a method not allowed in this document, then the server MAY
+return HTTP status code 405 Method Not Allowed.
 
 When the server responds with an error status, it SHOULD provide additional
 information using a problem detail object {{!RFC9457}}. To facilitate automatic
@@ -997,9 +1001,9 @@ struct {
 
 * `helper_encrypted_input_share` is the Helper's encrypted input share.
 
-Aggregators MAY require clients to authenticate when uploading reports (see
-{{client-auth}}). If it is used, Client authentication MUST use a scheme that
-meets the requirements in {{request-authentication}}.
+Aggregators MAY require Clients to authenticate when uploading reports (see
+{{client-auth}}). If it is used, HTTP client authentication MUST use a scheme
+that meets the requirements in {{request-authentication}}.
 
 To generate a report, the Client begins by sharding its measurement into input
 shares and the public share using the VDAF's sharding algorithm ({{Section 5.1
@@ -1447,7 +1451,7 @@ initialization messages have the same report ID, then the Helper MUST abort with
 error `invalidMessage`.
 
 The Helper is now ready to process each report share into an outbound prepare
-step to return to the server. The responses will be structured as follows:
+step to return to the Leader. The responses will be structured as follows:
 
 ~~~
 enum {
@@ -2530,7 +2534,7 @@ Attacks on other properties of the system:
    unencrypted aggregate shares in order to reveal the aggregation result for a
    given batch.
 1. Aggregators, or a passive network attacker between the Clients and the
-   Leader, can examine metadata such as client IP in order to infer which
+   Leader, can examine metadata such as HTTP client IP in order to infer which
    Clients are submitting reports. Depending on the particulars of the
    deployment, this may be used to infer sensitive information about the Client.
    This can be mitigated for the Aggregator by deploying an anonymizing proxy
