@@ -156,12 +156,13 @@ Table of Contents
 
    This document describes the Distributed Aggregation Protocol (DAP)
    for privacy preserving measurement.  The protocol is executed by a
-   large set of clients and a small set of servers.  The servers' goal
-   is to compute some aggregate statistic over the clients' inputs
-   without learning the inputs themselves.  This is made possible by
-   distributing the computation among the servers in such a way that, as
-   long as at least one of them executes the protocol honestly, no input
-   is ever seen in the clear by any server.
+   large set of clients and a small set of aggregator servers.  The
+   aggregators' goal is to compute some aggregate statistic over the
+   clients' inputs without learning the inputs themselves.  This is made
+   possible by distributing the computation among the aggregators in
+   such a way that, as long as at least one of them executes the
+   protocol honestly, no input is ever seen in the clear by any
+   aggregator.
 
 1.1.  Change Log
 
@@ -374,13 +375,17 @@ Table of Contents
    Batch interval:  A parameter of a query issued by the Collector that
       specifies the time range of the reports in the batch.
 
-   Client:  A party that uploads a report.
+   Client:  DAP protocol role identifying a party that uploads a report.
+      Note the distinction between a DAP Client (distinguished in this
+      document by the capital "C") and an HTTP client (distinguished in
+      this document by the phrase HTTP client), as the DAP Client is not
+      the only role that sometimes acts as an HTTP client.
 
    Collector:  The party that selects the aggregation parameter and
       receives the aggregate result.
 
    Helper:  The Aggregator that executes the aggregation and collection
-      sub-protocols as instructed by the Leader.
+      interactions as instructed by the Leader.
 
    Input share:  An Aggregator's share of a measurement.  The input
       shares are output by the VDAF sharding algorithm.  As defined in
@@ -588,13 +593,13 @@ Table of Contents
 
 3.  Message Transport
 
-   Communications between DAP participants are carried over HTTPS
-   [RFC9110].  HTTPS provides server authentication and confidentiality.
-   Use of HTTPS is REQUIRED.
+   Communications between DAP participants are carried over HTTP
+   [RFC9110].  Use of HTTPS [RFC8446] is REQUIRED to provide server
+   authentication and confidentiality.
 
 3.1.  HTTPS Request Authentication
 
-   DAP is made up of several sub-protocols in which different subsets of
+   DAP is made up of several interactions in which different subsets of
    the protocol's participants interact with each other.
 
    In those cases where a channel between two participants is tunneled
@@ -602,7 +607,7 @@ Table of Contents
    key encryption using [HPKE] to ensure that only the intended
    recipient can see a message in the clear.
 
-   In other cases, DAP requires HTTPS client authentication as well as
+   In other cases, DAP requires HTTP client authentication as well as
    server authentication.  Any authentication scheme that is composable
    with HTTP is allowed.  For example:
 
@@ -625,9 +630,9 @@ Table of Contents
    Errors can be reported in DAP both at the HTTP layer and within
    challenge objects as defined in Section 8.  DAP servers can return
    responses with an HTTP error response code (4XX or 5XX).  For
-   example, if the Client submits a request using a method not allowed
-   in this document, then the server MAY return HTTP status code 405
-   Method Not Allowed.
+   example, if the HTTP client sends a request using a method not
+   allowed in this document, then the server MAY return HTTP status code
+   405 Method Not Allowed.
 
    When the server responds with an error status, it SHOULD provide
    additional information using a problem detail object [RFC9457].  To
@@ -838,7 +843,7 @@ struct {} Empty;
      }
    } Query;
 
-   The query is issued in-band as part of the collect sub-protocol
+   The query is issued in-band as part of the collect interaction
    (Section 4.6).  Its content is determined by the "query type", which
    in turn is encoded by the "query configuration" configured out-of-
    band.  All query types have the following configuration parameters in
@@ -914,7 +919,7 @@ struct {} Empty;
    Implementation note: The goal for the Aggregators is to aggregate
    precisely min_batch_size reports per batch.  Doing so, however, may
    be challenging for Leader deployments in which multiple, independent
-   nodes running the aggregate sub-protocol (see Section 4.5) need to be
+   nodes running the aggregate interaction (see Section 4.5) need to be
    coordinated.  The maximum batch size is intended to allow room for
    error.  Typically the difference between the minimum and maximum
    batch size will be a small fraction of the target batch size for each
@@ -968,7 +973,7 @@ struct {} Empty;
       the HPKE configuration algorithms.
 
    *  vdaf_verify_key: The VDAF verification key shared by the
-      Aggregators.  This key is used in the aggregation sub-protocol
+      Aggregators.  This key is used in the aggregation interaction
       (Section 4.5).  The security requirements are described in
       Section 7.5.1.
 
@@ -1008,7 +1013,7 @@ struct {} Empty;
    Clients periodically upload reports to the Leader.  Each report
    contains two "report shares", one for the Leader and another for the
    Helper.  The Helper's report share is transmitted by the Leader
-   during the aggregation sub-protocol (see Section 4.5).
+   during the aggregation interaction (see Section 4.5).
 
 4.4.1.  HPKE Configuration Request
 
@@ -1061,7 +1066,7 @@ struct {} Empty;
    The Client MUST abort if any of the following happen for any HPKE
    config request:
 
-   *  the GET request failed or did not return a valid HPKE config list;
+   *  the GET request did not return a valid HPKE config list;
 
    *  the HPKE config list is empty; or
 
@@ -1072,12 +1077,13 @@ struct {} Empty;
    this resource [RFC5861].  Aggregators SHOULD favor long cache
    lifetimes to avoid frequent cache revalidation, e.g., on the order of
    days.  Aggregators can control this cached lifetime with the Cache-
-   Control header, as follows:
+   Control header, as in this example:
 
      Cache-Control: max-age=86400
 
-   Clients SHOULD follow the usual HTTP caching [RFC9111] semantics for
-   HPKE configurations.
+   Servers should choose a max-age value appropriate to the lifetime of
+   their keys.  Clients SHOULD follow the usual HTTP caching [RFC9111]
+   semantics for HPKE configurations.
 
    Note: Long cache lifetimes may result in Clients using stale HPKE
    configurations; Aggregators SHOULD continue to accept reports with
@@ -1125,9 +1131,9 @@ struct {} Empty;
    *  helper_encrypted_input_share is the Helper's encrypted input
       share.
 
-   Aggregators MAY require clients to authenticate when uploading
-   reports (see Section 7.2).  If it is used, Client authentication MUST
-   use a scheme that meets the requirements in Section 3.1.
+   Aggregators MAY require Clients to authenticate when uploading
+   reports (see Section 7.2).  If it is used, HTTP client authentication
+   MUST use a scheme that meets the requirements in Section 3.1.
 
    To generate a report, the Client begins by sharding its measurement
    into input shares and the public share using the VDAF's sharding
@@ -1208,7 +1214,7 @@ struct {} Empty;
    already been collected (see Section 4.5.1.4 for details).  Otherwise,
    comparing the aggregate result to the previous aggregate result may
    result in a privacy violation.  Note that this is also enforced by
-   the Helper during the aggregation sub-protocol.  The Leader MAY also
+   the Helper during the aggregation interaction.  The Leader MAY also
    abort the upload protocol and alert the Client with error
    reportRejected.
 
@@ -1343,7 +1349,7 @@ struct {} Empty;
       v                                                     v
      leader_out_share                         helper_out_share
 
-          Figure 2: Overview of the DAP aggregation sub-protocol.
+           Figure 2: Overview of the DAP aggregation interaction.
 
    The number of steps, and the type of the responses, depends on the
    VDAF.  The message structures and processing rules are specified in
@@ -1561,7 +1567,7 @@ struct {} Empty;
        which case the Leader rejects the report and removes it from the
        candidate set; or state == Finished(out_share), in which case
        preparation is complete and the Leader stores the output share
-       for use in the collection sub-protocol Section 4.6.
+       for use in the collection interaction Section 4.6.
 
    2.  Else if the type is "reject", then the Leader rejects the report
        and removes it from the candidate set.  The Leader MUST NOT
@@ -1594,7 +1600,7 @@ struct {} Empty;
    Helper MUST abort with error invalidMessage.
 
    The Helper is now ready to process each report share into an outbound
-   prepare step to return to the server.  The responses will be
+   prepare step to return to the Leader.  The responses will be
    structured as follows:
 
    enum {
@@ -1716,7 +1722,7 @@ struct {} Empty;
    Finally, if state == Continued(prep_state), then the Helper stores
    state to prepare for the next continuation step (Section 4.5.2.2).
    Otherwise, if state == Finished(out_share), then the Helper stores
-   out_share for use in the collection sub-protocol (Section 4.6).
+   out_share for use in the collection interaction (Section 4.6).
 
 4.5.1.3.  Input Share Decryption
 
@@ -1824,7 +1830,7 @@ struct {} Empty;
           size (per the task configuration), the Aggregator MAY mark the
           input share as invalid with the error batch_saturated.  Note
           that this behavior is not strictly enforced here but during
-          the collect sub-protocol.  (See Section 4.6.5.)  If maximum
+          the collect interaction.  (See Section 4.6.5.)  If maximum
           batch size is not provided, then Aggregators only need to
           ensure the current batch exceeds the minimum batch size (per
           the task configuration).  If both checks succeed, the input
@@ -1914,7 +1920,7 @@ struct {} Empty;
        the Leader rejects the report and removes it from the candidate
        set; or state == Finished(out_share), in which case preparation
        is complete and the Leader stores the output share for use in the
-       collection sub-protocol Section 4.6.
+       collection interaction Section 4.6.
 
    2.  Else if the type is "finished" and state == Finished(out_share),
        then preparation is complete and the Leader stores the output
@@ -2010,7 +2016,7 @@ struct {} Empty;
    Finally, if state == Continued(prep_state), then the Helper stores
    state to prepare for the next continuation step (Section 4.5.2.2).
    Otherwise, if state == Finished(out_share), then the Helper stores
-   out_share for use in the collection sub-protocol (Section 4.6).
+   out_share for use in the collection interaction (Section 4.6).
 
    If for whatever reason the Leader must abandon the aggregation job,
    it SHOULD send an HTTP DELETE request to the aggregation job URI so
@@ -2459,8 +2465,8 @@ enc, payload = SealBase(pk, "dap-09 aggregate share" || server_role || 0x00,
       divisible by time_precision
 
    These measures ensure that Aggregators can efficiently "pre-
-   aggregate" output shares recovered during the aggregation sub-
-   protocol.
+   aggregate" output shares recovered during the aggregation
+   interaction.
 
 4.6.5.1.2.  Size Check
 
@@ -2526,7 +2532,7 @@ enc, payload = SealBase(pk, "dap-09 aggregate share" || server_role || 0x00,
    Leaders must be at least as capable as Helpers, where Helpers are
    generally required to:
 
-   *  Support the aggregate sub-protocol, which includes validating and
+   *  Support the aggregate interaction, which includes validating and
       aggregating reports; and
 
    *  Publish and manage an HPKE configuration that can be used for the
@@ -2720,9 +2726,9 @@ enc, payload = SealBase(pk, "dap-09 aggregate share" || server_role || 0x00,
        aggregation result for a given batch.
 
    2.  Aggregators, or a passive network attacker between the Clients
-       and the Leader, can examine metadata such as client IP in order
-       to infer which Clients are submitting reports.  Depending on the
-       particulars of the deployment, this may be used to infer
+       and the Leader, can examine metadata such as HTTP client IP in
+       order to infer which Clients are submitting reports.  Depending
+       on the particulars of the deployment, this may be used to infer
        sensitive information about the Client.  This can be mitigated
        for the Aggregator by deploying an anonymizing proxy (see
        Section 7.3), or in general by requiring Clients to submit
