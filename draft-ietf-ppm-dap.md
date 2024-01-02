@@ -949,14 +949,15 @@ request:
 Aggregators SHOULD use HTTP caching to permit client-side caching of this
 resource {{!RFC5861}}. Aggregators SHOULD favor long cache lifetimes to avoid
 frequent cache revalidation, e.g., on the order of days. Aggregators can control
-this cached lifetime with the Cache-Control header, as follows:
+this cached lifetime with the Cache-Control header, as in this example:
 
 ~~~
   Cache-Control: max-age=86400
 ~~~
 
-Clients SHOULD follow the usual HTTP caching {{!RFC9111}} semantics for HPKE
-configurations.
+Servers should choose a `max-age` value appropriate to the lifetime of their
+keys. Clients SHOULD follow the usual HTTP caching {{!RFC9111}} semantics for
+HPKE configurations.
 
 Note: Long cache lifetimes may result in Clients using stale HPKE
 configurations; Aggregators SHOULD continue to accept reports with old keys for
