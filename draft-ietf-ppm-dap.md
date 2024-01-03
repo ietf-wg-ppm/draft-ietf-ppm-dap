@@ -109,12 +109,12 @@ revealing any individual user's data.
 # Introduction
 
 This document describes the Distributed Aggregation Protocol (DAP) for privacy
-preserving measurement. The protocol is executed by a large set of clients and a
-small set of aggregator servers. The aggregators' goal is to compute some
-aggregate statistic over the clients' inputs without learning the inputs
-themselves. This is made possible by distributing the computation among the
-aggregators in such a way that, as long as at least one of them executes the
-protocol honestly, no input is ever seen in the clear by any aggregator.
+preserving measurement. The protocol is executed by a large set of clients and
+two aggregator servers. The aggregators' goal is to compute some aggregate
+statistic over the clients' inputs without learning the inputs themselves. This
+is made possible by distributing the computation among the aggregators in such a
+way that, as long as at least one of them executes the protocol honestly, no
+input is ever seen in the clear by any aggregator.
 
 ## Change Log
 
@@ -316,7 +316,7 @@ Batch interval:
   of the reports in the batch.
 
 Client:
-: DAP protocol role identifying a party that uploads a report. Note the
+: The DAP protocol role identifying a party that uploads a report. Note the
   distinction between a DAP Client (distinguished in this document by the
   capital "C") and an HTTP client (distinguished in this document by the phrase
   HTTP client), as the DAP Client is not the only role that sometimes acts as an
@@ -829,9 +829,9 @@ opaque TaskID[32];
 The task ID value MUST be a globally unique sequence of bytes. Each task has
 the following parameters associated with it:
 
-* `leader_aggregator_server`: A URL relative to which the Leader's API resources
+* `leader_aggregator_url`: A URL relative to which the Leader's API resources
    can be found.
-* `helper_aggregator_server`: A URL relative to which the Helper's API resources
+* `helper_aggregator_url`: A URL relative to which the Helper's API resources
   can be found.
 * The query configuration for this task (see {{query}}). This determines the
   query type for batch selection and the properties that all batches for this
