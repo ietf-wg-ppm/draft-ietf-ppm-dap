@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-01-02T00:55:07.902910+00:00",
+  "timestamp": "2024-01-04T00:56:33.249356+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -64581,6 +64581,179 @@
           "createdAt": "2023-12-15T00:42:14Z",
           "updatedAt": "2023-12-15T00:42:14Z",
           "comments": []
+        }
+      ]
+    },
+    {
+      "number": 539,
+      "id": "PR_kwDOFEJYQs5jEmW-",
+      "title": "Fix a couple typos",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/539",
+      "state": "OPEN",
+      "author": "tgeoghegan",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "See [\"confusables note For bear\"](https://www.dictionary.com/browse/bear) to justify \"borne\" vs. \"born\".",
+      "createdAt": "2024-01-02T18:22:29Z",
+      "updatedAt": "2024-01-03T15:32:04Z",
+      "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "baseRefName": "main",
+      "baseRefOid": "1d40f97e89a5147acc6706776dd6785a34682391",
+      "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "headRefName": "timg/typos",
+      "headRefOid": "40a0997c063bdabdc769b55626b50238e4e56479",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOFEJYQs5rVoxd",
+          "commit": {
+            "abbreviatedOid": "40a0997"
+          },
+          "author": "divergentdave",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2024-01-02T18:23:19Z",
+          "updatedAt": "2024-01-02T18:23:19Z",
+          "comments": []
+        }
+      ]
+    },
+    {
+      "number": 540,
+      "id": "PR_kwDOFEJYQs5jEsHI",
+      "title": "Address some items from httpdir early review",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/540",
+      "state": "OPEN",
+      "author": "tgeoghegan",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Mark Nottingham (@mnot) was kind enough to share early review feedback on DAP on behalf of httpdir ([1]). This PR addresses several of the items there. See individual commit messages for discussion.\r\n\r\n[1]: https://datatracker.ietf.org/doc/review-ietf-ppm-dap-09-httpdir-early-nottingham-2023-12-29/",
+      "createdAt": "2024-01-02T18:49:38Z",
+      "updatedAt": "2024-01-03T21:19:23Z",
+      "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "baseRefName": "main",
+      "baseRefOid": "1d40f97e89a5147acc6706776dd6785a34682391",
+      "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "headRefName": "timg/endpoint",
+      "headRefOid": "9c26647a6e15e8fcac51ba9d793bbcbf022341de",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [
+        {
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Draft for now -- I think I want to stack some related commits on this.",
+          "createdAt": "2024-01-02T18:53:07Z",
+          "updatedAt": "2024-01-02T21:08:25Z"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "PRR_kwDOFEJYQs5rdp7u",
+          "commit": {
+            "abbreviatedOid": "4bcd0a7"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2024-01-03T19:16:12Z",
+          "updatedAt": "2024-01-03T19:47:38Z",
+          "comments": [
+            {
+              "originalPosition": 56,
+              "body": "I am not sure `server` is appropriate here (or for `helper_aggregator_server` below) -- I think either `{leader,helper}_aggregator_endpoint` or perhaps `{leader,helper}_aggregator_url` would be clearer. I'd expect a server to indicate a hostname, while this is a full URL including a protocol & path.",
+              "createdAt": "2024-01-03T19:16:13Z",
+              "updatedAt": "2024-01-03T19:47:39Z"
+            },
+            {
+              "originalPosition": 33,
+              "body": "```suggestion\r\n: A DAP protocol role identifying a party that uploads a report. Note the\r\n```\r\n\r\n(editorial, matching structure of other items in this list)",
+              "createdAt": "2024-01-03T19:25:22Z",
+              "updatedAt": "2024-01-03T19:47:39Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5rdzs5",
+          "commit": {
+            "abbreviatedOid": "5dba50d"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-01-03T19:48:41Z",
+          "updatedAt": "2024-01-03T19:48:41Z",
+          "comments": [
+            {
+              "originalPosition": 56,
+              "body": "(I'd go with \"endpoint\", but I think that an endpoint might also indicate a particular HTTP verb; if that's correct, I'd go with \"URL.\")",
+              "createdAt": "2024-01-03T19:48:41Z",
+              "updatedAt": "2024-01-03T19:48:41Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5reMEP",
+          "commit": {
+            "abbreviatedOid": "4bcd0a7"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-01-03T21:12:49Z",
+          "updatedAt": "2024-01-03T21:12:49Z",
+          "comments": [
+            {
+              "originalPosition": 9,
+              "body": "(This comment follows from off-PR discussion with/suggestion by @jbr.)\r\n\r\n\"small set of aggregator servers\" is correct but perhaps imprecise -- nowadays, there are exactly two aggregator servers, the Leader & the Helper. Maybe \"two aggregator servers, called the Leader & the Helper\"?",
+              "createdAt": "2024-01-03T21:12:49Z",
+              "updatedAt": "2024-01-03T21:12:49Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5reM8L",
+          "commit": {
+            "abbreviatedOid": "4bcd0a7"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-01-03T21:16:04Z",
+          "updatedAt": "2024-01-03T21:19:23Z",
+          "comments": [
+            {
+              "originalPosition": 9,
+              "body": "Makes sense! I left out the discussion of leader and helper because those terms aren't used again in the introduction and they get introduced properly in the glossary.",
+              "createdAt": "2024-01-03T21:16:04Z",
+              "updatedAt": "2024-01-03T21:19:23Z"
+            },
+            {
+              "originalPosition": 33,
+              "body": "Sure. \"The\" feels a bit more natural than \"A\" to me.",
+              "createdAt": "2024-01-03T21:16:50Z",
+              "updatedAt": "2024-01-03T21:19:23Z"
+            },
+            {
+              "originalPosition": 56,
+              "body": "`_url` seems better since that's what the text on the right of the colon says. I want to avoid \"endpoint\" as the httpdir review flagged that word.",
+              "createdAt": "2024-01-03T21:18:59Z",
+              "updatedAt": "2024-01-03T21:19:23Z"
+            }
+          ]
         }
       ]
     }
