@@ -562,16 +562,18 @@ document's scope.
 
 ## Errors
 
-Errors can be reported in DAP both at the HTTP layer and within challenge
-objects as defined in {{iana-considerations}}. DAP servers can return responses
-with an HTTP error response code (4XX or 5XX). For example, if the HTTP client
-sends a request using a method not allowed in this document, then the server MAY
-return HTTP status code 405 Method Not Allowed.
+Errors can be reported in DAP both as HTTP status codes and as problem detail
+objects {{!RFC9457}} in the response body. For example, if the HTTP client sends
+a request using a method not allowed in this document, then the server MAY
+return HTTP status 405 Method Not Allowed.
 
-When the server responds with an error status, it SHOULD provide additional
-information using a problem detail object {{!RFC9457}}. To facilitate automatic
-response to errors, this document defines the following standard tokens for use
-in the "type" field (within the DAP URN namespace
+When the server responds with an error status code, it SHOULD provide additional
+information using a problem detail object. If the response body does consist of
+a problem detail object, the HTTP status code MUST indicate a client or server
+error (the 4xx or 5xx classes, respectively, from {{Section 15 of !RFC9110}}).
+
+To facilitate automatic response to errors, this document defines the following
+standard tokens for use in the "type" field (within the DAP URN namespace
 "urn:ietf:params:ppm:dap:error:"):
 
 | Type                       | Description                                                                                  |
