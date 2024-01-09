@@ -846,6 +846,9 @@ the following parameters associated with it:
 * A unique identifier for the VDAF in use for the task, e.g., one of the VDAFs
   defined in {{Section 10 of !VDAF}}.
 
+Note that the `leader_aggregator_url` and `helper_aggregator_url` values may
+include arbitrary path components.
+
 In addition, in order to facilitate the aggregation and collect protocols, each
 of the Aggregators is configured with following parameters:
 
@@ -880,9 +883,13 @@ to the following rules:
   value MUST be encoded in its URL-safe, unpadded Base 64 representation as
   specified in {{Sections 5 and 3.2 of !RFC4648}}.
 
-For example, resource URI `{leader}/tasks/{task-id}/reports` might be expanded
-into
-`https://example.com/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/reports`
+For example, given a helper URL "https://example.com/api/dap", task ID "f0 16 34
+47 36 4c cf 1b c0 e3 af fc ca 68 73 c9 c3 81 f6 4a cd f9 02 06 62 f8 3f 46 c0 72
+19 e7" and an aggregation job ID "95 ce da 51 e1 a9 75 23 68 b0 d9 61 f9 46 61
+28" (32 and 16 byte octet strings, represented in hexadecimal), resource URI
+`{helper}/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}` would be
+expanded into
+`https://example.com/api/dap/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA`.
 
 ## Uploading Reports {#upload-flow}
 
@@ -966,7 +973,7 @@ at least twice the cache lifetime in order to avoid rejecting reports.
 
 ### Upload Request
 
-Clients upload reports by using an HTTP PUT to
+Clients upload reports by using an HTTP POST to
 `{leader}/tasks/{task-id}/reports`. The payload is a `Report`, with media type
 "application/dap-report", structured as follows:
 
@@ -1006,6 +1013,9 @@ struct {
 Aggregators MAY require Clients to authenticate when uploading reports (see
 {{client-auth}}). If it is used, HTTP client authentication MUST use a scheme
 that meets the requirements in {{request-authentication}}.
+
+The handling of the upload request by the Leader MUST be idempotent as discussed
+in {{Section 9.2.2 of !RFC9110}}.
 
 To generate a report, the Client begins by sharding its measurement into input
 shares and the public share using the VDAF's sharding algorithm ({{Section 5.1
