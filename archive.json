@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-01-07T01:01:43.959622+00:00",
+  "timestamp": "2024-01-09T00:57:40.081267+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -10339,6 +10339,37 @@
           "body": "SGTM, please send a PR :)",
           "createdAt": "2023-11-20T13:02:33Z",
           "updatedAt": "2023-11-20T13:02:33Z"
+        }
+      ]
+    },
+    {
+      "number": 541,
+      "id": "I_kwDOFEJYQs57bgcR",
+      "title": "Versioning PPM media types",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/541",
+      "state": "OPEN",
+      "author": "suman-ganta",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "PPM prescribed media types do not have version component in them. As DAP protocol progressing, the structures are changing in a non-compatible way. In order to consistently decode those structures, we need an indicator on what structure to use to decode them with.\r\n\r\nI propose adding a MIME parameter, `version`, to express the version of the payload.\r\n\r\nEx: To represent Report structure of protocol version DAP-09, use the media type - `application/dap-report;version=09`\r\n\r\nLeader/Helper need to rely on this MIME parameter to consistently parse the payload received, and should also be used to reject unsupported versions.\r\n\r\n",
+      "createdAt": "2024-01-08T16:24:21Z",
+      "updatedAt": "2024-01-08T17:16:03Z",
+      "closedAt": null,
+      "comments": [
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "I wouldn't object to this change if it's helpful for your implementation, but as things stand I'm not sure it's strictly necessary. [When we last discussed versioning](https://mailarchive.ietf.org/arch/msg/ppm/svv73HxLvTMdOqk2fLyuWmZRU6Q/), we decided an implementation could do this completely out of band. For example, in [Daphne](https://github.com/cloudflare/daphne/blob/main/daphne_server/src/router/helper.rs#L29) we prefix each endpoint with \"/:version\", where \":version\" is a Daphne-specific representation of the draft number (e.g., \"v09\" for draft09).\r\n\r\nI think we should also be open to arguments like \"this is already HTTP best practice\". I for one do not have a lot of experience developing HTTP applications.",
+          "createdAt": "2024-01-08T16:31:27Z",
+          "updatedAt": "2024-01-08T16:31:27Z"
+        },
+        {
+          "author": "suman-ganta",
+          "authorAssociation": "NONE",
+          "body": "Agreed on path based ways to distinguish versions as an alternative.\r\n\r\nBut, given that we are defining a dedicated mime type (`application/dap-report`), and not using a generic mime type (`application/octet-stream`), the type should also indicate how to decode it. The encoding is purely based on a specific version and the type information is not part of the stream. So for the reasons of making it self describable as much as possible, I think it is important to express version there.\r\n\r\n* It is not a problem for textual structured payloads such as json (`application/json`) since the structure has delimiters.\r\n* It is not an issue with protobuf (`application/protobuf`) since the message encapsulates the field boundaries.",
+          "createdAt": "2024-01-08T17:16:02Z",
+          "updatedAt": "2024-01-08T17:16:02Z"
         }
       ]
     }
@@ -64589,24 +64620,26 @@
       "id": "PR_kwDOFEJYQs5jEmW-",
       "title": "Fix a couple typos",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/539",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "tgeoghegan",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "See [\"confusables note For bear\"](https://www.dictionary.com/browse/bear) to justify \"borne\" vs. \"born\".",
       "createdAt": "2024-01-02T18:22:29Z",
-      "updatedAt": "2024-01-03T15:32:04Z",
+      "updatedAt": "2024-01-08T15:50:46Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "1d40f97e89a5147acc6706776dd6785a34682391",
       "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "headRefName": "timg/typos",
       "headRefOid": "40a0997c063bdabdc769b55626b50238e4e56479",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "closedAt": "2024-01-08T15:50:46Z",
+      "mergedAt": "2024-01-08T15:50:46Z",
+      "mergedBy": "cjpatton",
+      "mergeCommit": {
+        "oid": "99011a0746db28410e1292006ab7f19ee0dc21b1"
+      },
       "comments": [],
       "reviews": [
         {
@@ -64620,6 +64653,19 @@
           "body": "",
           "createdAt": "2024-01-02T18:23:19Z",
           "updatedAt": "2024-01-02T18:23:19Z",
+          "comments": []
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5r2duH",
+          "commit": {
+            "abbreviatedOid": "40a0997"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2024-01-08T15:50:41Z",
+          "updatedAt": "2024-01-08T15:50:41Z",
           "comments": []
         }
       ]
