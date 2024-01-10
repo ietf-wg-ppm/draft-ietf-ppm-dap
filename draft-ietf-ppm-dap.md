@@ -1982,7 +1982,7 @@ Changing a collection job's parameters is illegal, so further requests to
 with an HTTP client error status code.
 
 After receiving the response to its `CollectionReq`, the Collector makes an HTTP
-POST request to the collection job URI to check on the status of the collect job
+GET request to the collection job URI to check on the status of the collect job
 and eventually obtain the result. If the collection job is not finished yet, the
 Leader responds with HTTP status 202 Accepted. The response MAY include a
 Retry-After header field to suggest a polling interval to the Collector.
@@ -2001,7 +2001,7 @@ between aggregation and collection jobs that can yield trivial batch mismatch
 errors.
 
 Once both aggregate shares are successfully obtained, the Leader responds to
-subsequent HTTP POST requests to the collection job with HTTP status code 200 OK
+subsequent HTTP GET requests to the collection job with HTTP status code 200 OK
 and a body consisting of a `Collection`:
 
 ~~~
@@ -2038,7 +2038,7 @@ structure includes the following:
   Collector.
 
 If obtaining aggregate shares fails, then the Leader responds to subsequent HTTP
-POST requests to the collection job with an HTTP error status and a problem
+GET requests to the collection job with an HTTP error status and a problem
 document as described in {{errors}}.
 
 The Leader MAY respond with HTTP status 204 No Content to requests to a
@@ -2248,7 +2248,7 @@ AggregateShareReq, it must first check that the job or request does not violate
 the parameters associated with the DAP task. It does so as described here. Where
 we say that an Aggregator MUST abort with some error, then:
 
-- Leaders should respond to subsequent HTTP POST requests to the collection job
+- Leaders should respond to subsequent HTTP GET requests to the collection job
   with the indicated error.
 - Helpers should respond to the AggregateShareReq with the indicated error.
 
