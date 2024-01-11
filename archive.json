@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-01-09T00:57:40.081267+00:00",
+  "timestamp": "2024-01-11T00:57:53.582895+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -10354,7 +10354,7 @@
       "labels": [],
       "body": "PPM prescribed media types do not have version component in them. As DAP protocol progressing, the structures are changing in a non-compatible way. In order to consistently decode those structures, we need an indicator on what structure to use to decode them with.\r\n\r\nI propose adding a MIME parameter, `version`, to express the version of the payload.\r\n\r\nEx: To represent Report structure of protocol version DAP-09, use the media type - `application/dap-report;version=09`\r\n\r\nLeader/Helper need to rely on this MIME parameter to consistently parse the payload received, and should also be used to reject unsupported versions.\r\n\r\n",
       "createdAt": "2024-01-08T16:24:21Z",
-      "updatedAt": "2024-01-08T17:16:03Z",
+      "updatedAt": "2024-01-11T00:55:59Z",
       "closedAt": null,
       "comments": [
         {
@@ -10370,6 +10370,41 @@
           "body": "Agreed on path based ways to distinguish versions as an alternative.\r\n\r\nBut, given that we are defining a dedicated mime type (`application/dap-report`), and not using a generic mime type (`application/octet-stream`), the type should also indicate how to decode it. The encoding is purely based on a specific version and the type information is not part of the stream. So for the reasons of making it self describable as much as possible, I think it is important to express version there.\r\n\r\n* It is not a problem for textual structured payloads such as json (`application/json`) since the structure has delimiters.\r\n* It is not an issue with protobuf (`application/protobuf`) since the message encapsulates the field boundaries.",
           "createdAt": "2024-01-08T17:16:02Z",
           "updatedAt": "2024-01-08T17:16:02Z"
+        },
+        {
+          "author": "simon-friedberger",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "I think if we end up with multiple incompatible versions after this is moved out of the draft state adding version information would be a good idea.\r\n\r\n@mnot a comment from you would be greatly appreciated!",
+          "createdAt": "2024-01-09T09:06:40Z",
+          "updatedAt": "2024-01-09T09:07:02Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "@suman-ganta please prepare a PR when you have a moment.",
+          "createdAt": "2024-01-10T16:15:31Z",
+          "updatedAt": "2024-01-10T16:15:31Z"
+        },
+        {
+          "author": "mnot",
+          "authorAssociation": "NONE",
+          "body": "My .02 - it's fine to add a version parameter (or something else) for draft development purposes. When it ships, however, there shouldn't be any need for a version; the media type _is_ the version identifier.",
+          "createdAt": "2024-01-10T23:38:23Z",
+          "updatedAt": "2024-01-10T23:38:23Z"
+        },
+        {
+          "author": "suman-ganta",
+          "authorAssociation": "NONE",
+          "body": "@mnot how do we distinguish objects of same mime type belonging to two different major DAP versions without version parameter?",
+          "createdAt": "2024-01-11T00:43:51Z",
+          "updatedAt": "2024-01-11T00:43:51Z"
+        },
+        {
+          "author": "mnot",
+          "authorAssociation": "NONE",
+          "body": "If it's a new major version, it needs a new media type.",
+          "createdAt": "2024-01-11T00:55:58Z",
+          "updatedAt": "2024-01-11T00:55:58Z"
         }
       ]
     }
@@ -64800,6 +64835,160 @@
               "updatedAt": "2024-01-03T21:19:23Z"
             }
           ]
+        }
+      ]
+    },
+    {
+      "number": 542,
+      "id": "PR_kwDOFEJYQs5jnFa4",
+      "title": "require error responses to be consistent",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/542",
+      "state": "OPEN",
+      "author": "tgeoghegan",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "# Stacked on #540 \r\n\r\nBased on httpdir early review of DAP ([1]), amend the text on error handling:\r\n\r\n- fix non-sequitur reference to iana-considerations and \"challenge objects\"\r\n- require that responses containing problem documents use an error HTTP status\r\n\r\n[1]: https://datatracker.ietf.org/doc/review-ietf-ppm-dap-09-httpdir-early-nottingham-2023-12-29/",
+      "createdAt": "2024-01-09T19:00:56Z",
+      "updatedAt": "2024-01-10T17:31:12Z",
+      "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "baseRefName": "timg/endpoint",
+      "baseRefOid": "9c26647a6e15e8fcac51ba9d793bbcbf022341de",
+      "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "headRefName": "timg/error-consistency",
+      "headRefOid": "1b1bff31d865fbb7a78c9396a29f808b1a929957",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOFEJYQs5sGqRQ",
+          "commit": {
+            "abbreviatedOid": "1b1bff3"
+          },
+          "author": "divergentdave",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2024-01-10T16:56:23Z",
+          "updatedAt": "2024-01-10T16:56:23Z",
+          "comments": []
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5sG7L_",
+          "commit": {
+            "abbreviatedOid": "1b1bff3"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2024-01-10T17:31:12Z",
+          "updatedAt": "2024-01-10T17:31:12Z",
+          "comments": []
+        }
+      ]
+    },
+    {
+      "number": 543,
+      "id": "PR_kwDOFEJYQs5joElK",
+      "title": "Hoist report ID into upload request path",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/543",
+      "state": "OPEN",
+      "author": "tgeoghegan",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "# Stacked on #542 \r\n\r\nPer httpdir early review of DAP ([1]), it's inappropriate to use PUT for a resource that cannot later be GET. For that reason, and also consistency with the aggregation job and collection job request paths, hoist the report ID out of the upload request body and into the request path. We don't want to repeat the report ID twice in one request, so `struct Report` no longer includes a `struct Metadata` and instead just puts the `time` inline in `Report`. `struct ReportMetadata` is still used in `InputShareAad` and elsewhere in DAP, so its definition is not changed, just moved farther down the document, and we explain how to construct it from the report request path and body.\r\n\r\nWith this change, there is now a unique URI for each report uploaded to a DAP leader. However we do not add any requirement that an Aggregator support GET requests on that path, because not all DAP implementations will necessarily store enough per-report information to be able to respond to such a request with a complete `struct Report`. Implementations are free to do that, but can also respond with HTTP 204, 404, 410 or some other error if they wish. As these are well-established HTTP semantics, DAP doesn't need to spend any more ink on explaining them.\r\n\r\n[1]: https://datatracker.ietf.org/doc/review-ietf-ppm-dap-09-httpdir-early-nottingham-2023-12-29/",
+      "createdAt": "2024-01-09T22:19:37Z",
+      "updatedAt": "2024-01-10T18:06:14Z",
+      "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "baseRefName": "timg/error-consistency",
+      "baseRefOid": "1b1bff31d865fbb7a78c9396a29f808b1a929957",
+      "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "headRefName": "timg/report-id-request-path",
+      "headRefOid": "e7581931e51f7bb854b12e55b78165cacc98b465",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [
+        {
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "body": "I lean toward using PUT and changing the request path because:\r\n\r\n1. It makes the report upload request path consistent with the aggregation job and collection job request paths, which include their respective unique job IDs.\r\n1. Using PUT elegantly makes it clear that this request is idempotent and safe to retry (of course if we go to a POST we can just explain in the DAP text that it's an idempotent POST).\r\n1. While this forces a wire-breaking change, I think we're going to do draft 10 of DAP anyway, and that will mean a wire-breaking change to update the HPKE domain separation strings. Making this change to request paths and message formats isn't zero risk, but I think it's a marginal lift for implementations if they're breaking wire compatibility anyway.",
+          "createdAt": "2024-01-10T17:59:31Z",
+          "updatedAt": "2024-01-10T17:59:31Z"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "PRR_kwDOFEJYQs5sHB7m",
+          "commit": {
+            "abbreviatedOid": "e758193"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "I think this change is fine. However, as discussed off-PR (pointed out by @simon-friedberger, I think), switching from `PUT` to `POST` might be a smaller change. Are there downsides to using `POST`?",
+          "createdAt": "2024-01-10T17:45:44Z",
+          "updatedAt": "2024-01-10T17:45:44Z",
+          "comments": []
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5sHKAw",
+          "commit": {
+            "abbreviatedOid": "e758193"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2024-01-10T18:06:14Z",
+          "updatedAt": "2024-01-10T18:06:14Z",
+          "comments": []
+        }
+      ]
+    },
+    {
+      "number": 544,
+      "id": "PR_kwDOFEJYQs5jt2Yw",
+      "title": "Use GET rather than POST when polling collection jobs.",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/544",
+      "state": "OPEN",
+      "author": "branlwyd",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "This was first attempted as part of\r\n571988ca27bc65dad3cd97544c340623330333b8, since the original reason for using POST was removed; but the switch to GET was reverted to avoid including (too many?) breaking wire changes.\r\n\r\nNow that we are applying feedback from the HTTP directorate, we'll have a number of similar breaking changes in the next DAP draft. I think this is a good time to include this change.",
+      "createdAt": "2024-01-10T18:43:16Z",
+      "updatedAt": "2024-01-10T18:52:58Z",
+      "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "baseRefName": "main",
+      "baseRefOid": "99011a0746db28410e1292006ab7f19ee0dc21b1",
+      "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "headRefName": "bran/get-for-collection-polling",
+      "headRefOid": "2975cc4f20d61fb10f348c9371ceeef497b5bdd2",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOFEJYQs5sHdur",
+          "commit": {
+            "abbreviatedOid": "2975cc4"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "Yes, I think this is the right time for this change. Thanks for remembering it.",
+          "createdAt": "2024-01-10T18:52:58Z",
+          "updatedAt": "2024-01-10T18:52:58Z",
+          "comments": []
         }
       ]
     }
