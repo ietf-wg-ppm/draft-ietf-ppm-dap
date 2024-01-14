@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-01-11T00:57:53.582895+00:00",
+  "timestamp": "2024-01-14T01:02:01.335458+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -10354,7 +10354,7 @@
       "labels": [],
       "body": "PPM prescribed media types do not have version component in them. As DAP protocol progressing, the structures are changing in a non-compatible way. In order to consistently decode those structures, we need an indicator on what structure to use to decode them with.\r\n\r\nI propose adding a MIME parameter, `version`, to express the version of the payload.\r\n\r\nEx: To represent Report structure of protocol version DAP-09, use the media type - `application/dap-report;version=09`\r\n\r\nLeader/Helper need to rely on this MIME parameter to consistently parse the payload received, and should also be used to reject unsupported versions.\r\n\r\n",
       "createdAt": "2024-01-08T16:24:21Z",
-      "updatedAt": "2024-01-11T00:55:59Z",
+      "updatedAt": "2024-01-12T21:26:06Z",
       "closedAt": null,
       "comments": [
         {
@@ -10405,6 +10405,34 @@
           "body": "If it's a new major version, it needs a new media type.",
           "createdAt": "2024-01-11T00:55:58Z",
           "updatedAt": "2024-01-11T00:55:58Z"
+        },
+        {
+          "author": "suman-ganta",
+          "authorAssociation": "NONE",
+          "body": "> If it's a new major version, it needs a new media type.\r\n\r\nThat makes sense. But the current media types do not have any version embedded in them, So we need one of the following:\r\n\r\nOption-1:\r\nAdd version to the existing mime types. Which means, change current report mime type from `application/dap-report` to `application/dap-report_01`.\r\nSimilar naming will be followed for major/incompatible revisions.\r\n\r\nOption-2:\r\nmaintain a mandatory MIME parameter (version=) that points to a semver of the entity.\r\n",
+          "createdAt": "2024-01-11T02:42:51Z",
+          "updatedAt": "2024-01-11T02:42:51Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "It seems like a safe  bet that this document will be \"DAP v1\" and a future document with be \"DAP v2\". What about something like `application/dap1-report`?",
+          "createdAt": "2024-01-12T15:32:55Z",
+          "updatedAt": "2024-01-12T15:32:55Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Otherwise I think I prefer @suman-ganta's option 1.",
+          "createdAt": "2024-01-12T15:59:50Z",
+          "updatedAt": "2024-01-12T15:59:50Z"
+        },
+        {
+          "author": "mnot",
+          "authorAssociation": "NONE",
+          "body": "Remember that they're opaque strings; the first version could be `application/dap-report` and the second could be `application/dap2-report` or even `application/dap-results`.",
+          "createdAt": "2024-01-12T21:26:04Z",
+          "updatedAt": "2024-01-12T21:26:04Z"
         }
       ]
     }
