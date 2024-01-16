@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-01-14T01:02:01.335458+00:00",
+  "timestamp": "2024-01-16T00:57:31.277843+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -10354,7 +10354,7 @@
       "labels": [],
       "body": "PPM prescribed media types do not have version component in them. As DAP protocol progressing, the structures are changing in a non-compatible way. In order to consistently decode those structures, we need an indicator on what structure to use to decode them with.\r\n\r\nI propose adding a MIME parameter, `version`, to express the version of the payload.\r\n\r\nEx: To represent Report structure of protocol version DAP-09, use the media type - `application/dap-report;version=09`\r\n\r\nLeader/Helper need to rely on this MIME parameter to consistently parse the payload received, and should also be used to reject unsupported versions.\r\n\r\n",
       "createdAt": "2024-01-08T16:24:21Z",
-      "updatedAt": "2024-01-12T21:26:06Z",
+      "updatedAt": "2024-01-15T23:22:26Z",
       "closedAt": null,
       "comments": [
         {
@@ -10433,6 +10433,41 @@
           "body": "Remember that they're opaque strings; the first version could be `application/dap-report` and the second could be `application/dap2-report` or even `application/dap-results`.",
           "createdAt": "2024-01-12T21:26:04Z",
           "updatedAt": "2024-01-12T21:26:04Z"
+        },
+        {
+          "author": "wangshan",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "I'd prefer we keep the first version as `application/dap-report` and the implementation can optionally add `;version=0x`.\r\nIf we have a second version we can have `application/dap2-report`. ",
+          "createdAt": "2024-01-15T18:01:21Z",
+          "updatedAt": "2024-01-15T18:01:21Z"
+        },
+        {
+          "author": "suman-ganta",
+          "authorAssociation": "NONE",
+          "body": "Why do we need to treat first version differently from the rest?",
+          "createdAt": "2024-01-15T19:04:20Z",
+          "updatedAt": "2024-01-15T19:04:20Z"
+        },
+        {
+          "author": "wangshan",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "I don't have a good reason other than existing MIME types seem to follow that, I don't see any common media types have version1 in the name. Besides, we don't know if there will be dap2, or whether it will still be called dap.",
+          "createdAt": "2024-01-15T20:51:32Z",
+          "updatedAt": "2024-01-15T20:51:32Z"
+        },
+        {
+          "author": "suman-ganta",
+          "authorAssociation": "NONE",
+          "body": "Right. Which is why I was proposing version as a mime parameter.\n\nI'm not sure if there are other cases where tls encoding is used in http layer, but having no version info doesn't help to decode it in a deterministic way.",
+          "createdAt": "2024-01-15T23:19:33Z",
+          "updatedAt": "2024-01-15T23:19:33Z"
+        },
+        {
+          "author": "suman-ganta",
+          "authorAssociation": "NONE",
+          "body": "I would love to see another non DAP tls encoding mime type, if exists, and the practice followed there. \n\nTo me, this is analogous to expressing decoder parameter for video mime types. Without them, there is no consistent way to decode the stream. ",
+          "createdAt": "2024-01-15T23:22:26Z",
+          "updatedAt": "2024-01-15T23:22:26Z"
         }
       ]
     }
@@ -64931,7 +64966,7 @@
       "labels": [],
       "body": "# Stacked on #542 \r\n\r\nPer httpdir early review of DAP ([1]), it's inappropriate to use PUT for a resource that cannot later be GET. For that reason, and also consistency with the aggregation job and collection job request paths, hoist the report ID out of the upload request body and into the request path. We don't want to repeat the report ID twice in one request, so `struct Report` no longer includes a `struct Metadata` and instead just puts the `time` inline in `Report`. `struct ReportMetadata` is still used in `InputShareAad` and elsewhere in DAP, so its definition is not changed, just moved farther down the document, and we explain how to construct it from the report request path and body.\r\n\r\nWith this change, there is now a unique URI for each report uploaded to a DAP leader. However we do not add any requirement that an Aggregator support GET requests on that path, because not all DAP implementations will necessarily store enough per-report information to be able to respond to such a request with a complete `struct Report`. Implementations are free to do that, but can also respond with HTTP 204, 404, 410 or some other error if they wish. As these are well-established HTTP semantics, DAP doesn't need to spend any more ink on explaining them.\r\n\r\n[1]: https://datatracker.ietf.org/doc/review-ietf-ppm-dap-09-httpdir-early-nottingham-2023-12-29/",
       "createdAt": "2024-01-09T22:19:37Z",
-      "updatedAt": "2024-01-10T18:06:14Z",
+      "updatedAt": "2024-01-15T18:46:28Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "timg/error-consistency",
       "baseRefOid": "1b1bff31d865fbb7a78c9396a29f808b1a929957",
@@ -64949,6 +64984,13 @@
           "body": "I lean toward using PUT and changing the request path because:\r\n\r\n1. It makes the report upload request path consistent with the aggregation job and collection job request paths, which include their respective unique job IDs.\r\n1. Using PUT elegantly makes it clear that this request is idempotent and safe to retry (of course if we go to a POST we can just explain in the DAP text that it's an idempotent POST).\r\n1. While this forces a wire-breaking change, I think we're going to do draft 10 of DAP anyway, and that will mean a wire-breaking change to update the HPKE domain separation strings. Making this change to request paths and message formats isn't zero risk, but I think it's a marginal lift for implementations if they're breaking wire compatibility anyway.",
           "createdAt": "2024-01-10T17:59:31Z",
           "updatedAt": "2024-01-10T17:59:31Z"
+        },
+        {
+          "author": "wangshan",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "@tgeoghegan I read through the mailing list but don't get why this change is necessary? it seems specifying idempotent POST will do the same? Will we ever have a good reason to support GET a report? ",
+          "createdAt": "2024-01-15T18:45:34Z",
+          "updatedAt": "2024-01-15T18:45:34Z"
         }
       ],
       "reviews": [
@@ -64977,6 +65019,26 @@
           "createdAt": "2024-01-10T18:06:14Z",
           "updatedAt": "2024-01-10T18:06:14Z",
           "comments": []
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5sm77A",
+          "commit": {
+            "abbreviatedOid": "e758193"
+          },
+          "author": "wangshan",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-01-15T18:46:28Z",
+          "updatedAt": "2024-01-15T18:46:28Z",
+          "comments": [
+            {
+              "originalPosition": 86,
+              "body": "Does ReportMetadata still have meaning? would it be simpler if we simply put reportID and time in InputShareAad?",
+              "createdAt": "2024-01-15T18:46:28Z",
+              "updatedAt": "2024-01-15T18:46:28Z"
+            }
+          ]
         }
       ]
     },
