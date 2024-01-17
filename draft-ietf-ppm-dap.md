@@ -530,8 +530,7 @@ Client could not report 10^6s or -20s.
 # Message Transport {#message-transport}
 
 Communications between DAP participants are carried over HTTP {{!RFC9110}}. Use
-of HTTPS {{!RFC8446}} is REQUIRED to provide server authentication and
-confidentiality.
+of HTTPS is REQUIRED to provide server authentication and confidentiality.
 
 ## HTTPS Request Authentication {#request-authentication}
 
