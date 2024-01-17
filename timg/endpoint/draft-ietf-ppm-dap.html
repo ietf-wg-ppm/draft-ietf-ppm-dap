@@ -2023,16 +2023,17 @@ document's scope.<a href="#section-3.1-5" class="pilcrow">¶</a></p>
         <h3 id="name-errors">
 <a href="#section-3.2" class="section-number selfRef">3.2. </a><a href="#name-errors" class="section-name selfRef">Errors</a>
         </h3>
-<p id="section-3.2-1">Errors can be reported in DAP both at the HTTP layer and within challenge
-objects as defined in <a href="#iana-considerations" class="auto internal xref">Section 8</a>. DAP servers can return responses
-with an HTTP error response code (4XX or 5XX). For example, if the HTTP client
-sends a request using a method not allowed in this document, then the server <span class="bcp14">MAY</span>
-return HTTP status code 405 Method Not Allowed.<a href="#section-3.2-1" class="pilcrow">¶</a></p>
-<p id="section-3.2-2">When the server responds with an error status, it <span class="bcp14">SHOULD</span> provide additional
-information using a problem detail object <span>[<a href="#RFC9457" class="cite xref">RFC9457</a>]</span>. To facilitate automatic
-response to errors, this document defines the following standard tokens for use
-in the "type" field (within the DAP URN namespace
-"urn:ietf:params:ppm:dap:error:"):<a href="#section-3.2-2" class="pilcrow">¶</a></p>
+<p id="section-3.2-1">Errors can be reported in DAP both as HTTP status codes and as problem detail
+objects <span>[<a href="#RFC9457" class="cite xref">RFC9457</a>]</span> in the response body. For example, if the HTTP client sends
+a request using a method not allowed in this document, then the server <span class="bcp14">MAY</span>
+return HTTP status 405 Method Not Allowed.<a href="#section-3.2-1" class="pilcrow">¶</a></p>
+<p id="section-3.2-2">When the server responds with an error status code, it <span class="bcp14">SHOULD</span> provide additional
+information using a problem detail object. If the response body does consist of
+a problem detail object, the HTTP status code <span class="bcp14">MUST</span> indicate a client or server
+error (the 4xx or 5xx classes, respectively, from <span><a href="https://rfc-editor.org/rfc/rfc9110#section-15" class="relref">Section 15</a> of [<a href="#RFC9110" class="cite xref">RFC9110</a>]</span>).<a href="#section-3.2-2" class="pilcrow">¶</a></p>
+<p id="section-3.2-3">To facilitate automatic response to errors, this document defines the following
+standard tokens for use in the "type" field (within the DAP URN namespace
+"urn:ietf:params:ppm:dap:error:"):<a href="#section-3.2-3" class="pilcrow">¶</a></p>
 <table class="center" id="table-1">
           <caption><a href="#table-1" class="selfRef">Table 1</a></caption>
 <thead>
@@ -2100,22 +2101,22 @@ in the "type" field (within the DAP URN namespace
             </tr>
           </tbody>
         </table>
-<p id="section-3.2-4">This list is not exhaustive. The server <span class="bcp14">MAY</span> return errors set to a URI other
+<p id="section-3.2-5">This list is not exhaustive. The server <span class="bcp14">MAY</span> return errors set to a URI other
 than those defined above. Servers <span class="bcp14">MUST NOT</span> use the DAP URN namespace for errors
 not listed in the appropriate IANA registry (see <a href="#urn-space" class="auto internal xref">Section 8.3</a>). The "detail"
 member of the Problem Details document includes additional diagnostic
-information.<a href="#section-3.2-4" class="pilcrow">¶</a></p>
-<p id="section-3.2-5">When the task ID is known (see <a href="#task-configuration" class="auto internal xref">Section 4.2</a>), the problem document
+information.<a href="#section-3.2-5" class="pilcrow">¶</a></p>
+<p id="section-3.2-6">When the task ID is known (see <a href="#task-configuration" class="auto internal xref">Section 4.2</a>), the problem document
 <span class="bcp14">SHOULD</span> include an additional "taskid" member containing the ID encoded in Base
 64 using the URL and filename safe alphabet with no padding defined in
-Sections <a href="https://rfc-editor.org/rfc/rfc4648#section-5" class="relref">5</a> and <a href="https://rfc-editor.org/rfc/rfc4648#section-3.2" class="relref">3.2</a> of <span>[<a href="#RFC4648" class="cite xref">RFC4648</a>]</span>.<a href="#section-3.2-5" class="pilcrow">¶</a></p>
-<p id="section-3.2-6">In the remainder of this document, the tokens in the table above are used to
+Sections <a href="https://rfc-editor.org/rfc/rfc4648#section-5" class="relref">5</a> and <a href="https://rfc-editor.org/rfc/rfc4648#section-3.2" class="relref">3.2</a> of <span>[<a href="#RFC4648" class="cite xref">RFC4648</a>]</span>.<a href="#section-3.2-6" class="pilcrow">¶</a></p>
+<p id="section-3.2-7">In the remainder of this document, the tokens in the table above are used to
 refer to error types, rather than the full URNs. For example, an "error of type
 'invalidMessage'" refers to an error document with "type" value
-"urn:ietf:params:ppm:dap:error:invalidMessage".<a href="#section-3.2-6" class="pilcrow">¶</a></p>
-<p id="section-3.2-7">This document uses the verbs "abort" and "alert with [some error message]" to
+"urn:ietf:params:ppm:dap:error:invalidMessage".<a href="#section-3.2-7" class="pilcrow">¶</a></p>
+<p id="section-3.2-8">This document uses the verbs "abort" and "alert with [some error message]" to
 describe how protocol participants react to various error conditions. This
-implies HTTP status code 400 Bad Request unless explicitly specified otherwise.<a href="#section-3.2-7" class="pilcrow">¶</a></p>
+implies HTTP status code 400 Bad Request unless explicitly specified otherwise.<a href="#section-3.2-8" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
