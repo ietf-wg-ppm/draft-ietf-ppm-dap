@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-01-16T00:57:31.277843+00:00",
+  "timestamp": "2024-01-18T00:57:09.293234+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -10354,7 +10354,7 @@
       "labels": [],
       "body": "PPM prescribed media types do not have version component in them. As DAP protocol progressing, the structures are changing in a non-compatible way. In order to consistently decode those structures, we need an indicator on what structure to use to decode them with.\r\n\r\nI propose adding a MIME parameter, `version`, to express the version of the payload.\r\n\r\nEx: To represent Report structure of protocol version DAP-09, use the media type - `application/dap-report;version=09`\r\n\r\nLeader/Helper need to rely on this MIME parameter to consistently parse the payload received, and should also be used to reject unsupported versions.\r\n\r\n",
       "createdAt": "2024-01-08T16:24:21Z",
-      "updatedAt": "2024-01-15T23:22:26Z",
+      "updatedAt": "2024-01-16T17:23:41Z",
       "closedAt": null,
       "comments": [
         {
@@ -10468,6 +10468,13 @@
           "body": "I would love to see another non DAP tls encoding mime type, if exists, and the practice followed there. \n\nTo me, this is analogous to expressing decoder parameter for video mime types. Without them, there is no consistent way to decode the stream. ",
           "createdAt": "2024-01-15T23:22:26Z",
           "updatedAt": "2024-01-15T23:22:26Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "I'm not aware of such a thing. One example we might follow is OHTTP, which uses yet another serialization format: https://www.rfc-editor.org/rfc/rfc9458.html#section-9",
+          "createdAt": "2024-01-16T17:23:40Z",
+          "updatedAt": "2024-01-16T17:23:40Z"
         }
       ]
     }
@@ -64773,24 +64780,26 @@
       "id": "PR_kwDOFEJYQs5jEsHI",
       "title": "Address some items from httpdir early review",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/540",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "tgeoghegan",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "Mark Nottingham (@mnot) was kind enough to share early review feedback on DAP on behalf of httpdir ([1]). This PR addresses several of the items there. See individual commit messages for discussion.\r\n\r\n[1]: https://datatracker.ietf.org/doc/review-ietf-ppm-dap-09-httpdir-early-nottingham-2023-12-29/",
       "createdAt": "2024-01-02T18:49:38Z",
-      "updatedAt": "2024-01-03T21:19:23Z",
+      "updatedAt": "2024-01-17T02:20:04Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "1d40f97e89a5147acc6706776dd6785a34682391",
       "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "headRefName": "timg/endpoint",
-      "headRefOid": "9c26647a6e15e8fcac51ba9d793bbcbf022341de",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "headRefOid": "b47c136ff201b9b82ff9018c3b4a4b0a0369312f",
+      "closedAt": "2024-01-17T02:20:04Z",
+      "mergedAt": "2024-01-17T02:20:04Z",
+      "mergedBy": "tgeoghegan",
+      "mergeCommit": {
+        "oid": "76237517fbd8e8e78de43dba1f01729dba22eb89"
+      },
       "comments": [
         {
           "author": "tgeoghegan",
@@ -64898,6 +64907,66 @@
               "updatedAt": "2024-01-03T21:19:23Z"
             }
           ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5s19S3",
+          "commit": {
+            "abbreviatedOid": "9c26647"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2024-01-17T00:58:18Z",
+          "updatedAt": "2024-01-17T00:59:07Z",
+          "comments": [
+            {
+              "originalPosition": 76,
+              "body": "Is this the correct reference? RFC8446 defines TLS, not HTTPS.",
+              "createdAt": "2024-01-17T00:58:19Z",
+              "updatedAt": "2024-01-17T00:59:08Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5s2HTp",
+          "commit": {
+            "abbreviatedOid": "9c26647"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-01-17T01:08:27Z",
+          "updatedAt": "2024-01-17T01:08:27Z",
+          "comments": [
+            {
+              "originalPosition": 76,
+              "body": "Hmm, good point. RFC 9110 obsoletes RFC 2818 \"HTTP Over TLS\", so maybe the reference to 9110 suffices?",
+              "createdAt": "2024-01-17T01:08:27Z",
+              "updatedAt": "2024-01-17T01:08:28Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5s2I8i",
+          "commit": {
+            "abbreviatedOid": "9c26647"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-01-17T01:10:07Z",
+          "updatedAt": "2024-01-17T01:10:07Z",
+          "comments": [
+            {
+              "originalPosition": 76,
+              "body": "That makes sense to me.",
+              "createdAt": "2024-01-17T01:10:07Z",
+              "updatedAt": "2024-01-17T01:10:07Z"
+            }
+          ]
         }
       ]
     },
@@ -64906,24 +64975,26 @@
       "id": "PR_kwDOFEJYQs5jnFa4",
       "title": "require error responses to be consistent",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/542",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "tgeoghegan",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "# Stacked on #540 \r\n\r\nBased on httpdir early review of DAP ([1]), amend the text on error handling:\r\n\r\n- fix non-sequitur reference to iana-considerations and \"challenge objects\"\r\n- require that responses containing problem documents use an error HTTP status\r\n\r\n[1]: https://datatracker.ietf.org/doc/review-ietf-ppm-dap-09-httpdir-early-nottingham-2023-12-29/",
       "createdAt": "2024-01-09T19:00:56Z",
-      "updatedAt": "2024-01-10T17:31:12Z",
+      "updatedAt": "2024-01-17T02:20:53Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "timg/endpoint",
       "baseRefOid": "9c26647a6e15e8fcac51ba9d793bbcbf022341de",
       "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "headRefName": "timg/error-consistency",
       "headRefOid": "1b1bff31d865fbb7a78c9396a29f808b1a929957",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "closedAt": "2024-01-17T02:20:53Z",
+      "mergedAt": "2024-01-17T02:20:53Z",
+      "mergedBy": "tgeoghegan",
+      "mergeCommit": {
+        "oid": "bc0c0b999fb33af7705b8432f229095a3a03c6e4"
+      },
       "comments": [],
       "reviews": [
         {
@@ -64951,6 +65022,19 @@
           "createdAt": "2024-01-10T17:31:12Z",
           "updatedAt": "2024-01-10T17:31:12Z",
           "comments": []
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5s1_Ce",
+          "commit": {
+            "abbreviatedOid": "1b1bff3"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2024-01-17T01:00:02Z",
+          "updatedAt": "2024-01-17T01:00:02Z",
+          "comments": []
         }
       ]
     },
@@ -64964,15 +65048,15 @@
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
-      "body": "# Stacked on #542 \r\n\r\nPer httpdir early review of DAP ([1]), it's inappropriate to use PUT for a resource that cannot later be GET. For that reason, and also consistency with the aggregation job and collection job request paths, hoist the report ID out of the upload request body and into the request path. We don't want to repeat the report ID twice in one request, so `struct Report` no longer includes a `struct Metadata` and instead just puts the `time` inline in `Report`. `struct ReportMetadata` is still used in `InputShareAad` and elsewhere in DAP, so its definition is not changed, just moved farther down the document, and we explain how to construct it from the report request path and body.\r\n\r\nWith this change, there is now a unique URI for each report uploaded to a DAP leader. However we do not add any requirement that an Aggregator support GET requests on that path, because not all DAP implementations will necessarily store enough per-report information to be able to respond to such a request with a complete `struct Report`. Implementations are free to do that, but can also respond with HTTP 204, 404, 410 or some other error if they wish. As these are well-established HTTP semantics, DAP doesn't need to spend any more ink on explaining them.\r\n\r\n[1]: https://datatracker.ietf.org/doc/review-ietf-ppm-dap-09-httpdir-early-nottingham-2023-12-29/",
+      "body": "Per httpdir early review of DAP ([1]), it's inappropriate to use PUT for a resource that cannot later be GET. For that reason, and also consistency with the aggregation job and collection job request paths, hoist the report ID out of the upload request body and into the request path. We don't want to repeat the report ID twice in one request, so `struct Report` no longer includes a `struct Metadata` and instead just puts the `time` inline in `Report`. `struct ReportMetadata` is still used in `InputShareAad` and elsewhere in DAP, so its definition is not changed, just moved farther down the document, and we explain how to construct it from the report request path and body.\r\n\r\nWith this change, there is now a unique URI for each report uploaded to a DAP leader. However we do not add any requirement that an Aggregator support GET requests on that path, because not all DAP implementations will necessarily store enough per-report information to be able to respond to such a request with a complete `struct Report`. Implementations are free to do that, but can also respond with HTTP 204, 404, 410 or some other error if they wish. As these are well-established HTTP semantics, DAP doesn't need to spend any more ink on explaining them.\r\n\r\n[1]: https://datatracker.ietf.org/doc/review-ietf-ppm-dap-09-httpdir-early-nottingham-2023-12-29/",
       "createdAt": "2024-01-09T22:19:37Z",
-      "updatedAt": "2024-01-15T18:46:28Z",
+      "updatedAt": "2024-01-17T18:47:23Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
-      "baseRefName": "timg/error-consistency",
-      "baseRefOid": "1b1bff31d865fbb7a78c9396a29f808b1a929957",
+      "baseRefName": "main",
+      "baseRefOid": "3aee3f8ba87c73aacadf03143e6a3e6d5d91ff9f",
       "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "headRefName": "timg/report-id-request-path",
-      "headRefOid": "e7581931e51f7bb854b12e55b78165cacc98b465",
+      "headRefOid": "571e7c602cdb597c2e3c4735dd7285742cffabb6",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
@@ -64991,6 +65075,27 @@
           "body": "@tgeoghegan I read through the mailing list but don't get why this change is necessary? it seems specifying idempotent POST will do the same? Will we ever have a good reason to support GET a report? ",
           "createdAt": "2024-01-15T18:45:34Z",
           "updatedAt": "2024-01-15T18:45:34Z"
+        },
+        {
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> @tgeoghegan I read through the mailing list but don't get why this change is necessary? it seems specifying idempotent POST will do the same? Will we ever have a good reason to support GET a report?\r\n\r\nI agree that this change is not necessary, in that the protocol will work fine if we do nothing, or if we switch to a POST request and otherwise change nothing. I laid out my arguments for this change [above](https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/543#issuecomment-1885351964), and concede that my arguments are essentially esthetic.\r\n\r\nFWIW I don't intend to move forward with this change until and unless we establish WG rough consensus for it. I'll be following up on the mailing list with some concise discussion points to move this and other topics forward.",
+          "createdAt": "2024-01-16T18:48:01Z",
+          "updatedAt": "2024-01-16T18:48:01Z"
+        },
+        {
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "body": "For what it's worth, I think a `POST` is ultimately a smaller change that arrives at the desired behavior.\r\n\r\nI don't see much use for a `GET` of uploaded reports, and implementations will plausibly delete report content as soon as possible to reduce storage costs (which would make `GET` not so useful).",
+          "createdAt": "2024-01-16T19:32:24Z",
+          "updatedAt": "2024-01-16T19:32:24Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "@tgeoghegan please rebase when you have a moment",
+          "createdAt": "2024-01-17T16:04:54Z",
+          "updatedAt": "2024-01-17T16:04:54Z"
         }
       ],
       "reviews": [
@@ -65039,6 +65144,26 @@
               "updatedAt": "2024-01-15T18:46:28Z"
             }
           ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5s9IJ4",
+          "commit": {
+            "abbreviatedOid": "e758193"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-01-17T18:47:23Z",
+          "updatedAt": "2024-01-17T18:47:23Z",
+          "comments": [
+            {
+              "originalPosition": 86,
+              "body": "`struct ReportMetadata` ends up being useful in the aggregation interaction (e.g. it goes into a `ReportShare`) so I think it's useful. ",
+              "createdAt": "2024-01-17T18:47:23Z",
+              "updatedAt": "2024-01-17T18:47:23Z"
+            }
+          ]
         }
       ]
     },
@@ -65054,7 +65179,7 @@
       "labels": [],
       "body": "This was first attempted as part of\r\n571988ca27bc65dad3cd97544c340623330333b8, since the original reason for using POST was removed; but the switch to GET was reverted to avoid including (too many?) breaking wire changes.\r\n\r\nNow that we are applying feedback from the HTTP directorate, we'll have a number of similar breaking changes in the next DAP draft. I think this is a good time to include this change.",
       "createdAt": "2024-01-10T18:43:16Z",
-      "updatedAt": "2024-01-10T18:52:58Z",
+      "updatedAt": "2024-01-17T02:21:26Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "99011a0746db28410e1292006ab7f19ee0dc21b1",
@@ -65065,7 +65190,15 @@
       "mergedAt": null,
       "mergedBy": null,
       "mergeCommit": null,
-      "comments": [],
+      "comments": [
+        {
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "body": "@branlwyd I think we have enough consensus to take this change now. Anything else you want to do before we merge?",
+          "createdAt": "2024-01-17T02:21:25Z",
+          "updatedAt": "2024-01-17T02:21:25Z"
+        }
+      ],
       "reviews": [
         {
           "id": "PRR_kwDOFEJYQs5sHdur",
@@ -65078,6 +65211,74 @@
           "body": "Yes, I think this is the right time for this change. Thanks for remembering it.",
           "createdAt": "2024-01-10T18:52:58Z",
           "updatedAt": "2024-01-10T18:52:58Z",
+          "comments": []
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5s16Pq",
+          "commit": {
+            "abbreviatedOid": "2975cc4"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2024-01-17T00:55:19Z",
+          "updatedAt": "2024-01-17T00:55:19Z",
+          "comments": []
+        }
+      ]
+    },
+    {
+      "number": 545,
+      "id": "PR_kwDOFEJYQs5kQ7_H",
+      "title": "require error responses to be consistent, again",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/545",
+      "state": "MERGED",
+      "author": "tgeoghegan",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Based on httpdir early review of DAP ([1]), amend the text on error handling:\r\n\r\n- fix non-sequitur reference to iana-considerations and \"challenge objects\"\r\n- require that responses containing problem documents use an error HTTP status\r\n\r\n[1]: https://datatracker.ietf.org/doc/review-ietf-ppm-dap-09-httpdir-early-nottingham-2023-12-29/\r\n\r\nThis is exactly the same as #542, but I accidentally merged that change into the wrong branch.",
+      "createdAt": "2024-01-17T02:25:38Z",
+      "updatedAt": "2024-01-17T14:54:10Z",
+      "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "baseRefName": "main",
+      "baseRefOid": "76237517fbd8e8e78de43dba1f01729dba22eb89",
+      "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "headRefName": "timg/error-consistency",
+      "headRefOid": "4e1593d7ebc2077df1925615eb56038911588334",
+      "closedAt": "2024-01-17T14:54:09Z",
+      "mergedAt": "2024-01-17T14:54:09Z",
+      "mergedBy": "tgeoghegan",
+      "mergeCommit": {
+        "oid": "3aee3f8ba87c73aacadf03143e6a3e6d5d91ff9f"
+      },
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOFEJYQs5s29nI",
+          "commit": {
+            "abbreviatedOid": "4e1593d"
+          },
+          "author": "divergentdave",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2024-01-17T02:27:26Z",
+          "updatedAt": "2024-01-17T02:27:26Z",
+          "comments": []
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5s7K71",
+          "commit": {
+            "abbreviatedOid": "4e1593d"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2024-01-17T14:36:51Z",
+          "updatedAt": "2024-01-17T14:36:51Z",
           "comments": []
         }
       ]
