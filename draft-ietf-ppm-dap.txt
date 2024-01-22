@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 20 July 2024                                         Cloudflare
+Expires: 25 July 2024                                         Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                                  Mozilla
                                                               C. A. Wood
                                                               Cloudflare
-                                                         17 January 2024
+                                                         22 January 2024
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -63,7 +63,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 20 July 2024.
+   This Internet-Draft will expire on 25 July 2024.
 
 Copyright Notice
 
@@ -2148,7 +2148,7 @@ struct {} Empty;
    the body MUST fail with an HTTP client error status code.
 
    After receiving the response to its CollectionReq, the Collector
-   makes an HTTP POST request to the collection job URI to check on the
+   makes an HTTP GET request to the collection job URI to check on the
    status of the collect job and eventually obtain the result.  If the
    collection job is not finished yet, the Leader responds with HTTP
    status 202 Accepted.  The response MAY include a Retry-After header
@@ -2169,7 +2169,7 @@ struct {} Empty;
    can yield trivial batch mismatch errors.
 
    Once both aggregate shares are successfully obtained, the Leader
-   responds to subsequent HTTP POST requests to the collection job with
+   responds to subsequent HTTP GET requests to the collection job with
    HTTP status code 200 OK and a body consisting of a Collection:
 
    struct {
@@ -2207,8 +2207,8 @@ struct {} Empty;
       encrypted to the Collector.
 
    If obtaining aggregate shares fails, then the Leader responds to
-   subsequent HTTP POST requests to the collection job with an HTTP
-   error status and a problem document as described in Section 3.2.
+   subsequent HTTP GET requests to the collection job with an HTTP error
+   status and a problem document as described in Section 3.2.
 
    The Leader MAY respond with HTTP status 204 No Content to requests to
    a collection job if the results have been deleted.
@@ -2416,7 +2416,7 @@ enc, payload = SealBase(pk, "dap-09 aggregate share" || server_role || 0x00,
    as described here.  Where we say that an Aggregator MUST abort with
    some error, then:
 
-   *  Leaders should respond to subsequent HTTP POST requests to the
+   *  Leaders should respond to subsequent HTTP GET requests to the
       collection job with the indicated error.
 
    *  Helpers should respond to the AggregateShareReq with the indicated
