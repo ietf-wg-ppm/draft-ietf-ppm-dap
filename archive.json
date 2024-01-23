@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-01-21T01:02:20.108971+00:00",
+  "timestamp": "2024-01-23T00:58:59.928001+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -65172,24 +65172,26 @@
       "id": "PR_kwDOFEJYQs5jt2Yw",
       "title": "Use GET rather than POST when polling collection jobs.",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/544",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "branlwyd",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "This was first attempted as part of\r\n571988ca27bc65dad3cd97544c340623330333b8, since the original reason for using POST was removed; but the switch to GET was reverted to avoid including (too many?) breaking wire changes.\r\n\r\nNow that we are applying feedback from the HTTP directorate, we'll have a number of similar breaking changes in the next DAP draft. I think this is a good time to include this change.",
       "createdAt": "2024-01-10T18:43:16Z",
-      "updatedAt": "2024-01-17T02:21:26Z",
+      "updatedAt": "2024-01-22T22:08:44Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "99011a0746db28410e1292006ab7f19ee0dc21b1",
       "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "headRefName": "bran/get-for-collection-polling",
       "headRefOid": "2975cc4f20d61fb10f348c9371ceeef497b5bdd2",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "closedAt": "2024-01-22T22:08:40Z",
+      "mergedAt": "2024-01-22T22:08:40Z",
+      "mergedBy": "branlwyd",
+      "mergeCommit": {
+        "oid": "cc7e5f4ae10f3ff5f28a23d330105f3dd41fdb35"
+      },
       "comments": [
         {
           "author": "tgeoghegan",
