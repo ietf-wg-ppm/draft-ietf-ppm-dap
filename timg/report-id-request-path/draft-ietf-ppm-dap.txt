@@ -1146,6 +1146,9 @@ struct {} Empty;
    reports (see Section 7.2).  If it is used, HTTP client authentication
    MUST use a scheme that meets the requirements in Section 3.1.
 
+   The handling of the upload request by the Leader MUST be idempotent
+   as discussed in Section 9.2.2 of [RFC9110].
+
    To generate a report, the Client begins by sharding its measurement
    into input shares and the public share using the VDAF's sharding
    algorithm (Section 5.1 of [VDAF]), using the report ID as the nonce:
