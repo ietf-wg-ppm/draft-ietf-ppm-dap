@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 27 July 2024                                         Cloudflare
+Expires: 28 July 2024                                         Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                                  Mozilla
                                                               C. A. Wood
                                                               Cloudflare
-                                                         24 January 2024
+                                                         25 January 2024
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -63,7 +63,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 27 July 2024.
+   This Internet-Draft will expire on 28 July 2024.
 
 Copyright Notice
 
@@ -1015,7 +1015,7 @@ struct {} Empty;
    02 06 62 f8 3f 46 c0 72 19 e7" and an aggregation job ID "95 ce da 51
    e1 a9 75 23 68 b0 d9 61 f9 46 61 28" (32 and 16 byte octet strings,
    represented in hexadecimal), resource URI {helper}/tasks/{task-
-   id}/aggregation_jobs/{report-id} would be expanded into
+   id}/aggregation_jobs/{aggregation-job-id} would be expanded into
    https://example.com/api/dap/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-
    QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA.
 
