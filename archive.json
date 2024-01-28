@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-01-25T00:59:01.255484+00:00",
+  "timestamp": "2024-01-28T00:56:46.688432+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -65043,24 +65043,26 @@
       "id": "PR_kwDOFEJYQs5joElK",
       "title": "Use HTTP POST for report uploads",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/543",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "tgeoghegan",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "Per httpdir early review of DAP ([1]), it's inappropriate to use PUT for a resource that cannot later be GET. Change the HTTP method for report uploads to POST, and add a note making it clear that uploads are idempotent and safe to retry.\r\n\r\n[1]: https://datatracker.ietf.org/doc/review-ietf-ppm-dap-09-httpdir-early-nottingham-2023-12-29/\r\n\r\nPrevious description of this PR:\r\n~For that reason, and also consistency with the aggregation job and collection job request paths, hoist the report ID out of the upload request body and into the request path. We don't want to repeat the report ID twice in one request, so `struct Report` no longer includes a `struct Metadata` and instead just puts the `time` inline in `Report`. `struct ReportMetadata` is still used in `InputShareAad` and elsewhere in DAP, so its definition is not changed, just moved farther down the document, and we explain how to construct it from the report request path and body.~\r\n\r\n~With this change, there is now a unique URI for each report uploaded to a DAP leader. However we do not add any requirement that an Aggregator support GET requests on that path, because not all DAP implementations will necessarily store enough per-report information to be able to respond to such a request with a complete `struct Report`. Implementations are free to do that, but can also respond with HTTP 204, 404, 410 or some other error if they wish. As these are well-established HTTP semantics, DAP doesn't need to spend any more ink on explaining them.~",
       "createdAt": "2024-01-09T22:19:37Z",
-      "updatedAt": "2024-01-25T00:44:29Z",
+      "updatedAt": "2024-01-25T17:48:14Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
-      "baseRefOid": "3aee3f8ba87c73aacadf03143e6a3e6d5d91ff9f",
+      "baseRefOid": "cc7e5f4ae10f3ff5f28a23d330105f3dd41fdb35",
       "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "headRefName": "timg/report-id-request-path",
-      "headRefOid": "72f5b95b826b4c3251e1f2aefc85155ffd790602",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "headRefOid": "806d329e4512399d1f5ef26e0c7d0b98ef36175e",
+      "closedAt": "2024-01-25T17:48:14Z",
+      "mergedAt": "2024-01-25T17:48:14Z",
+      "mergedBy": "tgeoghegan",
+      "mergeCommit": {
+        "oid": "8f1f29daf32e3bdc769ccc65938d421be923e56c"
+      },
       "comments": [
         {
           "author": "tgeoghegan",
