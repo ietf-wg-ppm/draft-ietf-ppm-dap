@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-02-04T00:57:33.288599+00:00",
+  "timestamp": "2024-02-06T00:53:14.619856+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -8987,7 +8987,7 @@
       "id": "I_kwDOFEJYQs5krJQx",
       "title": "Use POST instead of PUT",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/450",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "ekr",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
@@ -8996,8 +8996,8 @@
       ],
       "body": "RFC 9110 says:\r\n\r\n> The fundamental difference between the POST and PUT methods is highlighted by the different intent for the enclosed representation. The target resource in a POST request is intended to handle the enclosed representation according to the resource's own semantics, whereas the enclosed representation in a PUT request is defined as replacing the state of the target resource. Hence, the intent of PUT is idempotent and visible to intermediaries, even though the exact effect is only known by the origin server.\r\n\r\nAs we are not replacing the resource at: `{leader}/tasks/{task-id}/reports` we should use `POST`\r\n",
       "createdAt": "2023-04-28T19:24:40Z",
-      "updatedAt": "2023-11-28T18:50:34Z",
-      "closedAt": null,
+      "updatedAt": "2024-02-06T00:46:27Z",
+      "closedAt": "2024-02-06T00:46:27Z",
       "comments": [
         {
           "author": "cjpatton",
@@ -9068,6 +9068,13 @@
           "body": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/532, once it lands, will remove the last reason (AFAIK) for collection job polling to use a POST rather than a GET. That PR will leave the POST in place for now, but collection job polling semantics may be worthy of review by the httpdir folks.",
           "createdAt": "2023-11-28T18:50:33Z",
           "updatedAt": "2023-11-28T18:50:33Z"
+        },
+        {
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "body": "We changed the request method for collection jobs in #544 and for report uploads in #543. I don't think there's anything else to do here.",
+          "createdAt": "2024-02-06T00:46:27Z",
+          "updatedAt": "2024-02-06T00:46:27Z"
         }
       ]
     },
@@ -10477,6 +10484,22 @@
           "updatedAt": "2024-01-16T17:23:40Z"
         }
       ]
+    },
+    {
+      "number": 546,
+      "id": "I_kwDOFEJYQs5-UAtH",
+      "title": "projexct",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/546",
+      "state": "CLOSED",
+      "author": "alexanderramos89",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "",
+      "createdAt": "2024-02-05T18:13:22Z",
+      "updatedAt": "2024-02-05T19:13:13Z",
+      "closedAt": "2024-02-05T19:13:13Z",
+      "comments": []
     }
   ],
   "pulls": [
