@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-02-18T00:56:53.958203+00:00",
+  "timestamp": "2024-02-20T00:52:44.891507+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -65375,7 +65375,7 @@
       "labels": [],
       "body": "This adds support for expressing dap versions in the mime types. This addresses the issue #541 ",
       "createdAt": "2024-02-17T02:22:27Z",
-      "updatedAt": "2024-02-17T02:22:28Z",
+      "updatedAt": "2024-02-18T05:14:49Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "8f1f29daf32e3bdc769ccc65938d421be923e56c",
