@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-02-20T00:52:44.891507+00:00",
+  "timestamp": "2024-02-22T00:52:56.099335+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -10500,6 +10500,39 @@
       "updatedAt": "2024-02-05T19:13:13Z",
       "closedAt": "2024-02-05T19:13:13Z",
       "comments": []
+    },
+    {
+      "number": 548,
+      "id": "I_kwDOFEJYQs5_2Cns",
+      "title": "Recommend against min_batch_size = max_batch_size when aggregation parameters are non-trivial",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/548",
+      "state": "OPEN",
+      "author": "divergentdave",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [
+        "collecting a batch more than once"
+      ],
+      "body": "It is possible that a report may pass VDAF preparation with one aggregation parameter, and later fail when prepared with another aggregation parameter. (for example, if a later correction word is corrupted in an otherwise-honestly generated Poplar1 report) We require that the same set of reports in any batch be used as input for aggregation with each aggregation parameter. The batch validation size check enforces that the number of successfully aggregated reports is at least `min_batch_size`. Therefore, if a deployment were to set `min_batch_size` equal to `max_batch_size`, a batch that has already been successfully collected with one aggregation parameter, and contains at least one such report, would be un-collectable with some other aggregation parameters, resulting in a loss of data, and an efficient DoS vector.\r\n\r\nI think we should recommend that `max_batch_size` be strictly greater than `min_batch_size` for VDAFs that make use of the aggregation parameter. The other solution I can think of would be to somehow allow combining previously-collected batches (while still not allowing subdivision of batches) for subsequent collection with different aggregation parameters, but that would be a lot of complexity.",
+      "createdAt": "2024-02-20T17:11:31Z",
+      "updatedAt": "2024-02-21T15:53:01Z",
+      "closedAt": null,
+      "comments": [
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "We should try to generalize this into guidance for any query type. Once collected, a batch cannot change: If X% of reports are going to be rejected, then you need to aim for a batch size that is X% larger than the minimum.",
+          "createdAt": "2024-02-21T15:51:19Z",
+          "updatedAt": "2024-02-21T15:51:19Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "On the other hand, this is basically a Sybil attack, which DAP does not address on its own. We could consider relaxing the batch size requirement to allow a batch size smaller than the minimum after the initial collection.",
+          "createdAt": "2024-02-21T15:52:59Z",
+          "updatedAt": "2024-02-21T15:52:59Z"
+        }
+      ]
     }
   ],
   "pulls": [
@@ -65375,7 +65408,7 @@
       "labels": [],
       "body": "This adds support for expressing dap versions in the mime types. This addresses the issue #541 ",
       "createdAt": "2024-02-17T02:22:27Z",
-      "updatedAt": "2024-02-18T05:14:49Z",
+      "updatedAt": "2024-02-21T00:46:21Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "8f1f29daf32e3bdc769ccc65938d421be923e56c",
@@ -65387,7 +65420,28 @@
       "mergedBy": null,
       "mergeCommit": null,
       "comments": [],
-      "reviews": []
+      "reviews": [
+        {
+          "id": "PRR_kwDOFEJYQs5wwxdH",
+          "commit": {
+            "abbreviatedOid": "e9409be"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "The idea here is to version media types following \"semver2\", presumably as described in https://semver.org/. This seems like a reasonable way to address the issue, but we'll need two bits of information:\r\n\r\n1. How do we construct media types with versions? Describe how the string is formatted.\r\n2. What is the version of the current draft?\r\n\r\nAlso, are there side-effects of making the version optional that we need to account for? Suppose a versioned client talks to an unversioned server.",
+          "createdAt": "2024-02-21T00:40:21Z",
+          "updatedAt": "2024-02-21T00:46:21Z",
+          "comments": [
+            {
+              "originalPosition": 5,
+              "body": "(Showing my lack of experience with HTTP here :/) What does it mean for \"version\" to be an optional parameter of a media type? Is this a string I am supposed to append to the media type string? If so, how do I construct this string?\r\n\r\nIf you're following a pattern in another document, could drop a link here?",
+              "createdAt": "2024-02-21T00:40:21Z",
+              "updatedAt": "2024-02-21T00:45:15Z"
+            }
+          ]
+        }
+      ]
     }
   ]
 }
