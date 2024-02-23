@@ -2620,10 +2620,9 @@ agent, or Client authentication information (in deployments which use it, see
 {{client-auth}}). This metadata can be used by Aggregators to identify
 participating Clients or permit some attacks on robustness. This auxiliary
 information can be removed by having Clients submit reports to an anonymizing
-proxy server which would then use Oblivious HTTP
-{{!I-D.draft-ietf-ohai-ohttp-10}} to forward reports to the DAP Leader. In this
-scenario, Client authentication would be performed by the proxy rather than any
-of the participants in the DAP protocol.
+proxy server which would then use Oblivious HTTP {{!RFC9458}} to forward reports
+to the DAP Leader. In this scenario, Client authentication would be performed by
+the proxy rather than any of the participants in the DAP protocol.
 
 ## Differential Privacy {#dp}
 
