@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 28 July 2024                                         Cloudflare
+Expires: 26 August 2024                                       Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                                  Mozilla
                                                               C. A. Wood
                                                               Cloudflare
-                                                         25 January 2024
+                                                        23 February 2024
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -63,7 +63,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 28 July 2024.
+   This Internet-Draft will expire on 26 August 2024.
 
 Copyright Notice
 
@@ -2827,10 +2827,9 @@ enc, payload = SealBase(pk, "dap-09 aggregate share" || server_role || 0x00,
    Aggregators to identify participating Clients or permit some attacks
    on robustness.  This auxiliary information can be removed by having
    Clients submit reports to an anonymizing proxy server which would
-   then use Oblivious HTTP [I-D.draft-ietf-ohai-ohttp-10] to forward
-   reports to the DAP Leader.  In this scenario, Client authentication
-   would be performed by the proxy rather than any of the participants
-   in the DAP protocol.
+   then use Oblivious HTTP [RFC9458] to forward reports to the DAP
+   Leader.  In this scenario, Client authentication would be performed
+   by the proxy rather than any of the participants in the DAP protocol.
 
 7.4.  Differential Privacy
 
@@ -3435,12 +3434,6 @@ Normative References
               Public Key Encryption", RFC 9180, DOI 10.17487/RFC9180,
               February 2022, <https://www.rfc-editor.org/rfc/rfc9180>.
 
-   [I-D.draft-ietf-ohai-ohttp-10]
-              Thomson, M. and C. A. Wood, "Oblivious HTTP", Work in
-              Progress, Internet-Draft, draft-ietf-ohai-ohttp-10, 25
-              August 2023, <https://datatracker.ietf.org/doc/html/draft-
-              ietf-ohai-ohttp-10>.
-
    [OAuth2]   Hardt, D., Ed., "The OAuth 2.0 Authorization Framework",
               RFC 6749, DOI 10.17487/RFC6749, October 2012,
               <https://www.rfc-editor.org/rfc/rfc6749>.
@@ -3488,6 +3481,10 @@ Normative References
    [RFC9457]  Nottingham, M., Wilde, E., and S. Dalal, "Problem Details
               for HTTP APIs", RFC 9457, DOI 10.17487/RFC9457, July 2023,
               <https://www.rfc-editor.org/rfc/rfc9457>.
+
+   [RFC9458]  Thomson, M. and C. A. Wood, "Oblivious HTTP", RFC 9458,
+              DOI 10.17487/RFC9458, January 2024,
+              <https://www.rfc-editor.org/rfc/rfc9458>.
 
    [SHS]      Dang, Q., "Secure Hash Standard", National Institute of
               Standards and Technology, DOI 10.6028/nist.fips.180-4,

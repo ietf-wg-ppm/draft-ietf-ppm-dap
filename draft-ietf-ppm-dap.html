@@ -21,17 +21,17 @@ describes a multi-party distributed aggregation protocol (DAP) for privacy
 preserving measurement (PPM) which can be used to collect aggregate data without
 revealing any individual user's data. 
     " name="description">
-<meta content="xml2rfc 3.19.1" name="generator">
+<meta content="xml2rfc 3.19.4" name="generator">
 <meta content="draft-ietf-ppm-dap-latest" name="ietf.draft">
 <!-- Generator version information:
-  xml2rfc 3.19.1
+  xml2rfc 3.19.4
     Python 3.11.6
     ConfigArgParse 1.7
     google-i18n-address 3.1.0
     intervaltree 3.1.0
     Jinja2 3.1.2
     lxml 4.9.3
-    platformdirs 4.1.0
+    platformdirs 4.2.0
     pycountry 22.3.5
     PyYAML 6.0.1
     requests 2.31.0
@@ -1036,11 +1036,11 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <thead><tr>
 <td class="left">Internet-Draft</td>
 <td class="center">DAP-PPM</td>
-<td class="right">January 2024</td>
+<td class="right">February 2024</td>
 </tr></thead>
 <tfoot><tr>
 <td class="left">Geoghegan, et al.</td>
-<td class="center">Expires 28 July 2024</td>
+<td class="center">Expires 26 August 2024</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1053,12 +1053,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-ietf-ppm-dap-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2024-01-25" class="published">25 January 2024</time>
+<time datetime="2024-02-23" class="published">23 February 2024</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Standards Track</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2024-07-28">28 July 2024</time></dd>
+<dd class="expires"><time datetime="2024-08-26">26 August 2024</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -1132,7 +1132,7 @@ revealing any individual user's data.<a href="#section-abstract-1" class="pilcro
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 28 July 2024.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 26 August 2024.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -4451,10 +4451,9 @@ agent, or Client authentication information (in deployments which use it, see
 <a href="#client-auth" class="auto internal xref">Section 7.2</a>). This metadata can be used by Aggregators to identify
 participating Clients or permit some attacks on robustness. This auxiliary
 information can be removed by having Clients submit reports to an anonymizing
-proxy server which would then use Oblivious HTTP
-<span>[<a href="#I-D.draft-ietf-ohai-ohttp-10" class="cite xref">I-D.draft-ietf-ohai-ohttp-10</a>]</span> to forward reports to the DAP Leader. In this
-scenario, Client authentication would be performed by the proxy rather than any
-of the participants in the DAP protocol.<a href="#section-7.3-1" class="pilcrow">¶</a></p>
+proxy server which would then use Oblivious HTTP <span>[<a href="#RFC9458" class="cite xref">RFC9458</a>]</span> to forward reports
+to the DAP Leader. In this scenario, Client authentication would be performed by
+the proxy rather than any of the participants in the DAP protocol.<a href="#section-7.3-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="dp">
@@ -5716,10 +5715,6 @@ with the Reference field set to point to this specification.<a href="#section-8.
         <dd>
 <span class="refAuthor">Barnes, R.</span>, <span class="refAuthor">Bhargavan, K.</span>, <span class="refAuthor">Lipp, B.</span>, and <span class="refAuthor">C. Wood</span>, <span class="refTitle">"Hybrid Public Key Encryption"</span>, <span class="seriesInfo">RFC 9180</span>, <span class="seriesInfo">DOI 10.17487/RFC9180</span>, <time datetime="2022-02" class="refDate">February 2022</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc9180">https://www.rfc-editor.org/rfc/rfc9180</a>&gt;</span>. </dd>
 <dd class="break"></dd>
-<dt id="I-D.draft-ietf-ohai-ohttp-10">[I-D.draft-ietf-ohai-ohttp-10]</dt>
-        <dd>
-<span class="refAuthor">Thomson, M.</span> and <span class="refAuthor">C. A. Wood</span>, <span class="refTitle">"Oblivious HTTP"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-ohai-ohttp-10</span>, <time datetime="2023-08-25" class="refDate">25 August 2023</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-ohai-ohttp-10">https://datatracker.ietf.org/doc/html/draft-ietf-ohai-ohttp-10</a>&gt;</span>. </dd>
-<dd class="break"></dd>
 <dt id="OAuth2">[OAuth2]</dt>
         <dd>
 <span class="refAuthor">Hardt, D., Ed.</span>, <span class="refTitle">"The OAuth 2.0 Authorization Framework"</span>, <span class="seriesInfo">RFC 6749</span>, <span class="seriesInfo">DOI 10.17487/RFC6749</span>, <time datetime="2012-10" class="refDate">October 2012</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc6749">https://www.rfc-editor.org/rfc/rfc6749</a>&gt;</span>. </dd>
@@ -5763,6 +5758,10 @@ with the Reference field set to point to this specification.<a href="#section-8.
 <dt id="RFC9457">[RFC9457]</dt>
         <dd>
 <span class="refAuthor">Nottingham, M.</span>, <span class="refAuthor">Wilde, E.</span>, and <span class="refAuthor">S. Dalal</span>, <span class="refTitle">"Problem Details for HTTP APIs"</span>, <span class="seriesInfo">RFC 9457</span>, <span class="seriesInfo">DOI 10.17487/RFC9457</span>, <time datetime="2023-07" class="refDate">July 2023</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc9457">https://www.rfc-editor.org/rfc/rfc9457</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC9458">[RFC9458]</dt>
+        <dd>
+<span class="refAuthor">Thomson, M.</span> and <span class="refAuthor">C. A. Wood</span>, <span class="refTitle">"Oblivious HTTP"</span>, <span class="seriesInfo">RFC 9458</span>, <span class="seriesInfo">DOI 10.17487/RFC9458</span>, <time datetime="2024-01" class="refDate">January 2024</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc9458">https://www.rfc-editor.org/rfc/rfc9458</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="SHS">[SHS]</dt>
         <dd>
