@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-02-22T00:52:56.099335+00:00",
+  "timestamp": "2024-02-25T00:57:02.443744+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -7997,7 +7997,7 @@
       ],
       "body": "Currently, the leader transmits aggregation parameters to the helper in an `AggregationJobInitReq`. Servicing a collection request can require arbitrarily many aggregation jobs (the leader chooses how many jobs to schedule), but all of them will have the same aggregation parameter value. This is fine for Prio3, because there is no aggregation parameter and thus it takes up no space in the wire message. But if a VDAF happens to have a large aggregation parameter (as is likely to be the case for Poplar1), then it's wasteful to retransmit the exact same aggregation parameter many times.",
       "createdAt": "2023-02-07T18:12:39Z",
-      "updatedAt": "2023-11-08T15:07:58Z",
+      "updatedAt": "2024-02-24T00:41:32Z",
       "closedAt": null,
       "comments": [
         {
@@ -8048,6 +8048,13 @@
           "body": "At IETF 118 I volunteered to implement multi-collection and resolve all related open issues.",
           "createdAt": "2023-11-08T15:07:58Z",
           "updatedAt": "2023-11-08T15:07:58Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "This change would require higher storage requirements and would add a bit of protocol complexity. (For instance, the aggregation parameter might arrive after an aggregation job.) Also, for heavy hitters, the aggregation parameters are privacy sensitive, so implementations would need to come up with a plan to prune aggregation parameters from storage after they're no longer needed.\r\n\r\nThe decision point is really whether the cost of re-transmission is so high that adding this complexity is worth it. Unfortunately, the cost here depends on the distribution of the inputs, since [the tree traversal depends on how many inputs have prefixes in common at each level of the tree](https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf#section-9.3.1-2).\r\n\r\nThat said, we can estimate this cost by generating synthetic batch and computing the prefix tree for it. We have done so here: https://github.com/divviup/libprio-rs/pull/956\r\n\r\nUsing the same parameters as the performance analysis in the [Poplar paper](ia.cr/2021/017), we find that the largest aggregation parameter is about a kilobyte. Moreover, adjusting the size of the batch doesn't change this much: even for 100K measurements, the distribution doesn't change much.\r\n\r\nEven planning for an aggregation parameter that is 10x larger, the cost of re-transmitting with each aggregation job is easily outweighted by the cost of this change.",
+          "createdAt": "2024-02-24T00:40:13Z",
+          "updatedAt": "2024-02-24T00:40:13Z"
         }
       ]
     },
@@ -10509,13 +10516,15 @@
       "state": "OPEN",
       "author": "divergentdave",
       "authorAssociation": "COLLABORATOR",
-      "assignees": [],
+      "assignees": [
+        "divergentdave"
+      ],
       "labels": [
         "collecting a batch more than once"
       ],
       "body": "It is possible that a report may pass VDAF preparation with one aggregation parameter, and later fail when prepared with another aggregation parameter. (for example, if a later correction word is corrupted in an otherwise-honestly generated Poplar1 report) We require that the same set of reports in any batch be used as input for aggregation with each aggregation parameter. The batch validation size check enforces that the number of successfully aggregated reports is at least `min_batch_size`. Therefore, if a deployment were to set `min_batch_size` equal to `max_batch_size`, a batch that has already been successfully collected with one aggregation parameter, and contains at least one such report, would be un-collectable with some other aggregation parameters, resulting in a loss of data, and an efficient DoS vector.\r\n\r\nI think we should recommend that `max_batch_size` be strictly greater than `min_batch_size` for VDAFs that make use of the aggregation parameter. The other solution I can think of would be to somehow allow combining previously-collected batches (while still not allowing subdivision of batches) for subsequent collection with different aggregation parameters, but that would be a lot of complexity.",
       "createdAt": "2024-02-20T17:11:31Z",
-      "updatedAt": "2024-02-21T15:53:01Z",
+      "updatedAt": "2024-02-22T22:13:57Z",
       "closedAt": null,
       "comments": [
         {
@@ -65440,6 +65449,61 @@
               "updatedAt": "2024-02-21T00:45:15Z"
             }
           ]
+        }
+      ]
+    },
+    {
+      "number": 549,
+      "id": "PR_kwDOFEJYQs5nynLq",
+      "title": "Update reference to OHTTP as RFC 9458",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/549",
+      "state": "MERGED",
+      "author": "tgeoghegan",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "",
+      "createdAt": "2024-02-23T20:22:45Z",
+      "updatedAt": "2024-02-23T22:51:19Z",
+      "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "baseRefName": "main",
+      "baseRefOid": "8f1f29daf32e3bdc769ccc65938d421be923e56c",
+      "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "headRefName": "timg/update-ohttp-reference",
+      "headRefOid": "2030cea36d0b039a90152bad9cf45772446e2f1a",
+      "closedAt": "2024-02-23T22:51:19Z",
+      "mergedAt": "2024-02-23T22:51:19Z",
+      "mergedBy": "tgeoghegan",
+      "mergeCommit": {
+        "oid": "3448ba400a628b18a785e069d544314c1bbff8c6"
+      },
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOFEJYQs5xLtN7",
+          "commit": {
+            "abbreviatedOid": "2030cea"
+          },
+          "author": "divergentdave",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2024-02-23T20:38:16Z",
+          "updatedAt": "2024-02-23T20:38:16Z",
+          "comments": []
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5xL0J3",
+          "commit": {
+            "abbreviatedOid": "2030cea"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2024-02-23T21:00:21Z",
+          "updatedAt": "2024-02-23T21:00:21Z",
+          "comments": []
         }
       ]
     }
