@@ -120,6 +120,21 @@ input is ever seen in the clear by any aggregator.
 
 (\*) Indicates a change that breaks wire compatibility with the previous draft.
 
+10:
+
+- Editorial changes from httpdir early review.
+
+- Poll collection jobs with HTTP GET instead of POST. (\*)
+
+- Upload reports with HTTP POST instead of PUT. (\*)
+
+- Clarify requirements for problem documents.
+
+- Provide guidance on batch sizes when running VDAFs with non-trivial
+  aggregation parameters.
+
+- Bump version tag from "dap-09" to "dap-10". (\*)
+
 09:
 
 - Fixed-size queries: make the maximum batch size optional.
