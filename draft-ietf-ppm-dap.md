@@ -750,8 +750,8 @@ types have the following configuration parameters in common:
   see {{upload-flow}}. Additional semantics may apply, depending on the query
   type. (See {{batch-validation}} for details.)
 
-The parameters pertaining to specific query types are described in the relevant
-subsection below.
+The parameters pertaining to specific query types are described in
+{{time-interval-query}} and {{fixed-size-query}}.
 
 ### Time-interval Queries {#time-interval-query}
 
@@ -804,19 +804,42 @@ the privacy guarantee is not affected by the sampling rate of the population,
 therefore a larger than expected batch size does not weaken the designed privacy
 guarantee.
 
-Implementation note: The goal for the Aggregators is to aggregate precisely
-`min_batch_size` reports per batch. Doing so, however, may be challenging for
-Leader deployments in which multiple, independent nodes running the aggregate
-interaction (see {{aggregate-flow}}) need to be coordinated. The maximum batch
-size is intended to allow room for error. Typically the difference between the
-minimum and maximum batch size will be a small fraction of the target batch size
-for each batch. If `max_batch_size` is not specified, the goal for Aggregators
-is to output the batch once it meets `min_batch_size`. How soon the batch should
-be output is deployment specific.
+Implementation note: The goal for the Aggregators is to aggregate the same
+number of reports in each batch. The target batch size is deployment-specific,
+and may be equal to or greater than the minimum batch size. Deciding how soon
+batches should be output is also deployment-specific. Exactly sizing batches may
+be challenging for Leader deployments in which multiple, independent nodes
+running the aggregate interaction (see {{aggregate-flow}}) need to be
+coordinated. The difference between the minimum batch size and maximum batch
+size is in part intended to allow room for error, and allow a range of target
+batch sizes.
 
-[OPEN ISSUE: It may be feasible to require a fixed batch size, i.e.,
-`min_batch_size == max_batch_size`. We should know better once we've had some
-implementation/deployment experience.]
+### Batch Size Considerations {#batch-size}
+
+If each batch will be collected only once (i.e. when using Prio3), then batch
+sizes may be equal to `min_batch_size` without issue. In the case of fixed size
+queries, `max_batch_size` may be equal to `min_batch_size`.
+
+If each batch may be collected more than once (i.e. when using Poplar1), then
+batches should be larger than `min_batch_size`, to allow for the possibility
+that some reports may successfully pass through VDAF preparation with the first
+aggregation parameter, but fail with a subsequent aggregation parameter. Once a
+batch has been collected for the first time, subsequent collections of the same
+batch must process the same set of reports, and collections can only succeed if
+the number of successfully aggregated reports is at least `min_batch_size` (see
+{{time-interval-batch-validation}} and {{fixed-size-batch-validation}}). Thus,
+if enough reports fail validation that fewer than `min_batch_size` output shares
+are available for aggregation, then collection of that batch may not proceed.
+(Note that this is not an issue for the first collection of a batch, since more
+reports could be combined with the uncollected reports in a subsequent
+collection attempt.) The target batch size may be chosen on a
+deployment-specific basis, based on the expected rate of invalid reports, and
+Sybil attack defenses ({{sybil}}). When using fixed size queries, the Leader
+should construct batches of this target batch size, and `max_batch_size` must be
+unset or greater than or equal to the target batch size. When using time
+interval queries, the Collector should adaptively choose batch intervals based
+on the report upload rate so that they exceed `min_batch_size` by enough to
+allow for subsequent preparation errors.
 
 ## Task Configuration {#task-configuration}
 
@@ -2688,6 +2711,17 @@ participating in a DAP task if the minimum batch size is too small. This
 document does not specify how to choose an appropriate minimum batch size, but
 an appropriate value may be determined from the differential privacy ({{dp}})
 parameters in use, if any.
+
+If batches will be collected more than once, it is possible that some invalid
+reports could be successfully aggregated into the first collection, but fail
+when aggregated with a subsequent aggregation parameter. This could reduce the
+number of successfully aggregated reports below the minimum batch size, and make
+the batch uncollectable with that aggregation parameter, as described in
+{{batch-size}}. This constitutes an efficient denial of service vector for a
+Sybil attacker. In deployments that will collect batches more than once, the
+actual batch sizes, as determined by the Leader or Collector (depending on query
+type) should be greater than the minimum batch size to allow for later detection
+of some number of invalid reports.
 
 ### Task Configuration Agreement and Consistency
 
