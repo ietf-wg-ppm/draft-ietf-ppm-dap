@@ -817,29 +817,31 @@ batch sizes.
 ### Batch Size Considerations {#batch-size}
 
 If each batch will be collected only once (i.e. when using Prio3), then batch
-sizes may be equal to `min_batch_size` without issue. In the case of fixed size
-queries, `max_batch_size` may be equal to `min_batch_size`.
+sizes MAY be equal to `min_batch_size` without issue. In the case of fixed size
+queries, `max_batch_size` MAY be equal to `min_batch_size`. Any target batch
+size between `min_batch_size` and `max_batch_size` may be chosen.
 
 If each batch may be collected more than once (i.e. when using Poplar1), then
-batches should be larger than `min_batch_size`, to allow for the possibility
-that some reports may successfully pass through VDAF preparation with the first
-aggregation parameter, but fail with a subsequent aggregation parameter. Once a
-batch has been collected for the first time, subsequent collections of the same
-batch must process the same set of reports, and collections can only succeed if
-the number of successfully aggregated reports is at least `min_batch_size` (see
+batches SHOULD be larger than `min_batch_size`, to allow for the possibility
+that some reports may be accepted with the first aggregation parameter, but be
+rejected with a subsequent aggregation parameter. Once a batch has been
+collected for the first time, subsequent collections of the same batch must
+process the same set of reports, and collections can only succeed if the number
+of successfully aggregated reports is at least `min_batch_size` (see
 {{time-interval-batch-validation}} and {{fixed-size-batch-validation}}). Thus,
-if enough reports fail validation that fewer than `min_batch_size` output shares
-are available for aggregation, then collection of that batch may not proceed.
-(Note that this is not an issue for the first collection of a batch, since more
-reports could be combined with the uncollected reports in a subsequent
-collection attempt.) The target batch size may be chosen on a
-deployment-specific basis, based on the expected rate of invalid reports, and
-Sybil attack defenses ({{sybil}}). When using fixed size queries, the Leader
-should construct batches of this target batch size, and `max_batch_size` must be
-unset or greater than or equal to the target batch size. When using time
-interval queries, the Collector should adaptively choose batch intervals based
-on the report upload rate so that they exceed `min_batch_size` by enough to
-allow for subsequent preparation errors.
+if enough reports are rejected such that fewer than `min_batch_size` output
+shares are available for aggregation, then collection of that batch may not
+proceed. (Note that this is not an issue for the first collection of a batch,
+since more reports could be combined with the uncollected reports in a
+subsequent collection attempt.)
+
+The target batch size may be chosen on a deployment-specific basis, based on the
+expected rate of invalid reports and Sybil attack defenses ({{sybil}}). When
+using fixed size queries, `max_batch_size` SHOULD be unset or greater than or
+equal to the target batch size, and the Leader SHOULD construct batches of the
+target batch size. When using time interval queries, the Collector SHOULD
+adaptively choose batch intervals based on the report upload rate so that they
+exceed `min_batch_size` by enough to allow for subsequent rejections of reports.
 
 ## Task Configuration {#task-configuration}
 
@@ -2713,14 +2715,14 @@ an appropriate value may be determined from the differential privacy ({{dp}})
 parameters in use, if any.
 
 If batches will be collected more than once, it is possible that some invalid
-reports could be successfully aggregated into the first collection, but fail
-when aggregated with a subsequent aggregation parameter. This could reduce the
+reports could be accepted and successfully aggregated into the first collection,
+but be rejected with a subsequent aggregation parameter. This could reduce the
 number of successfully aggregated reports below the minimum batch size, and make
 the batch uncollectable with that aggregation parameter, as described in
 {{batch-size}}. This constitutes an efficient denial of service vector for a
 Sybil attacker. In deployments that will collect batches more than once, the
 actual batch sizes, as determined by the Leader or Collector (depending on query
-type) should be greater than the minimum batch size to allow for later detection
+type) SHOULD be greater than the minimum batch size to allow for later rejection
 of some number of invalid reports.
 
 ### Task Configuration Agreement and Consistency
