@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-02-27T00:52:42.776981+00:00",
+  "timestamp": "2024-02-29T00:52:44.043819+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -10513,7 +10513,7 @@
       "id": "I_kwDOFEJYQs5_2Cns",
       "title": "Recommend against min_batch_size = max_batch_size when aggregation parameters are non-trivial",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/548",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "divergentdave",
       "authorAssociation": "COLLABORATOR",
       "assignees": [
@@ -10524,8 +10524,8 @@
       ],
       "body": "It is possible that a report may pass VDAF preparation with one aggregation parameter, and later fail when prepared with another aggregation parameter. (for example, if a later correction word is corrupted in an otherwise-honestly generated Poplar1 report) We require that the same set of reports in any batch be used as input for aggregation with each aggregation parameter. The batch validation size check enforces that the number of successfully aggregated reports is at least `min_batch_size`. Therefore, if a deployment were to set `min_batch_size` equal to `max_batch_size`, a batch that has already been successfully collected with one aggregation parameter, and contains at least one such report, would be un-collectable with some other aggregation parameters, resulting in a loss of data, and an efficient DoS vector.\r\n\r\nI think we should recommend that `max_batch_size` be strictly greater than `min_batch_size` for VDAFs that make use of the aggregation parameter. The other solution I can think of would be to somehow allow combining previously-collected batches (while still not allowing subdivision of batches) for subsequent collection with different aggregation parameters, but that would be a lot of complexity.",
       "createdAt": "2024-02-20T17:11:31Z",
-      "updatedAt": "2024-02-22T22:13:57Z",
-      "closedAt": null,
+      "updatedAt": "2024-02-28T23:26:52Z",
+      "closedAt": "2024-02-28T23:26:52Z",
       "comments": [
         {
           "author": "cjpatton",
@@ -10540,8 +10540,40 @@
           "body": "On the other hand, this is basically a Sybil attack, which DAP does not address on its own. We could consider relaxing the batch size requirement to allow a batch size smaller than the minimum after the initial collection.",
           "createdAt": "2024-02-21T15:52:59Z",
           "updatedAt": "2024-02-21T15:52:59Z"
+        },
+        {
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Naive question: if aggregation with one aggregation parameter succeeds with a different set of reports than aggregation with a second aggregation parameter, are we sure we haven't leaked information about the reports in the delta between the two sets?\r\n\r\nI don't think there's any generic VDAF property that guarantees we haven't leaked information, though I might be wrong.\r\n\r\nIf that's the case, perhaps we should guarantee that the same set of reports is successfully aggregated for every aggregation over the batch. However, I believe that some VDAFs would allow a maliciously-crafted report that passes aggregation with one aggregation parameter but fails aggregation with another -- i.e., an attacker could use this as a DoS vector.",
+          "createdAt": "2024-02-28T01:01:42Z",
+          "updatedAt": "2024-02-28T01:01:42Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> @cjpatton  On the other hand, this is basically a Sybil attack, which DAP does not address on its own. We could consider relaxing the batch size requirement to allow a batch size smaller than the minimum after the initial collection.\r\n\r\nWhoops, meant to update here: Thinking on this more, this is clearly a bad idea. Given our threat model, I think we just have to include more reports in the batch than we think we need and hope that no more than we need end up being invalid. Certainly mechanisms to prevent Sybil attacks would help, but since we've ruled this out for core DAP, @divergentdave's suggestion is the most sound.\r\n\r\n\r\n> @branlwyd  Naive question: if aggregation with one aggregation parameter succeeds with a different set of reports than aggregation with a second aggregation parameter, are we sure we haven't leaked information about the reports in the delta between the two sets?\r\n> \r\n> I don't think there's any generic VDAF property that guarantees we haven't leaked information, though I might be wrong.\r\n> \r\n> If that's the case, perhaps we should guarantee that the same set of reports is successfully aggregated for every aggregation over the batch. However, I believe that some VDAFs would allow a maliciously-crafted report that passes aggregation with one aggregation parameter but fails aggregation with another -- i.e., an attacker could use this as a DoS vector.\r\n\r\nGreat question. To crystalize this a bit: once a report is rejected, it is removed from the batch. That means if it's rejected during the first collection job, then it won't be included in the next collection job. In the case of Poplar1, we do indeed learn some information about the measurement that was rejected, since the prefix counts have changed by 1.\r\n\r\nVADF's answer to this question is: honest Clients are perfectly capable of generating measurements that are deemed valid each time they're aggregated; dishonest Clients forfeit privacy. It would indeed be a problem if a valid measurement could be deemed invalid, exactly for the reason you describe.\r\n\r\n",
+          "createdAt": "2024-02-28T01:58:15Z",
+          "updatedAt": "2024-02-28T01:58:15Z"
         }
       ]
+    },
+    {
+      "number": 551,
+      "id": "I_kwDOFEJYQs6AtJ4t",
+      "title": "Prep draft-ietf-ppm-dap-10",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/551",
+      "state": "OPEN",
+      "author": "tgeoghegan",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [
+        "tgeoghegan"
+      ],
+      "labels": [],
+      "body": "We want to publish draft 10 of DAP for IETF 119. The submission deadline is Monday March 4. We've already taken some breaking changes since draft-ietf-ppm-dap-09 (such as changing a couple HTTP verbs). The VDAF authors do not intend to publish a new draft yet, so we'll stay on draft-irtf-cfrg-vdaf-08.\r\n\r\n- [ ] Take https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/550\r\n- [ ] Update HPKE domain separation strings (#552)\r\n- [ ] Update changelog (#552)",
+      "createdAt": "2024-02-28T16:11:04Z",
+      "updatedAt": "2024-02-28T19:02:41Z",
+      "closedAt": null,
+      "comments": []
     }
   ],
   "pulls": [
@@ -65503,6 +65535,241 @@
           "body": "",
           "createdAt": "2024-02-23T21:00:21Z",
           "updatedAt": "2024-02-23T21:00:21Z",
+          "comments": []
+        }
+      ]
+    },
+    {
+      "number": 550,
+      "id": "PR_kwDOFEJYQs5oLvSS",
+      "title": "Recommend batches above minimum size for Poplar1",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/550",
+      "state": "MERGED",
+      "author": "divergentdave",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "This PR addresses the possibility that reports could be successfully prepared with a first aggregation parameter, but fail preparation with a subsequent aggregation parameter. A suggestion is added to increase actual batch size above the minimum batch size. The description of the fixed size query type is loosened -- the goal is no longer to create batches of the minimum batch size, but to create batches of a deployment-specific target batch size.\r\n\r\nThis closes #548.",
+      "createdAt": "2024-02-28T15:02:00Z",
+      "updatedAt": "2024-02-28T23:26:51Z",
+      "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "baseRefName": "main",
+      "baseRefOid": "3448ba400a628b18a785e069d544314c1bbff8c6",
+      "headRepository": "divergentdave/ppm-specification",
+      "headRefName": "david/max-batch-size-recommendation",
+      "headRefOid": "545dd66360fd6002bf11019785d0cdb7d952f398",
+      "closedAt": "2024-02-28T23:26:51Z",
+      "mergedAt": "2024-02-28T23:26:51Z",
+      "mergedBy": "tgeoghegan",
+      "mergeCommit": {
+        "oid": "d80ccbee79014ca06135b51cc9eedf6ae0bc727b"
+      },
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOFEJYQs5xo8f3",
+          "commit": {
+            "abbreviatedOid": "fcc9c31"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "Looks good. Remember to use \"SHOULD\" instead of \"should\" when you want to clearly specify recommended behavior. Likewise for \"may\" and \"must\".",
+          "createdAt": "2024-02-28T15:23:25Z",
+          "updatedAt": "2024-02-28T15:29:23Z",
+          "comments": [
+            {
+              "originalPosition": 35,
+              "body": "```suggestion\r\nsize is in part intended to allow room for rejecting some number of invalid reports, and allow a range of target\r\n```",
+              "createdAt": "2024-02-28T15:23:25Z",
+              "updatedAt": "2024-02-28T15:29:23Z"
+            },
+            {
+              "originalPosition": 47,
+              "body": "Instead of \"pass/fail preparation\", I prefer the verbiage \"accept/reject\".\r\n```suggestion\r\nthat some reports may be accepted with the first\r\naggregation parameter, but be rejected with a subsequent aggregation parameter. Once a\r\n```",
+              "createdAt": "2024-02-28T15:26:54Z",
+              "updatedAt": "2024-02-28T15:29:23Z"
+            },
+            {
+              "originalPosition": 52,
+              "body": "```suggestion\r\nif enough reports fail validation such that fewer than `min_batch_size` output shares\r\n```",
+              "createdAt": "2024-02-28T15:27:24Z",
+              "updatedAt": "2024-02-28T15:29:23Z"
+            },
+            {
+              "originalPosition": 43,
+              "body": "This paragraph is a little long ... see if there is a way to split it up into more digestable chunks.",
+              "createdAt": "2024-02-28T15:28:23Z",
+              "updatedAt": "2024-02-28T15:29:23Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5xqdrD",
+          "commit": {
+            "abbreviatedOid": "fcc9c31"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2024-02-28T18:18:31Z",
+          "updatedAt": "2024-02-28T18:20:35Z",
+          "comments": [
+            {
+              "originalPosition": 35,
+              "body": "Rejecting invalid reports isn't the only reason an aggregator could deviate from the target batch size, so I think David's more general text is better.",
+              "createdAt": "2024-02-28T18:18:31Z",
+              "updatedAt": "2024-02-28T18:20:35Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5xqfSK",
+          "commit": {
+            "abbreviatedOid": "fcc9c31"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-02-28T18:21:38Z",
+          "updatedAt": "2024-02-28T18:21:38Z",
+          "comments": [
+            {
+              "originalPosition": 35,
+              "body": "Hmm, what else might happen?",
+              "createdAt": "2024-02-28T18:21:38Z",
+              "updatedAt": "2024-02-28T18:21:38Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5xqlCh",
+          "commit": {
+            "abbreviatedOid": "fcc9c31"
+          },
+          "author": "divergentdave",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-02-28T18:33:25Z",
+          "updatedAt": "2024-02-28T18:33:25Z",
+          "comments": [
+            {
+              "originalPosition": 35,
+              "body": "In this sentence, \"room for error\" was previously referring to variance in batch size that may occur depending on how the aggregation jobs are ran by a distributed system. (depending on implementation decisions, etc.) I added the \"in part\" caveat in this PR because we now also need to allow for rejecting invalid reports. I can rephrase \"error\" to be more clear here.",
+              "createdAt": "2024-02-28T18:33:25Z",
+              "updatedAt": "2024-02-28T18:33:25Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5xqn0Y",
+          "commit": {
+            "abbreviatedOid": "fcc9c31"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-02-28T18:38:03Z",
+          "updatedAt": "2024-02-28T18:38:03Z",
+          "comments": [
+            {
+              "originalPosition": 35,
+              "body": "Nah that's fine, thanks.",
+              "createdAt": "2024-02-28T18:38:03Z",
+              "updatedAt": "2024-02-28T18:38:03Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5xrB9Y",
+          "commit": {
+            "abbreviatedOid": "545dd66"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2024-02-28T19:30:00Z",
+          "updatedAt": "2024-02-28T19:30:00Z",
+          "comments": []
+        }
+      ]
+    },
+    {
+      "number": 552,
+      "id": "PR_kwDOFEJYQs5oNH4q",
+      "title": "Prepare `draft-ietf-ppm-dap-10`",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/552",
+      "state": "OPEN",
+      "author": "tgeoghegan",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "There's no PPM session at IETF 119, but we nonetheless want to publish a new draft to keep DAP current.\r\n\r\nCloses #551 ",
+      "createdAt": "2024-02-28T18:26:24Z",
+      "updatedAt": "2024-02-28T18:35:20Z",
+      "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "baseRefName": "main",
+      "baseRefOid": "3448ba400a628b18a785e069d544314c1bbff8c6",
+      "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "headRefName": "timg/draft-10",
+      "headRefOid": "778194ade3c5fdadab220d48ec52982272da6b77",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> There's no PPM session at IETF 119, but we nonetheless want to publish a new draft to keep DAP current.\r\n> \r\n> Closes #551\r\n\r\nThere will (hopefully!) be an interim!",
+          "createdAt": "2024-02-28T18:29:20Z",
+          "updatedAt": "2024-02-28T18:29:20Z"
+        },
+        {
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> > There's no PPM session at IETF 119, but we nonetheless want to publish a new draft to keep DAP current.\r\n> > Closes #551\r\n> \r\n> There will (hopefully!) be an interim!\r\n\r\nYes, definitely. What I meant to say is that we want to get a draft in by the IETF 119 submission deadline despite not actually planning to discuss `draft-ietf-ppm-dap-10` at the plenary.",
+          "createdAt": "2024-02-28T18:35:19Z",
+          "updatedAt": "2024-02-28T18:35:19Z"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "PRR_kwDOFEJYQs5xqhuo",
+          "commit": {
+            "abbreviatedOid": "778194a"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-02-28T18:27:30Z",
+          "updatedAt": "2024-02-28T18:27:30Z",
+          "comments": [
+            {
+              "originalPosition": 15,
+              "body": "This refers to #550, which we plan to merge before cutting `draft-ietf-ppm-dap-10`.",
+              "createdAt": "2024-02-28T18:27:30Z",
+              "updatedAt": "2024-02-28T18:27:30Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5xqiv_",
+          "commit": {
+            "abbreviatedOid": "778194a"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2024-02-28T18:29:56Z",
+          "updatedAt": "2024-02-28T18:29:56Z",
           "comments": []
         }
       ]
