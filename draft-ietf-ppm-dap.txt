@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 31 August 2024                                       Cloudflare
+Expires: 1 September 2024                                     Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                                  Mozilla
                                                               C. A. Wood
                                                               Cloudflare
-                                                        28 February 2024
+                                                        29 February 2024
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -63,7 +63,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 31 August 2024.
+   This Internet-Draft will expire on 1 September 2024.
 
 Copyright Notice
 
@@ -168,6 +168,21 @@ Table of Contents
 
    (*) Indicates a change that breaks wire compatibility with the
    previous draft.
+
+   10:
+
+   *  Editorial changes from httpdir early review.
+
+   *  Poll collection jobs with HTTP GET instead of POST. (*)
+
+   *  Upload reports with HTTP POST instead of PUT. (*)
+
+   *  Clarify requirements for problem documents.
+
+   *  Provide guidance on batch sizes when running VDAFs with non-
+      trivial aggregation parameters.
+
+   *  Bump version tag from "dap-09" to "dap-10". (*)
 
    09:
 
@@ -1215,7 +1230,7 @@ struct {} Empty;
    plaintext_input_share as follows:
 
    enc, payload = SealBase(pk,
-     "dap-09 input share" || 0x01 || server_role,
+     "dap-10 input share" || 0x01 || server_role,
      input_share_aad, plaintext_input_share)
 
    where pk is the Aggregator's public key; 0x01 represents the Role of
@@ -1782,7 +1797,7 @@ struct {} Empty;
    and attempts decryption of the payload with the following procedure:
 
    plaintext_input_share = OpenBase(encrypted_input_share.enc, sk,
-     "dap-09 input share" || 0x01 || server_role,
+     "dap-10 input share" || 0x01 || server_role,
      input_share_aad, encrypted_input_share.payload)
 
    where sk is the HPKE secret key, 0x01 represents the Role of the
@@ -2398,7 +2413,7 @@ struct {} Empty;
    Encrypting an aggregate share agg_share for a given AggregateShareReq
    is done as follows:
 
-enc, payload = SealBase(pk, "dap-09 aggregate share" || server_role || 0x00,
+enc, payload = SealBase(pk, "dap-10 aggregate share" || server_role || 0x00,
   agg_share_aad, agg_share)
 
    where pk is the HPKE public key encoded by the Collector's HPKE key,
@@ -2428,7 +2443,7 @@ enc, payload = SealBase(pk, "dap-09 aggregate share" || server_role || 0x00,
    process.  Specifically, given an encrypted input share, denoted
    enc_share, for a given batch selector, decryption works as follows:
 
-   agg_share = OpenBase(enc_share.enc, sk, "dap-09 aggregate share" ||
+   agg_share = OpenBase(enc_share.enc, sk, "dap-10 aggregate share" ||
      server_role || 0x00, agg_share_aad, enc_share.payload)
 
    where sk is the HPKE secret key, server_role is the Role of the
