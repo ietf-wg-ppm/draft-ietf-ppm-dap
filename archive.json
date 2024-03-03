@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-02-29T00:52:44.043819+00:00",
+  "timestamp": "2024-03-03T00:56:07.782858+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -10562,17 +10562,17 @@
       "id": "I_kwDOFEJYQs6AtJ4t",
       "title": "Prep draft-ietf-ppm-dap-10",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/551",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "tgeoghegan",
       "authorAssociation": "COLLABORATOR",
       "assignees": [
         "tgeoghegan"
       ],
       "labels": [],
-      "body": "We want to publish draft 10 of DAP for IETF 119. The submission deadline is Monday March 4. We've already taken some breaking changes since draft-ietf-ppm-dap-09 (such as changing a couple HTTP verbs). The VDAF authors do not intend to publish a new draft yet, so we'll stay on draft-irtf-cfrg-vdaf-08.\r\n\r\n- [ ] Take https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/550\r\n- [ ] Update HPKE domain separation strings (#552)\r\n- [ ] Update changelog (#552)",
+      "body": "We want to publish draft 10 of DAP for IETF 119. The submission deadline is Monday March 4. We've already taken some breaking changes since draft-ietf-ppm-dap-09 (such as changing a couple HTTP verbs). The VDAF authors do not intend to publish a new draft yet, so we'll stay on draft-irtf-cfrg-vdaf-08.\r\n\r\n- [x] Take https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/550\r\n- [x] Update HPKE domain separation strings (#552)\r\n- [x] Update changelog (#552)",
       "createdAt": "2024-02-28T16:11:04Z",
-      "updatedAt": "2024-02-28T19:02:41Z",
-      "closedAt": null,
+      "updatedAt": "2024-02-29T21:44:54Z",
+      "closedAt": "2024-02-29T21:44:40Z",
       "comments": []
     }
   ],
@@ -65704,24 +65704,26 @@
       "id": "PR_kwDOFEJYQs5oNH4q",
       "title": "Prepare `draft-ietf-ppm-dap-10`",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/552",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "tgeoghegan",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "There's no PPM session at IETF 119, but we nonetheless want to publish a new draft to keep DAP current.\r\n\r\nCloses #551 ",
       "createdAt": "2024-02-28T18:26:24Z",
-      "updatedAt": "2024-02-28T18:35:20Z",
+      "updatedAt": "2024-02-29T21:44:39Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "3448ba400a628b18a785e069d544314c1bbff8c6",
       "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "headRefName": "timg/draft-10",
       "headRefOid": "778194ade3c5fdadab220d48ec52982272da6b77",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "closedAt": "2024-02-29T21:44:39Z",
+      "mergedAt": "2024-02-29T21:44:39Z",
+      "mergedBy": "tgeoghegan",
+      "mergeCommit": {
+        "oid": "08b67b9afd470bc12c7f13f87449879e5d26ed1c"
+      },
       "comments": [
         {
           "author": "cjpatton",
