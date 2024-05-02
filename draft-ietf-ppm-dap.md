@@ -1694,12 +1694,14 @@ following checks:
    If this returns false, the input share MUST be marked as invalid with the
    error `report_replayed`.
 
-    * Implementation note: To detect replay attacks, each Aggregator is required
-      to keep track of the set of reports it has processed for a given task.
-      Because honest Clients choose the report ID at random, it is sufficient to
-      store the set of IDs of processed reports. However, implementations may
-      find it helpful to track additional information, like the timestamp, so
-      that the storage used for anti-replay can be sharded efficiently.
+    * Implementation note: To detect replay attacks in which an honest Client's
+      report is uploaded to the aggregators multiple times, each Aggregator is
+      required to keep track of the set of reports it has processed for a given
+      task. Because honest Clients choose the report ID at random, it is
+      sufficient to store the set of IDs of processed reports. However,
+      implementations may find it helpful to track additional information, like
+      the timestamp, so that the storage used for anti-replay can be sharded
+      efficiently.
 
 1. If the report pertains to a batch that was previously collected, then make
    sure the report was already included in all previous collections for the
