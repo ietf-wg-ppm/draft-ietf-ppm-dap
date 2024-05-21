@@ -125,6 +125,10 @@ input is ever seen in the clear by any aggregator.
 - Remove support for multi-collection of batches, as well as the fixed-size
   query type's `by_batch_id` query. (\*)
 
+- Clarify purpose of report ID uniqueness.
+
+- Bump version tag from "dap-10" to "dap-11". (\*)
+
 10:
 
 - Editorial changes from httpdir early review.
@@ -1042,7 +1046,7 @@ follows:
 
 ~~~
 enc, payload = SealBase(pk,
-  "dap-10 input share" || 0x01 || server_role,
+  "dap-11 input share" || 0x01 || server_role,
   input_share_aad, plaintext_input_share)
 ~~~
 
@@ -1583,7 +1587,7 @@ attempts decryption of the payload with the following procedure:
 
 ~~~
 plaintext_input_share = OpenBase(encrypted_input_share.enc, sk,
-  "dap-10 input share" || 0x01 || server_role,
+  "dap-11 input share" || 0x01 || server_role,
   input_share_aad, encrypted_input_share.payload)
 ~~~
 
@@ -2165,7 +2169,7 @@ Encrypting an aggregate share `agg_share` for a given `AggregateShareReq` is
 done as follows:
 
 ~~~
-enc, payload = SealBase(pk, "dap-10 aggregate share" || server_role || 0x00,
+enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
   agg_share_aad, agg_share)
 ~~~
 
@@ -2195,7 +2199,7 @@ Specifically, given an encrypted input share, denoted `enc_share`, for a given
 batch selector, decryption works as follows:
 
 ~~~
-agg_share = OpenBase(enc_share.enc, sk, "dap-10 aggregate share" ||
+agg_share = OpenBase(enc_share.enc, sk, "dap-11 aggregate share" ||
   server_role || 0x00, agg_share_aad, enc_share.payload)
 ~~~
 
