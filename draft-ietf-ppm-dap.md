@@ -2696,7 +2696,7 @@ Required parameters:
 
 Optional parameters:
 
-: None
+: version - value indicating DAP version in the form of semver2 notation (major.minor.path). Defaults to system's version.
 
 Encoding considerations:
 
@@ -2708,7 +2708,7 @@ Security considerations:
 
 Interoperability considerations:
 
-: N/A
+: When version parameter is specified, enforce decoding following the versioned definition.
 
 Published specification:
 
@@ -2763,11 +2763,11 @@ Subtype name:
 
 Required parameters:
 
-: N/A
+: None
 
 Optional parameters:
 
-: None
+: version - value indicating DAP version in the form of semver2 notation (major.minor.path). Defaults to system's version.
 
 Encoding considerations:
 
@@ -2779,7 +2779,7 @@ Security considerations:
 
 Interoperability considerations:
 
-: N/A
+: When version parameter is specified, enforce decoding following the versioned definition.
 
 Published specification:
 
@@ -2838,7 +2838,7 @@ Required parameters:
 
 Optional parameters:
 
-: None
+: version - value indicating DAP version in the form of semver2 notation (major.minor.path). Defaults to system's version.
 
 Encoding considerations:
 
@@ -2850,7 +2850,7 @@ Security considerations:
 
 Interoperability considerations:
 
-: N/A
+: When version parameter is specified, enforce decoding following the versioned definition.
 
 Published specification:
 
@@ -2909,7 +2909,7 @@ Required parameters:
 
 Optional parameters:
 
-: None
+: version - value indicating DAP version in the form of semver2 notation (major.minor.path). Defaults to system's version.
 
 Encoding considerations:
 
@@ -2921,7 +2921,7 @@ Security considerations:
 
 Interoperability considerations:
 
-: N/A
+: When version parameter is specified, enforce decoding following the versioned definition.
 
 Published specification:
 
@@ -2980,7 +2980,7 @@ Required parameters:
 
 Optional parameters:
 
-: None
+: version - value indicating DAP version in the form of semver2 notation (major.minor.path). Defaults to system's version.
 
 Encoding considerations:
 
@@ -2992,7 +2992,7 @@ Security considerations:
 
 Interoperability considerations:
 
-: N/A
+: When version parameter is specified, enforce decoding following the versioned definition.
 
 Published specification:
 
@@ -3051,7 +3051,7 @@ Required parameters:
 
 Optional parameters:
 
-: None
+: version - value indicating DAP version in the form of semver2 notation (major.minor.path). Defaults to system's version.
 
 Encoding considerations:
 
@@ -3063,7 +3063,7 @@ Security considerations:
 
 Interoperability considerations:
 
-: N/A
+: When version parameter is specified, enforce decoding following the versioned definition.
 
 Published specification:
 
@@ -3122,7 +3122,7 @@ Required parameters:
 
 Optional parameters:
 
-: None
+: version - value indicating DAP version in the form of semver2 notation (major.minor.path). Defaults to system's version.
 
 Encoding considerations:
 
@@ -3134,7 +3134,7 @@ Security considerations:
 
 Interoperability considerations:
 
-: N/A
+: When version parameter is specified, enforce decoding following the versioned definition.
 
 Published specification:
 
@@ -3193,7 +3193,7 @@ Required parameters:
 
 Optional parameters:
 
-: None
+: version - value indicating DAP version in the form of semver2 notation (major.minor.path). Defaults to system's version.
 
 Encoding considerations:
 
@@ -3205,7 +3205,7 @@ Security considerations:
 
 Interoperability considerations:
 
-: N/A
+: When version parameter is specified, enforce decoding following the versioned definition.
 
 Published specification:
 
@@ -3264,7 +3264,7 @@ Required parameters:
 
 Optional parameters:
 
-: None
+: version - value indicating DAP version in the form of semver2 notation (major.minor.path). Defaults to system's version.
 
 Encoding considerations:
 
@@ -3276,7 +3276,7 @@ Security considerations:
 
 Interoperability considerations:
 
-: N/A
+: When version parameter is specified, enforce decoding following the versioned definition.
 
 Published specification:
 
