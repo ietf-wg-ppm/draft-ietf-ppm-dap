@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 3 November 2024                                      Cloudflare
+Expires: 15 December 2024                                     Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                                  Mozilla
                                                               C. A. Wood
                                                               Cloudflare
-                                                              2 May 2024
+                                                            13 June 2024
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -63,7 +63,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 3 November 2024.
+   This Internet-Draft will expire on 15 December 2024.
 
 Copyright Notice
 
@@ -93,8 +93,7 @@ Table of Contents
    4.  Protocol Definition
      4.1.  Queries
        4.1.1.  Time-interval Queries
-       4.1.2.  Fixed-size Queries
-       4.1.3.  Batch Size Considerations
+       4.1.2.  Leader-selected Queries
      4.2.  Task Configuration
      4.3.  Resource URIs
      4.4.  Uploading Reports
@@ -168,6 +167,23 @@ Table of Contents
 
    (*) Indicates a change that breaks wire compatibility with the
    previous draft.
+
+   12:
+
+   *  Rename the fixed-size query type to leader-selected, to align the
+      name with the behavior of this query type.
+
+   *  Remove the max_batch_size parameter of the leader-selected query
+      type.
+
+   11:
+
+   *  Remove support for multi-collection of batches, as well as the
+      fixed-size query type's by_batch_id query. (*)
+
+   *  Clarify purpose of report ID uniqueness.
+
+   *  Bump version tag from "dap-10" to "dap-11". (*)
 
    10:
 
@@ -374,8 +390,7 @@ Table of Contents
       measurements.  As defined in [VDAF].
 
    Aggregation parameter:  Parameter used to prepare a set of
-      measurements for aggregation (e.g., the candidate prefixes for
-      Poplar1 from Section 8 of [VDAF]).  As defined in [VDAF].
+      measurements for aggregation.  As defined in [VDAF].
 
    Aggregator:  A server that receives input shares from Clients and
       validates and aggregates them with the help of the other
@@ -448,17 +463,8 @@ Table of Contents
 
    This protocol is extensible and allows for the addition of new
    cryptographic schemes that implement the VDAF interface specified in
-   [VDAF].  Candidates include:
-
-   *  Prio3 (Section 7 of [VDAF]), which allows for aggregate statistics
-      such as sum, mean, histograms, etc.
-
-   *  Poplar1 (Section 8 of [VDAF]), which allows for finding the most
-      popular strings uploaded by a set of Clients (e.g., the URL of
-      their home page) as well as counting the number of Clients that
-      hold a given string.  This VDAF is the basis of the Poplar
-      protocol of [BBCGGI21], which is designed to solve the heavy
-      hitters problem in a privacy preserving manner.
+   [VDAF].  This protocol only supports VDAFs which require a single
+   collection to provide useful results.
 
    VDAFs rely on secret sharing to protect the privacy of the
    measurements.  Rather than sending its input in the clear, each
@@ -659,59 +665,60 @@ Table of Contents
    following standard tokens for use in the "type" field (within the DAP
    URN namespace "urn:ietf:params:ppm:dap:error:"):
 
-   +============================+=====================================+
-   | Type                       | Description                         |
-   +============================+=====================================+
-   | invalidMessage             | A message received by a protocol    |
-   |                            | participant could not be parsed or  |
-   |                            | otherwise was invalid.              |
-   +----------------------------+-------------------------------------+
-   | unrecognizedTask           | A server received a message with an |
-   |                            | unknown task ID.                    |
-   +----------------------------+-------------------------------------+
-   | unrecognizedAggregationJob | A server received a message with an |
-   |                            | unknown aggregation job ID.         |
-   +----------------------------+-------------------------------------+
-   | outdatedConfig             | The message was generated using an  |
-   |                            | outdated configuration.             |
-   +----------------------------+-------------------------------------+
-   | reportRejected             | Report could not be processed for   |
-   |                            | an unspecified reason.              |
-   +----------------------------+-------------------------------------+
-   | reportTooEarly             | Report could not be processed       |
-   |                            | because its timestamp is too far in |
-   |                            | the future.                         |
-   +----------------------------+-------------------------------------+
-   | batchInvalid               | The batch boundary check for        |
-   |                            | Collector's query failed.           |
-   +----------------------------+-------------------------------------+
-   | invalidBatchSize           | There are an invalid number of      |
-   |                            | reports in the batch.               |
-   +----------------------------+-------------------------------------+
-   | batchQueriedTooManyTimes   | The maximum number of batch queries |
-   |                            | has been exceeded for one or more   |
-   |                            | reports included in the batch.      |
-   +----------------------------+-------------------------------------+
-   | batchMismatch              | Aggregators disagree on the report  |
-   |                            | shares that were aggregated in a    |
-   |                            | batch.                              |
-   +----------------------------+-------------------------------------+
-   | unauthorizedRequest        | Authentication of an HTTP request   |
-   |                            | failed (see Section 3.1).           |
-   +----------------------------+-------------------------------------+
-   | missingTaskID              | HPKE configuration was requested    |
-   |                            | without specifying a task ID.       |
-   +----------------------------+-------------------------------------+
-   | stepMismatch               | The Aggregators disagree on the     |
-   |                            | current step of the DAP aggregation |
-   |                            | protocol.                           |
-   +----------------------------+-------------------------------------+
-   | batchOverlap               | A request's query includes reports  |
-   |                            | that were previously collected in a |
-   |                            | different batch.                    |
-   +----------------------------+-------------------------------------+
+     +============================+==================================+
+     | Type                       | Description                      |
+     +============================+==================================+
+     | invalidMessage             | A message received by a protocol |
+     |                            | participant could not be parsed  |
+     |                            | or otherwise was invalid.        |
+     +----------------------------+----------------------------------+
+     | unrecognizedTask           | A server received a message with |
+     |                            | an unknown task ID.              |
+     +----------------------------+----------------------------------+
+     | unrecognizedAggregationJob | A server received a message with |
+     |                            | an unknown aggregation job ID.   |
+     +----------------------------+----------------------------------+
+     | outdatedConfig             | The message was generated using  |
+     |                            | an outdated configuration.       |
+     +----------------------------+----------------------------------+
+     | reportRejected             | Report could not be processed    |
+     |                            | for an unspecified reason.       |
+     +----------------------------+----------------------------------+
+     | reportTooEarly             | Report could not be processed    |
+     |                            | because its timestamp is too far |
+     |                            | in the future.                   |
+     +----------------------------+----------------------------------+
+     | batchInvalid               | The batch boundary check for     |
+     |                            | Collector's query failed.        |
+     +----------------------------+----------------------------------+
+     | invalidBatchSize           | There are an invalid number of   |
+     |                            | reports in the batch.            |
+     +----------------------------+----------------------------------+
+     | batchQueriedMultipleTimes  | A batch was queried with         |
+     |                            | multiple distinct aggregation    |
+     |                            | parameters.                      |
+     +----------------------------+----------------------------------+
+     | batchMismatch              | Aggregators disagree on the      |
+     |                            | report shares that were          |
+     |                            | aggregated in a batch.           |
+     +----------------------------+----------------------------------+
+     | unauthorizedRequest        | Authentication of an HTTP        |
+     |                            | request failed (see              |
+     |                            | Section 3.1).                    |
+     +----------------------------+----------------------------------+
+     | missingTaskID              | HPKE configuration was requested |
+     |                            | without specifying a task ID.    |
+     +----------------------------+----------------------------------+
+     | stepMismatch               | The Aggregators disagree on the  |
+     |                            | current step of the DAP          |
+     |                            | aggregation protocol.            |
+     +----------------------------+----------------------------------+
+     | batchOverlap               | A request's query includes       |
+     |                            | reports that were previously     |
+     |                            | collected in a different batch.  |
+     +----------------------------+----------------------------------+
 
-                                 Table 1
+                                  Table 1
 
    This list is not exhaustive.  The server MAY return errors set to a
    URI other than those defined above.  Servers MUST NOT use the DAP URN
@@ -824,12 +831,12 @@ struct {} Empty;
    enum {
      reserved(0), /* Reserved for testing purposes */
      time_interval(1),
-     fixed_size(2),
+     leader_selected(2),
      (255)
    } QueryType;
 
    The time_interval query type is described in Section 4.1.1; the
-   fixed_size query type is described in Section 4.1.2.  Future
+   leader_selected query type is described in Section 4.1.2.  Future
    specifications may introduce new query types as needed (see
    Section 8.2.1).  Implementations are free to implement only a subset
    of the available query types.
@@ -838,27 +845,11 @@ struct {} Empty;
    of reports specific to the given query type.  A query is defined as
    follows:
 
-   opaque BatchID[32];
-
-   enum {
-     by_batch_id(0),
-     current_batch(1),
-     (255)
-   } FixedSizeQueryType;
-
-   struct {
-     FixedSizeQueryType query_type;
-     select (FixedSizeQuery.query_type) {
-       case by_batch_id: BatchID batch_id;
-       case current_batch: Empty;
-     }
-   } FixedSizeQuery;
-
    struct {
      QueryType query_type;
      select (Query.query_type) {
        case time_interval: Interval batch_interval;
-       case fixed_size: FixedSizeQuery fixed_size_query;
+       case leader_selected: Empty;
      }
    } Query;
 
@@ -885,99 +876,55 @@ struct {} Empty;
 4.1.1.  Time-interval Queries
 
    The first query type, time_interval, is designed to support
-   applications in which reports are collected over a long period of
-   time.  The Collector specifies a "batch interval" that determines the
-   time range for reports included in the batch.  For each report in the
-   batch, the time at which that report was generated (see Section 4.4)
-   MUST fall within the batch interval specified by the Collector.
+   applications in which reports are collected into batches grouped by
+   an interval of time.  The Collector specifies a "batch interval" that
+   determines the time range for reports included in the batch.  For
+   each report in the batch, the time at which that report was generated
+   (see Section 4.4) MUST fall within the batch interval specified by
+   the Collector.
 
    Typically the Collector issues queries for which the batch intervals
    are continuous, monotonically increasing, and have the same duration.
    For example, the sequence of batch intervals (1659544000, 1000),
    (1659545000, 1000), (1659546000, 1000), (1659547000, 1000) satisfies
    these conditions.  (The first element of the pair denotes the start
-   of the batch interval and the second denotes the duration.)  Of
-   course, there are cases in which Collector may need to issue queries
-   out-of-order.  For example, a previous batch might need to be queried
-   again with a different aggregation parameter (e.g, for Poplar1).  In
-   addition, the Collector may need to vary the duration to adjust to
-   changing report upload rates.
+   of the batch interval and the second denotes the duration.)  However,
+   this is not a requirement--the Collector may decide to issue queries
+   out-of-order.  In addition, the Collector may need to vary the
+   duration to adjust to changing report upload rates.
 
-4.1.2.  Fixed-size Queries
+4.1.2.  Leader-selected Queries
 
-   The fixed_size query type is used to support applications in which
-   the Collector needs the ability to strictly control the batch size.
-   This is particularly important for controlling the amount of noise
-   added to reports by Clients (or added to aggregate shares by
-   Aggregators) in order to achieve differential privacy.
+   The leader_selected query type is used to support applications in
+   which it is acceptable for reports to be grouped in an arbitrary
+   fashion by the Leader.  For this query type, the Leader groups
+   reports into arbitrary batches.  These batches are identified by
+   opaque "batch IDs", allocated in an arbitrary fashion by the Leader.
 
-   For this query type, the Aggregators group reports into arbitrary
-   batches such that each batch has roughly the same number of reports.
-   These batches are identified by opaque "batch IDs", allocated in an
-   arbitrary fashion by the Leader.
+   The Collector will not know the set of batch IDs available for
+   collection.  To get the aggregate of a batch, the Collector issues a
+   query, which does not include any information specifying a particular
+   batch (see Section 4.1).  The Leader selects a recent batch to
+   aggregate.  The Leader MUST select a batch that has not yet been
+   associated with a collection job.
 
-   To get the aggregate of a batch, the Collector issues a query
-   specifying the batch ID of interest (see Section 4.1).  The Collector
-   may not know which batch ID it is interested in; in this case, it can
-   also issue a query of type current_batch, which allows the Leader to
-   select a recent batch to aggregate.  The Leader MUST select a batch
-   that has not yet been associated with a collection job.
-
-   In addition to the minimum batch size common to all query types, the
-   configuration may include a parameter max_batch_size that determines
-   maximum number of reports per batch.
-
-   If the configuration does not include max_batch_size, then the
-   Aggregators can output any batch size that is larger than or equal to
-   min_batch_size.  This is useful for applications that are not
-   concerned with sample size, i.e., the privacy guarantee is not
+   The Aggregators can output batches of any size that is larger than or
+   equal to min_batch_size.  This is useful for applications that are
+   not concerned with sample size, i.e., the privacy guarantee is not
    affected by the sampling rate of the population, therefore a larger
    than expected batch size does not weaken the designed privacy
    guarantee.
 
-   Implementation note: The goal for the Aggregators is to aggregate the
-   same number of reports in each batch.  The target batch size is
-   deployment-specific, and may be equal to or greater than the minimum
-   batch size.  Deciding how soon batches should be output is also
-   deployment-specific.  Exactly sizing batches may be challenging for
-   Leader deployments in which multiple, independent nodes running the
-   aggregate interaction (see Section 4.5) need to be coordinated.  The
-   difference between the minimum batch size and maximum batch size is
-   in part intended to allow room for error, and allow a range of target
-   batch sizes.
-
-4.1.3.  Batch Size Considerations
-
-   If each batch will be collected only once (i.e. when using Prio3),
-   then batch sizes MAY be equal to min_batch_size without issue.  In
-   the case of fixed size queries, max_batch_size MAY be equal to
-   min_batch_size.  Any target batch size between min_batch_size and
-   max_batch_size may be chosen.
-
-   If each batch may be collected more than once (i.e. when using
-   Poplar1), then batches SHOULD be larger than min_batch_size, to allow
-   for the possibility that some reports may be accepted with the first
-   aggregation parameter, but be rejected with a subsequent aggregation
-   parameter.  Once a batch has been collected for the first time,
-   subsequent collections of the same batch must process the same set of
-   reports, and collections can only succeed if the number of
-   successfully aggregated reports is at least min_batch_size (see
-   Section 4.6.5.1 and Section 4.6.5.2).  Thus, if enough reports are
-   rejected such that fewer than min_batch_size output shares are
-   available for aggregation, then collection of that batch may not
-   proceed.  (Note that this is not an issue for the first collection of
-   a batch, since more reports could be combined with the uncollected
-   reports in a subsequent collection attempt.)
-
-   The target batch size may be chosen on a deployment-specific basis,
-   based on the expected rate of invalid reports and Sybil attack
-   defenses (Section 7.1).  When using fixed size queries,
-   max_batch_size SHOULD be unset or greater than or equal to the target
-   batch size, and the Leader SHOULD construct batches of the target
-   batch size.  When using time interval queries, the Collector SHOULD
-   adaptively choose batch intervals based on the report upload rate so
-   that they exceed min_batch_size by enough to allow for subsequent
-   rejections of reports.
+   Implementation note: The target batch size, if any, is
+   implementation-specific, and may be equal to or greater than the
+   minimum batch size.  Deciding how soon batches should be output is
+   also implementation-specific.  Exactly sizing batches may be
+   challenging for Leader deployments in which multiple, independent
+   nodes running the aggregate interaction (see Section 4.5) need to be
+   coordinated.  Applications which include differential privacy may
+   wish to control the size (or range of sizes) of generated batches in
+   order to control the amount of noise added to reports by Clients (or
+   added to aggregate shares by Aggregators).
 
 4.2.  Task Configuration
 
@@ -1000,9 +947,6 @@ struct {} Empty;
       determines the query type for batch selection and the properties
       that all batches for this task must have.  The party MUST NOT
       configure the task if it does not recognize the query type.
-
-   *  max_batch_query_count: The maximum number of times a batch of
-      reports may be queried by the Collector.
 
    *  task_expiration: The time up to which Clients are expected to
       upload to this task.  The task is considered completed after this
@@ -1230,7 +1174,7 @@ struct {} Empty;
    plaintext_input_share as follows:
 
    enc, payload = SealBase(pk,
-     "dap-10 input share" || 0x01 || server_role,
+     "dap-11 input share" || 0x01 || server_role,
      input_share_aad, plaintext_input_share)
 
    where pk is the Aggregator's public key; 0x01 represents the Role of
@@ -1344,22 +1288,18 @@ struct {} Empty;
 
    1.  To "refine" the input shares into "output shares" that have the
        desired aggregatable form.  For some VDAFs, like Prio3, the
-       mapping from input to output shares is some fixed, linear
-       operation, but in general the mapping is controlled dynamically
-       by the Collector and can be non-linear.  In Poplar1, for example,
-       the refinement process involves a sequence of "candidate
-       prefixes" and the output consists of a sequence of zeros and
-       ones, each indicating whether the corresponding candidate is a
-       prefix of the measurement from which the input shares were
-       generated.
+       mapping from input to output shares is a fixed operation
+       depending only on the input share, but in general the mapping
+       involves an aggregation parameter chosen by the Collector.
 
    2.  To verify that the output shares, when combined, correspond to a
        valid, refined measurement, where validity is determined by the
        VDAF itself.  For example, the Prio3Sum variant of Prio3
        (Section 7.4.2 of [VDAF]) requires that the output shares sum up
-       to an integer in a specific range; for Poplar1, the output shares
-       are required to sum up to a vector that is non-zero in at most
-       one position.
+       to an integer in a specific range, while the Prio3Histogram
+       variant (Section 7.4.4 of [VDAF]) proves that output shares sum
+       up to a one-hot vector representing a contribution to a single
+       bucket of the histogram.
 
    In general, refinement and verification are not distinct
    computations, since for some VDAFs, verification may only be achieved
@@ -1418,9 +1358,7 @@ struct {} Empty;
    specifies an aggregation parameter.  However, in some situations it
    is possible to begin aggregation as soon as reports arrive.  For
    example, Prio3 has just one valid aggregation parameter (the empty
-   string).  And there are use cases for Poplar1 in which aggregation
-   can begin immediately (i.e., those for which the candidate prefixes/
-   strings are fixed in advance).
+   string).
 
    An aggregation job can be thought of as having three phases:
 
@@ -1534,11 +1472,13 @@ struct {} Empty;
    Once all the report shares have been initialized, the Leader creates
    an AggregationJobInitReq message structured as follows:
 
+   opaque BatchID[32];
+
    struct {
      QueryType query_type;
      select (PartialBatchSelector.query_type) {
        case time_interval: Empty;
-       case fixed_size: BatchID batch_id;
+       case leader_selected: BatchID batch_id;
      };
    } PartialBatchSelector;
 
@@ -1548,11 +1488,6 @@ struct {} Empty;
      PrepareInit prepare_inits<1..2^32-1>;
    } AggregationJobInitReq;
 
-   [[OPEN ISSUE: Consider sending report shares separately (in parallel)
-   to the aggregate instructions.  Right now, aggregation parameters and
-   the corresponding report shares are sent at the same time, but this
-   may not be strictly necessary.]]
-
    This message consists of:
 
    *  agg_param: The VDAF aggregation parameter.
@@ -1560,12 +1495,12 @@ struct {} Empty;
    *  part_batch_selector: The "partial batch selector" used by the
       Aggregators to determine how to aggregate each report:
 
-      -  For fixed_size tasks, the Leader specifies a "batch ID" that
-         determines the batch to which each report for this aggregation
-         job belongs.
+      -  For leader_selected tasks, the Leader specifies a "batch ID"
+         that determines the batch to which each report for this
+         aggregation job belongs.
 
-         [OPEN ISSUE: For fixed_size tasks, the Leader is in complete
-         control over which batch a report is included in.  For
+         [OPEN ISSUE: For leader_selected tasks, the Leader is in
+         complete control over which batch a report is included in.  For
          time_interval tasks, the Client has some control, since the
          timestamp determines which batch window it falls in.  Is this
          desirable from a privacy perspective?  If not, it might be
@@ -1676,10 +1611,9 @@ struct {} Empty;
      hpke_unknown_config_id(3),
      hpke_decrypt_error(4),
      vdaf_prep_error(5),
-     batch_saturated(6),
-     task_expired(7),
-     invalid_message(8),
-     report_too_early(9),
+     task_expired(6),
+     invalid_message(7),
+     report_too_early(8),
      (255)
    } PrepareError;
 
@@ -1797,7 +1731,7 @@ struct {} Empty;
    and attempts decryption of the payload with the following procedure:
 
    plaintext_input_share = OpenBase(encrypted_input_share.enc, sk,
-     "dap-10 input share" || 0x01 || server_role,
+     "dap-11 input share" || 0x01 || server_role,
      input_share_aad, encrypted_input_share.payload)
 
    where sk is the HPKE secret key, 0x01 represents the Role of the
@@ -1840,32 +1774,22 @@ struct {} Empty;
        PlaintextInputShare are the same.  If so, the Aggregator MUST
        mark the input share as invalid with error invalid_message.
 
-   6.  Check if the report may still be aggregated with the current
-       aggregation parameter.  This can be done by looking up all
-       aggregation parameters previously used for this report and
-       calling
+   6.  Check if the report has been previously aggregated.  If so, the
+       input share MUST be marked as invalid with the error
+       report_replayed.
 
-      Vdaf.is_valid(current_agg_param, previous_agg_params)
-
-       If this returns false, the input share MUST be marked as invalid
-       with the error report_replayed.
-
-       *  Implementation note: To detect replay attacks in which an
-          honest Client's report is uploaded to the aggregators multiple
-          times, each Aggregator is required to keep track of the set of
-          reports it has processed for a given task.  Because honest
-          Clients choose the report ID at random, it is sufficient to
-          store the set of IDs of processed reports.  However,
-          implementations may find it helpful to track additional
-          information, like the timestamp, so that the storage used for
-          anti-replay can be sharded efficiently.
+       *  Implementation note: To detect replay attacks, each Aggregator
+          is required to keep track of the set of reports it has
+          processed for a given task.  Because honest Clients choose the
+          report ID at random, it is sufficient to store the set of IDs
+          of processed reports.  However, implementations may find it
+          helpful to track additional information, like the timestamp,
+          so that the storage used for anti-replay can be sharded
+          efficiently.
 
    7.  If the report pertains to a batch that was previously collected,
-       then make sure the report was already included in all previous
-       collections for the batch.  If not, the input share MUST be
-       marked as invalid with error batch_collected.  This prevents
-       Collectors from learning anything about small numbers of reports
-       that are uploaded between two collections of a batch.
+       then the input share MUST be marked as invalid with error
+       batch_collected.
 
        *  Implementation note: The Leader considers a batch to be
           collected once it has completed a collection job for a
@@ -1881,22 +1805,7 @@ struct {} Empty;
           [TODO: If a section to clarify report and batch states is
           added this can be removed.  See Issue #384]
 
-   8.  Depending on the query type for the task, additional checks may
-       be applicable:
-
-       *  For fixed_size tasks, the Aggregators need to ensure that each
-          batch is roughly the same size.  If the number of reports
-          aggregated for the current batch exceeds the maximum batch
-          size (per the task configuration), the Aggregator MAY mark the
-          input share as invalid with the error batch_saturated.  Note
-          that this behavior is not strictly enforced here but during
-          the collect interaction.  (See Section 4.6.5.)  If maximum
-          batch size is not provided, then Aggregators only need to
-          ensure the current batch exceeds the minimum batch size (per
-          the task configuration).  If both checks succeed, the input
-          share is not marked as invalid.
-
-   9.  Finally, if an Aggregator cannot determine if an input share is
+   8.  Finally, if an Aggregator cannot determine if an input share is
        valid, it MUST mark the input share as invalid with error
        report_dropped.  For example, if the Aggregator has evicted the
        state required to perform the check from long-term storage.  (See
@@ -2245,9 +2154,6 @@ struct {} Empty;
       assigned to the batch by the Leader.  The indicated query type
       MUST match the task's query type.
 
-      [OPEN ISSUE: What should the Collector do if the query type
-      doesn't match?]
-
    *  report_count: The number of reports included in the batch.
 
    *  interval: The smallest interval of time that contains the
@@ -2290,7 +2196,7 @@ struct {} Empty;
      QueryType query_type;
      select (BatchSelector.query_type) {
        case time_interval: Interval batch_interval;
-       case fixed_size: BatchID batch_id;
+       case leader_selected: BatchID batch_id;
      };
    } BatchSelector;
 
@@ -2311,7 +2217,7 @@ struct {} Empty;
       -  For time_interval tasks, the request specifies the batch
          interval.
 
-      -  For fixed_size tasks, the request specifies the batch ID.
+      -  For leader_selected tasks, the request specifies the batch ID.
 
       The indicated query type MUST match the task's query type.
       Otherwise, the Helper MUST abort with "invalidMessage".
@@ -2373,8 +2279,7 @@ struct {} Empty;
 
    The Helper's handling of this request MUST be idempotent.  That is,
    if multiple identical, valid AggregateShareReqs are received, they
-   should all yield the same response while only consuming one unit of
-   the task's max_batch_query_count (see Section 4.6.5).
+   should all yield the same response.
 
    After receiving the Helper's response, the Leader uses the
    HpkeCiphertext to finalize a collection job (see Section 4.6.3).
@@ -2414,7 +2319,7 @@ struct {} Empty;
    Encrypting an aggregate share agg_share for a given AggregateShareReq
    is done as follows:
 
-enc, payload = SealBase(pk, "dap-10 aggregate share" || server_role || 0x00,
+enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
   agg_share_aad, agg_share)
 
    where pk is the HPKE public key encoded by the Collector's HPKE key,
@@ -2444,7 +2349,7 @@ enc, payload = SealBase(pk, "dap-10 aggregate share" || server_role || 0x00,
    process.  Specifically, given an encrypted input share, denoted
    enc_share, for a given batch selector, decryption works as follows:
 
-   agg_share = OpenBase(enc_share.enc, sk, "dap-10 aggregate share" ||
+   agg_share = OpenBase(enc_share.enc, sk, "dap-11 aggregate share" ||
      server_role || 0x00, agg_share_aad, enc_share.payload)
 
    where sk is the HPKE secret key, server_role is the Role of the
@@ -2459,8 +2364,8 @@ enc, payload = SealBase(pk, "dap-10 aggregate share" || server_role || 0x00,
    *  For time_interval tasks, the batch selector is the batch interval
       specified in the query.
 
-   *  For fixed_size tasks, the batch selector is the batch ID assigned
-      sent in the response.
+   *  For leader_selected tasks, the batch selector is the batch ID sent
+      in the response.
 
    The OpenBase() function is as specified in [HPKE], Section 6.1 for
    the ciphersuite indicated by the HPKE configuration.
@@ -2490,12 +2395,10 @@ enc, payload = SealBase(pk, "dap-10 aggregate share" || server_role || 0x00,
    Leaders SHOULD wait for more reports to be validated and try the
    collection job again later.
 
-   Next, the Aggregator checks that the batch has not been queried too
-   many times.  This is determined by the maximum number of times a
-   batch can be queried, max_batch_query_count.  If the batch has been
-   queried with more than max_batch_query_count distinct aggregation
-   parameters, the Aggregator MUST abort with error of type
-   "batchQueriedTooManyTimes".
+   Next, the Aggregator checks that the batch has not been queried with
+   multiple distinct aggregation parameters.  If the batch has been
+   queried with more than one distinct aggregation parameter, the
+   Aggregator MUST abort with error of type "batchQueriedMultipleTimes".
 
    Finally, the Aggregator checks that the batch does not contain a
    report that was included in any previous batch.  If this batch
@@ -2534,28 +2437,21 @@ enc, payload = SealBase(pk, "dap-10 aggregate share" || server_role || 0x00,
    min_batch_size.  The Aggregator checks that len(X) >= min_batch_size,
    where X is the set of reports successfully aggregated into the batch.
 
-4.6.5.2.  Fixed-size Queries
+4.6.5.2.  Leader-selected Queries
 
 4.6.5.2.1.  Boundary Check
 
-   For fixed_size tasks, the batch boundaries are defined by opaque
+   For leader_selected tasks, the batch boundaries are defined by opaque
    batch IDs.  Thus the Aggregator needs to check that the query is
-   associated with a known batch ID:
-
-   *  For a CollectionReq containing a query of type by_batch_id, the
-      Leader checks that the provided batch ID corresponds to a batch ID
-      it returned in a previous collection for the task.
-
-   *  For an AggregateShareReq, the Helper checks that the batch ID
-      provided by the Leader corresponds to a batch ID used in a
-      previous AggregationJobInitReq for the task.
+   associated with a known batch ID; specifically, for an
+   AggregateShareReq, the Helper checks that the batch ID provided by
+   the Leader corresponds to a batch ID used in a previous
+   AggregationJobInitReq for the task.
 
 4.6.5.2.2.  Size Check
 
    The query configuration specifies the minimum batch size,
-   min_batch_size, and optionally the maximum batch size,
-   max_batch_size.  The Aggregator checks that len(X) >= min_batch_size.
-   And if max_batch_size is specified, also len(X) <= max_batch_size,
+   min_batch_size.  The Aggregator checks that len(X) >= min_batch_size,
    where X is the set of reports successfully aggregated into the batch.
 
 5.  Operational Considerations
@@ -2635,31 +2531,17 @@ enc, payload = SealBase(pk, "dap-10 aggregate share" || server_role || 0x00,
 5.2.  VDAFs and Compute Requirements
 
    The choice of VDAF can impact the computation required for a DAP
-   task.  For instance, the Poplar1 VDAF [VDAF] when configured to
-   compute a set of heavy hitters requires each measurement to be of the
-   same bit-length which all parties need to agree on prior to VDAF
-   execution.  The computation required for such tasks increases
-   superlinearly as a function of the chosen bit-length, as multiple
-   rounds of collection are needed for each bit of the measurement
-   value, and each bit of the measurement value requires computation
-   which scales with the chosen bit-length.
-
-   When dealing with variable length measurements (e.g domain names), it
-   is necessary to pad them to convert into fixed-length measurements.
-   When computing the heavy hitters from a batch of such measurements,
-   VDAF execution can be terminated early once once the padding region
-   is reached for a given measurement: at this point, the padded
-   measurement can be included in the last set of candidate prefixes.
-   For smaller length measurements, this significantly reduces the cost
-   of communication between Aggregators and the steps required for the
-   computation.  However, malicious Clients can still generate maximum
-   length measurements forcing the system to always operate at worst-
-   case performance.
+   task.  For instance, the Prio3SumVec VDAF [VDAF] requires each
+   measurement to be vectors of the same length, which all parties need
+   to agree on prior to VDAF execution.  The computation required for
+   such tasks increases linearly as a function of the chosen length, as
+   each vector element must be processed in turn.
 
    Therefore, care must be taken that a DAP deployment can handle VDAF
-   execution of all possible measurement values for any tasks that the
-   deployment is configured for.  Otherwise, an attacker may deny
-   service by uploading many expensive reports.
+   execution of all possible VDAF configurations for any tasks which the
+   deployment may be configured for.  Otherwise, an attacker may deny
+   service by uploading many expensive reports to a suitably-configured
+   VDAF.
 
    Applications which require computationally-expensive VDAFs can
    mitigate the computation cost of aggregation in a few ways, such as
@@ -2698,16 +2580,15 @@ enc, payload = SealBase(pk, "dap-10 aggregate share" || server_role || 0x00,
 5.4.1.  Reducing Storage Requirements
 
    In general, the Aggregators are required to keep state for tasks and
-   all valid reports for as long as collect requests can be made for
-   them.  In particular, Aggregators must store a batch as long as the
-   batch has not been queried more than max_batch_query_count times.
-   However, it is not always necessary to store the reports themselves.
-   For schemes like Prio3 [VDAF] in which reports are verified only
-   once, each Aggregator only needs to store its aggregate share for
-   each possible batch interval, along with the number of times the
-   aggregate share was used in a batch.  This is due to the requirement
-   that the batch interval respect the boundaries defined by the DAP
-   parameters.  (See Section 4.6.5.)
+   all valid reports for as long as collection requests can be made for
+   them.  However, it is not necessary to store the complete reports.
+   Each Aggregator only needs to store an aggregate share for each
+   possible batch interval (for time-interval) or batch ID (for leader-
+   selected), along with a flag indicating whether the aggregate share
+   has been collected.  This is due to the requirement that in the time-
+   interval case, the batch interval respect the boundaries defined by
+   the DAP parameters; and that in leader-selected case, a batch is
+   determined entirely by a batch ID.  (See Section 4.6.5.)
 
    However, Aggregators are also required to implement several per-
    report checks that require retaining a number of data artifacts.  For
@@ -2799,15 +2680,10 @@ enc, payload = SealBase(pk, "dap-10 aggregate share" || server_role || 0x00,
    3.  Aggregators can deny service by refusing to respond to collection
        requests or aggregate share requests.
 
-   4.  Collection requests may leak information beyond the collection
-       results.  For example, the Poplar1 VDAF [VDAF] can be used to
-       compute the set of heavy hitters among a set of arbitrary bit
-       strings uploaded by Clients.  This requires multiple evaluations
-       of the VDAF, the results of which reveal information to the
-       Aggregators and Collector beyond what follows from the heavy
-       hitters themselves.  Or the result could leak information about
-       outlier values.  This leakage can be mitigated using differential
-       privacy (Section 7.4).
+   4.  Some VDAFs could leak information to either Aggregator or the
+       Collector beyond what the protocol intended to learn.  It may be
+       possible to mitigate such leakages using differential privacy
+       (Section 7.4).
 
 7.1.  Sybil Attacks
 
@@ -2942,19 +2818,6 @@ enc, payload = SealBase(pk, "dap-10 aggregate share" || server_role || 0x00,
    does not specify how to choose an appropriate minimum batch size, but
    an appropriate value may be determined from the differential privacy
    (Section 7.4) parameters in use, if any.
-
-   If batches will be collected more than once, it is possible that some
-   invalid reports could be accepted and successfully aggregated into
-   the first collection, but be rejected with a subsequent aggregation
-   parameter.  This could reduce the number of successfully aggregated
-   reports below the minimum batch size, and make the batch
-   uncollectable with that aggregation parameter, as described in
-   Section 4.1.3.  This constitutes an efficient denial of service
-   vector for a Sybil attacker.  In deployments that will collect
-   batches more than once, the actual batch sizes, as determined by the
-   Leader or Collector (depending on query type) SHOULD be greater than
-   the minimum batch size to allow for later rejection of some number of
-   invalid reports.
 
 7.5.3.  Task Configuration Agreement and Consistency
 

@@ -25,17 +25,17 @@ revealing any individual user's data.
 <meta content="draft-ietf-ppm-dap-latest" name="ietf.draft">
 <!-- Generator version information:
   xml2rfc 3.21.0
-    Python 3.11.9
+    Python 3.12.3
     ConfigArgParse 1.7
     google-i18n-address 3.1.0
     intervaltree 3.1.0
-    Jinja2 3.1.2
-    lxml 4.9.3
-    platformdirs 4.2.0
+    Jinja2 3.1.4
+    lxml 4.9.4
+    platformdirs 4.2.2
     pycountry 22.3.5
     PyYAML 6.0.1
     requests 2.31.0
-    setuptools 68.2.2
+    setuptools 69.5.1
     six 1.16.0
     wcwidth 0.2.13
 -->
@@ -1036,11 +1036,11 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <thead><tr>
 <td class="left">Internet-Draft</td>
 <td class="center">DAP-PPM</td>
-<td class="right">May 2024</td>
+<td class="right">June 2024</td>
 </tr></thead>
 <tfoot><tr>
 <td class="left">Geoghegan, et al.</td>
-<td class="center">Expires 3 November 2024</td>
+<td class="center">Expires 15 December 2024</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1053,12 +1053,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-ietf-ppm-dap-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2024-05-02" class="published">2 May 2024</time>
+<time datetime="2024-06-13" class="published">13 June 2024</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Standards Track</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2024-11-03">3 November 2024</time></dd>
+<dd class="expires"><time datetime="2024-12-15">15 December 2024</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -1132,7 +1132,7 @@ revealing any individual user's data.<a href="#section-abstract-1" class="pilcro
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 3 November 2024.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 15 December 2024.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1204,10 +1204,7 @@ revealing any individual user's data.<a href="#section-abstract-1" class="pilcro
                     <p id="section-toc.1-1.4.2.1.2.1.1"><a href="#section-4.1.1" class="auto internal xref">4.1.1</a>.  <a href="#name-time-interval-queries" class="internal xref">Time-interval Queries</a></p>
 </li>
                   <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.1.2.2">
-                    <p id="section-toc.1-1.4.2.1.2.2.1"><a href="#section-4.1.2" class="auto internal xref">4.1.2</a>.  <a href="#name-fixed-size-queries" class="internal xref">Fixed-size Queries</a></p>
-</li>
-                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.1.2.3">
-                    <p id="section-toc.1-1.4.2.1.2.3.1"><a href="#section-4.1.3" class="auto internal xref">4.1.3</a>.  <a href="#name-batch-size-considerations" class="internal xref">Batch Size Considerations</a></p>
+                    <p id="section-toc.1-1.4.2.1.2.2.1"><a href="#section-4.1.2" class="auto internal xref">4.1.2</a>.  <a href="#name-leader-selected-queries" class="internal xref">Leader-selected Queries</a></p>
 </li>
                 </ul>
 </li>
@@ -1427,247 +1424,270 @@ input is ever seen in the clear by any aggregator.<a href="#section-1-1" class="
 <a href="#section-1.1" class="section-number selfRef">1.1. </a><a href="#name-change-log" class="section-name selfRef">Change Log</a>
         </h3>
 <p id="section-1.1-1">(*) Indicates a change that breaks wire compatibility with the previous draft.<a href="#section-1.1-1" class="pilcrow">¶</a></p>
-<p id="section-1.1-2">10:<a href="#section-1.1-2" class="pilcrow">¶</a></p>
+<p id="section-1.1-2">12:<a href="#section-1.1-2" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-1.1-3.1">
-            <p id="section-1.1-3.1.1">Editorial changes from httpdir early review.<a href="#section-1.1-3.1.1" class="pilcrow">¶</a></p>
+            <p id="section-1.1-3.1.1">Rename the fixed-size query type to leader-selected, to align the name with
+the behavior of this query type.<a href="#section-1.1-3.1.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-1.1-3.2">
-            <p id="section-1.1-3.2.1">Poll collection jobs with HTTP GET instead of POST. (*)<a href="#section-1.1-3.2.1" class="pilcrow">¶</a></p>
-</li>
-          <li class="normal" id="section-1.1-3.3">
-            <p id="section-1.1-3.3.1">Upload reports with HTTP POST instead of PUT. (*)<a href="#section-1.1-3.3.1" class="pilcrow">¶</a></p>
-</li>
-          <li class="normal" id="section-1.1-3.4">
-            <p id="section-1.1-3.4.1">Clarify requirements for problem documents.<a href="#section-1.1-3.4.1" class="pilcrow">¶</a></p>
-</li>
-          <li class="normal" id="section-1.1-3.5">
-            <p id="section-1.1-3.5.1">Provide guidance on batch sizes when running VDAFs with non-trivial
-aggregation parameters.<a href="#section-1.1-3.5.1" class="pilcrow">¶</a></p>
-</li>
-          <li class="normal" id="section-1.1-3.6">
-            <p id="section-1.1-3.6.1">Bump version tag from "dap-09" to "dap-10". (*)<a href="#section-1.1-3.6.1" class="pilcrow">¶</a></p>
+            <p id="section-1.1-3.2.1">Remove the <code>max_batch_size</code> parameter of the leader-selected query type.<a href="#section-1.1-3.2.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
-<p id="section-1.1-4">09:<a href="#section-1.1-4" class="pilcrow">¶</a></p>
+<p id="section-1.1-4">11:<a href="#section-1.1-4" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-1.1-5.1">
-            <p id="section-1.1-5.1.1">Fixed-size queries: make the maximum batch size optional.<a href="#section-1.1-5.1.1" class="pilcrow">¶</a></p>
+            <p id="section-1.1-5.1.1">Remove support for multi-collection of batches, as well as the fixed-size
+query type's <code>by_batch_id</code> query. (*)<a href="#section-1.1-5.1.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-1.1-5.2">
-            <p id="section-1.1-5.2.1">Fixed-size queries: require current-batch queries to return distinct batches.<a href="#section-1.1-5.2.1" class="pilcrow">¶</a></p>
+            <p id="section-1.1-5.2.1">Clarify purpose of report ID uniqueness.<a href="#section-1.1-5.2.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-1.1-5.3">
-            <p id="section-1.1-5.3.1">Clarify requirements for compatible VDAFs.<a href="#section-1.1-5.3.1" class="pilcrow">¶</a></p>
-</li>
-          <li class="normal" id="section-1.1-5.4">
-            <p id="section-1.1-5.4.1">Clarify rules around creating and abandoning aggregation jobs.<a href="#section-1.1-5.4.1" class="pilcrow">¶</a></p>
-</li>
-          <li class="normal" id="section-1.1-5.5">
-            <p id="section-1.1-5.5.1">Recommend that all task parameters are visible to all parties.<a href="#section-1.1-5.5.1" class="pilcrow">¶</a></p>
-</li>
-          <li class="normal" id="section-1.1-5.6">
-            <p id="section-1.1-5.6.1">Revise security considerations section.<a href="#section-1.1-5.6.1" class="pilcrow">¶</a></p>
-</li>
-          <li class="normal" id="section-1.1-5.7">
-            <p id="section-1.1-5.7.1">Bump draft-irtf-cfrg-vdaf-07 to 08 <span>[<a href="#VDAF" class="cite xref">VDAF</a>]</span>. (*)<a href="#section-1.1-5.7.1" class="pilcrow">¶</a></p>
-</li>
-          <li class="normal" id="section-1.1-5.8">
-            <p id="section-1.1-5.8.1">Bump version tag from "dap-07" to "dap-09". (*)<a href="#section-1.1-5.8.1" class="pilcrow">¶</a></p>
+            <p id="section-1.1-5.3.1">Bump version tag from "dap-10" to "dap-11". (*)<a href="#section-1.1-5.3.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
-<p id="section-1.1-6">08:<a href="#section-1.1-6" class="pilcrow">¶</a></p>
+<p id="section-1.1-6">10:<a href="#section-1.1-6" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-1.1-7.1">
-            <p id="section-1.1-7.1.1">Clarify requirements for initializing aggregation jobs.<a href="#section-1.1-7.1.1" class="pilcrow">¶</a></p>
+            <p id="section-1.1-7.1.1">Editorial changes from httpdir early review.<a href="#section-1.1-7.1.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-1.1-7.2">
-            <p id="section-1.1-7.2.1">Add more considerations for Sybil attacks.<a href="#section-1.1-7.2.1" class="pilcrow">¶</a></p>
+            <p id="section-1.1-7.2.1">Poll collection jobs with HTTP GET instead of POST. (*)<a href="#section-1.1-7.2.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-1.1-7.3">
-            <p id="section-1.1-7.3.1">Expand guidance around choosing the VDAF verification key.<a href="#section-1.1-7.3.1" class="pilcrow">¶</a></p>
+            <p id="section-1.1-7.3.1">Upload reports with HTTP POST instead of PUT. (*)<a href="#section-1.1-7.3.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-1.1-7.4">
-            <p id="section-1.1-7.4.1">Add an error type registry for the aggregation sub-protocol.<a href="#section-1.1-7.4.1" class="pilcrow">¶</a></p>
+            <p id="section-1.1-7.4.1">Clarify requirements for problem documents.<a href="#section-1.1-7.4.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-1.1-7.5">
+            <p id="section-1.1-7.5.1">Provide guidance on batch sizes when running VDAFs with non-trivial
+aggregation parameters.<a href="#section-1.1-7.5.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-1.1-7.6">
+            <p id="section-1.1-7.6.1">Bump version tag from "dap-09" to "dap-10". (*)<a href="#section-1.1-7.6.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
-<p id="section-1.1-8">07:<a href="#section-1.1-8" class="pilcrow">¶</a></p>
+<p id="section-1.1-8">09:<a href="#section-1.1-8" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-1.1-9.1">
-            <p id="section-1.1-9.1.1">Bump version tag from "dap-06" to "dap-07". This is a bug-fix revision: the
-editors overlooked some changes we intended to pick up in the previous
-version. (*)<a href="#section-1.1-9.1.1" class="pilcrow">¶</a></p>
+            <p id="section-1.1-9.1.1">Fixed-size queries: make the maximum batch size optional.<a href="#section-1.1-9.1.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-1.1-9.2">
+            <p id="section-1.1-9.2.1">Fixed-size queries: require current-batch queries to return distinct batches.<a href="#section-1.1-9.2.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-1.1-9.3">
+            <p id="section-1.1-9.3.1">Clarify requirements for compatible VDAFs.<a href="#section-1.1-9.3.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-1.1-9.4">
+            <p id="section-1.1-9.4.1">Clarify rules around creating and abandoning aggregation jobs.<a href="#section-1.1-9.4.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-1.1-9.5">
+            <p id="section-1.1-9.5.1">Recommend that all task parameters are visible to all parties.<a href="#section-1.1-9.5.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-1.1-9.6">
+            <p id="section-1.1-9.6.1">Revise security considerations section.<a href="#section-1.1-9.6.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-1.1-9.7">
+            <p id="section-1.1-9.7.1">Bump draft-irtf-cfrg-vdaf-07 to 08 <span>[<a href="#VDAF" class="cite xref">VDAF</a>]</span>. (*)<a href="#section-1.1-9.7.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-1.1-9.8">
+            <p id="section-1.1-9.8.1">Bump version tag from "dap-07" to "dap-09". (*)<a href="#section-1.1-9.8.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
-<p id="section-1.1-10">06:<a href="#section-1.1-10" class="pilcrow">¶</a></p>
+<p id="section-1.1-10">08:<a href="#section-1.1-10" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-1.1-11.1">
-            <p id="section-1.1-11.1.1">Bump draft-irtf-cfrg-vdaf-06 to 07 <span>[<a href="#VDAF" class="cite xref">VDAF</a>]</span>. (*)<a href="#section-1.1-11.1.1" class="pilcrow">¶</a></p>
+            <p id="section-1.1-11.1.1">Clarify requirements for initializing aggregation jobs.<a href="#section-1.1-11.1.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-1.1-11.2">
-            <p id="section-1.1-11.2.1">Overhaul security considerations (#488).<a href="#section-1.1-11.2.1" class="pilcrow">¶</a></p>
+            <p id="section-1.1-11.2.1">Add more considerations for Sybil attacks.<a href="#section-1.1-11.2.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-1.1-11.3">
-            <p id="section-1.1-11.3.1">Adopt revised ping-pong interface in draft-irtf-cfrg-vdaf-07 (#494).<a href="#section-1.1-11.3.1" class="pilcrow">¶</a></p>
+            <p id="section-1.1-11.3.1">Expand guidance around choosing the VDAF verification key.<a href="#section-1.1-11.3.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-1.1-11.4">
-            <p id="section-1.1-11.4.1">Add aggregation parameter to <code>AggregateShareAad</code> (#498). (*)<a href="#section-1.1-11.4.1" class="pilcrow">¶</a></p>
-</li>
-          <li class="normal" id="section-1.1-11.5">
-            <p id="section-1.1-11.5.1">Bump version tag from "dap-05" to "dap-06". (*)<a href="#section-1.1-11.5.1" class="pilcrow">¶</a></p>
+            <p id="section-1.1-11.4.1">Add an error type registry for the aggregation sub-protocol.<a href="#section-1.1-11.4.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
-<p id="section-1.1-12">05:<a href="#section-1.1-12" class="pilcrow">¶</a></p>
+<p id="section-1.1-12">07:<a href="#section-1.1-12" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-1.1-13.1">
-            <p id="section-1.1-13.1.1">Bump draft-irtf-cfrg-vdaf-05 to 06 <span>[<a href="#VDAF" class="cite xref">VDAF</a>]</span>. (*)<a href="#section-1.1-13.1.1" class="pilcrow">¶</a></p>
-</li>
-          <li class="normal" id="section-1.1-13.2">
-            <p id="section-1.1-13.2.1">Specialize the protocol for two-party VDAFs (i.e., one Leader and One
-Helper). Accordingly, update the aggregation sub-protocol to use the new
-"ping-pong" interface for two-party VDAFs introduced in
-draft-irtf-cfrg-vdaf-06. (*)<a href="#section-1.1-13.2.1" class="pilcrow">¶</a></p>
-</li>
-          <li class="normal" id="section-1.1-13.3">
-            <p id="section-1.1-13.3.1">Allow the following actions to be safely retried: aggregation job creation,
-collection job creation, and requesting the Helper's aggregate share.<a href="#section-1.1-13.3.1" class="pilcrow">¶</a></p>
-</li>
-          <li class="normal" id="section-1.1-13.4">
-            <p id="section-1.1-13.4.1">Merge error types that are related.<a href="#section-1.1-13.4.1" class="pilcrow">¶</a></p>
-</li>
-          <li class="normal" id="section-1.1-13.5">
-            <p id="section-1.1-13.5.1">Drop recommendation to generate IDs using a cryptographically secure
-pseudorandom number generator wherever pseudorandomness is not required.<a href="#section-1.1-13.5.1" class="pilcrow">¶</a></p>
-</li>
-          <li class="normal" id="section-1.1-13.6">
-            <p id="section-1.1-13.6.1">Require HPKE config identifiers to be unique.<a href="#section-1.1-13.6.1" class="pilcrow">¶</a></p>
-</li>
-          <li class="normal" id="section-1.1-13.7">
-            <p id="section-1.1-13.7.1">Bump version tag from "dap-04" to "dap-05". (*)<a href="#section-1.1-13.7.1" class="pilcrow">¶</a></p>
+            <p id="section-1.1-13.1.1">Bump version tag from "dap-06" to "dap-07". This is a bug-fix revision: the
+editors overlooked some changes we intended to pick up in the previous
+version. (*)<a href="#section-1.1-13.1.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
-<p id="section-1.1-14">04:<a href="#section-1.1-14" class="pilcrow">¶</a></p>
+<p id="section-1.1-14">06:<a href="#section-1.1-14" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-1.1-15.1">
-            <p id="section-1.1-15.1.1">Introduce resource oriented HTTP API. (#278, #398, #400) (*)<a href="#section-1.1-15.1.1" class="pilcrow">¶</a></p>
+            <p id="section-1.1-15.1.1">Bump draft-irtf-cfrg-vdaf-06 to 07 <span>[<a href="#VDAF" class="cite xref">VDAF</a>]</span>. (*)<a href="#section-1.1-15.1.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-1.1-15.2">
-            <p id="section-1.1-15.2.1">Clarify security requirements for choosing VDAF verify key. (#407, #411)<a href="#section-1.1-15.2.1" class="pilcrow">¶</a></p>
+            <p id="section-1.1-15.2.1">Overhaul security considerations (#488).<a href="#section-1.1-15.2.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-1.1-15.3">
-            <p id="section-1.1-15.3.1">Require Clients to provide nonce and random input when sharding inputs. (#394,
-#425) (*)<a href="#section-1.1-15.3.1" class="pilcrow">¶</a></p>
+            <p id="section-1.1-15.3.1">Adopt revised ping-pong interface in draft-irtf-cfrg-vdaf-07 (#494).<a href="#section-1.1-15.3.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-1.1-15.4">
-            <p id="section-1.1-15.4.1">Add interval of time spanned by constituent reports to Collection message.
-(#397, #403) (*)<a href="#section-1.1-15.4.1" class="pilcrow">¶</a></p>
+            <p id="section-1.1-15.4.1">Add aggregation parameter to <code>AggregateShareAad</code> (#498). (*)<a href="#section-1.1-15.4.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-1.1-15.5">
-            <p id="section-1.1-15.5.1">Update share validation requirements based on latest security analysis. (#408,
-#410)<a href="#section-1.1-15.5.1" class="pilcrow">¶</a></p>
-</li>
-          <li class="normal" id="section-1.1-15.6">
-            <p id="section-1.1-15.6.1">Bump draft-irtf-cfrg-vdaf-03 to 05 <span>[<a href="#VDAF" class="cite xref">VDAF</a>]</span>. (#429) (*)<a href="#section-1.1-15.6.1" class="pilcrow">¶</a></p>
-</li>
-          <li class="normal" id="section-1.1-15.7">
-            <p id="section-1.1-15.7.1">Bump version tag from "dap-03" to "dap-04". (#424) (*)<a href="#section-1.1-15.7.1" class="pilcrow">¶</a></p>
+            <p id="section-1.1-15.5.1">Bump version tag from "dap-05" to "dap-06". (*)<a href="#section-1.1-15.5.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
-<p id="section-1.1-16">03:<a href="#section-1.1-16" class="pilcrow">¶</a></p>
+<p id="section-1.1-16">05:<a href="#section-1.1-16" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-1.1-17.1">
-            <p id="section-1.1-17.1.1">Enrich the "fixed_size" query type to allow the Collector to request a
-recently aggregated batch without knowing the batch ID in advance. ID
-discovery was previously done out-of-band. (*)<a href="#section-1.1-17.1.1" class="pilcrow">¶</a></p>
+            <p id="section-1.1-17.1.1">Bump draft-irtf-cfrg-vdaf-05 to 06 <span>[<a href="#VDAF" class="cite xref">VDAF</a>]</span>. (*)<a href="#section-1.1-17.1.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-1.1-17.2">
-            <p id="section-1.1-17.2.1">Allow Aggregators to advertise multiple HPKE configurations. (*)<a href="#section-1.1-17.2.1" class="pilcrow">¶</a></p>
+            <p id="section-1.1-17.2.1">Specialize the protocol for two-party VDAFs (i.e., one Leader and One
+Helper). Accordingly, update the aggregation sub-protocol to use the new
+"ping-pong" interface for two-party VDAFs introduced in
+draft-irtf-cfrg-vdaf-06. (*)<a href="#section-1.1-17.2.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-1.1-17.3">
-            <p id="section-1.1-17.3.1">Clarify requirements for enforcing anti-replay. Namely, while it is sufficient
-to detect repeated report IDs, it is also enough to detect repeated IDs and
-timestamps.<a href="#section-1.1-17.3.1" class="pilcrow">¶</a></p>
+            <p id="section-1.1-17.3.1">Allow the following actions to be safely retried: aggregation job creation,
+collection job creation, and requesting the Helper's aggregate share.<a href="#section-1.1-17.3.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-1.1-17.4">
-            <p id="section-1.1-17.4.1">Remove the extensions from the Report and add extensions to the plaintext
-payload of each ReportShare. (*)<a href="#section-1.1-17.4.1" class="pilcrow">¶</a></p>
+            <p id="section-1.1-17.4.1">Merge error types that are related.<a href="#section-1.1-17.4.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-1.1-17.5">
-            <p id="section-1.1-17.5.1">Clarify that extensions are mandatory to implement: If an Aggregator does not
-recognize a ReportShare's extension, it must reject it.<a href="#section-1.1-17.5.1" class="pilcrow">¶</a></p>
+            <p id="section-1.1-17.5.1">Drop recommendation to generate IDs using a cryptographically secure
+pseudorandom number generator wherever pseudorandomness is not required.<a href="#section-1.1-17.5.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-1.1-17.6">
-            <p id="section-1.1-17.6.1">Clarify that Aggregators must reject any ReportShare with repeated extension
-types.<a href="#section-1.1-17.6.1" class="pilcrow">¶</a></p>
+            <p id="section-1.1-17.6.1">Require HPKE config identifiers to be unique.<a href="#section-1.1-17.6.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-1.1-17.7">
-            <p id="section-1.1-17.7.1">Specify explicitly how to serialize the Additional Authenticated Data (AAD)
-string for HPKE encryption. This clarifies an ambiguity in the previous
-version. (*)<a href="#section-1.1-17.7.1" class="pilcrow">¶</a></p>
-</li>
-          <li class="normal" id="section-1.1-17.8">
-            <p id="section-1.1-17.8.1">Change the length tag for the aggregation parameter to 32 bits. (*)<a href="#section-1.1-17.8.1" class="pilcrow">¶</a></p>
-</li>
-          <li class="normal" id="section-1.1-17.9">
-            <p id="section-1.1-17.9.1">Use the same prefix ("application") for all media types. (*)<a href="#section-1.1-17.9.1" class="pilcrow">¶</a></p>
-</li>
-          <li class="normal" id="section-1.1-17.10">
-            <p id="section-1.1-17.10.1">Make input share validation more explicit, including adding a new
-ReportShareError variant, "report_too_early", for handling reports too far in
-the future. (*)<a href="#section-1.1-17.10.1" class="pilcrow">¶</a></p>
-</li>
-          <li class="normal" id="section-1.1-17.11">
-            <p id="section-1.1-17.11.1">Improve alignment of problem details usage with <span>[<a href="#RFC7807" class="cite xref">RFC7807</a>]</span>. Replace
-"reportTooLate" problem document type with "repjortRejected" and clarify
-handling of rejected reports in the upload sub-protocol. (*)<a href="#section-1.1-17.11.1" class="pilcrow">¶</a></p>
-</li>
-          <li class="normal" id="section-1.1-17.12">
-            <p id="section-1.1-17.12.1">Bump version tag from "dap-02" to "dap-03". (*)<a href="#section-1.1-17.12.1" class="pilcrow">¶</a></p>
+            <p id="section-1.1-17.7.1">Bump version tag from "dap-04" to "dap-05". (*)<a href="#section-1.1-17.7.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
-<p id="section-1.1-18">02:<a href="#section-1.1-18" class="pilcrow">¶</a></p>
+<p id="section-1.1-18">04:<a href="#section-1.1-18" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-1.1-19.1">
-            <p id="section-1.1-19.1.1">Define a new task configuration parameter, called the "query type", that
+            <p id="section-1.1-19.1.1">Introduce resource oriented HTTP API. (#278, #398, #400) (*)<a href="#section-1.1-19.1.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-1.1-19.2">
+            <p id="section-1.1-19.2.1">Clarify security requirements for choosing VDAF verify key. (#407, #411)<a href="#section-1.1-19.2.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-1.1-19.3">
+            <p id="section-1.1-19.3.1">Require Clients to provide nonce and random input when sharding inputs. (#394,
+#425) (*)<a href="#section-1.1-19.3.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-1.1-19.4">
+            <p id="section-1.1-19.4.1">Add interval of time spanned by constituent reports to Collection message.
+(#397, #403) (*)<a href="#section-1.1-19.4.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-1.1-19.5">
+            <p id="section-1.1-19.5.1">Update share validation requirements based on latest security analysis. (#408,
+#410)<a href="#section-1.1-19.5.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-1.1-19.6">
+            <p id="section-1.1-19.6.1">Bump draft-irtf-cfrg-vdaf-03 to 05 <span>[<a href="#VDAF" class="cite xref">VDAF</a>]</span>. (#429) (*)<a href="#section-1.1-19.6.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-1.1-19.7">
+            <p id="section-1.1-19.7.1">Bump version tag from "dap-03" to "dap-04". (#424) (*)<a href="#section-1.1-19.7.1" class="pilcrow">¶</a></p>
+</li>
+        </ul>
+<p id="section-1.1-20">03:<a href="#section-1.1-20" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-1.1-21.1">
+            <p id="section-1.1-21.1.1">Enrich the "fixed_size" query type to allow the Collector to request a
+recently aggregated batch without knowing the batch ID in advance. ID
+discovery was previously done out-of-band. (*)<a href="#section-1.1-21.1.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-1.1-21.2">
+            <p id="section-1.1-21.2.1">Allow Aggregators to advertise multiple HPKE configurations. (*)<a href="#section-1.1-21.2.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-1.1-21.3">
+            <p id="section-1.1-21.3.1">Clarify requirements for enforcing anti-replay. Namely, while it is sufficient
+to detect repeated report IDs, it is also enough to detect repeated IDs and
+timestamps.<a href="#section-1.1-21.3.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-1.1-21.4">
+            <p id="section-1.1-21.4.1">Remove the extensions from the Report and add extensions to the plaintext
+payload of each ReportShare. (*)<a href="#section-1.1-21.4.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-1.1-21.5">
+            <p id="section-1.1-21.5.1">Clarify that extensions are mandatory to implement: If an Aggregator does not
+recognize a ReportShare's extension, it must reject it.<a href="#section-1.1-21.5.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-1.1-21.6">
+            <p id="section-1.1-21.6.1">Clarify that Aggregators must reject any ReportShare with repeated extension
+types.<a href="#section-1.1-21.6.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-1.1-21.7">
+            <p id="section-1.1-21.7.1">Specify explicitly how to serialize the Additional Authenticated Data (AAD)
+string for HPKE encryption. This clarifies an ambiguity in the previous
+version. (*)<a href="#section-1.1-21.7.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-1.1-21.8">
+            <p id="section-1.1-21.8.1">Change the length tag for the aggregation parameter to 32 bits. (*)<a href="#section-1.1-21.8.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-1.1-21.9">
+            <p id="section-1.1-21.9.1">Use the same prefix ("application") for all media types. (*)<a href="#section-1.1-21.9.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-1.1-21.10">
+            <p id="section-1.1-21.10.1">Make input share validation more explicit, including adding a new
+ReportShareError variant, "report_too_early", for handling reports too far in
+the future. (*)<a href="#section-1.1-21.10.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-1.1-21.11">
+            <p id="section-1.1-21.11.1">Improve alignment of problem details usage with <span>[<a href="#RFC7807" class="cite xref">RFC7807</a>]</span>. Replace
+"reportTooLate" problem document type with "repjortRejected" and clarify
+handling of rejected reports in the upload sub-protocol. (*)<a href="#section-1.1-21.11.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-1.1-21.12">
+            <p id="section-1.1-21.12.1">Bump version tag from "dap-02" to "dap-03". (*)<a href="#section-1.1-21.12.1" class="pilcrow">¶</a></p>
+</li>
+        </ul>
+<p id="section-1.1-22">02:<a href="#section-1.1-22" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-1.1-23.1">
+            <p id="section-1.1-23.1.1">Define a new task configuration parameter, called the "query type", that
 allows tasks to partition reports into batches in different ways. In the
 current draft, the Collector specifies a "query", which the Aggregators use to
 guide selection of the batch. Two query types are defined: the "time_interval"
 type captures the semantics of draft 01; and the "fixed_size" type allows the
 Leader to partition the reports arbitrarily, subject to the constraint that
-each batch is roughly the same size. (*)<a href="#section-1.1-19.1.1" class="pilcrow">¶</a></p>
+each batch is roughly the same size. (*)<a href="#section-1.1-23.1.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-1.1-19.2">
-            <p id="section-1.1-19.2.1">Define a new task configuration parameter, called the task "expiration", that
-defines the lifetime of a given task.<a href="#section-1.1-19.2.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-1.1-23.2">
+            <p id="section-1.1-23.2.1">Define a new task configuration parameter, called the task "expiration", that
+defines the lifetime of a given task.<a href="#section-1.1-23.2.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-1.1-19.3">
-            <p id="section-1.1-19.3.1">Specify requirements for HTTP request authentication rather than a concrete
+          <li class="normal" id="section-1.1-23.3">
+            <p id="section-1.1-23.3.1">Specify requirements for HTTP request authentication rather than a concrete
 scheme. (Draft 01 required the use of the <code>DAP-Auth-Token</code> header; this is now
-optional.)<a href="#section-1.1-19.3.1" class="pilcrow">¶</a></p>
+optional.)<a href="#section-1.1-23.3.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-1.1-19.4">
-            <p id="section-1.1-19.4.1">Make "task_id" an optional parameter of the "/hpke_config" endpoint.<a href="#section-1.1-19.4.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-1.1-23.4">
+            <p id="section-1.1-23.4.1">Make "task_id" an optional parameter of the "/hpke_config" endpoint.<a href="#section-1.1-23.4.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-1.1-19.5">
-            <p id="section-1.1-19.5.1">Add report count to CollectResp message. (*)<a href="#section-1.1-19.5.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-1.1-23.5">
+            <p id="section-1.1-23.5.1">Add report count to CollectResp message. (*)<a href="#section-1.1-23.5.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-1.1-19.6">
-            <p id="section-1.1-19.6.1">Increase message payload sizes to accommodate VDAFs with input and aggregate
-shares larger than 2^16-1 bytes. (*)<a href="#section-1.1-19.6.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-1.1-23.6">
+            <p id="section-1.1-23.6.1">Increase message payload sizes to accommodate VDAFs with input and aggregate
+shares larger than 2^16-1 bytes. (*)<a href="#section-1.1-23.6.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-1.1-19.7">
-            <p id="section-1.1-19.7.1">Bump draft-irtf-cfrg-vdaf-01 to 03 <span>[<a href="#VDAF" class="cite xref">VDAF</a>]</span>. (*)<a href="#section-1.1-19.7.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-1.1-23.7">
+            <p id="section-1.1-23.7.1">Bump draft-irtf-cfrg-vdaf-01 to 03 <span>[<a href="#VDAF" class="cite xref">VDAF</a>]</span>. (*)<a href="#section-1.1-23.7.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-1.1-19.8">
-            <p id="section-1.1-19.8.1">Bump version tag from "dap-01" to "dap-02". (*)<a href="#section-1.1-19.8.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-1.1-23.8">
+            <p id="section-1.1-23.8.1">Bump version tag from "dap-01" to "dap-02". (*)<a href="#section-1.1-23.8.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-1.1-19.9">
-            <p id="section-1.1-19.9.1">Rename the report nonce to the "report ID" and move it to the top of the
-structure. (*)<a href="#section-1.1-19.9.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-1.1-23.9">
+            <p id="section-1.1-23.9.1">Rename the report nonce to the "report ID" and move it to the top of the
+structure. (*)<a href="#section-1.1-23.9.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-1.1-19.10">
-            <p id="section-1.1-19.10.1">Clarify when it is safe for an Aggregator to evict various data artifacts from
-long-term storage.<a href="#section-1.1-19.10.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-1.1-23.10">
+            <p id="section-1.1-23.10.1">Clarify when it is safe for an Aggregator to evict various data artifacts from
+long-term storage.<a href="#section-1.1-23.10.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 </section>
@@ -1702,8 +1722,7 @@ output of the aggregation function. As defined in <span>[<a href="#VDAF" class="
           <dd class="break"></dd>
 <dt id="section-1.2-2.7">Aggregation parameter:</dt>
           <dd style="margin-left: 1.5em" id="section-1.2-2.8">
-            <p id="section-1.2-2.8.1">Parameter used to prepare a set of measurements for aggregation (e.g., the
-candidate prefixes for Poplar1 from <span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-08#section-8" class="relref">Section 8</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>). As defined in
+            <p id="section-1.2-2.8.1">Parameter used to prepare a set of measurements for aggregation. As defined in
 <span>[<a href="#VDAF" class="cite xref">VDAF</a>]</span>.<a href="#section-1.2-2.8.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
@@ -1821,33 +1840,21 @@ compute <code>y = F(p, x_1, ..., x_n)</code> for some function <code>F</code> wh
 else about the measurements. We call <code>F</code> the "aggregation function."<a href="#section-2-1" class="pilcrow">¶</a></p>
 <p id="section-2-2">This protocol is extensible and allows for the addition of new cryptographic
 schemes that implement the VDAF interface specified in
-<span>[<a href="#VDAF" class="cite xref">VDAF</a>]</span>. Candidates include:<a href="#section-2-2" class="pilcrow">¶</a></p>
-<ul class="normal">
-<li class="normal" id="section-2-3.1">
-          <p id="section-2-3.1.1">Prio3 (<span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-08#section-7" class="relref">Section 7</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>), which allows for aggregate statistics such as
-sum, mean, histograms, etc.<a href="#section-2-3.1.1" class="pilcrow">¶</a></p>
-</li>
-        <li class="normal" id="section-2-3.2">
-          <p id="section-2-3.2.1">Poplar1 (<span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-08#section-8" class="relref">Section 8</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>), which allows for finding the most popular
-strings uploaded by a set of Clients (e.g., the URL of their home page) as
-well as counting the number of Clients that hold a given string. This VDAF is
-the basis of the Poplar protocol of <span>[<a href="#BBCGGI21" class="cite xref">BBCGGI21</a>]</span>, which is designed to solve
-the heavy hitters problem in a privacy preserving manner.<a href="#section-2-3.2.1" class="pilcrow">¶</a></p>
-</li>
-      </ul>
-<p id="section-2-4">VDAFs rely on secret sharing to protect the privacy of the measurements. Rather
+<span>[<a href="#VDAF" class="cite xref">VDAF</a>]</span>. This protocol only supports VDAFs which
+require a single collection to provide useful results.<a href="#section-2-2" class="pilcrow">¶</a></p>
+<p id="section-2-3">VDAFs rely on secret sharing to protect the privacy of the measurements. Rather
 than sending its input in the clear, each Client shards its measurement into a
 pair of "input shares" and sends an input share to each of the Aggregators. This
-provides two important properties:<a href="#section-2-4" class="pilcrow">¶</a></p>
+provides two important properties:<a href="#section-2-3" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-2-5.1">
-          <p id="section-2-5.1.1">Given only one of the input shares, it is impossible to deduce the plaintext
-measurement from which it was generated.<a href="#section-2-5.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="section-2-4.1">
+          <p id="section-2-4.1.1">Given only one of the input shares, it is impossible to deduce the plaintext
+measurement from which it was generated.<a href="#section-2-4.1.1" class="pilcrow">¶</a></p>
 </li>
-        <li class="normal" id="section-2-5.2">
-          <p id="section-2-5.2.1">It allows the Aggregators to compute the aggregation function by first
+        <li class="normal" id="section-2-4.2">
+          <p id="section-2-4.2.1">It allows the Aggregators to compute the aggregation function by first
 aggregating up their input shares locally into "aggregate shares", then
-combining the aggregate shares into the aggregate result.<a href="#section-2-5.2.1" class="pilcrow">¶</a></p>
+combining the aggregate shares into the aggregate result.<a href="#section-2-4.2.1" class="pilcrow">¶</a></p>
 </li>
       </ul>
 <div id="system-architecture">
@@ -2101,8 +2108,8 @@ standard tokens for use in the "type" field (within the DAP URN namespace
               <td class="text-left" rowspan="1" colspan="1">There are an invalid number of reports in the batch.</td>
             </tr>
             <tr>
-              <td class="text-left" rowspan="1" colspan="1">batchQueriedTooManyTimes</td>
-              <td class="text-left" rowspan="1" colspan="1">The maximum number of batch queries has been exceeded for one or more reports included in the batch.</td>
+              <td class="text-left" rowspan="1" colspan="1">batchQueriedMultipleTimes</td>
+              <td class="text-left" rowspan="1" colspan="1">A batch was queried with multiple distinct aggregation parameters.</td>
             </tr>
             <tr>
               <td class="text-left" rowspan="1" colspan="1">batchMismatch</td>
@@ -2251,49 +2258,33 @@ aggregate shares encrypted to the Collector.<a href="#section-4.1-1" class="pilc
 enum {
   reserved(0), /* Reserved for testing purposes */
   time_interval(1),
-  fixed_size(2),
+  leader_selected(2),
   (255)
 } QueryType;
 </pre><a href="#section-4.1-3" class="pilcrow">¶</a>
 </div>
 <p id="section-4.1-4">The time_interval query type is described in <a href="#time-interval-query" class="auto internal xref">Section 4.1.1</a>; the
-fixed_size query type is described in <a href="#fixed-size-query" class="auto internal xref">Section 4.1.2</a>. Future
-specifications may introduce new query types as needed (see
-<a href="#query-type-reg" class="auto internal xref">Section 8.2.1</a>). Implementations are free to implement only a subset of the
-available query types.<a href="#section-4.1-4" class="pilcrow">¶</a></p>
+leader_selected query type is described in <a href="#leader-selected-query" class="auto internal xref">Section 4.1.2</a>. Future
+specifications may introduce new query types as needed (see <a href="#query-type-reg" class="auto internal xref">Section 8.2.1</a>).
+Implementations are free to implement only a subset of the available query
+types.<a href="#section-4.1-4" class="pilcrow">¶</a></p>
 <p id="section-4.1-5">A query includes parameters used by the Aggregators to select a batch of
 reports specific to the given query type. A query is defined as follows:<a href="#section-4.1-5" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-4.1-6">
 <pre>
-opaque BatchID[32];
-
-enum {
-  by_batch_id(0),
-  current_batch(1),
-  (255)
-} FixedSizeQueryType;
-
-struct {
-  FixedSizeQueryType query_type;
-  select (FixedSizeQuery.query_type) {
-    case by_batch_id: BatchID batch_id;
-    case current_batch: Empty;
-  }
-} FixedSizeQuery;
-
 struct {
   QueryType query_type;
   select (Query.query_type) {
     case time_interval: Interval batch_interval;
-    case fixed_size: FixedSizeQuery fixed_size_query;
+    case leader_selected: Empty;
   }
 } Query;
 </pre><a href="#section-4.1-6" class="pilcrow">¶</a>
 </div>
 <p id="section-4.1-7">The query is issued in-band as part of the collect interaction
-(<a href="#collect-flow" class="auto internal xref">Section 4.6</a>). Its content is determined by the "query type", which in
-turn is encoded by the "query configuration" configured out-of-band. All query
-types have the following configuration parameters in common:<a href="#section-4.1-7" class="pilcrow">¶</a></p>
+(<a href="#collect-flow" class="auto internal xref">Section 4.6</a>). Its content is determined by the "query type", which in turn
+is encoded by the "query configuration" configured out-of-band. All query types
+have the following configuration parameters in common:<a href="#section-4.1-7" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-4.1-8.1">
             <p id="section-4.1-8.1.1"><code>min_batch_size</code> - The smallest number of reports the batch is allowed to
@@ -2309,99 +2300,57 @@ type. (See <a href="#batch-validation" class="auto internal xref">Section 4.6.5<
 </li>
         </ul>
 <p id="section-4.1-9">The parameters pertaining to specific query types are described in
-<a href="#time-interval-query" class="auto internal xref">Section 4.1.1</a> and <a href="#fixed-size-query" class="auto internal xref">Section 4.1.2</a>.<a href="#section-4.1-9" class="pilcrow">¶</a></p>
+<a href="#time-interval-query" class="auto internal xref">Section 4.1.1</a> and <a href="#leader-selected-query" class="auto internal xref">Section 4.1.2</a>.<a href="#section-4.1-9" class="pilcrow">¶</a></p>
 <div id="time-interval-query">
 <section id="section-4.1.1">
           <h4 id="name-time-interval-queries">
 <a href="#section-4.1.1" class="section-number selfRef">4.1.1. </a><a href="#name-time-interval-queries" class="section-name selfRef">Time-interval Queries</a>
           </h4>
 <p id="section-4.1.1-1">The first query type, <code>time_interval</code>, is designed to support applications in
-which reports are collected over a long period of time. The Collector specifies
-a "batch interval" that determines the time range for reports included in the
-batch. For each report in the batch, the time at which that report was generated
-(see <a href="#upload-flow" class="auto internal xref">Section 4.4</a>) <span class="bcp14">MUST</span> fall within the batch interval specified by the
-Collector.<a href="#section-4.1.1-1" class="pilcrow">¶</a></p>
+which reports are collected into batches grouped by an interval of time. The
+Collector specifies a "batch interval" that determines the time range for
+reports included in the batch. For each report in the batch, the time at which
+that report was generated (see <a href="#upload-flow" class="auto internal xref">Section 4.4</a>) <span class="bcp14">MUST</span> fall within the batch
+interval specified by the Collector.<a href="#section-4.1.1-1" class="pilcrow">¶</a></p>
 <p id="section-4.1.1-2">Typically the Collector issues queries for which the batch intervals are
 continuous, monotonically increasing, and have the same duration. For example,
 the sequence of batch intervals <code>(1659544000, 1000)</code>, <code>(1659545000, 1000)</code>,
 <code>(1659546000, 1000)</code>, <code>(1659547000, 1000)</code> satisfies these conditions. (The
 first element of the pair denotes the start of the batch interval and the second
-denotes the duration.) Of course, there are cases in which Collector may need to
-issue queries out-of-order. For example, a previous batch might need to be
-queried again with a different aggregation parameter (e.g, for Poplar1). In
-addition, the Collector may need to vary the duration to adjust to changing
-report upload rates.<a href="#section-4.1.1-2" class="pilcrow">¶</a></p>
+denotes the duration.) However, this is not a requirement--the Collector may
+decide to issue queries out-of-order. In addition, the Collector may need to
+vary the duration to adjust to changing report upload rates.<a href="#section-4.1.1-2" class="pilcrow">¶</a></p>
 </section>
 </div>
-<div id="fixed-size-query">
+<div id="leader-selected-query">
 <section id="section-4.1.2">
-          <h4 id="name-fixed-size-queries">
-<a href="#section-4.1.2" class="section-number selfRef">4.1.2. </a><a href="#name-fixed-size-queries" class="section-name selfRef">Fixed-size Queries</a>
+          <h4 id="name-leader-selected-queries">
+<a href="#section-4.1.2" class="section-number selfRef">4.1.2. </a><a href="#name-leader-selected-queries" class="section-name selfRef">Leader-selected Queries</a>
           </h4>
-<p id="section-4.1.2-1">The <code>fixed_size</code> query type is used to support applications in which the
-Collector needs the ability to strictly control the batch size. This is
-particularly important for controlling the amount of noise added to reports by
-Clients (or added to aggregate shares by Aggregators) in order to achieve
-differential privacy.<a href="#section-4.1.2-1" class="pilcrow">¶</a></p>
-<p id="section-4.1.2-2">For this query type, the Aggregators group reports into arbitrary batches such
-that each batch has roughly the same number of reports. These batches are
-identified by opaque "batch IDs", allocated in an arbitrary fashion by the
-Leader.<a href="#section-4.1.2-2" class="pilcrow">¶</a></p>
-<p id="section-4.1.2-3">To get the aggregate of a batch, the Collector issues a query specifying the
-batch ID of interest (see <a href="#query" class="auto internal xref">Section 4.1</a>). The Collector may not know which batch ID
-it is interested in; in this case, it can also issue a query of type
-<code>current_batch</code>, which allows the Leader to select a recent batch to aggregate.
-The Leader <span class="bcp14">MUST</span> select a batch that has not yet been associated with a
-collection job.<a href="#section-4.1.2-3" class="pilcrow">¶</a></p>
-<p id="section-4.1.2-4">In addition to the minimum batch size common to all query types, the
-configuration may include a parameter <code>max_batch_size</code> that determines maximum
-number of reports per batch.<a href="#section-4.1.2-4" class="pilcrow">¶</a></p>
-<p id="section-4.1.2-5">If the configuration does not include <code>max_batch_size</code>, then the Aggregators
-can output any batch size that is larger than or equal to <code>min_batch_size</code>.
-This is useful for applications that are not concerned with sample size, i.e.,
-the privacy guarantee is not affected by the sampling rate of the population,
-therefore a larger than expected batch size does not weaken the designed privacy
-guarantee.<a href="#section-4.1.2-5" class="pilcrow">¶</a></p>
-<p id="section-4.1.2-6">Implementation note: The goal for the Aggregators is to aggregate the same
-number of reports in each batch. The target batch size is deployment-specific,
+<p id="section-4.1.2-1">The <code>leader_selected</code> query type is used to support applications in which it is
+acceptable for reports to be grouped in an arbitrary fashion by the Leader. For
+this query type, the Leader groups reports into arbitrary batches. These batches
+are identified by opaque "batch IDs", allocated in an arbitrary fashion by the
+Leader.<a href="#section-4.1.2-1" class="pilcrow">¶</a></p>
+<p id="section-4.1.2-2">The Collector will not know the set of batch IDs available for collection. To
+get the aggregate of a batch, the Collector issues a query, which does not
+include any information specifying a particular batch (see <a href="#query" class="auto internal xref">Section 4.1</a>). The
+Leader selects a recent batch to aggregate. The Leader <span class="bcp14">MUST</span> select a batch that
+has not yet been associated with a collection job.<a href="#section-4.1.2-2" class="pilcrow">¶</a></p>
+<p id="section-4.1.2-3">The Aggregators can output batches of any size that is larger than or equal to
+<code>min_batch_size</code>. This is useful for applications that are not concerned with
+sample size, i.e., the privacy guarantee is not affected by the sampling rate of
+the population, therefore a larger than expected batch size does not weaken the
+designed privacy guarantee.<a href="#section-4.1.2-3" class="pilcrow">¶</a></p>
+<p id="section-4.1.2-4">Implementation note: The target batch size, if any, is implementation-specific,
 and may be equal to or greater than the minimum batch size. Deciding how soon
-batches should be output is also deployment-specific. Exactly sizing batches may
-be challenging for Leader deployments in which multiple, independent nodes
+batches should be output is also implementation-specific. Exactly sizing batches
+may be challenging for Leader deployments in which multiple, independent nodes
 running the aggregate interaction (see <a href="#aggregate-flow" class="auto internal xref">Section 4.5</a>) need to be
-coordinated. The difference between the minimum batch size and maximum batch
-size is in part intended to allow room for error, and allow a range of target
-batch sizes.<a href="#section-4.1.2-6" class="pilcrow">¶</a></p>
-</section>
-</div>
-<div id="batch-size">
-<section id="section-4.1.3">
-          <h4 id="name-batch-size-considerations">
-<a href="#section-4.1.3" class="section-number selfRef">4.1.3. </a><a href="#name-batch-size-considerations" class="section-name selfRef">Batch Size Considerations</a>
-          </h4>
-<p id="section-4.1.3-1">If each batch will be collected only once (i.e. when using Prio3), then batch
-sizes <span class="bcp14">MAY</span> be equal to <code>min_batch_size</code> without issue. In the case of fixed size
-queries, <code>max_batch_size</code> <span class="bcp14">MAY</span> be equal to <code>min_batch_size</code>. Any target batch
-size between <code>min_batch_size</code> and <code>max_batch_size</code> may be chosen.<a href="#section-4.1.3-1" class="pilcrow">¶</a></p>
-<p id="section-4.1.3-2">If each batch may be collected more than once (i.e. when using Poplar1), then
-batches <span class="bcp14">SHOULD</span> be larger than <code>min_batch_size</code>, to allow for the possibility
-that some reports may be accepted with the first aggregation parameter, but be
-rejected with a subsequent aggregation parameter. Once a batch has been
-collected for the first time, subsequent collections of the same batch must
-process the same set of reports, and collections can only succeed if the number
-of successfully aggregated reports is at least <code>min_batch_size</code> (see
-<a href="#time-interval-batch-validation" class="auto internal xref">Section 4.6.5.1</a> and <a href="#fixed-size-batch-validation" class="auto internal xref">Section 4.6.5.2</a>). Thus,
-if enough reports are rejected such that fewer than <code>min_batch_size</code> output
-shares are available for aggregation, then collection of that batch may not
-proceed. (Note that this is not an issue for the first collection of a batch,
-since more reports could be combined with the uncollected reports in a
-subsequent collection attempt.)<a href="#section-4.1.3-2" class="pilcrow">¶</a></p>
-<p id="section-4.1.3-3">The target batch size may be chosen on a deployment-specific basis, based on the
-expected rate of invalid reports and Sybil attack defenses (<a href="#sybil" class="auto internal xref">Section 7.1</a>). When
-using fixed size queries, <code>max_batch_size</code> <span class="bcp14">SHOULD</span> be unset or greater than or
-equal to the target batch size, and the Leader <span class="bcp14">SHOULD</span> construct batches of the
-target batch size. When using time interval queries, the Collector <span class="bcp14">SHOULD</span>
-adaptively choose batch intervals based on the report upload rate so that they
-exceed <code>min_batch_size</code> by enough to allow for subsequent rejections of reports.<a href="#section-4.1.3-3" class="pilcrow">¶</a></p>
+coordinated. Applications which include differential privacy may wish to control
+the size (or range of sizes) of generated batches in order to control the amount
+of noise added to reports by Clients (or added to aggregate shares by
+Aggregators).<a href="#section-4.1.2-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -2436,17 +2385,13 @@ task must have. The party <span class="bcp14">MUST NOT</span> configure the task
 recognize the query type.<a href="#section-4.2-4.3.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-4.2-4.4">
-            <p id="section-4.2-4.4.1"><code>max_batch_query_count</code>: The maximum number of times a batch of reports may be
-queried by the Collector.<a href="#section-4.2-4.4.1" class="pilcrow">¶</a></p>
+            <p id="section-4.2-4.4.1"><code>task_expiration</code>: The time up to which Clients are expected to upload to this
+task. The task is considered completed after this time. Aggregators <span class="bcp14">MAY</span> reject
+reports that have timestamps later than <code>task_expiration</code>.<a href="#section-4.2-4.4.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-4.2-4.5">
-            <p id="section-4.2-4.5.1"><code>task_expiration</code>: The time up to which Clients are expected to upload to this
-task. The task is considered completed after this time. Aggregators <span class="bcp14">MAY</span> reject
-reports that have timestamps later than <code>task_expiration</code>.<a href="#section-4.2-4.5.1" class="pilcrow">¶</a></p>
-</li>
-          <li class="normal" id="section-4.2-4.6">
-            <p id="section-4.2-4.6.1">A unique identifier for the VDAF in use for the task, e.g., one of the VDAFs
-defined in <span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-08#section-10" class="relref">Section 10</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>.<a href="#section-4.2-4.6.1" class="pilcrow">¶</a></p>
+            <p id="section-4.2-4.5.1">A unique identifier for the VDAF in use for the task, e.g., one of the VDAFs
+defined in <span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-08#section-10" class="relref">Section 10</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>.<a href="#section-4.2-4.5.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 <p id="section-4.2-5">Note that the <code>leader_aggregator_url</code> and <code>helper_aggregator_url</code> values may
@@ -2682,7 +2627,7 @@ follows:<a href="#section-4.4.2-13" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-4.4.2-14">
 <pre>
 enc, payload = SealBase(pk,
-  "dap-10 input share" || 0x01 || server_role,
+  "dap-11 input share" || 0x01 || server_role,
   input_share_aad, plaintext_input_share)
 </pre><a href="#section-4.4.2-14" class="pilcrow">¶</a>
 </div>
@@ -2794,20 +2739,18 @@ Preparation has two purposes:<a href="#section-4.5-2" class="pilcrow">¶</a></p>
 <li id="section-4.5-3.1">
             <p id="section-4.5-3.1.1">To "refine" the input shares into "output shares" that have the desired
 aggregatable form. For some VDAFs, like Prio3, the mapping from input to
-output shares is some fixed, linear operation, but in general the mapping is
-controlled dynamically by the Collector and can be non-linear. In
-Poplar1, for example, the refinement process involves a sequence of
-"candidate prefixes" and the output consists of a sequence of zeros and ones,
-each indicating whether the corresponding candidate is a prefix of the
-measurement from which the input shares were generated.<a href="#section-4.5-3.1.1" class="pilcrow">¶</a></p>
+output shares is a fixed operation depending only on the input share, but in
+general the mapping involves an aggregation parameter chosen by the
+Collector.<a href="#section-4.5-3.1.1" class="pilcrow">¶</a></p>
 </li>
           <li id="section-4.5-3.2">
             <p id="section-4.5-3.2.1">To verify that the output shares, when combined, correspond to a valid,
 refined measurement, where validity is determined by the VDAF itself. For
 example, the Prio3Sum variant of Prio3 (<span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-08#section-7.4.2" class="relref">Section 7.4.2</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>) requires
-that the output shares sum up to an integer in a specific range; for Poplar1,
-the output shares are required to sum up to a vector that is non-zero in at
-most one position.<a href="#section-4.5-3.2.1" class="pilcrow">¶</a></p>
+that the output shares sum up to an integer in a specific range, while the
+Prio3Histogram variant (<span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-08#section-7.4.4" class="relref">Section 7.4.4</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>) proves that output shares
+sum up to a one-hot vector representing a contribution to a single bucket of
+the histogram.<a href="#section-4.5-3.2.1" class="pilcrow">¶</a></p>
 </li>
         </ol>
 <p id="section-4.5-4">In general, refinement and verification are not distinct computations, since for
@@ -2868,9 +2811,7 @@ subsections.<a href="#section-4.5-7" class="pilcrow">¶</a></p>
 <p id="section-4.5-8">In general, reports cannot be aggregated until the Collector specifies an
 aggregation parameter. However, in some situations it is possible to begin
 aggregation as soon as reports arrive. For example, Prio3 has just one valid
-aggregation parameter (the empty string). And there are use cases for Poplar1
-in which aggregation can begin immediately (i.e., those for which the candidate
-prefixes/strings are fixed in advance).<a href="#section-4.5-8" class="pilcrow">¶</a></p>
+aggregation parameter (the empty string).<a href="#section-4.5-8" class="pilcrow">¶</a></p>
 <p id="section-4.5-9">An aggregation job can be thought of as having three phases:<a href="#section-4.5-9" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-4.5-10.1">
@@ -3009,11 +2950,13 @@ initialization.<a href="#section-4.5.1.1-13" class="pilcrow">¶</a></p>
 <code>AggregationJobInitReq</code> message structured as follows:<a href="#section-4.5.1.1-14" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-4.5.1.1-15">
 <pre>
+opaque BatchID[32];
+
 struct {
   QueryType query_type;
   select (PartialBatchSelector.query_type) {
     case time_interval: Empty;
-    case fixed_size: BatchID batch_id;
+    case leader_selected: BatchID batch_id;
   };
 } PartialBatchSelector;
 
@@ -3024,104 +2967,101 @@ struct {
 } AggregationJobInitReq;
 </pre><a href="#section-4.5.1.1-15" class="pilcrow">¶</a>
 </div>
-<p id="section-4.5.1.1-16">[[OPEN ISSUE: Consider sending report shares separately (in parallel) to the
-aggregate instructions. Right now, aggregation parameters and the corresponding
-report shares are sent at the same time, but this may not be strictly
-necessary.]]<a href="#section-4.5.1.1-16" class="pilcrow">¶</a></p>
-<p id="section-4.5.1.1-17">This message consists of:<a href="#section-4.5.1.1-17" class="pilcrow">¶</a></p>
+<p id="section-4.5.1.1-16">This message consists of:<a href="#section-4.5.1.1-16" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-4.5.1.1-18.1">
-                <p id="section-4.5.1.1-18.1.1"><code>agg_param</code>: The VDAF aggregation parameter.<a href="#section-4.5.1.1-18.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="section-4.5.1.1-17.1">
+                <p id="section-4.5.1.1-17.1.1"><code>agg_param</code>: The VDAF aggregation parameter.<a href="#section-4.5.1.1-17.1.1" class="pilcrow">¶</a></p>
 </li>
-              <li class="normal" id="section-4.5.1.1-18.2">
-                <p id="section-4.5.1.1-18.2.1"><code>part_batch_selector</code>: The "partial batch selector" used by the Aggregators to
-determine how to aggregate each report:<a href="#section-4.5.1.1-18.2.1" class="pilcrow">¶</a></p>
+              <li class="normal" id="section-4.5.1.1-17.2">
+                <p id="section-4.5.1.1-17.2.1"><code>part_batch_selector</code>: The "partial batch selector" used by the Aggregators to
+determine how to aggregate each report:<a href="#section-4.5.1.1-17.2.1" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-4.5.1.1-18.2.2.1">
-                    <p id="section-4.5.1.1-18.2.2.1.1">For <code>fixed_size</code> tasks, the Leader specifies a "batch ID" that determines
-the batch to which each report for this aggregation job belongs.<a href="#section-4.5.1.1-18.2.2.1.1" class="pilcrow">¶</a></p>
-<p id="section-4.5.1.1-18.2.2.1.2">
-[OPEN ISSUE: For fixed_size tasks, the Leader is in complete control over
-which batch a report is included in. For time_interval tasks, the Client
-has some control, since the timestamp determines which batch window it
-falls in. Is this desirable from a privacy perspective? If not, it might
-be simpler to drop the timestamp altogether and have the agg init request
-specify the batch window instead.]<a href="#section-4.5.1.1-18.2.2.1.2" class="pilcrow">¶</a></p>
+<li class="normal" id="section-4.5.1.1-17.2.2.1">
+                    <p id="section-4.5.1.1-17.2.2.1.1">For <code>leader_selected</code> tasks, the Leader specifies a "batch ID" that
+determines the batch to which each report for this aggregation job
+belongs.<a href="#section-4.5.1.1-17.2.2.1.1" class="pilcrow">¶</a></p>
+<p id="section-4.5.1.1-17.2.2.1.2">
+[OPEN ISSUE: For leader_selected tasks, the Leader is in complete control
+over which batch a report is included in. For time_interval tasks, the
+Client has some control, since the timestamp determines which batch window
+it falls in. Is this desirable from a privacy perspective? If not, it
+might be simpler to drop the timestamp altogether and have the agg init
+request specify the batch window instead.]<a href="#section-4.5.1.1-17.2.2.1.2" class="pilcrow">¶</a></p>
 </li>
                 </ul>
-<p id="section-4.5.1.1-18.2.3">
+<p id="section-4.5.1.1-17.2.3">
 The indicated query type <span class="bcp14">MUST</span> match the task's query type. Otherwise, the
-Helper <span class="bcp14">MUST</span> abort with error <code>invalidMessage</code>.<a href="#section-4.5.1.1-18.2.3" class="pilcrow">¶</a></p>
-<p id="section-4.5.1.1-18.2.4">
+Helper <span class="bcp14">MUST</span> abort with error <code>invalidMessage</code>.<a href="#section-4.5.1.1-17.2.3" class="pilcrow">¶</a></p>
+<p id="section-4.5.1.1-17.2.4">
 This field is called the "partial" batch selector because, depending on the
 query type, it may not determine a batch. In particular, if the query type is
 <code>time_interval</code>, the batch is not determined until the Collector's query is
-issued (see <a href="#query" class="auto internal xref">Section 4.1</a>).<a href="#section-4.5.1.1-18.2.4" class="pilcrow">¶</a></p>
+issued (see <a href="#query" class="auto internal xref">Section 4.1</a>).<a href="#section-4.5.1.1-17.2.4" class="pilcrow">¶</a></p>
 </li>
-              <li class="normal" id="section-4.5.1.1-18.3">
-                <p id="section-4.5.1.1-18.3.1"><code>prepare_inits</code>: the sequence of <code>PrepareInit</code> messages constructed in the
-previous step.<a href="#section-4.5.1.1-18.3.1" class="pilcrow">¶</a></p>
+              <li class="normal" id="section-4.5.1.1-17.3">
+                <p id="section-4.5.1.1-17.3.1"><code>prepare_inits</code>: the sequence of <code>PrepareInit</code> messages constructed in the
+previous step.<a href="#section-4.5.1.1-17.3.1" class="pilcrow">¶</a></p>
 </li>
             </ul>
-<p id="section-4.5.1.1-19">Finally, the Leader sends a PUT request to
+<p id="section-4.5.1.1-18">Finally, the Leader sends a PUT request to
 <code>{helper}/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}</code>. The payload
 is set to <code>AggregationJobInitReq</code> and the media type is set to
-"application/dap-aggregation-job-init-req".<a href="#section-4.5.1.1-19" class="pilcrow">¶</a></p>
-<p id="section-4.5.1.1-20">The Leader <span class="bcp14">MUST</span> authenticate its requests to the Helper using a scheme that
-meets the requirements in <a href="#request-authentication" class="auto internal xref">Section 3.1</a>.<a href="#section-4.5.1.1-20" class="pilcrow">¶</a></p>
-<p id="section-4.5.1.1-21">The Helper's response will be an <code>AggregationJobResp</code> message (see
+"application/dap-aggregation-job-init-req".<a href="#section-4.5.1.1-18" class="pilcrow">¶</a></p>
+<p id="section-4.5.1.1-19">The Leader <span class="bcp14">MUST</span> authenticate its requests to the Helper using a scheme that
+meets the requirements in <a href="#request-authentication" class="auto internal xref">Section 3.1</a>.<a href="#section-4.5.1.1-19" class="pilcrow">¶</a></p>
+<p id="section-4.5.1.1-20">The Helper's response will be an <code>AggregationJobResp</code> message (see
 <a href="#aggregation-helper-init" class="auto internal xref">Section 4.5.1.2</a>. The response's <code>prepare_resps</code> must include exactly
 the same report IDs in the same order as the Leader's <code>AggregationJobInitReq</code>.
-Otherwise, the Leader <span class="bcp14">MUST</span> abort the aggregation job.<a href="#section-4.5.1.1-21" class="pilcrow">¶</a></p>
-<p id="section-4.5.1.1-22">[[OPEN ISSUE: consider relaxing this ordering constraint. See issue#217.]]<a href="#section-4.5.1.1-22" class="pilcrow">¶</a></p>
-<p id="section-4.5.1.1-23">Otherwise, the Leader proceeds as follows with each report:<a href="#section-4.5.1.1-23" class="pilcrow">¶</a></p>
-<ol start="1" type="1" class="normal type-1" id="section-4.5.1.1-24">
-<li id="section-4.5.1.1-24.1">
-                <p id="section-4.5.1.1-24.1.1">If the inbound prep response has type "continue", then the Leader computes<a href="#section-4.5.1.1-24.1.1" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.5.1.1-24.1.2">
+Otherwise, the Leader <span class="bcp14">MUST</span> abort the aggregation job.<a href="#section-4.5.1.1-20" class="pilcrow">¶</a></p>
+<p id="section-4.5.1.1-21">[[OPEN ISSUE: consider relaxing this ordering constraint. See issue#217.]]<a href="#section-4.5.1.1-21" class="pilcrow">¶</a></p>
+<p id="section-4.5.1.1-22">Otherwise, the Leader proceeds as follows with each report:<a href="#section-4.5.1.1-22" class="pilcrow">¶</a></p>
+<ol start="1" type="1" class="normal type-1" id="section-4.5.1.1-23">
+<li id="section-4.5.1.1-23.1">
+                <p id="section-4.5.1.1-23.1.1">If the inbound prep response has type "continue", then the Leader computes<a href="#section-4.5.1.1-23.1.1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-4.5.1.1-23.1.2">
 <pre>
 (state, outbound) = Vdaf.ping_pong_leader_continued(agg_param,
                                                     prev_state,
                                                     inbound)
-</pre><a href="#section-4.5.1.1-24.1.2" class="pilcrow">¶</a>
+</pre><a href="#section-4.5.1.1-23.1.2" class="pilcrow">¶</a>
 </div>
-<p id="section-4.5.1.1-24.1.3">
-where:<a href="#section-4.5.1.1-24.1.3" class="pilcrow">¶</a></p>
+<p id="section-4.5.1.1-23.1.3">
+where:<a href="#section-4.5.1.1-23.1.3" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-4.5.1.1-24.1.4.1">
-                    <p id="section-4.5.1.1-24.1.4.1.1"><code>agg_param</code> is the VDAF aggregation parameter provided by the Collector (see
-<a href="#collect-flow" class="auto internal xref">Section 4.6</a>)<a href="#section-4.5.1.1-24.1.4.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="section-4.5.1.1-23.1.4.1">
+                    <p id="section-4.5.1.1-23.1.4.1.1"><code>agg_param</code> is the VDAF aggregation parameter provided by the Collector (see
+<a href="#collect-flow" class="auto internal xref">Section 4.6</a>)<a href="#section-4.5.1.1-23.1.4.1.1" class="pilcrow">¶</a></p>
 </li>
-                  <li class="normal" id="section-4.5.1.1-24.1.4.2">
-                    <p id="section-4.5.1.1-24.1.4.2.1"><code>prev_state</code> is the state computed earlier by calling
-<code>Vdaf.ping_pong_leader_init</code> or <code>Vdaf.ping_pong_leader_continued</code><a href="#section-4.5.1.1-24.1.4.2.1" class="pilcrow">¶</a></p>
+                  <li class="normal" id="section-4.5.1.1-23.1.4.2">
+                    <p id="section-4.5.1.1-23.1.4.2.1"><code>prev_state</code> is the state computed earlier by calling
+<code>Vdaf.ping_pong_leader_init</code> or <code>Vdaf.ping_pong_leader_continued</code><a href="#section-4.5.1.1-23.1.4.2.1" class="pilcrow">¶</a></p>
 </li>
-                  <li class="normal" id="section-4.5.1.1-24.1.4.3">
-                    <p id="section-4.5.1.1-24.1.4.3.1"><code>inbound</code> is the message payload in the <code>PrepareResp</code><a href="#section-4.5.1.1-24.1.4.3.1" class="pilcrow">¶</a></p>
+                  <li class="normal" id="section-4.5.1.1-23.1.4.3">
+                    <p id="section-4.5.1.1-23.1.4.3.1"><code>inbound</code> is the message payload in the <code>PrepareResp</code><a href="#section-4.5.1.1-23.1.4.3.1" class="pilcrow">¶</a></p>
 </li>
                 </ul>
-<p id="section-4.5.1.1-24.1.5">
+<p id="section-4.5.1.1-23.1.5">
 If <code>outbound != None</code>, then the Leader stores <code>state</code> and <code>outbound</code> and
 proceeds to <a href="#aggregation-leader-continuation" class="auto internal xref">Section 4.5.2.1</a>. If <code>outbound == None</code>, then
 the preparation process is complete: either <code>state == Rejected()</code>, in which
 case the Leader rejects the report and removes it from the candidate set; or
 <code>state == Finished(out_share)</code>, in which case preparation is complete and the
 Leader stores the output share for use in the collection interaction
-<a href="#collect-flow" class="auto internal xref">Section 4.6</a>.<a href="#section-4.5.1.1-24.1.5" class="pilcrow">¶</a></p>
+<a href="#collect-flow" class="auto internal xref">Section 4.6</a>.<a href="#section-4.5.1.1-23.1.5" class="pilcrow">¶</a></p>
 </li>
-              <li id="section-4.5.1.1-24.2">
-                <p id="section-4.5.1.1-24.2.1">Else if the type is "reject", then the Leader rejects the report and removes
+              <li id="section-4.5.1.1-23.2">
+                <p id="section-4.5.1.1-23.2.1">Else if the type is "reject", then the Leader rejects the report and removes
 it from the candidate set. The Leader <span class="bcp14">MUST NOT</span> include the report in a
 subsequent aggregation job, unless the error is <code>report_too_early</code>, in which
-case the Leader <span class="bcp14">MAY</span> include the report in a subsequent aggregation job.<a href="#section-4.5.1.1-24.2.1" class="pilcrow">¶</a></p>
+case the Leader <span class="bcp14">MAY</span> include the report in a subsequent aggregation job.<a href="#section-4.5.1.1-23.2.1" class="pilcrow">¶</a></p>
 </li>
-              <li id="section-4.5.1.1-24.3">
-                <p id="section-4.5.1.1-24.3.1">Else the type is invalid, in which case the Leader <span class="bcp14">MUST</span> abort the
-aggregation job.<a href="#section-4.5.1.1-24.3.1" class="pilcrow">¶</a></p>
+              <li id="section-4.5.1.1-23.3">
+                <p id="section-4.5.1.1-23.3.1">Else the type is invalid, in which case the Leader <span class="bcp14">MUST</span> abort the
+aggregation job.<a href="#section-4.5.1.1-23.3.1" class="pilcrow">¶</a></p>
 </li>
             </ol>
-<p id="section-4.5.1.1-25">(Note: Since VDAF preparation completes in a constant number of rounds, it will
-never be the case that some reports are completed and others are not.)<a href="#section-4.5.1.1-25" class="pilcrow">¶</a></p>
+<p id="section-4.5.1.1-24">(Note: Since VDAF preparation completes in a constant number of rounds, it will
+never be the case that some reports are completed and others are not.)<a href="#section-4.5.1.1-24" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="aggregation-helper-init">
@@ -3158,10 +3098,9 @@ enum {
   hpke_unknown_config_id(3),
   hpke_decrypt_error(4),
   vdaf_prep_error(5),
-  batch_saturated(6),
-  task_expired(7),
-  invalid_message(8),
-  report_too_early(9),
+  task_expired(6),
+  invalid_message(7),
+  report_too_early(8),
   (255)
 } PrepareError;
 
@@ -3296,7 +3235,7 @@ attempts decryption of the payload with the following procedure:<a href="#sectio
 <div class="alignLeft art-text artwork" id="section-4.5.1.3-2">
 <pre>
 plaintext_input_share = OpenBase(encrypted_input_share.enc, sk,
-  "dap-10 input share" || 0x01 || server_role,
+  "dap-11 input share" || 0x01 || server_role,
   input_share_aad, encrypted_input_share.payload)
 </pre><a href="#section-4.5.1.3-2" class="pilcrow">¶</a>
 </div>
@@ -3344,37 +3283,22 @@ the same. If so, the Aggregator <span class="bcp14">MUST</span> mark the input s
 error <code>invalid_message</code>.<a href="#section-4.5.1.4-3.5.1" class="pilcrow">¶</a></p>
 </li>
               <li id="section-4.5.1.4-3.6">
-                <p id="section-4.5.1.4-3.6.1">Check if the report may still be aggregated with the current aggregation
-parameter. This can be done by looking up all aggregation parameters
-previously used for this report and calling<a href="#section-4.5.1.4-3.6.1" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.5.1.4-3.6.2">
-<pre>
-Vdaf.is_valid(current_agg_param, previous_agg_params)
-</pre><a href="#section-4.5.1.4-3.6.2" class="pilcrow">¶</a>
-</div>
-<p id="section-4.5.1.4-3.6.3">
-If this returns false, the input share <span class="bcp14">MUST</span> be marked as invalid with the
-error <code>report_replayed</code>.<a href="#section-4.5.1.4-3.6.3" class="pilcrow">¶</a></p>
+                <p id="section-4.5.1.4-3.6.1">Check if the report has been previously aggregated. If so, the input share
+<span class="bcp14">MUST</span> be marked as invalid with the error <code>report_replayed</code>.<a href="#section-4.5.1.4-3.6.1" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-4.5.1.4-3.6.4.1">
-                    <p id="section-4.5.1.4-3.6.4.1.1">Implementation note: To detect replay attacks in which an honest Client's
-report is uploaded to the aggregators multiple times, each Aggregator is
-required to keep track of the set of reports it has processed for a given
-task. Because honest Clients choose the report ID at random, it is
-sufficient to store the set of IDs of processed reports. However,
-implementations may find it helpful to track additional information, like
-the timestamp, so that the storage used for anti-replay can be sharded
-efficiently.<a href="#section-4.5.1.4-3.6.4.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="section-4.5.1.4-3.6.2.1">
+                    <p id="section-4.5.1.4-3.6.2.1.1">Implementation note: To detect replay attacks, each Aggregator is required
+to keep track of the set of reports it has processed for a given task.
+Because honest Clients choose the report ID at random, it is sufficient to
+store the set of IDs of processed reports. However, implementations may
+find it helpful to track additional information, like the timestamp, so
+that the storage used for anti-replay can be sharded efficiently.<a href="#section-4.5.1.4-3.6.2.1.1" class="pilcrow">¶</a></p>
 </li>
                 </ul>
 </li>
               <li id="section-4.5.1.4-3.7">
-                <p id="section-4.5.1.4-3.7.1">If the report pertains to a batch that was previously collected, then make
-sure the report was already included in all previous collections for the
-batch. If not, the input share <span class="bcp14">MUST</span> be marked as invalid with error
-<code>batch_collected</code>. This prevents Collectors from learning anything about
-small numbers of reports that are uploaded between two collections of a
-batch.<a href="#section-4.5.1.4-3.7.1" class="pilcrow">¶</a></p>
+                <p id="section-4.5.1.4-3.7.1">If the report pertains to a batch that was previously collected, then the
+input share <span class="bcp14">MUST</span> be marked as invalid with error <code>batch_collected</code>.<a href="#section-4.5.1.4-3.7.1" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-4.5.1.4-3.7.2.1">
                     <p id="section-4.5.1.4-3.7.2.1.1">Implementation note: The Leader considers a batch to be collected once it
@@ -3392,29 +3316,11 @@ removed. See Issue #384]<a href="#section-4.5.1.4-3.7.2.1.2" class="pilcrow">¶<
                 </ul>
 </li>
               <li id="section-4.5.1.4-3.8">
-                <p id="section-4.5.1.4-3.8.1">Depending on the query type for the task, additional checks may be
-applicable:<a href="#section-4.5.1.4-3.8.1" class="pilcrow">¶</a></p>
-<ul class="normal">
-<li class="normal" id="section-4.5.1.4-3.8.2.1">
-                    <p id="section-4.5.1.4-3.8.2.1.1">For <code>fixed_size</code> tasks, the Aggregators need to ensure that each batch is
-roughly the same size. If the number of reports aggregated for the current
-batch exceeds the maximum batch size (per the task configuration), the
-Aggregator <span class="bcp14">MAY</span> mark the input share as invalid with the error
-<code>batch_saturated</code>. Note that this behavior is not strictly enforced here
-but during the collect interaction. (See <a href="#batch-validation" class="auto internal xref">Section 4.6.5</a>.) If
-maximum batch size is not provided, then Aggregators only need to ensure
-the current batch exceeds the minimum batch size (per the task
-configuration). If both checks succeed, the input share is not marked as
-invalid.<a href="#section-4.5.1.4-3.8.2.1.1" class="pilcrow">¶</a></p>
-</li>
-                </ul>
-</li>
-              <li id="section-4.5.1.4-3.9">
-                <p id="section-4.5.1.4-3.9.1">Finally, if an Aggregator cannot determine if an input share is valid, it
+                <p id="section-4.5.1.4-3.8.1">Finally, if an Aggregator cannot determine if an input share is valid, it
 <span class="bcp14">MUST</span> mark the input share as invalid with error <code>report_dropped</code>. For
 example, if the Aggregator has evicted the state required to perform the
 check from long-term storage. (See <a href="#reducing-storage-requirements" class="auto internal xref">Section 5.4.1</a> for
-details.)<a href="#section-4.5.1.4-3.9.1" class="pilcrow">¶</a></p>
+details.)<a href="#section-4.5.1.4-3.8.1" class="pilcrow">¶</a></p>
 </li>
             </ol>
 <p id="section-4.5.1.4-4">If all of the above checks succeed, the input share is not marked as invalid.<a href="#section-4.5.1.4-4" class="pilcrow">¶</a></p>
@@ -3771,8 +3677,6 @@ structure includes the following:<a href="#section-4.6.1-19" class="pilcrow">¶<
               <p id="section-4.6.1-20.1.1"><code>part_batch_selector</code>: Information used to bind the aggregate result to the
 query. For fixed_size tasks, this includes the batch ID assigned to the batch
 by the Leader. The indicated query type <span class="bcp14">MUST</span> match the task's query type.<a href="#section-4.6.1-20.1.1" class="pilcrow">¶</a></p>
-<p id="section-4.6.1-20.1.2">
-[OPEN ISSUE: What should the Collector do if the query type doesn't match?]<a href="#section-4.6.1-20.1.2" class="pilcrow">¶</a></p>
 </li>
             <li class="normal" id="section-4.6.1-20.2">
               <p id="section-4.6.1-20.2.1"><code>report_count</code>: The number of reports included in the batch.<a href="#section-4.6.1-20.2.1" class="pilcrow">¶</a></p>
@@ -3822,7 +3726,7 @@ struct {
   QueryType query_type;
   select (BatchSelector.query_type) {
     case time_interval: Interval batch_interval;
-    case fixed_size: BatchID batch_id;
+    case leader_selected: BatchID batch_id;
   };
 } BatchSelector;
 
@@ -3846,7 +3750,7 @@ the task:<a href="#section-4.6.2-5.1.1" class="pilcrow">¶</a></p>
                   <p id="section-4.6.2-5.1.2.1.1">For time_interval tasks, the request specifies the batch interval.<a href="#section-4.6.2-5.1.2.1.1" class="pilcrow">¶</a></p>
 </li>
                 <li class="normal" id="section-4.6.2-5.1.2.2">
-                  <p id="section-4.6.2-5.1.2.2.1">For fixed_size tasks, the request specifies the batch ID.<a href="#section-4.6.2-5.1.2.2.1" class="pilcrow">¶</a></p>
+                  <p id="section-4.6.2-5.1.2.2.1">For leader_selected tasks, the request specifies the batch ID.<a href="#section-4.6.2-5.1.2.2.1" class="pilcrow">¶</a></p>
 </li>
               </ul>
 <p id="section-4.6.2-5.1.3">
@@ -3910,8 +3814,7 @@ computed above and <code>encrypted_aggregate_share.ciphertext</code> is the ciph
 <code>encrypted_agg_share</code> computed above.<a href="#section-4.6.2-15" class="pilcrow">¶</a></p>
 <p id="section-4.6.2-16">The Helper's handling of this request <span class="bcp14">MUST</span> be idempotent. That is, if multiple
 identical, valid <code>AggregateShareReq</code>s are received, they should all yield the
-same response while only consuming one unit of the task's
-<code>max_batch_query_count</code> (see <a href="#batch-validation" class="auto internal xref">Section 4.6.5</a>).<a href="#section-4.6.2-16" class="pilcrow">¶</a></p>
+same response.<a href="#section-4.6.2-16" class="pilcrow">¶</a></p>
 <p id="section-4.6.2-17">After receiving the Helper's response, the Leader uses the HpkeCiphertext to
 finalize a collection job (see <a href="#collect-finalization" class="auto internal xref">Section 4.6.3</a>).<a href="#section-4.6.2-17" class="pilcrow">¶</a></p>
 <p id="section-4.6.2-18">Once an AggregateShareReq has been issued for the batch determined by a given
@@ -3956,7 +3859,7 @@ agg_result = Vdaf.unshard(agg_param,
 done as follows:<a href="#section-4.6.4-1" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-4.6.4-2">
 <pre>
-enc, payload = SealBase(pk, "dap-10 aggregate share" || server_role || 0x00,
+enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
   agg_share_aad, agg_share)
 </pre><a href="#section-4.6.4-2" class="pilcrow">¶</a>
 </div>
@@ -3993,7 +3896,7 @@ Specifically, given an encrypted input share, denoted <code>enc_share</code>, fo
 batch selector, decryption works as follows:<a href="#section-4.6.4-6" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-4.6.4-7">
 <pre>
-agg_share = OpenBase(enc_share.enc, sk, "dap-10 aggregate share" ||
+agg_share = OpenBase(enc_share.enc, sk, "dap-11 aggregate share" ||
   server_role || 0x00, agg_share_aad, enc_share.payload)
 </pre><a href="#section-4.6.4-7" class="pilcrow">¶</a>
 </div>
@@ -4010,7 +3913,7 @@ from its query and the response to its query as follows:<a href="#section-4.6.4-
 the query.<a href="#section-4.6.4-9.1.1" class="pilcrow">¶</a></p>
 </li>
             <li class="normal" id="section-4.6.4-9.2">
-              <p id="section-4.6.4-9.2.1">For fixed_size tasks, the batch selector is the batch ID assigned sent in the
+              <p id="section-4.6.4-9.2.1">For leader_selected tasks, the batch selector is the batch ID sent in the
 response.<a href="#section-4.6.4-9.2.1" class="pilcrow">¶</a></p>
 </li>
           </ul>
@@ -4044,11 +3947,10 @@ check fails, then the Aggregator <span class="bcp14">MUST</span> abort with an e
 determined by the query type. If the size check fails, then Helpers <span class="bcp14">MUST</span> abort
 with an error of type "invalidBatchSize". Leaders <span class="bcp14">SHOULD</span> wait for more reports
 to be validated and try the collection job again later.<a href="#section-4.6.5-4" class="pilcrow">¶</a></p>
-<p id="section-4.6.5-5">Next, the Aggregator checks that the batch has not been queried too many times.
-This is determined by the maximum number of times a batch can be queried,
-<code>max_batch_query_count</code>. If the batch has been queried with more than
-<code>max_batch_query_count</code> distinct aggregation parameters, the Aggregator <span class="bcp14">MUST</span>
-abort with error of type "batchQueriedTooManyTimes".<a href="#section-4.6.5-5" class="pilcrow">¶</a></p>
+<p id="section-4.6.5-5">Next, the Aggregator checks that the batch has not been queried with multiple
+distinct aggregation parameters. If the batch has been queried with more than
+one distinct aggregation parameter, the Aggregator <span class="bcp14">MUST</span> abort with error of type
+"batchQueriedMultipleTimes".<a href="#section-4.6.5-5" class="pilcrow">¶</a></p>
 <p id="section-4.6.5-6">Finally, the Aggregator checks that the batch does not contain a report that was
 included in any previous batch. If this batch overlap check fails, then the
 Aggregator <span class="bcp14">MUST</span> abort with error of type "batchOverlap". For time_interval
@@ -4098,31 +4000,21 @@ reports successfully aggregated into the batch.<a href="#section-4.6.5.1.2-1" cl
 </div>
 </section>
 </div>
-<div id="fixed-size-batch-validation">
+<div id="leader-selected-batch-validation">
 <section id="section-4.6.5.2">
-            <h5 id="name-fixed-size-queries-2">
-<a href="#section-4.6.5.2" class="section-number selfRef">4.6.5.2. </a><a href="#name-fixed-size-queries-2" class="section-name selfRef">Fixed-size Queries</a>
+            <h5 id="name-leader-selected-queries-2">
+<a href="#section-4.6.5.2" class="section-number selfRef">4.6.5.2. </a><a href="#name-leader-selected-queries-2" class="section-name selfRef">Leader-selected Queries</a>
             </h5>
 <div id="boundary-check-1">
 <section id="section-4.6.5.2.1">
               <h6 id="name-boundary-check-2">
 <a href="#section-4.6.5.2.1" class="section-number selfRef">4.6.5.2.1. </a><a href="#name-boundary-check-2" class="section-name selfRef">Boundary Check</a>
               </h6>
-<p id="section-4.6.5.2.1-1">For fixed_size tasks, the batch boundaries are defined by opaque batch IDs. Thus
-the Aggregator needs to check that the query is associated with a known batch
-ID:<a href="#section-4.6.5.2.1-1" class="pilcrow">¶</a></p>
-<ul class="normal">
-<li class="normal" id="section-4.6.5.2.1-2.1">
-                  <p id="section-4.6.5.2.1-2.1.1">For a CollectionReq containing a query of type <code>by_batch_id</code>, the Leader
-checks that the provided batch ID corresponds to a batch ID it returned in a
-previous collection for the task.<a href="#section-4.6.5.2.1-2.1.1" class="pilcrow">¶</a></p>
-</li>
-                <li class="normal" id="section-4.6.5.2.1-2.2">
-                  <p id="section-4.6.5.2.1-2.2.1">For an AggregateShareReq, the Helper checks that the batch ID provided by the
-Leader corresponds to a batch ID used in a previous <code>AggregationJobInitReq</code>
-for the task.<a href="#section-4.6.5.2.1-2.2.1" class="pilcrow">¶</a></p>
-</li>
-              </ul>
+<p id="section-4.6.5.2.1-1">For leader_selected tasks, the batch boundaries are defined by opaque batch IDs.
+Thus the Aggregator needs to check that the query is associated with a known
+batch ID; specifically, for an <code>AggregateShareReq</code>, the Helper checks that the
+batch ID provided by the Leader corresponds to a batch ID used in a previous
+<code>AggregationJobInitReq</code> for the task.<a href="#section-4.6.5.2.1-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="size-check-1">
@@ -4130,11 +4022,9 @@ for the task.<a href="#section-4.6.5.2.1-2.2.1" class="pilcrow">¶</a></p>
               <h6 id="name-size-check-2">
 <a href="#section-4.6.5.2.2" class="section-number selfRef">4.6.5.2.2. </a><a href="#name-size-check-2" class="section-name selfRef">Size Check</a>
               </h6>
-<p id="section-4.6.5.2.2-1">The query configuration specifies the minimum batch size, <code>min_batch_size</code>, and
-optionally the maximum batch size, <code>max_batch_size</code>. The Aggregator checks that
-<code>len(X) &gt;= min_batch_size</code>. And if <code>max_batch_size</code> is specified, also
-<code>len(X) &lt;= max_batch_size</code>, where <code>X</code> is the set of reports successfully
-aggregated into the batch.<a href="#section-4.6.5.2.2-1" class="pilcrow">¶</a></p>
+<p id="section-4.6.5.2.2-1">The query configuration specifies the minimum batch size, <code>min_batch_size</code>. The
+Aggregator checks that <code>len(X) &gt;= min_batch_size</code>, where <code>X</code> is the set of
+reports successfully aggregated into the batch.<a href="#section-4.6.5.2.2-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -4247,31 +4137,19 @@ includes key material associated with the HPKE key configuration.<a href="#secti
 <a href="#section-5.2" class="section-number selfRef">5.2. </a><a href="#name-vdafs-and-compute-requireme" class="section-name selfRef">VDAFs and Compute Requirements</a>
         </h3>
 <p id="section-5.2-1">The choice of VDAF can impact the computation required for a DAP task. For
-instance, the Poplar1 VDAF <span>[<a href="#VDAF" class="cite xref">VDAF</a>]</span> when configured to compute a set of heavy
-hitters requires each measurement to be of the same bit-length which all parties
-need to agree on prior to VDAF execution. The computation required for such
-tasks increases superlinearly as a function of the chosen bit-length, as
-multiple rounds of collection are needed for each bit of the measurement value,
-and each bit of the measurement value requires computation which scales with the
-chosen bit-length.<a href="#section-5.2-1" class="pilcrow">¶</a></p>
-<p id="section-5.2-2">When dealing with variable length measurements (e.g domain names), it is
-necessary to pad them to convert into fixed-length measurements. When computing
-the heavy hitters from a batch of such measurements, VDAF execution can be
-terminated early once once the padding region is reached for a given
-measurement: at this point, the padded measurement can be included in the last
-set of candidate prefixes. For smaller length measurements, this significantly
-reduces the cost of communication between Aggregators and the steps required for
-the computation. However, malicious Clients can still generate maximum length
-measurements forcing the system to always operate at worst-case performance.<a href="#section-5.2-2" class="pilcrow">¶</a></p>
-<p id="section-5.2-3">Therefore, care must be taken that a DAP deployment can handle VDAF execution of
-all possible measurement values for any tasks that the deployment is configured
-for. Otherwise, an attacker may deny service by uploading many expensive
-reports.<a href="#section-5.2-3" class="pilcrow">¶</a></p>
-<p id="section-5.2-4">Applications which require computationally-expensive VDAFs can mitigate the
+instance, the Prio3SumVec VDAF <span>[<a href="#VDAF" class="cite xref">VDAF</a>]</span> requires each measurement to be vectors
+of the same length, which all parties need to agree on prior to VDAF execution.
+The computation required for such tasks increases linearly as a function of the
+chosen length, as each vector element must be processed in turn.<a href="#section-5.2-1" class="pilcrow">¶</a></p>
+<p id="section-5.2-2">Therefore, care must be taken that a DAP deployment can handle VDAF execution of
+all possible VDAF configurations for any tasks which the deployment may be
+configured for. Otherwise, an attacker may deny service by uploading many
+expensive reports to a suitably-configured VDAF.<a href="#section-5.2-2" class="pilcrow">¶</a></p>
+<p id="section-5.2-3">Applications which require computationally-expensive VDAFs can mitigate the
 computation cost of aggregation in a few ways, such as producing aggregates over
 a sample of the data or choosing a representation of the data permitting a
-simpler aggregation scheme.<a href="#section-5.2-4" class="pilcrow">¶</a></p>
-<p id="section-5.2-5">[[TODO: Discuss explicit key performance indicators, here or elsewhere.]]<a href="#section-5.2-5" class="pilcrow">¶</a></p>
+simpler aggregation scheme.<a href="#section-5.2-3" class="pilcrow">¶</a></p>
+<p id="section-5.2-4">[[TODO: Discuss explicit key performance indicators, here or elsewhere.]]<a href="#section-5.2-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="aggregation-utility-and-soft-batch-deadlines">
@@ -4307,15 +4185,14 @@ designed to allow implementations to reduce operational costs in certain cases.<
 <a href="#section-5.4.1" class="section-number selfRef">5.4.1. </a><a href="#name-reducing-storage-requiremen" class="section-name selfRef">Reducing Storage Requirements</a>
           </h4>
 <p id="section-5.4.1-1">In general, the Aggregators are required to keep state for tasks and all valid
-reports for as long as collect requests can be made for them. In particular,
-Aggregators must store a batch as long as the batch has not been queried more
-than <code>max_batch_query_count</code> times. However, it is not always necessary to store
-the reports themselves. For schemes like Prio3 <span>[<a href="#VDAF" class="cite xref">VDAF</a>]</span> in which reports are
-verified only once, each Aggregator only needs to store its aggregate share for
-each possible batch interval, along with the number of times the aggregate share
-was used in a batch. This is due to the requirement that the batch interval
-respect the boundaries defined by the DAP parameters. (See
-<a href="#batch-validation" class="auto internal xref">Section 4.6.5</a>.)<a href="#section-5.4.1-1" class="pilcrow">¶</a></p>
+reports for as long as collection requests can be made for them. However, it is
+not necessary to store the complete reports. Each Aggregator only needs to store
+an aggregate share for each possible batch interval (for time-interval) or batch
+ID (for leader-selected), along with a flag indicating whether the aggregate
+share has been collected. This is due to the requirement that in the
+time-interval case, the batch interval respect the boundaries defined by the DAP
+parameters; and that in leader-selected case, a batch is determined entirely by
+a batch ID. (See <a href="#batch-validation" class="auto internal xref">Section 4.6.5</a>.)<a href="#section-5.4.1-1" class="pilcrow">¶</a></p>
 <p id="section-5.4.1-2">However, Aggregators are also required to implement several per-report checks
 that require retaining a number of data artifacts. For example, to detect replay
 attacks, it is necessary for each Aggregator to retain the set of report IDs of
@@ -4426,13 +4303,9 @@ existence of a report does not imply the occurrence of a sensitive event.<a href
 aggregate share requests.<a href="#section-7-8.3.1" class="pilcrow">¶</a></p>
 </li>
         <li id="section-7-8.4">
-          <p id="section-7-8.4.1">Collection requests may leak information beyond the collection results. For
-example, the Poplar1 VDAF <span>[<a href="#VDAF" class="cite xref">VDAF</a>]</span> can be used to compute the set of heavy
-hitters among a set of arbitrary bit strings uploaded by Clients. This
-requires multiple evaluations of the VDAF, the results of which reveal
-information to the Aggregators and Collector beyond what follows from the
-heavy hitters themselves. Or the result could leak information about outlier
-values. This leakage can be mitigated using differential privacy (<a href="#dp" class="auto internal xref">Section 7.4</a>).<a href="#section-7-8.4.1" class="pilcrow">¶</a></p>
+          <p id="section-7-8.4.1">Some VDAFs could leak information to either Aggregator or the Collector
+beyond what the protocol intended to learn. It may be possible to mitigate
+such leakages using differential privacy (<a href="#dp" class="auto internal xref">Section 7.4</a>).<a href="#section-7-8.4.1" class="pilcrow">¶</a></p>
 </li>
       </ol>
 <div id="sybil">
@@ -4586,16 +4459,6 @@ participating in a DAP task if the minimum batch size is too small. This
 document does not specify how to choose an appropriate minimum batch size, but
 an appropriate value may be determined from the differential privacy (<a href="#dp" class="auto internal xref">Section 7.4</a>)
 parameters in use, if any.<a href="#section-7.5.2-1" class="pilcrow">¶</a></p>
-<p id="section-7.5.2-2">If batches will be collected more than once, it is possible that some invalid
-reports could be accepted and successfully aggregated into the first collection,
-but be rejected with a subsequent aggregation parameter. This could reduce the
-number of successfully aggregated reports below the minimum batch size, and make
-the batch uncollectable with that aggregation parameter, as described in
-<a href="#batch-size" class="auto internal xref">Section 4.1.3</a>. This constitutes an efficient denial of service vector for a
-Sybil attacker. In deployments that will collect batches more than once, the
-actual batch sizes, as determined by the Leader or Collector (depending on query
-type) <span class="bcp14">SHOULD</span> be greater than the minimum batch size to allow for later rejection
-of some number of invalid reports.<a href="#section-7.5.2-2" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="task-configuration-agreement-and-consistency">
