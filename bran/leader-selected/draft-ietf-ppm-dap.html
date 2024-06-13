@@ -2328,10 +2328,10 @@ vary the duration to adjust to changing report upload rates.<a href="#section-4.
 <a href="#section-4.1.2" class="section-number selfRef">4.1.2. </a><a href="#name-leader-selected-queries" class="section-name selfRef">Leader-selected Queries</a>
           </h4>
 <p id="section-4.1.2-1">The <code>leader_selected</code> query type is used to support applications in which it is
-acceptable for reports to be grouped in an arbitrary fashion by the Leader. For
-this query type, the Leader groups reports into arbitrary batches. These batches
-are identified by opaque "batch IDs", allocated in an arbitrary fashion by the
-Leader.<a href="#section-4.1.2-1" class="pilcrow">¶</a></p>
+acceptable for reports to be batched in an arbitrary fashion. Each
+batch of reports is identified by an opaque "batch ID". Both the reports
+included in each batch and the ID for each batch are allocated in an arbitrary
+fashion by the Leader.<a href="#section-4.1.2-1" class="pilcrow">¶</a></p>
 <p id="section-4.1.2-2">The Collector will not know the set of batch IDs available for collection. To
 get the aggregate of a batch, the Collector issues a query, which does not
 include any information specifying a particular batch (see <a href="#query" class="auto internal xref">Section 4.1</a>). The

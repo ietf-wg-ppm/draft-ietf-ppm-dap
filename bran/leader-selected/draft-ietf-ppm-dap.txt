@@ -896,10 +896,10 @@ struct {} Empty;
 4.1.2.  Leader-selected Queries
 
    The leader_selected query type is used to support applications in
-   which it is acceptable for reports to be grouped in an arbitrary
-   fashion by the Leader.  For this query type, the Leader groups
-   reports into arbitrary batches.  These batches are identified by
-   opaque "batch IDs", allocated in an arbitrary fashion by the Leader.
+   which it is acceptable for reports to be batched in an arbitrary
+   fashion.  Each batch of reports is identified by an opaque "batch
+   ID".  Both the reports included in each batch and the ID for each
+   batch are allocated in an arbitrary fashion by the Leader.
 
    The Collector will not know the set of batch IDs available for
    collection.  To get the aggregate of a batch, the Collector issues a
