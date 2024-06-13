@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-06-11T01:00:22.497828+00:00",
+  "timestamp": "2024-06-13T00:59:56.249048+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -10662,7 +10662,7 @@
       ],
       "body": "Once multi-collection of batches has been removed, we should consider whether the `max_batch_size` parameter of the fixed-size query type might be removed.\r\n\r\nSee https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/554/files#r1577003240 for context; in short, `max_batch_size`'s strongest use-case is in the case of a multiply-collected VDAF. It is unclear if there is a strong justification for this parameter in a DAP which supports only singly-collected VDAFs.",
       "createdAt": "2024-04-24T22:22:28Z",
-      "updatedAt": "2024-06-10T22:55:48Z",
+      "updatedAt": "2024-06-12T16:04:01Z",
       "closedAt": null,
       "comments": [
         {
@@ -10713,6 +10713,34 @@
           "body": "A solution to (1) would be to make time interval work more like fixed size in the specific respect of making the leader responsible for assigning reports to batches. This would have an additional benefit of letting the helper treat every task as fixed-size.\r\n\r\nSolving (2) seems tricky. I think you'd need to introduce something like the `current_batch`/batch ID semantics of fixed size, but compartmentalized by time interval. i.e., the collector would have to make queries not just for some interval of time, but a tuple of an interval and a batch ID (which could be `current_batch`). So then the collector could query on `([t1, t2), current_batch)` until it gets told there are fewer than `min_batch_size` reports left in `[t1, t2)`, and it could refer to each collection of that time interval by its batch ID.",
           "createdAt": "2024-06-10T22:55:47Z",
           "updatedAt": "2024-06-10T22:55:47Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> Can you provide more detail on why batch size matters to your sharding strategy? Specifically, would a bound on \r\naggregation job size rather than batch size solve your problem?\r\n\r\nI don't see how that this would help, but it's possible we're doing something weird.\r\n\r\nSuppose the task is time interval: we would quantize time into windows, and for each window we have an instance of the underlying storage object. In that object, we store the IDs of all reports with timestamps in that window.\r\n\r\nFor us, the rate of growth is the most important metric: the faster the aggregation rate in a given time window, the more  pressure we put on the underlying storage object. To relieve the pressure, we can further shard it into more objects by a [deterministic map from report ID to shard number](https://github.com/cloudflare/daphne/blob/0f1c7d8a48721f8fdefc861d9d548a0e6b51e3f3/crates/daphne/src/lib.rs#L354-L373).\r\n\r\nBut how many shards should we choose? More shards allows you to cope with higher aggregation rate, but it also consumes more resources, since their are more storage objects in existence simultaneously. Knowing how large a batch might help me figure out how many shards I need to cope with a given aggregation rate.\r\n\r\n\r\n\r\n> Solving (2) seems tricky. I think you'd need to introduce something like the `current_batch`/batch ID semantics of fixed size, but compartmentalized by time interval. i.e., the collector would have to make queries not just for some interval of time, but a tuple of an interval and a batch ID (which could be `current_batch`). So then the collector could query on `([t1, t2), current_batch)` until it gets told there are fewer than `min_batch_size` reports left in `[t1, t2)`, and it could refer to each collection of that time interval by its batch ID.\r\n\r\nMy first thought here was: \"you collected as much data as you need, so throw the rest away\". My guess is that you're not happy with that answer :)\r\n\r\nTurning this around: are there situations where you don't know a priori how much data to expect? If I have 1,000 users, each reporting about every 10 minutes, then I should expect about 6,000 reports in an hour.\r\n\r\n",
+          "createdAt": "2024-06-12T00:18:23Z",
+          "updatedAt": "2024-06-12T00:19:43Z"
+        },
+        {
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> Turning this around: are there situations where you don't know a priori how much data to expect? If I have 1,000 users, each reporting about every 10 minutes, then I should expect about 6,000 reports in an hour.\r\n\r\nIf you're that confident in your estimation of batch sizes, then why can't you use that for your sharding heuristic and leave `max_batch_size` out of the spec?",
+          "createdAt": "2024-06-12T15:37:37Z",
+          "updatedAt": "2024-06-12T15:37:37Z"
+        },
+        {
+          "author": "Noah-Kennedy",
+          "authorAssociation": "NONE",
+          "body": "> My thoughts here:\r\n> \r\n>     1. A maximum batch size is useful for capacity planning. In particular, the manner in which an aggregator stores report IDs may depend on how large of a batch it needs to plan for. In fact, I think we can make the case to add this parameter to all tasks, not just tasks with this query type.\r\n> \r\n>     2. If we take this change, then the name \"fixed-size\" no longer really applies, so we should consider renaming it as well.\r\n\r\nWith async jobs as suggested in #557, IMO the usefulness of this for capacity planning largely goes away",
+          "createdAt": "2024-06-12T15:56:32Z",
+          "updatedAt": "2024-06-12T15:56:32Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Per 2024/6/12 DAP sync: @tgeoghegan is correct, I missed something important: the semantics of time interval means a maximum batch size cannot be specified for it. And in light of @Noah-Kennedy's point, it's not going to be important for capcity planning once we've added async aggregation jobs.",
+          "createdAt": "2024-06-12T16:04:00Z",
+          "updatedAt": "2024-06-12T16:04:00Z"
         }
       ]
     },
@@ -10750,13 +10778,15 @@
       "state": "OPEN",
       "author": "cjpatton",
       "authorAssociation": "COLLABORATOR",
-      "assignees": [],
+      "assignees": [
+        "tgeoghegan"
+      ],
       "labels": [
         "feature"
       ],
       "body": "As mentioned in #556, replay protection implies a relatively stringent operational requirement for the Helper: many aggregation jobs might make concurrent transactions on the same database, which can easily overwhelm the database if not sufficiently provisioned.\r\n\r\nTo mitigate this problem, the Helper can cancel an aggregation job and ask the Leader to try again later. One option is to respond with HTTP status 429 and a \"retry-after\" header indicating when it should be safe to retry.\r\n\r\nI'd like to suggest that we spell this out explicitly in the draft.",
       "createdAt": "2024-05-01T20:01:38Z",
-      "updatedAt": "2024-06-07T00:05:14Z",
+      "updatedAt": "2024-06-12T16:11:19Z",
       "closedAt": null,
       "comments": [
         {
@@ -10807,6 +10837,34 @@
           "body": "I do think asynchronous aggregation jobs lead to increased complexity in the \"aggregation job state machine\".\r\n\r\nWith synchronous aggregation jobs, the state machine goes from step 1 -> step 2 ... until the aggregation job is complete.\r\n\r\nWith asynchronous aggregation jobs, an additional \"computing\" step will be added to each step above, so that the state machine goes computing step 1 -> step 1 -> computing step 2 -> step 2 -> ...\r\n\r\nThis is not a fatal flaw, just something to consider when weighing synchronous vs asynchronous behaviors.",
           "createdAt": "2024-06-07T00:05:13Z",
           "updatedAt": "2024-06-07T00:05:13Z"
+        },
+        {
+          "author": "erks",
+          "authorAssociation": "NONE",
+          "body": "We can make both asynchronous & synchronous aggregations co-exist by doing something like this:\r\n1. Each round/call to Helper will start with the regular PUT (for init) / POST (for continue/collect) calls.\r\n1. If Helper responds with the corresponding 201 (for init) / 200 (for continue/collect), then the call is done and Leader can move on to the next step.\r\n1. If Helper responds with [202 Accepted](https://datatracker.ietf.org/doc/html/rfc7231#autoid-66), Leader starts to poll with a GET version of the call until receiving 200/201.",
+          "createdAt": "2024-06-11T23:15:30Z",
+          "updatedAt": "2024-06-11T23:15:41Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "That sounds to me like it would work just fine. It's up to the Helper if they want to implement both or one or the other.",
+          "createdAt": "2024-06-11T23:44:43Z",
+          "updatedAt": "2024-06-11T23:44:43Z"
+        },
+        {
+          "author": "Noah-Kennedy",
+          "authorAssociation": "NONE",
+          "body": "> Tim's comment raises a good question: if we take this, should we allow both asynchronous & synchronous aggregation job behavior, or only asynchronous?\r\n> \r\n> IMO, it would be nice if we could specify only one of asynchronous/synchronous behavior: requiring implementations to support both modes would be added complexity; specifying both modes but allowing implementations to only implement one mode could lead to interoperability problems between aggregator implementations. But maybe that is too hopeful?\r\n> \r\n> (In general, I think asynchronous aggregation jobs are a good idea since they decouple expensive computation from synchronous HTTP requests. But they do increase the communication cost of each aggregation job -- every aggregation job will now require at least two network round trips, or more precisely two round trips per aggregation step required by the VDAF. I think this means that implementations would want to tune for fewer, larger aggregation jobs to amortize this cost per-report.)\r\n\r\nAs far as I am concerned, the additions to compute are pretty negligable compared with the additional scalability we would be getting.",
+          "createdAt": "2024-06-12T15:37:37Z",
+          "updatedAt": "2024-06-12T15:37:37Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Per 2024/6/12 DAP sync: @erks would be alright with making each step asynchronous and not allowing the synchronous option? We just had a call on this, and we expect that most of the time the Helper will always make this asynchronous.",
+          "createdAt": "2024-06-12T16:06:48Z",
+          "updatedAt": "2024-06-12T16:06:48Z"
         }
       ]
     },
