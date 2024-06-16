@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-06-13T00:59:56.249048+00:00",
+  "timestamp": "2024-06-16T01:04:57.129714+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -7776,13 +7776,15 @@
       "state": "OPEN",
       "author": "simon-friedberger",
       "authorAssociation": "CONTRIBUTOR",
-      "assignees": [],
+      "assignees": [
+        "tgeoghegan"
+      ],
       "labels": [
         "editorial"
       ],
       "body": "We are indicating that batches can already start aggregating before the collector sends a query at least in three places:\r\n\r\n2.1\r\n> The leader distributes the shares to the helpers and orchestrates the process of verifying them (see [Section 2.2](https://ietf-wg-ppm.github.io/draft-ietf-ppm-dap/draft-ietf-ppm-dap.html#validating-inputs)) and assembling them into a final measurement for the collector. Depending on the VDAF, it may be possible to incrementally process each report as it comes in, or may be necessary to wait until the entire batch of reports is received.\r\n\r\n4.4\r\n> Once a set of clients have uploaded their reports to the leader, the leader can send them to the helpers to be verified and aggregated. In order to enable the system to handle very large batches of reports, this process can be performed incrementally.\r\n\r\n4.5.2\r\n> Note that for most VDAFs, it is possible to aggregate output shares as they arrive rather than wait until the batch is collected. To do so however, it is necessary to enforce the batch parameters as described in [Section 4.5.6](https://ietf-wg-ppm.github.io/draft-ietf-ppm-dap/draft-ietf-ppm-dap.html#batch-validation) so that the aggregator knows which aggregate share to update.\r\n\r\nOptional, but we might want to expand 4.5.2 and give this process a name and clarify what it means to validate a _bucket_ (is this the name we're using?) because some of the point in 4.5.6 don't really apply. For example, a bucket may, by definition, contain too few reports.",
       "createdAt": "2022-11-29T08:22:12Z",
-      "updatedAt": "2023-10-24T21:57:00Z",
+      "updatedAt": "2024-06-13T16:52:16Z",
       "closedAt": null,
       "comments": [
         {
@@ -10662,7 +10664,7 @@
       ],
       "body": "Once multi-collection of batches has been removed, we should consider whether the `max_batch_size` parameter of the fixed-size query type might be removed.\r\n\r\nSee https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/554/files#r1577003240 for context; in short, `max_batch_size`'s strongest use-case is in the case of a multiply-collected VDAF. It is unclear if there is a strong justification for this parameter in a DAP which supports only singly-collected VDAFs.",
       "createdAt": "2024-04-24T22:22:28Z",
-      "updatedAt": "2024-06-12T16:04:01Z",
+      "updatedAt": "2024-06-13T19:43:57Z",
       "closedAt": null,
       "comments": [
         {
@@ -10741,6 +10743,34 @@
           "body": "Per 2024/6/12 DAP sync: @tgeoghegan is correct, I missed something important: the semantics of time interval means a maximum batch size cannot be specified for it. And in light of @Noah-Kennedy's point, it's not going to be important for capcity planning once we've added async aggregation jobs.",
           "createdAt": "2024-06-12T16:04:00Z",
           "updatedAt": "2024-06-12T16:04:00Z"
+        },
+        {
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "body": "One more argument against specifying `max_batch_size`:\r\n\r\n`min_batch_size` is a privacy parameter, and must be evaluated by both Leader & Helper. If they do not agree on the minimum batch size, confusion ensues; therefore, it makes sense to specify `min_batch_size`.\r\n\r\nThere is no corresponding argument for `max_batch_size`; more specifically, there is no requirement that both the Leader & Helper both evaluate a maximum batch size. We could remove `max_batch_size` from the specification, and leave any maximum size as an implementation detail for the Leader to enforce.",
+          "createdAt": "2024-06-13T03:48:23Z",
+          "updatedAt": "2024-06-13T03:48:23Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "This is ready for text @branlwyd. Would you mind putting up a PR?\r\n\r\nWhile at it, we should try to think of a replacement for the \"fixed-size\" name.",
+          "createdAt": "2024-06-13T14:32:07Z",
+          "updatedAt": "2024-06-13T14:32:07Z"
+        },
+        {
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "body": "I think the salient feature is that the leader constructs batches, so the name should reflect that. `leader-chosen`? I dunno.",
+          "createdAt": "2024-06-13T19:37:50Z",
+          "updatedAt": "2024-06-13T19:37:50Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "That works for me.",
+          "createdAt": "2024-06-13T19:43:56Z",
+          "updatedAt": "2024-06-13T19:43:56Z"
         }
       ]
     },
@@ -10786,7 +10816,7 @@
       ],
       "body": "As mentioned in #556, replay protection implies a relatively stringent operational requirement for the Helper: many aggregation jobs might make concurrent transactions on the same database, which can easily overwhelm the database if not sufficiently provisioned.\r\n\r\nTo mitigate this problem, the Helper can cancel an aggregation job and ask the Leader to try again later. One option is to respond with HTTP status 429 and a \"retry-after\" header indicating when it should be safe to retry.\r\n\r\nI'd like to suggest that we spell this out explicitly in the draft.",
       "createdAt": "2024-05-01T20:01:38Z",
-      "updatedAt": "2024-06-12T16:11:19Z",
+      "updatedAt": "2024-06-14T06:23:57Z",
       "closedAt": null,
       "comments": [
         {
@@ -10865,6 +10895,13 @@
           "body": "Per 2024/6/12 DAP sync: @erks would be alright with making each step asynchronous and not allowing the synchronous option? We just had a call on this, and we expect that most of the time the Helper will always make this asynchronous.",
           "createdAt": "2024-06-12T16:06:48Z",
           "updatedAt": "2024-06-12T16:06:48Z"
+        },
+        {
+          "author": "erks",
+          "authorAssociation": "NONE",
+          "body": "I think, from the spec perspective, it's probably okay to move towards the asynchronous option exclusively. I'm just worried about the migration of the existing implementations to the new async model, as there could be periods where Leader and Helper have to support both at the same time.",
+          "createdAt": "2024-06-13T23:16:30Z",
+          "updatedAt": "2024-06-14T06:23:57Z"
         }
       ]
     },
@@ -66659,6 +66696,81 @@
           "createdAt": "2024-05-21T21:57:07Z",
           "updatedAt": "2024-05-21T21:57:07Z",
           "comments": []
+        }
+      ]
+    },
+    {
+      "number": 563,
+      "id": "PR_kwDOFEJYQs5ybBGu",
+      "title": "Rename fixed-size query type to leader-selected, remove max_batch_size.",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/563",
+      "state": "OPEN",
+      "author": "branlwyd",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Leader-selected is a more accurate name than fixed-size, since the batch sizes are not fixed -- any size above min_batch_size (and, if specified, below max_batch_size) is acceptable.\r\n\r\nThe max_batch_size parameter of the leader-selected query type is removed. This parameter does not need to be enforced by both aggregators, so it can be made implementation-specific.\r\n\r\nAlso, restore the partial batch selector to the Collection message; the included batch ID is required for the Collector to decrypt the aggregate shares, as it is included in the AAD. This bug was introduced in #554 & effectively breaks collection for the fixed-size query type in DAP-11.",
+      "createdAt": "2024-06-13T23:56:57Z",
+      "updatedAt": "2024-06-14T00:28:05Z",
+      "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "baseRefName": "main",
+      "baseRefOid": "35f1274853c1c06a5132612b111debefe4fd17ac",
+      "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "headRefName": "bran/leader-selected",
+      "headRefOid": "302c7bfba3d014dcb9e007a7774a15d1df490e38",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [
+        {
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Closes #555.",
+          "createdAt": "2024-06-14T00:21:02Z",
+          "updatedAt": "2024-06-14T00:21:02Z"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "PRR_kwDOFEJYQs5-MhnW",
+          "commit": {
+            "abbreviatedOid": "302c7bf"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-06-14T00:19:19Z",
+          "updatedAt": "2024-06-14T00:19:20Z",
+          "comments": [
+            {
+              "originalPosition": 235,
+              "body": "The aggregate share AAD includes the batch ID, so the batch ID needs to be communicated to the Collector to allow decryption, alas. I restored the batch ID to the `Collection` message.\r\n\r\nHowever, I think maybe this isn't the right fix (just the least controversial one to unbreak things for now). DAP aims to provide robustness only if both aggregators are honest (and robustness is already trivally breakable by a single dishonest aggregator). If both aggregators are honest, there is no need for the aggregate share AAD to include the batch ID, since there is no need for the Collector to e.g. detect the aggregator attempting to repeatedly transmit an aggregate share. So I think the \"right\" fix would be to drop batch ID from both the `Collection` and `AggregateShareAad` messages.\r\n\r\nHowever, this argument applies just as well to every other field in `AggregateShareAad` -- so what is the purpose of the AAD here? (best-effort protection against bugs, perhaps?)\r\n\r\nIf this isn't trivially resolvable, this might be worthy of an issue to allow discussion on what the right fix is.",
+              "createdAt": "2024-06-14T00:19:19Z",
+              "updatedAt": "2024-06-14T00:35:27Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5-Mi9d",
+          "commit": {
+            "abbreviatedOid": "302c7bf"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-06-14T00:28:05Z",
+          "updatedAt": "2024-06-14T00:28:05Z",
+          "comments": [
+            {
+              "originalPosition": 235,
+              "body": "(I think the same argument doesn't apply to `InputShareAad`, since this AAD is used to allow the Helper to ensure the encrypted input share it received from the Leader matches the rest of the report share. Failing to perform this check would allow a malicious Leader to break a report's privacy even in the face of an honest Helper, and DAP's aim is to protect report privacy as long as at least one aggregator is honest.)",
+              "createdAt": "2024-06-14T00:28:05Z",
+              "updatedAt": "2024-06-14T00:36:07Z"
+            }
+          ]
         }
       ]
     }
