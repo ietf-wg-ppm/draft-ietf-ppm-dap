@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-06-25T01:00:15.339882+00:00",
+  "timestamp": "2024-06-27T01:00:40.984392+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -122,6 +122,11 @@
       "name": "feature",
       "description": "",
       "color": "0D4864"
+    },
+    {
+      "name": "ietf120",
+      "description": "",
+      "color": "C40CA0"
     }
   ],
   "issues": [
@@ -9571,14 +9576,15 @@
       "author": "tgeoghegan",
       "authorAssociation": "COLLABORATOR",
       "assignees": [
-        "chris-wood"
+        "tgeoghegan"
       ],
       "labels": [
-        "editorial"
+        "editorial",
+        "ietf120"
       ],
       "body": "In #393, we define a union with an enum discriminant roughly like:\r\n\r\n```\r\nenum {\r\n  continue(0),\r\n  finished(1)\r\n  reject(2),\r\n  (255)\r\n} PrepareStepState;\r\n\r\nstruct {\r\n  PrepareStepState prepare_step_state;\r\n  select (PrepareStep.prepare_step_state) {\r\n    case continue:\r\n      ReportId report_id;\r\n      opaque payload<0..2^32-1>;\r\n    case finished:\r\n      ReportId report_id;\r\n    case reject:\r\n      ReportId report_id;\r\n      ReportShareError report_share_error;\r\n  };\r\n} PrepareStep;\r\n```\r\n\r\nThen later in protocol text, we define partial constructions of values like:\r\n\r\n```\r\nstruct {\r\n  PrepareStepState prepare_step_state = 2; /* reject */\r\n  ReportId report_id;\r\n  ReportShareError report_share_error;\r\n} PrepareStep;\r\n```\r\n\r\nThis notation is clear and certainly is more compact than a paragraph explaining to implementers what enum variant to use, but it conflicts with [section 3.7 of RFC 8446](https://datatracker.ietf.org/doc/html/rfc8446#section-3.7), which tells us that this is the notation for defining structs that contain fields whose values are fixed (I gather this was useful in TLS 1.3 for backward compatibility with older TLS versions).\r\n\r\nWe can resolve this by adding some text to \"Conventions and Definitions\", where we introduce the usage of RFC 8446 presentation language, explaining our extensions and deviations. There may also be some prior art in other TLS WG documents we can reference, but I haven't found it.",
       "createdAt": "2023-06-14T18:22:32Z",
-      "updatedAt": "2024-06-04T15:56:11Z",
+      "updatedAt": "2024-06-26T23:28:13Z",
       "closedAt": null,
       "comments": [
         {
@@ -10193,13 +10199,15 @@
       "state": "OPEN",
       "author": "divergentdave",
       "authorAssociation": "COLLABORATOR",
-      "assignees": [],
+      "assignees": [
+        "tgeoghegan"
+      ],
       "labels": [
-        "editorial"
+        "ietf120"
       ],
       "body": "We may want to make note of the fact that the helper sees IP addresses of clients only during /hpke_config requests. Therefore the helper will see the combination of IP addresses and task IDs if using per-task HpkeConfigs, or IP addresses alone if not. This is a smaller difference (note that the leader sees them together either way) but we may want to note it as a consideration for choosing whether to use per-task HpkeConfigs. Note that OHTTP proxies would mitigate this.\n\nh/t @tgeoghegan",
       "createdAt": "2023-10-17T01:38:29Z",
-      "updatedAt": "2023-11-01T16:46:30Z",
+      "updatedAt": "2024-06-26T23:28:17Z",
       "closedAt": null,
       "comments": [
         {
@@ -10421,11 +10429,12 @@
       "authorAssociation": "NONE",
       "assignees": [],
       "labels": [
-        "feature"
+        "feature",
+        "ietf120"
       ],
       "body": "PPM prescribed media types do not have version component in them. As DAP protocol progressing, the structures are changing in a non-compatible way. In order to consistently decode those structures, we need an indicator on what structure to use to decode them with.\r\n\r\nI propose adding a MIME parameter, `version`, to express the version of the payload.\r\n\r\nEx: To represent Report structure of protocol version DAP-09, use the media type - `application/dap-report;version=09`\r\n\r\nLeader/Helper need to rely on this MIME parameter to consistently parse the payload received, and should also be used to reject unsupported versions.\r\n\r\n",
       "createdAt": "2024-01-08T16:24:21Z",
-      "updatedAt": "2024-06-05T17:04:19Z",
+      "updatedAt": "2024-06-26T14:36:18Z",
       "closedAt": null,
       "comments": [
         {
@@ -10660,11 +10669,12 @@
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [
-        "feature"
+        "feature",
+        "ietf120"
       ],
       "body": "Once multi-collection of batches has been removed, we should consider whether the `max_batch_size` parameter of the fixed-size query type might be removed.\r\n\r\nSee https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/554/files#r1577003240 for context; in short, `max_batch_size`'s strongest use-case is in the case of a multiply-collected VDAF. It is unclear if there is a strong justification for this parameter in a DAP which supports only singly-collected VDAFs.",
       "createdAt": "2024-04-24T22:22:28Z",
-      "updatedAt": "2024-06-13T19:43:57Z",
+      "updatedAt": "2024-06-26T14:36:09Z",
       "closedAt": null,
       "comments": [
         {
@@ -10812,11 +10822,12 @@
         "tgeoghegan"
       ],
       "labels": [
-        "feature"
+        "feature",
+        "ietf120"
       ],
       "body": "As mentioned in #556, replay protection implies a relatively stringent operational requirement for the Helper: many aggregation jobs might make concurrent transactions on the same database, which can easily overwhelm the database if not sufficiently provisioned.\r\n\r\nTo mitigate this problem, the Helper can cancel an aggregation job and ask the Leader to try again later. One option is to respond with HTTP status 429 and a \"retry-after\" header indicating when it should be safe to retry.\r\n\r\nI'd like to suggest that we spell this out explicitly in the draft.",
       "createdAt": "2024-05-01T20:01:38Z",
-      "updatedAt": "2024-06-14T06:23:57Z",
+      "updatedAt": "2024-06-26T00:12:06Z",
       "closedAt": null,
       "comments": [
         {
@@ -10902,6 +10913,13 @@
           "body": "I think, from the spec perspective, it's probably okay to move towards the asynchronous option exclusively. I'm just worried about the migration of the existing implementations to the new async model, as there could be periods where Leader and Helper have to support both at the same time.",
           "createdAt": "2024-06-13T23:16:30Z",
           "updatedAt": "2024-06-14T06:23:57Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> I think, from the spec perspective, it's probably okay to move towards the asynchronous option exclusively. I'm just worried about the migration of the existing implementations to the new async model, as there could be periods where Leader and Helper have to support both at the same time.\r\n\r\nSupporting multiple drafts at once adds complexity, but it's complexity that many have learned to manage. (I believe at one point, Cloudflare had deployed up to three drafts of TLS 1.3 (RFC8446) simultaneously.) We already have versioning infrastructure in [daphne](https://github.com/cloudflare/daphne) for this very reason.",
+          "createdAt": "2024-06-25T14:42:28Z",
+          "updatedAt": "2024-06-25T14:42:28Z"
         }
       ]
     },
@@ -11049,13 +11067,16 @@
       "state": "OPEN",
       "author": "cjpatton",
       "authorAssociation": "COLLABORATOR",
-      "assignees": [],
+      "assignees": [
+        "cjpatton"
+      ],
       "labels": [
-        "feature"
+        "feature",
+        "ietf120"
       ],
       "body": "There is a [new paper](https://eprint.iacr.org/2024/666) (to appear at IEEE S&P 2024) that shows how to lift an [FLP](https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-09#section-7.1) into a proof system that is \"silently verifiable\". For such a proof system, it's possible to check if _some_ measurement in a set of measurements is invalid, exchanging only a constant number of bits (128). In Prio3, we must exchange a number of bits linear in the number of measurements.\r\n\r\nThe bandwidth savings are significant. For Prio3SumVec with bits=1, length=1,000, and chunk_length=32 and 100 reports, an `AggregationJobInitReq` is 122KB. If we modified Prio3 by making the FLP silently verifiable, the same message would be roughly 7KB (back-of-a-napkin calculation). Computational cost remains about the same. (See Figure 7 from the paper for details.)\r\n\r\nThis approach does a have a potential downside: if verification fails, then we learn only that _some_ measurement is invalid, not _which_ measurement is invalid. Thus, in the case that some fraction of the reports in the aggregation job, you either need to throw away the data or exchange more bits in order to find the subset of measurements that are invalid. The communication cost increases as the fraction of malicious Clients increases.\r\n\r\nThere are many ways we might implement this. Perhaps the simplest would be to treat batched preparation as an alternative aggregation flow that falls back to the existing aggregation flow (i.e., per report validation) if verification fails. Concretely, we would specify an alternative aggregation sub-protocol that is the same as the existing flow except:\r\n1. It is only compatible with 1-round, \"silently verifiable\" VDAFs.\r\n2. If verification fails, then it needs to be safe to fallback to per-report validation.\r\n\r\n\r\n\r\n\r\n\r\n\r\n",
       "createdAt": "2024-05-16T23:48:08Z",
-      "updatedAt": "2024-06-03T14:50:00Z",
+      "updatedAt": "2024-06-26T15:51:52Z",
       "closedAt": null,
       "comments": [
         {
@@ -66711,7 +66732,7 @@
       "labels": [],
       "body": "Leader-selected is a more accurate name than fixed-size, since the batch sizes are not fixed -- any size above min_batch_size (and, if specified, below max_batch_size) is acceptable.\r\n\r\nThe max_batch_size parameter of the leader-selected query type is removed. This parameter does not need to be enforced by both aggregators, so it can be made implementation-specific.\r\n\r\nAlso, restore the partial batch selector to the Collection message; the included batch ID is required for the Collector to decrypt the aggregate shares, as it is included in the AAD. This bug was introduced in #554 & effectively breaks collection for the fixed-size query type in DAP-11.",
       "createdAt": "2024-06-13T23:56:57Z",
-      "updatedAt": "2024-06-14T00:28:05Z",
+      "updatedAt": "2024-06-26T11:06:20Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "35f1274853c1c06a5132612b111debefe4fd17ac",
@@ -66729,6 +66750,13 @@
           "body": "Closes #555.",
           "createdAt": "2024-06-14T00:21:02Z",
           "updatedAt": "2024-06-14T00:21:02Z"
+        },
+        {
+          "author": "wangshan",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "@branlwyd I feel `leader-selected` is a bit misleading, given that the batch size is decided by task creator based on some privacy requirements, for eg differential privacy. `leader-selected query` sounds odd to me.\r\nI suggest we change it to something that reflects the batch releasing criteria, how about `batch-threshold`? ",
+          "createdAt": "2024-06-26T11:06:19Z",
+          "updatedAt": "2024-06-26T11:06:19Z"
         }
       ],
       "reviews": [
@@ -66769,6 +66797,373 @@
               "body": "(I think the same argument doesn't apply to `InputShareAad`, since this AAD is used to allow the Helper to ensure the encrypted input share it received from the Leader matches the rest of the report share. Failing to perform this check would allow a malicious Leader to break a report's privacy even in the face of an honest Helper, and DAP's aim is to protect report privacy as long as at least one aggregator is honest.)",
               "createdAt": "2024-06-14T00:28:05Z",
               "updatedAt": "2024-06-14T00:36:07Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5_j4yM",
+          "commit": {
+            "abbreviatedOid": "302c7bf"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-06-25T23:18:16Z",
+          "updatedAt": "2024-06-25T23:49:04Z",
+          "comments": [
+            {
+              "originalPosition": 9,
+              "body": "nit: I'd re-order these, since you need the second as context for the first.",
+              "createdAt": "2024-06-25T23:18:16Z",
+              "updatedAt": "2024-06-25T23:49:04Z"
+            },
+            {
+              "originalPosition": 79,
+              "body": "```suggestion\r\nacceptable for reports to be batched by the Leader in an arbitrary fashion. Each batch of\r\n```",
+              "createdAt": "2024-06-25T23:24:57Z",
+              "updatedAt": "2024-06-25T23:49:04Z"
+            },
+            {
+              "originalPosition": 103,
+              "body": "This text now lacks important. There is only a minimum batch size, hence no application of DAP is allowed to be \"concerned with the sample size\".\r\n\r\nI think what we want to do now instead is say something generic about how privacy guarantees of DAP depend on the batch size, perhaps when composed with some DP policy.\r\n\r\nHowever I wonder if we still think this is accurate. My intuition is that choosing a larger batch size strictly increases privacy, regardless of how DP is implemented. (Though utility may be negatively impacted.) Is this correct?\r\n\r\ncc/ @wangshan since according to `git blame`, you wrote this text originally.",
+              "createdAt": "2024-06-25T23:33:29Z",
+              "updatedAt": "2024-06-25T23:49:04Z"
+            },
+            {
+              "originalPosition": 112,
+              "body": "I don't object, but why change \"deployment\" to \"implementation\" here?",
+              "createdAt": "2024-06-25T23:33:54Z",
+              "updatedAt": "2024-06-25T23:49:04Z"
+            },
+            {
+              "originalPosition": 120,
+              "body": "here too, @wangshan (see above comment)",
+              "createdAt": "2024-06-25T23:34:34Z",
+              "updatedAt": "2024-06-25T23:49:04Z"
+            },
+            {
+              "originalPosition": 154,
+              "body": "This doesn't appear to be desirable from a privacy perspective. I'll note here that having the timestamp in the metadata seems to be helpful for replay protection, since it allows you to shard by batch interval.\r\n\r\nI suggest we just delete this text.",
+              "createdAt": "2024-06-25T23:35:58Z",
+              "updatedAt": "2024-06-25T23:49:04Z"
+            },
+            {
+              "originalPosition": 168,
+              "body": "This is a wire-breaking change. We can avoid it by just deleting `batch_saturated` and not renumbering the remaining variants. However this would leave a gap in the variants defined in our draft, which is a bit odd.\r\n\r\nI think we should avoid breaking changes if we can. An alternative would be to leave a note here that if we want a new variant before RFC, then the variant should use `6`.\r\n\r\nWe could take this one step further by being very explicit about what we want in the end:\r\n\r\n```\r\nenum {\r\n  batch_collected(0),\r\n  report_replayed(1),\r\n  report_dropped(2),\r\n  hpke_unknown_config_id(3),\r\n  hpke_decrypt_error(4),\r\n  vdaf_prep_error(5),\r\n  /* [TODO Remove or replace this variant.] */\r\n  todo_remove_me(6),\r\n  task_expired(7),\r\n  invalid_message(8),\r\n  report_too_early(9),\r\n  (256)\r\n} PrepareError;\r\n```\r\n",
+              "createdAt": "2024-06-25T23:42:54Z",
+              "updatedAt": "2024-06-25T23:49:04Z"
+            },
+            {
+              "originalPosition": 206,
+              "body": "```suggestion\r\n  query. For leader_selected tasks, this includes the batch ID assigned to the batch\r\n```",
+              "createdAt": "2024-06-25T23:43:56Z",
+              "updatedAt": "2024-06-25T23:49:04Z"
+            },
+            {
+              "originalPosition": 235,
+              "body": "I think we should include the batch ID in the AAD. It's not strictly necessary in our threat model, so think of it as defense in depth: successful execution implies agreement on the batch ID between the aggregators and collector; this may have benefits we don't see right now.\r\n\r\nAs a general rule, binding protocol execution to crypto operations is a good idea whenever feasible. There are tons of examples of this, the most recent of which might be https://eprint.iacr.org/2023/691.\r\n",
+              "createdAt": "2024-06-25T23:48:27Z",
+              "updatedAt": "2024-06-25T23:49:04Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5_pCmE",
+          "commit": {
+            "abbreviatedOid": "302c7bf"
+          },
+          "author": "wangshan",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-06-26T10:58:15Z",
+          "updatedAt": "2024-06-26T10:58:15Z",
+          "comments": [
+            {
+              "originalPosition": 103,
+              "body": "generally speaking larger batch size gives better DP guarantee, however, there can be a case where the DP guarantee is based on a certain sampling rate and allowing too big a batch may break that condition. But in practice, I don't think sampling would be implemented in a way that make this a problem. If we decide to remove max_batch_size, I agree it doesn't make much sense to mention sampling here.  ",
+              "createdAt": "2024-06-26T10:58:15Z",
+              "updatedAt": "2024-06-26T10:58:15Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5_pDXZ",
+          "commit": {
+            "abbreviatedOid": "302c7bf"
+          },
+          "author": "wangshan",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-06-26T10:59:55Z",
+          "updatedAt": "2024-06-26T10:59:55Z",
+          "comments": [
+            {
+              "originalPosition": 168,
+              "body": "+1",
+              "createdAt": "2024-06-26T10:59:55Z",
+              "updatedAt": "2024-06-26T10:59:55Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5_pEQb",
+          "commit": {
+            "abbreviatedOid": "302c7bf"
+          },
+          "author": "wangshan",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-06-26T11:01:50Z",
+          "updatedAt": "2024-06-26T11:01:51Z",
+          "comments": [
+            {
+              "originalPosition": 120,
+              "body": "Similar to above, shall we just say whether to control the size of the batch is an implementation specific choice?",
+              "createdAt": "2024-06-26T11:01:50Z",
+              "updatedAt": "2024-06-26T11:01:51Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 564,
+      "id": "PR_kwDOFEJYQs5ziDTd",
+      "title": "Helper-side aggregation job init/continue asynchronous processing",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/564",
+      "state": "OPEN",
+      "author": "inahga",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "Closes https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/557.\r\n\r\nAllows helper-side aggregate job preparation to be handled asynchronously,\r\nsimilarly to how collection jobs work. Briefly, after calls with\r\n`AggregationJobInitReq` and `AggregationJobContinueReq`, the leader polls\r\nthe helper at `GET /tasks/{task-id]/aggregation_jobs/{aggregation-job-id}`\r\nuntil receiving an `AggregationJobResp`.\r\n\r\nIn discussion in #577 we had soft consensus on making this the only option,\r\ni.e. for spec simplicity we don't need to also allow the old synchronous\r\nbehavior.",
+      "createdAt": "2024-06-25T18:08:22Z",
+      "updatedAt": "2024-06-26T19:49:53Z",
+      "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "baseRefName": "main",
+      "baseRefOid": "35f1274853c1c06a5132612b111debefe4fd17ac",
+      "headRepository": "inahga/draft-ietf-ppm-dap",
+      "headRefName": "inahga/async-helper-agg-jobs",
+      "headRefOid": "3c9752d0f2a504ac8cddb29504665b4edd8462ac",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOFEJYQs5_kAb4",
+          "commit": {
+            "abbreviatedOid": "23c7912"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "Looks good over all! One high level question: How does the Helper multiple PUTs for the same aggregation job? (This may be covered, but I wanted to confirm.)",
+          "createdAt": "2024-06-25T23:54:26Z",
+          "updatedAt": "2024-06-26T00:07:56Z",
+          "comments": [
+            {
+              "originalPosition": 17,
+              "body": "Should this include \"MAY return a Retry-After\" to feature-match collection?",
+              "createdAt": "2024-06-25T23:54:26Z",
+              "updatedAt": "2024-06-26T00:07:37Z"
+            },
+            {
+              "originalPosition": 28,
+              "body": "I don't think this is necessary.\r\n```suggestion\r\nHelper attempts to initialize VDAF preparation (see\r\n```",
+              "createdAt": "2024-06-25T23:54:51Z",
+              "updatedAt": "2024-06-26T00:07:37Z"
+            },
+            {
+              "originalPosition": 49,
+              "body": "This transition is a little awkward I think. I like the first paragraph (\"it immediately responds with ...\"). Perhaps tack on something like: \"Later on, the Leader will make send an HTTP GET to <blah blah blah> to get the response. The Helper constructs the response as follows.\"",
+              "createdAt": "2024-06-26T00:00:14Z",
+              "updatedAt": "2024-06-26T00:07:37Z"
+            },
+            {
+              "originalPosition": 44,
+              "body": "Should this be 202?",
+              "createdAt": "2024-06-26T00:01:06Z",
+              "updatedAt": "2024-06-26T00:07:37Z"
+            },
+            {
+              "originalPosition": 61,
+              "body": "is \"aggregation job URI\" well-defined? In any case, I think it would help the reader to either spell it out here or add a reference to the definition.",
+              "createdAt": "2024-06-26T00:02:34Z",
+              "updatedAt": "2024-06-26T00:07:37Z"
+            },
+            {
+              "originalPosition": 153,
+              "body": "I may have missed it, but this should apply to the initial agg request as well.",
+              "createdAt": "2024-06-26T00:07:16Z",
+              "updatedAt": "2024-06-26T00:07:37Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5_seIT",
+          "commit": {
+            "abbreviatedOid": "23c7912"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-06-26T16:25:43Z",
+          "updatedAt": "2024-06-26T16:44:45Z",
+          "comments": [
+            {
+              "originalPosition": 44,
+              "body": "No, 201 Created is what we use in response to `PUT /tasks/{task-id}/collection_jobs/{collection-job-id}`, so it's appropriate here. 202 Accepted is what we use in response to `GET /tasks/{task-id}/collection_jobs/{collection-job-id}` if the job is not done yet.",
+              "createdAt": "2024-06-26T16:25:43Z",
+              "updatedAt": "2024-06-26T16:44:45Z"
+            },
+            {
+              "originalPosition": 153,
+              "body": "```suggestion\r\nheader field to suggest a polling interval to the Leader.\r\n```",
+              "createdAt": "2024-06-26T16:27:24Z",
+              "updatedAt": "2024-06-26T16:44:45Z"
+            },
+            {
+              "originalPosition": 15,
+              "body": "```suggestion\r\n\"application/dap-aggregation-job-init-req\". After receiving HTTP status 201\r\nCreated, the Leader proceeds to poll GET requests to the aggregation job URI\r\n```",
+              "createdAt": "2024-06-26T16:31:07Z",
+              "updatedAt": "2024-06-26T16:44:45Z"
+            },
+            {
+              "originalPosition": 15,
+              "body": "Further, the use of the verb \"poll\" is awkward: what's being polled is the aggregation job, not the GET request. The GET request is the representation of polling an aggregation job. Something like \"the Leader polls the aggregation job by sending GET requests to the aggregation job URI\" is better.",
+              "createdAt": "2024-06-26T16:32:38Z",
+              "updatedAt": "2024-06-26T16:44:45Z"
+            },
+            {
+              "originalPosition": 17,
+              "body": "This new text should be moved a few lines below, to where it says \"The Helper's response will be...\".\r\n\r\nFirst, it's awkward to discuss response handling and then have a sentence discussing Leader->Helper authentication, which is relevant to the request.\r\n\r\nSecond, the paragraph beginning \"The Helper's response will be an `AggregationJobResp` message...\" should be updated, because it's not clear whether that's talking about the PUT or a subsequent GET. \r\n\r\nSecond, ",
+              "createdAt": "2024-06-26T16:33:30Z",
+              "updatedAt": "2024-06-26T16:44:45Z"
+            },
+            {
+              "originalPosition": 73,
+              "body": "@cjpatton I believe this paragraph answers your question \"How does the Helper multiple PUTs for the same aggregation job?\"\r\n\r\nPUT multiple times is legal for idempotence, but mutation is illegal.",
+              "createdAt": "2024-06-26T16:40:19Z",
+              "updatedAt": "2024-06-26T16:44:45Z"
+            },
+            {
+              "originalPosition": 110,
+              "body": "Can you sketch out the scenario this is meant to catch? Per the previous paragraph, it should be OK for the leader to send the same `AggregationJobContinueReq` twice for idempotency reasons.",
+              "createdAt": "2024-06-26T16:42:34Z",
+              "updatedAt": "2024-06-26T16:44:45Z"
+            },
+            {
+              "originalPosition": 157,
+              "body": "Interesting implication of this is that it means the helper must keep track of the order in which prep steps occurred in the request. Janus already does this, but perhaps there are implementations that relied upon having the leader request in memory.",
+              "createdAt": "2024-06-26T16:44:21Z",
+              "updatedAt": "2024-06-26T16:44:45Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5_t49F",
+          "commit": {
+            "abbreviatedOid": "23c7912"
+          },
+          "author": "inahga",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-06-26T19:04:26Z",
+          "updatedAt": "2024-06-26T19:04:26Z",
+          "comments": [
+            {
+              "originalPosition": 61,
+              "body": "It's not concretely defined--I copied the vernacular from the collection flow. I think I will expand it out instead of using the shorthand (and do the same for the other references).",
+              "createdAt": "2024-06-26T19:04:26Z",
+              "updatedAt": "2024-06-26T19:04:27Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5_t7y5",
+          "commit": {
+            "abbreviatedOid": "23c7912"
+          },
+          "author": "inahga",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-06-26T19:11:27Z",
+          "updatedAt": "2024-06-26T19:11:27Z",
+          "comments": [
+            {
+              "originalPosition": 110,
+              "body": "Ah, you're right. I was thinking this would handle the case where the leader sends two different POST requests, but as you stated the idempotency check would catch this.\r\n\r\nI will strike this step, and revert the reordering of steps (as it's not necessary).",
+              "createdAt": "2024-06-26T19:11:27Z",
+              "updatedAt": "2024-06-26T19:11:27Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5_t_Fl",
+          "commit": {
+            "abbreviatedOid": "23c7912"
+          },
+          "author": "inahga",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-06-26T19:19:33Z",
+          "updatedAt": "2024-06-26T19:19:34Z",
+          "comments": [
+            {
+              "originalPosition": 157,
+              "body": "A point in favor of https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/217, but I doubt that discussion needs to be rehashed.",
+              "createdAt": "2024-06-26T19:19:34Z",
+              "updatedAt": "2024-06-26T19:19:34Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5_uKte",
+          "commit": {
+            "abbreviatedOid": "23c7912"
+          },
+          "author": "inahga",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-06-26T19:48:59Z",
+          "updatedAt": "2024-06-26T19:48:59Z",
+          "comments": [
+            {
+              "originalPosition": 49,
+              "body": "I rewrote this to match what I did for continuation\r\n```\r\nIf the Helper finds the `AggregationJobInitReq` to be valid, it immediately\r\nresponds with HTTP status 201 Created. The Helper is now ready to process each\r\nreport share into an outbound prepare step, asynchronously from any further\r\nrequests from the leader.\r\n\r\nThe following structures are computed:\r\n```\r\n\r\nLMK if that's also awkward, then I can fix both :D",
+              "createdAt": "2024-06-26T19:48:59Z",
+              "updatedAt": "2024-06-26T19:48:59Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5_uK2-",
+          "commit": {
+            "abbreviatedOid": "23c7912"
+          },
+          "author": "inahga",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-06-26T19:49:21Z",
+          "updatedAt": "2024-06-26T19:49:22Z",
+          "comments": [
+            {
+              "originalPosition": 61,
+              "body": "Done. I've replaced mention of `aggregation job URI` and `collection job URI` with the explicit paths.",
+              "createdAt": "2024-06-26T19:49:21Z",
+              "updatedAt": "2024-06-26T19:49:22Z"
             }
           ]
         }
