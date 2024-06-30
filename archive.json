@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-06-27T01:00:40.984392+00:00",
+  "timestamp": "2024-06-30T01:05:49.447943+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -10207,7 +10207,7 @@
       ],
       "body": "We may want to make note of the fact that the helper sees IP addresses of clients only during /hpke_config requests. Therefore the helper will see the combination of IP addresses and task IDs if using per-task HpkeConfigs, or IP addresses alone if not. This is a smaller difference (note that the leader sees them together either way) but we may want to note it as a consideration for choosing whether to use per-task HpkeConfigs. Note that OHTTP proxies would mitigate this.\n\nh/t @tgeoghegan",
       "createdAt": "2023-10-17T01:38:29Z",
-      "updatedAt": "2024-06-26T23:28:17Z",
+      "updatedAt": "2024-06-27T18:59:48Z",
       "closedAt": null,
       "comments": [
         {
@@ -10230,6 +10230,13 @@
           "body": "This issue initially was about adding a security consideration, but I think we should do a couple other things in these paragraphs that seem related. There's a TODO lurking in this text:\r\n\r\n> [TODO: Allow Aggregators to return HTTP status code 403 Forbidden in deployments that use authentication to avoid leaking information about which tasks exist.]\r\n\r\nAdditionally, I don't know if this prescription is necessary:\r\n\r\n> Clients retrieve the HPKE configuration from each Aggregator by sending an HTTP GET request to {aggregator}/hpke_config. Clients MAY specify a query parameter task_id whose value is the task ID whose HPKE configuration they want. *If the Aggregator does not recognize the task ID, then it MUST abort with error unrecognizedTask.*\r\n\r\nWe don't need a DAP-layer error. An HTTP client error should suffice (as usual, implementations can put a problem document in the body of the HTTP 4XX if they want). Note that I still think we need the `missingTaskID` langauge that instructs clients to \"upgrade\" their HPKE config request if the aggregator doesn't use global HPKE configs.",
           "createdAt": "2023-11-01T16:46:29Z",
           "updatedAt": "2023-11-01T16:46:29Z"
+        },
+        {
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "body": "I and others have come around to a new proposal here: we should do away with per-task HPKE keys altogether. The primary motivation for this is to reduce the complexity of the protocol: if only global HPKE keys are supported, then we can remove the task ID query parameter from the `/hpke_config` route and remove the description of the fallback logic.\r\n\r\nI have two more arguments in favour of doing this.\r\n\r\n## Oblivious HTTP\r\n\r\nRecently, we've been experimenting with composing DAP with [Oblivious HTTP](https://datatracker.ietf.org/doc/rfc9458/). The intent is to prevent the aggregators from learning which clients are participating in which tasks. If DAP uploads go over OHTTP, then the leader gets to see client-identifying metadata and in some settings, participating in some task can leak information (i.e., the user has opted into some data collection or has been assigned to some cohort).\r\n\r\nBut just doing uploads over OHTTP is insufficient: the helper and leader both get to see the clients and which task they are participating in when they fetch per-task HPKE configs. We could also serve HPKE configs over OHTTP, but this is kind of unsatisfactory: HPKE configs are static content that changes rarely, making it natural to delegate serving them to a content delivery network. Serving them over OHTTP is more expensive and a burden for aggregators. However, if you serve global HPKE keys, then aggregators no longer get to learn which clients are participating in which tasks.\r\n\r\nThis still lets the aggregators learn that some client may participate in DAP tasks at all in the future (it's also possible that clients will fetch HPKE keys but never upload). It'd be better to avoid this, but let's think about OHTTP again. That protocol _also_ uses HPKE to protect messages as they transit through a third party, the OHTTP relay. In order to make sure you're delivering messages to the intended gateway, OHTTP suggests a mechanism for fetching OHTTP HPKE keys from the gateway. So that means that no matter what you do about serving DAP HPKE configs over OHTTP, the OHTTP HPKE key fetches will reveal the same information anyway. The conclusion we at Divvi Up reached is that you might as well serve global DAP HPKE keys without OHTTP, because you don't learn anything additional past what you learned from the OHTTP key fetches.\r\n\r\nWe think that composing DAP with OHTTP is going to be a very common deployment pattern, and so deployments may wind up using exclusively global HPKE keys anyway. Additionally, taskprov mandates global HPKE keys.\r\n\r\n## TLS equivalency\r\n\r\nRecall that the reason we use HPKE at all is to build an authenticated, encrypted channel from the client to the helper. The helper receives the client's report shares from the leader in aggregation job initialization messages. But let's suppose DAP had shaken out differently and we did have clients upload report shares directly to the helper. Then we would simply rely on TLS to provide the authenticated, encrypted channel, and we wouldn't think twice about a single certificate and hence key being used for all tasks. So going from per-task HPKE keys to global ones should equivalently be acceptable.\r\n\r\n## Next steps\r\n\r\nThe DAP editors and several implementers agree that this change is a good idea. If we don't hear any objections, we'll be making that change on Friday, July 5.",
+          "createdAt": "2024-06-27T18:57:55Z",
+          "updatedAt": "2024-06-27T18:59:48Z"
         }
       ]
     },
@@ -66730,9 +66737,9 @@
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
-      "body": "Leader-selected is a more accurate name than fixed-size, since the batch sizes are not fixed -- any size above min_batch_size (and, if specified, below max_batch_size) is acceptable.\r\n\r\nThe max_batch_size parameter of the leader-selected query type is removed. This parameter does not need to be enforced by both aggregators, so it can be made implementation-specific.\r\n\r\nAlso, restore the partial batch selector to the Collection message; the included batch ID is required for the Collector to decrypt the aggregate shares, as it is included in the AAD. This bug was introduced in #554 & effectively breaks collection for the fixed-size query type in DAP-11.",
+      "body": "Closes #555.\r\n\r\nLeader-selected is a more accurate name than fixed-size, since the batch sizes are not fixed -- any size above min_batch_size (and, if specified, below max_batch_size) is acceptable.\r\n\r\nThe max_batch_size parameter of the leader-selected query type is removed. This parameter does not need to be enforced by both aggregators, so it can be made implementation-specific.\r\n\r\nAlso, restore the partial batch selector to the Collection message; the included batch ID is required for the Collector to decrypt the aggregate shares, as it is included in the AAD. This bug was introduced in #554 & effectively breaks collection for the fixed-size query type in DAP-11.",
       "createdAt": "2024-06-13T23:56:57Z",
-      "updatedAt": "2024-06-26T11:06:20Z",
+      "updatedAt": "2024-06-28T12:00:08Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "35f1274853c1c06a5132612b111debefe4fd17ac",
@@ -66757,6 +66764,20 @@
           "body": "@branlwyd I feel `leader-selected` is a bit misleading, given that the batch size is decided by task creator based on some privacy requirements, for eg differential privacy. `leader-selected query` sounds odd to me.\r\nI suggest we change it to something that reflects the batch releasing criteria, how about `batch-threshold`? ",
           "createdAt": "2024-06-26T11:06:19Z",
           "updatedAt": "2024-06-26T11:06:19Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> @branlwyd I feel `leader-selected` is a bit misleading, given that the batch size is decided by task creator based on some privacy requirements, for eg differential privacy. `leader-selected query` sounds odd to me. I suggest we change it to something that reflects the batch releasing criteria, how about `batch-threshold`?\r\n\r\nYou're correct that the batch size is not chosen by the Leader, but it is true that the Leader decides which reports go in which batch. On the other hand, that may not be the intent of the deployment.\r\n\r\nThat said, `batch-threshold` sounds generic enough to apply to any query type, no? E.g., isn't the \"batch releasing criteria\" now the same for time_interval as for fixed_size?\r\n\r\nWhat about something that emphasizes that there are no batch boundary criteria, as there are for time_interval? Perhaps any_batch or something?",
+          "createdAt": "2024-06-27T17:57:40Z",
+          "updatedAt": "2024-06-27T17:57:40Z"
+        },
+        {
+          "author": "wangshan",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "> You're correct that the batch size is not chosen by the Leader, but it is true that the Leader decides which reports go in which batch. On the other hand, that may not be the intent of the deployment.\r\n> \r\n> That said, `batch-threshold` sounds generic enough to apply to any query type, no? E.g., isn't the \"batch releasing criteria\" now the same for time_interval as for fixed_size?\r\n> \r\n> What about something that emphasizes that there are no batch boundary criteria, as there are for time_interval? Perhaps any_batch or something?\r\n\r\nThe batch releasing criteria is still different, `fixed_size` only requires minimum batch size to be met, `time_interval` requires size and time. How about `size_conditioned`?\r\nI feel the query type as is only defines the batch creation criteria, not the releasing criteria. If that's what we want query type to do, then something like `any_batch` would work too.\r\n",
+          "createdAt": "2024-06-28T12:00:07Z",
+          "updatedAt": "2024-06-28T12:00:07Z"
         }
       ],
       "reviews": [
@@ -66927,6 +66948,26 @@
               "updatedAt": "2024-06-26T11:01:51Z"
             }
           ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6AAWz8",
+          "commit": {
+            "abbreviatedOid": "302c7bf"
+          },
+          "author": "simon-friedberger",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-06-28T10:22:07Z",
+          "updatedAt": "2024-06-28T10:22:07Z",
+          "comments": [
+            {
+              "originalPosition": 154,
+              "body": "I'm sure we've discussed this before so maybe I am missing something but there is an attack where a Leader separately collects reports from a single client and then only aggregates those.\r\n\r\nFor time intervals the leader is strongly constrained here and that's exactly why we prohibit overlapping time-intervals. We might however have lost this meaning in the wording over time...\r\n\r\n> If the report pertains to a batch that was previously collected, then the input share MUST be marked as invalid with error batch_collected.\r\n\r\n> Finally, the Aggregator checks that the batch does not contain a report that was included in any previous batch. If this batch overlap check fails, then the Aggregator MUST abort with error of type \"batchOverlap\". For time_interval tasks, it is sufficient (but not necessary) to check that the batch interval does not overlap with the batch interval of any previous query. If this batch interval check fails, then the Aggregator MAY abort with error of type \"batchOverlap\".\r\n\r\n> For each report in the batch, the time at which that report was generated (see [Section 4.4](https://ietf-wg-ppm.github.io/draft-ietf-ppm-dap/draft-ietf-ppm-dap.html#upload-flow)) MUST fall within the batch interval specified by the Collector.\r\n\r\nAccording to my probably incorrect memory this is supposed to be prevented by the collector deciding which reports to aggregate and the other aggregator checking as well.\r\nWe should be explicit about this attack in https://ietf-wg-ppm.github.io/draft-ietf-ppm-dap/draft-ietf-ppm-dap.html#name-batch-parameters",
+              "createdAt": "2024-06-28T10:22:07Z",
+              "updatedAt": "2024-06-28T10:22:07Z"
+            }
+          ]
         }
       ]
     },
@@ -66942,7 +66983,7 @@
       "labels": [],
       "body": "Closes https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/557.\r\n\r\nAllows helper-side aggregate job preparation to be handled asynchronously,\r\nsimilarly to how collection jobs work. Briefly, after calls with\r\n`AggregationJobInitReq` and `AggregationJobContinueReq`, the leader polls\r\nthe helper at `GET /tasks/{task-id]/aggregation_jobs/{aggregation-job-id}`\r\nuntil receiving an `AggregationJobResp`.\r\n\r\nIn discussion in #577 we had soft consensus on making this the only option,\r\ni.e. for spec simplicity we don't need to also allow the old synchronous\r\nbehavior.",
       "createdAt": "2024-06-25T18:08:22Z",
-      "updatedAt": "2024-06-26T19:49:53Z",
+      "updatedAt": "2024-06-28T20:29:02Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "35f1274853c1c06a5132612b111debefe4fd17ac",
@@ -66953,7 +66994,36 @@
       "mergedAt": null,
       "mergedBy": null,
       "mergeCommit": null,
-      "comments": [],
+      "comments": [
+        {
+          "author": "suman-ganta",
+          "authorAssociation": "NONE",
+          "body": "I think I like the async approach proposed here. With this model, job as a computation unit does not have any significance. This async model could work at batch level between leader and helper.\r\n\r\n## Abstract Approach\r\nLeader submits to helper one or more reports belonging to a batch -  Ex: `PUT /tasks/taskId/batches/batchId <list of PrepareInit>` - returns 201 with no body\r\nLeader can query batch status - Ex `GET /tasks/taskId/batches/batchId?status=completed&begin=10&pageSize=20`  and receives paginated list of aggregates along with their status`\r\nLeader performs aggregation of successfully completed aggregates it received and runs the above query until it sees all the entries of the batch.\r\n\r\n#### Benefits\r\n* This enables concurrent processing on both leader and helper ends without blocking for whole job completion on either end.\r\n* This also gives flexibility to let leader and helper choose independent parallelism.\r\n* This is slightly different from the above approach even if we say jobCount=1. This can be loosely equivalent to jobCount=1 with ability to poll for multiple jobs at once.\r\n* Since job as an entity does not have any DAP meaning to it, we can drop it and have more granular parallelism.\r\n\r\n## Communication Patterns\r\nThis model also enables us to various communication patterns between Leader and helper.\r\n\r\n#### Request - Response with polling\r\nThis is essentially what was described above\r\n\r\n#### BiDirectional Streaming\r\nfor a given batch, bidirectional streaming RPC could allow sending report shares as and when they are available on leader and helper can respond the responses as a stream of messages. This is essentially gRPC bi-directional streaming\r\n\r\nSo, I think, instead of keeping the spec prescriptive about one pattern vs the other, it could be best to keep these patterns open to the implementation.\r\n\r\nThoughts?",
+          "createdAt": "2024-06-27T04:47:20Z",
+          "updatedAt": "2024-06-27T04:47:20Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "@suman-ganta,\r\n\r\n> Leader submits to helper one or more reports belonging to a batch - Ex: `PUT /tasks/taskId/batches/batchId <list of PrepareInit>` - returns 201 with no body Leader can query batch status - Ex `GET /tasks/taskId/batches/batchId?status=completed&begin=10&pageSize=20` and receives paginated list of aggregates along with their status` Leader performs aggregation of successfully completed aggregates it received and runs the above query until it sees all the entries of the batch.\r\n\r\nJust to clarify, are you suggesting this as a change to the current PR? \r\n\r\nIn the current PR, when the Leader sends `GET {helper}/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}`, the Helper is supposed to send the next prep step for each report in the batch. (For Prio3, this is the last prep step, i.e., the Leader learns whether each report was aggregated or not.) Is the idea to add some parameters to the request path that tell the Helper which reports to return?",
+          "createdAt": "2024-06-27T17:53:08Z",
+          "updatedAt": "2024-06-27T17:53:18Z"
+        },
+        {
+          "author": "suman-ganta",
+          "authorAssociation": "NONE",
+          "body": "> @suman-ganta,\r\n> \r\n> > Leader submits to helper one or more reports belonging to a batch - Ex: `PUT /tasks/taskId/batches/batchId <list of PrepareInit>` - returns 201 with no body Leader can query batch status - Ex `GET /tasks/taskId/batches/batchId?status=completed&begin=10&pageSize=20` and receives paginated list of aggregates along with their status` Leader performs aggregation of successfully completed aggregates it received and runs the above query until it sees all the entries of the batch.\r\n> \r\n> Just to clarify, are you suggesting this as a change to the current PR?\r\n> \r\n> In the current PR, when the Leader sends `GET {helper}/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}`, the Helper is supposed to send the next prep step for each report in the batch. (For Prio3, this is the last prep step, i.e., the Leader learns whether each report was aggregated or not.) Is the idea to add some parameters to the request path that tell the Helper which reports to return?\r\n\r\nYeah, at a high level, packaging these list of reports with a fixed job and computing that job as a whole, waiting for the whole job to finish on either end seem to introduce blocking processing. Instead of that, for a batch, we can break away from job notion and submit/process individual reports, query for completed (init/continue) reports (instead of blocking on one job completion). This could allow concurrently process these reports on both sides.",
+          "createdAt": "2024-06-28T14:18:05Z",
+          "updatedAt": "2024-06-28T14:18:05Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> @suman-ganta Yeah, at a high level, packaging these list of reports with a fixed job and computing that job as a whole, waiting for the whole job to finish on either end seem to introduce blocking processing. Instead of that, for a batch, we can break away from job notion and submit/process individual reports, query for completed (init/continue) reports (instead of blocking on one job completion). This could allow concurrently process these reports on both sides.\r\n\r\nI see. Couldn't this be achieved at the level of aggregation jobs? I.e., instead of splitting processing of aggregation jobs across 4 threads, just create 4 aggregation jobs. Does that solve your problem?",
+          "createdAt": "2024-06-28T20:29:00Z",
+          "updatedAt": "2024-06-28T20:29:00Z"
+        }
+      ],
       "reviews": [
         {
           "id": "PRR_kwDOFEJYQs5_kAb4",
@@ -67164,6 +67234,70 @@
               "body": "Done. I've replaced mention of `aggregation job URI` and `collection job URI` with the explicit paths.",
               "createdAt": "2024-06-26T19:49:21Z",
               "updatedAt": "2024-06-26T19:49:22Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6AFW23",
+          "commit": {
+            "abbreviatedOid": "23c7912"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-06-28T20:12:06Z",
+          "updatedAt": "2024-06-28T20:12:06Z",
+          "comments": [
+            {
+              "originalPosition": 49,
+              "body": "Much better!",
+              "createdAt": "2024-06-28T20:12:06Z",
+              "updatedAt": "2024-06-28T20:12:06Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6AFYl2",
+          "commit": {
+            "abbreviatedOid": "3c9752d"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "@inahga a couple of questions for you and others, but overall this looks correct!",
+          "createdAt": "2024-06-28T20:15:14Z",
+          "updatedAt": "2024-06-28T20:25:47Z",
+          "comments": [
+            {
+              "originalPosition": 28,
+              "body": "A bit more clear\r\n```suggestion\r\nThe Helper's response MAY include a Retry-After header field to suggest a polling\r\n```",
+              "createdAt": "2024-06-28T20:15:15Z",
+              "updatedAt": "2024-06-28T20:25:47Z"
+            },
+            {
+              "originalPosition": 119,
+              "body": "Not part of this PR, but I think this should be be a proper MUST.\r\n```suggestion\r\nThe response's `prepare_resps` MUST include exactly the same report IDs in the\r\n```",
+              "createdAt": "2024-06-28T20:18:25Z",
+              "updatedAt": "2024-06-28T20:25:47Z"
+            },
+            {
+              "originalPosition": 114,
+              "body": "The same URI is used for each prep step. Do we foresee this being an issue? Perhaps this is actually desirable from an idempotency standpoint?\r\n\r\ncc/ @tgeoghegan, @branlwyd ",
+              "createdAt": "2024-06-28T20:20:10Z",
+              "updatedAt": "2024-06-28T20:25:47Z"
+            },
+            {
+              "originalPosition": 148,
+              "body": "What is the Helper trying to accomplish here? Does this response actually hep? If I understand correctly, the Helper's response would be the same had the Leader indicated the correct step.\r\n\r\n",
+              "createdAt": "2024-06-28T20:22:49Z",
+              "updatedAt": "2024-06-28T20:25:47Z"
+            },
+            {
+              "originalPosition": 157,
+              "body": "I don't think this requirement is any harder to meet as a result of taking this PR. Or am I missing something?\r\n\r\n",
+              "createdAt": "2024-06-28T20:24:44Z",
+              "updatedAt": "2024-06-28T20:25:47Z"
             }
           ]
         }
