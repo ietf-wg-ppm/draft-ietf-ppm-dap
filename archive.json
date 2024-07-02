@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-06-30T01:05:49.447943+00:00",
+  "timestamp": "2024-07-02T01:01:05.173481+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -10207,7 +10207,7 @@
       ],
       "body": "We may want to make note of the fact that the helper sees IP addresses of clients only during /hpke_config requests. Therefore the helper will see the combination of IP addresses and task IDs if using per-task HpkeConfigs, or IP addresses alone if not. This is a smaller difference (note that the leader sees them together either way) but we may want to note it as a consideration for choosing whether to use per-task HpkeConfigs. Note that OHTTP proxies would mitigate this.\n\nh/t @tgeoghegan",
       "createdAt": "2023-10-17T01:38:29Z",
-      "updatedAt": "2024-06-27T18:59:48Z",
+      "updatedAt": "2024-07-01T18:53:59Z",
       "closedAt": null,
       "comments": [
         {
@@ -10237,6 +10237,27 @@
           "body": "I and others have come around to a new proposal here: we should do away with per-task HPKE keys altogether. The primary motivation for this is to reduce the complexity of the protocol: if only global HPKE keys are supported, then we can remove the task ID query parameter from the `/hpke_config` route and remove the description of the fallback logic.\r\n\r\nI have two more arguments in favour of doing this.\r\n\r\n## Oblivious HTTP\r\n\r\nRecently, we've been experimenting with composing DAP with [Oblivious HTTP](https://datatracker.ietf.org/doc/rfc9458/). The intent is to prevent the aggregators from learning which clients are participating in which tasks. If DAP uploads go over OHTTP, then the leader gets to see client-identifying metadata and in some settings, participating in some task can leak information (i.e., the user has opted into some data collection or has been assigned to some cohort).\r\n\r\nBut just doing uploads over OHTTP is insufficient: the helper and leader both get to see the clients and which task they are participating in when they fetch per-task HPKE configs. We could also serve HPKE configs over OHTTP, but this is kind of unsatisfactory: HPKE configs are static content that changes rarely, making it natural to delegate serving them to a content delivery network. Serving them over OHTTP is more expensive and a burden for aggregators. However, if you serve global HPKE keys, then aggregators no longer get to learn which clients are participating in which tasks.\r\n\r\nThis still lets the aggregators learn that some client may participate in DAP tasks at all in the future (it's also possible that clients will fetch HPKE keys but never upload). It'd be better to avoid this, but let's think about OHTTP again. That protocol _also_ uses HPKE to protect messages as they transit through a third party, the OHTTP relay. In order to make sure you're delivering messages to the intended gateway, OHTTP suggests a mechanism for fetching OHTTP HPKE keys from the gateway. So that means that no matter what you do about serving DAP HPKE configs over OHTTP, the OHTTP HPKE key fetches will reveal the same information anyway. The conclusion we at Divvi Up reached is that you might as well serve global DAP HPKE keys without OHTTP, because you don't learn anything additional past what you learned from the OHTTP key fetches.\r\n\r\nWe think that composing DAP with OHTTP is going to be a very common deployment pattern, and so deployments may wind up using exclusively global HPKE keys anyway. Additionally, taskprov mandates global HPKE keys.\r\n\r\n## TLS equivalency\r\n\r\nRecall that the reason we use HPKE at all is to build an authenticated, encrypted channel from the client to the helper. The helper receives the client's report shares from the leader in aggregation job initialization messages. But let's suppose DAP had shaken out differently and we did have clients upload report shares directly to the helper. Then we would simply rely on TLS to provide the authenticated, encrypted channel, and we wouldn't think twice about a single certificate and hence key being used for all tasks. So going from per-task HPKE keys to global ones should equivalently be acceptable.\r\n\r\n## Next steps\r\n\r\nThe DAP editors and several implementers agree that this change is a good idea. If we don't hear any objections, we'll be making that change on Friday, July 5.",
           "createdAt": "2024-06-27T18:57:55Z",
           "updatedAt": "2024-06-27T18:59:48Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Just to nit-pick one thing: \r\n\r\n> @tgeoghegan: Recall that the reason we use HPKE at all is to build an authenticated, encrypted channel from the client to the helper.\r\n\r\nThis \"channel\" is not client-authenticated. To more a bit more precise, we need non-malleability, not authenticity.",
+          "createdAt": "2024-07-01T15:13:50Z",
+          "updatedAt": "2024-07-01T15:13:50Z"
+        },
+        {
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> Just to nit-pick one thing:\r\n> \r\n> > @tgeoghegan: Recall that the reason we use HPKE at all is to build an authenticated, encrypted channel from the client to the helper.\r\n> \r\n> This \"channel\" is not client-authenticated. To more a bit more precise, we need non-malleability, not authenticity.\r\n\r\nI agree about non-malleability, but I think it is important that the server authenticate to the client, in the sense that the client wants to be sure that only the helper it fetched an HPKE configuration from could decrypt the report share. Perhaps that's already captured by the non-malleability property?",
+          "createdAt": "2024-07-01T18:45:03Z",
+          "updatedAt": "2024-07-01T18:45:03Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> > Just to nit-pick one thing:\r\n> > > @tgeoghegan: Recall that the reason we use HPKE at all is to build an authenticated, encrypted channel from the client to the helper.\r\n> > \r\n> > \r\n> > This \"channel\" is not client-authenticated. To more a bit more precise, we need non-malleability, not authenticity.\r\n> \r\n> I agree about non-malleability, but I think it is important that the server authenticate to the client, in the sense that the client wants to be sure that only the helper it fetched an HPKE configuration from could decrypt the report share. Perhaps that's already captured by the non-malleability property?\r\n\r\nYes it's important that the client has the correct public key, but this isn't provided by HPKE on its own. ",
+          "createdAt": "2024-07-01T18:53:58Z",
+          "updatedAt": "2024-07-01T18:53:58Z"
         }
       ]
     },
@@ -66983,7 +67004,7 @@
       "labels": [],
       "body": "Closes https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/557.\r\n\r\nAllows helper-side aggregate job preparation to be handled asynchronously,\r\nsimilarly to how collection jobs work. Briefly, after calls with\r\n`AggregationJobInitReq` and `AggregationJobContinueReq`, the leader polls\r\nthe helper at `GET /tasks/{task-id]/aggregation_jobs/{aggregation-job-id}`\r\nuntil receiving an `AggregationJobResp`.\r\n\r\nIn discussion in #577 we had soft consensus on making this the only option,\r\ni.e. for spec simplicity we don't need to also allow the old synchronous\r\nbehavior.",
       "createdAt": "2024-06-25T18:08:22Z",
-      "updatedAt": "2024-06-28T20:29:02Z",
+      "updatedAt": "2024-07-01T22:27:38Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "35f1274853c1c06a5132612b111debefe4fd17ac",
@@ -67298,6 +67319,58 @@
               "body": "I don't think this requirement is any harder to meet as a result of taking this PR. Or am I missing something?\r\n\r\n",
               "createdAt": "2024-06-28T20:24:44Z",
               "updatedAt": "2024-06-28T20:25:47Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6ASe3b",
+          "commit": {
+            "abbreviatedOid": "3c9752d"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-01T22:22:58Z",
+          "updatedAt": "2024-07-01T22:22:58Z",
+          "comments": [
+            {
+              "originalPosition": 114,
+              "body": "It was already the case that the same URI was used regardless of which step we were on. Asynchronous handling of aggregation jobs shouldn't change that.",
+              "createdAt": "2024-07-01T22:22:58Z",
+              "updatedAt": "2024-07-01T22:22:58Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6ASXDL",
+          "commit": {
+            "abbreviatedOid": "3c9752d"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "A few thoughts on Suman's proposal:\r\n\r\n* I interpret this proposal as removing the concept of \"aggregation jobs\" entirely, and allowing reports to be grouped arbitrarily (and even grouped differently across different aggregation steps?).\r\n* This is similar to the suggestion to drop batched requests entirely, sending each report in a separate request (likely requiring connection reuse/pipelining for efficiency). However, by batching we avoid that suggestion's issue with needing to repeatedly transmit batch ID/aggregation parameters on a per-report basis.\r\n* However, even with Suman's suggestion, we would still need to retransmit the aggregation parameter on a per-step basis. This would be most impactful for VDAFs with a large aggregation parameter.\r\n* The proposed URL scheme does not quite work out for the time-interval query type, where (a) the batch associated with each report is implicit (based on the timestamp) and (b) reports in a single aggregation job can currently be spread across multiple batches. I think (a) is more important than (b), but likely we can fix the URL scheme so this is not a fatal concern to the idea.\r\n* This would also increase the complexity of handling aggregation jobs, since certain per-batch errors would become per-report errors.\r\n* Implementations can also currently store the state for an aggregation job & its reports \"together\" (whatever that might mean for the underlying datastore); with this change, a Leader could potentially send a different grouping with each step, which might lead to less-optimal data access patterns. (More concretely, an implementation currently could store a single \"object\" for each aggregation job; I think with Suman's suggestion, implementations would be forced to store a single \"object\" for each report share, since the Helper has no guarantee that the grouping of reports per request will be stable.)\r\n\r\nI'm most concerned about retransmission of aggregation parameters,  as well as the increase in complexity.",
+          "createdAt": "2024-07-01T21:47:18Z",
+          "updatedAt": "2024-07-01T22:27:38Z",
+          "comments": [
+            {
+              "originalPosition": 114,
+              "body": "I don't see a problem with it (practically-speaking; I didn't think too deeply about \"proper\" HTTP semantics).\r\n\r\nIn effect, the same resource (i.e. an aggregation job) is being repeatedly mutated as it is stepped from start to completion. I can't think of a reason to use more granular URIs (e.g. a URI per step?) -- if anything, I think this would add confusion as older steps are \"invalid\" and most implementations will not want to keep around the state that would allow them to be retrieved again.",
+              "createdAt": "2024-07-01T21:47:19Z",
+              "updatedAt": "2024-07-01T22:27:38Z"
+            },
+            {
+              "originalPosition": 148,
+              "body": "If I'm reading this correctly, this is the asynchronous version of our current skew-recovery logic. Since aggregation jobs are now asynchronous, if the Helper receives a repeated request it must treat it as if it needs to be handled asynchronously (since there is no way to communicate synchronous completion), though I suspect the implementation would effectively be to treat the job as already completed & return the results on the first attempt to poll.\r\n\r\nHowever, I think we need some text here that the expected response is to re-send the previous results -- right now, this reads as if we continue on to the next paragraph, which I think isn't intended.",
+              "createdAt": "2024-07-01T21:55:03Z",
+              "updatedAt": "2024-07-01T22:27:38Z"
+            },
+            {
+              "originalPosition": 157,
+              "body": "Hmm. In the Leader Continuation section, we have:\r\n\r\n> The PrepareContinues MUST be in the same order as the previous aggregate request.\r\n\r\nBut in the Helper Continuation section, we have:\r\n\r\n> Additionally, if any prep step appears out of order relative to the previous request, then the Helper MAY abort with error invalidMessage.\r\n\r\nThat is, we proscribe that the Leader MUST respect the original order of reports, but only that the Helper MAY respect the original order (and therefore MAY not). I'm not sure if there is a good reason for this mismatch -- it seems to me that this is Postel's Law (\"be conservative about what you send, liberal in what you accept\") thinking which is recognized as [causing reliability & security issues](https://en.wikipedia.org/wiki/Robustness_principle#Criticism). IMO, the Helper should require that reports be in the same order if the Leader does, i.e. the quoted MAY should be a MUST instead.\r\n\r\n(That said, I do think the ordering requirement is perhaps ill-justified, but it's not important enough to rehash #217.)",
+              "createdAt": "2024-07-01T22:05:56Z",
+              "updatedAt": "2024-07-01T22:27:38Z"
             }
           ]
         }
