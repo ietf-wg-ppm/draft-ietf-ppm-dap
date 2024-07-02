@@ -1036,11 +1036,11 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <thead><tr>
 <td class="left">Internet-Draft</td>
 <td class="center">DAP-PPM</td>
-<td class="right">June 2024</td>
+<td class="right">July 2024</td>
 </tr></thead>
 <tfoot><tr>
 <td class="left">Geoghegan, et al.</td>
-<td class="center">Expires 16 December 2024</td>
+<td class="center">Expires 3 January 2025</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1053,12 +1053,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-ietf-ppm-dap-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2024-06-14" class="published">14 June 2024</time>
+<time datetime="2024-07-02" class="published">2 July 2024</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Standards Track</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2024-12-16">16 December 2024</time></dd>
+<dd class="expires"><time datetime="2025-01-03">3 January 2025</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -1132,7 +1132,7 @@ revealing any individual user's data.<a href="#section-abstract-1" class="pilcro
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 16 December 2024.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 3 January 2025.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1427,11 +1427,11 @@ input is ever seen in the clear by any aggregator.<a href="#section-1-1" class="
 <p id="section-1.1-2">12:<a href="#section-1.1-2" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-1.1-3.1">
-            <p id="section-1.1-3.1.1">Rename the fixed-size query type to leader-selected, to align the name with
-the behavior of this query type.<a href="#section-1.1-3.1.1" class="pilcrow">¶</a></p>
+            <p id="section-1.1-3.1.1">Remove the <code>max_batch_size</code> parameter of the fixed-size query type.<a href="#section-1.1-3.1.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-1.1-3.2">
-            <p id="section-1.1-3.2.1">Remove the <code>max_batch_size</code> parameter of the leader-selected query type.<a href="#section-1.1-3.2.1" class="pilcrow">¶</a></p>
+            <p id="section-1.1-3.2.1">Rename the fixed-size query type to leader-selected, to align the name with
+the behavior of this query type.<a href="#section-1.1-3.2.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 <p id="section-1.1-4">11:<a href="#section-1.1-4" class="pilcrow">¶</a></p>
@@ -2328,29 +2328,22 @@ vary the duration to adjust to changing report upload rates.<a href="#section-4.
 <a href="#section-4.1.2" class="section-number selfRef">4.1.2. </a><a href="#name-leader-selected-queries" class="section-name selfRef">Leader-selected Queries</a>
           </h4>
 <p id="section-4.1.2-1">The <code>leader_selected</code> query type is used to support applications in which it is
-acceptable for reports to be batched in an arbitrary fashion. Each batch of
-reports is identified by an opaque "batch ID". Both the reports included in each
-batch and the ID for each batch are allocated in an arbitrary fashion by the
-Leader.<a href="#section-4.1.2-1" class="pilcrow">¶</a></p>
+acceptable for reports to be batched in an arbitrary fashion by the Leader. Each
+batch of reports is identified by an opaque "batch ID". Both the reports
+included in each batch and the ID for each batch are allocated in an arbitrary
+fashion by the Leader.<a href="#section-4.1.2-1" class="pilcrow">¶</a></p>
 <p id="section-4.1.2-2">The Collector will not know the set of batch IDs available for collection. To
 get the aggregate of a batch, the Collector issues a query, which does not
 include any information specifying a particular batch (see <a href="#query" class="auto internal xref">Section 4.1</a>). The
 Leader selects a recent batch to aggregate. The Leader <span class="bcp14">MUST</span> select a batch that
 has not yet been associated with a collection job.<a href="#section-4.1.2-2" class="pilcrow">¶</a></p>
 <p id="section-4.1.2-3">The Aggregators can output batches of any size that is larger than or equal to
-<code>min_batch_size</code>. This is useful for applications that are not concerned with
-sample size, i.e., the privacy guarantee is not affected by the sampling rate of
-the population, therefore a larger than expected batch size does not weaken the
-designed privacy guarantee.<a href="#section-4.1.2-3" class="pilcrow">¶</a></p>
-<p id="section-4.1.2-4">Implementation note: The target batch size, if any, is implementation-specific,
-and may be equal to or greater than the minimum batch size. Deciding how soon
+<code>min_batch_size</code>. The target batch size, if any, is implementation-specific, and
+may be equal to or greater than the minimum batch size. Deciding how soon
 batches should be output is also implementation-specific. Exactly sizing batches
 may be challenging for Leader deployments in which multiple, independent nodes
 running the aggregate interaction (see <a href="#aggregate-flow" class="auto internal xref">Section 4.5</a>) need to be
-coordinated. Applications which include differential privacy may wish to control
-the size (or range of sizes) of generated batches in order to control the amount
-of noise added to reports by Clients (or added to aggregate shares by
-Aggregators).<a href="#section-4.1.2-4" class="pilcrow">¶</a></p>
+coordinated.<a href="#section-4.1.2-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -2980,13 +2973,6 @@ determine how to aggregate each report:<a href="#section-4.5.1.1-17.2.1" class="
                     <p id="section-4.5.1.1-17.2.2.1.1">For <code>leader_selected</code> tasks, the Leader specifies a "batch ID" that
 determines the batch to which each report for this aggregation job
 belongs.<a href="#section-4.5.1.1-17.2.2.1.1" class="pilcrow">¶</a></p>
-<p id="section-4.5.1.1-17.2.2.1.2">
-[OPEN ISSUE: For leader_selected tasks, the Leader is in complete control
-over which batch a report is included in. For time_interval tasks, the
-Client has some control, since the timestamp determines which batch window
-it falls in. Is this desirable from a privacy perspective? If not, it
-might be simpler to drop the timestamp altogether and have the agg init
-request specify the batch window instead.]<a href="#section-4.5.1.1-17.2.2.1.2" class="pilcrow">¶</a></p>
 </li>
                 </ul>
 <p id="section-4.5.1.1-17.2.3">
@@ -3098,9 +3084,10 @@ enum {
   hpke_unknown_config_id(3),
   hpke_decrypt_error(4),
   vdaf_prep_error(5),
-  task_expired(6),
-  invalid_message(7),
-  report_too_early(8),
+  TODO_remove_me(6), /* TODO: replace/remove before RFC. */
+  task_expired(7),
+  invalid_message(8),
+  report_too_early(9),
   (255)
 } PrepareError;
 
@@ -3675,8 +3662,9 @@ structure includes the following:<a href="#section-4.6.1-19" class="pilcrow">¶<
 <ul class="normal">
 <li class="normal" id="section-4.6.1-20.1">
               <p id="section-4.6.1-20.1.1"><code>part_batch_selector</code>: Information used to bind the aggregate result to the
-query. For fixed_size tasks, this includes the batch ID assigned to the batch
-by the Leader. The indicated query type <span class="bcp14">MUST</span> match the task's query type.<a href="#section-4.6.1-20.1.1" class="pilcrow">¶</a></p>
+query. For leader_selected tasks, this includes the batch ID assigned to the
+batch by the Leader. The indicated query type <span class="bcp14">MUST</span> match the task's query
+type.<a href="#section-4.6.1-20.1.1" class="pilcrow">¶</a></p>
 </li>
             <li class="normal" id="section-4.6.1-20.2">
               <p id="section-4.6.1-20.2.1"><code>report_count</code>: The number of reports included in the batch.<a href="#section-4.6.1-20.2.1" class="pilcrow">¶</a></p>
