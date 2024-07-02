@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 16 December 2024                                     Cloudflare
+Expires: 3 January 2025                                       Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                                  Mozilla
                                                               C. A. Wood
                                                               Cloudflare
-                                                            14 June 2024
+                                                             2 July 2024
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -63,7 +63,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 16 December 2024.
+   This Internet-Draft will expire on 3 January 2025.
 
 Copyright Notice
 
@@ -170,11 +170,10 @@ Table of Contents
 
    12:
 
+   *  Remove the max_batch_size parameter of the fixed-size query type.
+
    *  Rename the fixed-size query type to leader-selected, to align the
       name with the behavior of this query type.
-
-   *  Remove the max_batch_size parameter of the leader-selected query
-      type.
 
    11:
 
@@ -897,9 +896,10 @@ struct {} Empty;
 
    The leader_selected query type is used to support applications in
    which it is acceptable for reports to be batched in an arbitrary
-   fashion.  Each batch of reports is identified by an opaque "batch
-   ID".  Both the reports included in each batch and the ID for each
-   batch are allocated in an arbitrary fashion by the Leader.
+   fashion by the Leader.  Each batch of reports is identified by an
+   opaque "batch ID".  Both the reports included in each batch and the
+   ID for each batch are allocated in an arbitrary fashion by the
+   Leader.
 
    The Collector will not know the set of batch IDs available for
    collection.  To get the aggregate of a batch, the Collector issues a
@@ -909,22 +909,13 @@ struct {} Empty;
    associated with a collection job.
 
    The Aggregators can output batches of any size that is larger than or
-   equal to min_batch_size.  This is useful for applications that are
-   not concerned with sample size, i.e., the privacy guarantee is not
-   affected by the sampling rate of the population, therefore a larger
-   than expected batch size does not weaken the designed privacy
-   guarantee.
-
-   Implementation note: The target batch size, if any, is
+   equal to min_batch_size.  The target batch size, if any, is
    implementation-specific, and may be equal to or greater than the
    minimum batch size.  Deciding how soon batches should be output is
    also implementation-specific.  Exactly sizing batches may be
    challenging for Leader deployments in which multiple, independent
    nodes running the aggregate interaction (see Section 4.5) need to be
-   coordinated.  Applications which include differential privacy may
-   wish to control the size (or range of sizes) of generated batches in
-   order to control the amount of noise added to reports by Clients (or
-   added to aggregate shares by Aggregators).
+   coordinated.
 
 4.2.  Task Configuration
 
@@ -1499,14 +1490,6 @@ struct {} Empty;
          that determines the batch to which each report for this
          aggregation job belongs.
 
-         [OPEN ISSUE: For leader_selected tasks, the Leader is in
-         complete control over which batch a report is included in.  For
-         time_interval tasks, the Client has some control, since the
-         timestamp determines which batch window it falls in.  Is this
-         desirable from a privacy perspective?  If not, it might be
-         simpler to drop the timestamp altogether and have the agg init
-         request specify the batch window instead.]
-
       The indicated query type MUST match the task's query type.
       Otherwise, the Helper MUST abort with error invalidMessage.
 
@@ -1611,9 +1594,10 @@ struct {} Empty;
      hpke_unknown_config_id(3),
      hpke_decrypt_error(4),
      vdaf_prep_error(5),
-     task_expired(6),
-     invalid_message(7),
-     report_too_early(8),
+     TODO_remove_me(6), /* TODO: replace/remove before RFC. */
+     task_expired(7),
+     invalid_message(8),
+     report_too_early(9),
      (255)
    } PrepareError;
 
@@ -2150,8 +2134,8 @@ struct {} Empty;
    Collection structure includes the following:
 
    *  part_batch_selector: Information used to bind the aggregate result
-      to the query.  For fixed_size tasks, this includes the batch ID
-      assigned to the batch by the Leader.  The indicated query type
+      to the query.  For leader_selected tasks, this includes the batch
+      ID assigned to the batch by the Leader.  The indicated query type
       MUST match the task's query type.
 
    *  report_count: The number of reports included in the batch.
