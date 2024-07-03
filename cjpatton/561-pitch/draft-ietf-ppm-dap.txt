@@ -2047,10 +2047,11 @@ struct {} Empty;
 
    Some VDAFs support a mode of operation known as "batched
    preparation".  In this mode, prep shares for many reports are
-   aggregated into a short message called a "tag".  If the Leader and
-   Helper compute the same tag, then every report is deemed valid;
-   otherwise, at least one report is known to be invalid.  This section
-   describes an alternative aggregation flow for batched aggregation.
+   aggregated into a short message called a "tag".  The tags computed by
+   the Leader and Helper are used to decide validity of the reports: if
+   the tags are valid, then every report is deemed valid; otherwise, at
+   least one report is known to be invalid.  This section describes an
+   alternative aggregation flow for batched aggregation.
 
       NOTE For context, there are two recent papers that extend Prio3
       and Poplar1 respectively to support this mode of operation:
