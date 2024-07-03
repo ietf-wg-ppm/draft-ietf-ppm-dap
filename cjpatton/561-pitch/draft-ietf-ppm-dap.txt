@@ -2051,10 +2051,11 @@ struct {} Empty;
    the Leader and Helper are used to decide validity of the reports: if
    the tags are valid, then every report is deemed valid; otherwise, at
    least one report is known to be invalid.  This section describes an
-   alternative aggregation flow for batched aggregation.
+   alternative aggregation flow for batched preparation.
 
-      NOTE For context, there are two recent papers that extend Prio3
-      and Poplar1 respectively to support this mode of operation:
+      NOTE For context, there are two recent papers that describe
+      alternatives to Prio3 and Poplar1 respectively that support this
+      mode of operation:
 
       -  Whisper (https://eprint.iacr.org/2024/666, IEEE S&P 2024):
          Extends the FLP system underlying Prio3 to make input
@@ -2078,13 +2079,16 @@ struct {} Empty;
 
       -  PLASMA (https://eprint.iacr.org/2023/080, PETS 2024): Extends
          the IDPF used in Poplar1 to make validation of the output
-         batchable.  In fact, the "secure sketch" of Poplar1 can be
-         dropped altogether.  In more detail, each Aggregator computes a
-         short "proof string" related to its traversal of the IDPF tree,
-         and if both compute the same proof string, then they're
-         guaranteed to have traversed a sub-tree with at most one non-
-         zero path.  Batching is process this trivial: just broadcast
-         the hash of the proof strings (~32 bytes).
+         batchable.  In more detail, each Aggregator computes a short
+         "proof string" related to its traversal of the IDPF tree, and
+         if both compute the same proof string, then they're guaranteed
+         to have traversed a sub-tree with at most one non-zero path.
+         Batching this process this trivial: just broadcast the hash of
+         the proof strings (~32 bytes).
+
+         This approach actually decreases the Client-Aggregator
+         bandwidth cost, since the "secure sketch" of Poplar1 can be
+         dropped altogether.
 
       In the case that all reports are valid, both works show a massive
       improvement in Leader-Helper bandwidth in the case that all
@@ -2105,7 +2109,7 @@ struct {} Empty;
       NOTE This may not be strictly necessary, but it makes specifying
       the protocol easier.  Plus, it's true of existing schemes.
 
-   In addition, it MUST implement two additional methods:
+   In addition, it MUST implement two new methods:
 
    vdaf.batched_prep_eval(
        vdaf_verify_key: bytes,
@@ -2125,8 +2129,8 @@ struct {} Empty;
    the public share, and its input share from each report and feeds them
    to vdaf.batched_prep_eval().  The result is a sequence of output
    shares corresponding to the input shares, plus a tag (of type Tag)
-   used to verify the them.  To complete verification, one Aggregator
-   gathers the tags and runs vdaf.batched_agg_verify().
+   used to verify them.  To complete verification, one Aggregator
+   gathers the tags and runs vdaf.batched_prep_verify().
 
    If the result is True, then all reports are deemed valid and the
    output shares should be accepted.  Otherwise, at least one report is
@@ -2139,8 +2143,8 @@ struct {} Empty;
 
 4.5.3.2.  Leader Behavior
 
-   The Leader begins the aggregation with for a set of candidate reports
-   the same way as in Section 4.5.1.1:
+   The Leader begins a batched aggregation job with for a set of
+   candidate reports the same way as in Section 4.5.1.1:
 
    1.  Generate a fresh AggregationJobID.
 
@@ -2184,12 +2188,13 @@ struct {} Empty;
 
    *  report_sharess: the Helper's report shares.
 
-   *  tag: the VDAF verification tag.
+   *  tag: the Leader's VDAF verification tag.
 
    Finally, the Leader sends a PUT request to {helper}/tasks/{task-
    id}/aggregation_jobs/{aggregation-job-id}. The payload is set to
    BatchedAggregationJobReq and the media type is set to "application/
-   dap-batched-aggregation-job-req".
+   dap-batched-aggregation-job-req".  [[TODO Add this media type to the
+   registry.]]
 
    The Leader MUST authenticate its requests to the Helper using a
    scheme that meets the requirements in Section 3.1.
