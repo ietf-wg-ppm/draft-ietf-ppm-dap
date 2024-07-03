@@ -2126,6 +2126,16 @@ struct {} Empty;
    aggregate share is accepted.  Otherwise, at least one report is
    invalid and needs to be rejected.
 
+   The VDAF MAY also specify methods for per-report preparation
+   (vdaf.prep_init(), vdaf.prep_shares_to_prep(), and vdaf.prep_next()),
+   and aggregation of output shares (vdaf.aggregate()), but these are
+   not strictly necessary.  Batched aggregation operates on any number
+   of reports, so fallback to per-report preparation is always possible.
+
+      NOTE We would only consider adding this syntax to the VDAF draft
+      if there is broad consensus to support batched aggregation in DAP.
+      Otherwise, we would probably punt this to a new draft.
+
 4.6.  Collecting Results
 
    In this phase, the Collector requests aggregate shares from each
