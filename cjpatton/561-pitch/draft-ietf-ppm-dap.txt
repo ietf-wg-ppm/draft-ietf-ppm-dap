@@ -2091,10 +2091,10 @@ struct {} Empty;
       bandwidth and number of rounds of communication increase as the
       fraction of invalid reports increases.
 
-      NOTE The protocol is synchronous.  Once asynchronous aggregation
-      is merged (https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/
-      pull/564), we'll need to rebase this PR and make the sub-protocol
-      in this section asynchronous as well.
+      NOTE The protocol described here is synchronous.  Once
+      asynchronous aggregation is merged (https://github.com/ietf-wg-
+      ppm/draft-ietf-ppm-dap/pull/564), we'll need to rebase this PR and
+      make the sub-protocol in this section asynchronous as well.
 
 4.5.3.1.  Compatible VDAFs
 
@@ -2104,20 +2104,21 @@ struct {} Empty;
       NOTE This may not be strictly necessary, but it makes specifying
       the protocol easier.  Plus, it's true of existing schemes.
 
-   In addition, it MUST specify two additional methods:
+   In addition, it MUST implement the following methods:
 
    vdaf.batched_agg_eval(
+       vdaf_verify_key: bytes,
        agg_id: int,
        agg_param: AggParam,
-       nonce: bytes,
+       nonces: list[bytes],
        public_shares: list[PublicShare],
        input_shares: list[InputShare]) -> tuple[AggShare, Tag]
 
    vdaf.batched_agg_verify(tags: list[Tag]) -> bool
 
-   To aggregate a set of reports, each Aggregator extracts the public
-   share and its input share from its report share and feeds them to
-   vdaf.batched_agg_eval().  The result is an aggregate share, plus a
+   To aggregate a set of reports, each Aggregator extracts the nonce,
+   the public share, and its input share from each report and feeds them
+   to vdaf.batched_agg_eval().  The result is an aggregate share, plus a
    tag (of type Tag) used to verify the aggregate.  To complete
    verification, one Aggregator gathers the tags and runs
    vdaf.batched_agg_verify().
@@ -2134,7 +2135,77 @@ struct {} Empty;
 
       NOTE We would only consider adding this syntax to the VDAF draft
       if there is broad consensus to support batched aggregation in DAP.
-      Otherwise, we would probably punt this to a new draft.
+      Otherwise, we would probably treat this as a separate
+      cryptographic primitive and punt it to a new draft.
+
+4.5.3.2.  Leader Behavior
+
+   The Leader begins the aggregation with for a set of candidate reports
+   the same way as in Section 4.5.1.1:
+
+   1.  Generate a fresh AggregationJobID.
+
+   2.  Decrypt the input share for each report share as described in
+       Section 4.5.1.3.
+
+   3.  Check that the resulting input share is valid as described in
+       Section 4.5.1.4.
+
+   If any step invalidates the report, the Leader rejects the report and
+   removes it from the set of candidate reports.
+
+   For each candidate report, the Leader has extracted the nonce, the
+   public share, and its input share.  It then aggregates the reports
+   and computes its verification tag by running:
+
+   (agg_share, tag) = vdaf.agg_eval(
+       vdaf_verify_key,
+       0,
+       agg_param,
+       nonces,
+       public_shares,
+       input_shares)
+
+   Next, the Leader creates an BatchedAggregationJobReq message
+   structured as follows:
+
+   struct {
+     opaque agg_param<0..2^32-1>;
+     PartialBatchSelector part_batch_selector;
+     ReportShare report_shares<1..2^32-1>;
+     opaque tag<0..255>;
+   } AggregationJobInitReq;
+
+   This message consists of:
+
+   *  agg_param: The VDAF aggregation parameter.
+
+   *  part_batch_selector: The partial batch selector as defined in
+      Section 4.5.1.1.
+
+   *  report_sharess: the Helper's report shares.
+
+   *  tag: the VDAF verification tag.
+
+   Finally, the Leader sends a PUT request to {helper}/tasks/{task-
+   id}/aggregation_jobs/{aggregation-job-id}. The payload is set to
+   BatchedAggregationJobReq and the media type is set to "application/
+   dap-batched-aggregation-job-req".
+
+   The Leader MUST authenticate its requests to the Helper using a
+   scheme that meets the requirements in Section 3.1.
+
+   The Helper responds with 200 OK and an empty response body to signify
+   that verification succeeded and that it has aggregated the reports.
+   Otherwise, to indicate that some report is invalid and therefore none
+   of the reports were aggregated, the client aborts with error
+   "jobContainsInvalidReport" [[TODO: Add to error registry]].
+
+   If the Helper aborts, the Leader MAY retry with any subset of
+   candidate reports.  To avoid retrying more than once, it SHOULD
+   fallback to per-report validation as specified in Section 4.5.1.1.
+
+4.5.3.3.  Helper Behavior
 
 4.6.  Collecting Results
 
