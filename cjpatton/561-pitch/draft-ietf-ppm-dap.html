@@ -3812,10 +3812,13 @@ accept = vdaf.batched_prep_verify(tag, peer_tag)
 </pre><a href="#section-4.5.3.3-10" class="pilcrow">¶</a>
 </div>
 <p id="section-4.5.3.3-11">where <code>peer_tag</code> is the tag parsed from the inbound <code>BatchedAggregationJobReq</code>
-message. If <code>accept == True</code>, then the Helper stores <code>out_shares</code> for use in
-the collection sub-protocol (<a href="#collect-flow" class="auto internal xref">Section 4.6</a>) and responds with 200 OK and an
-empty body. Otherwise, if <code>accept != True</code>, then the Helper aborts with error
-"jobContainsInvalidReport".<a href="#section-4.5.3.3-11" class="pilcrow">¶</a></p>
+message. If <code>accept == True</code> we say the Helper "accepts".<a href="#section-4.5.3.3-11" class="pilcrow">¶</a></p>
+<p id="section-4.5.3.3-12">If the Helper accepts, then it stores <code>out_shares</code> for use in the collection
+sub-protocol (<a href="#collect-flow" class="auto internal xref">Section 4.6</a>) and responds with 200 OK and an empty body.<a href="#section-4.5.3.3-12" class="pilcrow">¶</a></p>
+<p id="section-4.5.3.3-13">Otherwise, if the Helper does not accept, then the Helper <span class="bcp14">MUST</span> abort with error
+"jobContainsInvalidReport". However, it <span class="bcp14">MUST NOT</span> mark any report rejected with
+"vdaf_prep_error" in order to allow the Leader to retry with a subset of the
+reports or fallback to per-report aggregation (<a href="#leader-init" class="auto internal xref">Section 4.5.1.1</a>).<a href="#section-4.5.3.3-13" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>

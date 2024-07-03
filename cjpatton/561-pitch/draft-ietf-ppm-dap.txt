@@ -2252,11 +2252,18 @@ struct {} Empty;
    accept = vdaf.batched_prep_verify(tag, peer_tag)
 
    where peer_tag is the tag parsed from the inbound
-   BatchedAggregationJobReq message.  If accept == True, then the Helper
-   stores out_shares for use in the collection sub-protocol
-   (Section 4.6) and responds with 200 OK and an empty body.  Otherwise,
-   if accept != True, then the Helper aborts with error
-   "jobContainsInvalidReport".
+   BatchedAggregationJobReq message.  If accept == True we say the
+   Helper "accepts".
+
+   If the Helper accepts, then it stores out_shares for use in the
+   collection sub-protocol (Section 4.6) and responds with 200 OK and an
+   empty body.
+
+   Otherwise, if the Helper does not accept, then the Helper MUST abort
+   with error "jobContainsInvalidReport".  However, it MUST NOT mark any
+   report rejected with "vdaf_prep_error" in order to allow the Leader
+   to retry with a subset of the reports or fallback to per-report
+   aggregation (Section 4.5.1.1).
 
 4.6.  Collecting Results
 
