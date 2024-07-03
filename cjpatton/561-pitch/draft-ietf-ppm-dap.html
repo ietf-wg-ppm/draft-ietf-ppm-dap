@@ -3573,9 +3573,10 @@ any).<a href="#section-4.5.2.3-4" class="pilcrow">¶</a></p>
           </h4>
 <p id="section-4.5.3-1">Some VDAFs support a mode of operation known as "batched preparation". In this
 mode, prep shares for many reports are aggregated into a short message called a
-"tag". If the Leader and Helper compute the same tag, then every report is
-deemed valid; otherwise, at least one report is known to be invalid. This
-section describes an alternative aggregation flow for batched aggregation.<a href="#section-4.5.3-1" class="pilcrow">¶</a></p>
+"tag". The tags computed by the Leader and Helper are used to decide validity
+of the reports: if the tags are valid, then every report is deemed valid;
+otherwise, at least one report is known to be invalid. This section describes
+an alternative aggregation flow for batched aggregation.<a href="#section-4.5.3-1" class="pilcrow">¶</a></p>
 <ul class="normal ulEmpty">
 <li class="normal ulEmpty" id="section-4.5.3-2.1">
               <p id="section-4.5.3-2.1.1">NOTE For context, there are two recent papers that extend Prio3 and Poplar1
