@@ -1883,6 +1883,224 @@ request, indexed by aggregation job ID and step, and refuse to service a request
 for a given aggregation step unless it matches the previously seen request (if
 any).
 
+### Batched Preparation
+
+Some VDAFs support a mode of operation known as "batched preparation". In this
+mode, prep shares for many reports are aggregated into a short message called a
+"tag". The tags computed by the Leader and Helper are used to decide validity
+of the reports: if the tags are valid, then every report is deemed valid;
+otherwise, at least one report is known to be invalid. This section describes
+an alternative aggregation flow for batched preparation.
+
+> NOTE For context, there are two recent papers that describe alternatives to
+> Prio3 and Poplar1 respectively that support this mode of operation:
+>
+> - Whisper (https://eprint.iacr.org/2024/666, IEEE S&P 2024): Extends the FLP
+>   system underlying Prio3 to make input validation batchable. In more detail,
+>   in the new proof system, each Aggregator broadcasts a "tag", and to decide
+>   validity, they compute a linear function of the pair of tags and check if
+>   the output is 0. They call this "silent verifiability". To batch this
+>   process, each Aggregator would broadcast a random linear combination of its
+>   tags (~16 bytes), then compute the same linear function on the output. This
+>   is equivalent to first applying the function to each pair of tags
+>   individually, then computing the random linear combination.
+>
+>   To make an FLP silently verifiable, the Client "simulates" the verification
+>   process "in its head", deriving the query randomness in a process similar
+>   to how the joint randomness is derived. Likewise, it must convey in its
+>   report some information the Aggregators use to re-derive the query
+>   randomness. This results in a modest increase in Client-Aggregator
+>   bandwidth cost (< 10%).
+>
+> - PLASMA (https://eprint.iacr.org/2023/080, PETS 2024): Extends the IDPF used
+>   in Poplar1 to make validation of the output batchable. In more detail, each
+>   Aggregator computes a short "proof string" related to its traversal of the
+>   IDPF tree, and if both compute the same proof string, then they're
+>   guaranteed to have traversed a sub-tree with at most one non-zero path.
+>   Batching this process this trivial: just broadcast the hash of the proof
+>   strings (~32 bytes).
+>
+>   This approach actually decreases the Client-Aggregator bandwidth cost,
+>   since the "secure sketch" of Poplar1 can be dropped altogether.
+>
+> In the case that all reports are valid, both works show a massive improvement
+> in Leader-Helper bandwidth in the case that all reports are valid. In the
+> case that some reports are invalid, the bandwidth and number of rounds of
+> communication increase as the fraction of invalid reports increases.
+
+> NOTE The protocol described here is synchronous. Once asynchronous
+> aggregation is merged
+> (https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/564), we'll need to
+> rebase this PR and make the sub-protocol in this section asynchronous as
+> well.
+
+#### Compatible VDAFs
+
+A VDAF used with the sub-protocol described in this section MUST have one round
+of preparation.
+
+> NOTE This may not be strictly necessary, but it makes specifying the protocol
+> easier. Plus, it's true of existing schemes.
+
+In addition, it MUST implement two new methods:
+
+~~~
+vdaf.batched_prep_eval(
+    vdaf_verify_key: bytes,
+    agg_id: int,
+    agg_param: AggParam,
+    nonces: list[bytes],
+    public_shares: list[PublicShare],
+    input_shares: list[InputShare]) -> tuple[list[OutShare], Tag]
+
+vdaf.batched_prep_verify(tags: list[Tag]) -> bool
+~~~
+
+> NOTE Alternatively, we could have `batched_prep_eval()` return an `AggShare`.
+> We return a list of output shares to keep this section consistent with the
+> collection sub-protocol.
+
+To aggregate a set of reports, each Aggregator extracts the nonce, the public
+share, and its input share from each report and feeds them to
+`vdaf.batched_prep_eval()`. The result is a sequence of output shares
+corresponding to the input shares, plus a tag (of type `Tag`) used to verify
+them. To complete verification, one Aggregator gathers the tags and runs
+`vdaf.batched_prep_verify()`.
+
+If the result is `True`, then all reports are deemed valid and the output
+shares should be accepted. Otherwise, at least one report is invalid and needs
+to be rejected.
+
+> NOTE We would only consider adding this syntax to the VDAF draft if there is
+> broad consensus to support batched aggregation in DAP. Otherwise, we would
+> probably treat this as a separate cryptographic primitive and punt it to a
+> new draft.
+
+#### Leader Behavior
+
+The Leader begins a batched aggregation job with for a set of candidate reports
+the same way as in {{leader-init}}:
+
+1. Generate a fresh AggregationJobID.
+1. Decrypt the input share for each report share as described in
+   {{input-share-decryption}}.
+1. Check that the resulting input share is valid as described in
+   {{input-share-validation}}.
+
+If any step invalidates the report, the Leader rejects the report and removes
+it from the set of candidate reports.
+
+For each candidate report, the Leader has extracted the nonce, the public
+share, and its input share. It then begins preparation by running:
+
+~~~
+(out_shares, tag) = vdaf.batched_prep_eval(
+    vdaf_verify_key,
+    0,
+    agg_param,
+    nonces,
+    public_shares,
+    input_shares)
+~~~
+
+Next, the Leader creates an `BatchedAggregationJobReq` message structured as
+follows:
+
+~~~
+struct {
+  opaque agg_param<0..2^32-1>;
+  PartialBatchSelector part_batch_selector;
+  ReportShare report_shares<1..2^32-1>;
+  opaque tag<0..255>;
+} AggregationJobInitReq;
+~~~
+
+This message consists of:
+
+* `agg_param`: The VDAF aggregation parameter.
+* `part_batch_selector`: The partial batch selector as defined in {{leader-init}}.
+* `report_sharess`: the Helper's report shares.
+* `tag`: the Leader's VDAF verification tag.
+
+Finally, the Leader sends a PUT request to
+`{helper}/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}`. The payload
+is set to `BatchedAggregationJobReq` and the media type is set to
+"application/dap-batched-aggregation-job-req". [[TODO Add this media type to
+the registry.]]
+
+The Leader MUST authenticate its requests to the Helper using a scheme that
+meets the requirements in {{request-authentication}}.
+
+The Helper responds with 200 OK and an empty response body to signify that
+verification succeeded and that it has aggregated the reports. Otherwise, to
+indicate that some report is invalid and therefore none of the reports were
+aggregated, the client aborts with error "jobContainsInvalidReport" [[TODO: Add
+to error registry]].
+
+If successful, the Leader stores `out_shares` for use in the collection
+sub-protocol ({{collect-flow}}).
+
+If the Helper aborts, the Leader MAY retry with any subset of candidate
+reports. To avoid retrying more than once, it SHOULD fallback to per-report
+validation as specified in {{leader-init}}.
+
+#### Helper Behavior
+
+The Helper begins an aggregation job when it receives an
+`BatchedAggregationJobReq` message from the Leader. To begin the process, the
+Helper checks if it recognizes the task ID. If not, then it MUST abort with
+error `unrecognizedTask`.
+
+Next, the Helper checks that the report IDs in
+`AggregationJobInitReq.report_shares` are all distinct. If two report shares
+have the same ID, then the Helper MUST abort with error `invalidMessage`.
+
+The Helper is now ready to attempt to aggregate the report shares. First the
+Helper preprocesses each report as follows:
+
+1. Decrypt the input share for each report share as described in
+   {{input-share-decryption}}.
+1. Check that the resulting input share is valid as described in
+   {{input-share-validation}}.
+
+If any report was rejected, the Helper MUST abort with error
+jobContainsInvalidReport".
+
+> NOTE This is stricter than necessary: we would probably rather have the
+> Helper return a list of reports that were rejected, say, due to replay or
+> decryption failure. This PR is meant to be a sketch of the protocol flow, not
+> necessarily feature complete.
+
+For each candidate report, the Helper has extracted the nonce, the public
+share, and its input share. It then begins preparation by running:
+
+~~~
+(out_shares, tag) = vdaf.batched_prep_eval(
+    vdaf_verify_key,
+    1,
+    agg_param,
+    nonces,
+    public_shares,
+    input_shares)
+~~~
+
+Next, it completes preparation by running:
+
+~~~
+accept = vdaf.batched_prep_verify(tag, peer_tag)
+~~~
+
+where `peer_tag` is the tag parsed from the inbound `BatchedAggregationJobReq`
+message. If `accept == True` we say the Helper "accepts".
+
+If the Helper accepts, then it stores `out_shares` for use in the collection
+sub-protocol ({{collect-flow}}) and responds with 200 OK and an empty body.
+
+Otherwise, if the Helper does not accept, then the Helper MUST abort with error
+"jobContainsInvalidReport". However, it MUST NOT mark any report rejected with
+"vdaf_prep_error" in order to allow the Leader to retry with a subset of the
+reports or fallback to per-report aggregation ({{leader-init}}).
+
 ## Collecting Results {#collect-flow}
 
 In this phase, the Collector requests aggregate shares from each Aggregator and
