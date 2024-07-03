@@ -3658,6 +3658,18 @@ Aggregator gathers the tags and runs <code>vdaf.batched_agg_verify()</code>.<a h
 <p id="section-4.5.3.1-6">If the result is <code>True</code>, then all reports are deemed valid and the aggregate
 share is accepted. Otherwise, at least one report is invalid and needs to be
 rejected.<a href="#section-4.5.3.1-6" class="pilcrow">¶</a></p>
+<p id="section-4.5.3.1-7">The VDAF <span class="bcp14">MAY</span> also specify methods for per-report preparation
+(<code>vdaf.prep_init()</code>, <code>vdaf.prep_shares_to_prep()</code>, and <code>vdaf.prep_next()</code>), and
+aggregation of output shares (<code>vdaf.aggregate()</code>), but these are not strictly
+necessary. Batched aggregation operates on any number of reports, so fallback
+to per-report preparation is always possible.<a href="#section-4.5.3.1-7" class="pilcrow">¶</a></p>
+<ul class="normal ulEmpty">
+<li class="normal ulEmpty" id="section-4.5.3.1-8.1">
+                <p id="section-4.5.3.1-8.1.1">NOTE We would only consider adding this syntax to the VDAF draft if there is
+broad consensus to support batched aggregation in DAP. Otherwise, we would
+probably punt this to a new draft.<a href="#section-4.5.3.1-8.1.1" class="pilcrow">¶</a></p>
+</li>
+            </ul>
 </section>
 </div>
 </section>
