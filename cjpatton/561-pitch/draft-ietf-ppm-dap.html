@@ -3576,11 +3576,11 @@ mode, prep shares for many reports are aggregated into a short message called a
 "tag". The tags computed by the Leader and Helper are used to decide validity
 of the reports: if the tags are valid, then every report is deemed valid;
 otherwise, at least one report is known to be invalid. This section describes
-an alternative aggregation flow for batched aggregation.<a href="#section-4.5.3-1" class="pilcrow">¶</a></p>
+an alternative aggregation flow for batched preparation.<a href="#section-4.5.3-1" class="pilcrow">¶</a></p>
 <ul class="normal ulEmpty">
 <li class="normal ulEmpty" id="section-4.5.3-2.1">
-              <p id="section-4.5.3-2.1.1">NOTE For context, there are two recent papers that extend Prio3 and Poplar1
-respectively to support this mode of operation:<a href="#section-4.5.3-2.1.1" class="pilcrow">¶</a></p>
+              <p id="section-4.5.3-2.1.1">NOTE For context, there are two recent papers that describe alternatives to
+Prio3 and Poplar1 respectively that support this mode of operation:<a href="#section-4.5.3-2.1.1" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-4.5.3-2.1.2.1">
                   <p id="section-4.5.3-2.1.2.1.1">Whisper (https://eprint.iacr.org/2024/666, IEEE S&amp;P 2024): Extends the FLP
@@ -3602,13 +3602,15 @@ bandwidth cost (&lt; 10%).<a href="#section-4.5.3-2.1.2.1.2" class="pilcrow">¶<
 </li>
                 <li class="normal" id="section-4.5.3-2.1.2.2">
                   <p id="section-4.5.3-2.1.2.2.1">PLASMA (https://eprint.iacr.org/2023/080, PETS 2024): Extends the IDPF used
-in Poplar1 to make validation of the output batchable. In fact, the "secure
-sketch" of Poplar1 can be dropped altogether. In more detail, each
+in Poplar1 to make validation of the output batchable. In more detail, each
 Aggregator computes a short "proof string" related to its traversal of the
 IDPF tree, and if both compute the same proof string, then they're
 guaranteed to have traversed a sub-tree with at most one non-zero path.
-Batching is process this trivial: just broadcast the hash of the proof
+Batching this process this trivial: just broadcast the hash of the proof
 strings (~32 bytes).<a href="#section-4.5.3-2.1.2.2.1" class="pilcrow">¶</a></p>
+<p id="section-4.5.3-2.1.2.2.2">
+This approach actually decreases the Client-Aggregator bandwidth cost,
+since the "secure sketch" of Poplar1 can be dropped altogether.<a href="#section-4.5.3-2.1.2.2.2" class="pilcrow">¶</a></p>
 </li>
               </ul>
 <p id="section-4.5.3-2.1.3">In the case that all reports are valid, both works show a massive improvement
@@ -3639,7 +3641,7 @@ of preparation.<a href="#section-4.5.3.1-1" class="pilcrow">¶</a></p>
 easier. Plus, it's true of existing schemes.<a href="#section-4.5.3.1-2.1.1" class="pilcrow">¶</a></p>
 </li>
             </ul>
-<p id="section-4.5.3.1-3">In addition, it <span class="bcp14">MUST</span> implement two additional methods:<a href="#section-4.5.3.1-3" class="pilcrow">¶</a></p>
+<p id="section-4.5.3.1-3">In addition, it <span class="bcp14">MUST</span> implement two new methods:<a href="#section-4.5.3.1-3" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-4.5.3.1-4">
 <pre>
 vdaf.batched_prep_eval(
@@ -3664,8 +3666,8 @@ collection sub-protocol.<a href="#section-4.5.3.1-5.1.1" class="pilcrow">¶</a><
 share, and its input share from each report and feeds them to
 <code>vdaf.batched_prep_eval()</code>. The result is a sequence of output shares
 corresponding to the input shares, plus a tag (of type <code>Tag</code>) used to verify
-the them. To complete verification, one Aggregator gathers the tags and runs
-<code>vdaf.batched_agg_verify()</code>.<a href="#section-4.5.3.1-6" class="pilcrow">¶</a></p>
+them. To complete verification, one Aggregator gathers the tags and runs
+<code>vdaf.batched_prep_verify()</code>.<a href="#section-4.5.3.1-6" class="pilcrow">¶</a></p>
 <p id="section-4.5.3.1-7">If the result is <code>True</code>, then all reports are deemed valid and the output
 shares should be accepted. Otherwise, at least one report is invalid and needs
 to be rejected.<a href="#section-4.5.3.1-7" class="pilcrow">¶</a></p>
@@ -3684,8 +3686,8 @@ new draft.<a href="#section-4.5.3.1-8.1.1" class="pilcrow">¶</a></p>
             <h5 id="name-leader-behavior">
 <a href="#section-4.5.3.2" class="section-number selfRef">4.5.3.2. </a><a href="#name-leader-behavior" class="section-name selfRef">Leader Behavior</a>
             </h5>
-<p id="section-4.5.3.2-1">The Leader begins the aggregation with for a set of candidate reports the same
-way as in <a href="#leader-init" class="auto internal xref">Section 4.5.1.1</a>:<a href="#section-4.5.3.2-1" class="pilcrow">¶</a></p>
+<p id="section-4.5.3.2-1">The Leader begins a batched aggregation job with for a set of candidate reports
+the same way as in <a href="#leader-init" class="auto internal xref">Section 4.5.1.1</a>:<a href="#section-4.5.3.2-1" class="pilcrow">¶</a></p>
 <ol start="1" type="1" class="normal type-1" id="section-4.5.3.2-2">
 <li id="section-4.5.3.2-2.1">
                 <p id="section-4.5.3.2-2.1.1">Generate a fresh AggregationJobID.<a href="#section-4.5.3.2-2.1.1" class="pilcrow">¶</a></p>
@@ -3738,13 +3740,14 @@ struct {
                 <p id="section-4.5.3.2-9.3.1"><code>report_sharess</code>: the Helper's report shares.<a href="#section-4.5.3.2-9.3.1" class="pilcrow">¶</a></p>
 </li>
               <li class="normal" id="section-4.5.3.2-9.4">
-                <p id="section-4.5.3.2-9.4.1"><code>tag</code>: the VDAF verification tag.<a href="#section-4.5.3.2-9.4.1" class="pilcrow">¶</a></p>
+                <p id="section-4.5.3.2-9.4.1"><code>tag</code>: the Leader's VDAF verification tag.<a href="#section-4.5.3.2-9.4.1" class="pilcrow">¶</a></p>
 </li>
             </ul>
 <p id="section-4.5.3.2-10">Finally, the Leader sends a PUT request to
 <code>{helper}/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}</code>. The payload
 is set to <code>BatchedAggregationJobReq</code> and the media type is set to
-"application/dap-batched-aggregation-job-req".<a href="#section-4.5.3.2-10" class="pilcrow">¶</a></p>
+"application/dap-batched-aggregation-job-req". [[TODO Add this media type to
+the registry.]]<a href="#section-4.5.3.2-10" class="pilcrow">¶</a></p>
 <p id="section-4.5.3.2-11">The Leader <span class="bcp14">MUST</span> authenticate its requests to the Helper using a scheme that
 meets the requirements in <a href="#request-authentication" class="auto internal xref">Section 3.1</a>.<a href="#section-4.5.3.2-11" class="pilcrow">¶</a></p>
 <p id="section-4.5.3.2-12">The Helper responds with 200 OK and an empty response body to signify that
