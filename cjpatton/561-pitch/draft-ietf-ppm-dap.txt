@@ -103,7 +103,7 @@ Table of Contents
      4.5.  Verifying and Aggregating Reports
        4.5.1.  Aggregate Initialization
        4.5.2.  Aggregate Continuation
-       4.5.3.  Batched Aggregation
+       4.5.3.  Batched Preparation
      4.6.  Collecting Results
        4.6.1.  Collection Job Initialization
        4.6.2.  Obtaining Aggregate Shares
@@ -2043,10 +2043,10 @@ struct {} Empty;
    refuse to service a request for a given aggregation step unless it
    matches the previously seen request (if any).
 
-4.5.3.  Batched Aggregation
+4.5.3.  Batched Preparation
 
    Some VDAFs support a mode of operation known as "batched
-   aggregation".  In this mode, prep shares for many reports are
+   preparation".  In this mode, prep shares for many reports are
    aggregated into a short message called a "tag".  If the Leader and
    Helper compute the same tag, then every report is deemed valid;
    otherwise, at least one report is known to be invalid.  This section
@@ -2104,34 +2104,32 @@ struct {} Empty;
       NOTE This may not be strictly necessary, but it makes specifying
       the protocol easier.  Plus, it's true of existing schemes.
 
-   In addition, it MUST implement the following methods:
+   In addition, it MUST implement two additional methods:
 
-   vdaf.batched_agg_eval(
+   vdaf.batched_prep_eval(
        vdaf_verify_key: bytes,
        agg_id: int,
        agg_param: AggParam,
        nonces: list[bytes],
        public_shares: list[PublicShare],
-       input_shares: list[InputShare]) -> tuple[AggShare, Tag]
+       input_shares: list[InputShare]) -> tuple[list[OutShare], Tag]
 
-   vdaf.batched_agg_verify(tags: list[Tag]) -> bool
+   vdaf.batched_prep_verify(tags: list[Tag]) -> bool
+
+      NOTE Alternatively, we could have batched_prep_eval() return an
+      AggShare.  We return a list of output shares to keep this section
+      consistent with the collection sub-protocol.
 
    To aggregate a set of reports, each Aggregator extracts the nonce,
    the public share, and its input share from each report and feeds them
-   to vdaf.batched_agg_eval().  The result is an aggregate share, plus a
-   tag (of type Tag) used to verify the aggregate.  To complete
-   verification, one Aggregator gathers the tags and runs
-   vdaf.batched_agg_verify().
+   to vdaf.batched_prep_eval().  The result is a sequence of output
+   shares corresponding to the input shares, plus a tag (of type Tag)
+   used to verify the them.  To complete verification, one Aggregator
+   gathers the tags and runs vdaf.batched_agg_verify().
 
    If the result is True, then all reports are deemed valid and the
-   aggregate share is accepted.  Otherwise, at least one report is
+   output shares should be accepted.  Otherwise, at least one report is
    invalid and needs to be rejected.
-
-   The VDAF MAY also specify methods for per-report preparation
-   (vdaf.prep_init(), vdaf.prep_shares_to_prep(), and vdaf.prep_next()),
-   and aggregation of output shares (vdaf.aggregate()), but these are
-   not strictly necessary.  Batched aggregation operates on any number
-   of reports, so fallback to per-report preparation is always possible.
 
       NOTE We would only consider adding this syntax to the VDAF draft
       if there is broad consensus to support batched aggregation in DAP.
@@ -2155,10 +2153,10 @@ struct {} Empty;
    removes it from the set of candidate reports.
 
    For each candidate report, the Leader has extracted the nonce, the
-   public share, and its input share.  It then aggregates the reports
-   and computes its verification tag by running:
+   public share, and its input share.  It then begins preparation by
+   running:
 
-   (agg_share, tag) = vdaf.agg_eval(
+   (out_shares, tag) = vdaf.batched_prep_eval(
        vdaf_verify_key,
        0,
        agg_param,
@@ -2201,11 +2199,64 @@ struct {} Empty;
    of the reports were aggregated, the client aborts with error
    "jobContainsInvalidReport" [[TODO: Add to error registry]].
 
+   If successful, the Leader stores out_shares for use in the collection
+   sub-protocol (Section 4.6).
+
    If the Helper aborts, the Leader MAY retry with any subset of
    candidate reports.  To avoid retrying more than once, it SHOULD
    fallback to per-report validation as specified in Section 4.5.1.1.
 
 4.5.3.3.  Helper Behavior
+
+   The Helper begins an aggregation job when it receives an
+   BatchedAggregationJobReq message from the Leader.  To begin the
+   process, the Helper checks if it recognizes the task ID.  If not,
+   then it MUST abort with error unrecognizedTask.
+
+   Next, the Helper checks that the report IDs in
+   AggregationJobInitReq.report_shares are all distinct.  If two report
+   shares have the same ID, then the Helper MUST abort with error
+   invalidMessage.
+
+   The Helper is now ready to attempt to aggregate the report shares.
+   First the Helper preprocesses each report as follows:
+
+   1.  Decrypt the input share for each report share as described in
+       Section 4.5.1.3.
+
+   2.  Check that the resulting input share is valid as described in
+       Section 4.5.1.4.
+
+   If any report was rejected, the Helper MUST abort with error
+   jobContainsInvalidReport".
+
+      NOTE This is stricter than necessary: we would probably rather
+      have the Helper return a list of reports that were rejected, say,
+      due to replay or decryption failure.  This PR is meant to be a
+      sketch of the protocol flow, not necessarily feature complete.
+
+   For each candidate report, the Helper has extracted the nonce, the
+   public share, and its input share.  It then begins preparation by
+   running:
+
+   (out_shares, tag) = vdaf.batched_prep_eval(
+       vdaf_verify_key,
+       1,
+       agg_param,
+       nonces,
+       public_shares,
+       input_shares)
+
+   Next, it completes preparation by running:
+
+   accept = vdaf.batched_prep_verify(tag, peer_tag)
+
+   where peer_tag is the tag parsed from the inbound
+   BatchedAggregationJobReq message.  If accept == True, then the Helper
+   stores out_shares for use in the collection sub-protocol
+   (Section 4.6) and responds with 200 OK and an empty body.  Otherwise,
+   if accept != True, then the Helper aborts with error
+   "jobContainsInvalidReport".
 
 4.6.  Collecting Results
 
