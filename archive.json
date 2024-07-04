@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-07-02T01:01:05.173481+00:00",
+  "timestamp": "2024-07-04T01:00:53.910852+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -10455,14 +10455,16 @@
       "state": "OPEN",
       "author": "suman-ganta",
       "authorAssociation": "NONE",
-      "assignees": [],
+      "assignees": [
+        "cjpatton"
+      ],
       "labels": [
         "feature",
         "ietf120"
       ],
       "body": "PPM prescribed media types do not have version component in them. As DAP protocol progressing, the structures are changing in a non-compatible way. In order to consistently decode those structures, we need an indicator on what structure to use to decode them with.\r\n\r\nI propose adding a MIME parameter, `version`, to express the version of the payload.\r\n\r\nEx: To represent Report structure of protocol version DAP-09, use the media type - `application/dap-report;version=09`\r\n\r\nLeader/Helper need to rely on this MIME parameter to consistently parse the payload received, and should also be used to reject unsupported versions.\r\n\r\n",
       "createdAt": "2024-01-08T16:24:21Z",
-      "updatedAt": "2024-06-26T14:36:18Z",
+      "updatedAt": "2024-07-03T15:12:04Z",
       "closedAt": null,
       "comments": [
         {
@@ -10695,14 +10697,16 @@
       "state": "OPEN",
       "author": "branlwyd",
       "authorAssociation": "COLLABORATOR",
-      "assignees": [],
+      "assignees": [
+        "branlwyd"
+      ],
       "labels": [
         "feature",
         "ietf120"
       ],
       "body": "Once multi-collection of batches has been removed, we should consider whether the `max_batch_size` parameter of the fixed-size query type might be removed.\r\n\r\nSee https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/554/files#r1577003240 for context; in short, `max_batch_size`'s strongest use-case is in the case of a multiply-collected VDAF. It is unclear if there is a strong justification for this parameter in a DAP which supports only singly-collected VDAFs.",
       "createdAt": "2024-04-24T22:22:28Z",
-      "updatedAt": "2024-06-26T14:36:09Z",
+      "updatedAt": "2024-07-03T15:11:53Z",
       "closedAt": null,
       "comments": [
         {
@@ -66758,15 +66762,15 @@
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
-      "body": "Closes #555.\r\n\r\nLeader-selected is a more accurate name than fixed-size, since the batch sizes are not fixed -- any size above min_batch_size (and, if specified, below max_batch_size) is acceptable.\r\n\r\nThe max_batch_size parameter of the leader-selected query type is removed. This parameter does not need to be enforced by both aggregators, so it can be made implementation-specific.\r\n\r\nAlso, restore the partial batch selector to the Collection message; the included batch ID is required for the Collector to decrypt the aggregate shares, as it is included in the AAD. This bug was introduced in #554 & effectively breaks collection for the fixed-size query type in DAP-11.",
+      "body": "Leader-selected is a more accurate name than fixed-size, since the batch sizes are not fixed -- any size above min_batch_size (and, if specified, below max_batch_size) is acceptable.\r\n\r\nThe max_batch_size parameter of the leader-selected query type is removed. This parameter does not need to be enforced by both aggregators, so it can be made implementation-specific.\r\n\r\nAlso, restore the partial batch selector to the Collection message; the included batch ID is required for the Collector to decrypt the aggregate shares, as it is included in the AAD. This bug was introduced in #554 & effectively breaks collection for the fixed-size query type in DAP-11.\r\n\r\nCloses #555.",
       "createdAt": "2024-06-13T23:56:57Z",
-      "updatedAt": "2024-06-28T12:00:08Z",
+      "updatedAt": "2024-07-04T00:03:52Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "35f1274853c1c06a5132612b111debefe4fd17ac",
       "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "headRefName": "bran/leader-selected",
-      "headRefOid": "302c7bfba3d014dcb9e007a7774a15d1df490e38",
+      "headRefOid": "55d42f49031eff93952c9db62df554e1ad2052c5",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
@@ -66799,6 +66803,27 @@
           "body": "> You're correct that the batch size is not chosen by the Leader, but it is true that the Leader decides which reports go in which batch. On the other hand, that may not be the intent of the deployment.\r\n> \r\n> That said, `batch-threshold` sounds generic enough to apply to any query type, no? E.g., isn't the \"batch releasing criteria\" now the same for time_interval as for fixed_size?\r\n> \r\n> What about something that emphasizes that there are no batch boundary criteria, as there are for time_interval? Perhaps any_batch or something?\r\n\r\nThe batch releasing criteria is still different, `fixed_size` only requires minimum batch size to be met, `time_interval` requires size and time. How about `size_conditioned`?\r\nI feel the query type as is only defines the batch creation criteria, not the releasing criteria. If that's what we want query type to do, then something like `any_batch` would work too.\r\n",
           "createdAt": "2024-06-28T12:00:07Z",
           "updatedAt": "2024-06-28T12:00:07Z"
+        },
+        {
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> > You're correct that the batch size is not chosen by the Leader, but it is true that the Leader decides which reports go in which batch. On the other hand, that may not be the intent of the deployment.\r\n> > That said, `batch-threshold` sounds generic enough to apply to any query type, no? E.g., isn't the \"batch releasing criteria\" now the same for time_interval as for fixed_size?\r\n> > What about something that emphasizes that there are no batch boundary criteria, as there are for time_interval? Perhaps any_batch or something?\r\n> \r\n> The batch releasing criteria is still different, `fixed_size` only requires minimum batch size to be met, `time_interval` requires size and time. How about `size_conditioned`? I feel the query type as is only defines the batch creation criteria, not the releasing criteria. If that's what we want query type to do, then something like `any_batch` would work too.\r\n\r\nMy interpretation is also that the query type determines how batches are determined:\r\n\r\n* `time_interval` determines batches by intervals of time.\r\n* `leader_selected` determines batches by the mostly-arbitrary selection of the Leader. \r\n\r\n`any_batch`, or even `unconstrained`/`arbitrary` would also work for `leader_selected`; but IMO these are not strongly better than `leader_selected` -- they might even be considered worse, in the sense that `leader_selected` indicates which protocol participant is doing the batch selection.",
+          "createdAt": "2024-07-02T23:05:27Z",
+          "updatedAt": "2024-07-02T23:05:27Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "@wangshan's interpretation of \"release criteria\" sounds reasonable to me. If we take this suggestion, then we should clarify in the query type what the names mean. Previously it was \"how a batch is constructed\"; \"when a batch can be queried\" is subtley different.",
+          "createdAt": "2024-07-03T14:38:03Z",
+          "updatedAt": "2024-07-03T14:38:03Z"
+        },
+        {
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "body": "I think a query type effectively:\r\n\r\n* determines how reports can be grouped together\r\n* determines how batches are addressed (i.e. what is the identifier for a batch)\r\n* determines the semantics of how aggregate results can be queried by the collector\r\n\r\nI added some text to this effect -- I'm not totally sure I understand what is meant by \"release criteria\". If this doesn't capture what we hoped, please push back.",
+          "createdAt": "2024-07-03T18:29:16Z",
+          "updatedAt": "2024-07-03T18:29:16Z"
         }
       ],
       "reviews": [
@@ -66989,6 +67014,232 @@
               "updatedAt": "2024-06-28T10:22:07Z"
             }
           ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6AcihG",
+          "commit": {
+            "abbreviatedOid": "302c7bf"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-02T22:19:06Z",
+          "updatedAt": "2024-07-02T22:19:06Z",
+          "comments": [
+            {
+              "originalPosition": 235,
+              "body": "Fair enough. Even if this AAD doesn't support the explicit threat model, at the very least it will help avoid accidental bugs which e.g. mismatch aggregate shares. (I'm not sure it can protect against any form of malice, as the components of the AAD are public to both aggregators; and each aggregator can already falsify results of any aggregate shares it can control -- i.e. the Helper can falsify the Helper's aggregate share, the Leader can falsify the Leader or Helper's aggregate share.)",
+              "createdAt": "2024-07-02T22:19:06Z",
+              "updatedAt": "2024-07-02T22:19:22Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6Acixf",
+          "commit": {
+            "abbreviatedOid": "302c7bf"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-02T22:20:22Z",
+          "updatedAt": "2024-07-02T22:20:22Z",
+          "comments": [
+            {
+              "originalPosition": 9,
+              "body": "Done, though now we're referencing \"fixed-size\" directly before we mention that it is renamed.",
+              "createdAt": "2024-07-02T22:20:22Z",
+              "updatedAt": "2024-07-02T22:20:23Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6AcpWE",
+          "commit": {
+            "abbreviatedOid": "302c7bf"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-02T22:41:39Z",
+          "updatedAt": "2024-07-02T22:41:39Z",
+          "comments": [
+            {
+              "originalPosition": 103,
+              "body": "I got rid of this text and merged the next paragraph into it, since that paragraph is also concerned with the range of possible batch sizes. The following paragraph is concerned with the batch sizes that might be generated by an implementation, but IMO the existing text makes it clear the difference between specification & implementation advice (and this section is not normative).",
+              "createdAt": "2024-07-02T22:41:39Z",
+              "updatedAt": "2024-07-02T22:41:39Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6Acp2d",
+          "commit": {
+            "abbreviatedOid": "302c7bf"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-02T22:42:47Z",
+          "updatedAt": "2024-07-02T22:42:47Z",
+          "comments": [
+            {
+              "originalPosition": 112,
+              "body": "Saying something is \"implementation-specific\" is (in my experience) much more common than \"deployment-specific\". Prior to this document, I am not sure I have seen the use of \"deployment\" in this fashion; instead, typically \"implementation\" would be used.",
+              "createdAt": "2024-07-02T22:42:47Z",
+              "updatedAt": "2024-07-02T22:42:47Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6Acutr",
+          "commit": {
+            "abbreviatedOid": "302c7bf"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-02T22:53:11Z",
+          "updatedAt": "2024-07-02T22:53:12Z",
+          "comments": [
+            {
+              "originalPosition": 154,
+              "body": "Deleting the text SGTM because I think `time_interval`'s association of report to batch via timestamp is (plausibly) desirable from a privacy perspective.\r\n\r\n",
+              "createdAt": "2024-07-02T22:53:12Z",
+              "updatedAt": "2024-07-02T22:53:12Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6AcwSk",
+          "commit": {
+            "abbreviatedOid": "302c7bf"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-02T22:57:54Z",
+          "updatedAt": "2024-07-02T22:57:55Z",
+          "comments": [
+            {
+              "originalPosition": 168,
+              "body": "I suppose -- every new draft is a breaking change because it will, at least, change the domain-separation strings. I suppose it could be argued that shifting the numbers around could lead to bugs in implementations that implement multiple DAP drafts & use the wrong \"version\" of `PrepareError`; but we could run into similar issues if/when we reuse the number with a new semantic meaning.\r\n\r\nThat said, I'm happy enough kicking the can down the road, as long as we clean things up for the final RFC.",
+              "createdAt": "2024-07-02T22:57:55Z",
+              "updatedAt": "2024-07-02T22:57:55Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6Ai4Ld",
+          "commit": {
+            "abbreviatedOid": "302c7bf"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-03T14:32:47Z",
+          "updatedAt": "2024-07-03T14:32:47Z",
+          "comments": [
+            {
+              "originalPosition": 154,
+              "body": "@simon-friedberger I agree that time interval queries are much more constrained, and this definitely has benefits. But I don't think fixed size queries are unconstrained in a way that leads to overlapping batches. The aggregators are supposed to assign reports to batches and make sure each report is mapped to a single batch. At a high level, any query type needs to ensure that queries _partition_ the set of reports for a task.",
+              "createdAt": "2024-07-03T14:32:47Z",
+              "updatedAt": "2024-07-03T14:32:47Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6Ai5Mz",
+          "commit": {
+            "abbreviatedOid": "302c7bf"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-03T14:34:24Z",
+          "updatedAt": "2024-07-03T14:34:24Z",
+          "comments": [
+            {
+              "originalPosition": 168,
+              "body": "We don't actually need to update the domain separation tags with each version. In fact, in the latest version of the VDAF draft, we didn't update the version tag because there were no breaking changes. ",
+              "createdAt": "2024-07-03T14:34:24Z",
+              "updatedAt": "2024-07-03T14:34:24Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6Akuy1",
+          "commit": {
+            "abbreviatedOid": "302c7bf"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-03T18:29:31Z",
+          "updatedAt": "2024-07-03T18:29:31Z",
+          "comments": [
+            {
+              "originalPosition": 154,
+              "body": "I added some text to the security considerations section capturing this concern.",
+              "createdAt": "2024-07-03T18:29:31Z",
+              "updatedAt": "2024-07-03T18:29:31Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6Akwdd",
+          "commit": {
+            "abbreviatedOid": "302c7bf"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-03T18:34:17Z",
+          "updatedAt": "2024-07-03T18:34:17Z",
+          "comments": [
+            {
+              "originalPosition": 112,
+              "body": "Thinking about this a little more, at least in my head:\r\n\r\n* An \"implementation\" is a specific software implementation of some DAP protocol actor. Examples would include Janus or Daphne.\r\n* A \"deployment\" is a practical deployment of DAP; it would use one or more implementations of the DAP protocol actors, as well as defining tasks (or deciding how tasks can be dynamically configured, e.g. taskprov or some other task-provisioning scheme), defining other configuration parameters, deciding how the software implementations are run on machines, and everything else that comes with deploying software. Examples would include Divvi Up.",
+              "createdAt": "2024-07-03T18:34:17Z",
+              "updatedAt": "2024-07-03T18:34:17Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6Am2OD",
+          "commit": {
+            "abbreviatedOid": "55d42f4"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "Looks good to me. I lean towards \"leader_selected\", but I don't much care what we call it at the end of the day.",
+          "createdAt": "2024-07-03T23:59:34Z",
+          "updatedAt": "2024-07-04T00:03:52Z",
+          "comments": [
+            {
+              "originalPosition": 25,
+              "body": "```suggestion\r\nEach measurement task has a preconfigured \"query type\". This query type defines\r\n```",
+              "createdAt": "2024-07-03T23:59:34Z",
+              "updatedAt": "2024-07-04T00:03:52Z"
+            },
+            {
+              "originalPosition": 27,
+              "body": "```suggestion\r\nboth how reports may be partitions into batches, as well as how these batches are\r\naddressed and the semantics of the query used for collection.\r\n```",
+              "createdAt": "2024-07-04T00:00:00Z",
+              "updatedAt": "2024-07-04T00:03:52Z"
+            }
+          ]
         }
       ]
     },
@@ -67004,13 +67255,13 @@
       "labels": [],
       "body": "Closes https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/557.\r\n\r\nAllows helper-side aggregate job preparation to be handled asynchronously,\r\nsimilarly to how collection jobs work. Briefly, after calls with\r\n`AggregationJobInitReq` and `AggregationJobContinueReq`, the leader polls\r\nthe helper at `GET /tasks/{task-id]/aggregation_jobs/{aggregation-job-id}`\r\nuntil receiving an `AggregationJobResp`.\r\n\r\nIn discussion in #577 we had soft consensus on making this the only option,\r\ni.e. for spec simplicity we don't need to also allow the old synchronous\r\nbehavior.",
       "createdAt": "2024-06-25T18:08:22Z",
-      "updatedAt": "2024-07-01T22:27:38Z",
+      "updatedAt": "2024-07-03T23:41:32Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "35f1274853c1c06a5132612b111debefe4fd17ac",
       "headRepository": "inahga/draft-ietf-ppm-dap",
       "headRefName": "inahga/async-helper-agg-jobs",
-      "headRefOid": "3c9752d0f2a504ac8cddb29504665b4edd8462ac",
+      "headRefOid": "738ec18389195b3b28a00b07a72a17ee39a201f8",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
@@ -67043,6 +67294,27 @@
           "body": "> @suman-ganta Yeah, at a high level, packaging these list of reports with a fixed job and computing that job as a whole, waiting for the whole job to finish on either end seem to introduce blocking processing. Instead of that, for a batch, we can break away from job notion and submit/process individual reports, query for completed (init/continue) reports (instead of blocking on one job completion). This could allow concurrently process these reports on both sides.\r\n\r\nI see. Couldn't this be achieved at the level of aggregation jobs? I.e., instead of splitting processing of aggregation jobs across 4 threads, just create 4 aggregation jobs. Does that solve your problem?",
           "createdAt": "2024-06-28T20:29:00Z",
           "updatedAt": "2024-06-28T20:29:00Z"
+        },
+        {
+          "author": "suman-ganta",
+          "authorAssociation": "NONE",
+          "body": "> A few thoughts on Suman's proposal:\r\n> \r\n> * I interpret this proposal as removing the concept of \"aggregation jobs\" entirely, and allowing reports to be grouped arbitrarily (and even grouped differently across different aggregation steps?).\r\n> * This is similar to the suggestion to drop batched requests entirely, sending each report in a separate request (likely requiring connection reuse/pipelining for efficiency). However, by batching we avoid that suggestion's issue with needing to repeatedly transmit batch ID/aggregation parameters on a per-report basis.\r\n> * However, even with Suman's suggestion, we would still need to retransmit the aggregation parameter on a per-step basis. This would be most impactful for VDAFs with a large aggregation parameter.\r\n> * The proposed URL scheme does not quite work out for the time-interval query type, where (a) the batch associated with each report is implicit (based on the timestamp) and (b) reports in a single aggregation job can currently be spread across multiple batches. I think (a) is more important than (b), but likely we can fix the URL scheme so this is not a fatal concern to the idea.\r\n> * This would also increase the complexity of handling aggregation jobs, since certain per-batch errors would become per-report errors.\r\n> * Implementations can also currently store the state for an aggregation job & its reports \"together\" (whatever that might mean for the underlying datastore); with this change, a Leader could potentially send a different grouping with each step, which might lead to less-optimal data access patterns. (More concretely, an implementation currently could store a single \"object\" for each aggregation job; I think with Suman's suggestion, implementations would be forced to store a single \"object\" for each report share, since the Helper has no guarantee that the grouping of reports per request will be stable.)\r\n> \r\n> I'm most concerned about retransmission of aggregation parameters, as well as the increase in complexity.\r\n\r\nFew clarifications:\r\n* My proposal is not really eliminating the grouping of reports in a request. instead, making the grouping optional and dynamic. The only purpose, as I understand, job is serving is to perform batch computation on both ends. This can be pretty dynamic based on available resources on either end. So, I'm seeing that as implementation detail as opposed to keep it as part of spec.\r\n* In this PR, the proposal is to do blocking poll on each job during collection phase. This can introduce blocking wait on leader and chattiness between leader and helper. An improvement could be - ability to ask for all completed jobs so far, which, in implementation can translate to ability to express completion status, page size etc as parameters.\r\n\r\nOther than that, my proposal shouldn't change anything in terms of additional overhead. If this sounds reasonable I'm happy to detail these further to make more sense.",
+          "createdAt": "2024-07-03T01:32:06Z",
+          "updatedAt": "2024-07-03T01:32:06Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> @suman-ganta: Other than that, my proposal shouldn't change anything in terms of additional overhead. If this sounds reasonable I'm happy to detail these further to make more sense.\r\n\r\nI suggest moving this conversation to a different thread so that we can focus this PR on the move from sync to async aggregation. Would you follow up on the issue (#557) with a description of the problem you see and your proposal for solving it?\r\n\r\n",
+          "createdAt": "2024-07-03T14:46:25Z",
+          "updatedAt": "2024-07-03T14:46:25Z"
+        },
+        {
+          "author": "inahga",
+          "authorAssociation": "NONE",
+          "body": "I've made the editorial changes requested. I'd like some time to hack together a POC of this in Janus before merging this, to reveal any edge cases we haven't considered.\r\n\r\n> I suggest moving this conversation to a different thread so that we can focus this PR on the move from sync to async aggregation.\r\n\r\nAgreed, let's discuss there.",
+          "createdAt": "2024-07-03T21:35:32Z",
+          "updatedAt": "2024-07-03T21:35:32Z"
         }
       ],
       "reviews": [
@@ -67373,8 +67645,426 @@
               "updatedAt": "2024-07-01T22:27:38Z"
             }
           ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6AdPJ1",
+          "commit": {
+            "abbreviatedOid": "3c9752d"
+          },
+          "author": "suman-ganta",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-03T01:03:59Z",
+          "updatedAt": "2024-07-03T01:22:54Z",
+          "comments": [
+            {
+              "originalPosition": 80,
+              "body": "It looks like this requires constant polling from the leader end to check status of each job. Should it implement long polling and respond when there is response to return?",
+              "createdAt": "2024-07-03T01:03:59Z",
+              "updatedAt": "2024-07-03T01:22:54Z"
+            },
+            {
+              "originalPosition": 80,
+              "body": "If we are not doing long polling for any reason, the response should probably 200 with appropriate status response instead of 202, since we are not accepting a new request for processing.",
+              "createdAt": "2024-07-03T01:11:04Z",
+              "updatedAt": "2024-07-03T01:22:54Z"
+            },
+            {
+              "originalPosition": 24,
+              "body": "What the recommended way of polling here? Do we poll each job in batch sequentially until all jobs give expected response? This would be blocking operation on leader side and generates noisy request to the helper. It would be better to provide ability to query for completed jobs. This enables leader to process-and-fetch the completed jobs in a loop.",
+              "createdAt": "2024-07-03T01:22:40Z",
+              "updatedAt": "2024-07-03T01:22:54Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6AjTec",
+          "commit": {
+            "abbreviatedOid": "23c7912"
+          },
+          "author": "inahga",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-03T15:12:28Z",
+          "updatedAt": "2024-07-03T15:12:28Z",
+          "comments": [
+            {
+              "originalPosition": 157,
+              "body": "It strikes me as an error/oversight, but perusing the blame looks inconclusive either way. I will change it to a `MUST`.",
+              "createdAt": "2024-07-03T15:12:28Z",
+              "updatedAt": "2024-07-03T15:12:28Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6AjZvS",
+          "commit": {
+            "abbreviatedOid": "3c9752d"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-03T15:23:33Z",
+          "updatedAt": "2024-07-03T15:23:33Z",
+          "comments": [
+            {
+              "originalPosition": 80,
+              "body": "What do you mean by \"long polling\"?",
+              "createdAt": "2024-07-03T15:23:33Z",
+              "updatedAt": "2024-07-03T15:23:33Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6AjdTx",
+          "commit": {
+            "abbreviatedOid": "3c9752d"
+          },
+          "author": "inahga",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-03T15:29:58Z",
+          "updatedAt": "2024-07-03T15:29:59Z",
+          "comments": [
+            {
+              "originalPosition": 80,
+              "body": "Hmm, I see long polling as the state of the spec before this change, more or less. That is, leaders hold the HTTP connection open while the helper does processing. The helper returns a response when it's ready.\r\n\r\n> If we are not doing long polling for any reason, the response should probably 200 with appropriate status response instead of 202, since we are not accepting a new request for processing.\r\n\r\n202 signals to the leader that polling needs to continue. We could give 200 with an empty body, but I think 202 is most appropriate, [given my reading of MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/202). (FWIW I copied the semantics from collection, so if we argue against using 202 we would need to fix collection too).",
+              "createdAt": "2024-07-03T15:29:59Z",
+              "updatedAt": "2024-07-03T15:29:59Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6Ajwpz",
+          "commit": {
+            "abbreviatedOid": "3c9752d"
+          },
+          "author": "suman-ganta",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-03T16:05:46Z",
+          "updatedAt": "2024-07-03T16:05:46Z",
+          "comments": [
+            {
+              "originalPosition": 80,
+              "body": "Earlier model is, you wait when you init a job. Now, we submit the job and then wait on a different thread. But leader has to wait for several jobs to complete in this model, right? So, it is not clear to me how leader keep polling for all jobs better than long polling.\r\n\r\n@cjpatton - http long polling - in this context, it translates to helper blocks the GET call until the job processing is done (with an optional timeout).",
+              "createdAt": "2024-07-03T16:05:46Z",
+              "updatedAt": "2024-07-03T16:05:46Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6AkafR",
+          "commit": {
+            "abbreviatedOid": "3c9752d"
+          },
+          "author": "mendess",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-03T17:38:42Z",
+          "updatedAt": "2024-07-03T17:38:43Z",
+          "comments": [
+            {
+              "originalPosition": 87,
+              "body": "This is very hard to implement for the helper. It requires possibly storing every body indefinitely. I think we can take advantage of the fact that aggregation is now async to make this better.\r\n\r\nI propose that subsequent `PUT` requests to this enpoint carrying the same aggregation-job-id should be responded with the same response that previous requests were responded with regardless of , this means we have to, at most, store an (endpoint, response code) tuple. And we still maintain the idenpotency guarantees that we want, in case the leader retries the request",
+              "createdAt": "2024-07-03T17:38:43Z",
+              "updatedAt": "2024-07-03T17:38:43Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6AlpeI",
+          "commit": {
+            "abbreviatedOid": "3c9752d"
+          },
+          "author": "inahga",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-03T20:26:57Z",
+          "updatedAt": "2024-07-03T20:26:57Z",
+          "comments": [
+            {
+              "originalPosition": 80,
+              "body": "The goal is to enable the helper to move expensive computation (checking uniqueness indices, heavyweight VDAF math, etc.) out of the request hot-path. \r\n\r\nIt is plausible to make no changes to the spec, which IIUC is equivalent to using a long-polling strategy. Implementations could still decouple expensive operations by leaving the connection open and internally polling a pool of compute workers.\r\n\r\nBut I (if I'm operating as a helper) am still left with the disadvantages of having to deal with long-running connections. It's tricky to load balance them, e.g. what do we do with existing connections when we need to scale up? Whereas for stateless GET requests with no body, load balancing them is trivial.\r\n\r\nIf we really want to avoid polling, we may want to look into the more robust 2-way protocols, i.e. websockets. (ah you did allude to this in your proposal).",
+              "createdAt": "2024-07-03T20:26:57Z",
+              "updatedAt": "2024-07-03T21:14:06Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6AlrrW",
+          "commit": {
+            "abbreviatedOid": "3c9752d"
+          },
+          "author": "suman-ganta",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-03T20:31:03Z",
+          "updatedAt": "2024-07-03T20:31:03Z",
+          "comments": [
+            {
+              "originalPosition": 80,
+              "body": "To summarize my proposed changes - \r\n1. aggregate init request can return either 200 with proper response body (sync) or 202 without body (async). This makes it backward compatible and supports sync model.\r\n2. When leader is ready to receive the init job response, it makes a GET <jobid> http request. Helper can\r\n  * respond with 202 immediately if the job init is not done on helper (frequent polling model)\r\n  * respond with 200 immediately with init job response (if job is completed)\r\n  * Block the caller and respond with 200 with init job response when job is finished (long polling).",
+              "createdAt": "2024-07-03T20:31:03Z",
+              "updatedAt": "2024-07-03T20:31:03Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6Alu9u",
+          "commit": {
+            "abbreviatedOid": "3c9752d"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-03T20:37:36Z",
+          "updatedAt": "2024-07-03T20:37:36Z",
+          "comments": [
+            {
+              "originalPosition": 87,
+              "body": "I disagree here: in practice, the Helper only needs to store a hash of the previous request to perform request-equivalence checking. So the storage overhead isn't to store all request bodies indefinitely, it's to store the hash of the last request body until the next request is successfully processed.\r\n\r\nI do think that checking that the request matches is very useful for \"request/response coherency\" reasons: if the Helper doesn't check the request body, we could end up in a situation where the Leader (due to a bug) repeats a request for some aggregation step with a different request, and the Helper would respond with the response body for the original request. This could be a very challenging situation to debug.",
+              "createdAt": "2024-07-03T20:37:36Z",
+              "updatedAt": "2024-07-03T20:37:36Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6Alxq3",
+          "commit": {
+            "abbreviatedOid": "3c9752d"
+          },
+          "author": "inahga",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-03T20:42:56Z",
+          "updatedAt": "2024-07-03T20:42:56Z",
+          "comments": [
+            {
+              "originalPosition": 24,
+              "body": "Aggregation jobs are independent, so it shouldn't be necessary to process jobs sequentially. Rather the leader can/should eagerly send aggregate init/continue to the helper.\r\n\r\n> This would be blocking operation on leader side\r\n\r\nIndeed, but it shouldn't be much worse than blocking leader-side waiting for the aggregate init/continue request to finish.\r\n\r\nI'd actually expect this grants leader implementations more flexibility in how they schedule aggregation job processing. If a leader-side worker thread is blocked on an open HTTP request, it can't set it aside to do other work. In the proposed model, the leader-side worker can poll once, see that the aggregation job isn't ready, move on to other work (e.g. polling other workers), and poll again later.\r\n\r\n> generates noisy request to the helper\r\n\r\nIndeed that's a tradeoff, but I'm hoping that empty GET requests are fairly cheap in terms of bandwidth. And aggregator pairings are free to tune polling intervals and aggregation job volume such that the amount of noise is low.\r\n\r\n> It would be better to provide ability to query for completed jobs. This enables leader to process-and-fetch the completed jobs in a loop.\r\n\r\nThat's an interesting idea. Can you elaborate on the structure of such an endpoint?",
+              "createdAt": "2024-07-03T20:42:56Z",
+              "updatedAt": "2024-07-03T20:42:56Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6AlyaQ",
+          "commit": {
+            "abbreviatedOid": "3c9752d"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-03T20:44:29Z",
+          "updatedAt": "2024-07-03T20:44:29Z",
+          "comments": [
+            {
+              "originalPosition": 80,
+              "body": "I agree that the old semantics were effectively equivalent to long-polling.\r\n\r\nI also think that the semantics in this PR are compatible with a long-polling implementation: specifically, on receipt of a poll request the Helper would not respond at all until the job is complete (resulting in a 200 response) or some timeout occurs (resulting in a 202 response).\r\n\r\nBut now that we're thinking about this, I do wonder if this could be a source of friction between different implementations: the deployment considerations for immediate-polling are different than those for long-polling, so an implementation optimized for immediate-polling may not play well with an implementation optimized for long-polling.",
+              "createdAt": "2024-07-03T20:44:29Z",
+              "updatedAt": "2024-07-03T20:44:48Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6Aly4F",
+          "commit": {
+            "abbreviatedOid": "3c9752d"
+          },
+          "author": "suman-ganta",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-03T20:45:31Z",
+          "updatedAt": "2024-07-03T20:45:31Z",
+          "comments": [
+            {
+              "originalPosition": 80,
+              "body": "I hope the above clarifies some of the confusion. We are still doing it this process in two steps, but the later step can be optimized as mentioned above without compromising on proposed async model.",
+              "createdAt": "2024-07-03T20:45:31Z",
+              "updatedAt": "2024-07-03T20:45:31Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6Al0yo",
+          "commit": {
+            "abbreviatedOid": "3c9752d"
+          },
+          "author": "inahga",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-03T20:49:26Z",
+          "updatedAt": "2024-07-03T20:49:26Z",
+          "comments": [
+            {
+              "originalPosition": 87,
+              "body": "> It requires possibly storing every body indefinitely.\r\n\r\nCan you clarify the drawbacks to this? In Janus, [we accomplish this by storing a SHA-256 of the request body](https://github.com/divviup/janus/blob/main/db/00000000000001_initial_schema.up.sql#L225) which is fairly cheap in terms of storage, and I don't think has caused us problems (yet).\r\n\r\nIf we have to store `(endpoint, response code)` anyway, then we may as well go all the way and give more \"truthful\" idempotency (i.e. retain this clause), assuming that storing a request hash is not burdensome.",
+              "createdAt": "2024-07-03T20:49:26Z",
+              "updatedAt": "2024-07-03T20:49:26Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6AmOBn",
+          "commit": {
+            "abbreviatedOid": "3c9752d"
+          },
+          "author": "inahga",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-03T21:29:03Z",
+          "updatedAt": "2024-07-03T21:29:03Z",
+          "comments": [
+            {
+              "originalPosition": 148,
+              "body": "> if the Helper receives a repeated request it must treat it as if it needs to be handled asynchronously (since there is no way to communicate synchronous completion), though I suspect the implementation would effectively be to treat the job as already completed & return the results on the first attempt to poll.\r\n\r\nThat's more or less correct. My idea is that the repeated request is effectively a no-op, i.e. the helper-side aggregation job state does not need to change.\r\n\r\nI've added verbiage\r\n> If the Leader is one step behind (e.g., the Leader has resent the previous HTTP request), then the Helper MAY attempt to recover by sending HTTP 202 status Accepted and discontinuing any further work.\r\n\r\nto cut the transition to the next paragraph. Let me know if more elaboration is necessary.\r\n",
+              "createdAt": "2024-07-03T21:29:03Z",
+              "updatedAt": "2024-07-03T21:29:03Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6AmYSo",
+          "commit": {
+            "abbreviatedOid": "3c9752d"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-03T21:57:34Z",
+          "updatedAt": "2024-07-03T21:57:34Z",
+          "comments": [
+            {
+              "originalPosition": 80,
+              "body": "What textual change are you suggesting? My interpretation of the text in this PR is that an implementation is allowed to implement either frequent-polling or long-polling. There are some operational considerations which are not specified (e.g. if long-polling, how long does the Helper wait before giving up & returning 202?) but I think they can be left implementation-dependent.\r\n\r\nN.B. as it stands, the initial request must always return a 201 Created -- i.e. the old \"sync\" model has been replaced by the new \"async\" model. The prior discussion around this is in #557.",
+              "createdAt": "2024-07-03T21:57:34Z",
+              "updatedAt": "2024-07-03T21:57:34Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6AmrK0",
+          "commit": {
+            "abbreviatedOid": "3c9752d"
+          },
+          "author": "inahga",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-03T22:48:24Z",
+          "updatedAt": "2024-07-03T22:48:24Z",
+          "comments": [
+            {
+              "originalPosition": 80,
+              "body": "> My interpretation of the text in this PR is that an implementation is allowed to implement either frequent-polling or long-polling.\r\n\r\nTrue, with caveats. The GET request that follow PUT/POST requests could long poll. But note that this PR changeset would have inserted a new request that didn't exist before, i.e. long polling on the PUT/POST requests is not possible, you'd still need to follow it up with a GET request.\r\n\r\nBut as @suman-ganta states, we can make it so that:\r\n> aggregate init request can return either 200 with proper response body (sync) or 202 without body (async). This makes it backward compatible and supports sync model.\r\n\r\nIn effect we're raising the question again we thought about in https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/557#issuecomment-2166938611. I do see value in letting the polling behavior (long or short) be decided amongst implementations, but it does seem to come at the cost of spec complexity.",
+              "createdAt": "2024-07-03T22:48:24Z",
+              "updatedAt": "2024-07-03T22:49:04Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6AmwFS",
+          "commit": {
+            "abbreviatedOid": "3c9752d"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-03T23:19:09Z",
+          "updatedAt": "2024-07-03T23:19:09Z",
+          "comments": [
+            {
+              "originalPosition": 80,
+              "body": "I think we should be careful not to conflate the discussion of:\r\n\r\n* Sync vs async aggregation job handling (and whether to support both of these, or only one), first opened in #557 and continued in this PR.\r\n* Frequent-polling vs long-polling, first discussed in this PR.\r\n\r\nFWIW/IMO, I am concerned about the need for an extra request per aggregation job implied by the async model, but not enough to accept the complexity of specifying & implementing both sync & async behaviors -- I think we should specify only one of sync & async. I am still thinking through whether it is wise to allow both frequent-polling & long-polling behaviors.",
+              "createdAt": "2024-07-03T23:19:09Z",
+              "updatedAt": "2024-07-03T23:19:09Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6AmyuS",
+          "commit": {
+            "abbreviatedOid": "3c9752d"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-03T23:37:19Z",
+          "updatedAt": "2024-07-03T23:37:19Z",
+          "comments": [
+            {
+              "originalPosition": 80,
+              "body": "I think the PUT should always return 202. I like @suman-ganta's suggestion for the GET. I understand it to be:\r\n\r\n> If the response is ready, then return 200. Otherwise, if the response is not ready, the Helper MAY return 202 immediately, or it MAY wait until the response is ready and respond with 200.",
+              "createdAt": "2024-07-03T23:37:19Z",
+              "updatedAt": "2024-07-03T23:37:19Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6AmzeB",
+          "commit": {
+            "abbreviatedOid": "3c9752d"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-03T23:41:32Z",
+          "updatedAt": "2024-07-03T23:41:32Z",
+          "comments": [
+            {
+              "originalPosition": 80,
+              "body": "A textual change may make this clearer.",
+              "createdAt": "2024-07-03T23:41:32Z",
+              "updatedAt": "2024-07-03T23:41:32Z"
+            }
+          ]
         }
       ]
+    },
+    {
+      "number": 565,
+      "id": "PR_kwDOFEJYQs50XPJI",
+      "title": "Specify aggregation with batched preparation",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/565",
+      "state": "OPEN",
+      "author": "cjpatton",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Closes #561.\r\n\r\nAdds an alternative aggregation flow for VDAFs that support batched preparation.\r\n\r\nIn this mode of operation, prep shares for many reports are aggregated into a short message called a \"tag\". The tags computed by the Leader and Helper are used to decide validity of the reports: if the tags are valid, then every report is deemed valid; otherwise, at least one report is known to be invalid.\r\n\r\nThe Helper handles invalidity by aborting the request. In this case the Leader is allowed to retry, either with a subset of the reports or with the existing, pep-report preparation code path.\r\n\r\nDRAFT STATUS: This PR is not quite feature-complete. In fact, before merging it, we may need to make some changes to the VDAF draft. It is intended primarily to drive conversation about whether there is appetite to support the feature.",
+      "createdAt": "2024-07-03T19:30:43Z",
+      "updatedAt": "2024-07-03T19:31:49Z",
+      "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "baseRefName": "main",
+      "baseRefOid": "35f1274853c1c06a5132612b111debefe4fd17ac",
+      "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "headRefName": "cjpatton/561-pitch",
+      "headRefOid": "e192b0be3c106313c7b98df8e8983e10715bf198",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": []
     }
   ]
 }
