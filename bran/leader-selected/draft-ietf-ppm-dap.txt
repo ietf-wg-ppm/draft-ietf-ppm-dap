@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 4 January 2025                                       Cloudflare
+Expires: 6 January 2025                                       Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                                  Mozilla
                                                               C. A. Wood
                                                               Cloudflare
-                                                             3 July 2024
+                                                             5 July 2024
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -63,7 +63,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 4 January 2025.
+   This Internet-Draft will expire on 6 January 2025.
 
 Copyright Notice
 
@@ -459,7 +459,7 @@ Table of Contents
    x_n held by n Clients, and an aggregation parameter p shared by the
    Aggregators, the goal of DAP is to compute y = F(p, x_1, ..., x_n)
    for some function F while revealing nothing else about the
-   measurements.  We call F the "aggregation function."
+   measurements.  We call F the "aggregation function".
 
    This protocol is extensible and allows for the addition of new
    cryptographic schemes that implement the VDAF interface specified in
@@ -821,15 +821,15 @@ struct {} Empty;
 4.1.  Queries
 
    Aggregated results are computed based on sets of reports, called
-   "batches."  The Collector requests the aggregated results for a given
-   batch via a "query."  The Aggregators use this query to carry out the
+   "batches".  The Collector requests the aggregated results for a given
+   batch via a "query".  The Aggregators use this query to carry out the
    aggregation flow and produce aggregate shares encrypted to the
    Collector.
 
-   Each measurement task has a preconfigured "query type."  This query
-   type defines both how reports may be grouped into batches, as well as
-   how these batches are addressed & the semantics of the query used for
-   collection.
+   Each measurement task has a preconfigured "query type".  This query
+   type defines both how reports may be partitioned into batches, as
+   well as how these batches are addressed and the semantics of the
+   query used for collection.
 
    This document defines the following query types:
 
