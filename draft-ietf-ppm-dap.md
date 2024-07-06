@@ -603,7 +603,6 @@ standard tokens for use in the "type" field (within the DAP URN namespace
 | batchQueriedMultipleTimes  | A batch was queried with multiple distinct aggregation parameters. |
 | batchMismatch              | Aggregators disagree on the report shares that were aggregated in a batch. |
 | unauthorizedRequest        | Authentication of an HTTP request failed (see {{request-authentication}}). |
-| missingTaskID              | HPKE configuration was requested without specifying a task ID. |
 | stepMismatch               | The Aggregators disagree on the current step of the DAP aggregation protocol. |
 | batchOverlap               | A request's query includes reports that were previously collected in a different batch. |
 
@@ -895,24 +894,13 @@ configuration of each Aggregator. See {{compliance}} for information on HPKE
 algorithm choices.
 
 Clients retrieve the HPKE configuration from each Aggregator by sending an HTTP
-GET request to `{aggregator}/hpke_config`. Clients MAY specify a query parameter
-`task_id` whose value is the task ID whose HPKE configuration they want. If the
-Aggregator does not recognize the task ID, then it MUST abort with error
-`unrecognizedTask`.
-
-An Aggregator is free to use different HPKE configurations for each task with
-which it is configured. If the task ID is missing from  the Client's request,
-the Aggregator MAY abort with an error of type `missingTaskID`, in which case
-the Client SHOULD retry the request with a well-formed task ID included.
+GET request to `{aggregator}/hpke_config`.
 
 An Aggregator responds to well-formed requests with HTTP status code 200 OK and
 an `HpkeConfigList` value, with media type "application/dap-hpke-config-list".
 The `HpkeConfigList` structure contains one or more `HpkeConfig` structures in
 decreasing order of preference. This allows an Aggregator to support multiple
 HPKE configurations simultaneously.
-
-[TODO: Allow Aggregators to return HTTP status code 403 Forbidden in deployments
-that use authentication to avoid leaking information about which tasks exist.]
 
 ~~~
 HpkeConfig HpkeConfigList<1..2^16-1>;
