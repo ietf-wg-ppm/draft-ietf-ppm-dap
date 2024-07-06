@@ -388,10 +388,6 @@ Report Share:
 
 {:br}
 
-This document uses the presentation language of {{!RFC8446}} to define messages
-in the DAP protocol. Encoding and decoding of these messages as byte strings
-also follows {{RFC8446}}.
-
 # Overview {#overview}
 
 The protocol is executed by a large set of Clients and a pair of servers
@@ -639,6 +635,82 @@ DAP has three major interactions which need to be defined:
 
 Each of these interactions is defined in terms of "resources". In this section
 we define these resources and the messages used to act on them.
+
+## Message Encoding
+
+We use the presentation language defined in {{!RFC8446, Section 3}} to define
+messages in the DAP protocol, with the following deviations.
+
+{{Section 3.7 of !RFC8446}} defines a syntax for structure fields whose values
+are constants. In this document, we do not use that notation, but use something
+similar to describe specific variants of structures containing enumerated types,
+described in {{!RFC8446, Section 3.8}}.
+
+For example, suppose we have an enumeration and a structure defined as follows:
+
+~~~
+enum {
+  number(0),
+  string(1),
+  (255)
+} ExampleEnum;
+
+struct {
+  uint32 always_present;
+  ExampleEnum type;
+  select (ExampleStruct.type) {
+    case number: uint32 a_number;
+    case string: opaque a_string<0..10>;
+  };
+} ExampleStruct;
+~~~
+
+Then we describe the specific variant of `ExampleStruct` where `type == number`
+with a `variant` block like so:
+
+~~~
+variant {
+  /* Field exists regardless of variant */
+  uint32 always_present;
+  ExampleEnum type = number;
+  /* Only fields included in the type == number variant is described */
+  uint32 a_number;
+} ExampleStruct;
+~~~
+
+The protocol text accompanying this would explain how implementations should
+handle the `always_present` and `a_number` fields but not `type`. This does not
+mean that the `type` field of `ExampleStruct` can only ever have value `number`.
+
+This notation can also be used in structures where the enum field does not
+affect what fields are or are not present in the structure. For example:
+
+~~~
+enum {
+  something(0),
+  something_else(1),
+  (255)
+} FailureReason;
+
+struct {
+  FailureReason failure_reason;
+  opaque another_field<0..256>;
+} FailedOperation;
+~~~
+
+The protocol text might include a description like:
+
+~~~
+variant {
+  FailureReason failure_reason = something;
+  opaque another_field<0..256>;
+} FailedOperation;
+~~~
+
+Encoding and decoding of these messages as byte strings also follows
+{{RFC8446}}.
+
+## Basic Type Definitions
 
 The following are some basic type definitions used in other messages:
 
@@ -1492,7 +1564,7 @@ For any report that was rejected, the Helper sets the outbound preparation
 response to
 
 ~~~
-struct {
+variant {
   ReportID report_id;
   PrepareRespState prepare_resp_state = reject;
   PrepareError prepare_error;
@@ -1525,7 +1597,7 @@ initial `outbound` message to send in response to the Leader. If `state` is of
 type `Rejected`, then the Helper responds with
 
 ~~~
-struct {
+variant {
   ReportID report_id;
   PrepareRespState prepare_resp_state = reject;
   PrepareError prepare_error = vdaf_prep_error;
@@ -1535,7 +1607,7 @@ struct {
 Otherwise the Helper responds with
 
 ~~~
-struct {
+variant {
   ReportID report_id;
   PrepareRespState prepare_resp_state = continue;
   opaque payload<0..2^32-1> = outbound;
@@ -1811,7 +1883,7 @@ denote the payload of the prep step. The Helper computes the following:
 If `state == Rejected()`, then the Helper's response is
 
 ~~~
-struct {
+variant {
   ReportID report_id;
   PrepareRespState prepare_resp_state = reject;
   PrepareError prepare_error = vdaf_prep_error;
@@ -1821,7 +1893,7 @@ struct {
 Otherwise, if `outbound != None`, then the Helper's response is
 
 ~~~
-struct {
+variant {
   ReportID report_id;
   PrepareRespState prepare_resp_state = continue;
   opaque payload<0..2^32-1> = outbound;
@@ -1831,7 +1903,7 @@ struct {
 Otherwise, if `outbound == None`, then the Helper's response is
 
 ~~~
-struct {
+variant {
   ReportID report_id;
   PrepareRespState prepare_resp_state = finished;
 } PrepareResp;
