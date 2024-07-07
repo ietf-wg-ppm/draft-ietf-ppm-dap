@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-07-04T01:00:53.910852+00:00",
+  "timestamp": "2024-07-07T01:06:19.518752+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -9584,7 +9584,7 @@
       ],
       "body": "In #393, we define a union with an enum discriminant roughly like:\r\n\r\n```\r\nenum {\r\n  continue(0),\r\n  finished(1)\r\n  reject(2),\r\n  (255)\r\n} PrepareStepState;\r\n\r\nstruct {\r\n  PrepareStepState prepare_step_state;\r\n  select (PrepareStep.prepare_step_state) {\r\n    case continue:\r\n      ReportId report_id;\r\n      opaque payload<0..2^32-1>;\r\n    case finished:\r\n      ReportId report_id;\r\n    case reject:\r\n      ReportId report_id;\r\n      ReportShareError report_share_error;\r\n  };\r\n} PrepareStep;\r\n```\r\n\r\nThen later in protocol text, we define partial constructions of values like:\r\n\r\n```\r\nstruct {\r\n  PrepareStepState prepare_step_state = 2; /* reject */\r\n  ReportId report_id;\r\n  ReportShareError report_share_error;\r\n} PrepareStep;\r\n```\r\n\r\nThis notation is clear and certainly is more compact than a paragraph explaining to implementers what enum variant to use, but it conflicts with [section 3.7 of RFC 8446](https://datatracker.ietf.org/doc/html/rfc8446#section-3.7), which tells us that this is the notation for defining structs that contain fields whose values are fixed (I gather this was useful in TLS 1.3 for backward compatibility with older TLS versions).\r\n\r\nWe can resolve this by adding some text to \"Conventions and Definitions\", where we introduce the usage of RFC 8446 presentation language, explaining our extensions and deviations. There may also be some prior art in other TLS WG documents we can reference, but I haven't found it.",
       "createdAt": "2023-06-14T18:22:32Z",
-      "updatedAt": "2024-06-26T23:28:13Z",
+      "updatedAt": "2024-07-06T00:08:48Z",
       "closedAt": null,
       "comments": [
         {
@@ -9663,6 +9663,13 @@
           "body": "[RFC 9420 2.1](https://datatracker.ietf.org/doc/html/rfc9420#name-presentation-language) has some prior art on documenting extensions to TLS PR. And actually we should check whether we want to adopt their optional and variable length vector notation.",
           "createdAt": "2024-05-09T18:06:42Z",
           "updatedAt": "2024-05-09T18:06:42Z"
+        },
+        {
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "body": "#556 addresses this to my satisfaction. To answer some specific points from above:\r\n\r\n- I don't think either of the extensions from MLS are useful for us: there's nowhere we would use `Optional<T>` (or at least nowhere that I think is more clear than what we have now), and I don't think the variable length vector encoding is worthwhile for us.\r\n- I don't think there's a strong enough case for rewriting everything into RFC 9000 syntax. Proponents of that approach are welcome to draft a PR, though.",
+          "createdAt": "2024-07-06T00:08:46Z",
+          "updatedAt": "2024-07-06T00:08:46Z"
         }
       ]
     },
@@ -66764,13 +66771,13 @@
       "labels": [],
       "body": "Leader-selected is a more accurate name than fixed-size, since the batch sizes are not fixed -- any size above min_batch_size (and, if specified, below max_batch_size) is acceptable.\r\n\r\nThe max_batch_size parameter of the leader-selected query type is removed. This parameter does not need to be enforced by both aggregators, so it can be made implementation-specific.\r\n\r\nAlso, restore the partial batch selector to the Collection message; the included batch ID is required for the Collector to decrypt the aggregate shares, as it is included in the AAD. This bug was introduced in #554 & effectively breaks collection for the fixed-size query type in DAP-11.\r\n\r\nCloses #555.",
       "createdAt": "2024-06-13T23:56:57Z",
-      "updatedAt": "2024-07-04T00:03:52Z",
+      "updatedAt": "2024-07-05T23:31:13Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "35f1274853c1c06a5132612b111debefe4fd17ac",
       "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "headRefName": "bran/leader-selected",
-      "headRefOid": "55d42f49031eff93952c9db62df554e1ad2052c5",
+      "headRefOid": "bb404b7fa69c66b2fb4f9d494938bea2a756e8d7",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
@@ -67240,6 +67247,39 @@
               "updatedAt": "2024-07-04T00:03:52Z"
             }
           ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6Az7iR",
+          "commit": {
+            "abbreviatedOid": "55d42f4"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-05T18:05:15Z",
+          "updatedAt": "2024-07-05T18:05:15Z",
+          "comments": [
+            {
+              "originalPosition": 25,
+              "body": "(made this change throughout.)",
+              "createdAt": "2024-07-05T18:05:15Z",
+              "updatedAt": "2024-07-05T18:05:21Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6A0ypn",
+          "commit": {
+            "abbreviatedOid": "bb404b7"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2024-07-05T23:31:13Z",
+          "updatedAt": "2024-07-05T23:31:13Z",
+          "comments": []
         }
       ]
     },
@@ -67255,7 +67295,7 @@
       "labels": [],
       "body": "Closes https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/557.\r\n\r\nAllows helper-side aggregate job preparation to be handled asynchronously,\r\nsimilarly to how collection jobs work. Briefly, after calls with\r\n`AggregationJobInitReq` and `AggregationJobContinueReq`, the leader polls\r\nthe helper at `GET /tasks/{task-id]/aggregation_jobs/{aggregation-job-id}`\r\nuntil receiving an `AggregationJobResp`.\r\n\r\nIn discussion in #577 we had soft consensus on making this the only option,\r\ni.e. for spec simplicity we don't need to also allow the old synchronous\r\nbehavior.",
       "createdAt": "2024-06-25T18:08:22Z",
-      "updatedAt": "2024-07-03T23:41:32Z",
+      "updatedAt": "2024-07-05T23:33:13Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "35f1274853c1c06a5132612b111debefe4fd17ac",
@@ -68037,6 +68077,86 @@
               "updatedAt": "2024-07-03T23:41:32Z"
             }
           ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6Ap-Gt",
+          "commit": {
+            "abbreviatedOid": "3c9752d"
+          },
+          "author": "mendess",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-04T09:38:48Z",
+          "updatedAt": "2024-07-04T09:38:48Z",
+          "comments": [
+            {
+              "originalPosition": 87,
+              "body": "You're right, this can be implemented with a hash. My follow up question is, what happens if the leader does repeat the request and keeps the same body? What should the helper do then? If this is specified I'm missing where",
+              "createdAt": "2024-07-04T09:38:48Z",
+              "updatedAt": "2024-07-04T09:38:48Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6AzhAV",
+          "commit": {
+            "abbreviatedOid": "3c9752d"
+          },
+          "author": "inahga",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-05T16:12:01Z",
+          "updatedAt": "2024-07-05T16:12:01Z",
+          "comments": [
+            {
+              "originalPosition": 87,
+              "body": "I'm not seeing concrete mention of that scenario either. We've been treating repeated requests as idempotent, i.e. we return 201 Created.\r\n\r\nWe probably need language in this paragraph along the lines of \"If the `AggregationJobInitReq` is identical to the original request, the Leader MAY respond with 201 Created\". Thoughts from others?",
+              "createdAt": "2024-07-05T16:12:01Z",
+              "updatedAt": "2024-07-05T16:12:01Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6Azkr0",
+          "commit": {
+            "abbreviatedOid": "3c9752d"
+          },
+          "author": "inahga",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-05T16:25:36Z",
+          "updatedAt": "2024-07-05T16:25:36Z",
+          "comments": [
+            {
+              "originalPosition": 80,
+              "body": "> I think the PUT should always return 202.\r\n\r\nClarify? PUT should always return 201 Created?\r\n\r\n> I like @suman-ganta's suggestion for the GET.\r\n\r\nI'm fine with this change as well.\r\n\r\n> A textual change may make this clearer.\r\n\r\nAgreed, I think the behavior is permissible with the text as-is, but it's not obvious.",
+              "createdAt": "2024-07-05T16:25:36Z",
+              "updatedAt": "2024-07-05T16:25:36Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6A0ywu",
+          "commit": {
+            "abbreviatedOid": "3c9752d"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-05T23:33:13Z",
+          "updatedAt": "2024-07-05T23:33:13Z",
+          "comments": [
+            {
+              "originalPosition": 87,
+              "body": "My view is that the discussion of PUT in [RFC 9110](https://www.rfc-editor.org/rfc/rfc9110#section-9.3.4) makes it clear that such request are idempotent, but there's no downside to making that explicit here.",
+              "createdAt": "2024-07-05T23:33:13Z",
+              "updatedAt": "2024-07-05T23:33:13Z"
+            }
+          ]
         }
       ]
     },
@@ -68065,6 +68185,79 @@
       "mergeCommit": null,
       "comments": [],
       "reviews": []
+    },
+    {
+      "number": 566,
+      "id": "PR_kwDOFEJYQs50kpE0",
+      "title": "Document deviations from RFC 8446 PL",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/566",
+      "state": "OPEN",
+      "author": "tgeoghegan",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Explains in detail how the syntax from RFC 8446 section 3.7 is repurposed for concise descriptions of structure variants. Additionally, the section on message encoding is moved to \"Protocol Definition\" to make the document flow better.\r\n\r\nCloses #472",
+      "createdAt": "2024-07-06T00:05:12Z",
+      "updatedAt": "2024-07-06T00:05:18Z",
+      "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "baseRefName": "main",
+      "baseRefOid": "35f1274853c1c06a5132612b111debefe4fd17ac",
+      "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "headRefName": "timg/tls-presentation-exceptions",
+      "headRefOid": "334e2a76b19eacd8a688672faf4da620284f7108",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 567,
+      "id": "PR_kwDOFEJYQs50kqOj",
+      "title": "Remove per-task HPKE configurations",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/567",
+      "state": "OPEN",
+      "author": "tgeoghegan",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "As discussed in #505, putting the task ID into the HPKE configuration request leaks which tasks a client is participating in, which can otherwise be concealed by OHTTP. This commit removes the notion of per-task HPKE keys from DAP, requiring global keys.\r\n\r\nCloses #505",
+      "createdAt": "2024-07-06T00:17:07Z",
+      "updatedAt": "2024-07-06T00:18:25Z",
+      "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "baseRefName": "main",
+      "baseRefOid": "35f1274853c1c06a5132612b111debefe4fd17ac",
+      "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "headRefName": "timg/global-hpke-only",
+      "headRefOid": "db5eed72626186587190f98c06ca81a4286d947c",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOFEJYQs6A01Az",
+          "commit": {
+            "abbreviatedOid": "db5eed7"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-06T00:18:08Z",
+          "updatedAt": "2024-07-06T00:18:08Z",
+          "comments": [
+            {
+              "originalPosition": 30,
+              "body": "This TODO is moot:\r\n\r\n1. If we only have global HPKE keys, we don't leak which tasks exist\r\n2. This would at best be a security consideration; DAP does not need to give implementations permission to use well-established HTTP semantics.",
+              "createdAt": "2024-07-06T00:18:08Z",
+              "updatedAt": "2024-07-06T00:18:09Z"
+            }
+          ]
+        }
+      ]
     }
   ]
 }
