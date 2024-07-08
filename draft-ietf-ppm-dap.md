@@ -2750,6 +2750,22 @@ in this section for all media types listed above.
 
 [OPEN ISSUE: Solicit review of these allocations from domain experts.]
 
+### Message versioning
+
+Media types for the HTTP requests are specific to this version of DAP. When a
+new major enhancement is proposed that results in newer IETF specification
+for DAP, a new set of media types need to be defined. In other words, newer
+versions of DAP will not be backward compatible with this version of DAP.
+
+(NOTE TO RFC EDITOR: Remove this paragraph.) HTTP requests with DAP media types
+MAY express an optional parameter 'version', following {{Section 8.3 of !RFC9110}}.
+Value of this parameter indicates current draft version of the protocol the
+component is using. This MAY be used as a hint by the receiver of the request
+to do compatibility checks between client and server.
+For example, A report submission to leader from a client that supports
+draft-ietf-ppm-dap-09 could have the header
+`Media-Type: application/dap-report;version=09`.
+
 ### "application/dap-hpke-config-list" media type
 
 Type name:
