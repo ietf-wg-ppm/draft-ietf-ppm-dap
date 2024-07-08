@@ -2654,6 +2654,11 @@ the input shares and defeat privacy.
 
 # IANA Considerations
 
+## Message versioning
+Media types for the HTTP requests are specific to this version of DAP. When a new major enhancement is proposed that results in newer IETF specification for DAP, a new set of media types need to be defined. In other words, newer versions of DAP will not be backward compatible with this version of DAP.
+
+HTTP requests with DAP media types MAY express an optional parameter 'version'. Value of this parameter indicates current draft version of the protocol the component is using. This MAY be used as a hint by the receiver of the request to do compatibility checks between client and server.
+
 ## Protocol Message Media Types
 
 This specification defines the following protocol messages, along with their
