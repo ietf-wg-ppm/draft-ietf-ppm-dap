@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-07-07T01:06:19.518752+00:00",
+  "timestamp": "2024-07-09T01:01:55.681401+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -66001,21 +66001,21 @@
       "id": "PR_kwDOFEJYQs5nJjJ2",
       "title": "DAP Version info in mime types",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/547",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "suman-ganta",
       "authorAssociation": "NONE",
       "assignees": [],
       "labels": [],
       "body": "This adds support for expressing dap versions in the mime types. This addresses the issue #541 ",
       "createdAt": "2024-02-17T02:22:27Z",
-      "updatedAt": "2024-02-21T00:46:21Z",
+      "updatedAt": "2024-07-08T23:17:55Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "8f1f29daf32e3bdc769ccc65938d421be923e56c",
       "headRepository": "suman-ganta/draft-ietf-ppm-dap",
       "headRefName": "dap-version",
-      "headRefOid": "e9409be818816355f85ae4368251ef9933a3aaa9",
-      "closedAt": null,
+      "headRefOid": "6236ff0d53a38456d539aa151fd171a2407991f9",
+      "closedAt": "2024-07-08T23:17:55Z",
       "mergedAt": null,
       "mergedBy": null,
       "mergeCommit": null,
@@ -68198,7 +68198,7 @@
       "labels": [],
       "body": "Explains in detail how the syntax from RFC 8446 section 3.7 is repurposed for concise descriptions of structure variants. Additionally, the section on message encoding is moved to \"Protocol Definition\" to make the document flow better.\r\n\r\nCloses #472",
       "createdAt": "2024-07-06T00:05:12Z",
-      "updatedAt": "2024-07-06T00:05:18Z",
+      "updatedAt": "2024-07-08T22:38:37Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "35f1274853c1c06a5132612b111debefe4fd17ac",
@@ -68209,8 +68209,56 @@
       "mergedAt": null,
       "mergedBy": null,
       "mergeCommit": null,
-      "comments": [],
-      "reviews": []
+      "comments": [
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Reviewer note: @suman-ganta[observed](https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/472#issuecomment-1781933269) that TLS-syntax does not explicitly allow `case` blocks with multiple fields. We currently don't have any cases of this.\r\n\r\n",
+          "createdAt": "2024-07-08T20:45:35Z",
+          "updatedAt": "2024-07-08T20:45:48Z"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "PRR_kwDOFEJYQs6BAcIc",
+          "commit": {
+            "abbreviatedOid": "334e2a7"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2024-07-08T20:46:13Z",
+          "updatedAt": "2024-07-08T20:46:13Z",
+          "comments": []
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6BBDwO",
+          "commit": {
+            "abbreviatedOid": "334e2a7"
+          },
+          "author": "suman-ganta",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-08T22:24:31Z",
+          "updatedAt": "2024-07-08T22:38:37Z",
+          "comments": [
+            {
+              "originalPosition": 54,
+              "body": "This semantic is defined in [variant](https://datatracker.ietf.org/doc/html/rfc8446#section-3.8) section, right? Are we making `select` readable here? If so, do we need to do this for every structure? Or there is a special case where illustrating the above way makes it clear?\r\n\r\nSeeing same type definition multiple times with different fields could confuse readers. Instead of extending the semantics of `struct`, should this type be called `const` or `type`?",
+              "createdAt": "2024-07-08T22:24:31Z",
+              "updatedAt": "2024-07-08T22:38:57Z"
+            },
+            {
+              "originalPosition": 52,
+              "body": "How do we express multiple selects and their associated qualified members in this notation? (Such case does not exist in DAP so far I think)\r\n\r\n",
+              "createdAt": "2024-07-08T22:34:09Z",
+              "updatedAt": "2024-07-08T22:38:37Z"
+            }
+          ]
+        }
+      ]
     },
     {
       "number": 567,
@@ -68224,7 +68272,7 @@
       "labels": [],
       "body": "As discussed in #505, putting the task ID into the HPKE configuration request leaks which tasks a client is participating in, which can otherwise be concealed by OHTTP. This commit removes the notion of per-task HPKE keys from DAP, requiring global keys.\r\n\r\nCloses #505",
       "createdAt": "2024-07-06T00:17:07Z",
-      "updatedAt": "2024-07-06T00:18:25Z",
+      "updatedAt": "2024-07-08T20:07:59Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "35f1274853c1c06a5132612b111debefe4fd17ac",
@@ -68254,6 +68302,98 @@
               "body": "This TODO is moot:\r\n\r\n1. If we only have global HPKE keys, we don't leak which tasks exist\r\n2. This would at best be a security consideration; DAP does not need to give implementations permission to use well-established HTTP semantics.",
               "createdAt": "2024-07-06T00:18:08Z",
               "updatedAt": "2024-07-06T00:18:09Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6BAH5N",
+          "commit": {
+            "abbreviatedOid": "db5eed7"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2024-07-08T20:07:59Z",
+          "updatedAt": "2024-07-08T20:07:59Z",
+          "comments": []
+        }
+      ]
+    },
+    {
+      "number": 568,
+      "id": "PR_kwDOFEJYQs50wQ9x",
+      "title": "DAP Version compatibility",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/568",
+      "state": "OPEN",
+      "author": "suman-ganta",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "Closes #541.\r\n\r\nMade versioning compatibilities explicit and an optional way to express draft versions.",
+      "createdAt": "2024-07-08T23:17:45Z",
+      "updatedAt": "2024-07-08T23:42:40Z",
+      "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "baseRefName": "main",
+      "baseRefOid": "35f1274853c1c06a5132612b111debefe4fd17ac",
+      "headRepository": "suman-ganta/draft-ietf-ppm-dap",
+      "headRefName": "dap-versioning",
+      "headRefOid": "62cdae34fb1316cb25ea9ead71b5aa34563e9365",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOFEJYQs6BBRxs",
+          "commit": {
+            "abbreviatedOid": "62cdae3"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "N.B. the cryptographic domain separation string used for encryption of report & aggregate shares contains the current draft number, so implementations of different drafts of DAP will not interoperate. But there's no reason we can't include this as well, it would likely be much easier to debug a version-skew issue using this mechanism.",
+          "createdAt": "2024-07-08T23:26:22Z",
+          "updatedAt": "2024-07-08T23:32:08Z",
+          "comments": [
+            {
+              "originalPosition": 7,
+              "body": "I think this paragraph would not fit into the eventual RFC for DAP, since there will be no draft version to refer to. IMO, add a TODO to remove this before RFC.",
+              "createdAt": "2024-07-08T23:26:22Z",
+              "updatedAt": "2024-07-08T23:32:08Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6BBUBb",
+          "commit": {
+            "abbreviatedOid": "62cdae3"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-08T23:36:49Z",
+          "updatedAt": "2024-07-08T23:42:40Z",
+          "comments": [
+            {
+              "originalPosition": 4,
+              "body": "```suggestion\r\n## Message versioning\r\n\r\n```",
+              "createdAt": "2024-07-08T23:36:49Z",
+              "updatedAt": "2024-07-08T23:42:40Z"
+            },
+            {
+              "originalPosition": 5,
+              "body": "Wrap paragraphs at 80 columns.",
+              "createdAt": "2024-07-08T23:37:06Z",
+              "updatedAt": "2024-07-08T23:42:40Z"
+            },
+            {
+              "originalPosition": 7,
+              "body": "Agreed. Concretely, add something like this: \r\n```suggestion\r\n(NOTE TO RFC EDITOR: Remove this paragraph.) HTTP requests with DAP media types MAY express an optional parameter 'version'. Value of this parameter indicates current draft version of the protocol the component is using. This MAY be used as a hint by the receiver of the request to do compatibility checks between client and server.\r\n```\r\n\r\n",
+              "createdAt": "2024-07-08T23:42:25Z",
+              "updatedAt": "2024-07-08T23:42:40Z"
             }
           ]
         }
