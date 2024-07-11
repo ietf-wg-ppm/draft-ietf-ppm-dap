@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-07-09T01:01:55.681401+00:00",
+  "timestamp": "2024-07-11T01:02:27.565746+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -11115,7 +11115,7 @@
       ],
       "body": "There is a [new paper](https://eprint.iacr.org/2024/666) (to appear at IEEE S&P 2024) that shows how to lift an [FLP](https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-09#section-7.1) into a proof system that is \"silently verifiable\". For such a proof system, it's possible to check if _some_ measurement in a set of measurements is invalid, exchanging only a constant number of bits (128). In Prio3, we must exchange a number of bits linear in the number of measurements.\r\n\r\nThe bandwidth savings are significant. For Prio3SumVec with bits=1, length=1,000, and chunk_length=32 and 100 reports, an `AggregationJobInitReq` is 122KB. If we modified Prio3 by making the FLP silently verifiable, the same message would be roughly 7KB (back-of-a-napkin calculation). Computational cost remains about the same. (See Figure 7 from the paper for details.)\r\n\r\nThis approach does a have a potential downside: if verification fails, then we learn only that _some_ measurement is invalid, not _which_ measurement is invalid. Thus, in the case that some fraction of the reports in the aggregation job, you either need to throw away the data or exchange more bits in order to find the subset of measurements that are invalid. The communication cost increases as the fraction of malicious Clients increases.\r\n\r\nThere are many ways we might implement this. Perhaps the simplest would be to treat batched preparation as an alternative aggregation flow that falls back to the existing aggregation flow (i.e., per report validation) if verification fails. Concretely, we would specify an alternative aggregation sub-protocol that is the same as the existing flow except:\r\n1. It is only compatible with 1-round, \"silently verifiable\" VDAFs.\r\n2. If verification fails, then it needs to be safe to fallback to per-report validation.\r\n\r\n\r\n\r\n\r\n\r\n\r\n",
       "createdAt": "2024-05-16T23:48:08Z",
-      "updatedAt": "2024-06-26T15:51:52Z",
+      "updatedAt": "2024-07-09T18:16:51Z",
       "closedAt": null,
       "comments": [
         {
@@ -11131,6 +11131,13 @@
           "body": "That's a super interesting idea! Care to flesh it out a bit more, even if just for fun? \r\n\r\nThe problem at hand is to minimize the communication cost (bits on the wire, number of round trips) when you expect X% of the reports to invalid. Though I think there will always be a need to fallback to per-report verification.",
           "createdAt": "2024-06-03T14:49:59Z",
           "updatedAt": "2024-06-03T14:49:59Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "There is a draft PR (#565) with a proposal of how to integrate this into DAP. In the meantime, I've been looking at how much bandwidth savings we would actually get.\r\n\r\nUnfortunately, **[Whisper](https://eprint.iacr.org/2024/666) provides no benefit for DAP _as-is_, even if all clients are honest.** In Whisper, each Client sends some additional information to each Aggregator. The number of bytes included in the report is roughly as much information as is exchanged during per-report preparation Prio3.\r\n\r\nIn more detail, the Client sends to each Aggregator the verifier share that would be computed by its co-Aggregator. This is denoted by $\\mathsf{vtag}_{\\mathsf{NS},i}$ in Figure 4 of the paper. (In the transformation from to the \"silently verifiable\" proof system, the Aggregators arrange to check that Client sent the correct value. This is morally similar to how we check that joint randomness computation in Prio3.) This is the same value that would be transmitted during preparation of Prio3.\r\n\r\nNow, in DAP, the Helper's report share is proxied by the Leader during aggregation. Thus, one verifier share per-report is transmitted either in a traditional aggregation job via Prio3 or a batched aggregation job via Whisper. The only difference is who generates the message.\r\n\r\nWhisper would only make a difference in a \"Split-Upload\" architecture, where each Client sends report shares to the Leader and Helper directly. In this setting, the Clients pay the bandwidth cost, rather than the Leader. It has been observed (#130) that bandwidth is usually cheaper for Clients than it would be for a Leader. Note that [we ruled out Split-Upload for DAP at IETF 113](https://datatracker.ietf.org/meeting/113/materials/slides-113-ppm-ppm-upload-flow).\r\n\r\nAll that said, we may see improvements to Whisper in the future that make it worth it for DAP as-is. And there are other VDAFs that may fair better. For example, [VIDPFs](https://eprint.iacr.org/2023/080) not only allow for batched preparation, but also don't increase Client->Aggregator bandwidth[^1].\r\n\r\n\r\n[^1]: There is a big caveat here: The parameters of VIDPF are subject to change as we learn more about their concrete security.\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n",
+          "createdAt": "2024-07-09T18:06:50Z",
+          "updatedAt": "2024-07-09T18:16:51Z"
         }
       ]
     }
@@ -67295,7 +67302,7 @@
       "labels": [],
       "body": "Closes https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/557.\r\n\r\nAllows helper-side aggregate job preparation to be handled asynchronously,\r\nsimilarly to how collection jobs work. Briefly, after calls with\r\n`AggregationJobInitReq` and `AggregationJobContinueReq`, the leader polls\r\nthe helper at `GET /tasks/{task-id]/aggregation_jobs/{aggregation-job-id}`\r\nuntil receiving an `AggregationJobResp`.\r\n\r\nIn discussion in #577 we had soft consensus on making this the only option,\r\ni.e. for spec simplicity we don't need to also allow the old synchronous\r\nbehavior.",
       "createdAt": "2024-06-25T18:08:22Z",
-      "updatedAt": "2024-07-05T23:33:13Z",
+      "updatedAt": "2024-07-10T21:46:50Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "35f1274853c1c06a5132612b111debefe4fd17ac",
@@ -68157,6 +68164,52 @@
               "updatedAt": "2024-07-05T23:33:13Z"
             }
           ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6BXbhb",
+          "commit": {
+            "abbreviatedOid": "738ec18"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "We should add some discussion about asynchronocity to the overview at the top of {{aggregate-flow}}: Mention that aggregation jobs are handled asynchronicity, and why.",
+          "createdAt": "2024-07-10T21:35:50Z",
+          "updatedAt": "2024-07-10T21:41:55Z",
+          "comments": [
+            {
+              "originalPosition": 81,
+              "body": "@suman-ganta suggested to me offline that the Helper should be able to wait to respond to the GET until the response is ready. I don't this text disallows this behavior, but could we add a \"MAY\" to make it more explicit.\r\n\r\nAlso, perhaps we should recommend sending the Retry-After header more strongly.\r\n```suggestion\r\nIf the aggregation job is not finished yet, the Helper responds with HTTP\r\nstatus 202 Accepted. The Helper's response SHOULD include a Retry-After header\r\nfield to suggest a polling interval to the Leader.\r\n```",
+              "createdAt": "2024-07-10T21:35:50Z",
+              "updatedAt": "2024-07-10T21:41:55Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6BXgx6",
+          "commit": {
+            "abbreviatedOid": "738ec18"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-10T21:43:18Z",
+          "updatedAt": "2024-07-10T21:45:41Z",
+          "comments": [
+            {
+              "originalPosition": 124,
+              "body": "Since you also deleted this above\r\n```suggestion\r\n```",
+              "createdAt": "2024-07-10T21:43:18Z",
+              "updatedAt": "2024-07-10T21:45:41Z"
+            },
+            {
+              "originalPosition": 157,
+              "body": "I agree it's an oversight. It should be MUST.",
+              "createdAt": "2024-07-10T21:45:08Z",
+              "updatedAt": "2024-07-10T21:45:41Z"
+            }
+          ]
         }
       ]
     },
@@ -68198,13 +68251,13 @@
       "labels": [],
       "body": "Explains in detail how the syntax from RFC 8446 section 3.7 is repurposed for concise descriptions of structure variants. Additionally, the section on message encoding is moved to \"Protocol Definition\" to make the document flow better.\r\n\r\nCloses #472",
       "createdAt": "2024-07-06T00:05:12Z",
-      "updatedAt": "2024-07-08T22:38:37Z",
+      "updatedAt": "2024-07-09T18:17:48Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "35f1274853c1c06a5132612b111debefe4fd17ac",
       "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "headRefName": "timg/tls-presentation-exceptions",
-      "headRefOid": "334e2a76b19eacd8a688672faf4da620284f7108",
+      "headRefOid": "28fac094792711ba8c2ba324478ce855d89daca9",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
@@ -68257,6 +68310,72 @@
               "updatedAt": "2024-07-08T22:38:37Z"
             }
           ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6BJ0vg",
+          "commit": {
+            "abbreviatedOid": "334e2a7"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-09T16:19:30Z",
+          "updatedAt": "2024-07-09T16:24:14Z",
+          "comments": [
+            {
+              "originalPosition": 52,
+              "body": "Since this doesn't occur in DAP, I don't think we need to define it. Also, I would push back pretty hard on any struct definition that contained multiple selects. That would almost certainly allow construction of messages that aren't semantically valid, which would force extra validation checks on implementations. I think we would always prefer a struct contain a single enumeration where all its variants are valid over multiple enumerated types.",
+              "createdAt": "2024-07-09T16:19:30Z",
+              "updatedAt": "2024-07-09T16:24:14Z"
+            },
+            {
+              "originalPosition": 54,
+              "body": "The pertinent examples are various cases of constructing `PrepareResp` as shown [here](https://datatracker.ietf.org/doc/html/draft-ietf-ppm-dap-11#section-4.5.1.2-9) and [here](https://datatracker.ietf.org/doc/html/draft-ietf-ppm-dap-11#section-4.5.1.2-15) or [here](https://datatracker.ietf.org/doc/html/draft-ietf-ppm-dap-11#section-4.5.2.2-13).\r\n\r\nI like the idea of annotating such partial constants somehow to make it clear this special syntax is in use. `const` doesn't feel right because only part of the structure is constant. Maybe `struct specialized` to indicate we are describing a particular specialization of the structure:\r\n\r\n```\r\nstruct specialized {\r\n  ReportID report_id;\r\n  PrepareRespState prepare_resp_state = continue;\r\n  opaque payload<0..2^32-1> = outbound;\r\n} PrepareResp;\r\n```\r\n\r\nOr perhaps `struct variant` is better, since we are dealing with enums here, and \"specialized\" implies generics.",
+              "createdAt": "2024-07-09T16:24:04Z",
+              "updatedAt": "2024-07-09T16:24:14Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6BKkMb",
+          "commit": {
+            "abbreviatedOid": "334e2a7"
+          },
+          "author": "suman-ganta",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-09T18:06:10Z",
+          "updatedAt": "2024-07-09T18:06:10Z",
+          "comments": [
+            {
+              "originalPosition": 54,
+              "body": "`struct variant` sounds good to me.",
+              "createdAt": "2024-07-09T18:06:10Z",
+              "updatedAt": "2024-07-09T18:06:10Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6BKo1D",
+          "commit": {
+            "abbreviatedOid": "334e2a7"
+          },
+          "author": "suman-ganta",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-09T18:15:16Z",
+          "updatedAt": "2024-07-09T18:15:16Z",
+          "comments": [
+            {
+              "originalPosition": 52,
+              "body": "From, the semantics of variants, it is possible to have several selects in a structure. Since variants allow dynamic members of structure, it sounds like legitimate definition to me. Am I missing anything here? Since we are coming up with a notation that could probably be followed in future DAP specs too, I'm trying to make sure we define something that lasts.\r\n\r\nI'm fine if you would like to defer this to later updates.\r\n\r\nOverall, In this notation, I didn't see the distinction between representing `alwaysExsting` fields vs fields added as a result of a specific value of enum. Since the order of fields matter, and these dynamic fields can appear in the middle of two static fields, some visual cue (bold/italicized etc) could help to locate them.",
+              "createdAt": "2024-07-09T18:15:16Z",
+              "updatedAt": "2024-07-09T18:15:16Z"
+            }
+          ]
         }
       ]
     },
@@ -68272,7 +68391,7 @@
       "labels": [],
       "body": "As discussed in #505, putting the task ID into the HPKE configuration request leaks which tasks a client is participating in, which can otherwise be concealed by OHTTP. This commit removes the notion of per-task HPKE keys from DAP, requiring global keys.\r\n\r\nCloses #505",
       "createdAt": "2024-07-06T00:17:07Z",
-      "updatedAt": "2024-07-08T20:07:59Z",
+      "updatedAt": "2024-07-10T21:53:03Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "35f1274853c1c06a5132612b111debefe4fd17ac",
@@ -68317,6 +68436,19 @@
           "createdAt": "2024-07-08T20:07:59Z",
           "updatedAt": "2024-07-08T20:07:59Z",
           "comments": []
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6BXlIf",
+          "commit": {
+            "abbreviatedOid": "db5eed7"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "No objection to merging, but since this is making DAP a little less general, we need to make the case (at IETF 120) for this resolution and against alternatives. An alternative resolution is to discuss the side-effect for OHTTP in security considerations.",
+          "createdAt": "2024-07-10T21:52:49Z",
+          "updatedAt": "2024-07-10T21:53:03Z",
+          "comments": []
         }
       ]
     },
@@ -68332,7 +68464,7 @@
       "labels": [],
       "body": "Closes #541.\r\n\r\nMade versioning compatibilities explicit and an optional way to express draft versions.",
       "createdAt": "2024-07-08T23:17:45Z",
-      "updatedAt": "2024-07-08T23:42:40Z",
+      "updatedAt": "2024-07-09T19:06:48Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "35f1274853c1c06a5132612b111debefe4fd17ac",
@@ -68343,7 +68475,15 @@
       "mergedAt": null,
       "mergedBy": null,
       "mergeCommit": null,
-      "comments": [],
+      "comments": [
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> I like the idea of doing this as an optional parameter in the existing `Content-Type`/`Accept` headers. However, for that reason, I'm not sure we need this spelled out in the DAP protocol. DAP is built on HTTP, and RFC 9110 already makes it clear that media types can include \"semicolon-delimited parameters in the form of name/value pairs\" ([Section 8.3.1](https://www.rfc-editor.org/rfc/rfc9110.html#section-8.3.1)). We don't need to give DAP implementations permission to use well-defined HTTP semantics, just the same as we don't need to give them permission to use HTTP 3xx redirects.\r\n> \r\n> Since we don't specify what should be in this `version` parameter, nor do we specify how implementations should evaluate it, I'm not sure this text adds value to this protocol.\r\n\r\nI think it's a good idea to at least mention this is a possibilty, rather than leaving it to implementers to dig this up themselves. Language like \"MAY add a version parameter as specified in {{Section whatever of !RFC9110}}\" would be helpful.",
+          "createdAt": "2024-07-09T19:06:47Z",
+          "updatedAt": "2024-07-09T19:06:47Z"
+        }
+      ],
       "reviews": [
         {
           "id": "PRR_kwDOFEJYQs6BBRxs",
@@ -68394,6 +68534,26 @@
               "body": "Agreed. Concretely, add something like this: \r\n```suggestion\r\n(NOTE TO RFC EDITOR: Remove this paragraph.) HTTP requests with DAP media types MAY express an optional parameter 'version'. Value of this parameter indicates current draft version of the protocol the component is using. This MAY be used as a hint by the receiver of the request to do compatibility checks between client and server.\r\n```\r\n\r\n",
               "createdAt": "2024-07-08T23:42:25Z",
               "updatedAt": "2024-07-08T23:42:40Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6BJ5fi",
+          "commit": {
+            "abbreviatedOid": "62cdae3"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "I like the idea of doing this as an optional parameter in the existing `Content-Type`/`Accept` headers. However, for that reason, I'm not sure we need this spelled out in the DAP protocol. DAP is built on HTTP, and RFC 9110 already makes it clear that media types can include \"semicolon-delimited parameters  in the form of name/value pairs\" ([Section 8.3.1](https://www.rfc-editor.org/rfc/rfc9110.html#section-8.3.1)). We don't need to give DAP implementations permission to use well-defined HTTP semantics, just the same as we don't need to give them permission to use HTTP 3xx redirects.\r\n\r\nSince we don't specify what should be in this `version` parameter, nor do we specify how implementations should evaluate it, I'm not sure this text adds value to this protocol.",
+          "createdAt": "2024-07-09T16:29:24Z",
+          "updatedAt": "2024-07-09T16:33:55Z",
+          "comments": [
+            {
+              "originalPosition": 7,
+              "body": "I'd like to see an example of this optional `version` parameter. Would this be something like `Media-Type: application/dap-aggregation-job-init-req;version=11`? A reference to [RFC 9110 section 8.3](https://www.rfc-editor.org/rfc/rfc9110.html#section-8.3.1) (which describes this kind of thing in media types) also would help.",
+              "createdAt": "2024-07-09T16:29:24Z",
+              "updatedAt": "2024-07-09T16:33:55Z"
             }
           ]
         }
