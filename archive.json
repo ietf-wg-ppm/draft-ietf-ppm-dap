@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-07-11T01:02:27.565746+00:00",
+  "timestamp": "2024-07-14T01:07:11.056091+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -67302,7 +67302,7 @@
       "labels": [],
       "body": "Closes https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/557.\r\n\r\nAllows helper-side aggregate job preparation to be handled asynchronously,\r\nsimilarly to how collection jobs work. Briefly, after calls with\r\n`AggregationJobInitReq` and `AggregationJobContinueReq`, the leader polls\r\nthe helper at `GET /tasks/{task-id]/aggregation_jobs/{aggregation-job-id}`\r\nuntil receiving an `AggregationJobResp`.\r\n\r\nIn discussion in #577 we had soft consensus on making this the only option,\r\ni.e. for spec simplicity we don't need to also allow the old synchronous\r\nbehavior.",
       "createdAt": "2024-06-25T18:08:22Z",
-      "updatedAt": "2024-07-10T21:46:50Z",
+      "updatedAt": "2024-07-12T18:13:38Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "35f1274853c1c06a5132612b111debefe4fd17ac",
@@ -68210,6 +68210,128 @@
               "updatedAt": "2024-07-10T21:45:41Z"
             }
           ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6Beith",
+          "commit": {
+            "abbreviatedOid": "3c9752d"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-11T15:21:12Z",
+          "updatedAt": "2024-07-11T15:21:12Z",
+          "comments": [
+            {
+              "originalPosition": 87,
+              "body": "@inahga let's mention this scenario explicitly.",
+              "createdAt": "2024-07-11T15:21:12Z",
+              "updatedAt": "2024-07-11T15:21:12Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6BgfFC",
+          "commit": {
+            "abbreviatedOid": "738ec18"
+          },
+          "author": "kristineguo",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-11T18:52:44Z",
+          "updatedAt": "2024-07-11T21:42:23Z",
+          "comments": [
+            {
+              "originalPosition": 24,
+              "body": "> It would be better to provide ability to query for completed jobs\r\n\r\nWould it add too much complexity to support both? i.e., the leader can either query for a specific job's response (using the current proposed structure) or for any complete job response. This gives future leader implementations flexibility on how they want to query for completed jobs.",
+              "createdAt": "2024-07-11T18:52:44Z",
+              "updatedAt": "2024-07-11T21:42:23Z"
+            },
+            {
+              "originalPosition": 60,
+              "body": "```suggestion\r\nresponds with HTTP status 201 Created. The Helper is now ready to process the\r\naggregation job asynchronously from any further requests from the leader.\r\n\r\nTo process an aggregation job, the Helper computes an outbound prepare step\r\nfor each report share. This includes the following structures:\r\n```",
+              "createdAt": "2024-07-11T18:56:45Z",
+              "updatedAt": "2024-07-11T21:42:23Z"
+            },
+            {
+              "originalPosition": 145,
+              "body": "Why do we enforce the same ordering between requests for a given job? This seems unnecessarily strict when the Helper can just match based on the report_id.",
+              "createdAt": "2024-07-11T21:29:56Z",
+              "updatedAt": "2024-07-11T21:42:23Z"
+            },
+            {
+              "originalPosition": 167,
+              "body": "Same nit as above - this wording frames the preparation of the reports as asynchronous from each other, rather than in reality where the job requests are what as processed async",
+              "createdAt": "2024-07-11T21:35:29Z",
+              "updatedAt": "2024-07-11T21:43:56Z"
+            },
+            {
+              "originalPosition": 158,
+              "body": "```suggestion\r\nMAY attempt to recover by sending HTTP status 202 Accepted and discontinuing\r\n```",
+              "createdAt": "2024-07-11T21:37:33Z",
+              "updatedAt": "2024-07-11T21:42:23Z"
+            },
+            {
+              "originalPosition": 159,
+              "body": "Can you clarify what you mean by discontinuing further work? Future continue steps should be allowed to continue processing asynchronously.",
+              "createdAt": "2024-07-11T21:38:31Z",
+              "updatedAt": "2024-07-11T21:42:23Z"
+            },
+            {
+              "originalPosition": 221,
+              "body": "Can we make this plural to indicate that Helpers can store anywhere from the most recent step to the all the steps in a job's history?",
+              "createdAt": "2024-07-11T21:40:12Z",
+              "updatedAt": "2024-07-11T21:42:23Z"
+            },
+            {
+              "originalPosition": 236,
+              "body": "```suggestion\r\nrequest `GET /tasks/{task_id}/collection_jobs/{collection-job-id}` to check on\r\n```",
+              "createdAt": "2024-07-11T21:41:13Z",
+              "updatedAt": "2024-07-11T21:42:23Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6BiMcp",
+          "commit": {
+            "abbreviatedOid": "738ec18"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-11T23:08:46Z",
+          "updatedAt": "2024-07-11T23:24:51Z",
+          "comments": [
+            {
+              "originalPosition": 24,
+              "body": "I think one challenge for \"give me any complete job\" is deciding when to have the Helper _stop_ returning a given job to this request type.\r\n\r\nIf the Helper returns a given job only once, an inopportune network issue, Leader crash, or other transient issue could lead to the job being \"lost\". (specifically, the condition for a job being \"lost\" would be the Helper considering the request successful, but the Leader not processing the response successfully)\r\n\r\nIf the Helper hands out the job until e.g. the Leader sends the next `AggregationJobContinueReq`, a Leader which sends multiple requests for completed jobs concurrently could see the same response multiple times. (Also, if we have reached the last aggregation step, there is no next `AggregationJobContinueReq` to be sent.)",
+              "createdAt": "2024-07-11T23:08:47Z",
+              "updatedAt": "2024-07-11T23:24:51Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6Bq1Oc",
+          "commit": {
+            "abbreviatedOid": "3c9752d"
+          },
+          "author": "suman-ganta",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-12T18:13:38Z",
+          "updatedAt": "2024-07-12T18:13:38Z",
+          "comments": [
+            {
+              "originalPosition": 114,
+              "body": "Since this is async interaction, leader can send two POST requests to this URI, one with valid and another with invalid body. When leader query for status with GET, it would be ambiguous to interpret the response. Two options to resolve this -\r\n* Maintain a requestID so a GET can be pointed to a specific requestID\r\n* Somehow early reject 2nd request instead of always returning 202",
+              "createdAt": "2024-07-12T18:13:38Z",
+              "updatedAt": "2024-07-12T18:14:04Z"
+            }
+          ]
         }
       ]
     },
@@ -68464,13 +68586,13 @@
       "labels": [],
       "body": "Closes #541.\r\n\r\nMade versioning compatibilities explicit and an optional way to express draft versions.",
       "createdAt": "2024-07-08T23:17:45Z",
-      "updatedAt": "2024-07-09T19:06:48Z",
+      "updatedAt": "2024-07-12T22:30:05Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "35f1274853c1c06a5132612b111debefe4fd17ac",
       "headRepository": "suman-ganta/draft-ietf-ppm-dap",
       "headRefName": "dap-versioning",
-      "headRefOid": "62cdae34fb1316cb25ea9ead71b5aa34563e9365",
+      "headRefOid": "a1467cdadc5bfd80678f953714ca6a0a5741c246",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
@@ -68554,6 +68676,46 @@
               "body": "I'd like to see an example of this optional `version` parameter. Would this be something like `Media-Type: application/dap-aggregation-job-init-req;version=11`? A reference to [RFC 9110 section 8.3](https://www.rfc-editor.org/rfc/rfc9110.html#section-8.3.1) (which describes this kind of thing in media types) also would help.",
               "createdAt": "2024-07-09T16:29:24Z",
               "updatedAt": "2024-07-09T16:33:55Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6BsJMk",
+          "commit": {
+            "abbreviatedOid": "62cdae3"
+          },
+          "author": "suman-ganta",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-12T22:29:50Z",
+          "updatedAt": "2024-07-12T22:29:50Z",
+          "comments": [
+            {
+              "originalPosition": 7,
+              "body": "incorporated both suggestions.",
+              "createdAt": "2024-07-12T22:29:50Z",
+              "updatedAt": "2024-07-12T22:29:50Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6BsJO9",
+          "commit": {
+            "abbreviatedOid": "62cdae3"
+          },
+          "author": "suman-ganta",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-12T22:30:05Z",
+          "updatedAt": "2024-07-12T22:30:05Z",
+          "comments": [
+            {
+              "originalPosition": 5,
+              "body": "done",
+              "createdAt": "2024-07-12T22:30:05Z",
+              "updatedAt": "2024-07-12T22:30:05Z"
             }
           ]
         }
