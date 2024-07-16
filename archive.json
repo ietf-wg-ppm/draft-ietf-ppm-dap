@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-07-14T01:07:11.056091+00:00",
+  "timestamp": "2024-07-16T01:03:14.355981+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -66778,7 +66778,7 @@
       "labels": [],
       "body": "Leader-selected is a more accurate name than fixed-size, since the batch sizes are not fixed -- any size above min_batch_size (and, if specified, below max_batch_size) is acceptable.\r\n\r\nThe max_batch_size parameter of the leader-selected query type is removed. This parameter does not need to be enforced by both aggregators, so it can be made implementation-specific.\r\n\r\nAlso, restore the partial batch selector to the Collection message; the included batch ID is required for the Collector to decrypt the aggregate shares, as it is included in the AAD. This bug was introduced in #554 & effectively breaks collection for the fixed-size query type in DAP-11.\r\n\r\nCloses #555.",
       "createdAt": "2024-06-13T23:56:57Z",
-      "updatedAt": "2024-07-05T23:31:13Z",
+      "updatedAt": "2024-07-16T00:14:14Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "35f1274853c1c06a5132612b111debefe4fd17ac",
@@ -66838,6 +66838,13 @@
           "body": "I think a query type effectively:\r\n\r\n* determines how reports can be grouped together\r\n* determines how batches are addressed (i.e. what is the identifier for a batch)\r\n* determines the semantics of how aggregate results can be queried by the collector\r\n\r\nI added some text to this effect -- I'm not totally sure I understand what is meant by \"release criteria\". If this doesn't capture what we hoped, please push back.",
           "createdAt": "2024-07-03T18:29:16Z",
           "updatedAt": "2024-07-03T18:29:16Z"
+        },
+        {
+          "author": "wangshan",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "@cjpatton @branlwyd I don't have a strong opinion on what it should be called. From the discussion so far, I think we agree the purpose of this `query_type` is how the batch is created, or partitioned/selected. In this context, `leader_selected` makes sense, as long as we explain this in the text. I would also preferred to change `query_type` to `batch_select_type`, but I don't have strong opinion on that either.",
+          "createdAt": "2024-07-16T00:14:13Z",
+          "updatedAt": "2024-07-16T00:14:13Z"
         }
       ],
       "reviews": [
@@ -67287,6 +67294,26 @@
           "createdAt": "2024-07-05T23:31:13Z",
           "updatedAt": "2024-07-05T23:31:13Z",
           "comments": []
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6B30wS",
+          "commit": {
+            "abbreviatedOid": "bb404b7"
+          },
+          "author": "wangshan",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-16T00:10:00Z",
+          "updatedAt": "2024-07-16T00:10:01Z",
+          "comments": [
+            {
+              "originalPosition": 236,
+              "body": "names with _ are usually backquoted. Consider adding `` to  this and time_interval on above row",
+              "createdAt": "2024-07-16T00:10:00Z",
+              "updatedAt": "2024-07-16T00:10:01Z"
+            }
+          ]
         }
       ]
     },
@@ -67302,7 +67329,7 @@
       "labels": [],
       "body": "Closes https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/557.\r\n\r\nAllows helper-side aggregate job preparation to be handled asynchronously,\r\nsimilarly to how collection jobs work. Briefly, after calls with\r\n`AggregationJobInitReq` and `AggregationJobContinueReq`, the leader polls\r\nthe helper at `GET /tasks/{task-id]/aggregation_jobs/{aggregation-job-id}`\r\nuntil receiving an `AggregationJobResp`.\r\n\r\nIn discussion in #577 we had soft consensus on making this the only option,\r\ni.e. for spec simplicity we don't need to also allow the old synchronous\r\nbehavior.",
       "createdAt": "2024-06-25T18:08:22Z",
-      "updatedAt": "2024-07-12T18:13:38Z",
+      "updatedAt": "2024-07-15T22:17:13Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "35f1274853c1c06a5132612b111debefe4fd17ac",
@@ -68332,6 +68359,186 @@
               "updatedAt": "2024-07-12T18:14:04Z"
             }
           ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6B1wlR",
+          "commit": {
+            "abbreviatedOid": "3c9752d"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-15T18:06:26Z",
+          "updatedAt": "2024-07-15T18:06:26Z",
+          "comments": [
+            {
+              "originalPosition": 114,
+              "body": "Invalid in what sense? If the message is malformed or something, then the Helper would abort the request. I think it's the Helper's job to ensure that one and only one request is accepted.",
+              "createdAt": "2024-07-15T18:06:26Z",
+              "updatedAt": "2024-07-15T18:06:27Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6B1yAJ",
+          "commit": {
+            "abbreviatedOid": "738ec18"
+          },
+          "author": "suman-ganta",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-15T18:09:53Z",
+          "updatedAt": "2024-07-15T18:09:54Z",
+          "comments": [
+            {
+              "originalPosition": 114,
+              "body": "When two requests are accepted with 202 on the same URL, there is no way to know the response fetched later belongs to request1 or request2. Hope that clarifies.",
+              "createdAt": "2024-07-15T18:09:54Z",
+              "updatedAt": "2024-07-15T18:09:54Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6B19wX",
+          "commit": {
+            "abbreviatedOid": "3c9752d"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-15T18:38:26Z",
+          "updatedAt": "2024-07-15T18:38:26Z",
+          "comments": [
+            {
+              "originalPosition": 114,
+              "body": "When would this happen? Are you thinking of something like a race condition, where the Leader erroneously sends two POSTs at the same time for the same aggregation job?",
+              "createdAt": "2024-07-15T18:38:26Z",
+              "updatedAt": "2024-07-15T18:38:26Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6B2Jp6",
+          "commit": {
+            "abbreviatedOid": "738ec18"
+          },
+          "author": "suman-ganta",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-15T19:07:03Z",
+          "updatedAt": "2024-07-15T19:07:04Z",
+          "comments": [
+            {
+              "originalPosition": 114,
+              "body": "It could happen for various reasons -\r\n1. Leader did not receive response due to network error and retries.\r\n2. Leader incorrectly tracks the step count and sends continue request with invalid step count.\r\n3. Two leader instances sends the same request\r\n4. Other malicious reasons\r\n\r\nI think without request to response correlation, it adds stateful processing responsibility on leader and still does not give a way to track this correlation in a consistent way.",
+              "createdAt": "2024-07-15T19:07:04Z",
+              "updatedAt": "2024-07-15T19:07:04Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6B2bsv",
+          "commit": {
+            "abbreviatedOid": "3c9752d"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-15T19:54:41Z",
+          "updatedAt": "2024-07-15T19:54:41Z",
+          "comments": [
+            {
+              "originalPosition": 114,
+              "body": "Given that the relevant VDAF functions are deterministic, when both aggregators are honestly following the protocol, there is exactly one correct next request for a given aggregation job[1].\r\n\r\nTherefore, I suspect the semantics we want are that the _first_ request received for a given aggregation request determines the correct request; if the Leader sends multiple, non-identical requests for the same aggregation job, something has gone wrong with the Leader & failure is OK. That is, we want to detect repeated non-identical requests, but the proper way to respond to them is with failure rather than tracking both requests.\r\n\r\n[1] This is true semantically but may not be true up to encoding; though DAP messages are deterministically-encoded if the underlying VDAF messages are, and to my knowledge all current VDAFs use messages which are deterministically-encoded.",
+              "createdAt": "2024-07-15T19:54:41Z",
+              "updatedAt": "2024-07-15T19:54:41Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6B2fmg",
+          "commit": {
+            "abbreviatedOid": "3c9752d"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-15T20:04:48Z",
+          "updatedAt": "2024-07-15T20:04:48Z",
+          "comments": [
+            {
+              "originalPosition": 114,
+              "body": "VDAF preparation is deterministic. Given the current _strict_ ordering of reports in the job, there should be exactly one valid next message.",
+              "createdAt": "2024-07-15T20:04:48Z",
+              "updatedAt": "2024-07-15T20:04:48Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6B2gFT",
+          "commit": {
+            "abbreviatedOid": "3c9752d"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-15T20:06:01Z",
+          "updatedAt": "2024-07-15T20:06:01Z",
+          "comments": [
+            {
+              "originalPosition": 114,
+              "body": "Well, one thing that can change is that the Helper's decryption key gets rotated out, causing the report to be rejected.",
+              "createdAt": "2024-07-15T20:06:01Z",
+              "updatedAt": "2024-07-15T20:06:01Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6B3PmT",
+          "commit": {
+            "abbreviatedOid": "3c9752d"
+          },
+          "author": "suman-ganta",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-15T21:54:37Z",
+          "updatedAt": "2024-07-15T21:54:37Z",
+          "comments": [
+            {
+              "originalPosition": 114,
+              "body": "I guess I don't get what response Helper gives in these cases. Response to last request or response to first request?\r\n\r\nIf it is giving response to first request to all - then an incorrect submission (request2) gets a valid response.\r\nIf it is giving response to last request to all - then a valid submission receives error response without knowing why.\r\n\r\nBesides this, My understanding is, leader does not have to be good citizen and can learn things and hence Helper implements\r\n* Prevention of replay attacks\r\n* Prevention of same share belonging to several batches etc.\r\nIs that right understanding and still holds good here?",
+              "createdAt": "2024-07-15T21:54:37Z",
+              "updatedAt": "2024-07-15T21:54:37Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6B3WSo",
+          "commit": {
+            "abbreviatedOid": "3c9752d"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-15T22:17:13Z",
+          "updatedAt": "2024-07-15T22:17:13Z",
+          "comments": [
+            {
+              "originalPosition": 114,
+              "body": "Yes, both the Leader and Helper are responsible for preventing replays, including across batches. This PR shouldn't change that. (If it does, we have a problem.)",
+              "createdAt": "2024-07-15T22:17:13Z",
+              "updatedAt": "2024-07-15T22:17:56Z"
+            }
+          ]
         }
       ]
     },
@@ -68373,7 +68580,7 @@
       "labels": [],
       "body": "Explains in detail how the syntax from RFC 8446 section 3.7 is repurposed for concise descriptions of structure variants. Additionally, the section on message encoding is moved to \"Protocol Definition\" to make the document flow better.\r\n\r\nCloses #472",
       "createdAt": "2024-07-06T00:05:12Z",
-      "updatedAt": "2024-07-09T18:17:48Z",
+      "updatedAt": "2024-07-16T00:50:40Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "35f1274853c1c06a5132612b111debefe4fd17ac",
@@ -68498,6 +68705,146 @@
               "updatedAt": "2024-07-09T18:15:16Z"
             }
           ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6B2SaD",
+          "commit": {
+            "abbreviatedOid": "334e2a7"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-15T19:29:56Z",
+          "updatedAt": "2024-07-15T19:29:56Z",
+          "comments": [
+            {
+              "originalPosition": 54,
+              "body": "I'm confused by the need for special syntax. What is a \"partial constant\"?",
+              "createdAt": "2024-07-15T19:29:56Z",
+              "updatedAt": "2024-07-15T19:29:56Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6B2SvF",
+          "commit": {
+            "abbreviatedOid": "334e2a7"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-15T19:30:51Z",
+          "updatedAt": "2024-07-15T19:30:51Z",
+          "comments": [
+            {
+              "originalPosition": 52,
+              "body": "Can you give an example of when multiple `select`s in the same `struct` is ambiguous? ",
+              "createdAt": "2024-07-15T19:30:51Z",
+              "updatedAt": "2024-07-15T19:30:51Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6B2qB1",
+          "commit": {
+            "abbreviatedOid": "334e2a7"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-15T20:30:28Z",
+          "updatedAt": "2024-07-15T20:30:28Z",
+          "comments": [
+            {
+              "originalPosition": 54,
+              "body": "[RFC 8446 3.7](https://datatracker.ietf.org/doc/html/rfc8446#section-3.7) defines constant fields of structs:\r\n\r\n```\r\n struct {\r\n          T1 f1 = 8;  /* T.f1 must always be 8 */\r\n          T2 f2;\r\n      } T;\r\n```\r\n\r\nThis notation collides with our usage, where `PrepareResp.prepare_resp_state` can have many values, but we want to describe the variant where `prepare_resp_state = continue`.",
+              "createdAt": "2024-07-15T20:30:28Z",
+              "updatedAt": "2024-07-15T20:30:28Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6B2xrC",
+          "commit": {
+            "abbreviatedOid": "334e2a7"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-15T20:45:03Z",
+          "updatedAt": "2024-07-15T20:45:03Z",
+          "comments": [
+            {
+              "originalPosition": 54,
+              "body": "In the example given here, can't `f1` have many values?",
+              "createdAt": "2024-07-15T20:45:03Z",
+              "updatedAt": "2024-07-15T20:45:04Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6B3bHE",
+          "commit": {
+            "abbreviatedOid": "334e2a7"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-15T22:31:46Z",
+          "updatedAt": "2024-07-15T22:31:47Z",
+          "comments": [
+            {
+              "originalPosition": 54,
+              "body": "No, that is the point of the RFC 8446 constant notation. The comment says \"T.f1 must always be 8\". If you click through to 8446 s3.7 it says 'Fields and variables may be assigned a fixed value using \"=\"'.",
+              "createdAt": "2024-07-15T22:31:46Z",
+              "updatedAt": "2024-07-15T22:31:47Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6B3ezM",
+          "commit": {
+            "abbreviatedOid": "334e2a7"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-15T22:40:15Z",
+          "updatedAt": "2024-07-15T22:40:15Z",
+          "comments": [
+            {
+              "originalPosition": 54,
+              "body": "Got it, thanks for clarifying. I think this could be clearer in the PR.",
+              "createdAt": "2024-07-15T22:40:15Z",
+              "updatedAt": "2024-07-15T22:40:15Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6B4ImS",
+          "commit": {
+            "abbreviatedOid": "28fac09"
+          },
+          "author": "wangshan",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-16T00:50:39Z",
+          "updatedAt": "2024-07-16T00:50:40Z",
+          "comments": [
+            {
+              "originalPosition": 22,
+              "body": "@tgeoghegan does this mean the syntax from `{{Section 3.7 of !RFC8446}}` is forbidden in this doc? \r\nIf a structure has the following def:\r\n```\r\nstruct {\r\n   uint32 always_present;\r\n   ExampleEnum type;\r\n}\r\n```\r\n\r\nThen does the below have ambiguity?\r\n```\r\nstruct variant {\r\n   uint32 always_present = 0;\r\n   ExampleEnum type = number;\r\n}\r\n```\r\nDoes it mean `always_present` can only be a constant 0 or it just happens to be 0 in this variant?",
+              "createdAt": "2024-07-16T00:50:40Z",
+              "updatedAt": "2024-07-16T00:50:40Z"
+            }
+          ]
         }
       ]
     },
@@ -68586,13 +68933,13 @@
       "labels": [],
       "body": "Closes #541.\r\n\r\nMade versioning compatibilities explicit and an optional way to express draft versions.",
       "createdAt": "2024-07-08T23:17:45Z",
-      "updatedAt": "2024-07-12T22:30:05Z",
+      "updatedAt": "2024-07-15T22:22:44Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "35f1274853c1c06a5132612b111debefe4fd17ac",
       "headRepository": "suman-ganta/draft-ietf-ppm-dap",
       "headRefName": "dap-versioning",
-      "headRefOid": "a1467cdadc5bfd80678f953714ca6a0a5741c246",
+      "headRefOid": "0e9313cb4c3e47ab8f2eb53401ba622799aa4214",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
@@ -68604,6 +68951,13 @@
           "body": "> I like the idea of doing this as an optional parameter in the existing `Content-Type`/`Accept` headers. However, for that reason, I'm not sure we need this spelled out in the DAP protocol. DAP is built on HTTP, and RFC 9110 already makes it clear that media types can include \"semicolon-delimited parameters in the form of name/value pairs\" ([Section 8.3.1](https://www.rfc-editor.org/rfc/rfc9110.html#section-8.3.1)). We don't need to give DAP implementations permission to use well-defined HTTP semantics, just the same as we don't need to give them permission to use HTTP 3xx redirects.\r\n> \r\n> Since we don't specify what should be in this `version` parameter, nor do we specify how implementations should evaluate it, I'm not sure this text adds value to this protocol.\r\n\r\nI think it's a good idea to at least mention this is a possibilty, rather than leaving it to implementers to dig this up themselves. Language like \"MAY add a version parameter as specified in {{Section whatever of !RFC9110}}\" would be helpful.",
           "createdAt": "2024-07-09T19:06:47Z",
           "updatedAt": "2024-07-09T19:06:47Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "@suman-ganta CI is failing due to trailing whitespace:\r\n```\r\ndraft-ietf-ppm-dap.md contains trailing whitespace\r\n```",
+          "createdAt": "2024-07-15T22:22:43Z",
+          "updatedAt": "2024-07-15T22:22:43Z"
         }
       ],
       "reviews": [
@@ -68716,6 +69070,119 @@
               "body": "done",
               "createdAt": "2024-07-12T22:30:05Z",
               "updatedAt": "2024-07-12T22:30:05Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6B1o49",
+          "commit": {
+            "abbreviatedOid": "a1467cd"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-15T17:47:47Z",
+          "updatedAt": "2024-07-15T17:47:47Z",
+          "comments": [
+            {
+              "originalPosition": 17,
+              "body": "```suggestion\r\nFor example, a report submission to leader from a client that supports\r\ndraft-ietf-ppm-dap-09 could have the header `Media-Type:\r\napplication/dap-report;version=09`.\r\n```\r\n\r\nPrefer notation `draft-ietf-ppm-dap-09` because that's a bit more formal in IETF parlance. Also use \"could\" instead of \"would\", because this text isn't normative: it's completely up to implementations what to put in the `version` field and how to interpret it.",
+              "createdAt": "2024-07-15T17:47:47Z",
+              "updatedAt": "2024-07-15T17:47:47Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6B1uI8",
+          "commit": {
+            "abbreviatedOid": "a1467cd"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "One more editorial comment from me, then I'm good to go!",
+          "createdAt": "2024-07-15T18:00:37Z",
+          "updatedAt": "2024-07-15T18:00:51Z",
+          "comments": [
+            {
+              "originalPosition": 4,
+              "body": "Let's move this to a subsection of `## Protocol Message Media Types` immediately below this.",
+              "createdAt": "2024-07-15T18:00:37Z",
+              "updatedAt": "2024-07-15T18:00:51Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6B11x5",
+          "commit": {
+            "abbreviatedOid": "a1467cd"
+          },
+          "author": "suman-ganta",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-15T18:18:54Z",
+          "updatedAt": "2024-07-15T18:18:54Z",
+          "comments": [
+            {
+              "originalPosition": 4,
+              "body": "Moved.",
+              "createdAt": "2024-07-15T18:18:54Z",
+              "updatedAt": "2024-07-15T18:18:54Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6B116h",
+          "commit": {
+            "abbreviatedOid": "a1467cd"
+          },
+          "author": "suman-ganta",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-15T18:19:14Z",
+          "updatedAt": "2024-07-15T18:19:14Z",
+          "comments": [
+            {
+              "originalPosition": 17,
+              "body": "Sounds good. Done.",
+              "createdAt": "2024-07-15T18:19:14Z",
+              "updatedAt": "2024-07-15T18:19:14Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6B19Pt",
+          "commit": {
+            "abbreviatedOid": "0e9313c"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2024-07-15T18:37:08Z",
+          "updatedAt": "2024-07-15T18:37:08Z",
+          "comments": []
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6B2c2v",
+          "commit": {
+            "abbreviatedOid": "0e9313c"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-15T19:57:41Z",
+          "updatedAt": "2024-07-15T19:57:45Z",
+          "comments": [
+            {
+              "originalPosition": 13,
+              "body": "```suggestion\r\nValue of this parameter indicate current draft version of the protocol the \r\n```",
+              "createdAt": "2024-07-15T19:57:41Z",
+              "updatedAt": "2024-07-15T19:57:45Z"
             }
           ]
         }
