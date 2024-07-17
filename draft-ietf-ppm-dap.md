@@ -1854,24 +1854,26 @@ it can clean up its state.
 
 #### Recovering from Aggregation Step Skew {#aggregation-step-skew-recovery}
 
-`AggregationJobContinueReq` messages contain a `step` field, allowing
-Aggregators to ensure that their peer is on an expected step of the DAP
-aggregation protocol. In particular, the intent is to allow recovery from a
-scenario where the Helper successfully advances from step `n` to `n+1`, but its
-`AggregationJobResp` response to the Leader gets dropped due to something like a
-transient network failure. The Leader could then resend the request to have the
-Helper advance to step `n+1` and the Helper should be able to retransmit the
-`AggregationJobContinueReq` that was previously dropped. To make that kind of
-recovery possible, Aggregator implementations SHOULD checkpoint the most recent
-step's prep state and messages to durable storage such that the Leader can
-re-construct continuation requests and the Helper can re-construct continuation
-responses as needed.
+`AggregationJobContinueReq` messages contain a `step` field to indicate the
+expected step of the DAP aggregation protocol their peer should be on. The
+inclusion of this field also allows the Leader to recover if it falls behind
+the Helper (e.g., Leader drops a response due to a transient network failure).
+In this situation, the Leader can re-send the `AggregationJobContinueReq`
+messages for previously computed steps. The Helper can respond by retransmitting
+the corresponding `AggregationJobResp` messages. By replaying the exact sequence
+of messages, the Leader can re-compute its previously dropped state and resume
+aggregation with the Helper from the most recent step.
+
+To make this kind of recovery possible, Aggregator implementations SHOULD, at
+minimum, checkpoint the most recent step's prep state and messages to durable
+storage such that the Leader can re-construct continuation requests and the
+Helper can re-construct continuation responses as needed.
 
 When implementing an aggregation step skew recovery strategy, the Helper SHOULD
-ensure that the Leader's `AggregationJobContinueReq` message did not change when
-it was re-sent (i.e., the two messages must be identical). This prevents the
-Leader from re-winding an aggregation job and re-running an aggregation step
-with different parameters.
+ensure that the Leader's `AggregationJobContinueReq` message for a given step did
+not change when it was re-sent (i.e., the two messages must be identical). This
+prevents the Leader from re-winding an aggregation job and re-running an aggregation
+step with different parameters.
 
 [[OPEN ISSUE: Allowing the Leader to "rewind" aggregation job state of the
 Helper may allow an attack on privacy. For instance, if the VDAF verification
