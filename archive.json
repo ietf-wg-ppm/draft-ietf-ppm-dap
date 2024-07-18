@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-07-16T01:03:14.355981+00:00",
+  "timestamp": "2024-07-18T01:01:26.636868+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -66778,7 +66778,7 @@
       "labels": [],
       "body": "Leader-selected is a more accurate name than fixed-size, since the batch sizes are not fixed -- any size above min_batch_size (and, if specified, below max_batch_size) is acceptable.\r\n\r\nThe max_batch_size parameter of the leader-selected query type is removed. This parameter does not need to be enforced by both aggregators, so it can be made implementation-specific.\r\n\r\nAlso, restore the partial batch selector to the Collection message; the included batch ID is required for the Collector to decrypt the aggregate shares, as it is included in the AAD. This bug was introduced in #554 & effectively breaks collection for the fixed-size query type in DAP-11.\r\n\r\nCloses #555.",
       "createdAt": "2024-06-13T23:56:57Z",
-      "updatedAt": "2024-07-16T00:14:14Z",
+      "updatedAt": "2024-07-16T01:26:05Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "35f1274853c1c06a5132612b111debefe4fd17ac",
@@ -66845,6 +66845,13 @@
           "body": "@cjpatton @branlwyd I don't have a strong opinion on what it should be called. From the discussion so far, I think we agree the purpose of this `query_type` is how the batch is created, or partitioned/selected. In this context, `leader_selected` makes sense, as long as we explain this in the text. I would also preferred to change `query_type` to `batch_select_type`, but I don't have strong opinion on that either.",
           "createdAt": "2024-07-16T00:14:13Z",
           "updatedAt": "2024-07-16T00:14:13Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> @cjpatton @branlwyd I don't have a strong opinion on what it should be called. From the discussion so far, I think we agree the purpose of this `query_type` is how the batch is created, or partitioned/selected. In this context, `leader_selected` makes sense, as long as we explain this in the text. I would also preferred to change `query_type` to \r\n`batch_select_type`, but I don't have strong opinion on that either.\r\n\r\nIt's a little broader than that, but I think I might know what's missing: a notion of \"bucket\" (#560). Namely, I've understood \"query\" to refer to both:\r\n\r\n1. how reports may be mapped to batch buckets (e.g., a time window)\r\n2. how batch buckets are merged into batches (e.g., a sequence of time windows, i.e., a time interval)",
+          "createdAt": "2024-07-16T01:26:04Z",
+          "updatedAt": "2024-07-16T01:26:04Z"
         }
       ],
       "reviews": [
@@ -67329,13 +67336,13 @@
       "labels": [],
       "body": "Closes https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/557.\r\n\r\nAllows helper-side aggregate job preparation to be handled asynchronously,\r\nsimilarly to how collection jobs work. Briefly, after calls with\r\n`AggregationJobInitReq` and `AggregationJobContinueReq`, the leader polls\r\nthe helper at `GET /tasks/{task-id]/aggregation_jobs/{aggregation-job-id}`\r\nuntil receiving an `AggregationJobResp`.\r\n\r\nIn discussion in #577 we had soft consensus on making this the only option,\r\ni.e. for spec simplicity we don't need to also allow the old synchronous\r\nbehavior.",
       "createdAt": "2024-06-25T18:08:22Z",
-      "updatedAt": "2024-07-15T22:17:13Z",
+      "updatedAt": "2024-07-17T23:54:55Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "35f1274853c1c06a5132612b111debefe4fd17ac",
       "headRepository": "inahga/draft-ietf-ppm-dap",
       "headRefName": "inahga/async-helper-agg-jobs",
-      "headRefOid": "738ec18389195b3b28a00b07a72a17ee39a201f8",
+      "headRefOid": "f0b803ce3aba1424380b747393b026d4d51b675c",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
@@ -67389,6 +67396,104 @@
           "body": "I've made the editorial changes requested. I'd like some time to hack together a POC of this in Janus before merging this, to reveal any edge cases we haven't considered.\r\n\r\n> I suggest moving this conversation to a different thread so that we can focus this PR on the move from sync to async aggregation.\r\n\r\nAgreed, let's discuss there.",
           "createdAt": "2024-07-03T21:35:32Z",
           "updatedAt": "2024-07-03T21:35:32Z"
+        },
+        {
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "body": "One concern that fell out of discussion with @inahga today: I think any proposal which makes aggregation job processing asynchronous will significantly increase durable storage usage for the Helper.\r\n\r\nSpecifically, in today's \"sync\" world, the Helper can receive an aggregation job request, then handle processing of it in-memory. In the common case of a 1-step VDAF, this means that the only thing that needs to be durably stored is (a) a marker for each report ID that was aggregated, for replay protection and (b) the aggregate shares derived from the aggregation process, for collection. (This is what Janus implements today.)\r\n\r\nIn an \"async\" world, to allow the request to be reliably processed in an asynchronous fashion, it must be durably stored. This means that the Helper will need to durably store the entirety of the request, which includes both the (encrypted) Helper input shares as well as the Leader's first-step preparation messages. For many VDAFs, or for aggregation jobs containing many report shares, this will be significantly larger than what is stored in the \"sync\" approach.",
+          "createdAt": "2024-07-16T19:59:27Z",
+          "updatedAt": "2024-07-16T20:07:35Z"
+        },
+        {
+          "author": "kristineguo",
+          "authorAssociation": "NONE",
+          "body": "> I think any proposal which makes aggregation job processing asynchronous will significantly increase durable storage usage for the Helper.\r\n\r\nThat additional storage should be ephemeral, as you can delete the persisted request once the response is computed. So the only additional \"long-term\" persisted data should be an extra request digest (for retry and caching purposes).",
+          "createdAt": "2024-07-16T20:13:00Z",
+          "updatedAt": "2024-07-16T20:13:07Z"
+        },
+        {
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> That additional storage should be ephemeral, as you can delete the persisted request once the response is computed. So the only additional \"long-term\" persisted data should be an extra request digest (for retry and caching purposes).\r\n\r\nCorrect, this is additional IO rate rather than additional long-term storage.\r\n\r\nFor multi-step VDAFs, the increased storage occurs on a per-step basis: the first step will need to store (encrypted) Helper input shares & preparation messages; later steps will need to store preparation messages.",
+          "createdAt": "2024-07-16T20:40:58Z",
+          "updatedAt": "2024-07-16T20:40:58Z"
+        },
+        {
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "body": "I did a little napkin math to roughly estimate the increase in Helper storage IO for an async approach.\r\n\r\nConcretely, I used `Prio3SumVec` with `BITS=1`, `LEN=100000`, `CHUNK_LENGTH=316`. This is a large but realistic VDAF. In this configuration, the Helper input share has size 48, the Leader message has size 10165, and aggregate shares have size 1600000. I am assuming a fixed-size query mode, i.e. a single aggregation job touches a single batch & therefore a single aggregate share, and aggregation job sizes of 250.\r\n\r\nIn the \"sync\" model, the Helper receives the aggregation request from the Leader, performs VDAF computations, and stores an aggregate share. The total read/written is 1.6 megabytes. (This ignores whatever needs to be written for anti-replay purposes.)\r\n\r\nIn the \"async\" model, the Helper receives the aggregation request from the Leader & stores it (2.55 megabytes written); reads it, performs VDAF computations, and stores an aggregate share (2.55 megabytes read, 1.6 megabytes written). The total read/written is 6.7 megabytes, a slightly-more-than-fourfold increase in storage IO. (This ignores whatever needs to be written for anti-replay purposes, as well as ignoring the need to write/read the Helper messages to construct the eventual reply to the Leader -- N.B. the helper message is only 21 bytes.)\r\n\r\nIMO, this is a large enough increase to database IO that we should consider whether the async model justifies itself, especially since the current \"sync\" model would allow for background processing as an implementation detail -- with the downside that retries require re-transmitting the aggregation job. Perhaps we can get away with synchronous messages by tuning aggregation job sizes & timeouts appropriately on a per-deployment basis?",
+          "createdAt": "2024-07-16T23:37:09Z",
+          "updatedAt": "2024-07-16T23:54:15Z"
+        },
+        {
+          "author": "inahga",
+          "authorAssociation": "NONE",
+          "body": "> especially since the current \"sync\" model would allow for background processing as an implementation detail\r\n\r\nTo elaborate on this:\r\n\r\nConcretely, in Janus, we have a problem with CPU-intensive work being done inside an HTTP request when large histograms are being prepared. This is difficult to load balance and autoscale. One problem, out of a few: if requests come in a burst while the system is scaled-down, then those requests could overwhelm a single aggregator replica.\r\n\r\nThe natural response to this is to move CPU intensive work into a pool of workers that can intelligently schedule work, and have the original request used for enqueuing the work.\r\n\r\nIt occurred to me after writing this PR that this can be accomplished without spec changes. Inside the aggregate init/continue request, we can enqueue work and internally poll (or whatever signaling mechanism makes sense) until the internal job is complete, then return the request. All the while we hold the HTTP connection open.\r\n\r\nThis approach does have some disadvantages:\r\n1. The implementation still incurs DB IO disadvantages, noted by @branlwyd above.\r\n2. Repeated requests, e.g. due to timeout, require retransmitting the request body, which is potentially large.\r\n3. We still have a long running HTTP connection to deal with.\r\n\r\nI'm not sure that shifting to the async model in this PR meaningfully ameliorates these disadvantages. For point 1, this is a fact of life, but by not taking this PR, we've at least not imposed this problem on all implementers of DAP. For point 2, this is not a new disadvantage, but maybe there's a better way to fix this problem (e.g. idempotency key?). For point 3, I'm less concerned about long HTTP connections if they aren't also doing lots of CPU work--that is I think these connections can be made cheap.\r\n\r\nIn short: through some further thought and good points raised by folks in this issue, I'm starting to think that we shouldn't take this change right now.\r\n\r\nI'm curious about other operators of helpers, whether there's still use cases for async aggregate init/continue that are not satisfied by the workaround I've described.",
+          "createdAt": "2024-07-17T16:42:12Z",
+          "updatedAt": "2024-07-17T16:42:12Z"
+        },
+        {
+          "author": "inahga",
+          "authorAssociation": "NONE",
+          "body": "n.b. the \"internal async\" strategy (which is what I'm calling the alternative proposal I described above) still may be aided by the \"job cancellation\" change originally proposed in https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/557#issue-2274105720. That is, we don't want 504 Gateway Timeout to be a normal part of operations, we'd rather internally timeout a long-running job/connection with 429.",
+          "createdAt": "2024-07-17T17:03:03Z",
+          "updatedAt": "2024-07-17T17:03:03Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> @branlwyd In an \"async\" world, to allow the request to be reliably processed in an asynchronous fashion, it must be durably stored. \r\n\r\nWhy is this true?\r\n\r\n",
+          "createdAt": "2024-07-17T17:34:30Z",
+          "updatedAt": "2024-07-17T17:34:30Z"
+        },
+        {
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> > @branlwyd In an \"async\" world, to allow the request to be reliably processed in an asynchronous fashion, it must be durably stored.\r\n> \r\n> Why is this true?\r\n\r\nI think anything we'd call \"async\" conceptually follows this model:\r\n\r\n1. Leader sends request to Helper; Helper responds OK once it has done what it needs to do to begin background processing, then begins processing in the background.\r\n2. Leader polls Helper until the Helper's processing is complete, then receives result.\r\n\r\nIf step 1's \"Helper responds OK once it has done what it needs to do to perform background processing\" doesn't involve storing the request durably, we are just as open to \"losing\" requests due to transient failures as we are in the \"sync\" world. (Or, to look at it another way: if we don't store the request durably in step 1, and the request is lost, recovery would involve the Leader receiving an appropriate error on its poll attempt in step 2 & retransmitting the aggregation job -- requiring retransmission just as in the \"sync\" world, with the additional complexity & network transit of polling.)",
+          "createdAt": "2024-07-17T18:23:51Z",
+          "updatedAt": "2024-07-17T18:23:51Z"
+        },
+        {
+          "author": "Noah-Kennedy",
+          "authorAssociation": "NONE",
+          "body": "The internal async approach does not solve the replay check issue. The replay checks are problematic so long as they need to be done in the critical path.",
+          "createdAt": "2024-07-17T18:26:37Z",
+          "updatedAt": "2024-07-17T18:26:37Z"
+        },
+        {
+          "author": "Noah-Kennedy",
+          "authorAssociation": "NONE",
+          "body": "@branlwyd what I like about the async proposal is that it gives far more flexibility to implementations for how they store data and handle things.\r\n\r\nThe synchronous approach requires a lot of strongly consistent operations to occur in the critical path, and this has significant limitations on the scalability of the protocol and the availability that implementations can potentially offer. In the handling of an aggregate job request, the processing and replay checks both must be conducted. Internal async does not address this - we are still bound to perform all actions successfully within whatever timeouts are set with the leader. This is something we have demonstrated internally to be a fairly significant operational challenge for the protocol.\r\n\r\nIf the critical path on the other hand is potentially just pushing this to a queue, that is a substantial improvement. Handling the replay checks in particular out-of-band temporarily with the request is a huge improvement for us, and gives us a lot more flexibility and allows us to construct a far more robust and reliable system.\r\n\r\nOn the subject of IO costs, costs of reads and writes to eventually consistent systems are generally significantly cheaper than e.g a relational database. Async gives implementations access to a far better toolkit here.",
+          "createdAt": "2024-07-17T18:46:18Z",
+          "updatedAt": "2024-07-17T18:46:18Z"
+        },
+        {
+          "author": "Noah-Kennedy",
+          "authorAssociation": "NONE",
+          "body": "> I did a little napkin math to roughly estimate the increase in Helper storage IO for an async approach.\r\n> \r\n> Concretely, I used `Prio3SumVec` with `BITS=1`, `LEN=100000`, `CHUNK_LENGTH=316`. This is a large but realistic VDAF. In this configuration, the Helper input share has size 48, the Leader message has size 10165, and aggregate shares have size 1600000. I am assuming a fixed-size query mode, i.e. a single aggregation job touches a single batch & therefore a single aggregate share, and aggregation job sizes of 250.\r\n> \r\n> In the \"sync\" model, the Helper receives the aggregation request from the Leader, performs VDAF computations, and stores an aggregate share. The total read/written is 1.6 megabytes. (This ignores whatever needs to be written for anti-replay purposes.)\r\n> \r\n> In the \"async\" model, the Helper receives the aggregation request from the Leader & stores it (2.55 megabytes written); reads it, performs VDAF computations, and stores an aggregate share (2.55 megabytes read, 1.6 megabytes written). The total read/written is 6.7 megabytes, a slightly-more-than-fourfold increase in storage IO. (This ignores whatever needs to be written for anti-replay purposes, as well as ignoring the need to write/read the Helper messages to construct the eventual reply to the Leader -- N.B. the helper message is only 21 bytes.)\r\n> \r\n> IMO, this is a large enough increase to database IO that we should consider whether the async model justifies itself, especially since the current \"sync\" model would allow for background processing as an implementation detail -- with the downside that retries require re-transmitting the aggregation job. Perhaps we can get away with synchronous messages by tuning aggregation job sizes & timeouts appropriately on a per-deployment basis?\r\n\r\n@branlwyd I'm also confused here about why the costs are being measured in bytes - generally it's the transactions and consistency checks that are the expensive part of writes, not the raw bytes.",
+          "createdAt": "2024-07-17T19:52:45Z",
+          "updatedAt": "2024-07-17T19:52:45Z"
+        },
+        {
+          "author": "inahga",
+          "authorAssociation": "NONE",
+          "body": "> Internal async does not address this - we are still bound to perform all actions successfully within whatever timeouts are set with the leader.\r\n\r\nI think this depends on how the helper operates. Timeouts should be normal(-ish) and tolerable. With internal async, if the leader repeats a request due to a timeout, the helper should await the existing background job.\r\n\r\nLet me write some pseudocode for an internal async helper's aggregate init/continue handler to be clear.\r\n\r\n```rust\r\nlet existing_job = database.get_queued_aggregation_job(aggregation_job_id);\r\n\r\nlet job = match existing_job {\r\n    Some(job) => job,\r\n    None => {\r\n        // Do some basic, cheap, checks on the aggregation job request, i.e. make sure it's well-formed.\r\n        if !is_valid(aggregation_job_request) {\r\n            return Err(InvalidRequest);\r\n        } else {\r\n            database.enqueue_new_aggregation_job(aggregation_job_request);\r\n        }\r\n    }\r\n}\r\n\r\n// Simple polling strategy, but implementations *could* do their own non-polling design, e.g. postgres LISTEN/NOTIFY.\r\nlet deadline = Time::now().add(SOME_REASONABLE_TIMEOUT);\r\nloop {\r\n    let job_response = database.check_if_aggregation_job_is_ready(job);\r\n\r\n    if job_response.is_ready() {\r\n        return Ok(job_response)\r\n    }\r\n\r\n    if Time::now() > deadline {\r\n        return Err(Timeout);\r\n    }\r\n    sleep(SOME_POLLING_INTERVAL);\r\n}\r\n```\r\n\r\nThis handwaves some checks into `is_valid()`, but I think the only things we want/need to check at this stage are:\r\n- Task ID recognized.\r\n- All reports IDs within request are distinct.\r\n\r\nNone of which require consistency guarantees since they're all in the context of the single request.\r\n\r\nEdit: Or does checking whether an aggregation job is already enqueued represent something unworkable for non-relational datastores? It does require a strong consistency guarantee. Edit again: [Although, I think even in true async we're going to need strong consistency guarantees about aggregation jobs.](https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/564#discussion_r1681344788)\r\n\r\n(Note I haven't convinced myself yet one way or the other which is best, so I appreciate talking it out with me \ud83d\ude04)\r\n",
+          "createdAt": "2024-07-17T20:52:01Z",
+          "updatedAt": "2024-07-17T22:05:08Z"
+        },
+        {
+          "author": "inahga",
+          "authorAssociation": "NONE",
+          "body": "I've taken another editorial pass.\r\n\r\nI believe the only open discussions are:\r\n- https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/564#discussion_r1659280137 (what to do about duplicated POST/PUT?)\r\n- https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/564#issuecomment-2231990580 (is the IO cost too high?)\r\n- https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/564#issuecomment-2233743979 (should we even take this change?)\r\n- https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/564#discussion_r1674725591 (editorial).\r\n\r\nPlease let me know if I've missed any feedback, the PR comments are getting quite large :smile:.",
+          "createdAt": "2024-07-17T22:39:57Z",
+          "updatedAt": "2024-07-17T22:39:57Z"
+        },
+        {
+          "author": "Noah-Kennedy",
+          "authorAssociation": "NONE",
+          "body": "> > Internal async does not address this - we are still bound to perform all actions successfully within whatever timeouts are set with the leader.\r\n> \r\n> I think this depends on how the helper operates. Timeouts should be normal(-ish) and tolerable. With internal async, if the leader repeats a request due to a timeout, the helper should await the existing background job.\r\n> \r\n> Let me write some pseudocode for an internal async helper's aggregate init/continue handler to be clear.\r\n> \r\n> ```rust\r\n> let existing_job = database.get_queued_aggregation_job(aggregation_job_id);\r\n> \r\n> let job = match existing_job {\r\n>     Some(job) => job,\r\n>     None => {\r\n>         // Do some basic, cheap, checks on the aggregation job request, i.e. make sure it's well-formed.\r\n>         if !is_valid(aggregation_job_request) {\r\n>             return Err(InvalidRequest);\r\n>         } else {\r\n>             database.enqueue_new_aggregation_job(aggregation_job_request);\r\n>         }\r\n>     }\r\n> }\r\n> \r\n> // Simple polling strategy, but implementations *could* do their own non-polling design, e.g. postgres LISTEN/NOTIFY.\r\n> let deadline = Time::now().add(SOME_REASONABLE_TIMEOUT);\r\n> loop {\r\n>     let job_response = database.check_if_aggregation_job_is_ready(job);\r\n> \r\n>     if job_response.is_ready() {\r\n>         return Ok(job_response)\r\n>     }\r\n> \r\n>     if Time::now() > deadline {\r\n>         return Err(Timeout);\r\n>     }\r\n>     sleep(SOME_POLLING_INTERVAL);\r\n> }\r\n> ```\r\n> \r\n> This handwaves some checks into `is_valid()`, but I think the only things we want/need to check at this stage are:\r\n> \r\n>     * Task ID recognized.\r\n> \r\n>     * All reports IDs within request are distinct.\r\n> \r\n> \r\n> None of which require consistency guarantees since they're all in the context of the single request.\r\n> \r\n> Edit: Or does checking whether an aggregation job is already enqueued represent something unworkable for non-relational datastores? It does require a strong consistency guarantee. Edit again: [Although, I think even in true async we're going to need strong consistency guarantees about aggregation jobs.](https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/564#discussion_r1681344788)\r\n> \r\n> (Note I haven't convinced myself yet one way or the other which is best, so I appreciate talking it out with me \ud83d\ude04)\r\n\r\nSo, our helper runs globally distributed across many sites, and when receiving traffic from leader nodes we generally expect to see this traffic split across multiple sites, even if the leader is only in a single source DC.\r\n\r\nWe can do strong consistency, it just reduces our availability, especially when doing things like sharding replay checks to improve throughput. These compromises to availability are extremely OK so long as they don't impact the critical paths of getting a job from a leader or serving a finished job to a leader.\r\n\r\nFor helpers which run in a single site, async might not be as helpful, but it is essential for helpers running in a multi-site configuration with high availability.",
+          "createdAt": "2024-07-17T23:42:51Z",
+          "updatedAt": "2024-07-17T23:42:51Z"
         }
       ],
       "reviews": [
@@ -68539,6 +68644,466 @@
               "updatedAt": "2024-07-15T22:17:56Z"
             }
           ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6B4NyX",
+          "commit": {
+            "abbreviatedOid": "3c9752d"
+          },
+          "author": "suman-ganta",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-16T01:11:42Z",
+          "updatedAt": "2024-07-16T01:11:42Z",
+          "comments": [
+            {
+              "originalPosition": 114,
+              "body": "Okay. I still need to understand this part -\r\n\r\n> \r\n> I guess I don't get what response Helper gives in these cases. Response to last request or response to first request?\r\n> \r\n> If it is giving response to first request to all - then an incorrect submission (request2) gets a valid response.\r\n> If it is giving response to last request to all - then a valid submission receives error response without knowing why.",
+              "createdAt": "2024-07-16T01:11:42Z",
+              "updatedAt": "2024-07-16T01:11:42Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6B4Ubf",
+          "commit": {
+            "abbreviatedOid": "3c9752d"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-16T01:35:59Z",
+          "updatedAt": "2024-07-16T01:35:59Z",
+          "comments": [
+            {
+              "originalPosition": 114,
+              "body": ">     1. Leader did not receive response due to network error and retries.\r\n\r\nIf the body of each request is the same, then so should be the Helper's respond. Otherwise, the Leader is in error, and it's up to the Helper to decide which order they're processed in.\r\n\r\n>     2. Leader incorrectly tracks the step count and sends continue request with invalid step count.\r\n\r\nThe Leader is in error. The Helper will abort, but it [might be possible to retry](https://ietf-wg-ppm.github.io/draft-ietf-ppm-dap/draft-ietf-ppm-dap.html#section-4.5.2.3).\r\n\r\n>     3. Two leader instances sends the same request\r\n\r\nSame as for 1 I think.\r\n\r\n>     4. Other malicious reasons\r\n\r\nEven if the Leader is malicious, then it's still up to the Helper to enforce invariants like anti-replay. However there are probably any number of ways the Leader can break correctness.\r\n",
+              "createdAt": "2024-07-16T01:35:59Z",
+              "updatedAt": "2024-07-16T01:35:59Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6B4adz",
+          "commit": {
+            "abbreviatedOid": "3c9752d"
+          },
+          "author": "suman-ganta",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-16T02:02:16Z",
+          "updatedAt": "2024-07-16T02:02:16Z",
+          "comments": [
+            {
+              "originalPosition": 114,
+              "body": "If two mutating requests results in two different responses, then it is not deterministic to let Helper decide what to do with them. I think it is deterministic if the helper respond with the unique URL to track the POST request status. I think this behavior should not depend on what Leader's behavior is.\r\n\r\nNote that, this would not be a problem if the response is synchronous since it comes with request-response correlation built-in.",
+              "createdAt": "2024-07-16T02:02:16Z",
+              "updatedAt": "2024-07-16T02:02:16Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6B9_Ky",
+          "commit": {
+            "abbreviatedOid": "3c9752d"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-16T14:54:23Z",
+          "updatedAt": "2024-07-16T14:54:24Z",
+          "comments": [
+            {
+              "originalPosition": 114,
+              "body": "Let's maybe take a step back for a second: what property do you want DAP to have that this PR doesn't have?\r\n\r\nIt sounds like you want some way for the Leader to recover if it makes a mistake. Is this correct?\r\n\r\nIt sounds like you're suggesting the following mechanism: the Leader chooses a unique identifier for each request (probably at random?), which the Helper is supposed to echo back in its response. Is this what you're suggesting?\r\n\r\nIf so, what errors does this help the Leader recover from? What errors does it not help it recover from?",
+              "createdAt": "2024-07-16T14:54:23Z",
+              "updatedAt": "2024-07-16T14:54:40Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6B_nJv",
+          "commit": {
+            "abbreviatedOid": "738ec18"
+          },
+          "author": "inahga",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-16T17:58:15Z",
+          "updatedAt": "2024-07-16T17:58:15Z",
+          "comments": [
+            {
+              "originalPosition": 145,
+              "body": "I think the discussion in https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/217 is relevant.",
+              "createdAt": "2024-07-16T17:58:15Z",
+              "updatedAt": "2024-07-16T17:58:15Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6B_oVa",
+          "commit": {
+            "abbreviatedOid": "738ec18"
+          },
+          "author": "inahga",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-16T18:00:59Z",
+          "updatedAt": "2024-07-16T18:00:59Z",
+          "comments": [
+            {
+              "originalPosition": 159,
+              "body": "I mean discontinuing work in the context of that single request, i.e. in the code it would be effectively a \"return\" statement. I will reword for clarity.",
+              "createdAt": "2024-07-16T18:00:59Z",
+              "updatedAt": "2024-07-16T18:01:00Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6CJEqY",
+          "commit": {
+            "abbreviatedOid": "3c9752d"
+          },
+          "author": "inahga",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-17T16:21:43Z",
+          "updatedAt": "2024-07-17T16:21:43Z",
+          "comments": [
+            {
+              "originalPosition": 114,
+              "body": "> When two requests are accepted with 202 on the same URL, there is no way to know the response fetched later belongs to request1 or request2.\r\n\r\nConcretely, in Janus, each insertion of aggregation job is transactional since we use a relational database. The operations are serialized--a second request will reject with a database conflict error, since we use a uniqueness index on `(task, aggregation_job_id)`. That is, the only scenario where we would return 202 for a repeated request is if the second request is exactly identical to the first.\r\n\r\nHowever, I don't think we have any requirement for transactionality, either in this PR or generally in DAP. An aggregator that lacks transactionality _could_ accept multiple PUTs, and indeed it would be implementation-defined as to which request the subsequent GET request is responding to.\r\n\r\nSo I think @suman-ganta is correct. Perhaps we should add clarification that the helper should only accept one PUT request?",
+              "createdAt": "2024-07-17T16:21:43Z",
+              "updatedAt": "2024-07-17T16:58:09Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6CJVX9",
+          "commit": {
+            "abbreviatedOid": "3c9752d"
+          },
+          "author": "inahga",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-17T16:56:28Z",
+          "updatedAt": "2024-07-17T16:56:28Z",
+          "comments": [
+            {
+              "originalPosition": 24,
+              "body": "Something to note is that async init/continue raises interesting possibilities as to how many reports are contained within an `AggregationJobInitReq`.\r\n\r\nRight now, the leader/helper have to limit the number of reports based on how long HTTP timeouts are configured helper-side.\r\n\r\nWith async, the leader can send arbitrarily large aggregation jobs without concerns about the HTTP gateway timeout. If taking advantage of that, there are fewer aggregation jobs that require bookkeeping and polling.",
+              "createdAt": "2024-07-17T16:56:28Z",
+              "updatedAt": "2024-07-17T16:56:28Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6CKByb",
+          "commit": {
+            "abbreviatedOid": "738ec18"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-17T18:08:18Z",
+          "updatedAt": "2024-07-17T18:08:22Z",
+          "comments": [
+            {
+              "originalPosition": 114,
+              "body": "It might be useful to clarify that only one request should be accepted at each step, whether PUT for init and POST for continue.\r\n\r\nAlso @suman-ganta and @kristineguo point out offline that, if a POST comes in for step 2 while we're processing step 1, then we should abort the POST request.",
+              "createdAt": "2024-07-17T18:08:18Z",
+              "updatedAt": "2024-07-17T18:08:22Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6CLyhX",
+          "commit": {
+            "abbreviatedOid": "3c9752d"
+          },
+          "author": "inahga",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-17T21:37:31Z",
+          "updatedAt": "2024-07-17T21:37:32Z",
+          "comments": [
+            {
+              "originalPosition": 114,
+              "body": "Eh. Reading through it again as I try to write it:\r\n```\r\nChanging an aggregation job's parameters is illegal, so further requests to\r\n`PUT /tasks/{task-id}/aggregation_jobs/{aggregation-job-id}` for the same\r\n`aggregation-job-id` but with a different `AggregationJobInitReq` in the body\r\nMUST fail with an HTTP client error status code.\r\n```\r\nI feel we are adequately signaling that only one PUT request should be accepted. i.e. a helper that is accepting multiple different PUT requests is not following the spec. Similarly, I think the continue section with step recovery strongly implies the need for transactionality/consistency.\r\n\r\nSo I think my point earlier:\r\n> However, I don't think we have any requirement for transactionality, either in this PR or generally in DAP.\r\n\r\nis not valid. Sorry, I should have given a close read before commenting.\r\n\r\nSo @suman-ganta, I think the questions in https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/564#discussion_r1679566081 still apply.\r\n\r\n---\r\n\r\n> Also @suman-ganta and @kristineguo point out offline that, if a POST comes in for step 2 while we're processing step 1, then we should abort the POST request.\r\n\r\nI think stepMismatch covers this? If the helper receives a request for step 2 while step 1 is still in flight, the aggregation job will still be on step 1, thus being errored out per this paragraph.\r\n```\r\nNext, the Helper checks if the continuation step indicated by the request is\r\ncorrect. (For the first `AggregationJobContinueReq` the value should be `1`;\r\nfor the second the value should be `2`; and so on.) If the Leader is one step\r\nbehind (e.g., the Leader has resent the previous HTTP request), then the Helper\r\nMAY attempt to recover by sending HTTP 202 status Accepted and discontinuing\r\nany further work. In this case it SHOULD verify that the contents of the\r\n`AggregationJobContinueReq` are identical to the previous message (see\r\n{{aggregation-step-skew-recovery}}). Otherwise, if the step is incorrect, the\r\nHelper MUST abort with error `stepMismatch`.\r\n```",
+              "createdAt": "2024-07-17T21:37:32Z",
+              "updatedAt": "2024-07-17T21:37:32Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6CLzIk",
+          "commit": {
+            "abbreviatedOid": "3c9752d"
+          },
+          "author": "inahga",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-17T21:39:17Z",
+          "updatedAt": "2024-07-17T21:39:17Z",
+          "comments": [
+            {
+              "originalPosition": 24,
+              "body": "Resolving this subthread: I feel strongly that per-job polling is sufficient, and that implementations can control the volume of GET polls by tweaking the aggregation job size and polling interval.\r\n\r\nFeel free to unresolve if there are dissents.",
+              "createdAt": "2024-07-17T21:39:17Z",
+              "updatedAt": "2024-07-17T21:39:18Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6CL9v6",
+          "commit": {
+            "abbreviatedOid": "738ec18"
+          },
+          "author": "inahga",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-17T22:09:48Z",
+          "updatedAt": "2024-07-17T22:09:49Z",
+          "comments": [
+            {
+              "originalPosition": 221,
+              "body": "Clarify? The Helper can store whatever it wants, but the minimum recommendation is to store whatever it needs to satisfy skew recovery, as far as the protocol is concerned.",
+              "createdAt": "2024-07-17T22:09:49Z",
+              "updatedAt": "2024-07-17T22:09:49Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6CL-rz",
+          "commit": {
+            "abbreviatedOid": "738ec18"
+          },
+          "author": "kristineguo",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-17T22:13:09Z",
+          "updatedAt": "2024-07-17T22:13:10Z",
+          "comments": [
+            {
+              "originalPosition": 221,
+              "body": "The language implies that only the most recent step's state SHOULD be stored. I think we can generalize this language to imply that _all_ steps' state SHOULD/MAY be stored to promote aggregation step skew recovery.",
+              "createdAt": "2024-07-17T22:13:09Z",
+              "updatedAt": "2024-07-17T22:13:29Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6CL-uR",
+          "commit": {
+            "abbreviatedOid": "738ec18"
+          },
+          "author": "inahga",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-17T22:13:18Z",
+          "updatedAt": "2024-07-17T22:13:19Z",
+          "comments": [
+            {
+              "originalPosition": 221,
+              "body": "Or in other words, the Helper could retain the entire step history and satisfy the SHOULD, but I'm not sure that possibility needs to be explicitly called out in protocol text.",
+              "createdAt": "2024-07-17T22:13:19Z",
+              "updatedAt": "2024-07-17T22:13:19Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6CMAfL",
+          "commit": {
+            "abbreviatedOid": "738ec18"
+          },
+          "author": "inahga",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-17T22:19:20Z",
+          "updatedAt": "2024-07-17T22:19:20Z",
+          "comments": [
+            {
+              "originalPosition": 81,
+              "body": "For consistency, I've also called this out in collection as well.",
+              "createdAt": "2024-07-17T22:19:20Z",
+              "updatedAt": "2024-07-17T22:19:20Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6CMBK5",
+          "commit": {
+            "abbreviatedOid": "738ec18"
+          },
+          "author": "kristineguo",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-17T22:22:13Z",
+          "updatedAt": "2024-07-17T22:22:13Z",
+          "comments": [
+            {
+              "originalPosition": 114,
+              "body": "I don't know how often this scenario would actually come up in reality, but imagine a scenario where the Leader sends out two simultaneous requests:\r\n- `POST /tasks/{task-id}/aggregation_jobs/{aggregation-job-id}` for step 1 (already computed)\r\n  - Helper may return `202 Accepted` here if the request matches the previous message.\r\n- `POST /tasks/{task-id}/aggregation_jobs/{aggregation-job-id}` for step 2 (new)\r\n\r\nDoes the Helper return `202 Accepted` for that second POST request? If the Helper does, what should the Helper return when the Leader does `GET /tasks/{task-id}/aggregation_jobs/{aggregation-job-id}`? The response for step 1 or 2?",
+              "createdAt": "2024-07-17T22:22:13Z",
+              "updatedAt": "2024-07-17T22:23:20Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6CMCBE",
+          "commit": {
+            "abbreviatedOid": "738ec18"
+          },
+          "author": "kristineguo",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-17T22:25:09Z",
+          "updatedAt": "2024-07-17T22:25:09Z",
+          "comments": [
+            {
+              "originalPosition": 114,
+              "body": "To me, the confusion can arise because we're using the same request path for multiple different requests (one for each step). We could potentially alleviate this by making the request path more explicit by adding the step into the request path, so that the Helper always explicitly knows which step the Leader is requesting a response for.",
+              "createdAt": "2024-07-17T22:25:09Z",
+              "updatedAt": "2024-07-17T22:25:49Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6CMEPi",
+          "commit": {
+            "abbreviatedOid": "f0b803c"
+          },
+          "author": "kristineguo",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-17T22:29:38Z",
+          "updatedAt": "2024-07-17T22:29:38Z",
+          "comments": [
+            {
+              "originalPosition": 221,
+              "body": "In general, the aggregation step skew recovery section seems to focus on just recovering when there's a difference of 1 between the Helper and Leader. I think it would be beneficial to change the wording to imply that aggregation step skew recovery can allow the Leader to re-send any number of previously computed steps. Hence, specifying the Helper can store all previous steps' state follows naturally from this.",
+              "createdAt": "2024-07-17T22:29:38Z",
+              "updatedAt": "2024-07-17T22:29:38Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6CMF5l",
+          "commit": {
+            "abbreviatedOid": "f0b803c"
+          },
+          "author": "inahga",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-17T22:36:01Z",
+          "updatedAt": "2024-07-17T22:36:01Z",
+          "comments": [
+            {
+              "originalPosition": 221,
+              "body": "> The language implies that only the most recent step's state SHOULD be stored.\r\n\r\nI don't think I agree with that reading, but we could say \"Aggregator implementations SHOULD, at minimum, checkpoint...\".\r\n\r\n(n.b. this diff got roped into this PR because I noticed a typo in `AggregationJobResp`. We may consider taking this editorial into another PR, since I don't think it's strictly relevant to async jobs).",
+              "createdAt": "2024-07-17T22:36:01Z",
+              "updatedAt": "2024-07-17T22:36:15Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6CMHjQ",
+          "commit": {
+            "abbreviatedOid": "738ec18"
+          },
+          "author": "inahga",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-17T22:43:27Z",
+          "updatedAt": "2024-07-17T22:43:27Z",
+          "comments": [
+            {
+              "originalPosition": 221,
+              "body": "> I think it would be beneficial to change the wording to imply that aggregation step skew recovery can allow the Leader to re-send any number of previously computed steps. Hence, specifying the Helper can store all previous steps' state follows naturally from this.\r\n\r\nAh, this is the part I was missing, thanks for clarifying. I do think we should rope this into another PR though, since I think there could be more wording changes necessary to make this clear. For one we only call out recovering from `n` to `n+1`.",
+              "createdAt": "2024-07-17T22:43:27Z",
+              "updatedAt": "2024-07-17T22:43:27Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6CMNtc",
+          "commit": {
+            "abbreviatedOid": "3c9752d"
+          },
+          "author": "inahga",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-17T23:05:53Z",
+          "updatedAt": "2024-07-17T23:05:54Z",
+          "comments": [
+            {
+              "originalPosition": 114,
+              "body": "Good scenario, I think it's plausible. Perhaps not under normal operations, but it is a series of operations that I think would be accepted. Let me think about it out loud:\r\n\r\nI'm going to assume that aggregation jobs processing is perfectly transactional, and that these simultaneous requests don't leave the job in some indeterminate state. I believe these are valid assumptions, but stop me if they're not.\r\n\r\n---\r\nConsider the first scenario, where the order of requests is serialized to request 1 (i.e. your bullet point 1), then request 2.\r\n\r\nRequest 1: POST returns 202 Accepted, any subsequent GET requests _would_ return 200 with the proper body, since it was already computed.\r\nRequest 2: POST returns 202 Accepted, any subsequent GET requests would return 202 until the aggregation job is complete.\r\n\r\nI don't think anything is surprising here.\r\n\r\n---\r\nSecond scenario, the order of requests is flipped.\r\n\r\nRequest 2: POST returns 202 accepted, any subsequent GET requests would return 202 until the aggregation job is complete.\r\nRequest 1: Step recovery kicks in, because we're trying to POST for step 1. Uh oh. I think you're right that this situation is ambiguous. For step recovery to actually be possible, we'd need to abort continuation to step 2. Or the leader would need to wait for step 2 to be done, then try step recovery again.\r\n\r\n---\r\n\r\n> To me, the confusion can arise because we're using the same request path for multiple different requests (one for each step). We could potentially alleviate this by making the request path more explicit by adding the step into the request path, so that the Helper always explicitly knows which step the Leader is requesting a response for.\r\n\r\nI had originally considered having different paths for different steps, but couldn't find a scenario where this was strictly necessary, but I think you've identified one.\r\n\r\nLet me dwell on it for a bit, anyone else have thoughts as well?",
+              "createdAt": "2024-07-17T23:05:54Z",
+              "updatedAt": "2024-07-17T23:05:54Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6CMa-9",
+          "commit": {
+            "abbreviatedOid": "738ec18"
+          },
+          "author": "kristineguo",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-17T23:48:36Z",
+          "updatedAt": "2024-07-17T23:48:36Z",
+          "comments": [
+            {
+              "originalPosition": 221,
+              "body": "Opened a new PR on this edit: https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/569\r\nWe can resolve this thread here \ud83d\ude01 ",
+              "createdAt": "2024-07-17T23:48:36Z",
+              "updatedAt": "2024-07-17T23:48:37Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6CMdUq",
+          "commit": {
+            "abbreviatedOid": "3c9752d"
+          },
+          "author": "Noah-Kennedy",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-17T23:54:55Z",
+          "updatedAt": "2024-07-17T23:54:55Z",
+          "comments": [
+            {
+              "originalPosition": 114,
+              "body": "@inahga I don't think that we should be prescribing serializable transactions here - this is very limiting and operationally challenging for partitioned helpers.\r\n\r\nWith our helper, we've found that this aspect of the replay checks are the hardest part of the system to scale up - they eventually become a breaking point for the system unless you shard, and that has availability implications under draft 11 due to the synchronous nature of the protocol.\r\n\r\nIdeally we'd make things idempotent, or defer when transactional things have to occur until after jobs have been accepted for processing.",
+              "createdAt": "2024-07-17T23:54:55Z",
+              "updatedAt": "2024-07-17T23:54:55Z"
+            }
+          ]
         }
       ]
     },
@@ -68580,7 +69145,7 @@
       "labels": [],
       "body": "Explains in detail how the syntax from RFC 8446 section 3.7 is repurposed for concise descriptions of structure variants. Additionally, the section on message encoding is moved to \"Protocol Definition\" to make the document flow better.\r\n\r\nCloses #472",
       "createdAt": "2024-07-06T00:05:12Z",
-      "updatedAt": "2024-07-16T00:50:40Z",
+      "updatedAt": "2024-07-16T19:19:21Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "35f1274853c1c06a5132612b111debefe4fd17ac",
@@ -68843,6 +69408,46 @@
               "body": "@tgeoghegan does this mean the syntax from `{{Section 3.7 of !RFC8446}}` is forbidden in this doc? \r\nIf a structure has the following def:\r\n```\r\nstruct {\r\n   uint32 always_present;\r\n   ExampleEnum type;\r\n}\r\n```\r\n\r\nThen does the below have ambiguity?\r\n```\r\nstruct variant {\r\n   uint32 always_present = 0;\r\n   ExampleEnum type = number;\r\n}\r\n```\r\nDoes it mean `always_present` can only be a constant 0 or it just happens to be 0 in this variant?",
               "createdAt": "2024-07-16T00:50:40Z",
               "updatedAt": "2024-07-16T00:50:40Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6B-7KV",
+          "commit": {
+            "abbreviatedOid": "28fac09"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-16T16:26:39Z",
+          "updatedAt": "2024-07-16T16:26:40Z",
+          "comments": [
+            {
+              "originalPosition": 22,
+              "body": "> @tgeoghegan does this mean the syntax from `{{Section 3.7 of !RFC8446}}` is forbidden in this doc?\r\n\r\nI don't think so. By introducing `struct variant`, we avoid collision with the RFC 8446 s3.7 notation, meaning it can be used without further complications. However, I don't think DAP ever should: TLS 1.3 needs that notation because it wants some its messages to be backward compatible with TLS 1.2. We have no such problem.\r\n\r\n> If a structure has the following def:\r\n> \r\n> ```\r\n> struct {\r\n>    uint32 always_present;\r\n>    ExampleEnum type;\r\n> }\r\n> ```\r\n> \r\n> Then does the below have ambiguity?\r\n> \r\n> ```\r\n> struct variant {\r\n>    uint32 always_present = 0;\r\n>    ExampleEnum type = number;\r\n> }\r\n> ```\r\n> \r\n> Does it mean `always_present` can only be a constant 0 or it just happens to be 0 in this variant?\r\n\r\nI don't think there's ambiguity because using `struct variant` makes it clear we're not using the notation from RFC 8446 section 3.7.",
+              "createdAt": "2024-07-16T16:26:39Z",
+              "updatedAt": "2024-07-16T16:26:40Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6CAWSq",
+          "commit": {
+            "abbreviatedOid": "28fac09"
+          },
+          "author": "wangshan",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-16T19:19:21Z",
+          "updatedAt": "2024-07-16T19:19:21Z",
+          "comments": [
+            {
+              "originalPosition": 22,
+              "body": "> \r\n> I don't think there's ambiguity because using `struct variant` makes it clear we're not using the notation from RFC 8446 section 3.7.\r\n\r\nI see, so it essentially overrides RFC 8446 s3.7. Do you think it's worth calling out this in the example? @tgeoghegan ",
+              "createdAt": "2024-07-16T19:19:21Z",
+              "updatedAt": "2024-07-16T19:19:50Z"
             }
           ]
         }
@@ -69187,6 +69792,32 @@
           ]
         }
       ]
+    },
+    {
+      "number": 569,
+      "id": "PR_kwDOFEJYQs51tJAT",
+      "title": "Allow for aggregation step skew recovery of arbitrary number of steps",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/569",
+      "state": "OPEN",
+      "author": "kristineguo",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "Context: https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/564#discussion_r1674725591\r\n\r\nThe current draft focuses on only the recovery from `n` to `n+1`. We should generalize this section to allow aggregation step skew recovery of any arbitrary number of previous steps.",
+      "createdAt": "2024-07-17T23:47:44Z",
+      "updatedAt": "2024-07-17T23:47:45Z",
+      "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "baseRefName": "main",
+      "baseRefOid": "35f1274853c1c06a5132612b111debefe4fd17ac",
+      "headRepository": "kristineguo/draft-ietf-ppm-dap",
+      "headRefName": "step-skew-recovery",
+      "headRefOid": "5e1e842d03644b4d931104820fe85b1ccf65f4dd",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": []
     }
   ]
 }
