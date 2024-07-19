@@ -173,8 +173,8 @@ Table of Contents
 
    *  Remove the max_batch_size parameter of the fixed-size query type.
 
-   *  Rename the fixed-size query type to leader-selected, to align the
-      name with the behavior of this query type.
+   *  Rename the "fixed-size" query type to "leader-selected", to align
+      the name with the behavior of this query type.
 
    *  Rename "query type" to "batch mode", to align the name of this
       configuration value with its functionality.
