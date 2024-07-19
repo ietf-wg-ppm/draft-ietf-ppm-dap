@@ -1197,13 +1197,13 @@ revealing any individual user's data.<a href="#section-abstract-1" class="pilcro
             <p id="section-toc.1-1.4.1"><a href="#section-4" class="auto internal xref">4</a>.  <a href="#name-protocol-definition" class="internal xref">Protocol Definition</a></p>
 <ul class="compact toc ulBare ulEmpty">
 <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.1">
-                <p id="section-toc.1-1.4.2.1.1"><a href="#section-4.1" class="auto internal xref">4.1</a>.  <a href="#name-queries" class="internal xref">Queries</a></p>
+                <p id="section-toc.1-1.4.2.1.1"><a href="#section-4.1" class="auto internal xref">4.1</a>.  <a href="#name-batch-modes-batches-and-que" class="internal xref">Batch Modes, Batches, and Queries</a></p>
 <ul class="compact toc ulBare ulEmpty">
 <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.1.2.1">
-                    <p id="section-toc.1-1.4.2.1.2.1.1"><a href="#section-4.1.1" class="auto internal xref">4.1.1</a>.  <a href="#name-time-interval-queries" class="internal xref">Time-interval Queries</a></p>
+                    <p id="section-toc.1-1.4.2.1.2.1.1"><a href="#section-4.1.1" class="auto internal xref">4.1.1</a>.  <a href="#name-time-interval-batch-mode" class="internal xref">Time-interval Batch Mode</a></p>
 </li>
                   <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.1.2.2">
-                    <p id="section-toc.1-1.4.2.1.2.2.1"><a href="#section-4.1.2" class="auto internal xref">4.1.2</a>.  <a href="#name-leader-selected-queries" class="internal xref">Leader-selected Queries</a></p>
+                    <p id="section-toc.1-1.4.2.1.2.2.1"><a href="#section-4.1.2" class="auto internal xref">4.1.2</a>.  <a href="#name-leader-selected-batch-mode" class="internal xref">Leader-selected Batch Mode</a></p>
 </li>
                 </ul>
 </li>
@@ -1372,7 +1372,7 @@ revealing any individual user's data.<a href="#section-abstract-1" class="pilcro
                 <p id="section-toc.1-1.8.2.2.1"><a href="#section-8.2" class="auto internal xref">8.2</a>.  <a href="#name-dap-type-registries" class="internal xref">DAP Type Registries</a></p>
 <ul class="compact toc ulBare ulEmpty">
 <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8.2.2.2.1">
-                    <p id="section-toc.1-1.8.2.2.2.1.1"><a href="#section-8.2.1" class="auto internal xref">8.2.1</a>.  <a href="#name-query-types-registry" class="internal xref">Query Types Registry</a></p>
+                    <p id="section-toc.1-1.8.2.2.2.1.1"><a href="#section-8.2.1" class="auto internal xref">8.2.1</a>.  <a href="#name-batch-modes-registry" class="internal xref">Batch Modes Registry</a></p>
 </li>
                   <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8.2.2.2.2">
                     <p id="section-toc.1-1.8.2.2.2.2.1"><a href="#section-8.2.2" class="auto internal xref">8.2.2</a>.  <a href="#name-upload-extension-registry" class="internal xref">Upload Extension Registry</a></p>
@@ -1434,6 +1434,10 @@ input is ever seen in the clear by any aggregator.<a href="#section-1-1" class="
           <li class="normal" id="section-1.1-3.2">
             <p id="section-1.1-3.2.1">Rename the fixed-size query type to leader-selected, to align the name with
 the behavior of this query type.<a href="#section-1.1-3.2.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-1.1-3.3">
+            <p id="section-1.1-3.3.1">Rename "query type" to "batch mode", to align the name of this configuration
+value with its functionality.<a href="#section-1.1-3.3.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 <p id="section-1.1-4">11:<a href="#section-1.1-4" class="pilcrow">¶</a></p>
@@ -2245,19 +2249,19 @@ VDAF types:<a href="#section-4-6" class="pilcrow">¶</a></p>
           <p id="section-4-7.6.1">PrepMessage<a href="#section-4-7.6.1" class="pilcrow">¶</a></p>
 </li>
       </ul>
-<div id="query">
+<div id="batch-mode">
 <section id="section-4.1">
-        <h3 id="name-queries">
-<a href="#section-4.1" class="section-number selfRef">4.1. </a><a href="#name-queries" class="section-name selfRef">Queries</a>
+        <h3 id="name-batch-modes-batches-and-que">
+<a href="#section-4.1" class="section-number selfRef">4.1. </a><a href="#name-batch-modes-batches-and-que" class="section-name selfRef">Batch Modes, Batches, and Queries</a>
         </h3>
 <p id="section-4.1-1">Aggregated results are computed based on sets of reports, called "batches". The
 Collector requests the aggregated results for a given batch via a "query". The
 Aggregators use this query to carry out the aggregation flow and produce
 aggregate shares encrypted to the Collector.<a href="#section-4.1-1" class="pilcrow">¶</a></p>
-<p id="section-4.1-2">Each measurement task has a preconfigured "query type". This query type defines
+<p id="section-4.1-2">Each measurement task has a preconfigured "batch mode". The batch mode defines
 both how reports may be partitioned into batches, as well as how these batches
 are addressed and the semantics of the query used for collection.<a href="#section-4.1-2" class="pilcrow">¶</a></p>
-<p id="section-4.1-3">This document defines the following query types:<a href="#section-4.1-3" class="pilcrow">¶</a></p>
+<p id="section-4.1-3">This document defines the following batch modes:<a href="#section-4.1-3" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-4.1-4">
 <pre>
 enum {
@@ -2265,21 +2269,21 @@ enum {
   time_interval(1),
   leader_selected(2),
   (255)
-} QueryType;
+} BatchMode;
 </pre><a href="#section-4.1-4" class="pilcrow">¶</a>
 </div>
-<p id="section-4.1-5">The time_interval query type is described in <a href="#time-interval-query" class="auto internal xref">Section 4.1.1</a>; the
-leader_selected query type is described in <a href="#leader-selected-query" class="auto internal xref">Section 4.1.2</a>. Future
-specifications may introduce new query types as needed (see <a href="#query-type-reg" class="auto internal xref">Section 8.2.1</a>).
-Implementations are free to implement only a subset of the available query
-types.<a href="#section-4.1-5" class="pilcrow">¶</a></p>
+<p id="section-4.1-5">The time_interval batch mode is described in <a href="#time-interval-batch-mode" class="auto internal xref">Section 4.1.1</a>; the
+leader_selected batch mode is described in <a href="#leader-selected-batch-mode" class="auto internal xref">Section 4.1.2</a>.
+Future specifications may introduce new batch modes as needed (see
+<a href="#batch-mode-reg" class="auto internal xref">Section 8.2.1</a>). Implementations are free to implement only a subset of the
+available batch modes.<a href="#section-4.1-5" class="pilcrow">¶</a></p>
 <p id="section-4.1-6">A query includes parameters used by the Aggregators to select a batch of
-reports specific to the given query type. A query is defined as follows:<a href="#section-4.1-6" class="pilcrow">¶</a></p>
+reports specific to the given batch mode. A query is defined as follows:<a href="#section-4.1-6" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-4.1-7">
 <pre>
 struct {
-  QueryType query_type;
-  select (Query.query_type) {
+  BatchMode batch_mode;
+  select (Query.batch_mode) {
     case time_interval: Interval batch_interval;
     case leader_selected: Empty;
   }
@@ -2287,9 +2291,9 @@ struct {
 </pre><a href="#section-4.1-7" class="pilcrow">¶</a>
 </div>
 <p id="section-4.1-8">The query is issued in-band as part of the collect interaction
-(<a href="#collect-flow" class="auto internal xref">Section 4.6</a>). Its content is determined by the "query type", which in turn
-is encoded by the "query configuration" configured out-of-band. All query types
-have the following configuration parameters in common:<a href="#section-4.1-8" class="pilcrow">¶</a></p>
+(<a href="#collect-flow" class="auto internal xref">Section 4.6</a>). Its content is determined by the batch mode, which in turn
+is determined by the measurement task, which is configured out-of-band. All
+batch modes have the following configuration parameters in common:<a href="#section-4.1-8" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-4.1-9.1">
             <p id="section-4.1-9.1.1"><code>min_batch_size</code> - The smallest number of reports the batch is allowed to
@@ -2300,23 +2304,23 @@ measurements and aggregation function.<a href="#section-4.1-9.1.1" class="pilcro
 </li>
           <li class="normal" id="section-4.1-9.2">
             <p id="section-4.1-9.2.1"><code>time_precision</code> - Clients use this value to truncate their report timestamps;
-see <a href="#upload-flow" class="auto internal xref">Section 4.4</a>. Additional semantics may apply, depending on the query
-type. (See <a href="#batch-validation" class="auto internal xref">Section 4.6.5</a> for details.)<a href="#section-4.1-9.2.1" class="pilcrow">¶</a></p>
+see <a href="#upload-flow" class="auto internal xref">Section 4.4</a>. Additional semantics may apply, depending on the batch
+mode. (See <a href="#batch-validation" class="auto internal xref">Section 4.6.5</a> for details.)<a href="#section-4.1-9.2.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
-<p id="section-4.1-10">The parameters pertaining to specific query types are described in
-<a href="#time-interval-query" class="auto internal xref">Section 4.1.1</a> and <a href="#leader-selected-query" class="auto internal xref">Section 4.1.2</a>.<a href="#section-4.1-10" class="pilcrow">¶</a></p>
-<div id="time-interval-query">
+<p id="section-4.1-10">The parameters pertaining to specific batch modes are described in
+<a href="#time-interval-batch-mode" class="auto internal xref">Section 4.1.1</a> and <a href="#leader-selected-batch-mode" class="auto internal xref">Section 4.1.2</a>.<a href="#section-4.1-10" class="pilcrow">¶</a></p>
+<div id="time-interval-batch-mode">
 <section id="section-4.1.1">
-          <h4 id="name-time-interval-queries">
-<a href="#section-4.1.1" class="section-number selfRef">4.1.1. </a><a href="#name-time-interval-queries" class="section-name selfRef">Time-interval Queries</a>
+          <h4 id="name-time-interval-batch-mode">
+<a href="#section-4.1.1" class="section-number selfRef">4.1.1. </a><a href="#name-time-interval-batch-mode" class="section-name selfRef">Time-interval Batch Mode</a>
           </h4>
-<p id="section-4.1.1-1">The first query type, <code>time_interval</code>, is designed to support applications in
-which reports are collected into batches grouped by an interval of time. The
-Collector specifies a "batch interval" that determines the time range for
-reports included in the batch. For each report in the batch, the time at which
-that report was generated (see <a href="#upload-flow" class="auto internal xref">Section 4.4</a>) <span class="bcp14">MUST</span> fall within the batch
-interval specified by the Collector.<a href="#section-4.1.1-1" class="pilcrow">¶</a></p>
+<p id="section-4.1.1-1">The <code>time_interval</code> batch mode is designed to support applications in which
+reports are collected into batches grouped by an interval of time. The Collector
+specifies a "batch interval" that determines the time range for reports included
+in the batch. For each report in the batch, the time at which that report was
+generated (see <a href="#upload-flow" class="auto internal xref">Section 4.4</a>) <span class="bcp14">MUST</span> fall within the batch interval specified by
+the Collector.<a href="#section-4.1.1-1" class="pilcrow">¶</a></p>
 <p id="section-4.1.1-2">Typically the Collector issues queries for which the batch intervals are
 continuous, monotonically increasing, and have the same duration. For example,
 the sequence of batch intervals <code>(1659544000, 1000)</code>, <code>(1659545000, 1000)</code>,
@@ -2327,19 +2331,19 @@ decide to issue queries out-of-order. In addition, the Collector may need to
 vary the duration to adjust to changing report upload rates.<a href="#section-4.1.1-2" class="pilcrow">¶</a></p>
 </section>
 </div>
-<div id="leader-selected-query">
+<div id="leader-selected-batch-mode">
 <section id="section-4.1.2">
-          <h4 id="name-leader-selected-queries">
-<a href="#section-4.1.2" class="section-number selfRef">4.1.2. </a><a href="#name-leader-selected-queries" class="section-name selfRef">Leader-selected Queries</a>
+          <h4 id="name-leader-selected-batch-mode">
+<a href="#section-4.1.2" class="section-number selfRef">4.1.2. </a><a href="#name-leader-selected-batch-mode" class="section-name selfRef">Leader-selected Batch Mode</a>
           </h4>
-<p id="section-4.1.2-1">The <code>leader_selected</code> query type is used to support applications in which it is
+<p id="section-4.1.2-1">The <code>leader_selected</code> batch mode is used to support applications in which it is
 acceptable for reports to be batched in an arbitrary fashion by the Leader. Each
 batch of reports is identified by an opaque "batch ID". Both the reports
 included in each batch and the ID for each batch are allocated in an arbitrary
 fashion by the Leader.<a href="#section-4.1.2-1" class="pilcrow">¶</a></p>
 <p id="section-4.1.2-2">The Collector will not know the set of batch IDs available for collection. To
 get the aggregate of a batch, the Collector issues a query, which does not
-include any information specifying a particular batch (see <a href="#query" class="auto internal xref">Section 4.1</a>). The
+include any information specifying a particular batch (see <a href="#batch-mode" class="auto internal xref">Section 4.1</a>). The
 Leader selects a recent batch to aggregate. The Leader <span class="bcp14">MUST</span> select a batch that
 has not yet been associated with a collection job.<a href="#section-4.1.2-2" class="pilcrow">¶</a></p>
 <p id="section-4.1.2-3">The Aggregators can output batches of any size that is larger than or equal to
@@ -2377,10 +2381,10 @@ the following parameters associated with it:<a href="#section-4.2-3" class="pilc
 can be found.<a href="#section-4.2-4.2.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-4.2-4.3">
-            <p id="section-4.2-4.3.1">The query configuration for this task (see <a href="#query" class="auto internal xref">Section 4.1</a>). This determines the
-query type for batch selection and the properties that all batches for this
-task must have. The party <span class="bcp14">MUST NOT</span> configure the task if it does not
-recognize the query type.<a href="#section-4.2-4.3.1" class="pilcrow">¶</a></p>
+            <p id="section-4.2-4.3.1">The batch mode for this task (see <a href="#batch-mode" class="auto internal xref">Section 4.1</a>). This determines how reports
+are grouped into batches and the properties that all batches for this task
+must have. The party <span class="bcp14">MUST NOT</span> configure the task if it does not recognize the
+batch mode.<a href="#section-4.2-4.3.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-4.2-4.4">
             <p id="section-4.2-4.4.1"><code>task_expiration</code>: The time up to which Clients are expected to upload to this
@@ -2951,8 +2955,8 @@ initialization.<a href="#section-4.5.1.1-13" class="pilcrow">¶</a></p>
 opaque BatchID[32];
 
 struct {
-  QueryType query_type;
-  select (PartialBatchSelector.query_type) {
+  BatchMode batch_mode;
+  select (PartialBatchSelector.batch_mode) {
     case time_interval: Empty;
     case leader_selected: BatchID batch_id;
   };
@@ -2981,13 +2985,13 @@ belongs.<a href="#section-4.5.1.1-17.2.2.1.1" class="pilcrow">¶</a></p>
 </li>
                 </ul>
 <p id="section-4.5.1.1-17.2.3">
-The indicated query type <span class="bcp14">MUST</span> match the task's query type. Otherwise, the
+The indicated batch mode <span class="bcp14">MUST</span> match the task's batch mode. Otherwise, the
 Helper <span class="bcp14">MUST</span> abort with error <code>invalidMessage</code>.<a href="#section-4.5.1.1-17.2.3" class="pilcrow">¶</a></p>
 <p id="section-4.5.1.1-17.2.4">
 This field is called the "partial" batch selector because, depending on the
-query type, it may not determine a batch. In particular, if the query type is
+batch mode, it may not determine a batch. In particular, if the batch mode is
 <code>time_interval</code>, the batch is not determined until the Collector's query is
-issued (see <a href="#query" class="auto internal xref">Section 4.1</a>).<a href="#section-4.5.1.1-17.2.4" class="pilcrow">¶</a></p>
+issued (see <a href="#batch-mode" class="auto internal xref">Section 4.1</a>).<a href="#section-4.5.1.1-17.2.4" class="pilcrow">¶</a></p>
 </li>
               <li class="normal" id="section-4.5.1.1-17.3">
                 <p id="section-4.5.1.1-17.3.1"><code>prepare_inits</code>: the sequence of <code>PrepareInit</code> messages constructed in the
@@ -3297,9 +3301,9 @@ input share <span class="bcp14">MUST</span> be marked as invalid with error <cod
 has completed a collection job for a CollectionReq message from the
 Collector; the Helper considers a batch to be collected once it has
 responded to an <code>AggregateShareReq</code> message from the Leader. A batch is
-determined by query (<a href="#query" class="auto internal xref">Section 4.1</a>) conveyed in these messages. Queries must
-satisfy the criteria covered in <a href="#batch-validation" class="auto internal xref">Section 4.6.5</a>. These criteria are
-meant to restrict queries in a way make it easy to determine wither a
+determined by query (<a href="#batch-mode" class="auto internal xref">Section 4.1</a>) conveyed in these messages. Queries
+must satisfy the criteria covered in <a href="#batch-validation" class="auto internal xref">Section 4.6.5</a>. These criteria
+are meant to restrict queries in a way make it easy to determine wither a
 report pertains to a batch that was collected.<a href="#section-4.5.1.4-3.7.2.1.1" class="pilcrow">¶</a></p>
 <p id="section-4.5.1.4-3.7.2.1.2">
 [TODO: If a section to clarify report and batch states is added this can be
@@ -3549,9 +3553,9 @@ any).<a href="#section-4.5.2.3-4" class="pilcrow">¶</a></p>
         </h3>
 <p id="section-4.6-1">In this phase, the Collector requests aggregate shares from each Aggregator and
 then locally combines them to yield a single aggregate result. In particular,
-the Collector issues a query to the Leader (<a href="#query" class="auto internal xref">Section 4.1</a>), which the Aggregators
-use to select a batch of reports to aggregate. Each Aggregator emits an
-aggregate share encrypted to the Collector so that it can decrypt and combine
+the Collector issues a query to the Leader (<a href="#batch-mode" class="auto internal xref">Section 4.1</a>), which the
+Aggregators use to select a batch of reports to aggregate. Each Aggregator emits
+an aggregate share encrypted to the Collector so that it can decrypt and combine
 them to yield the aggregate result. This entire process is composed of two
 interactions:<a href="#section-4.6-1" class="pilcrow">¶</a></p>
 <ol start="1" type="1" class="normal type-1" id="section-4.6-2">
@@ -3594,8 +3598,8 @@ struct {
 <p id="section-4.6.1-6">The named parameters are:<a href="#section-4.6.1-6" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-4.6.1-7.1">
-              <p id="section-4.6.1-7.1.1"><code>query</code>, the Collector's query. The indicated query type <span class="bcp14">MUST</span> match the task's
-query type. Otherwise, the Leader <span class="bcp14">MUST</span> abort with error "invalidMessage".<a href="#section-4.6.1-7.1.1" class="pilcrow">¶</a></p>
+              <p id="section-4.6.1-7.1.1"><code>query</code>, the Collector's query. The indicated batch mode <span class="bcp14">MUST</span> match the task's
+batch mode. Otherwise, the Leader <span class="bcp14">MUST</span> abort with error "invalidMessage".<a href="#section-4.6.1-7.1.1" class="pilcrow">¶</a></p>
 </li>
             <li class="normal" id="section-4.6.1-7.2">
               <p id="section-4.6.1-7.2.1"><code>agg_param</code>, an aggregation parameter for the VDAF being executed. This is the
@@ -3668,8 +3672,8 @@ structure includes the following:<a href="#section-4.6.1-19" class="pilcrow">¶<
 <li class="normal" id="section-4.6.1-20.1">
               <p id="section-4.6.1-20.1.1"><code>part_batch_selector</code>: Information used to bind the aggregate result to the
 query. For leader_selected tasks, this includes the batch ID assigned to the
-batch by the Leader. The indicated query type <span class="bcp14">MUST</span> match the task's query
-type.<a href="#section-4.6.1-20.1.1" class="pilcrow">¶</a></p>
+batch by the Leader. The indicated batch mode <span class="bcp14">MUST</span> match the task's batch
+mode.<a href="#section-4.6.1-20.1.1" class="pilcrow">¶</a></p>
 </li>
             <li class="normal" id="section-4.6.1-20.2">
               <p id="section-4.6.1-20.2.1"><code>report_count</code>: The number of reports included in the batch.<a href="#section-4.6.1-20.2.1" class="pilcrow">¶</a></p>
@@ -3678,7 +3682,7 @@ type.<a href="#section-4.6.1-20.1.1" class="pilcrow">¶</a></p>
               <p id="section-4.6.1-20.3.1"><code>interval</code>: The smallest interval of time that contains the timestamps of all
 reports included in the batch, such that the interval's start and duration are
 both multiples of the task's <code>time_precision</code> parameter. Note that in the case
-of a <code>time_interval</code> type query (see <a href="#query" class="auto internal xref">Section 4.1</a>), this interval can be smaller
+of a <code>time_interval</code> query (see <a href="#batch-mode" class="auto internal xref">Section 4.1</a>), this interval can be smaller
 than the one in the corresponding <code>CollectionReq.query</code>.<a href="#section-4.6.1-20.3.1" class="pilcrow">¶</a></p>
 </li>
             <li class="normal" id="section-4.6.1-20.4">
@@ -3716,8 +3720,8 @@ a bitwise-XOR operation.<a href="#section-4.6.2-1" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-4.6.2-3">
 <pre>
 struct {
-  QueryType query_type;
-  select (BatchSelector.query_type) {
+  BatchMode batch_mode;
+  select (BatchSelector.batch_mode) {
     case time_interval: Interval batch_interval;
     case leader_selected: BatchID batch_id;
   };
@@ -3736,7 +3740,7 @@ message contains the following parameters:<a href="#section-4.6.2-4" class="pilc
 <ul class="normal">
 <li class="normal" id="section-4.6.2-5.1">
               <p id="section-4.6.2-5.1.1"><code>batch_selector</code>: The "batch selector", which encodes parameters used to
-determine the batch being aggregated. The value depends on the query type for
+determine the batch being aggregated. The value depends on the batch mode for
 the task:<a href="#section-4.6.2-5.1.1" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-4.6.2-5.1.2.1">
@@ -3747,7 +3751,7 @@ the task:<a href="#section-4.6.2-5.1.1" class="pilcrow">¶</a></p>
 </li>
               </ul>
 <p id="section-4.6.2-5.1.3">
-The indicated query type <span class="bcp14">MUST</span> match the task's query type. Otherwise, the
+The indicated batch mode <span class="bcp14">MUST</span> match the task's batch mode. Otherwise, the
 Helper <span class="bcp14">MUST</span> abort with "invalidMessage".<a href="#section-4.6.2-5.1.3" class="pilcrow">¶</a></p>
 </li>
             <li class="normal" id="section-4.6.2-5.2">
@@ -3902,11 +3906,11 @@ value of the batch selector used in <code>agg_share_aad</code> is computed by th
 from its query and the response to its query as follows:<a href="#section-4.6.4-8" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-4.6.4-9.1">
-              <p id="section-4.6.4-9.1.1">For time_interval tasks, the batch selector is the batch interval specified in
-the query.<a href="#section-4.6.4-9.1.1" class="pilcrow">¶</a></p>
+              <p id="section-4.6.4-9.1.1">For <code>time_interval</code> tasks, the batch selector is the batch interval specified
+in the query.<a href="#section-4.6.4-9.1.1" class="pilcrow">¶</a></p>
 </li>
             <li class="normal" id="section-4.6.4-9.2">
-              <p id="section-4.6.4-9.2.1">For leader_selected tasks, the batch selector is the batch ID sent in the
+              <p id="section-4.6.4-9.2.1">For <code>leader_selected</code> tasks, the batch selector is the batch ID sent in the
 response.<a href="#section-4.6.4-9.2.1" class="pilcrow">¶</a></p>
 </li>
           </ul>
@@ -3933,11 +3937,11 @@ with the indicated error.<a href="#section-4.6.5-2.1.1" class="pilcrow">¶</a></
 </li>
           </ul>
 <p id="section-4.6.5-3">First the Aggregator checks that the batch respects any "boundaries" determined
-by the query type. These are described in the subsections below. If the boundary
+by the batch mode. These are described in the subsections below. If the boundary
 check fails, then the Aggregator <span class="bcp14">MUST</span> abort with an error of type
 "batchInvalid".<a href="#section-4.6.5-3" class="pilcrow">¶</a></p>
 <p id="section-4.6.5-4">Next, the Aggregator checks that batch contains a valid number of reports, as
-determined by the query type. If the size check fails, then Helpers <span class="bcp14">MUST</span> abort
+determined by the batch mode. If the size check fails, then Helpers <span class="bcp14">MUST</span> abort
 with an error of type "invalidBatchSize". Leaders <span class="bcp14">SHOULD</span> wait for more reports
 to be validated and try the collection job again later.<a href="#section-4.6.5-4" class="pilcrow">¶</a></p>
 <p id="section-4.6.5-5">Next, the Aggregator checks that the batch has not been queried with multiple
@@ -3956,15 +3960,15 @@ collect query flexibility. As of now, this is quite rigid and doesn't give the
 Collector much room for mistakes.]]<a href="#section-4.6.5-7" class="pilcrow">¶</a></p>
 <div id="time-interval-batch-validation">
 <section id="section-4.6.5.1">
-            <h5 id="name-time-interval-queries-2">
-<a href="#section-4.6.5.1" class="section-number selfRef">4.6.5.1. </a><a href="#name-time-interval-queries-2" class="section-name selfRef">Time-interval Queries</a>
+            <h5 id="name-time-interval-batch-mode-2">
+<a href="#section-4.6.5.1" class="section-number selfRef">4.6.5.1. </a><a href="#name-time-interval-batch-mode-2" class="section-name selfRef">Time-interval Batch Mode</a>
             </h5>
 <div id="boundary-check">
 <section id="section-4.6.5.1.1">
               <h6 id="name-boundary-check">
 <a href="#section-4.6.5.1.1" class="section-number selfRef">4.6.5.1.1. </a><a href="#name-boundary-check" class="section-name selfRef">Boundary Check</a>
               </h6>
-<p id="section-4.6.5.1.1-1">The batch boundaries are determined by the <code>time_precision</code> field of the query
+<p id="section-4.6.5.1.1-1">The batch boundaries are determined by the <code>time_precision</code> field of the task
 configuration. For the <code>batch_interval</code> included with the query, the Aggregator
 checks that:<a href="#section-4.6.5.1.1-1" class="pilcrow">¶</a></p>
 <ul class="normal">
@@ -3995,18 +3999,18 @@ reports successfully aggregated into the batch.<a href="#section-4.6.5.1.2-1" cl
 </div>
 <div id="leader-selected-batch-validation">
 <section id="section-4.6.5.2">
-            <h5 id="name-leader-selected-queries-2">
-<a href="#section-4.6.5.2" class="section-number selfRef">4.6.5.2. </a><a href="#name-leader-selected-queries-2" class="section-name selfRef">Leader-selected Queries</a>
+            <h5 id="name-leader-selected-batch-mode-2">
+<a href="#section-4.6.5.2" class="section-number selfRef">4.6.5.2. </a><a href="#name-leader-selected-batch-mode-2" class="section-name selfRef">Leader-selected Batch Mode</a>
             </h5>
 <div id="boundary-check-1">
 <section id="section-4.6.5.2.1">
               <h6 id="name-boundary-check-2">
 <a href="#section-4.6.5.2.1" class="section-number selfRef">4.6.5.2.1. </a><a href="#name-boundary-check-2" class="section-name selfRef">Boundary Check</a>
               </h6>
-<p id="section-4.6.5.2.1-1">For leader_selected tasks, the batch boundaries are defined by opaque batch IDs.
-Thus the Aggregator needs to check that the query is associated with a known
-batch ID; specifically, for an <code>AggregateShareReq</code>, the Helper checks that the
-batch ID provided by the Leader corresponds to a batch ID used in a previous
+<p id="section-4.6.5.2.1-1">For <code>leader_selected</code> tasks, the batch boundaries are defined by opaque batch
+IDs. Thus the Aggregator needs to check that the query is associated with a
+known batch ID; specifically, for an <code>AggregateShareReq</code>, the Helper checks that
+the batch ID provided by the Leader corresponds to a batch ID used in a previous
 <code>AggregationJobInitReq</code> for the task.<a href="#section-4.6.5.2.1-1" class="pilcrow">¶</a></p>
 </section>
 </div>
@@ -4345,9 +4349,9 @@ use of anonymizing proxies in the upload flow, as described in
         <h3 id="name-batch-selection-attacks">
 <a href="#section-7.2" class="section-number selfRef">7.2. </a><a href="#name-batch-selection-attacks" class="section-name selfRef">Batch-selection Attacks</a>
         </h3>
-<p id="section-7.2-1">Depending on the query type, the privacy of an individual Client may be
+<p id="section-7.2-1">Depending on the batch mode, the privacy of an individual Client may be
 infringed upon by selection of the batch. For example, in the leader-selected
-query type, the Leader is free to select the reports that compose a given batch
+batch mode, the Leader is free to select the reports that compose a given batch
 almost arbitrarily; a malicious Leader might choose a batch composed of reports
 arriving from a single client. The aggregate derived from this batch might then
 reveal information about that Client.<a href="#section-7.2-1" class="pilcrow">¶</a></p>
@@ -5538,12 +5542,12 @@ in this section for all media types listed above.<a href="#section-8.1-5" class=
 <p id="section-8.2-1">This document also requests creation of a new "Distributed Aggregation Protocol
 Parameters" page. This page will contain several new registries, described in the
 following sections.<a href="#section-8.2-1" class="pilcrow">¶</a></p>
-<div id="query-type-reg">
+<div id="batch-mode-reg">
 <section id="section-8.2.1">
-          <h4 id="name-query-types-registry">
-<a href="#section-8.2.1" class="section-number selfRef">8.2.1. </a><a href="#name-query-types-registry" class="section-name selfRef">Query Types Registry</a>
+          <h4 id="name-batch-modes-registry">
+<a href="#section-8.2.1" class="section-number selfRef">8.2.1. </a><a href="#name-batch-modes-registry" class="section-name selfRef">Batch Modes Registry</a>
           </h4>
-<p id="section-8.2.1-1">This document requests creation of a new registry for Query Types. This registry
+<p id="section-8.2.1-1">This document requests creation of a new registry for Batch Modes. This registry
 should contain the following columns:<a href="#section-8.2.1-1" class="pilcrow">¶</a></p>
 <p id="section-8.2.1-2">[TODO: define how we want to structure this registry when the time comes]<a href="#section-8.2.1-2" class="pilcrow">¶</a></p>
 </section>

@@ -91,9 +91,9 @@ Table of Contents
      3.1.  HTTPS Request Authentication
      3.2.  Errors
    4.  Protocol Definition
-     4.1.  Queries
-       4.1.1.  Time-interval Queries
-       4.1.2.  Leader-selected Queries
+     4.1.  Batch Modes, Batches, and Queries
+       4.1.1.  Time-interval Batch Mode
+       4.1.2.  Leader-selected Batch Mode
      4.2.  Task Configuration
      4.3.  Resource URIs
      4.4.  Uploading Reports
@@ -143,7 +143,7 @@ Table of Contents
        8.1.8.  "application/dap-collect-req" media type
        8.1.9.  "application/dap-collection" media type
      8.2.  DAP Type Registries
-       8.2.1.  Query Types Registry
+       8.2.1.  Batch Modes Registry
        8.2.2.  Upload Extension Registry
        8.2.3.  Prepare Error Registry
      8.3.  URN Sub-namespace for DAP (urn:ietf:params:ppm:dap)
@@ -175,6 +175,9 @@ Table of Contents
 
    *  Rename the fixed-size query type to leader-selected, to align the
       name with the behavior of this query type.
+
+   *  Rename "query type" to "batch mode", to align the name of this
+      configuration value with its functionality.
 
    11:
 
@@ -818,7 +821,7 @@ struct {} Empty;
 
    *  PrepMessage
 
-4.1.  Queries
+4.1.  Batch Modes, Batches, and Queries
 
    Aggregated results are computed based on sets of reports, called
    "batches".  The Collector requests the aggregated results for a given
@@ -826,43 +829,43 @@ struct {} Empty;
    aggregation flow and produce aggregate shares encrypted to the
    Collector.
 
-   Each measurement task has a preconfigured "query type".  This query
-   type defines both how reports may be partitioned into batches, as
+   Each measurement task has a preconfigured "batch mode".  The batch
+   mode defines both how reports may be partitioned into batches, as
    well as how these batches are addressed and the semantics of the
    query used for collection.
 
-   This document defines the following query types:
+   This document defines the following batch modes:
 
    enum {
      reserved(0), /* Reserved for testing purposes */
      time_interval(1),
      leader_selected(2),
      (255)
-   } QueryType;
+   } BatchMode;
 
-   The time_interval query type is described in Section 4.1.1; the
-   leader_selected query type is described in Section 4.1.2.  Future
-   specifications may introduce new query types as needed (see
+   The time_interval batch mode is described in Section 4.1.1; the
+   leader_selected batch mode is described in Section 4.1.2.  Future
+   specifications may introduce new batch modes as needed (see
    Section 8.2.1).  Implementations are free to implement only a subset
-   of the available query types.
+   of the available batch modes.
 
    A query includes parameters used by the Aggregators to select a batch
-   of reports specific to the given query type.  A query is defined as
+   of reports specific to the given batch mode.  A query is defined as
    follows:
 
    struct {
-     QueryType query_type;
-     select (Query.query_type) {
+     BatchMode batch_mode;
+     select (Query.batch_mode) {
        case time_interval: Interval batch_interval;
        case leader_selected: Empty;
      }
    } Query;
 
    The query is issued in-band as part of the collect interaction
-   (Section 4.6).  Its content is determined by the "query type", which
-   in turn is encoded by the "query configuration" configured out-of-
-   band.  All query types have the following configuration parameters in
-   common:
+   (Section 4.6).  Its content is determined by the batch mode, which in
+   turn is determined by the measurement task, which is configured out-
+   of-band.  All batch modes have the following configuration parameters
+   in common:
 
    *  min_batch_size - The smallest number of reports the batch is
       allowed to include.  In a sense, this parameter controls the
@@ -873,20 +876,19 @@ struct {} Empty;
 
    *  time_precision - Clients use this value to truncate their report
       timestamps; see Section 4.4.  Additional semantics may apply,
-      depending on the query type.  (See Section 4.6.5 for details.)
+      depending on the batch mode.  (See Section 4.6.5 for details.)
 
-   The parameters pertaining to specific query types are described in
+   The parameters pertaining to specific batch modes are described in
    Section 4.1.1 and Section 4.1.2.
 
-4.1.1.  Time-interval Queries
+4.1.1.  Time-interval Batch Mode
 
-   The first query type, time_interval, is designed to support
-   applications in which reports are collected into batches grouped by
-   an interval of time.  The Collector specifies a "batch interval" that
-   determines the time range for reports included in the batch.  For
-   each report in the batch, the time at which that report was generated
-   (see Section 4.4) MUST fall within the batch interval specified by
-   the Collector.
+   The time_interval batch mode is designed to support applications in
+   which reports are collected into batches grouped by an interval of
+   time.  The Collector specifies a "batch interval" that determines the
+   time range for reports included in the batch.  For each report in the
+   batch, the time at which that report was generated (see Section 4.4)
+   MUST fall within the batch interval specified by the Collector.
 
    Typically the Collector issues queries for which the batch intervals
    are continuous, monotonically increasing, and have the same duration.
@@ -898,9 +900,9 @@ struct {} Empty;
    out-of-order.  In addition, the Collector may need to vary the
    duration to adjust to changing report upload rates.
 
-4.1.2.  Leader-selected Queries
+4.1.2.  Leader-selected Batch Mode
 
-   The leader_selected query type is used to support applications in
+   The leader_selected batch mode is used to support applications in
    which it is acceptable for reports to be batched in an arbitrary
    fashion by the Leader.  Each batch of reports is identified by an
    opaque "batch ID".  Both the reports included in each batch and the
@@ -940,10 +942,10 @@ struct {} Empty;
    *  helper_aggregator_url: A URL relative to which the Helper's API
       resources can be found.
 
-   *  The query configuration for this task (see Section 4.1).  This
-      determines the query type for batch selection and the properties
-      that all batches for this task must have.  The party MUST NOT
-      configure the task if it does not recognize the query type.
+   *  The batch mode for this task (see Section 4.1).  This determines
+      how reports are grouped into batches and the properties that all
+      batches for this task must have.  The party MUST NOT configure the
+      task if it does not recognize the batch mode.
 
    *  task_expiration: The time up to which Clients are expected to
       upload to this task.  The task is considered completed after this
@@ -1472,8 +1474,8 @@ struct {} Empty;
    opaque BatchID[32];
 
    struct {
-     QueryType query_type;
-     select (PartialBatchSelector.query_type) {
+     BatchMode batch_mode;
+     select (PartialBatchSelector.batch_mode) {
        case time_interval: Empty;
        case leader_selected: BatchID batch_id;
      };
@@ -1496,12 +1498,12 @@ struct {} Empty;
          that determines the batch to which each report for this
          aggregation job belongs.
 
-      The indicated query type MUST match the task's query type.
+      The indicated batch mode MUST match the task's batch mode.
       Otherwise, the Helper MUST abort with error invalidMessage.
 
       This field is called the "partial" batch selector because,
-      depending on the query type, it may not determine a batch.  In
-      particular, if the query type is time_interval, the batch is not
+      depending on the batch mode, it may not determine a batch.  In
+      particular, if the batch mode is time_interval, the batch is not
       determined until the Collector's query is issued (see
       Section 4.1).
 
@@ -2058,8 +2060,8 @@ struct {} Empty;
 
    The named parameters are:
 
-   *  query, the Collector's query.  The indicated query type MUST match
-      the task's query type.  Otherwise, the Leader MUST abort with
+   *  query, the Collector's query.  The indicated batch mode MUST match
+      the task's batch mode.  Otherwise, the Leader MUST abort with
       error "invalidMessage".
 
    *  agg_param, an aggregation parameter for the VDAF being executed.
@@ -2141,8 +2143,8 @@ struct {} Empty;
 
    *  part_batch_selector: Information used to bind the aggregate result
       to the query.  For leader_selected tasks, this includes the batch
-      ID assigned to the batch by the Leader.  The indicated query type
-      MUST match the task's query type.
+      ID assigned to the batch by the Leader.  The indicated batch mode
+      MUST match the task's batch mode.
 
    *  report_count: The number of reports included in the batch.
 
@@ -2150,7 +2152,7 @@ struct {} Empty;
       timestamps of all reports included in the batch, such that the
       interval's start and duration are both multiples of the task's
       time_precision parameter.  Note that in the case of a
-      time_interval type query (see Section 4.1), this interval can be
+      time_interval query (see Section 4.1), this interval can be
       smaller than the one in the corresponding CollectionReq.query.
 
    *  leader_encrypted_agg_share: The Leader's aggregate share,
@@ -2183,8 +2185,8 @@ struct {} Empty;
    id}/aggregate_shares with the following message:
 
    struct {
-     QueryType query_type;
-     select (BatchSelector.query_type) {
+     BatchMode batch_mode;
+     select (BatchSelector.batch_mode) {
        case time_interval: Interval batch_interval;
        case leader_selected: BatchID batch_id;
      };
@@ -2202,14 +2204,14 @@ struct {} Empty;
 
    *  batch_selector: The "batch selector", which encodes parameters
       used to determine the batch being aggregated.  The value depends
-      on the query type for the task:
+      on the batch mode for the task:
 
       -  For time_interval tasks, the request specifies the batch
          interval.
 
       -  For leader_selected tasks, the request specifies the batch ID.
 
-      The indicated query type MUST match the task's query type.
+      The indicated batch mode MUST match the task's batch mode.
       Otherwise, the Helper MUST abort with "invalidMessage".
 
    *  agg_param: The opaque aggregation parameter for the VDAF being
@@ -2375,12 +2377,12 @@ enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
       error.
 
    First the Aggregator checks that the batch respects any "boundaries"
-   determined by the query type.  These are described in the subsections
+   determined by the batch mode.  These are described in the subsections
    below.  If the boundary check fails, then the Aggregator MUST abort
    with an error of type "batchInvalid".
 
    Next, the Aggregator checks that batch contains a valid number of
-   reports, as determined by the query type.  If the size check fails,
+   reports, as determined by the batch mode.  If the size check fails,
    then Helpers MUST abort with an error of type "invalidBatchSize".
    Leaders SHOULD wait for more reports to be validated and try the
    collection job again later.
@@ -2403,12 +2405,12 @@ enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
    for more collect query flexibility.  As of now, this is quite rigid
    and doesn't give the Collector much room for mistakes.]]
 
-4.6.5.1.  Time-interval Queries
+4.6.5.1.  Time-interval Batch Mode
 
 4.6.5.1.1.  Boundary Check
 
    The batch boundaries are determined by the time_precision field of
-   the query configuration.  For the batch_interval included with the
+   the task configuration.  For the batch_interval included with the
    query, the Aggregator checks that:
 
    *  batch_interval.duration >= time_precision (this field determines,
@@ -2427,7 +2429,7 @@ enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
    min_batch_size.  The Aggregator checks that len(X) >= min_batch_size,
    where X is the set of reports successfully aggregated into the batch.
 
-4.6.5.2.  Leader-selected Queries
+4.6.5.2.  Leader-selected Batch Mode
 
 4.6.5.2.1.  Boundary Check
 
@@ -2713,9 +2715,9 @@ enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
 
 7.2.  Batch-selection Attacks
 
-   Depending on the query type, the privacy of an individual Client may
+   Depending on the batch mode, the privacy of an individual Client may
    be infringed upon by selection of the batch.  For example, in the
-   leader-selected query type, the Leader is free to select the reports
+   leader-selected batch mode, the Leader is free to select the reports
    that compose a given batch almost arbitrarily; a malicious Leader
    might choose a batch composed of reports arriving from a single
    client.  The aggregate derived from this batch might then reveal
@@ -3282,9 +3284,9 @@ enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
    Aggregation Protocol Parameters" page.  This page will contain
    several new registries, described in the following sections.
 
-8.2.1.  Query Types Registry
+8.2.1.  Batch Modes Registry
 
-   This document requests creation of a new registry for Query Types.
+   This document requests creation of a new registry for Batch Modes.
    This registry should contain the following columns:
 
    [TODO: define how we want to structure this registry when the time
