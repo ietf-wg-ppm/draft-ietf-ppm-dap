@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-07-21T01:07:04.424310+00:00",
+  "timestamp": "2024-07-23T01:02:45.190260+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -127,6 +127,11 @@
       "name": "ietf120",
       "description": "",
       "color": "C40CA0"
+    },
+    {
+      "name": "wire breaking",
+      "description": "",
+      "color": "BF322F"
     }
   ],
   "issues": [
@@ -66775,10 +66780,12 @@
       "author": "branlwyd",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
-      "labels": [],
+      "labels": [
+        "wire breaking"
+      ],
       "body": "Batch mode is a more descriptive name than query type. And leader-selected is a more accurate name than fixed-size, since the batch sizes are not fixed -- any size above min_batch_size (and, if specified, below max_batch_size) is acceptable.\r\n\r\nThe max_batch_size parameter of the leader-selected query type is removed. This parameter does not need to be enforced by both aggregators, so it can be made implementation-specific.\r\n\r\nAlso, restore the partial batch selector to the Collection message; the included batch ID is required for the Collector to decrypt the aggregate shares, as it is included in the AAD. This bug was introduced in #554 & effectively breaks collection for the fixed-size query type in DAP-11.\r\n\r\nCloses #555.",
       "createdAt": "2024-06-13T23:56:57Z",
-      "updatedAt": "2024-07-19T19:31:40Z",
+      "updatedAt": "2024-07-22T22:12:31Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "35f1274853c1c06a5132612b111debefe4fd17ac",
@@ -67349,6 +67356,38 @@
               "updatedAt": "2024-07-16T00:10:01Z"
             }
           ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6CsMaj",
+          "commit": {
+            "abbreviatedOid": "73053f5"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2024-07-22T22:03:00Z",
+          "updatedAt": "2024-07-22T22:09:40Z",
+          "comments": [
+            {
+              "originalPosition": 213,
+              "body": "While at it: Do we still like the term \"partial batch selector\"?",
+              "createdAt": "2024-07-22T22:03:01Z",
+              "updatedAt": "2024-07-22T22:09:40Z"
+            },
+            {
+              "originalPosition": 314,
+              "body": "Reviewer note: [This was removed in draft 11](https://datatracker.ietf.org/doc/html/draft-ietf-ppm-dap-10#section-4.6.1-18), but [we decided to add it back during review of this PR](https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/563#discussion_r1639068652). @branlwyd perhaps the Change Log should be updated to reflect this. This is a breaking change, btw.",
+              "createdAt": "2024-07-22T22:06:35Z",
+              "updatedAt": "2024-07-22T22:09:40Z"
+            },
+            {
+              "originalPosition": 469,
+              "body": "For consistency with above?\r\n```suggestion\r\ninfringed upon by selection of the batch. For example, in the leader_selected\r\n```",
+              "createdAt": "2024-07-22T22:07:21Z",
+              "updatedAt": "2024-07-22T22:09:40Z"
+            }
+          ]
         }
       ]
     },
@@ -67364,13 +67403,13 @@
       "labels": [],
       "body": "Closes https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/557.\r\n\r\nAllows helper-side aggregate job preparation to be handled asynchronously,\r\nsimilarly to how collection jobs work. Briefly, after calls with\r\n`AggregationJobInitReq` and `AggregationJobContinueReq`, the leader polls\r\nthe helper at `GET /tasks/{task-id]/aggregation_jobs/{aggregation-job-id}`\r\nuntil receiving an `AggregationJobResp`.\r\n\r\nIn discussion in #577 we had soft consensus on making this the only option,\r\ni.e. for spec simplicity we don't need to also allow the old synchronous\r\nbehavior.",
       "createdAt": "2024-06-25T18:08:22Z",
-      "updatedAt": "2024-07-19T20:32:22Z",
+      "updatedAt": "2024-07-22T22:23:12Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "35f1274853c1c06a5132612b111debefe4fd17ac",
       "headRepository": "inahga/draft-ietf-ppm-dap",
       "headRefName": "inahga/async-helper-agg-jobs",
-      "headRefOid": "6aa0869ce88f72c007209c699370cc8ea08dd53a",
+      "headRefOid": "c0736b677633a39c1162586da564cd6bb99302ef",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
@@ -69445,6 +69484,112 @@
               "updatedAt": "2024-07-19T20:32:47Z"
             }
           ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6Cjqj_",
+          "commit": {
+            "abbreviatedOid": "6aa0869"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-21T19:27:20Z",
+          "updatedAt": "2024-07-21T19:27:20Z",
+          "comments": [
+            {
+              "originalPosition": 114,
+              "body": "@inahga it sounds like 1 is the option with the most consensus. Let's take it for this PR. I'd be cool with removing the `step` field from the request body if you'd like to.",
+              "createdAt": "2024-07-21T19:27:20Z",
+              "updatedAt": "2024-07-21T19:28:01Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6CpZPE",
+          "commit": {
+            "abbreviatedOid": "3c9752d"
+          },
+          "author": "inahga",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-22T15:24:27Z",
+          "updatedAt": "2024-07-22T15:24:28Z",
+          "comments": [
+            {
+              "originalPosition": 114,
+              "body": "> If you don't want to make a wire change, we could do:\r\n\r\nI meant the definition of `AggregationJobContinueReq`. It's defined as.\r\n```\r\nstruct {\r\n  uint16 step;\r\n  PrepareContinue prepare_continues<1..2^32-1>;\r\n} AggregationJobContinueReq;\r\n```\r\n\r\nWe may be tempted to remove the `step` field, since if `step` is a field of the URI, it's no longer necessary. That would be a simplification, but a wire breaking change.",
+              "createdAt": "2024-07-22T15:24:28Z",
+              "updatedAt": "2024-07-22T17:06:27Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6CqPD2",
+          "commit": {
+            "abbreviatedOid": "3c9752d"
+          },
+          "author": "inahga",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-22T17:08:23Z",
+          "updatedAt": "2024-07-22T17:08:24Z",
+          "comments": [
+            {
+              "originalPosition": 114,
+              "body": "> If you don't want to make a wire change, we could do:\r\n\r\nSorry, I have Monday brain, I see what you're getting at now. We could let `AggregationJobContinueReq` retain the `step` field, retain calling `POST` as-is, but only use the `step` query parameter in the GET request. That would not be a wire breaking change.",
+              "createdAt": "2024-07-22T17:08:23Z",
+              "updatedAt": "2024-07-22T17:08:24Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6CrAiO",
+          "commit": {
+            "abbreviatedOid": "3c9752d"
+          },
+          "author": "inahga",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-22T18:43:01Z",
+          "updatedAt": "2024-07-22T18:43:02Z",
+          "comments": [
+            {
+              "originalPosition": 114,
+              "body": "I've sketched out how this looks in the latest commit, editorial changes still probably required. I went with striking the `step` field, mostly for consistency (don't need the same data in two different locations), and debug-ability (easier to see what the leader is thinking about through HTTP status logs).\r\n\r\nI've also moved from POST to PUT for continuation, since we use separate URIs for each step. This lets us use PUT semantics, i.e. idempotency.\r\n\r\nThat idempotency leads me to strike the entire job recovery section. Now I believe recovery is implicitly possible. If the Leader loses the acknowledgement of the PUT request, it can simply retransmit. Likewise with losing the response to the GET requests. Hopefully that's not overeager, as that seems like a pretty big win for simplicity of the text.\r\n\r\nI've replaced it with a small paragraph that allows the helper to discard information about old steps, so that it doesn't have to retain the entire step history of a (theoretical) VDAF with many steps, but allows for the flexibility of recovering the whole step history (a-la https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/569). I anticipate implementing this as `if step < job.step - 1 { return Err }`.",
+              "createdAt": "2024-07-22T18:43:01Z",
+              "updatedAt": "2024-07-22T18:43:02Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6CsQSE",
+          "commit": {
+            "abbreviatedOid": "c0736b6"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "CHANGES_REQUESTED",
+          "body": "",
+          "createdAt": "2024-07-22T22:19:22Z",
+          "updatedAt": "2024-07-22T22:23:12Z",
+          "comments": [
+            {
+              "originalPosition": 235,
+              "body": "```suggestion\r\nIf the response is ready, the Helper constructs an `AggregationJobResp`\r\n```",
+              "createdAt": "2024-07-22T22:19:22Z",
+              "updatedAt": "2024-07-22T22:23:12Z"
+            },
+            {
+              "originalPosition": 114,
+              "body": "@inahga this is a big and somewhat contentious change, and for that reason, we need to make sure to implement the smallest change necessary. Please revert all changes except for adding the step parameter to the URL.\r\n\r\nYou are probably right about the simplifications we can make, but it will help everyone if we handle this in separate PRs. Feel free to just stick those in a draft PR for now.",
+              "createdAt": "2024-07-22T22:23:01Z",
+              "updatedAt": "2024-07-22T22:23:12Z"
+            }
+          ]
         }
       ]
     },
@@ -69486,7 +69631,7 @@
       "labels": [],
       "body": "Explains in detail how the syntax from RFC 8446 section 3.7 is repurposed for concise descriptions of structure variants. Additionally, the section on message encoding is moved to \"Protocol Definition\" to make the document flow better.\r\n\r\nCloses #472",
       "createdAt": "2024-07-06T00:05:12Z",
-      "updatedAt": "2024-07-16T19:19:21Z",
+      "updatedAt": "2024-07-22T22:32:20Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "35f1274853c1c06a5132612b111debefe4fd17ac",
@@ -69791,6 +69936,26 @@
               "updatedAt": "2024-07-16T19:19:50Z"
             }
           ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6CsTZG",
+          "commit": {
+            "abbreviatedOid": "28fac09"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-22T22:32:20Z",
+          "updatedAt": "2024-07-22T22:32:20Z",
+          "comments": [
+            {
+              "originalPosition": 22,
+              "body": "It does not override that section of RFC 8446. The notation in 8446 section 3.7 is `struct { ... } whatever`. The notation we introduce here is `struct variant { ... } whatever` which does not conflict.",
+              "createdAt": "2024-07-22T22:32:20Z",
+              "updatedAt": "2024-07-22T22:32:20Z"
+            }
+          ]
         }
       ]
     },
@@ -69879,7 +70044,7 @@
       "labels": [],
       "body": "Closes #541.\r\n\r\nMade versioning compatibilities explicit and an optional way to express draft versions.",
       "createdAt": "2024-07-08T23:17:45Z",
-      "updatedAt": "2024-07-20T22:25:30Z",
+      "updatedAt": "2024-07-22T22:29:49Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "35f1274853c1c06a5132612b111debefe4fd17ac",
@@ -70138,6 +70303,26 @@
               "updatedAt": "2024-07-15T19:57:45Z"
             }
           ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6CsS0H",
+          "commit": {
+            "abbreviatedOid": "808d873"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-22T22:29:44Z",
+          "updatedAt": "2024-07-22T22:29:49Z",
+          "comments": [
+            {
+              "originalPosition": 14,
+              "body": "This is non-normative IMO\r\n```suggestion\r\ncomponent is using. This might be used as a hint by the receiver of the request\r\n```",
+              "createdAt": "2024-07-22T22:29:44Z",
+              "updatedAt": "2024-07-22T22:29:49Z"
+            }
+          ]
         }
       ]
     },
@@ -70150,12 +70335,10 @@
       "author": "kristineguo",
       "authorAssociation": "NONE",
       "assignees": [],
-      "labels": [
-        "ietf120"
-      ],
+      "labels": [],
       "body": "Context: https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/564#discussion_r1674725591\r\n\r\nThe current draft focuses on only the recovery from `n` to `n+1`. We should generalize this section to allow aggregation step skew recovery of any arbitrary number of previous steps.",
       "createdAt": "2024-07-17T23:47:44Z",
-      "updatedAt": "2024-07-19T20:38:35Z",
+      "updatedAt": "2024-07-22T23:01:54Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "35f1274853c1c06a5132612b111debefe4fd17ac",
@@ -70222,6 +70405,13 @@
           "body": "If we want to limit step skew recovery to just `n`/`n+1`, we should make it more explicit in this section that the Leader is expected to store its state at each step.\r\n\r\nBut it seems that the amount of stored state is overall the same between Aggregators - either we make the Leader store state of each step (currently implied model), or the Helper stores the state of each step (this PR's suggestion). \r\n\r\nI had always assumed the helper's APIs were idempotent - the same request could be repeated independently of other requests that have been sent and still receive the same response as it had. You seem to be disagreeing with this. If a Helper has moved on to step `n+2`, even if the same request is sent by the leader for step `n`, it will be aborted.",
           "createdAt": "2024-07-19T20:38:01Z",
           "updatedAt": "2024-07-19T20:38:35Z"
+        },
+        {
+          "author": "kristineguo",
+          "authorAssociation": "NONE",
+          "body": "Discussion was taken offline but to summarize here for posterity's sake:\r\n\r\n**Conclusion:** **We will defer this issue.** The current status quo and what's proposed here are functionally the same for 1-round and 2-round VDAfs. Once more multi-round VDAFs are implemented and the async conversations (https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/564) are converged, we can revisit this issue.\r\n\r\n**Details:**\r\nThere are two options:\r\n1. Stick with leader being the one to store state for every step and only supporting `n` / `n+1` recovery.\r\n2. Move to the helper storing state (i.e., sufficient to reconstruct the same original response) and supporting arbitrary step recovery.\r\n\r\nThe current draft assumes that the leader takes the responsibility for tracking state and that the leader will only ever need to recover from the most recent step (i.e., a transient failure caused the most recent response to be dropped). If this is maintained, only option 1 (the status quo) is required.\r\n\r\nHowever, if we want to support aggregation job recovery from either the first step, we will need the helper to maintain state for every step. This is so that we can support idempotency: aggregators should ensure that each step that\u2019s retried is the same as before. So supporting this recovery strategy requires per-step state storage on the helper side. \r\n\r\n**Tangent: Meaning of \"Aggregated\" Reports**\r\nThis discussion on \"recovery from the beginning\" brought up a relevant tangent on what it means for a report to have been \"aggregated.\" @cjpatton mentioned that Daphne delays the anti-replay validation until right before the output shares are aggregated, at which point the job is \"committed\". Before this point, the reports could be sent in a brand new aggregation job if the leader wished to start over. This will be explored more in a separate issue by @branlwyd.\r\n\r\n**Personal Notes**\r\nI still personally prefer option 2, since it\u2019s ultimately the same amount of state stored in sum between the aggregators and allows for more flexibility in recovery. ",
+          "createdAt": "2024-07-22T23:00:55Z",
+          "updatedAt": "2024-07-22T23:01:54Z"
         }
       ],
       "reviews": [
