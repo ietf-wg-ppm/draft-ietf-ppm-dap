@@ -1187,13 +1187,13 @@ Leader to Helper HTTP communication can be performed asynchronously or
 synchronously. In the asynchronous case, the Leader and Helper exchange HTTP
 requests that can be handled quickly, and the Leader polls the Helper for
 aggregation job readiness. In the synchronous case, the Helper processes the
-aggregation job while holding the request open, reducing the number of requests
-that are exchanged. This allows a Helper implementation flexibility in choosing
-a request model that best supports its architecture and use case. For instance,
-resource-intensive use cases, such as replay checks across vast numbers of
-reports and preparation of large histograms, may be better suited for the
-asynchronous model. For use cases where datastore performance is a concern, the
-synchronous model may be better suited.
+aggregation job while holding the request open, reducing the number of HTTP
+requests that are exchanged. This allows a Helper implementation flexibility in
+choosing a request model that best supports its architecture and use case. For
+instance, resource-intensive use cases, such as replay checks across vast
+numbers of reports and preparation of large histograms, may be better suited for
+the asynchronous model. For use cases where datastore performance is a concern,
+the synchronous model may be better suited.
 
 ~~~ ladder
   report, agg_param
@@ -1397,16 +1397,18 @@ is set to `AggregationJobInitReq` and the media type is set to
 The Leader MUST authenticate its requests to the Helper using a scheme that
 meets the requirements in {{request-authentication}}.
 
-The Helper responds with HTTP status 201 Created. If the response has a body
-containing an `AggregationJobResp`, the Leader proceeds onward (see
-{{aggregation-helper-init}}). Otherwise, if the response has an empty body, the
-Leader polls the aggregation job by sending HTTP GET requests to
+The Helper responds with HTTP status 201 Created. If the response has a media
+type of "application/dap-aggregation-job-resp" with a body containing an
+`AggregationJobResp`, the Leader proceeds onward (see
+{{aggregation-helper-init}}). Otherwise, the Leader polls the aggregation job
+by sending HTTP GET requests to
 `{helper}/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}?step=0`. If the
 job is not ready, the Helper responds to the GET request with HTTP status 202
 Accepted. The Helper's response SHOULD include a Retry-After header field to
 suggest a polling interval to the Leader. Otherwise, if the job is ready, the
-Helper responds with HTTP status 200 OK with a body containing an
-`AggregationJobResp`
+Helper responds with HTTP status 200 OK with a media type of
+"application/dap-aggregation-job-resp" and a body containing an
+`AggregationJobResp`.
 
 The `AggregationJobResp.prepare_resps` field must include exactly the same
 report IDs in the same order as the Leader's `AggregationJobInitReq`. Otherwise,
@@ -1466,8 +1468,8 @@ initialization messages have the same report ID, then the Helper MUST abort with
 error `invalidMessage`.
 
 If the Helper finds the `AggregationJobInitReq` to be valid, it MAY immediately
-respond with HTTP status 201 Created with no body, and perform the remaining
-processing asynchronously from any further requests from the Leader.
+respond with HTTP status 201 Created, and perform the remaining processing
+asynchronously from any further requests from the Leader.
 
 To process the aggregation job, the Helper computes an outbound prepare step
 for each report share. This includes the following structures:
@@ -1761,8 +1763,9 @@ preparation continuation messages constructed in the previous step. The
 The Leader MUST authenticate its requests to the Helper using a scheme that
 meets the requirements in {{request-authentication}}.
 
-The Helper responds with HTTP status 202 Accepted. If the response has a body
-containing an `AggregationJobResp`, the Leader proceeds onward (see
+The Helper responds with HTTP status 202 Accepted. If the response has a media
+type of "application/dap-aggregation-job-resp" with a body containing an
+`AggregationJobResp`, the Leader proceeds onward (see
 {{aggregation-helper-continuation}}). Otherwise, if the response has an empty
 body, the Leader polls the aggregation job by sending GET requests to
 `{helper}/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}?step={step}`
@@ -1770,7 +1773,8 @@ where `step` is the `step` field of the `AggregationJobContinueReq`. If the job
 is not ready, the Helper responds with HTTP status 202 Accepted. The Helper's
 response SHOULD include a Retry-After header field to suggest a polling interval
 to the Leader. Otherwise, if the job is ready, the Helper responds with HTTP
-status 200 OK with a body containing an `AggregationJobResp`.
+status 200 OK with media type "application/dap-aggregation-job-resp" and a body
+containing an `AggregationJobResp`.
 
 The response's `prepare_resps` MUST include exactly the same report IDs in the
 same order as the Leader's `AggregationJobContinueReq`. Otherwise, the Leader
