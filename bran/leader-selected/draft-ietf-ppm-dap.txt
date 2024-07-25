@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 20 January 2025                                      Cloudflare
+Expires: 26 January 2025                                      Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                                  Mozilla
                                                               C. A. Wood
                                                               Cloudflare
-                                                            19 July 2024
+                                                            25 July 2024
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -63,7 +63,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 20 January 2025.
+   This Internet-Draft will expire on 26 January 2025.
 
 Copyright Notice
 
@@ -178,6 +178,10 @@ Table of Contents
 
    *  Rename "query type" to "batch mode", to align the name of this
       configuration value with its functionality.
+
+   *  Restore the part_batch_selector field of the Collection structure,
+      which was removed in draft 11, as it is required to decrypt
+      collection results in some cases. (*)
 
    11:
 
@@ -843,8 +847,8 @@ struct {} Empty;
      (255)
    } BatchMode;
 
-   The time_interval batch mode is described in Section 4.1.1; the
-   leader_selected batch mode is described in Section 4.1.2.  Future
+   The time-interval batch mode is described in Section 4.1.1; the
+   leader-selected batch mode is described in Section 4.1.2.  Future
    specifications may introduce new batch modes as needed (see
    Section 8.2.1).  Implementations are free to implement only a subset
    of the available batch modes.
@@ -883,7 +887,7 @@ struct {} Empty;
 
 4.1.1.  Time-interval Batch Mode
 
-   The time_interval batch mode is designed to support applications in
+   The time-interval batch mode is designed to support applications in
    which reports are collected into batches grouped by an interval of
    time.  The Collector specifies a "batch interval" that determines the
    time range for reports included in the batch.  For each report in the
@@ -902,7 +906,7 @@ struct {} Empty;
 
 4.1.2.  Leader-selected Batch Mode
 
-   The leader_selected batch mode is used to support applications in
+   The leader-selected batch mode is used to support applications in
    which it is acceptable for reports to be batched in an arbitrary
    fashion by the Leader.  Each batch of reports is identified by an
    opaque "batch ID".  Both the reports included in each batch and the
@@ -1494,7 +1498,7 @@ struct {} Empty;
    *  part_batch_selector: The "partial batch selector" used by the
       Aggregators to determine how to aggregate each report:
 
-      -  For leader_selected tasks, the Leader specifies a "batch ID"
+      -  For leader-selected tasks, the Leader specifies a "batch ID"
          that determines the batch to which each report for this
          aggregation job belongs.
 
@@ -2142,7 +2146,7 @@ struct {} Empty;
    Collection structure includes the following:
 
    *  part_batch_selector: Information used to bind the aggregate result
-      to the query.  For leader_selected tasks, this includes the batch
+      to the query.  For leader-selected tasks, this includes the batch
       ID assigned to the batch by the Leader.  The indicated batch mode
       MUST match the task's batch mode.
 
@@ -2151,9 +2155,9 @@ struct {} Empty;
    *  interval: The smallest interval of time that contains the
       timestamps of all reports included in the batch, such that the
       interval's start and duration are both multiples of the task's
-      time_precision parameter.  Note that in the case of a
-      time_interval query (see Section 4.1), this interval can be
-      smaller than the one in the corresponding CollectionReq.query.
+      time_precision parameter.  Note that in the case of a time-
+      interval query (see Section 4.1), this interval can be smaller
+      than the one in the corresponding CollectionReq.query.
 
    *  leader_encrypted_agg_share: The Leader's aggregate share,
       encrypted to the Collector.
@@ -2206,10 +2210,10 @@ struct {} Empty;
       used to determine the batch being aggregated.  The value depends
       on the batch mode for the task:
 
-      -  For time_interval tasks, the request specifies the batch
+      -  For time-interval tasks, the request specifies the batch
          interval.
 
-      -  For leader_selected tasks, the request specifies the batch ID.
+      -  For leader-selected tasks, the request specifies the batch ID.
 
       The indicated batch mode MUST match the task's batch mode.
       Otherwise, the Helper MUST abort with "invalidMessage".
@@ -2353,10 +2357,10 @@ enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
    selector used in agg_share_aad is computed by the Collector from its
    query and the response to its query as follows:
 
-   *  For time_interval tasks, the batch selector is the batch interval
+   *  For time-interval tasks, the batch selector is the batch interval
       specified in the query.
 
-   *  For leader_selected tasks, the batch selector is the batch ID sent
+   *  For leader-selected tasks, the batch selector is the batch ID sent
       in the response.
 
    The OpenBase() function is as specified in [HPKE], Section 6.1 for
@@ -2395,7 +2399,7 @@ enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
    Finally, the Aggregator checks that the batch does not contain a
    report that was included in any previous batch.  If this batch
    overlap check fails, then the Aggregator MUST abort with error of
-   type "batchOverlap".  For time_interval tasks, it is sufficient (but
+   type "batchOverlap".  For time-interval tasks, it is sufficient (but
    not necessary) to check that the batch interval does not overlap with
    the batch interval of any previous query.  If this batch interval
    check fails, then the Aggregator MAY abort with error of type
@@ -2433,12 +2437,11 @@ enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
 
 4.6.5.2.1.  Boundary Check
 
-   For leader_selected tasks, the batch boundaries are defined by opaque
-   batch IDs.  Thus the Aggregator needs to check that the query is
-   associated with a known batch ID; specifically, for an
-   AggregateShareReq, the Helper checks that the batch ID provided by
-   the Leader corresponds to a batch ID used in a previous
-   AggregationJobInitReq for the task.
+   The batch boundaries are defined by opaque batch IDs.  Thus the
+   Aggregator needs to check that the query is associated with a known
+   batch ID; specifically, for an AggregateShareReq, the Helper checks
+   that the batch ID provided by the Leader corresponds to a batch ID
+   used in a previous AggregationJobInitReq for the task.
 
 4.6.5.2.2.  Size Check
 
