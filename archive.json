@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-07-23T01:02:45.190260+00:00",
+  "timestamp": "2024-07-25T01:02:44.410545+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -67400,16 +67400,18 @@
       "author": "inahga",
       "authorAssociation": "NONE",
       "assignees": [],
-      "labels": [],
+      "labels": [
+        "wire breaking"
+      ],
       "body": "Closes https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/557.\r\n\r\nAllows helper-side aggregate job preparation to be handled asynchronously,\r\nsimilarly to how collection jobs work. Briefly, after calls with\r\n`AggregationJobInitReq` and `AggregationJobContinueReq`, the leader polls\r\nthe helper at `GET /tasks/{task-id]/aggregation_jobs/{aggregation-job-id}`\r\nuntil receiving an `AggregationJobResp`.\r\n\r\nIn discussion in #577 we had soft consensus on making this the only option,\r\ni.e. for spec simplicity we don't need to also allow the old synchronous\r\nbehavior.",
       "createdAt": "2024-06-25T18:08:22Z",
-      "updatedAt": "2024-07-22T22:23:12Z",
+      "updatedAt": "2024-07-24T23:42:30Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "35f1274853c1c06a5132612b111debefe4fd17ac",
       "headRepository": "inahga/draft-ietf-ppm-dap",
       "headRefName": "inahga/async-helper-agg-jobs",
-      "headRefOid": "c0736b677633a39c1162586da564cd6bb99302ef",
+      "headRefOid": "bdbaeae2825bcb36b3fa63f186fdb24f5ff8ec74",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
@@ -67582,6 +67584,20 @@
           "body": "> The internal async approach does not solve the replay check issue. The replay checks are problematic so long as they need to be done in the critical path.\r\n\r\n> If the critical path on the other hand is potentially just pushing this to a queue, that is a substantial improvement. Handling the replay checks in particular out-of-band temporarily with the request is a huge improvement for us, and gives us a lot more flexibility and allows us to construct a far more robust and reliable system.\r\n\r\nCan you add some detail here about how pushing these replay checks into a background job will help? Ultimately, the replay checks must occur, and they effectively must be \"strongly consistent\"/\"serializable\" (lest two concurrent requests permit a replay). Pushing the work into a background worker may make individual HTTP requests resolve more quickly, but it is not clear to me how the overall work to process an aggregation step is reduced or simplified.\r\n\r\n\r\n> On the subject of IO costs, costs of reads and writes to eventually consistent systems are generally significantly cheaper than e.g a relational database. Async gives implementations access to a far better toolkit here.\r\n\r\nI think \"async\" vs \"sync\" implementations are orthogonal to the durable storage technology in use, that is, either async or sync can use either a \"strongly consistent\" or an \"eventually consistent\" storage technology. Can you expand on your concern here?\r\n\r\n\r\n> The synchronous approach requires a lot of strongly consistent operations to occur in the critical path, and this has significant limitations on the scalability of the protocol and the availability that implementations can potentially offer. In the handling of an aggregate job request, the processing and replay checks both must be conducted. Internal async does not address this - we are still bound to perform all actions successfully within whatever timeouts are set with the leader. This is something we have demonstrated internally to be a fairly significant operational challenge for the protocol.\r\n\r\nDAP currently requires a lot of strong consistency/serializability of requests, not all of which are addressed by fixing aggregation job stepping:\r\n* Report replay checks\r\n* Collection/aggregation job semantics (the Leader must complete a collection job only after all reports in the relevant batch have been aggregated; the Leader & Helper must not permit additional aggregation into a batch once a collection job exists)\r\n* Probably more?\r\n\r\nI'm amenable to improving things here, but IMO we should identify the current locations where semantics requiring strong consistency/serializability might be relaxed to semantics requiring only eventual consistency, and address them.\r\n\r\n\r\n> We can do strong consistency, it just reduces our availability, especially when doing things like sharding replay checks to improve throughput. These compromises to availability are extremely OK so long as they don't impact the critical paths of getting a job from a leader or serving a finished job to a leader.\r\n\r\nThis is helpful, thank you. IIUC, your implementation has intermittent/transient(?) availability issues when performing some strongly-consistent DB operations; if these operations are part of the synchronous aggregation step, they will bubble up to the Leader as errors. But async allows these errors to be hidden, and (I suppose) the availability failures still permit the system to process aggregations with appropriate throughput.\r\n\r\n\r\n>  I'm also confused here about why the costs are being measured in bytes - generally it's the transactions and consistency checks that are the expensive part of writes, not the raw bytes.\r\n\r\nFair enough, the numbers are similar:\r\n\r\nIn the \"sync\" model, the Helper receives the aggregation request from the Leader, performs VDAF computations, and stores an aggregate share (1 tx). The total number of transactions is 1. (This ignores none of the required work -- the replay check would be done as part of the transaction.)\r\n\r\nIn the \"async\" model, the Helper receives the aggregation request from the Leader & stores it (1 tx); reads it (1 tx), performs VDAF computations, and stores an aggregate share (1 tx). At least one poll from the Leader is then required, each poll taking 1 tx. The total number of transactions is 4+, a fourfold-or-more increase in transactions. (This also ignores nothing -- I think the replay check could be done as part of the Helper processing write tx. Possibly the \"processing\" step could be done in a single transaction that both reads & writes, but this would require keeping the transaction open while time-consuming VDAF computations are ongoing -- which may or may not be a good idea depending on the underlying DB in use.)\r\n",
           "createdAt": "2024-07-19T03:12:07Z",
           "updatedAt": "2024-07-19T04:16:36Z"
+        },
+        {
+          "author": "inahga",
+          "authorAssociation": "NONE",
+          "body": "> We should add some discussion about asynchronocity to the overview at the top of {{aggregate-flow}}: Mention that aggregation jobs are handled asynchronicity, and why.\r\n\r\nSorry, I overlooked this change. I have added a short summary that explains the rough what and why.\r\n\r\nNon-critical atm: Is it worth drawing the new flow in the ladder diagram `#agg-flow`? On one hand it's more accurate, on the other hand it may make the diagram too busy.",
+          "createdAt": "2024-07-23T20:19:47Z",
+          "updatedAt": "2024-07-23T20:19:47Z"
+        },
+        {
+          "author": "inahga",
+          "authorAssociation": "NONE",
+          "body": "We discussed in meeting to prepare for possibly taking both async and sync HTTP request models for this PR. I have written it up in commit https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/564/commits/39cfd4eb42f0ee010a2a11e54e03fe126c0d87f4.",
+          "createdAt": "2024-07-24T17:54:06Z",
+          "updatedAt": "2024-07-24T17:54:06Z"
         }
       ],
       "reviews": [
@@ -69590,6 +69606,274 @@
               "updatedAt": "2024-07-22T22:23:12Z"
             }
           ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6C1G9n",
+          "commit": {
+            "abbreviatedOid": "3c9752d"
+          },
+          "author": "inahga",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-23T20:01:07Z",
+          "updatedAt": "2024-07-23T20:01:07Z",
+          "comments": [
+            {
+              "originalPosition": 114,
+              "body": "Makes sense, I have done so.",
+              "createdAt": "2024-07-23T20:01:07Z",
+              "updatedAt": "2024-07-23T20:01:07Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6C1WYd",
+          "commit": {
+            "abbreviatedOid": "41c40a3"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2024-07-23T20:32:42Z",
+          "updatedAt": "2024-07-23T20:32:42Z",
+          "comments": []
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6C1lmh",
+          "commit": {
+            "abbreviatedOid": "41c40a3"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-23T21:02:09Z",
+          "updatedAt": "2024-07-23T21:02:10Z",
+          "comments": [
+            {
+              "originalPosition": 39,
+              "body": "Let's add the step parameter here as well ?\r\n```suggestion\r\n`GET {helper}/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}?step=0` until\r\n```",
+              "createdAt": "2024-07-23T21:02:10Z",
+              "updatedAt": "2024-07-23T21:02:10Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6C9l-U",
+          "commit": {
+            "abbreviatedOid": "353b3e3"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "I haven't caught up on all the debates in this PR, but am comfortable deferring to the consensus of the group that has been designing this. The change accomplishes what it sets out to do.",
+          "createdAt": "2024-07-24T16:05:28Z",
+          "updatedAt": "2024-07-24T16:13:44Z",
+          "comments": [
+            {
+              "originalPosition": 30,
+              "body": "nit: I don't love this phrasing. `PUT` is the verb in the request sent to the path, not the recipient of the request.",
+              "createdAt": "2024-07-24T16:05:28Z",
+              "updatedAt": "2024-07-24T16:13:44Z"
+            },
+            {
+              "originalPosition": 42,
+              "body": "This last sentence suggests that the eventual 200 OK `AggregationJobResp` response should come with a `Retry-After` header. I think we should reorder the sentences.",
+              "createdAt": "2024-07-24T16:07:02Z",
+              "updatedAt": "2024-07-24T16:13:44Z"
+            },
+            {
+              "originalPosition": 140,
+              "body": "As above, this suggests the 200 OK should contain `Retry-After`. This sentence should be attached to the text describing the 202 Accepted response.",
+              "createdAt": "2024-07-24T16:11:04Z",
+              "updatedAt": "2024-07-24T16:13:44Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6C98NK",
+          "commit": {
+            "abbreviatedOid": "353b3e3"
+          },
+          "author": "inahga",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-24T16:45:34Z",
+          "updatedAt": "2024-07-24T16:45:34Z",
+          "comments": [
+            {
+              "originalPosition": 30,
+              "body": "I mostly took this to be consistent with the existing phrasing of https://www.ietf.org/archive/id/draft-ietf-ppm-dap-09.html#section-4.6.1-14, but now perusing the draft it looks like that was in fact an outlier usage of `PUT /blah`. I will rephrase as `sends a PUT request to \"/blah\"`.",
+              "createdAt": "2024-07-24T16:45:34Z",
+              "updatedAt": "2024-07-24T16:45:34Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6C-dFA",
+          "commit": {
+            "abbreviatedOid": "3c9752d"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-24T17:54:01Z",
+          "updatedAt": "2024-07-24T17:54:01Z",
+          "comments": [
+            {
+              "originalPosition": 114,
+              "body": "I'm closing this thread! @kristineguo or @suman-ganta please chime in if there's more to address.",
+              "createdAt": "2024-07-24T17:54:01Z",
+              "updatedAt": "2024-07-24T17:54:02Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6C-dk3",
+          "commit": {
+            "abbreviatedOid": "39cfd4e"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-24T17:55:13Z",
+          "updatedAt": "2024-07-24T18:00:23Z",
+          "comments": [
+            {
+              "originalPosition": 14,
+              "body": "\"the number of HTTP requests\"",
+              "createdAt": "2024-07-24T17:55:13Z",
+              "updatedAt": "2024-07-24T18:00:23Z"
+            },
+            {
+              "originalPosition": 32,
+              "body": "Instead of using empy/non-empty to distinguish the response, the Leader should use the media type. That is, if the response contains the media type header for AggregationJobResp (I don't remember what this is), then interpret the body of the response as an AggregationJobResp.",
+              "createdAt": "2024-07-24T17:58:26Z",
+              "updatedAt": "2024-07-24T18:00:23Z"
+            },
+            {
+              "originalPosition": 55,
+              "body": "Mention media type here as well.",
+              "createdAt": "2024-07-24T17:58:57Z",
+              "updatedAt": "2024-07-24T18:00:23Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6C-2Tw",
+          "commit": {
+            "abbreviatedOid": "353b3e3"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-24T18:44:42Z",
+          "updatedAt": "2024-07-24T18:44:43Z",
+          "comments": [
+            {
+              "originalPosition": 30,
+              "body": "IMO consistency is king here, but also it's not worth sweating this too hard, because I suspect that things like request paths might get revisited as DAP makes its way to RFC (specifically I suspect we'll get forced to do an ACME style directory).",
+              "createdAt": "2024-07-24T18:44:42Z",
+              "updatedAt": "2024-07-24T18:44:43Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6C_UwJ",
+          "commit": {
+            "abbreviatedOid": "39cfd4e"
+          },
+          "author": "inahga",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-24T19:49:19Z",
+          "updatedAt": "2024-07-24T19:49:19Z",
+          "comments": [
+            {
+              "originalPosition": 55,
+              "body": "I think it may be better if I strike `with no body`, as elsewhere in collection it's inferred that if we only say \"responds with STATUS\" there is no media type and body, as compared to explicitly saying \"responds with STATUS with a body of SomeResp and media type foo/bar\"",
+              "createdAt": "2024-07-24T19:49:19Z",
+              "updatedAt": "2024-07-24T19:49:19Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6C_cQl",
+          "commit": {
+            "abbreviatedOid": "bdbaeae"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2024-07-24T20:05:46Z",
+          "updatedAt": "2024-07-24T20:05:46Z",
+          "comments": []
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6DAT1t",
+          "commit": {
+            "abbreviatedOid": "bdbaeae"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "I'm OK with the intent, a few nitpicky comments.",
+          "createdAt": "2024-07-24T22:32:21Z",
+          "updatedAt": "2024-07-24T23:18:45Z",
+          "comments": [
+            {
+              "originalPosition": 105,
+              "body": "I think that we should specify that the body is empty in this case, and perhaps that the content-type is unset. This would apply to everywhere we generate a response indicating \"not ready yet, poll for completion.\"",
+              "createdAt": "2024-07-24T22:32:21Z",
+              "updatedAt": "2024-07-24T23:18:45Z"
+            },
+            {
+              "originalPosition": 122,
+              "body": "A couple of points (the latter may be moot depending on how the former is resolved):\r\n1. Skew-recovery/idempotency is optional[1]; I'm not sure it's appropriate to say that the Helper MUST be able to respond with 201 Created. And if so, we should specify what it responds with, i.e. the same response as the original request.\r\n2. This effectively requires \"synchronous\" behavior on retries. Even though the Helper will already know the right answer (assuming it implements skew-recovery/idempotency), I think we should allow for implementations which always want to use the async approach, even when the result is already-computed.\r\n\r\n[1] I think aggregation initialization doesn't talk about idempotency or retries at all; the closest explicit text is in the [Recovering from Aggregation Step Skew](https://www.ietf.org/archive/id/draft-ietf-ppm-dap-11.html#name-recovering-from-aggregation) section, and that is both optional and written such that it only applies to aggregation continuation. Not for this PR, but perhaps that section should be generalized, since the initialization request is effectively \"step 0\".",
+              "createdAt": "2024-07-24T22:45:30Z",
+              "updatedAt": "2024-07-24T23:18:45Z"
+            },
+            {
+              "originalPosition": 54,
+              "body": "nitpicky: can we suggest that the original request can also contain a `Retry-After` header? obviously this is optional, but as-written we suggest the use of `Retry-After` when the Leader polls, but not a way for the Helper to hint at the initial delay before polling to the Leader.",
+              "createdAt": "2024-07-24T22:56:14Z",
+              "updatedAt": "2024-07-24T23:18:45Z"
+            },
+            {
+              "originalPosition": 202,
+              "body": "Similar to the other comment on skew-recovery/idempotency, this wording makes it sound like skew-recovery for continuation should always be done asynchronously (since synchronous recovery would respond with HTTP 200 OK). I don't think we should restrict the Helper in this way.",
+              "createdAt": "2024-07-24T23:18:26Z",
+              "updatedAt": "2024-07-24T23:18:45Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6DAmer",
+          "commit": {
+            "abbreviatedOid": "bdbaeae"
+          },
+          "author": "inahga",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-24T23:42:29Z",
+          "updatedAt": "2024-07-24T23:42:30Z",
+          "comments": [
+            {
+              "originalPosition": 122,
+              "body": "I think idempotency is a required property of a [PUT request](https://www.rfc-editor.org/rfc/rfc9110#section-9.3.4-2), rather than related to skew recovery.\r\n\r\nWe could make it a SHOULD. The helper's behavior then should respond with an error code though, I don't think it's valid for the helper to accept more than one valid `AggregationJobInitReq`.\r\n\r\nYou're correct that we need to rewrite this paragraph to accommodate for both sync/async--I overlooked it.",
+              "createdAt": "2024-07-24T23:42:29Z",
+              "updatedAt": "2024-07-24T23:43:19Z"
+            }
+          ]
         }
       ]
     },
@@ -69631,7 +69915,7 @@
       "labels": [],
       "body": "Explains in detail how the syntax from RFC 8446 section 3.7 is repurposed for concise descriptions of structure variants. Additionally, the section on message encoding is moved to \"Protocol Definition\" to make the document flow better.\r\n\r\nCloses #472",
       "createdAt": "2024-07-06T00:05:12Z",
-      "updatedAt": "2024-07-22T22:32:20Z",
+      "updatedAt": "2024-07-24T21:31:07Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "35f1274853c1c06a5132612b111debefe4fd17ac",
@@ -69956,6 +70240,19 @@
               "updatedAt": "2024-07-22T22:32:20Z"
             }
           ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6DACaq",
+          "commit": {
+            "abbreviatedOid": "28fac09"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2024-07-24T21:31:07Z",
+          "updatedAt": "2024-07-24T21:31:07Z",
+          "comments": []
         }
       ]
     },
@@ -69968,10 +70265,12 @@
       "author": "tgeoghegan",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
-      "labels": [],
+      "labels": [
+        "wire breaking"
+      ],
       "body": "As discussed in #505, putting the task ID into the HPKE configuration request leaks which tasks a client is participating in, which can otherwise be concealed by OHTTP. This commit removes the notion of per-task HPKE keys from DAP, requiring global keys.\r\n\r\nCloses #505",
       "createdAt": "2024-07-06T00:17:07Z",
-      "updatedAt": "2024-07-10T21:53:03Z",
+      "updatedAt": "2024-07-23T20:37:51Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "35f1274853c1c06a5132612b111debefe4fd17ac",
