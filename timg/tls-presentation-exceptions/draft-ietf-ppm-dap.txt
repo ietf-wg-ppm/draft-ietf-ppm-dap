@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 10 January 2025                                      Cloudflare
+Expires: 27 January 2025                                      Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                                  Mozilla
                                                               C. A. Wood
                                                               Cloudflare
-                                                             9 July 2024
+                                                            26 July 2024
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -63,7 +63,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 10 January 2025.
+   This Internet-Draft will expire on 27 January 2025.
 
 Copyright Notice
 
@@ -777,9 +777,9 @@ Table of Contents
    } ExampleStruct;
 
    Then we describe the specific variant of ExampleStruct where type ==
-   number with a struct variant block like so:
+   number with a variant block like so:
 
- struct variant {
+ variant {
    /* Field exists regardless of variant */
    uint32 always_present;
    ExampleEnum type = number;
@@ -809,7 +809,7 @@ Table of Contents
 
    The protocol text might include a description like:
 
-   struct variant {
+   variant {
      FailureReason failure_reason = something;
      opaque another_field<0..256>;
    } FailedOperation;
@@ -1709,7 +1709,7 @@ struct {} Empty;
    For any report that was rejected, the Helper sets the outbound
    preparation response to
 
-   struct variant {
+   variant {
      ReportID report_id;
      PrepareRespState prepare_resp_state = reject;
      PrepareError prepare_error;
@@ -1743,7 +1743,7 @@ struct {} Empty;
    the initial outbound message to send in response to the Leader.  If
    state is of type Rejected, then the Helper responds with
 
-   struct variant {
+   variant {
      ReportID report_id;
      PrepareRespState prepare_resp_state = reject;
      PrepareError prepare_error = vdaf_prep_error;
@@ -1751,7 +1751,7 @@ struct {} Empty;
 
    Otherwise the Helper responds with
 
-   struct variant {
+   variant {
      ReportID report_id;
      PrepareRespState prepare_resp_state = continue;
      opaque payload<0..2^32-1> = outbound;
@@ -2041,7 +2041,7 @@ struct {} Empty;
 
    If state == Rejected(), then the Helper's response is
 
-   struct variant {
+   variant {
      ReportID report_id;
      PrepareRespState prepare_resp_state = reject;
      PrepareError prepare_error = vdaf_prep_error;
@@ -2049,7 +2049,7 @@ struct {} Empty;
 
    Otherwise, if outbound != None, then the Helper's response is
 
-   struct variant {
+   variant {
      ReportID report_id;
      PrepareRespState prepare_resp_state = continue;
      opaque payload<0..2^32-1> = outbound;
@@ -2057,7 +2057,7 @@ struct {} Empty;
 
    Otherwise, if outbound == None, then the Helper's response is
 
-   struct variant {
+   variant {
      ReportID report_id;
      PrepareRespState prepare_resp_state = finished;
    } PrepareResp;
