@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 27 January 2025                                      Cloudflare
+Expires: 28 January 2025                                      Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                                  Mozilla
                                                               C. A. Wood
                                                               Cloudflare
-                                                            26 July 2024
+                                                            27 July 2024
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -63,7 +63,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 27 January 2025.
+   This Internet-Draft will expire on 28 January 2025.
 
 Copyright Notice
 
@@ -91,24 +91,26 @@ Table of Contents
      3.1.  HTTPS Request Authentication
      3.2.  Errors
    4.  Protocol Definition
-     4.1.  Batch Modes, Batches, and Queries
-       4.1.1.  Time-interval Batch Mode
-       4.1.2.  Leader-selected Batch Mode
-     4.2.  Task Configuration
-     4.3.  Resource URIs
-     4.4.  Uploading Reports
-       4.4.1.  HPKE Configuration Request
-       4.4.2.  Upload Request
-       4.4.3.  Upload Extensions
-     4.5.  Verifying and Aggregating Reports
-       4.5.1.  Aggregate Initialization
-       4.5.2.  Aggregate Continuation
-     4.6.  Collecting Results
-       4.6.1.  Collection Job Initialization
-       4.6.2.  Obtaining Aggregate Shares
-       4.6.3.  Collection Job Finalization
-       4.6.4.  Aggregate Share Encryption
-       4.6.5.  Batch Validation
+     4.1.  Message Encoding
+     4.2.  Basic Type Definitions
+     4.3.  Batch Modes, Batches, and Queries
+       4.3.1.  Time-interval Batch Mode
+       4.3.2.  Leader-selected Batch Mode
+     4.4.  Task Configuration
+     4.5.  Resource URIs
+     4.6.  Uploading Reports
+       4.6.1.  HPKE Configuration Request
+       4.6.2.  Upload Request
+       4.6.3.  Upload Extensions
+     4.7.  Verifying and Aggregating Reports
+       4.7.1.  Aggregate Initialization
+       4.7.2.  Aggregate Continuation
+     4.8.  Collecting Results
+       4.8.1.  Collection Job Initialization
+       4.8.2.  Obtaining Aggregate Shares
+       4.8.3.  Collection Job Finalization
+       4.8.4.  Aggregate Share Encryption
+       4.8.5.  Batch Validation
    5.  Operational Considerations
      5.1.  Protocol Participant Capabilities
        5.1.1.  Client Capabilities
@@ -453,10 +455,6 @@ Table of Contents
    Report Share:  An encrypted input share comprising a piece of a
       report.
 
-   This document uses the presentation language of [RFC8446] to define
-   messages in the DAP protocol.  Encoding and decoding of these
-   messages as byte strings also follows [RFC8446].
-
 2.  Overview
 
    The protocol is executed by a large set of Clients and a pair of
@@ -730,7 +728,7 @@ Table of Contents
    Section 8.3).  The "detail" member of the Problem Details document
    includes additional diagnostic information.
 
-   When the task ID is known (see Section 4.2), the problem document
+   When the task ID is known (see Section 4.4), the problem document
    SHOULD include an additional "taskid" member containing the ID
    encoded in Base 64 using the URL and filename safe alphabet with no
    padding defined in Sections 5 and 3.2 of [RFC4648].
@@ -751,16 +749,87 @@ Table of Contents
    DAP has three major interactions which need to be defined:
 
    *  Uploading reports from the Client to the Aggregators, specified in
-      Section 4.4
+      Section 4.6
 
    *  Computing the results for a given measurement task, specified in
-      Section 4.5
+      Section 4.7
 
-   *  Collecting aggregated results, specified in Section 4.6
+   *  Collecting aggregated results, specified in Section 4.8
 
    Each of these interactions is defined in terms of "resources".  In
    this section we define these resources and the messages used to act
    on them.
+
+4.1.  Message Encoding
+
+   We use the presentation language defined in [RFC8446], Section 3 to
+   define messages in the DAP protocol, with the following deviations.
+
+   Section 3.7 of [RFC8446] defines a syntax for structure fields whose
+   values are constants.  In this document, we do not use that notation,
+   but use something similar to describe specific variants of structures
+   containing enumerated types, described in [RFC8446], Section 3.8.
+
+   For example, suppose we have an enumeration and a structure defined
+   as follows:
+
+   enum {
+     number(0),
+     string(1),
+     (255)
+   } ExampleEnum;
+
+   struct {
+     uint32 always_present;
+     ExampleEnum type;
+     select (ExampleStruct.type) {
+       case number: uint32 a_number;
+       case string: opaque a_string<0..10>;
+     };
+   } ExampleStruct;
+
+   Then we describe the specific variant of ExampleStruct where type ==
+   number with a variant block like so:
+
+ variant {
+   /* Field exists regardless of variant */
+   uint32 always_present;
+   ExampleEnum type = number;
+   /* Only fields included in the type == number variant is described */
+   uint32 a_number;
+ } ExampleStruct;
+
+   The protocol text accompanying this would explain how implementations
+   should handle the always_present and a_number fields but not type.
+   This does not mean that the type field of ExampleStruct can only ever
+   have value number.
+
+   This notation can also be used in structures where the enum field
+   does not affect what fields are or are not present in the structure.
+   For example:
+
+   enum {
+     something(0),
+     something_else(1),
+     (255)
+   } FailureReason;
+
+   struct {
+     FailureReason failure_reason;
+     opaque another_field<0..256>;
+   } FailedOperation;
+
+   The protocol text might include a description like:
+
+   variant {
+     FailureReason failure_reason = something;
+     opaque another_field<0..256>;
+   } FailedOperation;
+
+   Encoding and decoding of these messages as byte strings also follows
+   [RFC8446].
+
+4.2.  Basic Type Definitions
 
    The following are some basic type definitions used in other messages:
 
@@ -822,7 +891,7 @@ struct {} Empty;
 
    *  PrepMessage
 
-4.1.  Batch Modes, Batches, and Queries
+4.3.  Batch Modes, Batches, and Queries
 
    Aggregated results are computed based on sets of reports, called
    "batches".  The Collector requests the aggregated results for a given
@@ -844,8 +913,8 @@ struct {} Empty;
      (255)
    } BatchMode;
 
-   The time-interval batch mode is described in Section 4.1.1; the
-   leader-selected batch mode is described in Section 4.1.2.  Future
+   The time-interval batch mode is described in Section 4.3.1; the
+   leader-selected batch mode is described in Section 4.3.2.  Future
    specifications may introduce new batch modes as needed (see
    Section 8.2.1).  Implementations are free to implement only a subset
    of the available batch modes.
@@ -863,7 +932,7 @@ struct {} Empty;
    } Query;
 
    The query is issued in-band as part of the collect interaction
-   (Section 4.6).  Its content is determined by the batch mode, which in
+   (Section 4.8).  Its content is determined by the batch mode, which in
    turn is determined by the measurement task, which is configured out-
    of-band.  All batch modes have the following configuration parameters
    in common:
@@ -876,19 +945,19 @@ struct {} Empty;
       measurements and aggregation function.
 
    *  time_precision - Clients use this value to truncate their report
-      timestamps; see Section 4.4.  Additional semantics may apply,
-      depending on the batch mode.  (See Section 4.6.5 for details.)
+      timestamps; see Section 4.6.  Additional semantics may apply,
+      depending on the batch mode.  (See Section 4.8.5 for details.)
 
    The parameters pertaining to specific batch modes are described in
-   Section 4.1.1 and Section 4.1.2.
+   Section 4.3.1 and Section 4.3.2.
 
-4.1.1.  Time-interval Batch Mode
+4.3.1.  Time-interval Batch Mode
 
    The time-interval batch mode is designed to support applications in
    which reports are collected into batches grouped by an interval of
    time.  The Collector specifies a "batch interval" that determines the
    time range for reports included in the batch.  For each report in the
-   batch, the time at which that report was generated (see Section 4.4)
+   batch, the time at which that report was generated (see Section 4.6)
    MUST fall within the batch interval specified by the Collector.
 
    Typically the Collector issues queries for which the batch intervals
@@ -901,7 +970,7 @@ struct {} Empty;
    out-of-order.  In addition, the Collector may need to vary the
    duration to adjust to changing report upload rates.
 
-4.1.2.  Leader-selected Batch Mode
+4.3.2.  Leader-selected Batch Mode
 
    The leader-selected batch mode is used to support applications in
    which it is acceptable for reports to be batched in an arbitrary
@@ -913,7 +982,7 @@ struct {} Empty;
    The Collector will not know the set of batch IDs available for
    collection.  To get the aggregate of a batch, the Collector issues a
    query, which does not include any information specifying a particular
-   batch (see Section 4.1).  The Leader selects a recent batch to
+   batch (see Section 4.3).  The Leader selects a recent batch to
    aggregate.  The Leader MUST select a batch that has not yet been
    associated with a collection job.
 
@@ -923,10 +992,10 @@ struct {} Empty;
    minimum batch size.  Deciding how soon batches should be output is
    also implementation-specific.  Exactly sizing batches may be
    challenging for Leader deployments in which multiple, independent
-   nodes running the aggregate interaction (see Section 4.5) need to be
+   nodes running the aggregate interaction (see Section 4.7) need to be
    coordinated.
 
-4.2.  Task Configuration
+4.4.  Task Configuration
 
    Prior to the start of execution of the protocol, each participant
    must agree on the configuration for each task.  A task is uniquely
@@ -943,7 +1012,7 @@ struct {} Empty;
    *  helper_aggregator_url: A URL relative to which the Helper's API
       resources can be found.
 
-   *  The batch mode for this task (see Section 4.1).  This determines
+   *  The batch mode for this task (see Section 4.3).  This determines
       how reports are grouped into batches and the properties that all
       batches for this task must have.  The party MUST NOT configure the
       task if it does not recognize the batch mode.
@@ -964,12 +1033,12 @@ struct {} Empty;
    parameters:
 
    *  collector_hpke_config: The [HPKE] configuration of the Collector
-      (described in Section 4.4.1); see Section 6 for information about
+      (described in Section 4.6.1); see Section 6 for information about
       the HPKE configuration algorithms.
 
    *  vdaf_verify_key: The VDAF verification key shared by the
       Aggregators.  This key is used in the aggregation interaction
-      (Section 4.5).  The security requirements are described in
+      (Section 4.7).  The security requirements are described in
       Section 7.6.1.
 
    Finally, the Collector is configured with the HPKE secret key
@@ -980,21 +1049,21 @@ struct {} Empty;
    collector HPKE configuration or the VDAF verification key is to
    configure a new task.
 
-4.3.  Resource URIs
+4.5.  Resource URIs
 
    DAP is defined in terms of "resources", such as reports
-   (Section 4.4), aggregation jobs (Section 4.5), and collection jobs
-   (Section 4.6).  Each resource has an associated URI.  Resource URIs
+   (Section 4.6), aggregation jobs (Section 4.7), and collection jobs
+   (Section 4.8).  Each resource has an associated URI.  Resource URIs
    are specified by a sequence of string literals and variables.
    Variables are expanded into strings according to the following rules:
 
    *  Variables {leader} and {helper} are replaced with the base URL of
       the Leader and Helper respectively (the base URL is defined in
-      Section 4.2).
+      Section 4.4).
 
    *  Variables {task-id}, {aggregation-job-id}, and {collection-job-id}
-      are replaced with the task ID (Section 4.2), aggregation job ID
-      (Section 4.5.1), and collection job ID (Section 4.6.1)
+      are replaced with the task ID (Section 4.4), aggregation job ID
+      (Section 4.7.1), and collection job ID (Section 4.8.1)
       respectively.  The value MUST be encoded in its URL-safe, unpadded
       Base 64 representation as specified in Sections 5 and 3.2 of
       [RFC4648].
@@ -1008,14 +1077,14 @@ struct {} Empty;
    https://example.com/api/dap/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-
    QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA.
 
-4.4.  Uploading Reports
+4.6.  Uploading Reports
 
    Clients periodically upload reports to the Leader.  Each report
    contains two "report shares", one for the Leader and another for the
    Helper.  The Helper's report share is transmitted by the Leader
-   during the aggregation interaction (see Section 4.5).
+   during the aggregation interaction (see Section 4.7).
 
-4.4.1.  HPKE Configuration Request
+4.6.1.  HPKE Configuration Request
 
    Before the Client can upload its report to the Leader, it must know
    the HPKE configuration of each Aggregator.  See Section 6 for
@@ -1077,7 +1146,7 @@ struct {} Empty;
    old keys for at least twice the cache lifetime in order to avoid
    rejecting reports.
 
-4.4.2.  Upload Request
+4.6.2.  Upload Request
 
    Clients upload reports by using an HTTP POST to {leader}/tasks/{task-
    id}/reports.  The payload is a Report, with media type "application/
@@ -1098,7 +1167,7 @@ struct {} Empty;
    *  report_metadata is public metadata describing the report.
 
       -  report_id is used by the Aggregators to ensure the report
-         appears in at most one batch (see Section 4.5.1.4).  The Client
+         appears in at most one batch (see Section 4.7.1.4).  The Client
          MUST generate this by generating 16 random bytes using a
          cryptographically secure random number generator.
 
@@ -1153,7 +1222,7 @@ struct {} Empty;
    } PlaintextInputShare;
 
    Field extensions is set to the list of extensions intended to be
-   consumed by the given Aggregator.  (See Section 4.4.3.)  Field
+   consumed by the given Aggregator.  (See Section 4.6.3.)  Field
    payload is set to the Aggregator's input share output by the VDAF
    sharding algorithm.
 
@@ -1198,10 +1267,10 @@ struct {} Empty;
    If a report's ID matches that of a previously uploaded report, the
    Leader MUST ignore it.  In addition, it MAY alert the Client with
    error reportRejected.  See the implementation note in
-   Section 4.5.1.4.
+   Section 4.7.1.4.
 
    The Leader MUST ignore any report pertaining to a batch that has
-   already been collected (see Section 4.5.1.4 for details).  Otherwise,
+   already been collected (see Section 4.7.1.4 for details).  Otherwise,
    comparing the aggregate result to the previous aggregate result may
    result in a privacy violation.  Note that this is also enforced by
    the Helper during the aggregation interaction.  The Leader MAY also
@@ -1216,7 +1285,7 @@ struct {} Empty;
 
    The Leader may need to buffer reports while waiting to aggregate them
    (e.g., while waiting for an aggregation parameter from the Collector;
-   see Section 4.6).  The Leader SHOULD NOT accept reports whose
+   see Section 4.8).  The Leader SHOULD NOT accept reports whose
    timestamps are too far in the future.  Implementors MAY provide for
    some small leeway, usually no more than a few minutes, to account for
    clock skew.  If the Leader rejects a report for this reason, it
@@ -1230,7 +1299,7 @@ struct {} Empty;
    behavior is not mandatory because it requires the Leader to decrypt
    its input share.
 
-4.4.3.  Upload Extensions
+4.6.3.  Upload Extensions
 
    Each PlaintextInputShare carries a list of extensions that Clients
    use to convey additional information to the Aggregator.  Some
@@ -1257,9 +1326,9 @@ struct {} Empty;
 
    Extensions are mandatory-to-implement: If an Aggregator receives a
    report containing an extension it does not recognize, then it MUST
-   reject the report.  (See Section 4.5.1.4 for details.)
+   reject the report.  (See Section 4.7.1.4 for details.)
 
-4.5.  Verifying and Aggregating Reports
+4.7.  Verifying and Aggregating Reports
 
    Once a set of Clients have uploaded their reports to the Leader, the
    Leader can begin the process of validating and aggregating them with
@@ -1361,7 +1430,7 @@ struct {} Empty;
 
    These phases are described in the following subsections.
 
-4.5.1.  Aggregate Initialization
+4.7.1.  Aggregate Initialization
 
    The Leader begins an aggregation job by choosing a set of candidate
    reports that pertain to the same DAP task and a job ID which MUST be
@@ -1383,7 +1452,7 @@ struct {} Empty;
 
    The Leader and Helper initialization behavior is detailed below.
 
-4.5.1.1.  Leader Initialization
+4.7.1.1.  Leader Initialization
 
    The Leader begins the aggregate initialization phase with the set of
    candidate reports as follows:
@@ -1391,10 +1460,10 @@ struct {} Empty;
    1.  Generate a fresh AggregationJobID.
 
    2.  Decrypt the input share for each report share as described in
-       Section 4.5.1.3.
+       Section 4.7.1.3.
 
    3.  Check that the resulting input share is valid as described in
-       Section 4.5.1.4.
+       Section 4.7.1.4.
 
    If any step invalidates the report, the Leader rejects the report and
    removes it from the set of candidate reports.
@@ -1413,7 +1482,7 @@ struct {} Empty;
    *  vdaf_verify_key is the VDAF verification key for the task
 
    *  agg_param is the VDAF aggregation parameter provided by the
-      Collector (see Section 4.6)
+      Collector (see Section 4.8)
 
    *  report_id is the report ID, used as the nonce for VDAF sharding
 
@@ -1493,7 +1562,7 @@ struct {} Empty;
       depending on the batch mode, it may not determine a batch.  In
       particular, if the batch mode is time_interval, the batch is not
       determined until the Collector's query is issued (see
-      Section 4.1).
+      Section 4.3).
 
    *  prepare_inits: the sequence of PrepareInit messages constructed in
       the previous step.
@@ -1507,7 +1576,7 @@ struct {} Empty;
    scheme that meets the requirements in Section 3.1.
 
    The Helper's response will be an AggregationJobResp message (see
-   Section 4.5.1.2.  The response's prepare_resps must include exactly
+   Section 4.7.1.2.  The response's prepare_resps must include exactly
    the same report IDs in the same order as the Leader's
    AggregationJobInitReq.  Otherwise, the Leader MUST abort the
    aggregation job.
@@ -1527,7 +1596,7 @@ struct {} Empty;
        where:
 
        *  agg_param is the VDAF aggregation parameter provided by the
-          Collector (see Section 4.6)
+          Collector (see Section 4.8)
 
        *  prev_state is the state computed earlier by calling
           Vdaf.ping_pong_leader_init or Vdaf.ping_pong_leader_continued
@@ -1535,12 +1604,12 @@ struct {} Empty;
        *  inbound is the message payload in the PrepareResp
 
        If outbound != None, then the Leader stores state and outbound
-       and proceeds to Section 4.5.2.1.  If outbound == None, then the
+       and proceeds to Section 4.7.2.1.  If outbound == None, then the
        preparation process is complete: either state == Rejected(), in
        which case the Leader rejects the report and removes it from the
        candidate set; or state == Finished(out_share), in which case
        preparation is complete and the Leader stores the output share
-       for use in the collection interaction Section 4.6.
+       for use in the collection interaction Section 4.8.
 
    2.  Else if the type is "reject", then the Leader rejects the report
        and removes it from the candidate set.  The Leader MUST NOT
@@ -1555,7 +1624,7 @@ struct {} Empty;
    rounds, it will never be the case that some reports are completed and
    others are not.)
 
-4.5.1.2.  Helper Initialization
+4.7.1.2.  Helper Initialization
 
    The Helper begins an aggregation job when it receives an
    AggregationJobInitReq message from the Leader.  For each PrepareInit
@@ -1610,15 +1679,15 @@ struct {} Empty;
    First the Helper preprocesses each report as follows:
 
    1.  Decrypt the input share for each report share as described in
-       Section 4.5.1.3.
+       Section 4.7.1.3.
 
    2.  Check that the resulting input share is valid as described in
-       Section 4.5.1.4.
+       Section 4.7.1.4.
 
    For any report that was rejected, the Helper sets the outbound
    preparation response to
 
-   struct {
+   variant {
      ReportID report_id;
      PrepareRespState prepare_resp_state = reject;
      PrepareError prepare_error;
@@ -1652,7 +1721,7 @@ struct {} Empty;
    the initial outbound message to send in response to the Leader.  If
    state is of type Rejected, then the Helper responds with
 
-   struct {
+   variant {
      ReportID report_id;
      PrepareRespState prepare_resp_state = reject;
      PrepareError prepare_error = vdaf_prep_error;
@@ -1660,7 +1729,7 @@ struct {} Empty;
 
    Otherwise the Helper responds with
 
-   struct {
+   variant {
      ReportID report_id;
      PrepareRespState prepare_resp_state = continue;
      opaque payload<0..2^32-1> = outbound;
@@ -1689,15 +1758,15 @@ struct {} Empty;
 
    Additionally, it is not possible to rewind or reset the state of an
    aggregation job.  Once an aggregation job has been continued at least
-   once (see Section 4.5.2), further requests to initialize that
+   once (see Section 4.7.2), further requests to initialize that
    aggregation job MUST fail with an HTTP client error status code.
 
    Finally, if state == Continued(prep_state), then the Helper stores
-   state to prepare for the next continuation step (Section 4.5.2.2).
+   state to prepare for the next continuation step (Section 4.7.2.2).
    Otherwise, if state == Finished(out_share), then the Helper stores
-   out_share for use in the collection interaction (Section 4.6).
+   out_share for use in the collection interaction (Section 4.8).
 
-4.5.1.3.  Input Share Decryption
+4.7.1.3.  Input Share Decryption
 
    Each report share has a corresponding task ID, report metadata
    (report ID and, timestamp), public share, and the Aggregator's
@@ -1723,7 +1792,7 @@ struct {} Empty;
    error hpke_decrypt_error.  Otherwise, the Aggregator outputs the
    resulting PlaintextInputShare plaintext_input_share.
 
-4.5.1.4.  Input Share Validation
+4.7.1.4.  Input Share Validation
 
    Validating an input share will either succeed or fail.  In the case
    of failure, the input share is marked as invalid with a corresponding
@@ -1776,8 +1845,8 @@ struct {} Empty;
           CollectionReq message from the Collector; the Helper considers
           a batch to be collected once it has responded to an
           AggregateShareReq message from the Leader.  A batch is
-          determined by query (Section 4.1) conveyed in these messages.
-          Queries must satisfy the criteria covered in Section 4.6.5.
+          determined by query (Section 4.3) conveyed in these messages.
+          Queries must satisfy the criteria covered in Section 4.8.5.
           These criteria are meant to restrict queries in a way make it
           easy to determine wither a report pertains to a batch that was
           collected.
@@ -1794,7 +1863,7 @@ struct {} Empty;
    If all of the above checks succeed, the input share is not marked as
    invalid.
 
-4.5.2.  Aggregate Continuation
+4.7.2.  Aggregate Continuation
 
    In the continuation phase, the Leader drives the VDAF preparation of
    each report in the candidate report set until the underlying VDAF
@@ -1805,7 +1874,7 @@ struct {} Empty;
    like Prio3, processing has already completed.  Continuation is
    required for VDAFs that require more than one round.
 
-4.5.2.1.  Leader Continuation
+4.7.2.1.  Leader Continuation
 
    The Leader begins each step of aggregation continuation with a prep
    state object state and an outbound message outbound for each report
@@ -1826,7 +1895,7 @@ struct {} Empty;
    and payload is set to the outbound message.
 
    Next, the Leader sends a POST request to the aggregation job URI used
-   during initialization (see Section 4.5.1.1) with media type
+   during initialization (see Section 4.7.1.1) with media type
    "application/dap-aggregation-job-continue-req" and body structured
    as:
 
@@ -1845,7 +1914,7 @@ struct {} Empty;
    scheme that meets the requirements in Section 3.1.
 
    The Helper's response will be an AggregationJobResp message (see
-   Section 4.5.1.2).  The response's prepare_resps must include exactly
+   Section 4.7.1.2).  The response's prepare_resps must include exactly
    the same report IDs in the same order as the Leader's
    AggregationJobContinueReq.  Otherwise, the Leader MUST abort the
    aggregation job.
@@ -1869,11 +1938,11 @@ struct {} Empty;
        the Leader rejects the report and removes it from the candidate
        set; or state == Finished(out_share), in which case preparation
        is complete and the Leader stores the output share for use in the
-       collection interaction Section 4.6.
+       collection interaction Section 4.8.
 
    2.  Else if the type is "finished" and state == Finished(out_share),
        then preparation is complete and the Leader stores the output
-       share for use in the collection flow (Section 4.6).
+       share for use in the collection flow (Section 4.8).
 
    3.  Else if the type is "reject", then the Leader rejects the report
        and removes it from the candidate set.
@@ -1881,7 +1950,7 @@ struct {} Empty;
    4.  Else the type is invalid, in which case the Leader MUST abort the
        aggregation job.
 
-4.5.2.2.  Helper Continuation
+4.7.2.2.  Helper Continuation
 
    The Helper begins each step of continuation with a sequence of state
    objects, which will be Continued(prep_state), one for each report in
@@ -1889,7 +1958,7 @@ struct {} Empty;
 
    The Helper awaits an HTTP POST request to the aggregation job URI
    from the Leader, the body of which is an AggregationJobContinueReq as
-   specified in Section 4.5.2.1.
+   specified in Section 4.7.2.1.
 
    Next, it checks that it recognizes the task ID.  If not, then it MUST
    abort with error unrecognizedTask.
@@ -1921,7 +1990,7 @@ struct {} Empty;
    previous HTTP request), then the Helper MAY attempt to recover by re-
    sending the previous AggregationJobResp.  In this case it SHOULD
    verify that the contents of the AggregationJobContinueReq are
-   identical to the previous message (see Section 4.5.2.3).  Otherwise,
+   identical to the previous message (see Section 4.7.2.3).  Otherwise,
    if the step is incorrect, the Helper MUST abort with error
    stepMismatch.
 
@@ -1935,7 +2004,7 @@ struct {} Empty;
 
    If state == Rejected(), then the Helper's response is
 
-   struct {
+   variant {
      ReportID report_id;
      PrepareRespState prepare_resp_state = reject;
      PrepareError prepare_error = vdaf_prep_error;
@@ -1943,7 +2012,7 @@ struct {} Empty;
 
    Otherwise, if outbound != None, then the Helper's response is
 
-   struct {
+   variant {
      ReportID report_id;
      PrepareRespState prepare_resp_state = continue;
      opaque payload<0..2^32-1> = outbound;
@@ -1951,27 +2020,27 @@ struct {} Empty;
 
    Otherwise, if outbound == None, then the Helper's response is
 
-   struct {
+   variant {
      ReportID report_id;
      PrepareRespState prepare_resp_state = finished;
    } PrepareResp;
 
    Next, the Helper constructs an AggregationJobResp message
-   (Section 4.5.1.2) with each prep step.  The order of the prep steps
+   (Section 4.7.1.2) with each prep step.  The order of the prep steps
    MUST match the Leader's request.  It responds to the Leader with HTTP
    status 200 OK, media type application/dap-aggregation-job-resp, and a
    body consisting of the AggregationJobResp.
 
    Finally, if state == Continued(prep_state), then the Helper stores
-   state to prepare for the next continuation step (Section 4.5.2.2).
+   state to prepare for the next continuation step (Section 4.7.2.2).
    Otherwise, if state == Finished(out_share), then the Helper stores
-   out_share for use in the collection interaction (Section 4.6).
+   out_share for use in the collection interaction (Section 4.8).
 
    If for whatever reason the Leader must abandon the aggregation job,
    it SHOULD send an HTTP DELETE request to the aggregation job URI so
    that the Helper knows it can clean up its state.
 
-4.5.2.3.  Recovering from Aggregation Step Skew
+4.7.2.3.  Recovering from Aggregation Step Skew
 
    AggregationJobContinueReq messages contain a step field, allowing
    Aggregators to ensure that their peer is on an expected step of the
@@ -2005,29 +2074,29 @@ struct {} Empty;
    refuse to service a request for a given aggregation step unless it
    matches the previously seen request (if any).
 
-4.6.  Collecting Results
+4.8.  Collecting Results
 
    In this phase, the Collector requests aggregate shares from each
    Aggregator and then locally combines them to yield a single aggregate
    result.  In particular, the Collector issues a query to the Leader
-   (Section 4.1), which the Aggregators use to select a batch of reports
+   (Section 4.3), which the Aggregators use to select a batch of reports
    to aggregate.  Each Aggregator emits an aggregate share encrypted to
    the Collector so that it can decrypt and combine them to yield the
    aggregate result.  This entire process is composed of two
    interactions:
 
    1.  Collect request and response between the Collector and Leader,
-       specified in Section 4.6.1
+       specified in Section 4.8.1
 
    2.  Aggregate share request and response between the Leader and the
-       Helper, specified in Section 4.6.2
+       Helper, specified in Section 4.8.2
 
    Once complete, the Collector computes the final aggregate result as
-   specified in Section 4.6.3.
+   specified in Section 4.8.3.
 
    This overall process is referred to as a "collection job".
 
-4.6.1.  Collection Job Initialization
+4.8.1.  Collection Job Initialization
 
    First, the Collector chooses a collection job ID:
 
@@ -2054,7 +2123,7 @@ struct {} Empty;
 
    *  agg_param, an aggregation parameter for the VDAF being executed.
       This is the same value as in AggregationJobInitReq (see
-      Section 4.5.1.1).
+      Section 4.7.1.1).
 
    Collectors MUST authenticate their requests to Leaders using a scheme
    that meets the requirements in Section 3.1.
@@ -2064,7 +2133,7 @@ struct {} Empty;
    reports satisfying the query and be ready to return the aggregate
    shares right away.  However, this is not always the case.  In fact,
    for some VDAFs, it is not be possible to begin running aggregation
-   jobs (Section 4.5) until the Collector initiates a collection job.
+   jobs (Section 4.7) until the Collector initiates a collection job.
    This is because, in general, the aggregation parameter is not known
    until this point.  In certain situations it is possible to predict
    the aggregation parameter in advance.  For example, for Prio3 the
@@ -2076,7 +2145,7 @@ struct {} Empty;
    with error unrecognizedTask.
 
    The Leader MAY further validate the request according to the
-   requirements in Section 4.6.5 and abort with the indicated error,
+   requirements in Section 4.8.5 and abort with the indicated error,
    though some conditions such as the number of valid reports may not be
    verifiable while handling the CollectionReq message, and the batch
    will have to be re-validated later on regardless.
@@ -2086,7 +2155,7 @@ struct {} Empty;
 
    The Leader then begins working with the Helper to aggregate the
    reports satisfying the query (or continues this process, depending on
-   the VDAF) as described in Section 4.5.
+   the VDAF) as described in Section 4.7.
 
    Changing a collection job's parameters is illegal, so further
    requests to PUT /tasks/{tasks}/collection_jobs/{collection-job-id}
@@ -2103,10 +2172,10 @@ struct {} Empty;
    Asynchronously from any request from the Collector, the Leader
    attempts to run the collection job.  It first checks whether it can
    construct a batch for the collection job by applying the requirements
-   in Section 4.6.5.  If so, then the Leader obtains the Helper's
+   in Section 4.8.5.  If so, then the Leader obtains the Helper's
    aggregate share following the aggregate-share request flow described
-   in Section 4.6.2.  If not, it either aborts the collection job or
-   tries again later, depending on which requirement in Section 4.6.5
+   in Section 4.8.2.  If not, it either aborts the collection job or
+   tries again later, depending on which requirement in Section 4.8.5
    was not met.  If the Leader has a pending aggregation job that
    overlaps with the batch and aggregation parameter for the collection
    job, the Leader MUST first complete the aggregation job before
@@ -2140,7 +2209,7 @@ struct {} Empty;
       timestamps of all reports included in the batch, such that the
       interval's start and duration are both multiples of the task's
       time_precision parameter.  Note that in the case of a time-
-      interval query (see Section 4.1), this interval can be smaller
+      interval query (see Section 4.3), this interval can be smaller
       than the one in the corresponding CollectionReq.query.
 
    *  leader_encrypted_agg_share: The Leader's aggregate share,
@@ -2160,7 +2229,7 @@ struct {} Empty;
    which indicates to the Leader that it can abandon the collection job
    and discard all state related to it.
 
-4.6.2.  Obtaining Aggregate Shares
+4.8.2.  Obtaining Aggregate Shares
 
    The Leader must obtain the Helper's encrypted aggregate share before
    it can complete a collection job.  To do this, the Leader first
@@ -2205,8 +2274,8 @@ struct {} Empty;
    *  agg_param: The opaque aggregation parameter for the VDAF being
       executed.  This value MUST match the AggregationJobInitReq message
       for each aggregation job used to compute the aggregate shares (see
-      Section 4.5.1.1) and the aggregation parameter indicated by the
-      Collector in the CollectionReq message (see Section 4.6.1).
+      Section 4.7.1.1) and the aggregation parameter indicated by the
+      Collector in the CollectionReq message (see Section 4.8.1).
 
    *  report_count: The number number of reports included in the batch.
 
@@ -2219,7 +2288,7 @@ struct {} Empty;
    recognizes the task ID in the request path.  If not, it MUST abort
    with error unrecognizedTask.  The Helper then verifies that the
    request meets the requirements for batch parameters following the
-   procedure in Section 4.6.5.
+   procedure in Section 4.8.5.
 
    Next, it computes a checksum based on the reports that satisfy the
    query, and checks that the report_count and checksum included in the
@@ -2235,11 +2304,11 @@ struct {} Empty;
    Implementation note: For most VDAFs, it is possible to aggregate
    output shares as they arrive rather than wait until the batch is
    collected.  To do so however, it is necessary to enforce the batch
-   parameters as described in Section 4.6.5 so that the Aggregator knows
+   parameters as described in Section 4.8.5 so that the Aggregator knows
    which aggregate share to update.
 
    The Helper then encrypts agg_share under the Collector's HPKE public
-   key as described in Section 4.6.4, yielding encrypted_agg_share.
+   key as described in Section 4.8.4, yielding encrypted_agg_share.
    Encryption prevents the Leader from learning the actual result, as it
    only has its own aggregate share and cannot compute the Helper's.
 
@@ -2262,26 +2331,26 @@ struct {} Empty;
    should all yield the same response.
 
    After receiving the Helper's response, the Leader uses the
-   HpkeCiphertext to finalize a collection job (see Section 4.6.3).
+   HpkeCiphertext to finalize a collection job (see Section 4.8.3).
 
    Once an AggregateShareReq has been issued for the batch determined by
    a given query, it is an error for the Leader to issue any more
    aggregation jobs for additional reports that satisfy the query.
    These reports will be rejected by the Helper as described in
-   Section 4.5.1.4.
+   Section 4.7.1.4.
 
    Before completing the collection job, the Leader also computes its
    own aggregate share agg_share by aggregating all of the prepared
    output shares that fall within the batch interval.  Finally, it
    encrypts its aggregate share under the Collector's HPKE public key as
-   described in Section 4.6.4.
+   described in Section 4.8.4.
 
-4.6.3.  Collection Job Finalization
+4.8.3.  Collection Job Finalization
 
    Once the Collector has received a collection job from the Leader, it
    can decrypt the aggregate shares and produce an aggregate result.
    The Collector decrypts each aggregate share as described in
-   Section 4.6.4.  Once the Collector successfully decrypts all
+   Section 4.8.4.  Once the Collector successfully decrypts all
    aggregate shares, it unshards the aggregate shares into an aggregate
    result using the VDAF's unshard algorithm.  In particular, let
    leader_agg_share denote the Leader's aggregate share,
@@ -2294,7 +2363,7 @@ struct {} Empty;
                              [leader_agg_share, helper_agg_share],
                              report_count)
 
-4.6.4.  Aggregate Share Encryption
+4.8.4.  Aggregate Share Encryption
 
    Encrypting an aggregate share agg_share for a given AggregateShareReq
    is done as follows:
@@ -2350,7 +2419,7 @@ enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
    The OpenBase() function is as specified in [HPKE], Section 6.1 for
    the ciphersuite indicated by the HPKE configuration.
 
-4.6.5.  Batch Validation
+4.8.5.  Batch Validation
 
    Before a Leader runs a collection job or a Helper responds to an
    AggregateShareReq, it must first check that the job or request does
@@ -2393,9 +2462,9 @@ enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
    for more collect query flexibility.  As of now, this is quite rigid
    and doesn't give the Collector much room for mistakes.]]
 
-4.6.5.1.  Time-interval Batch Mode
+4.8.5.1.  Time-interval Batch Mode
 
-4.6.5.1.1.  Boundary Check
+4.8.5.1.1.  Boundary Check
 
    The batch boundaries are determined by the time_precision field of
    the task configuration.  For the batch_interval included with the
@@ -2411,15 +2480,15 @@ enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
    aggregate" output shares recovered during the aggregation
    interaction.
 
-4.6.5.1.2.  Size Check
+4.8.5.1.2.  Size Check
 
    The query configuration specifies the minimum batch size,
    min_batch_size.  The Aggregator checks that len(X) >= min_batch_size,
    where X is the set of reports successfully aggregated into the batch.
 
-4.6.5.2.  Leader-selected Batch Mode
+4.8.5.2.  Leader-selected Batch Mode
 
-4.6.5.2.1.  Boundary Check
+4.8.5.2.1.  Boundary Check
 
    The batch boundaries are defined by opaque batch IDs.  Thus the
    Aggregator needs to check that the query is associated with a known
@@ -2427,7 +2496,7 @@ enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
    that the batch ID provided by the Leader corresponds to a batch ID
    used in a previous AggregationJobInitReq for the task.
 
-4.6.5.2.2.  Size Check
+4.8.5.2.2.  Size Check
 
    The query configuration specifies the minimum batch size,
    min_batch_size.  The Aggregator checks that len(X) >= min_batch_size,
@@ -2479,7 +2548,7 @@ enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
       and intra-batch replay mitigation storage, which includes some way
       of tracking batch report size.  Some of this state may be used for
       replay attack mitigation.  The replay mitigation strategy is
-      described in Section 4.5.1.4.
+      described in Section 4.7.1.4.
 
    Beyond the minimal capabilities required of Helpers, Leaders are
    generally required to:
@@ -2492,7 +2561,7 @@ enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
    In addition, for each DAP task, the Leader is required to:
 
    *  Implement and store state for the form of inter- and intra-batch
-      replay mitigation in Section 4.5.1.4.
+      replay mitigation in Section 4.7.1.4.
 
 5.1.3.  Collector Capabilities
 
@@ -2567,7 +2636,7 @@ enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
    has been collected.  This is due to the requirement that in the time-
    interval case, the batch interval respect the boundaries defined by
    the DAP parameters; and that in leader-selected case, a batch is
-   determined entirely by a batch ID.  (See Section 4.6.5.)
+   determined entirely by a batch ID.  (See Section 4.8.5.)
 
    However, Aggregators are also required to implement several per-
    report checks that require retaining a number of data artifacts.  For
@@ -2577,7 +2646,7 @@ enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
    report upload rate, this can result in high storage costs.  To
    alleviate this burden, DAP allows Aggregators to drop this state as
    needed, so long as reports are dropped properly as described in
-   Section 4.5.1.4.  Aggregators SHOULD take steps to mitigate the risk
+   Section 4.7.1.4.  Aggregators SHOULD take steps to mitigate the risk
    of dropping reports (e.g., by evicting the oldest data first).
 
    Furthermore, the Aggregators must store data related to a task as
@@ -2739,7 +2808,7 @@ enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
    the Aggregators; see Section 7.4) ensure that all reports come from
    authentic Clients.  Note that because the Helper never handles
    messages directly from the Clients, reports would need to include an
-   extension (Section 4.4.3) to convey authentication information to the
+   extension (Section 4.6.3) to convey authentication information to the
    Helper.  For example, a deployment might include a Privacy Pass token
    ([I-D.draft-ietf-privacypass-architecture-16]) in an extension to
    allow both Aggregators to independently verify the Client's identity.
@@ -2834,14 +2903,14 @@ enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
    ensure they agree on the configuration of the task.  However, it is
    possible for a party to participate in the execution of DAP without
    knowing all of the task's parameters.  For example, a Client can
-   upload a report (Section 4.4) without knowing the minimum batch size
-   that is enforced by the Aggregators during collection (Section 4.6).
+   upload a report (Section 4.6) without knowing the minimum batch size
+   that is enforced by the Aggregators during collection (Section 4.8).
 
    Depending on the deployment model, agreement can require that task
    parameters are visible to all parties such that each party can choose
    whether to participate based on the value of any parameter.  This
-   includes the parameters enumerated in Section 4.2 and any additional
-   parameters implied by upload extensions Section 4.4.3 used by the
+   includes the parameters enumerated in Section 4.4 and any additional
+   parameters implied by upload extensions Section 4.6.3 used by the
    task.  Since meaningful privacy requires that multiple Clients
    contribute to a task, they should also share a consistent view of the
    task configuration.
@@ -2862,27 +2931,27 @@ enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
    This specification defines the following protocol messages, along
    with their corresponding media types types:
 
-   *  HpkeConfigList Section 4.4.1: "application/dap-hpke-config-list"
+   *  HpkeConfigList Section 4.6.1: "application/dap-hpke-config-list"
 
-   *  Report Section 4.4.2: "application/dap-report"
+   *  Report Section 4.6.2: "application/dap-report"
 
-   *  AggregationJobInitReq Section 4.5.1.1: "application/dap-
+   *  AggregationJobInitReq Section 4.7.1.1: "application/dap-
       aggregation-job-init-req"
 
-   *  AggregationJobResp Section 4.5.1.2: "application/dap-aggregation-
+   *  AggregationJobResp Section 4.7.1.2: "application/dap-aggregation-
       job-resp"
 
-   *  AggregationJobContinueReq Section 4.5.2.1: "application/dap-
+   *  AggregationJobContinueReq Section 4.7.2.1: "application/dap-
       aggregation-job-continue-req"
 
-   *  AggregateShareReq Section 4.6: "application/dap-aggregate-share-
+   *  AggregateShareReq Section 4.8: "application/dap-aggregate-share-
       req"
 
-   *  AggregateShare Section 4.6: "application/dap-aggregate-share"
+   *  AggregateShare Section 4.8: "application/dap-aggregate-share"
 
-   *  CollectionReq Section 4.6: "application/dap-collect-req"
+   *  CollectionReq Section 4.8: "application/dap-collect-req"
 
-   *  Collection Section 4.6: "application/dap-collection"
+   *  Collection Section 4.8: "application/dap-collection"
 
    The definition for each media type is in the following subsections.
 
@@ -2908,7 +2977,7 @@ enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
 
    Encoding considerations:  only "8bit" or "binary" is permitted
 
-   Security considerations:  see Section 4.2
+   Security considerations:  see Section 4.4
 
    Interoperability considerations:  N/A
 
@@ -2949,7 +3018,7 @@ enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
 
    Encoding considerations:  only "8bit" or "binary" is permitted
 
-   Security considerations:  see Section 4.4.2
+   Security considerations:  see Section 4.6.2
 
    Interoperability considerations:  N/A
 
@@ -2990,7 +3059,7 @@ enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
 
    Encoding considerations:  only "8bit" or "binary" is permitted
 
-   Security considerations:  see Section 4.6
+   Security considerations:  see Section 4.8
 
    Interoperability considerations:  N/A
 
@@ -3031,7 +3100,7 @@ enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
 
    Encoding considerations:  only "8bit" or "binary" is permitted
 
-   Security considerations:  see Section 4.6
+   Security considerations:  see Section 4.8
 
    Interoperability considerations:  N/A
 
@@ -3072,7 +3141,7 @@ enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
 
    Encoding considerations:  only "8bit" or "binary" is permitted
 
-   Security considerations:  see Section 4.6
+   Security considerations:  see Section 4.8
 
    Interoperability considerations:  N/A
 
@@ -3113,7 +3182,7 @@ enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
 
    Encoding considerations:  only "8bit" or "binary" is permitted
 
-   Security considerations:  see Section 4.6
+   Security considerations:  see Section 4.8
 
    Interoperability considerations:  N/A
 
@@ -3154,7 +3223,7 @@ enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
 
    Encoding considerations:  only "8bit" or "binary" is permitted
 
-   Security considerations:  see Section 4.6
+   Security considerations:  see Section 4.8
 
    Interoperability considerations:  N/A
 
@@ -3195,7 +3264,7 @@ enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
 
    Encoding considerations:  only "8bit" or "binary" is permitted
 
-   Security considerations:  see Section 4.6
+   Security considerations:  see Section 4.8
 
    Interoperability considerations:  N/A
 
@@ -3236,7 +3305,7 @@ enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
 
    Encoding considerations:  only "8bit" or "binary" is permitted
 
-   Security considerations:  see Section 4.6
+   Security considerations:  see Section 4.8
 
    Interoperability considerations:  N/A
 
@@ -3300,7 +3369,7 @@ enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
    Reference:  A reference to where the PrepareError type is defined.
 
    The initial contents of this registry are as defined in
-   Section 4.5.1.2, with this document as the reference.
+   Section 4.7.1.2, with this document as the reference.
 
 8.3.  URN Sub-namespace for DAP (urn:ietf:params:ppm:dap)
 
