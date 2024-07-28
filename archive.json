@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-07-25T01:02:44.410545+00:00",
+  "timestamp": "2024-07-28T01:07:31.639462+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -9577,7 +9577,7 @@
       "id": "I_kwDOFEJYQs5owDfX",
       "title": "Document extensions to and/or deviations from RFC 8446 presentation language",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/472",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "tgeoghegan",
       "authorAssociation": "COLLABORATOR",
       "assignees": [
@@ -9589,8 +9589,8 @@
       ],
       "body": "In #393, we define a union with an enum discriminant roughly like:\r\n\r\n```\r\nenum {\r\n  continue(0),\r\n  finished(1)\r\n  reject(2),\r\n  (255)\r\n} PrepareStepState;\r\n\r\nstruct {\r\n  PrepareStepState prepare_step_state;\r\n  select (PrepareStep.prepare_step_state) {\r\n    case continue:\r\n      ReportId report_id;\r\n      opaque payload<0..2^32-1>;\r\n    case finished:\r\n      ReportId report_id;\r\n    case reject:\r\n      ReportId report_id;\r\n      ReportShareError report_share_error;\r\n  };\r\n} PrepareStep;\r\n```\r\n\r\nThen later in protocol text, we define partial constructions of values like:\r\n\r\n```\r\nstruct {\r\n  PrepareStepState prepare_step_state = 2; /* reject */\r\n  ReportId report_id;\r\n  ReportShareError report_share_error;\r\n} PrepareStep;\r\n```\r\n\r\nThis notation is clear and certainly is more compact than a paragraph explaining to implementers what enum variant to use, but it conflicts with [section 3.7 of RFC 8446](https://datatracker.ietf.org/doc/html/rfc8446#section-3.7), which tells us that this is the notation for defining structs that contain fields whose values are fixed (I gather this was useful in TLS 1.3 for backward compatibility with older TLS versions).\r\n\r\nWe can resolve this by adding some text to \"Conventions and Definitions\", where we introduce the usage of RFC 8446 presentation language, explaining our extensions and deviations. There may also be some prior art in other TLS WG documents we can reference, but I haven't found it.",
       "createdAt": "2023-06-14T18:22:32Z",
-      "updatedAt": "2024-07-06T00:08:48Z",
-      "closedAt": null,
+      "updatedAt": "2024-07-27T17:08:53Z",
+      "closedAt": "2024-07-27T17:08:52Z",
       "comments": [
         {
           "author": "wangshan",
@@ -9675,6 +9675,13 @@
           "body": "#556 addresses this to my satisfaction. To answer some specific points from above:\r\n\r\n- I don't think either of the extensions from MLS are useful for us: there's nowhere we would use `Optional<T>` (or at least nowhere that I think is more clear than what we have now), and I don't think the variable length vector encoding is worthwhile for us.\r\n- I don't think there's a strong enough case for rewriting everything into RFC 9000 syntax. Proponents of that approach are welcome to draft a PR, though.",
           "createdAt": "2024-07-06T00:08:46Z",
           "updatedAt": "2024-07-06T00:08:46Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Decision at IETF 120 is to merge @tgeoghegan's PR.",
+          "createdAt": "2024-07-26T23:15:06Z",
+          "updatedAt": "2024-07-26T23:15:06Z"
         }
       ]
     },
@@ -10208,7 +10215,7 @@
       "id": "I_kwDOFEJYQs50Axx8",
       "title": "Security considerations: privacy impact of per-task HpkeConfigs",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/505",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "divergentdave",
       "authorAssociation": "COLLABORATOR",
       "assignees": [
@@ -10219,8 +10226,8 @@
       ],
       "body": "We may want to make note of the fact that the helper sees IP addresses of clients only during /hpke_config requests. Therefore the helper will see the combination of IP addresses and task IDs if using per-task HpkeConfigs, or IP addresses alone if not. This is a smaller difference (note that the leader sees them together either way) but we may want to note it as a consideration for choosing whether to use per-task HpkeConfigs. Note that OHTTP proxies would mitigate this.\n\nh/t @tgeoghegan",
       "createdAt": "2023-10-17T01:38:29Z",
-      "updatedAt": "2024-07-01T18:53:59Z",
-      "closedAt": null,
+      "updatedAt": "2024-07-26T23:40:46Z",
+      "closedAt": "2024-07-26T22:21:00Z",
       "comments": [
         {
           "author": "cjpatton",
@@ -10270,6 +10277,13 @@
           "body": "> > Just to nit-pick one thing:\r\n> > > @tgeoghegan: Recall that the reason we use HPKE at all is to build an authenticated, encrypted channel from the client to the helper.\r\n> > \r\n> > \r\n> > This \"channel\" is not client-authenticated. To more a bit more precise, we need non-malleability, not authenticity.\r\n> \r\n> I agree about non-malleability, but I think it is important that the server authenticate to the client, in the sense that the client wants to be sure that only the helper it fetched an HPKE configuration from could decrypt the report share. Perhaps that's already captured by the non-malleability property?\r\n\r\nYes it's important that the client has the correct public key, but this isn't provided by HPKE on its own. ",
           "createdAt": "2024-07-01T18:53:58Z",
           "updatedAt": "2024-07-01T18:53:58Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Decision at IETF 120 was to merge @tgeoghegan's PR.",
+          "createdAt": "2024-07-26T23:40:45Z",
+          "updatedAt": "2024-07-26T23:40:45Z"
         }
       ]
     },
@@ -10476,7 +10490,7 @@
       ],
       "body": "PPM prescribed media types do not have version component in them. As DAP protocol progressing, the structures are changing in a non-compatible way. In order to consistently decode those structures, we need an indicator on what structure to use to decode them with.\r\n\r\nI propose adding a MIME parameter, `version`, to express the version of the payload.\r\n\r\nEx: To represent Report structure of protocol version DAP-09, use the media type - `application/dap-report;version=09`\r\n\r\nLeader/Helper need to rely on this MIME parameter to consistently parse the payload received, and should also be used to reject unsupported versions.\r\n\r\n",
       "createdAt": "2024-01-08T16:24:21Z",
-      "updatedAt": "2024-07-03T15:12:04Z",
+      "updatedAt": "2024-07-26T23:43:25Z",
       "closedAt": null,
       "comments": [
         {
@@ -10597,6 +10611,13 @@
           "body": "I'm not aware of such a thing. One example we might follow is OHTTP, which uses yet another serialization format: https://www.rfc-editor.org/rfc/rfc9458.html#section-9",
           "createdAt": "2024-01-16T17:23:40Z",
           "updatedAt": "2024-01-16T17:23:40Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "IETF 120: There was opposition to merging #568. @bemasc (as chair) suggested we get some advice from an HTTP expert about whether normative language for media type parameters is needed. I will take this action.",
+          "createdAt": "2024-07-26T23:43:24Z",
+          "updatedAt": "2024-07-26T23:43:24Z"
         }
       ]
     },
@@ -10706,7 +10727,7 @@
       "id": "I_kwDOFEJYQs6G17C7",
       "title": "Consider removing `max_batch_size`.",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/555",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "branlwyd",
       "authorAssociation": "COLLABORATOR",
       "assignees": [
@@ -10718,8 +10739,8 @@
       ],
       "body": "Once multi-collection of batches has been removed, we should consider whether the `max_batch_size` parameter of the fixed-size query type might be removed.\r\n\r\nSee https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/554/files#r1577003240 for context; in short, `max_batch_size`'s strongest use-case is in the case of a multiply-collected VDAF. It is unclear if there is a strong justification for this parameter in a DAP which supports only singly-collected VDAFs.",
       "createdAt": "2024-04-24T22:22:28Z",
-      "updatedAt": "2024-07-03T15:11:53Z",
-      "closedAt": null,
+      "updatedAt": "2024-07-26T23:51:36Z",
+      "closedAt": "2024-07-26T23:51:36Z",
       "comments": [
         {
           "author": "cjpatton",
@@ -10825,6 +10846,13 @@
           "body": "That works for me.",
           "createdAt": "2024-06-13T19:43:56Z",
           "updatedAt": "2024-06-13T19:43:56Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Decision at IETF 120 is to merge #563. However there is some follow up discussion about whether `leader_selected` should be supported at all. @martinthomson I'll ask you to open up a PR with a summary of your thoughts.",
+          "createdAt": "2024-07-26T23:18:10Z",
+          "updatedAt": "2024-07-26T23:18:10Z"
         }
       ]
     },
@@ -10871,7 +10899,7 @@
       ],
       "body": "As mentioned in #556, replay protection implies a relatively stringent operational requirement for the Helper: many aggregation jobs might make concurrent transactions on the same database, which can easily overwhelm the database if not sufficiently provisioned.\r\n\r\nTo mitigate this problem, the Helper can cancel an aggregation job and ask the Leader to try again later. One option is to respond with HTTP status 429 and a \"retry-after\" header indicating when it should be safe to retry.\r\n\r\nI'd like to suggest that we spell this out explicitly in the draft.",
       "createdAt": "2024-05-01T20:01:38Z",
-      "updatedAt": "2024-06-26T00:12:06Z",
+      "updatedAt": "2024-07-26T23:35:39Z",
       "closedAt": null,
       "comments": [
         {
@@ -10964,6 +10992,13 @@
           "body": "> I think, from the spec perspective, it's probably okay to move towards the asynchronous option exclusively. I'm just worried about the migration of the existing implementations to the new async model, as there could be periods where Leader and Helper have to support both at the same time.\r\n\r\nSupporting multiple drafts at once adds complexity, but it's complexity that many have learned to manage. (I believe at one point, Cloudflare had deployed up to three drafts of TLS 1.3 (RFC8446) simultaneously.) We already have versioning infrastructure in [daphne](https://github.com/cloudflare/daphne) for this very reason.",
           "createdAt": "2024-06-25T14:42:28Z",
           "updatedAt": "2024-06-25T14:42:28Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "IETF 120: There was no objection to merging #564, but @bemasc and @martinthomson both expressed interest in revisiting the design space. On the other hand, @Noah-Kennedy and myself expressed some urgency in making some change here soon: right now we're having to do way too much work (storage consistency and computation) on the hot path of HTTP requests.\r\n\r\nWe have considered other alternatives, including @martinthomson's suggestion of having the Helper tell the Leader later on which reports are replayed and thus need to reviewed. As @branlwyd and others observed previously, this creates the requirement to store individual report shares until the batch is collected. We would rather not impose this requirement.\r\n\r\nTo @bemasc's point at the mic: if there is a different HTTP API pattern we should be following to resolve this, please let us know what it is. The folks working on this probably have far less expertise than you do on building applications on HTTP.\r\n\r\nI think we should give this issue a little more time to see if someone has a better idea. That said, we can't wait forever to fix this problem, so I think we should lean on the deployment of experience of folks who have implemented DAP. If there is no discussion on this topic in the next couple of weeks, I'm going to merge #564 as-is.\r\n\r\nThank you again @inahga for wrangler the PR!",
+          "createdAt": "2024-07-26T23:35:38Z",
+          "updatedAt": "2024-07-26T23:35:38Z"
         }
       ]
     },
@@ -66776,7 +66811,7 @@
       "id": "PR_kwDOFEJYQs5ybBGu",
       "title": "Rename \"query type\" to \"batch mode\", \"fixed-size\" to \"leader-selected\", remove max_batch_size.",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/563",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "branlwyd",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
@@ -66785,17 +66820,19 @@
       ],
       "body": "Batch mode is a more descriptive name than query type. And leader-selected is a more accurate name than fixed-size, since the batch sizes are not fixed -- any size above min_batch_size (and, if specified, below max_batch_size) is acceptable.\r\n\r\nThe max_batch_size parameter of the leader-selected query type is removed. This parameter does not need to be enforced by both aggregators, so it can be made implementation-specific.\r\n\r\nAlso, restore the partial batch selector to the Collection message; the included batch ID is required for the Collector to decrypt the aggregate shares, as it is included in the AAD. This bug was introduced in #554 & effectively breaks collection for the fixed-size query type in DAP-11.\r\n\r\nCloses #555.",
       "createdAt": "2024-06-13T23:56:57Z",
-      "updatedAt": "2024-07-22T22:12:31Z",
+      "updatedAt": "2024-07-26T23:51:41Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
-      "baseRefOid": "35f1274853c1c06a5132612b111debefe4fd17ac",
+      "baseRefOid": "7b5eeca998d7871089249a7efc8224d9a3651df0",
       "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "headRefName": "bran/leader-selected",
-      "headRefOid": "73053f5e4fbdeaa0a072ac0af2362cc317b89374",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "headRefOid": "6d7fd1b8c84e9b40cb1d3f40c8d5e6a646e321d4",
+      "closedAt": "2024-07-26T23:51:35Z",
+      "mergedAt": "2024-07-26T23:51:35Z",
+      "mergedBy": "branlwyd",
+      "mergeCommit": {
+        "oid": "83f1ea77fb9ff1f304779e775bb15efcf51a9269"
+      },
       "comments": [
         {
           "author": "branlwyd",
@@ -66887,6 +66924,13 @@
           "body": "> Thanks -- I've updated this PR to rename \"query type\" to \"batch mode\" & I like the change. @cjpatton interested in your thoughts here, I can revert (or rename to something else) if this isn't so good.\r\n\r\nNo objection. ",
           "createdAt": "2024-07-19T18:40:42Z",
           "updatedAt": "2024-07-19T18:40:42Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "@branlwyd please squash and merge at will.",
+          "createdAt": "2024-07-26T23:18:36Z",
+          "updatedAt": "2024-07-26T23:18:36Z"
         }
       ],
       "reviews": [
@@ -67388,6 +67432,46 @@
               "updatedAt": "2024-07-22T22:09:40Z"
             }
           ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6DKkox",
+          "commit": {
+            "abbreviatedOid": "73053f5"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-25T22:56:35Z",
+          "updatedAt": "2024-07-25T22:56:35Z",
+          "comments": [
+            {
+              "originalPosition": 469,
+              "body": "I went with a different change: everywhere we are referring to the modes themselves, as opposed to referring to a specific variant of the `BatchMode` enum, I use time-interval/leader-selected instead of `time_interval`/`leader_selected`. I think this reads a little better.",
+              "createdAt": "2024-07-25T22:56:35Z",
+              "updatedAt": "2024-07-25T23:04:08Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6DKk0M",
+          "commit": {
+            "abbreviatedOid": "73053f5"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-25T22:57:33Z",
+          "updatedAt": "2024-07-25T22:57:33Z",
+          "comments": [
+            {
+              "originalPosition": 213,
+              "body": "I do not like \"partial batch selector\" at all, but I have struggled to come up with a better name (e.g. more descriptive, without being too long). Suggestions for a better name are very welcome IMO",
+              "createdAt": "2024-07-25T22:57:33Z",
+              "updatedAt": "2024-07-25T22:57:33Z"
+            }
+          ]
         }
       ]
     },
@@ -67405,13 +67489,13 @@
       ],
       "body": "Closes https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/557.\r\n\r\nAllows helper-side aggregate job preparation to be handled asynchronously,\r\nsimilarly to how collection jobs work. Briefly, after calls with\r\n`AggregationJobInitReq` and `AggregationJobContinueReq`, the leader polls\r\nthe helper at `GET /tasks/{task-id]/aggregation_jobs/{aggregation-job-id}`\r\nuntil receiving an `AggregationJobResp`.\r\n\r\nIn discussion in #577 we had soft consensus on making this the only option,\r\ni.e. for spec simplicity we don't need to also allow the old synchronous\r\nbehavior.",
       "createdAt": "2024-06-25T18:08:22Z",
-      "updatedAt": "2024-07-24T23:42:30Z",
+      "updatedAt": "2024-07-26T23:52:01Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "35f1274853c1c06a5132612b111debefe4fd17ac",
       "headRepository": "inahga/draft-ietf-ppm-dap",
       "headRefName": "inahga/async-helper-agg-jobs",
-      "headRefOid": "bdbaeae2825bcb36b3fa63f186fdb24f5ff8ec74",
+      "headRefOid": "5ad2c4da50d48ec404ebc2d97bd178c2f472d8d1",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
@@ -67598,6 +67682,27 @@
           "body": "We discussed in meeting to prepare for possibly taking both async and sync HTTP request models for this PR. I have written it up in commit https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/564/commits/39cfd4eb42f0ee010a2a11e54e03fe126c0d87f4.",
           "createdAt": "2024-07-24T17:54:06Z",
           "updatedAt": "2024-07-24T17:54:06Z"
+        },
+        {
+          "author": "inahga",
+          "authorAssociation": "NONE",
+          "body": "n.b. to focus this PR I've backed out any (editorial) changes to collection. I will save those for another PR.",
+          "createdAt": "2024-07-26T15:51:18Z",
+          "updatedAt": "2024-07-26T15:51:18Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "@inahga we will hold off on merging this for a couple of weeks in order to give folks a little time to think about the design space.",
+          "createdAt": "2024-07-26T23:39:06Z",
+          "updatedAt": "2024-07-26T23:39:06Z"
+        },
+        {
+          "author": "inahga",
+          "authorAssociation": "NONE",
+          "body": "Perfectly acceptable! I have written up a POC of this as-written (albeit for single round VDAFs only), to evaluate the costs that @branlwyd alluded to. My initial impression is that the drawbacks are small, if any, and may be mitigated (e.g. by maximizing aggregation job size). If that proves the case with some more testing, we may be able to drop sync support entirely.",
+          "createdAt": "2024-07-26T23:51:59Z",
+          "updatedAt": "2024-07-26T23:51:59Z"
         }
       ],
       "reviews": [
@@ -69874,6 +69979,66 @@
               "updatedAt": "2024-07-24T23:43:19Z"
             }
           ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6DIY0P",
+          "commit": {
+            "abbreviatedOid": "bdbaeae"
+          },
+          "author": "inahga",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-25T17:57:40Z",
+          "updatedAt": "2024-07-25T17:57:40Z",
+          "comments": [
+            {
+              "originalPosition": 105,
+              "body": "I'm cool with it. I will save changing collection's wording for another PR to keep this one from continuing to sprawl. (In fact, I should probably back out all changes to collection and save them for a later editorial PR).",
+              "createdAt": "2024-07-25T17:57:40Z",
+              "updatedAt": "2024-07-25T17:57:41Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6DQori",
+          "commit": {
+            "abbreviatedOid": "bdbaeae"
+          },
+          "author": "inahga",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-26T15:45:31Z",
+          "updatedAt": "2024-07-26T15:45:31Z",
+          "comments": [
+            {
+              "originalPosition": 122,
+              "body": "I've turned it into a SHOULD. I suppose for many-step VDAFs, the helper could want to discard its response to `AggregationJobInitReq` as later steps take place, i.e. `n-2, n-1, n`, `n-2` may be zero and can be discarded/overwritten while still supporting skew recovery. In which case the helper would respond with something like 410 Gone.",
+              "createdAt": "2024-07-26T15:45:31Z",
+              "updatedAt": "2024-07-26T15:45:31Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6DQpyw",
+          "commit": {
+            "abbreviatedOid": "bdbaeae"
+          },
+          "author": "inahga",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-07-26T15:47:16Z",
+          "updatedAt": "2024-07-26T15:47:16Z",
+          "comments": [
+            {
+              "originalPosition": 122,
+              "body": "> Not for this PR, but perhaps that section should be generalized, since the initialization request is effectively \"step 0\".\r\n\r\nI'm hoping in the next PR that section can be stricken entirely, now that we have step encoded in the URI. Although I haven't thought about it in the face of supporting both sync/async.",
+              "createdAt": "2024-07-26T15:47:16Z",
+              "updatedAt": "2024-07-26T15:47:16Z"
+            }
+          ]
         }
       ]
     },
@@ -69908,24 +70073,26 @@
       "id": "PR_kwDOFEJYQs50kpE0",
       "title": "Document deviations from RFC 8446 PL",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/566",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "tgeoghegan",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "Explains in detail how the syntax from RFC 8446 section 3.7 is repurposed for concise descriptions of structure variants. Additionally, the section on message encoding is moved to \"Protocol Definition\" to make the document flow better.\r\n\r\nCloses #472",
       "createdAt": "2024-07-06T00:05:12Z",
-      "updatedAt": "2024-07-24T21:31:07Z",
+      "updatedAt": "2024-07-27T17:08:52Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
-      "baseRefOid": "35f1274853c1c06a5132612b111debefe4fd17ac",
+      "baseRefOid": "83f1ea77fb9ff1f304779e775bb15efcf51a9269",
       "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "headRefName": "timg/tls-presentation-exceptions",
-      "headRefOid": "28fac094792711ba8c2ba324478ce855d89daca9",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "headRefOid": "2eb189affa0f7bdd6a1dde10ae68ac4d40aaf4ee",
+      "closedAt": "2024-07-27T17:08:51Z",
+      "mergedAt": "2024-07-27T17:08:51Z",
+      "mergedBy": "tgeoghegan",
+      "mergeCommit": {
+        "oid": "93fca5745c5b27d5a57a3b1195429d7935569961"
+      },
       "comments": [
         {
           "author": "cjpatton",
@@ -69933,6 +70100,20 @@
           "body": "Reviewer note: @suman-ganta[observed](https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/472#issuecomment-1781933269) that TLS-syntax does not explicitly allow `case` blocks with multiple fields. We currently don't have any cases of this.\r\n\r\n",
           "createdAt": "2024-07-08T20:45:35Z",
           "updatedAt": "2024-07-08T20:45:48Z"
+        },
+        {
+          "author": "suman-ganta",
+          "authorAssociation": "NONE",
+          "body": "`struct variant` is kind of indicating it is deviation from `struct`, but most of the `struct` semantics apply. `variant` alone is not defined anywhere, so it would leave every one for wild interpretations.",
+          "createdAt": "2024-07-26T22:28:31Z",
+          "updatedAt": "2024-07-26T22:28:31Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "@tgeoghegan please squash and merge at will!",
+          "createdAt": "2024-07-26T23:15:27Z",
+          "updatedAt": "2024-07-26T23:15:27Z"
         }
       ],
       "reviews": [
@@ -70261,7 +70442,7 @@
       "id": "PR_kwDOFEJYQs50kqOj",
       "title": "Remove per-task HPKE configurations",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/567",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "tgeoghegan",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
@@ -70270,18 +70451,28 @@
       ],
       "body": "As discussed in #505, putting the task ID into the HPKE configuration request leaks which tasks a client is participating in, which can otherwise be concealed by OHTTP. This commit removes the notion of per-task HPKE keys from DAP, requiring global keys.\r\n\r\nCloses #505",
       "createdAt": "2024-07-06T00:17:07Z",
-      "updatedAt": "2024-07-23T20:37:51Z",
+      "updatedAt": "2024-07-26T22:21:00Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "35f1274853c1c06a5132612b111debefe4fd17ac",
       "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "headRefName": "timg/global-hpke-only",
       "headRefOid": "db5eed72626186587190f98c06ca81a4286d947c",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
-      "comments": [],
+      "closedAt": "2024-07-26T22:21:00Z",
+      "mergedAt": "2024-07-26T22:20:59Z",
+      "mergedBy": "tgeoghegan",
+      "mergeCommit": {
+        "oid": "7b5eeca998d7871089249a7efc8224d9a3651df0"
+      },
+      "comments": [
+        {
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "body": "We discussed this at PPM @ IETF 120 and nobody spoke up in defense of per-task HPKE configurations, so let's merge this!",
+          "createdAt": "2024-07-26T22:20:48Z",
+          "updatedAt": "2024-07-26T22:20:48Z"
+        }
+      ],
       "reviews": [
         {
           "id": "PRR_kwDOFEJYQs6A01Az",
@@ -70343,7 +70534,7 @@
       "labels": [],
       "body": "Closes #541.\r\n\r\nMade versioning compatibilities explicit and an optional way to express draft versions.",
       "createdAt": "2024-07-08T23:17:45Z",
-      "updatedAt": "2024-07-22T22:29:49Z",
+      "updatedAt": "2024-07-26T23:44:15Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "35f1274853c1c06a5132612b111debefe4fd17ac",
@@ -70375,6 +70566,13 @@
           "body": "Addressed trailing whitespace issue.",
           "createdAt": "2024-07-20T22:25:29Z",
           "updatedAt": "2024-07-20T22:25:29Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "@suman-ganta this is on hold while we get some feedback from HTTP experts. I'm on it!",
+          "createdAt": "2024-07-26T23:44:14Z",
+          "updatedAt": "2024-07-26T23:44:14Z"
         }
       ],
       "reviews": [
