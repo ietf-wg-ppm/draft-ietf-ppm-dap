@@ -185,6 +185,8 @@ Table of Contents
       which was removed in draft 11, as it is required to decrypt
       collection results in some cases. (*)
 
+   *  Clarify what it means for a report to be "previously aggregated."
+
    11:
 
    *  Remove support for multi-collection of batches, as well as the
