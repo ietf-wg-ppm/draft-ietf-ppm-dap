@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-07-28T01:07:31.639462+00:00",
+  "timestamp": "2024-07-30T01:02:40.209271+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -11143,7 +11143,7 @@
       "id": "I_kwDOFEJYQs6JLwBv",
       "title": "Support for batched preparation",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/561",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "cjpatton",
       "authorAssociation": "COLLABORATOR",
       "assignees": [
@@ -11155,8 +11155,8 @@
       ],
       "body": "There is a [new paper](https://eprint.iacr.org/2024/666) (to appear at IEEE S&P 2024) that shows how to lift an [FLP](https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-09#section-7.1) into a proof system that is \"silently verifiable\". For such a proof system, it's possible to check if _some_ measurement in a set of measurements is invalid, exchanging only a constant number of bits (128). In Prio3, we must exchange a number of bits linear in the number of measurements.\r\n\r\nThe bandwidth savings are significant. For Prio3SumVec with bits=1, length=1,000, and chunk_length=32 and 100 reports, an `AggregationJobInitReq` is 122KB. If we modified Prio3 by making the FLP silently verifiable, the same message would be roughly 7KB (back-of-a-napkin calculation). Computational cost remains about the same. (See Figure 7 from the paper for details.)\r\n\r\nThis approach does a have a potential downside: if verification fails, then we learn only that _some_ measurement is invalid, not _which_ measurement is invalid. Thus, in the case that some fraction of the reports in the aggregation job, you either need to throw away the data or exchange more bits in order to find the subset of measurements that are invalid. The communication cost increases as the fraction of malicious Clients increases.\r\n\r\nThere are many ways we might implement this. Perhaps the simplest would be to treat batched preparation as an alternative aggregation flow that falls back to the existing aggregation flow (i.e., per report validation) if verification fails. Concretely, we would specify an alternative aggregation sub-protocol that is the same as the existing flow except:\r\n1. It is only compatible with 1-round, \"silently verifiable\" VDAFs.\r\n2. If verification fails, then it needs to be safe to fallback to per-report validation.\r\n\r\n\r\n\r\n\r\n\r\n\r\n",
       "createdAt": "2024-05-16T23:48:08Z",
-      "updatedAt": "2024-07-09T18:16:51Z",
-      "closedAt": null,
+      "updatedAt": "2024-07-29T17:59:54Z",
+      "closedAt": "2024-07-29T17:59:53Z",
       "comments": [
         {
           "author": "wbl",
@@ -11178,6 +11178,39 @@
           "body": "There is a draft PR (#565) with a proposal of how to integrate this into DAP. In the meantime, I've been looking at how much bandwidth savings we would actually get.\r\n\r\nUnfortunately, **[Whisper](https://eprint.iacr.org/2024/666) provides no benefit for DAP _as-is_, even if all clients are honest.** In Whisper, each Client sends some additional information to each Aggregator. The number of bytes included in the report is roughly as much information as is exchanged during per-report preparation Prio3.\r\n\r\nIn more detail, the Client sends to each Aggregator the verifier share that would be computed by its co-Aggregator. This is denoted by $\\mathsf{vtag}_{\\mathsf{NS},i}$ in Figure 4 of the paper. (In the transformation from to the \"silently verifiable\" proof system, the Aggregators arrange to check that Client sent the correct value. This is morally similar to how we check that joint randomness computation in Prio3.) This is the same value that would be transmitted during preparation of Prio3.\r\n\r\nNow, in DAP, the Helper's report share is proxied by the Leader during aggregation. Thus, one verifier share per-report is transmitted either in a traditional aggregation job via Prio3 or a batched aggregation job via Whisper. The only difference is who generates the message.\r\n\r\nWhisper would only make a difference in a \"Split-Upload\" architecture, where each Client sends report shares to the Leader and Helper directly. In this setting, the Clients pay the bandwidth cost, rather than the Leader. It has been observed (#130) that bandwidth is usually cheaper for Clients than it would be for a Leader. Note that [we ruled out Split-Upload for DAP at IETF 113](https://datatracker.ietf.org/meeting/113/materials/slides-113-ppm-ppm-upload-flow).\r\n\r\nAll that said, we may see improvements to Whisper in the future that make it worth it for DAP as-is. And there are other VDAFs that may fair better. For example, [VIDPFs](https://eprint.iacr.org/2023/080) not only allow for batched preparation, but also don't increase Client->Aggregator bandwidth[^1].\r\n\r\n\r\n[^1]: There is a big caveat here: The parameters of VIDPF are subject to change as we learn more about their concrete security.\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n",
           "createdAt": "2024-07-09T18:06:50Z",
           "updatedAt": "2024-07-09T18:16:51Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "This topic was brought up at IETF 120: https://datatracker.ietf.org/meeting/120/materials/slides-120-ppm-batched-vdaf-preparation\r\n\r\nThere wasn't much enthusiasm for this feature in the room. In any case, there is no point in supporting it in DAP unless we're willing to re-consider the Split-Upload architecture.",
+          "createdAt": "2024-07-29T17:59:53Z",
+          "updatedAt": "2024-07-29T17:59:53Z"
+        }
+      ]
+    },
+    {
+      "number": 571,
+      "id": "I_kwDOFEJYQs6ROQwV",
+      "title": "Clarification request: Does aggregation happen in the AggregationJob?",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/571",
+      "state": "OPEN",
+      "author": "bemasc",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [
+        "editorial"
+      ],
+      "body": "Section 4.5 says that an Aggregation Job has three phases, the last of which is\r\n\r\n>    *  Completion: Finish the aggregate flow, yielding an output share\r\n      corresponding to each report share in the aggregation job.\r\n\r\nThat makes it sound like Aggregation Jobs don't perform any aggregation.  If that's true, maybe they should be called Preparation Jobs.  If it's false, maybe it can be corrected.",
+      "createdAt": "2024-07-29T21:44:37Z",
+      "updatedAt": "2024-07-29T22:05:51Z",
+      "closedAt": null,
+      "comments": [
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "It's false: we leave it up to an implementation to decide whether it will store output shares individually or aggregate in a streaming fashion (once an output share is produced, add it to an aggregate share).\r\n\r\nA bit of pertinent history: Early on we wanted to allow the possibility that the aggregation function (i.e., the function computed by the VDAF) may be sensitive to the order of measurements. For example, you might have that $f(m_1, m_2, m_3) \\ne f(m_1, m_3, m_2)$. The VDAF draft doesn't rule this out, but in practice we have not found a need for this. In fact, no open source implementation of DAP that I'm aware of supports it.\r\n\r\nI think we can resolve this by clarifying that most of the time the aggregate share will usually be updated in a streaming fashion. (Thanks @bemasc for suggesting the terminology offline.)",
+          "createdAt": "2024-07-29T21:54:44Z",
+          "updatedAt": "2024-07-29T21:54:44Z"
         }
       ]
     }
@@ -67489,7 +67522,7 @@
       ],
       "body": "Closes https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/557.\r\n\r\nAllows helper-side aggregate job preparation to be handled asynchronously,\r\nsimilarly to how collection jobs work. Briefly, after calls with\r\n`AggregationJobInitReq` and `AggregationJobContinueReq`, the leader polls\r\nthe helper at `GET /tasks/{task-id]/aggregation_jobs/{aggregation-job-id}`\r\nuntil receiving an `AggregationJobResp`.\r\n\r\nIn discussion in #577 we had soft consensus on making this the only option,\r\ni.e. for spec simplicity we don't need to also allow the old synchronous\r\nbehavior.",
       "createdAt": "2024-06-25T18:08:22Z",
-      "updatedAt": "2024-07-26T23:52:01Z",
+      "updatedAt": "2024-07-29T15:10:41Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "35f1274853c1c06a5132612b111debefe4fd17ac",
@@ -67703,6 +67736,13 @@
           "body": "Perfectly acceptable! I have written up a POC of this as-written (albeit for single round VDAFs only), to evaluate the costs that @branlwyd alluded to. My initial impression is that the drawbacks are small, if any, and may be mitigated (e.g. by maximizing aggregation job size). If that proves the case with some more testing, we may be able to drop sync support entirely.",
           "createdAt": "2024-07-26T23:51:59Z",
           "updatedAt": "2024-07-26T23:51:59Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "I think our best bet is to keep sync optional for now.",
+          "createdAt": "2024-07-29T15:10:41Z",
+          "updatedAt": "2024-07-29T15:10:41Z"
         }
       ],
       "reviews": [
@@ -70047,25 +70087,33 @@
       "id": "PR_kwDOFEJYQs50XPJI",
       "title": "Specify aggregation with batched preparation",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/565",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "cjpatton",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "Closes #561.\r\n\r\nAdds an alternative aggregation flow for VDAFs that support batched preparation.\r\n\r\nIn this mode of operation, prep shares for many reports are aggregated into a short message called a \"tag\". The tags computed by the Leader and Helper are used to decide validity of the reports: if the tags are valid, then every report is deemed valid; otherwise, at least one report is known to be invalid.\r\n\r\nThe Helper handles invalidity by aborting the request. In this case the Leader is allowed to retry, either with a subset of the reports or with the existing, pep-report preparation code path.\r\n\r\nDRAFT STATUS: This PR is not quite feature-complete. In fact, before merging it, we may need to make some changes to the VDAF draft. It is intended primarily to drive conversation about whether there is appetite to support the feature.",
       "createdAt": "2024-07-03T19:30:43Z",
-      "updatedAt": "2024-07-03T19:31:49Z",
+      "updatedAt": "2024-07-29T18:00:38Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "35f1274853c1c06a5132612b111debefe4fd17ac",
       "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "headRefName": "cjpatton/561-pitch",
       "headRefOid": "e192b0be3c106313c7b98df8e8983e10715bf198",
-      "closedAt": null,
+      "closedAt": "2024-07-29T18:00:38Z",
       "mergedAt": null,
       "mergedBy": null,
       "mergeCommit": null,
-      "comments": [],
+      "comments": [
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "The issue was closed, so closing this PR as well.",
+          "createdAt": "2024-07-29T18:00:38Z",
+          "updatedAt": "2024-07-29T18:00:38Z"
+        }
+      ],
       "reviews": []
     },
     {
@@ -70534,7 +70582,7 @@
       "labels": [],
       "body": "Closes #541.\r\n\r\nMade versioning compatibilities explicit and an optional way to express draft versions.",
       "createdAt": "2024-07-08T23:17:45Z",
-      "updatedAt": "2024-07-26T23:44:15Z",
+      "updatedAt": "2024-07-30T00:30:31Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "35f1274853c1c06a5132612b111debefe4fd17ac",
@@ -70573,6 +70621,13 @@
           "body": "@suman-ganta this is on hold while we get some feedback from HTTP experts. I'm on it!",
           "createdAt": "2024-07-26T23:44:14Z",
           "updatedAt": "2024-07-26T23:44:14Z"
+        },
+        {
+          "author": "mnot",
+          "authorAssociation": "NONE",
+          "body": "What's being versioned here - the format itself, or the protocol overall?\r\n\r\nRegardless, I wouldn't recommend using a media type parameter to version either. Parameters are lost by some types of software, and if there are breaking changes in the version, that can cause compatibility issues.\r\n\r\nBest practice is to use a new media type to indicate breaking changes. ",
+          "createdAt": "2024-07-30T00:30:31Z",
+          "updatedAt": "2024-07-30T00:30:31Z"
         }
       ],
       "reviews": [
@@ -70835,7 +70890,7 @@
       "labels": [],
       "body": "Context: https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/564#discussion_r1674725591\r\n\r\nThe current draft focuses on only the recovery from `n` to `n+1`. We should generalize this section to allow aggregation step skew recovery of any arbitrary number of previous steps.",
       "createdAt": "2024-07-17T23:47:44Z",
-      "updatedAt": "2024-07-22T23:01:54Z",
+      "updatedAt": "2024-07-29T16:25:59Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "35f1274853c1c06a5132612b111debefe4fd17ac",
@@ -70909,6 +70964,20 @@
           "body": "Discussion was taken offline but to summarize here for posterity's sake:\r\n\r\n**Conclusion:** **We will defer this issue.** The current status quo and what's proposed here are functionally the same for 1-round and 2-round VDAfs. Once more multi-round VDAFs are implemented and the async conversations (https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/564) are converged, we can revisit this issue.\r\n\r\n**Details:**\r\nThere are two options:\r\n1. Stick with leader being the one to store state for every step and only supporting `n` / `n+1` recovery.\r\n2. Move to the helper storing state (i.e., sufficient to reconstruct the same original response) and supporting arbitrary step recovery.\r\n\r\nThe current draft assumes that the leader takes the responsibility for tracking state and that the leader will only ever need to recover from the most recent step (i.e., a transient failure caused the most recent response to be dropped). If this is maintained, only option 1 (the status quo) is required.\r\n\r\nHowever, if we want to support aggregation job recovery from either the first step, we will need the helper to maintain state for every step. This is so that we can support idempotency: aggregators should ensure that each step that\u2019s retried is the same as before. So supporting this recovery strategy requires per-step state storage on the helper side. \r\n\r\n**Tangent: Meaning of \"Aggregated\" Reports**\r\nThis discussion on \"recovery from the beginning\" brought up a relevant tangent on what it means for a report to have been \"aggregated.\" @cjpatton mentioned that Daphne delays the anti-replay validation until right before the output shares are aggregated, at which point the job is \"committed\". Before this point, the reports could be sent in a brand new aggregation job if the leader wished to start over. This will be explored more in a separate issue by @branlwyd.\r\n\r\n**Personal Notes**\r\nI still personally prefer option 2, since it\u2019s ultimately the same amount of state stored in sum between the aggregators and allows for more flexibility in recovery. ",
           "createdAt": "2024-07-22T23:00:55Z",
           "updatedAt": "2024-07-22T23:01:54Z"
+        },
+        {
+          "author": "simon-friedberger",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "@kristineguo Why does the leader have to store all steps anyway? If the leader receives a response for step x, then x can be discarded, right? Basically, we would need to store 3 steps. What the leader thinks the current step is. What the helper thinks the current step is and the previous step on the helper in case the leader hasn't received the response and retries.",
+          "createdAt": "2024-07-29T06:48:02Z",
+          "updatedAt": "2024-07-29T06:48:02Z"
+        },
+        {
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> @kristineguo Why does the leader have to store all steps anyway? If the leader receives a response for step x, then x can be discarded, right? Basically, we would need to store 3 steps. What the leader thinks the current step is. What the helper thinks the current step is and the previous step on the helper in case the leader hasn't received the response and retries.\r\n\r\nI think that's correct. I think the summary of the situation discussed so far is as follows:\r\n\r\nNo matter what skew-recovery scheme is implemented, both the Leader & the Helper must store their view of the current aggregation state to enable \"normal\" (happy-path) operation of the protocol.\r\n\r\nThe information that must be additionally stored to enable a skew-recovery scheme differs by scheme:\r\n* In `n`/`n+1` recovery, the Helper stores the hash of the previous request & the previous response (or enough other information to reconstruct the previous response from the previous request).\r\n* In restart-from-beginning skew recovery, the Helper must store the hash of the original request.\r\n* In arbitrary-step skew recovery, the Helper must store the hash of every previous request & every previous response (or enough other information to reconstruct that response from the associated request).\r\n\r\n(I don't believe the Leader needs to store additional state for any of the skew-recovery schemes discussed so far.)",
+          "createdAt": "2024-07-29T16:25:57Z",
+          "updatedAt": "2024-07-29T16:25:57Z"
         }
       ],
       "reviews": [
@@ -70929,6 +70998,76 @@
               "body": "Let's make this a bit more normative.\r\n\r\n> If the Leader re-sends an `AggregationJobContinueReq` from a previous step, the Helper SHOULD respond with the corresponding `AggregateShareResp`.",
               "createdAt": "2024-07-18T23:50:48Z",
               "updatedAt": "2024-07-18T23:51:01Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 570,
+      "id": "PR_kwDOFEJYQs52xnHQ",
+      "title": "Clarify what it means for a report to be \"previously aggregated.\"",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/570",
+      "state": "OPEN",
+      "author": "branlwyd",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [
+        "editorial"
+      ],
+      "body": "This is mostly a clarification; some implementations were treating reports as aggregated if they had ever been included in an aggregation job, whether or not that job was successful or the individual report had successfully completed aggregation.",
+      "createdAt": "2024-07-29T17:23:59Z",
+      "updatedAt": "2024-07-29T19:06:18Z",
+      "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "baseRefName": "main",
+      "baseRefOid": "93fca5745c5b27d5a57a3b1195429d7935569961",
+      "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "headRefName": "bran/clarify-aggregated",
+      "headRefOid": "413cc947176d0bab60dad7b5d267f73896ff44ee",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [
+        {
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "body": "This fell out of discussion in #569 -- other than being conceptually correct, this would help with some skew-recovery schemes.",
+          "createdAt": "2024-07-29T17:24:31Z",
+          "updatedAt": "2024-07-29T17:24:31Z"
+        },
+        {
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "body": "+@kristineguo for visibility.",
+          "createdAt": "2024-07-29T17:58:42Z",
+          "updatedAt": "2024-07-29T17:58:42Z"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "PRR_kwDOFEJYQs6DeWga",
+          "commit": {
+            "abbreviatedOid": "413cc94"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2024-07-29T19:05:21Z",
+          "updatedAt": "2024-07-29T19:06:07Z",
+          "comments": [
+            {
+              "originalPosition": 16,
+              "body": "```suggestion\r\n   MUST be marked as invalid with the error `report_replayed`. A report is\r\n   considered aggregated if its contribution would be include in a relevant\r\n   collection job.\r\n```",
+              "createdAt": "2024-07-29T19:05:21Z",
+              "updatedAt": "2024-07-29T19:06:07Z"
+            },
+            {
+              "originalPosition": 4,
+              "body": "I probably wouldn't list this in the CL.",
+              "createdAt": "2024-07-29T19:06:04Z",
+              "updatedAt": "2024-07-29T19:06:07Z"
             }
           ]
         }
