@@ -1681,7 +1681,9 @@ following checks:
    error `invalid_message`.
 
 1. Check if the report has been previously aggregated. If so, the input share
-   MUST be marked as invalid with the error `report_replayed`.
+   MUST be marked as invalid with the error `report_replayed`. A report is
+   considered aggregated if its contribution would be included in a relevant
+   collection job.
 
     * Implementation note: To detect replay attacks, each Aggregator is required
       to keep track of the set of reports it has processed for a given task.
