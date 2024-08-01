@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 30 January 2025                                      Cloudflare
+Expires: 2 February 2025                                      Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                                  Mozilla
                                                               C. A. Wood
                                                               Cloudflare
-                                                            29 July 2024
+                                                           1 August 2024
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -63,7 +63,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 30 January 2025.
+   This Internet-Draft will expire on 2 February 2025.
 
 Copyright Notice
 
@@ -184,8 +184,6 @@ Table of Contents
    *  Restore the part_batch_selector field of the Collection structure,
       which was removed in draft 11, as it is required to decrypt
       collection results in some cases. (*)
-
-   *  Clarify what it means for a report to be "previously aggregated."
 
    11:
 
@@ -1828,8 +1826,7 @@ struct {} Empty;
    6.  Check if the report has been previously aggregated.  If so, the
        input share MUST be marked as invalid with the error
        report_replayed.  A report is considered aggregated if its
-       contribution would be included in the relevant collection
-       request.
+       contribution would be included in a relevant collection job.
 
        *  Implementation note: To detect replay attacks, each Aggregator
           is required to keep track of the set of reports it has
