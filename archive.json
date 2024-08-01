@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-07-30T01:02:40.209271+00:00",
+  "timestamp": "2024-08-01T01:08:20.105036+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -10899,7 +10899,7 @@
       ],
       "body": "As mentioned in #556, replay protection implies a relatively stringent operational requirement for the Helper: many aggregation jobs might make concurrent transactions on the same database, which can easily overwhelm the database if not sufficiently provisioned.\r\n\r\nTo mitigate this problem, the Helper can cancel an aggregation job and ask the Leader to try again later. One option is to respond with HTTP status 429 and a \"retry-after\" header indicating when it should be safe to retry.\r\n\r\nI'd like to suggest that we spell this out explicitly in the draft.",
       "createdAt": "2024-05-01T20:01:38Z",
-      "updatedAt": "2024-07-26T23:35:39Z",
+      "updatedAt": "2024-07-31T19:26:16Z",
       "closedAt": null,
       "comments": [
         {
@@ -10996,9 +10996,23 @@
         {
           "author": "cjpatton",
           "authorAssociation": "COLLABORATOR",
-          "body": "IETF 120: There was no objection to merging #564, but @bemasc and @martinthomson both expressed interest in revisiting the design space. On the other hand, @Noah-Kennedy and myself expressed some urgency in making some change here soon: right now we're having to do way too much work (storage consistency and computation) on the hot path of HTTP requests.\r\n\r\nWe have considered other alternatives, including @martinthomson's suggestion of having the Helper tell the Leader later on which reports are replayed and thus need to reviewed. As @branlwyd and others observed previously, this creates the requirement to store individual report shares until the batch is collected. We would rather not impose this requirement.\r\n\r\nTo @bemasc's point at the mic: if there is a different HTTP API pattern we should be following to resolve this, please let us know what it is. The folks working on this probably have far less expertise than you do on building applications on HTTP.\r\n\r\nI think we should give this issue a little more time to see if someone has a better idea. That said, we can't wait forever to fix this problem, so I think we should lean on the deployment of experience of folks who have implemented DAP. If there is no discussion on this topic in the next couple of weeks, I'm going to merge #564 as-is.\r\n\r\nThank you again @inahga for wrangler the PR!",
+          "body": "IETF 120: There was no objection to merging #564, but @bemasc and @martinthomson both expressed interest in revisiting the design space. On the other hand, @Noah-Kennedy and myself expressed some urgency in making some change here soon: right now we're having to do way too much work (storage consistency and computation) on the hot path of HTTP requests.\r\n\r\nWe have considered other alternatives, including @martinthomson's suggestion of having the Helper tell the Leader later on which reports are replayed and thus need to reviewed. As @branlwyd and others observed previously, this creates the requirement to store individual report shares until the batch is collected. We would rather not impose this requirement.\r\n\r\nTo @bemasc's point at the mic: if there is a different HTTP API pattern we should be following to resolve this, please let us know what it is. The folks working on this probably have far less expertise than you do on building applications on HTTP.\r\n\r\nI think we should give this issue a little more time to see if someone has a better idea. That said, we can't wait forever to fix this problem, so I think we should lean on the deployment of experience of folks who have implemented DAP. If there is no discussion on this topic in the next couple of weeks, I'm going to merge #564 as-is.\r\n\r\nThank you again @inahga for wrangling the PR!",
           "createdAt": "2024-07-26T23:35:38Z",
-          "updatedAt": "2024-07-26T23:35:38Z"
+          "updatedAt": "2024-07-31T16:06:44Z"
+        },
+        {
+          "author": "martinthomson",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "My suggestion was not limited to a batch.  The leader would send reports to the helper and store them until the helper gives an OK or a REJECT.  In most cases, that batch could be bounded in time or number such that the total work on hand is manageable.\r\n\r\nHowever, I think that our current exploration of consistent hashing and other techniques is more likely to produce a good outcome here.\r\n\r\nI would like to avoid the need for asynchronous processing.  It creates a burden for the leader that is almost exactly the same as what you were concerned about, it just hides it.  So, if we can get the processing cost down -- in particular, to remove any reliance on consistent global state -- I would like to see the asynchronous stuff removed.  It complicates where the protocol should be simplified.",
+          "createdAt": "2024-07-31T03:08:26Z",
+          "updatedAt": "2024-07-31T03:08:26Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> However, I think that our current exploration of consistent hashing and other techniques is more likely to produce a good outcome here.\r\n\r\n[Consisting hashing is already used in Daphne](https://mailarchive.ietf.org/arch/msg/ppm/uJDUCZPJ9EYgeVE-90aFx489OPI/) to shard replay protection across multiple actors. This is the main tool we have to reduce the latency of resolving storage transactions across aggregation jobs.\r\n\r\n\r\n> I would like to avoid the need for asynchronous processing. It creates a burden for the leader that is almost exactly the same as what you were concerned about, it just hides it. So, if we can get the processing cost down -- in particular, to remove any reliance on consistent global state -- I would like to see the asynchronous stuff removed. It complicates where the protocol should be simplified.\r\n\r\nWhat consistent global state are you thinking of here?\r\n\r\nBy all means, let's explore ways to mitigate costs, but we need to start turning our intuition about what might be possible into concrete proposals on paper. \r\n\r\n@bemasc's [proposal on the list](https://mailarchive.ietf.org/arch/msg/ppm/rNpe3Ky070_voM5BAk3ICieF6OI/) is a good first step, but there are some concerns it doesn't fully address. I'll reply with details on the list in a moment, but at a high level, there is a certain amount of computation both aggregators have to do ($O(m \\cdot n \\cdot \\log n)$, where $m$ is the batch size and $n$ is the size of measurement); and unlike the leader, it has to carry out that computation on the hot path of HTTP requests.\r\n\r\nGiven the operational requirements currently in the draft, our expectation is that whatever burden exists for coordinating the computation is meant to be born by the leader, not the helper. So if there is an irreducible cost that some aggregator has to pay, it should be payed by the leader.",
+          "createdAt": "2024-07-31T16:20:42Z",
+          "updatedAt": "2024-07-31T19:26:16Z"
         }
       ]
     },
@@ -70582,7 +70596,7 @@
       "labels": [],
       "body": "Closes #541.\r\n\r\nMade versioning compatibilities explicit and an optional way to express draft versions.",
       "createdAt": "2024-07-08T23:17:45Z",
-      "updatedAt": "2024-07-30T00:30:31Z",
+      "updatedAt": "2024-07-30T02:01:14Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "35f1274853c1c06a5132612b111debefe4fd17ac",
@@ -70628,6 +70642,20 @@
           "body": "What's being versioned here - the format itself, or the protocol overall?\r\n\r\nRegardless, I wouldn't recommend using a media type parameter to version either. Parameters are lost by some types of software, and if there are breaking changes in the version, that can cause compatibility issues.\r\n\r\nBest practice is to use a new media type to indicate breaking changes. ",
           "createdAt": "2024-07-30T00:30:31Z",
           "updatedAt": "2024-07-30T00:30:31Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> @mnot What's being versioned here - the format itself, or the protocol overall?\r\n>\r\n> Regardless, I wouldn't recommend using a media type parameter to version either. Parameters are lost by some types of software, and if there are breaking changes in the version, that can cause compatibility issues.\r\n>\r\n> Best practice is to use a new media type to indicate breaking changes.\r\n\r\nThe protocol specifies the format of each message, so both.\r\n\r\nThe PR intends only to use the parameter as a hint for debugging purposes, not as a means of indicating the version or draft. We have other ways of handling breaking changes across drafts.\r\n\r\nWe plan to update the media types for future versions of the specification (i.e., future RFCs).\r\n\r\n\r\n",
+          "createdAt": "2024-07-30T01:47:37Z",
+          "updatedAt": "2024-07-30T01:47:37Z"
+        },
+        {
+          "author": "mnot",
+          "authorAssociation": "NONE",
+          "body": "If it's very clearly just a hint and doesn't change behaviour or trigger normative requirements, that's OK. From what I see, it's more typical to do this inside the format itself, although you may have Reasons\u2122\ufe0f.",
+          "createdAt": "2024-07-30T02:01:13Z",
+          "updatedAt": "2024-07-30T02:01:13Z"
         }
       ],
       "reviews": [
@@ -71017,7 +71045,7 @@
       ],
       "body": "This is mostly a clarification; some implementations were treating reports as aggregated if they had ever been included in an aggregation job, whether or not that job was successful or the individual report had successfully completed aggregation.",
       "createdAt": "2024-07-29T17:23:59Z",
-      "updatedAt": "2024-07-29T19:06:18Z",
+      "updatedAt": "2024-07-30T16:35:08Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "93fca5745c5b27d5a57a3b1195429d7935569961",
@@ -71070,6 +71098,19 @@
               "updatedAt": "2024-07-29T19:06:07Z"
             }
           ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6DnhbM",
+          "commit": {
+            "abbreviatedOid": "413cc94"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2024-07-30T16:35:08Z",
+          "updatedAt": "2024-07-30T16:35:08Z",
+          "comments": []
         }
       ]
     }
