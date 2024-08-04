@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-08-01T01:08:20.105036+00:00",
+  "timestamp": "2024-08-04T01:07:44.684581+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -67536,7 +67536,7 @@
       ],
       "body": "Closes https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/557.\r\n\r\nAllows helper-side aggregate job preparation to be handled asynchronously,\r\nsimilarly to how collection jobs work. Briefly, after calls with\r\n`AggregationJobInitReq` and `AggregationJobContinueReq`, the leader polls\r\nthe helper at `GET /tasks/{task-id]/aggregation_jobs/{aggregation-job-id}`\r\nuntil receiving an `AggregationJobResp`.\r\n\r\nIn discussion in #577 we had soft consensus on making this the only option,\r\ni.e. for spec simplicity we don't need to also allow the old synchronous\r\nbehavior.",
       "createdAt": "2024-06-25T18:08:22Z",
-      "updatedAt": "2024-07-29T15:10:41Z",
+      "updatedAt": "2024-08-02T17:22:42Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "35f1274853c1c06a5132612b111debefe4fd17ac",
@@ -70093,6 +70093,70 @@
               "updatedAt": "2024-07-26T15:47:16Z"
             }
           ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6D_NXK",
+          "commit": {
+            "abbreviatedOid": "5ad2c4d"
+          },
+          "author": "martinthomson",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-08-02T02:15:23Z",
+          "updatedAt": "2024-08-02T02:22:57Z",
+          "comments": [
+            {
+              "originalPosition": 55,
+              "body": "Where did `?step=0` come from?",
+              "createdAt": "2024-08-02T02:15:23Z",
+              "updatedAt": "2024-08-02T02:22:57Z"
+            },
+            {
+              "originalPosition": 50,
+              "body": "Shouldn't this response include a `Location` field indicating what was created?",
+              "createdAt": "2024-08-02T02:15:42Z",
+              "updatedAt": "2024-08-02T02:22:57Z"
+            },
+            {
+              "originalPosition": 57,
+              "body": "202 is not the right status code to return from polling.  If the goal is to have a resource that indicates the status of the job, it should always return 200 with a body that indicates what the status is.",
+              "createdAt": "2024-08-02T02:16:40Z",
+              "updatedAt": "2024-08-02T02:22:57Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6EFkr9",
+          "commit": {
+            "abbreviatedOid": "5ad2c4d"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-08-02T17:12:19Z",
+          "updatedAt": "2024-08-02T17:22:36Z",
+          "comments": [
+            {
+              "originalPosition": 50,
+              "body": "I assume you mean https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Location?\r\n\r\nGreat question. We actually specify the path for the subsequent GET in this PR, so it might not be strictly necessary?\r\n\r\nOne potential oddness here: If the helper responds synchronously, i.e., the body of the response contains the `AggregationJobResp`, so there would be no subsequent GET, and therefore no Location to return. Perhaps the leader should respond with 200 OK in this case?",
+              "createdAt": "2024-08-02T17:12:19Z",
+              "updatedAt": "2024-08-02T17:22:36Z"
+            },
+            {
+              "originalPosition": 55,
+              "body": "\"step\" refers to the step of the aggregation job:\r\n\r\n* step 0 is the initial `AggregationJobInitReq`\r\n* step 1 is the first `AggregationJobContinueReq`\r\n* step 2 is the second `AggregationJobContinueReq`\r\n* and so on.\r\n\r\nNote that, for Prio3, aggregation is complete after step 0.\r\n\r\nWe decided to add the `step` parameter to the GET request so that the helper knows how to respond if the leader somehow ends up in a weird state.",
+              "createdAt": "2024-08-02T17:15:26Z",
+              "updatedAt": "2024-08-02T17:22:36Z"
+            },
+            {
+              "originalPosition": 57,
+              "body": "Got it, thanks for catching this.\r\n\r\nWhen the step is ready, the Helper returns 200 OK with an `AggregationJobResp`, so we would need to disambiguate this \"ready\" response from a \"not ready\" response. Could we use the content types for this? Something like:\r\n\r\n* \"ready\": content = [application/dap-aggregation-job-resp](https://ietf-wg-ppm.github.io/draft-ietf-ppm-dap/draft-ietf-ppm-dap.html#section-8.1.4); body = [`AggregationJobResp`](https://ietf-wg-ppm.github.io/draft-ietf-ppm-dap/draft-ietf-ppm-dap.html#section-4.7.1.2-19)\r\n* \"not ready\": content = application/dap-aggregation-job-pending (or something); body = empty\r\n\r\nOr perhaps it would be more correct to change `AggregationJobResp` to convey whether the step is ready?",
+              "createdAt": "2024-08-02T17:22:28Z",
+              "updatedAt": "2024-08-02T17:22:36Z"
+            }
+          ]
         }
       ]
     },
@@ -71036,7 +71100,7 @@
       "id": "PR_kwDOFEJYQs52xnHQ",
       "title": "Clarify what it means for a report to be \"previously aggregated.\"",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/570",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "branlwyd",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
@@ -71045,17 +71109,19 @@
       ],
       "body": "This is mostly a clarification; some implementations were treating reports as aggregated if they had ever been included in an aggregation job, whether or not that job was successful or the individual report had successfully completed aggregation.",
       "createdAt": "2024-07-29T17:23:59Z",
-      "updatedAt": "2024-07-30T16:35:08Z",
+      "updatedAt": "2024-08-01T20:38:16Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "93fca5745c5b27d5a57a3b1195429d7935569961",
       "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "headRefName": "bran/clarify-aggregated",
-      "headRefOid": "413cc947176d0bab60dad7b5d267f73896ff44ee",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "headRefOid": "661fe048eb720bef0813551d5dc1162ad3099e64",
+      "closedAt": "2024-08-01T19:19:18Z",
+      "mergedAt": "2024-08-01T19:19:18Z",
+      "mergedBy": "branlwyd",
+      "mergeCommit": {
+        "oid": "9f05d0d21b14eecd3c539d643569f1c30c0ff472"
+      },
       "comments": [
         {
           "author": "branlwyd",
