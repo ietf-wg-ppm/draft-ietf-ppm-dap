@@ -1397,18 +1397,13 @@ type of "application/dap-aggregation-job-init-req" and a body containing the
 The Leader MUST authenticate its requests to the Helper using a scheme that
 meets the requirements in {{request-authentication}}.
 
-The Helper responds with HTTP status 201 Created. If the response has a media
-type of "application/dap-aggregation-job-resp" with a body containing an
-`AggregationJobResp`, the Leader proceeds onward (see
-{{aggregation-helper-init}}). Otherwise, the Leader polls the aggregation job
-by sending HTTP GET requests to
-`{helper}/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}?step=0`. If the
-job is not ready, the Helper responds to the GET request with HTTP status 202
-Accepted with no media type and body. The Helper's response SHOULD include a
-Retry-After header field to suggest a polling interval to the Leader. Otherwise,
-if the job is ready, the Helper responds with HTTP status 200 OK with a media
-type of "application/dap-aggregation-job-resp" and a body containing an
-`AggregationJobResp`.
+The Helper responds with HTTP status 201 Created with a body containing an
+`AggregationJobResp` (see {{aggregation-helper-init}}). If the `status` field
+is `finished`, the Leader proceeds onward. Otherwise, if the `status` field is
+`processing`, the Leader polls the aggregation job by sending GET requests to
+the URI indicated in the Location header field, until the `status` is
+`finished`. The Helper's response when processing SHOULD include a Retry-After
+header to suggest a polling interval to the Leader.
 
 The `AggregationJobResp.prepare_resps` field must include exactly the same
 report IDs in the same order as the Leader's `AggregationJobInitReq`. Otherwise,
@@ -1466,12 +1461,6 @@ Next, the Helper checks that the report IDs in
 `AggregationJobInitReq.prepare_inits` are all distinct. If two preparation
 initialization messages have the same report ID, then the Helper MUST abort with
 error `invalidMessage`.
-
-If the Helper finds the `AggregationJobInitReq` to be valid, it MAY immediately
-respond with HTTP status 201 Created with no media type and body, and perform
-the remaining processing asynchronously from any further requests from the
-Leader. The Helper's response SHOULD include a Retry-After header field to
-suggest a polling interval to the Leader.
 
 To process the aggregation job, the Helper computes an outbound prepare step
 for each report share. This includes the following structures:
@@ -1574,31 +1563,37 @@ Finally, the Helper creates an `AggregationJobResp` to send to the Leader. This
 message is structured as follows:
 
 ~~~
+enum {
+  processing(0),
+  finished(1),
+} AggregationJobStatus;
+
 struct {
-  PrepareResp prepare_resps<1..2^32-1>;
+  AggregationJobStatus status;
+  select (AggregationJobResp.status) {
+    case processing: Empty;
+    case finished:   PrepareResp prepare_resps<0..2^32-1>;
+  };
 } AggregationJobResp;
 ~~~
 
 where `prepare_resps` are the outbound prep steps computed in the previous step.
 The order MUST match `AggregationJobInitReq.prepare_inits`.
 
-If the Helper is asynchronously processing the aggregation job, the Leader makes
-HTTP GET requests to
-`{helper}/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}?step=0` to check
-on the status of the aggregation job. If the aggregation job is not finished yet,
-the Helper MAY wait to respond until the job is complete. Once the aggregation
-job is ready, or if it is already ready, the Helper responds to the GET request
-with HTTP status 200 OK with media type "application/dap-aggregation-job-resp"
-and a body consisting of the `AggregationJobResp`. If the aggregation job is not
-finished yet, and the Helper chooses not to wait for the job to finish, the
-Helper responds with HTTP status 202 Accepted with no media type and body. The
-Helper's response SHOULD include a Retry-After header field to suggest a polling
-interval to the Leader.
+The Helper responds to the Leader with HTTP status 201 Created, a body
+consisting of the `AggregationJobResp`, and the media type
+"application/dap-aggregation-job-resp".
 
-Otherwise, if the Helper is synchronously processing the aggregation job, the
-Helper responds to the PUT request with HTTP status 201 Created with media type
-"application/dap-aggregation-job-resp" and a body consisting of the
-`AggregationJobResp`.
+Depending on the task parameters, processing an aggregation job may take some
+time, so the Helper MAY defer computation to a background process by responding
+with the field `status` set to `processing` and a Location header field set to
+the relative reference
+`/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}?step=0`. If so, the
+Leader polls the Helper by making HTTP GET requests to the aforementioned
+Location. The Helper responds to GET requests with HTTP status 200 and the
+`status` field reflecting the current state of the job. When the aggregation
+job is `processing`, the response SHOULD include a Retry-After header field to
+suggest a polling interval to the Leader.
 
 Changing an aggregation job's parameters is illegal, so further HTTP PUT
 requests to `/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}` for the
@@ -1767,19 +1762,13 @@ preparation continuation messages constructed in the previous step. The
 The Leader MUST authenticate its requests to the Helper using a scheme that
 meets the requirements in {{request-authentication}}.
 
-The Helper responds with HTTP status 202 Accepted. If the response has a media
-type of "application/dap-aggregation-job-resp" with a body containing an
-`AggregationJobResp`, the Leader proceeds onward (see
-{{aggregation-helper-continuation}}). Otherwise, if the response has no media
-type and body, the Leader polls the aggregation job by sending GET requests to
-`{helper}/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}?step={step}`
-where `step` is the `step` field of the `AggregationJobContinueReq`. If the job
-is not ready, the Helper responds to the GET request with HTTP status 202
-Accepted with no media type and body. The Helper's response SHOULD include a
-Retry-After header field to suggest a polling interval to the Leader. Otherwise,
-if the job is ready, the Helper responds with HTTP status 200 OK with media type
-"application/dap-aggregation-job-resp" and a body containing an
-`AggregationJobResp`.
+The Helper responds with HTTP status 202 Accepted with a body containing an
+`AggregationJobResp` (see {{aggregation-helper-init}}). If the `status` field
+is `finished`, the Leader proceeds onward. Otherwise, if the `status` field is
+`processing`, the Leader polls the aggregation job by sending GET requests to
+the URI indicated in the Location header field, until the `status` is
+`finished`. The Helper's response when processing SHOULD include a Retry-After
+header to suggest a polling interval to the Leader.
 
 The response's `prepare_resps` MUST include exactly the same report IDs in the
 same order as the Leader's `AggregationJobContinueReq`. Otherwise, the Leader
@@ -1853,12 +1842,6 @@ aggregation job. In this case it SHOULD verify that the contents of the
 {{aggregation-step-skew-recovery}}). Otherwise, if the step is incorrect, the
 Helper MUST abort with error `stepMismatch`.
 
-If the Helper finds the `AggregationJobContinueReq` to be valid, it MAY
-immediately respond with HTTP status 202 Accepted with no media type and body,
-and perform preparation for the aggregation job asynchronously from any further
-requests from the Leader. The Helper's response SHOULD include a Retry-After
-header field to suggest a polling interval to the Leader.
-
 Let `inbound` denote the payload of the prep step. For each report, the Helper
 computes the following:
 
@@ -1901,24 +1884,21 @@ The Helper constructs an `AggregationJobResp` message (see
 {{aggregation-helper-init}}) with each prep step. The order of the prep steps
 MUST match the Leader's `AggregationJobContinueReq`.
 
-If the Helper is asynchronously performing preparation, the Leader makes HTTP
-GET requests to
-`{helper}/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}?step={step}` to
-check on the status of the aggregation job. The `step` parameter is the `step`
-field of the `AggregationJobContinueReq` and identifies which continuation to
-check the status of. If continuation is not finished yet, the Helper MAY wait
-to respond until it is complete. Once the continuation is ready, or if it is
-already ready, the Helper responds with HTTP status 200 OK with media type
-"application/dap-aggregation-job-resp" and a body consisting of the
-`AggregationJobResp`. Otherwise, if the Helper chooses not to wait for the job
-to finish, the Helper responds with HTTP status 202 Accepted with no media type
-and body. The Helper's response SHOULD include a Retry-After header field to
-suggest a polling interval to the Leader.
+The Helper responds to the Leader with HTTP status 200 OK, a body consisting
+of the `AggregationJobResp`, and the media type
+"application/dap-aggregation-job-resp".
 
-Otherwise, if the Helper is synchronously performing continuation, the Helper
-responds to the POST request with HTTP status 200 OK with media type
-"application/dap-aggregation-job-resp" and a body consisting of the
-`AggregationJobResp`.
+Depending on the task parameters, processing an aggregation job may take some
+time, so the Helper MAY defer computation to a background process by responding
+with the field `status` set to `processing` and Location header field set to the
+relative reference
+`/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}?step={step}`, where
+`step` is the step indicated in the `AggregationJobContinueReq`. If so, the
+Leader polls the Helper by making HTTP GET requests to the aforementioned
+Location. The Helper responds to GET requests with HTTP status 200 and the
+`status` field reflecting the current state of the job. When the aggregation
+job is `processing`, the response SHOULD include a Retry-After header field to
+suggest a polling interval to the Leader.
 
 Finally, if `state == Continued(prep_state)`, then the Helper stores `state` to
 prepare for the next continuation step ({{aggregation-helper-continuation}}).
