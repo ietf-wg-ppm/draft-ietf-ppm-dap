@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-08-04T01:07:44.684581+00:00",
+  "timestamp": "2024-08-06T01:03:05.781460+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -11227,6 +11227,22 @@
           "updatedAt": "2024-07-29T21:54:44Z"
         }
       ]
+    },
+    {
+      "number": 572,
+      "id": "I_kwDOFEJYQs6R4ItB",
+      "title": "Eric's affiliation",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/572",
+      "state": "OPEN",
+      "author": "martinthomson",
+      "authorAssociation": "CONTRIBUTOR",
+      "assignees": [],
+      "labels": [],
+      "body": "@ekr, do you want to update this?",
+      "createdAt": "2024-08-05T01:23:25Z",
+      "updatedAt": "2024-08-05T01:23:25Z",
+      "closedAt": null,
+      "comments": []
     }
   ],
   "pulls": [
