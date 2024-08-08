@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-08-06T01:03:05.781460+00:00",
+  "timestamp": "2024-08-08T01:03:33.672756+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -67552,13 +67552,13 @@
       ],
       "body": "Closes https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/557.\r\n\r\nAllows helper-side aggregate job preparation to be handled asynchronously,\r\nsimilarly to how collection jobs work. Briefly, after calls with\r\n`AggregationJobInitReq` and `AggregationJobContinueReq`, the leader polls\r\nthe helper at `GET /tasks/{task-id]/aggregation_jobs/{aggregation-job-id}`\r\nuntil receiving an `AggregationJobResp`.\r\n\r\nIn discussion in #577 we had soft consensus on making this the only option,\r\ni.e. for spec simplicity we don't need to also allow the old synchronous\r\nbehavior.",
       "createdAt": "2024-06-25T18:08:22Z",
-      "updatedAt": "2024-08-02T17:22:42Z",
+      "updatedAt": "2024-08-06T21:47:06Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "35f1274853c1c06a5132612b111debefe4fd17ac",
       "headRepository": "inahga/draft-ietf-ppm-dap",
       "headRefName": "inahga/async-helper-agg-jobs",
-      "headRefOid": "5ad2c4da50d48ec404ebc2d97bd178c2f472d8d1",
+      "headRefOid": "d62e7e08993edcf437a9624e4663d10e4e5f5c93",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
@@ -67773,6 +67773,13 @@
           "body": "I think our best bet is to keep sync optional for now.",
           "createdAt": "2024-07-29T15:10:41Z",
           "updatedAt": "2024-07-29T15:10:41Z"
+        },
+        {
+          "author": "inahga",
+          "authorAssociation": "NONE",
+          "body": "In perusing prior art for HTTP polling in IETF specs, I consulted ACME https://www.rfc-editor.org/rfc/rfc8555#section-7.5.1, which more or less taught me \"less is more\". In my latest pass I've edited for brevity, as I think overspecifying the behavior partially leads to the perception of this proposal being too complex. (Not that it's an invalid perception, but overspecifying doesn't help the matter :smile:).\r\n\r\nNotably I hoist up mention of media types, shortened mentions of URIs, and dropped the `MAY wait for job to be ready...` statements. In the latter case, I believe it goes without saying, since the behavior is 100% legal with or without mention of it.",
+          "createdAt": "2024-08-06T21:47:05Z",
+          "updatedAt": "2024-08-06T21:47:05Z"
         }
       ],
       "reviews": [
@@ -70171,6 +70178,66 @@
               "body": "Got it, thanks for catching this.\r\n\r\nWhen the step is ready, the Helper returns 200 OK with an `AggregationJobResp`, so we would need to disambiguate this \"ready\" response from a \"not ready\" response. Could we use the content types for this? Something like:\r\n\r\n* \"ready\": content = [application/dap-aggregation-job-resp](https://ietf-wg-ppm.github.io/draft-ietf-ppm-dap/draft-ietf-ppm-dap.html#section-8.1.4); body = [`AggregationJobResp`](https://ietf-wg-ppm.github.io/draft-ietf-ppm-dap/draft-ietf-ppm-dap.html#section-4.7.1.2-19)\r\n* \"not ready\": content = application/dap-aggregation-job-pending (or something); body = empty\r\n\r\nOr perhaps it would be more correct to change `AggregationJobResp` to convey whether the step is ready?",
               "createdAt": "2024-08-02T17:22:28Z",
               "updatedAt": "2024-08-02T17:22:36Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6Ec1iK",
+          "commit": {
+            "abbreviatedOid": "5ad2c4d"
+          },
+          "author": "inahga",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-08-06T20:09:00Z",
+          "updatedAt": "2024-08-06T20:09:00Z",
+          "comments": [
+            {
+              "originalPosition": 50,
+              "body": "I think no action is required here. Per https://www.rfc-editor.org/rfc/rfc9110#section-15.3.2-1\r\n\r\n> The primary resource created by the request is identified by either a [Location](https://www.rfc-editor.org/rfc/rfc9110#field.location) header field in the response or, if no [Location](https://www.rfc-editor.org/rfc/rfc9110#field.location) header field is received, by the target URI.\r\n\r\nsince the PUT and GET URIs are the same, we shouldn't need a `Location` header. (please correct me if I'm misreading)",
+              "createdAt": "2024-08-06T20:09:00Z",
+              "updatedAt": "2024-08-06T20:09:00Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6EdQb1",
+          "commit": {
+            "abbreviatedOid": "5ad2c4d"
+          },
+          "author": "inahga",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-08-06T21:19:33Z",
+          "updatedAt": "2024-08-06T21:19:33Z",
+          "comments": [
+            {
+              "originalPosition": 50,
+              "body": "Ah, my mistake, the PUT/POST and GET URIs are not actually the same since we don't require the step field in the PUT/POST request--in which case yes we should have a Location header.",
+              "createdAt": "2024-08-06T21:19:33Z",
+              "updatedAt": "2024-08-06T21:19:33Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6EdXSk",
+          "commit": {
+            "abbreviatedOid": "5ad2c4d"
+          },
+          "author": "inahga",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-08-06T21:42:31Z",
+          "updatedAt": "2024-08-06T21:42:31Z",
+          "comments": [
+            {
+              "originalPosition": 57,
+              "body": "> 202 is not the right status code to return from polling. If the goal is to have a resource that indicates the status of the job, it should always return 200 with a body that indicates what the status is.\r\n\r\nThat tracks with prior art https://www.rfc-editor.org/rfc/rfc8555#section-7.5.1. (How embarrassing! I should have consulted ACME far earlier :wink:).\r\n\r\nI have added a `status` field to the `AggregationJobResp`. I think this brings nice text simplifications, because we express the mutual exclusion between a processing job and the presence of prep_resps through the struct definition (i.e. no need to talk about media types).",
+              "createdAt": "2024-08-06T21:42:31Z",
+              "updatedAt": "2024-08-06T21:51:06Z"
             }
           ]
         }
