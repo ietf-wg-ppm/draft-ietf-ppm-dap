@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-08-08T01:03:33.672756+00:00",
+  "timestamp": "2024-08-11T01:08:54.768212+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -10891,7 +10891,7 @@
       "author": "cjpatton",
       "authorAssociation": "COLLABORATOR",
       "assignees": [
-        "tgeoghegan"
+        "cjpatton"
       ],
       "labels": [
         "feature",
@@ -10899,7 +10899,7 @@
       ],
       "body": "As mentioned in #556, replay protection implies a relatively stringent operational requirement for the Helper: many aggregation jobs might make concurrent transactions on the same database, which can easily overwhelm the database if not sufficiently provisioned.\r\n\r\nTo mitigate this problem, the Helper can cancel an aggregation job and ask the Leader to try again later. One option is to respond with HTTP status 429 and a \"retry-after\" header indicating when it should be safe to retry.\r\n\r\nI'd like to suggest that we spell this out explicitly in the draft.",
       "createdAt": "2024-05-01T20:01:38Z",
-      "updatedAt": "2024-07-31T19:26:16Z",
+      "updatedAt": "2024-08-08T22:44:45Z",
       "closedAt": null,
       "comments": [
         {
@@ -11157,20 +11157,19 @@
       "id": "I_kwDOFEJYQs6JLwBv",
       "title": "Support for batched preparation",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/561",
-      "state": "CLOSED",
+      "state": "OPEN",
       "author": "cjpatton",
       "authorAssociation": "COLLABORATOR",
       "assignees": [
         "cjpatton"
       ],
       "labels": [
-        "feature",
-        "ietf120"
+        "feature"
       ],
       "body": "There is a [new paper](https://eprint.iacr.org/2024/666) (to appear at IEEE S&P 2024) that shows how to lift an [FLP](https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-09#section-7.1) into a proof system that is \"silently verifiable\". For such a proof system, it's possible to check if _some_ measurement in a set of measurements is invalid, exchanging only a constant number of bits (128). In Prio3, we must exchange a number of bits linear in the number of measurements.\r\n\r\nThe bandwidth savings are significant. For Prio3SumVec with bits=1, length=1,000, and chunk_length=32 and 100 reports, an `AggregationJobInitReq` is 122KB. If we modified Prio3 by making the FLP silently verifiable, the same message would be roughly 7KB (back-of-a-napkin calculation). Computational cost remains about the same. (See Figure 7 from the paper for details.)\r\n\r\nThis approach does a have a potential downside: if verification fails, then we learn only that _some_ measurement is invalid, not _which_ measurement is invalid. Thus, in the case that some fraction of the reports in the aggregation job, you either need to throw away the data or exchange more bits in order to find the subset of measurements that are invalid. The communication cost increases as the fraction of malicious Clients increases.\r\n\r\nThere are many ways we might implement this. Perhaps the simplest would be to treat batched preparation as an alternative aggregation flow that falls back to the existing aggregation flow (i.e., per report validation) if verification fails. Concretely, we would specify an alternative aggregation sub-protocol that is the same as the existing flow except:\r\n1. It is only compatible with 1-round, \"silently verifiable\" VDAFs.\r\n2. If verification fails, then it needs to be safe to fallback to per-report validation.\r\n\r\n\r\n\r\n\r\n\r\n\r\n",
       "createdAt": "2024-05-16T23:48:08Z",
-      "updatedAt": "2024-07-29T17:59:54Z",
-      "closedAt": "2024-07-29T17:59:53Z",
+      "updatedAt": "2024-08-09T22:17:13Z",
+      "closedAt": null,
       "comments": [
         {
           "author": "wbl",
@@ -11199,6 +11198,13 @@
           "body": "This topic was brought up at IETF 120: https://datatracker.ietf.org/meeting/120/materials/slides-120-ppm-batched-vdaf-preparation\r\n\r\nThere wasn't much enthusiasm for this feature in the room. In any case, there is no point in supporting it in DAP unless we're willing to re-consider the Split-Upload architecture.",
           "createdAt": "2024-07-29T17:59:53Z",
           "updatedAt": "2024-07-29T17:59:53Z"
+        },
+        {
+          "author": "mayank0403",
+          "authorAssociation": "NONE",
+          "body": "Hi, \r\n\r\nI co-authored the [Whisper](https://eprint.iacr.org/2024/666) paper and thanks to everyone for showing interest in the work!\r\n\r\nI think a small change in the construction of silently verifiable proofs would fix the issue mentioned above. The idea is that the public proof doesn't need to be sent to the helper; as long as the leader has it, that's enough. \r\n\r\nReport shares would look like this:\r\nLeader gets: measurement share, prio3 proof share, public proof\r\nHelper gets: measurement seed, prio3 proof seed, one extra seed for Fiat-Shamir\r\n\r\nWith this change, even when the leader relays Helper's report shares, the leader's egress stays very low (512 bits egress per report - includes egress during proof verification).\r\n\r\nPlease refer to the attached document for a formal description. Note that the document's exposition is simplified by considering only Prio3 proofs, but any proofs that we talk about in our paper will work here. \r\n\r\nI am curious to hear your thoughts! \r\n[Whisper_IETF_Draft.pdf](https://github.com/user-attachments/files/16567347/Whisper_IETF_Draft.pdf)\r\n",
+          "createdAt": "2024-08-09T22:17:13Z",
+          "updatedAt": "2024-08-09T22:17:13Z"
         }
       ]
     },
@@ -70743,13 +70749,13 @@
       "labels": [],
       "body": "Closes #541.\r\n\r\nMade versioning compatibilities explicit and an optional way to express draft versions.",
       "createdAt": "2024-07-08T23:17:45Z",
-      "updatedAt": "2024-07-30T02:01:14Z",
+      "updatedAt": "2024-08-09T21:09:34Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "35f1274853c1c06a5132612b111debefe4fd17ac",
       "headRepository": "suman-ganta/draft-ietf-ppm-dap",
       "headRefName": "dap-versioning",
-      "headRefOid": "808d87345f04a96147265d24c472973e6691f4c9",
+      "headRefOid": "c6af7083797106328a9a9ac4f5b5c94ed6b75d53",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
