@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 2 February 2025                                      Cloudflare
+Expires: 16 February 2025                                     Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                                  Mozilla
                                                               C. A. Wood
                                                               Cloudflare
-                                                           1 August 2024
+                                                          15 August 2024
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -63,7 +63,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 2 February 2025.
+   This Internet-Draft will expire on 16 February 2025.
 
 Copyright Notice
 
@@ -134,16 +134,17 @@ Table of Contents
      7.7.  Infrastructure Diversity
    8.  IANA Considerations
      8.1.  Protocol Message Media Types
-       8.1.1.  "application/dap-hpke-config-list" media type
-       8.1.2.  "application/dap-report" media type
-       8.1.3.  "application/dap-aggregation-job-init-req" media type
-       8.1.4.  "application/dap-aggregation-job-resp" media type
-       8.1.5.  "application/dap-aggregation-job-continue-req" media
+       8.1.1.  Message versioning
+       8.1.2.  "application/dap-hpke-config-list" media type
+       8.1.3.  "application/dap-report" media type
+       8.1.4.  "application/dap-aggregation-job-init-req" media type
+       8.1.5.  "application/dap-aggregation-job-resp" media type
+       8.1.6.  "application/dap-aggregation-job-continue-req" media
                type
-       8.1.6.  "application/dap-aggregate-share-req" media type
-       8.1.7.  "application/dap-aggregate-share" media type
-       8.1.8.  "application/dap-collect-req" media type
-       8.1.9.  "application/dap-collection" media type
+       8.1.7.  "application/dap-aggregate-share-req" media type
+       8.1.8.  "application/dap-aggregate-share" media type
+       8.1.9.  "application/dap-collect-req" media type
+       8.1.10. "application/dap-collection" media type
      8.2.  DAP Type Registries
        8.2.1.  Batch Modes Registry
        8.2.2.  Upload Extension Registry
@@ -2966,7 +2967,24 @@ enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
    [OPEN ISSUE: Solicit review of these allocations from domain
    experts.]
 
-8.1.1.  "application/dap-hpke-config-list" media type
+8.1.1.  Message versioning
+
+   Media types for the HTTP requests are specific to this version of
+   DAP.  When a new major enhancement is proposed that results in newer
+   IETF specification for DAP, a new set of media types need to be
+   defined.  In other words, newer versions of DAP will not be backward
+   compatible with this version of DAP.
+
+   (NOTE TO RFC EDITOR: Remove this paragraph.)  HTTP requests with DAP
+   media types MAY express an optional parameter 'version', following
+   Section 8.3 of [RFC9110].  Value of this parameter indicates current
+   draft version of the protocol the component is using.  This MAY be
+   used as a hint by the receiver of the request to do compatibility
+   checks between client and server.  For example, A report submission
+   to leader from a client that supports draft-ietf-ppm-dap-09 could
+   have the header Media-Type: application/dap-report;version=09.
+
+8.1.2.  "application/dap-hpke-config-list" media type
 
    Type name:  application
 
@@ -3007,7 +3025,7 @@ enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
 
    Change controller:  IESG
 
-8.1.2.  "application/dap-report" media type
+8.1.3.  "application/dap-report" media type
 
    Type name:  application
 
@@ -3048,7 +3066,7 @@ enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
 
    Change controller:  IESG
 
-8.1.3.  "application/dap-aggregation-job-init-req" media type
+8.1.4.  "application/dap-aggregation-job-init-req" media type
 
    Type name:  application
 
@@ -3089,7 +3107,7 @@ enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
 
    Change controller:  IESG
 
-8.1.4.  "application/dap-aggregation-job-resp" media type
+8.1.5.  "application/dap-aggregation-job-resp" media type
 
    Type name:  application
 
@@ -3130,7 +3148,7 @@ enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
 
    Change controller:  IESG
 
-8.1.5.  "application/dap-aggregation-job-continue-req" media type
+8.1.6.  "application/dap-aggregation-job-continue-req" media type
 
    Type name:  application
 
@@ -3171,7 +3189,7 @@ enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
 
    Change controller:  IESG
 
-8.1.6.  "application/dap-aggregate-share-req" media type
+8.1.7.  "application/dap-aggregate-share-req" media type
 
    Type name:  application
 
@@ -3212,7 +3230,7 @@ enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
 
    Change controller:  IESG
 
-8.1.7.  "application/dap-aggregate-share" media type
+8.1.8.  "application/dap-aggregate-share" media type
 
    Type name:  application
 
@@ -3253,7 +3271,7 @@ enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
 
    Change controller:  IESG
 
-8.1.8.  "application/dap-collect-req" media type
+8.1.9.  "application/dap-collect-req" media type
 
    Type name:  application
 
@@ -3294,7 +3312,7 @@ enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
 
    Change controller:  IESG
 
-8.1.9.  "application/dap-collection" media type
+8.1.10.  "application/dap-collection" media type
 
    Type name:  application
 
