@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-08-15T01:00:59.550946+00:00",
+  "timestamp": "2024-08-18T01:07:40.487812+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -10478,7 +10478,7 @@
       "id": "I_kwDOFEJYQs57bgcR",
       "title": "Versioning PPM media types",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/541",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "suman-ganta",
       "authorAssociation": "NONE",
       "assignees": [
@@ -10490,8 +10490,8 @@
       ],
       "body": "PPM prescribed media types do not have version component in them. As DAP protocol progressing, the structures are changing in a non-compatible way. In order to consistently decode those structures, we need an indicator on what structure to use to decode them with.\r\n\r\nI propose adding a MIME parameter, `version`, to express the version of the payload.\r\n\r\nEx: To represent Report structure of protocol version DAP-09, use the media type - `application/dap-report;version=09`\r\n\r\nLeader/Helper need to rely on this MIME parameter to consistently parse the payload received, and should also be used to reject unsupported versions.\r\n\r\n",
       "createdAt": "2024-01-08T16:24:21Z",
-      "updatedAt": "2024-07-26T23:43:25Z",
-      "closedAt": null,
+      "updatedAt": "2024-08-15T21:28:59Z",
+      "closedAt": "2024-08-15T21:28:59Z",
       "comments": [
         {
           "author": "cjpatton",
@@ -70756,24 +70756,26 @@
       "id": "PR_kwDOFEJYQs50wQ9x",
       "title": "DAP Version compatibility",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/568",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "suman-ganta",
       "authorAssociation": "NONE",
       "assignees": [],
       "labels": [],
       "body": "Closes #541.\r\n\r\nMade versioning compatibilities explicit and an optional way to express draft versions.",
       "createdAt": "2024-07-08T23:17:45Z",
-      "updatedAt": "2024-08-09T21:09:34Z",
+      "updatedAt": "2024-08-15T21:28:58Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
-      "baseRefOid": "35f1274853c1c06a5132612b111debefe4fd17ac",
+      "baseRefOid": "9f05d0d21b14eecd3c539d643569f1c30c0ff472",
       "headRepository": "suman-ganta/draft-ietf-ppm-dap",
       "headRefName": "dap-versioning",
-      "headRefOid": "c6af7083797106328a9a9ac4f5b5c94ed6b75d53",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "headRefOid": "5567c2073c782877337ca52e8d6762cb5e556e25",
+      "closedAt": "2024-08-15T21:28:58Z",
+      "mergedAt": "2024-08-15T21:28:58Z",
+      "mergedBy": "cjpatton",
+      "mergeCommit": {
+        "oid": "c2f4e851a5989f4772d0c9e7c6d147611af7fd7b"
+      },
       "comments": [
         {
           "author": "cjpatton",
