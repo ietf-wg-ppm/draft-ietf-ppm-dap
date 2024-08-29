@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-08-27T01:05:11.763942+00:00",
+  "timestamp": "2024-08-29T01:06:22.279114+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -71284,6 +71284,40 @@
           "comments": []
         }
       ]
+    },
+    {
+      "number": 573,
+      "id": "PR_kwDOFEJYQs55wiJ8",
+      "title": "Add `max_aggregation_job_size` task parameter.",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/573",
+      "state": "OPEN",
+      "author": "branlwyd",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "This parameter configures the maximum aggregation job size, allowing a standard way for the Helper to opt out of processing aggregation jobs which are too large.",
+      "createdAt": "2024-08-28T21:26:24Z",
+      "updatedAt": "2024-08-28T21:29:29Z",
+      "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "baseRefName": "main",
+      "baseRefOid": "c2f4e851a5989f4772d0c9e7c6d147611af7fd7b",
+      "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "headRefName": "bran/max-agg-job-size",
+      "headRefOid": "c2c481872781617515edb1228fb03d3315e2ed2a",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [
+        {
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Some notes:\r\n* The Leader behavior is a `MUST`, while the Helper behavior is a `SHOULD`. Since this parameter is intended to allow the Helper to protect itself from the Leader producing too-large aggregation jobs, I think this is acceptable. (Notably, this parameter does not need to be checked by both aggregators to achieve privacy/robustness properties, so it is at least _permissible_ for the Helper to ignore this check.)\r\n* We could get away without specifying this at all -- the Helper could simply abort on a too-large aggregation job even without this protocol text. However, I think it is useful to specify this so that we have a standardized error for debugging purposes, and so that task-provisioning schemes like taskprov can eventually standardize a way to negotiate this parameter.",
+          "createdAt": "2024-08-28T21:29:29Z",
+          "updatedAt": "2024-08-28T21:29:29Z"
+        }
+      ],
+      "reviews": []
     }
   ]
 }
