@@ -116,10 +116,13 @@ Table of Contents
        5.1.1.  Client Capabilities
        5.1.2.  Aggregator Capabilities
        5.1.3.  Collector Capabilities
-     5.2.  VDAFs and Compute Requirements
-     5.3.  Aggregation Utility and Soft Batch Deadlines
-     5.4.  Protocol-specific Optimizations
-       5.4.1.  Reducing Storage Requirements
+     5.2.  Aggregation Jobs & Replay Protection
+       5.2.1.  Leader
+       5.2.2.  Helper
+     5.3.  VDAFs and Compute Requirements
+     5.4.  Aggregation Utility and Soft Batch Deadlines
+     5.5.  Protocol-specific Optimizations
+       5.5.1.  Reducing Storage Requirements
    6.  Compliance Requirements
    7.  Security Considerations
      7.1.  Sybil Attacks
@@ -1862,7 +1865,7 @@ struct {} Empty;
        valid, it MUST mark the input share as invalid with error
        report_dropped.  For example, if the Aggregator has evicted the
        state required to perform the check from long-term storage.  (See
-       Section 5.4.1 for details.)
+       Section 5.5.1 for details.)
 
    If all of the above checks succeed, the input share is not marked as
    invalid.
@@ -2600,7 +2603,41 @@ enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
    which includes key material associated with the HPKE key
    configuration.
 
-5.2.  VDAFs and Compute Requirements
+5.2.  Aggregation Jobs & Replay Protection
+
+5.2.1.  Leader
+
+   As part of the aggregation protocol, the Leader is responsible for
+   generating aggregation jobs.  The Leader must produce aggregation
+   jobs using reports with non-overlapping intervals of report IDs for
+   each time window (see Section 4.7.1).  Further, once an aggregation
+   job has been created, further reports falling inside that time window
+   and report ID interval must be rejected; this implies that if the
+   Leader creates aggregation jobs too soon, reports may be
+   unnecessarily rejected.
+
+   One strategy the Leader can use is to wait to generate aggregation
+   jobs for a given time window until it is confident that no additional
+   reports will arrive in that time window.  For tasks using the time-
+   interval batch mode, this might be achieved by waiting until a
+   collection request arrives for the time window.  Alternatively, in
+   any batch mode, the Leader might wait to begin aggregation of reports
+   in a given time window until that time window is a certain amount of
+   time in the past; this effectively provides a grace window for late-
+   arriving reports, at the cost of increasing aggregation latency.
+
+5.2.2.  Helper
+
+   As part of the aggregation protocol, the Helper is responsible for
+   verifying that a single report is not aggregated more than once (see
+   Section 4.7.1.4).  The replay check is based on storage of intervals
+   of report IDs for each time window.  This might be implemented by a
+   monolithic storage system, requiring a single transaction to perform
+   report checking.  Or it might be implemented by a sharded storage
+   system (sharding on task ID and/or time window), using a single
+   transaction per shard.
+
+5.3.  VDAFs and Compute Requirements
 
    The choice of VDAF can impact the computation required for a DAP
    task.  For instance, the Prio3SumVec VDAF [VDAF] requires each
@@ -2623,7 +2660,7 @@ enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
    [[TODO: Discuss explicit key performance indicators, here or
    elsewhere.]]
 
-5.3.  Aggregation Utility and Soft Batch Deadlines
+5.4.  Aggregation Utility and Soft Batch Deadlines
 
    A soft real-time system should produce a response within a deadline
    to be useful.  This constraint may be relevant when the value of an
@@ -2643,13 +2680,13 @@ enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
    samples can be collected, balanced against the urgency of responding
    to a soft deadline.
 
-5.4.  Protocol-specific Optimizations
+5.5.  Protocol-specific Optimizations
 
    Not all DAP tasks have the same operational requirements, so the
    protocol is designed to allow implementations to reduce operational
    costs in certain cases.
 
-5.4.1.  Reducing Storage Requirements
+5.5.1.  Reducing Storage Requirements
 
    In general, the Aggregators are required to keep state for tasks and
    all valid reports for as long as collection requests can be made for
@@ -3515,9 +3552,9 @@ Normative References
               DOI 10.17487/RFC9458, January 2024,
               <https://www.rfc-editor.org/rfc/rfc9458>.
 
-   [SHS]      Dang, Q., "Secure Hash Standard", National Institute of
-              Standards and Technology, DOI 10.6028/nist.fips.180-4,
-              July 2015, <https://doi.org/10.6028/nist.fips.180-4>.
+   [SHS]      "Secure hash standard", National Institute of Standards
+              and Technology (U.S.), DOI 10.6028/nist.fips.180-4, 2015,
+              <https://doi.org/10.6028/nist.fips.180-4>.
 
    [VDAF]     Barnes, R., Cook, D., Patton, C., and P. Schoppmann,
               "Verifiable Distributed Aggregation Functions", Work in
