@@ -615,7 +615,7 @@ standard tokens for use in the "type" field (within the DAP URN namespace
 | unauthorizedRequest        | Authentication of an HTTP request failed (see {{request-authentication}}). |
 | stepMismatch               | The Aggregators disagree on the current step of the DAP aggregation protocol. |
 | batchOverlap               | A request's query includes reports that were previously collected in a different batch. |
-| aggregationJobTooLarge     | An aggregation request contained too many report shares. |
+| aggregationJobTooLarge     | An aggregation job contains more reports than the negotiated threshold. |
 
 This list is not exhaustive. The server MAY return errors set to a URI other
 than those defined above. Servers MUST NOT use the DAP URN namespace for errors
@@ -905,8 +905,8 @@ the following parameters associated with it:
 * `task_expiration`: The time up to which Clients are expected to upload to this
   task. The task is considered completed after this time. Aggregators MAY reject
   reports that have timestamps later than `task_expiration`.
-* `max_aggregation_job_size`: The maximum size, measured in number of reports,
-  of a single aggregation job (see {{aggregate-flow}}).
+* `max_aggregation_job_report_count`: The maximum number of reports which can be
+  included in a single aggregation job (see {{aggregate-flow}}).
 * A unique identifier for the VDAF in use for the task, e.g., one of the VDAFs
   defined in {{Section 10 of !VDAF}}.
 
@@ -1311,7 +1311,7 @@ opaque AggregationJobID[16];
 ~~~
 
 The number of reports in the candidate set MUST be at most the
-`max_aggregation_job_size` configured for the task.
+`max_aggregation_job_report_count` configured for the task.
 
 The Leader can run this process for many sets of candidate reports in parallel
 as needed. After choosing a set of candidates, the Leader begins aggregation by
@@ -1500,7 +1500,9 @@ that the Leader will use to continue preparing the report.
 To begin this process, the Helper checks if it recognizes the task ID. If not,
 then it MUST abort with error `unrecognizedTask`.
 
-Next, the Helper checks that the number of `PrepareInit`s in the message is at most the `max_aggregation_job_size` configured for the task. If not, then it SHOULD abort with error `aggregationJobTooLarge`.
+Next, the Helper checks that the number of `PrepareInit`s in the message is at
+most the `max_aggregation_job_report_count` configured for the task. If not,
+then it SHOULD abort with error `aggregationJobTooLarge`.
 
 Next, the Helper checks that the report IDs in
 `AggregationJobInitReq.prepare_inits` are all distinct. If two preparation
