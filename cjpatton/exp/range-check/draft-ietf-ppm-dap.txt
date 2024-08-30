@@ -720,9 +720,6 @@ Table of Contents
      |                            | reports that were previously     |
      |                            | collected in a different batch.  |
      +----------------------------+----------------------------------+
-     | aggregationJobTooLarge     | An aggregation request contained |
-     |                            | too many report shares.          |
-     +----------------------------+----------------------------------+
 
                                   Table 1
 
@@ -1025,9 +1022,6 @@ struct {} Empty;
       upload to this task.  The task is considered completed after this
       time.  Aggregators MAY reject reports that have timestamps later
       than task_expiration.
-
-   *  max_aggregation_job_size: The maximum size, measured in number of
-      reports, of a single aggregation job (see Section 4.7).
 
    *  A unique identifier for the VDAF in use for the task, e.g., one of
       the VDAFs defined in Section 10 of [VDAF].
@@ -1446,9 +1440,6 @@ struct {} Empty;
 
    opaque AggregationJobID[16];
 
-   The number of reports in the candidate set MUST be at most the
-   max_aggregation_job_size configured for the task.
-
    The Leader can run this process for many sets of candidate reports in
    parallel as needed.  After choosing a set of candidates, the Leader
    begins aggregation by splitting each report into report shares, one
@@ -1645,11 +1636,6 @@ struct {} Empty;
 
    To begin this process, the Helper checks if it recognizes the task
    ID.  If not, then it MUST abort with error unrecognizedTask.
-
-   Next, the Helper checks that the number of PrepareInits in the
-   message is at most the max_aggregation_job_size configured for the
-   task.  If not, then it SHOULD abort with error
-   aggregationJobTooLarge.
 
    Next, the Helper checks that the report IDs in
    AggregationJobInitReq.prepare_inits are all distinct.  If two
