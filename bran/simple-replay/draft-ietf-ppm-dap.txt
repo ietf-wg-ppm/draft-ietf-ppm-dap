@@ -1447,7 +1447,7 @@ struct {} Empty;
    opaque AggregationJobID[16];
 
    The set of candidate reports MUST produce a set of report ID ranges
-   which is non-intersecting with the report ID ranges for any other
+   which does not intersect with the report ID ranges for any other
    aggregation job associated with the task (see Section 4.7.1.5).
 
    The Leader can run this process for many sets of candidate reports in
