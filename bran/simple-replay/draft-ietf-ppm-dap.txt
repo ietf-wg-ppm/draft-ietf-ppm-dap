@@ -2623,7 +2623,7 @@ enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
    collection request arrives for the time window.  Alternatively, in
    any batch mode, the Leader might wait to begin aggregation of reports
    in a given time window until that time window is a certain amount of
-   time in the past; this effectively provides a grace window for late-
+   time in the past; this effectively provides a grace period for late-
    arriving reports, at the cost of increasing aggregation latency.
 
 5.2.2.  Helper
