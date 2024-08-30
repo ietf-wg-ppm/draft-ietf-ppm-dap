@@ -3505,9 +3505,9 @@ Normative References
               DOI 10.17487/RFC9458, January 2024,
               <https://www.rfc-editor.org/rfc/rfc9458>.
 
-   [SHS]      Dang, Q., "Secure Hash Standard", National Institute of
-              Standards and Technology, DOI 10.6028/nist.fips.180-4,
-              July 2015, <https://doi.org/10.6028/nist.fips.180-4>.
+   [SHS]      "Secure hash standard", National Institute of Standards
+              and Technology (U.S.), DOI 10.6028/nist.fips.180-4, 2015,
+              <https://doi.org/10.6028/nist.fips.180-4>.
 
    [VDAF]     Barnes, R., Cook, D., Patton, C., and P. Schoppmann,
               "Verifiable Distributed Aggregation Functions", Work in
