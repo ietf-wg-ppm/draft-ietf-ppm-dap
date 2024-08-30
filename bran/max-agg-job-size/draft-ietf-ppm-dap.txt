@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 1 March 2025                                         Cloudflare
+Expires: 3 March 2025                                         Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                                  Mozilla
                                                               C. A. Wood
                                                               Cloudflare
-                                                          28 August 2024
+                                                          30 August 2024
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -63,7 +63,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 1 March 2025.
+   This Internet-Draft will expire on 3 March 2025.
 
 Copyright Notice
 
@@ -720,8 +720,9 @@ Table of Contents
      |                            | reports that were previously     |
      |                            | collected in a different batch.  |
      +----------------------------+----------------------------------+
-     | aggregationJobTooLarge     | An aggregation request contained |
-     |                            | too many report shares.          |
+     | aggregationJobTooLarge     | An aggregation job contains more |
+     |                            | reports than the negotiated      |
+     |                            | threshold.                       |
      +----------------------------+----------------------------------+
 
                                   Table 1
@@ -1026,8 +1027,9 @@ struct {} Empty;
       time.  Aggregators MAY reject reports that have timestamps later
       than task_expiration.
 
-   *  max_aggregation_job_size: The maximum size, measured in number of
-      reports, of a single aggregation job (see Section 4.7).
+   *  max_aggregation_job_report_count: The maximum number of reports
+      which can be included in a single aggregation job (see
+      Section 4.7).
 
    *  A unique identifier for the VDAF in use for the task, e.g., one of
       the VDAFs defined in Section 10 of [VDAF].
@@ -1447,7 +1449,7 @@ struct {} Empty;
    opaque AggregationJobID[16];
 
    The number of reports in the candidate set MUST be at most the
-   max_aggregation_job_size configured for the task.
+   max_aggregation_job_report_count configured for the task.
 
    The Leader can run this process for many sets of candidate reports in
    parallel as needed.  After choosing a set of candidates, the Leader
@@ -1647,8 +1649,8 @@ struct {} Empty;
    ID.  If not, then it MUST abort with error unrecognizedTask.
 
    Next, the Helper checks that the number of PrepareInits in the
-   message is at most the max_aggregation_job_size configured for the
-   task.  If not, then it SHOULD abort with error
+   message is at most the max_aggregation_job_report_count configured
+   for the task.  If not, then it SHOULD abort with error
    aggregationJobTooLarge.
 
    Next, the Helper checks that the report IDs in
@@ -3519,9 +3521,9 @@ Normative References
               DOI 10.17487/RFC9458, January 2024,
               <https://www.rfc-editor.org/rfc/rfc9458>.
 
-   [SHS]      Dang, Q., "Secure Hash Standard", National Institute of
-              Standards and Technology, DOI 10.6028/nist.fips.180-4,
-              July 2015, <https://doi.org/10.6028/nist.fips.180-4>.
+   [SHS]      "Secure hash standard", National Institute of Standards
+              and Technology (U.S.), DOI 10.6028/nist.fips.180-4, 2015,
+              <https://doi.org/10.6028/nist.fips.180-4>.
 
    [VDAF]     Barnes, R., Cook, D., Patton, C., and P. Schoppmann,
               "Verifiable Distributed Aggregation Functions", Work in

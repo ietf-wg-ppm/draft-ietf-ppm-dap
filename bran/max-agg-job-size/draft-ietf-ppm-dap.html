@@ -1039,7 +1039,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
 </tr></thead>
 <tfoot><tr>
 <td class="left">Geoghegan, et al.</td>
-<td class="center">Expires 1 March 2025</td>
+<td class="center">Expires 3 March 2025</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1052,12 +1052,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-ietf-ppm-dap-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2024-08-28" class="published">28 August 2024</time>
+<time datetime="2024-08-30" class="published">30 August 2024</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Standards Track</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2025-03-01">1 March 2025</time></dd>
+<dd class="expires"><time datetime="2025-03-03">3 March 2025</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -1131,7 +1131,7 @@ revealing any individual user's data.<a href="#section-abstract-1" class="pilcro
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 1 March 2025.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 3 March 2025.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -2146,7 +2146,7 @@ standard tokens for use in the "type" field (within the DAP URN namespace
             </tr>
             <tr>
               <td class="text-left" rowspan="1" colspan="1">aggregationJobTooLarge</td>
-              <td class="text-left" rowspan="1" colspan="1">An aggregation request contained too many report shares.</td>
+              <td class="text-left" rowspan="1" colspan="1">An aggregation job contains more reports than the negotiated threshold.</td>
             </tr>
           </tbody>
         </table>
@@ -2485,8 +2485,8 @@ task. The task is considered completed after this time. Aggregators <span class=
 reports that have timestamps later than <code>task_expiration</code>.<a href="#section-4.4-4.4.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-4.4-4.5">
-            <p id="section-4.4-4.5.1"><code>max_aggregation_job_size</code>: The maximum size, measured in number of reports,
-of a single aggregation job (see <a href="#aggregate-flow" class="auto internal xref">Section 4.7</a>).<a href="#section-4.4-4.5.1" class="pilcrow">¶</a></p>
+            <p id="section-4.4-4.5.1"><code>max_aggregation_job_report_count</code>: The maximum number of reports which can be
+included in a single aggregation job (see <a href="#aggregate-flow" class="auto internal xref">Section 4.7</a>).<a href="#section-4.4-4.5.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-4.4-4.6">
             <p id="section-4.4-4.6.1">A unique identifier for the VDAF in use for the task, e.g., one of the VDAFs
@@ -2932,7 +2932,7 @@ opaque AggregationJobID[16];
 </pre><a href="#section-4.7.1-2" class="pilcrow">¶</a>
 </div>
 <p id="section-4.7.1-3">The number of reports in the candidate set <span class="bcp14">MUST</span> be at most the
-<code>max_aggregation_job_size</code> configured for the task.<a href="#section-4.7.1-3" class="pilcrow">¶</a></p>
+<code>max_aggregation_job_report_count</code> configured for the task.<a href="#section-4.7.1-3" class="pilcrow">¶</a></p>
 <p id="section-4.7.1-4">The Leader can run this process for many sets of candidate reports in parallel
 as needed. After choosing a set of candidates, the Leader begins aggregation by
 splitting each report into report shares, one for each Aggregator. The Leader
@@ -3161,7 +3161,9 @@ just as the Leader does. If successful, it includes the result in its response
 that the Leader will use to continue preparing the report.<a href="#section-4.7.1.2-1" class="pilcrow">¶</a></p>
 <p id="section-4.7.1.2-2">To begin this process, the Helper checks if it recognizes the task ID. If not,
 then it <span class="bcp14">MUST</span> abort with error <code>unrecognizedTask</code>.<a href="#section-4.7.1.2-2" class="pilcrow">¶</a></p>
-<p id="section-4.7.1.2-3">Next, the Helper checks that the number of <code>PrepareInit</code>s in the message is at most the <code>max_aggregation_job_size</code> configured for the task. If not, then it <span class="bcp14">SHOULD</span> abort with error <code>aggregationJobTooLarge</code>.<a href="#section-4.7.1.2-3" class="pilcrow">¶</a></p>
+<p id="section-4.7.1.2-3">Next, the Helper checks that the number of <code>PrepareInit</code>s in the message is at
+most the <code>max_aggregation_job_report_count</code> configured for the task. If not,
+then it <span class="bcp14">SHOULD</span> abort with error <code>aggregationJobTooLarge</code>.<a href="#section-4.7.1.2-3" class="pilcrow">¶</a></p>
 <p id="section-4.7.1.2-4">Next, the Helper checks that the report IDs in
 <code>AggregationJobInitReq.prepare_inits</code> are all distinct. If two preparation
 initialization messages have the same report ID, then the Helper <span class="bcp14">MUST</span> abort with
@@ -5839,7 +5841,7 @@ with the Reference field set to point to this specification.<a href="#section-8.
 <dd class="break"></dd>
 <dt id="SHS">[SHS]</dt>
         <dd>
-<span class="refAuthor">Dang, Q.</span>, <span class="refTitle">"Secure Hash Standard"</span>, <span class="refContent">National Institute of Standards and Technology</span>, <span class="seriesInfo">DOI 10.6028/nist.fips.180-4</span>, <time datetime="2015-07" class="refDate">July 2015</time>, <span>&lt;<a href="https://doi.org/10.6028/nist.fips.180-4">https://doi.org/10.6028/nist.fips.180-4</a>&gt;</span>. </dd>
+<span class="refTitle">"Secure hash standard"</span>, <span class="refContent">National Institute of Standards and Technology (U.S.)</span>, <span class="seriesInfo">DOI 10.6028/nist.fips.180-4</span>, <time datetime="2015" class="refDate">2015</time>, <span>&lt;<a href="https://doi.org/10.6028/nist.fips.180-4">https://doi.org/10.6028/nist.fips.180-4</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="VDAF">[VDAF]</dt>
       <dd>
