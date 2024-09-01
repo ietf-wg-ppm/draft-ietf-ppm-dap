@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-08-29T01:06:22.279114+00:00",
+  "timestamp": "2024-09-01T01:17:04.181677+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -71297,13 +71297,13 @@
       "labels": [],
       "body": "This parameter configures the maximum aggregation job size, allowing a standard way for the Helper to opt out of processing aggregation jobs which are too large.",
       "createdAt": "2024-08-28T21:26:24Z",
-      "updatedAt": "2024-08-28T21:29:29Z",
+      "updatedAt": "2024-08-30T18:17:19Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "c2f4e851a5989f4772d0c9e7c6d147611af7fd7b",
       "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "headRefName": "bran/max-agg-job-size",
-      "headRefOid": "c2c481872781617515edb1228fb03d3315e2ed2a",
+      "headRefOid": "fe5e8db1bf054dd1de280807942a240d11bd3f5b",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
@@ -71315,6 +71315,106 @@
           "body": "Some notes:\r\n* The Leader behavior is a `MUST`, while the Helper behavior is a `SHOULD`. Since this parameter is intended to allow the Helper to protect itself from the Leader producing too-large aggregation jobs, I think this is acceptable. (Notably, this parameter does not need to be checked by both aggregators to achieve privacy/robustness properties, so it is at least _permissible_ for the Helper to ignore this check.)\r\n* We could get away without specifying this at all -- the Helper could simply abort on a too-large aggregation job even without this protocol text. However, I think it is useful to specify this so that we have a standardized error for debugging purposes, and so that task-provisioning schemes like taskprov can eventually standardize a way to negotiate this parameter.",
           "createdAt": "2024-08-28T21:29:29Z",
           "updatedAt": "2024-08-28T21:29:29Z"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "PRR_kwDOFEJYQs6HUqfu",
+          "commit": {
+            "abbreviatedOid": "c2c4818"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-08-29T22:21:28Z",
+          "updatedAt": "2024-08-29T22:23:55Z",
+          "comments": [
+            {
+              "originalPosition": 4,
+              "body": "nit: not every aggregation request has report shares (only the first does).\r\n1. If the intent is that we abort only on the initial request, then say \"initial\" here\r\n2. (my preference): Use more agnostic language, e.g., \"An aggregation job contains more reports than the negotiated threshold.\"",
+              "createdAt": "2024-08-29T22:21:29Z",
+              "updatedAt": "2024-08-29T22:23:55Z"
+            },
+            {
+              "originalPosition": 12,
+              "body": "suggestion, feel free to ignore: \"count\" to align with \"report_count\" elsewhere?\r\n```suggestion\r\n* `max_reports_per_aggregation_job_count`: The maximum size, measured in number of reports,\r\n```",
+              "createdAt": "2024-08-29T22:23:20Z",
+              "updatedAt": "2024-08-29T22:23:55Z"
+            },
+            {
+              "originalPosition": 31,
+              "body": "nit: break lines at 80 columns.",
+              "createdAt": "2024-08-29T22:23:53Z",
+              "updatedAt": "2024-08-29T22:23:55Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6HfatZ",
+          "commit": {
+            "abbreviatedOid": "c2c4818"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-08-30T17:38:04Z",
+          "updatedAt": "2024-08-30T17:38:04Z",
+          "comments": [
+            {
+              "originalPosition": 12,
+              "body": "Went with `max_aggregation_job_report_count`, only because it's slightly shorter and (IMO) equally comprehensible.",
+              "createdAt": "2024-08-30T17:38:04Z",
+              "updatedAt": "2024-08-30T17:38:04Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6Hfs2a",
+          "commit": {
+            "abbreviatedOid": "fe5e8db"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "LGTM. Let's hold off on merging until we have rough consensus.",
+          "createdAt": "2024-08-30T18:17:19Z",
+          "updatedAt": "2024-08-30T18:17:19Z",
+          "comments": []
+        }
+      ]
+    },
+    {
+      "number": 574,
+      "id": "PR_kwDOFEJYQs5555zi",
+      "title": "Simplify report replay checking.",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/574",
+      "state": "OPEN",
+      "author": "branlwyd",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Specifically, we relax the check from the specific report ID, to intersection with intervals of report IDs. This will allow implementations to drop all long-term per-report storage, considerably reducing the storage requirements to implement the protocol. The tradeoff is in increased aggregation latency: typically, aggregation cannot begin until the Leader is sure that no further reports will arrive for a given time window.",
+      "createdAt": "2024-08-30T00:21:13Z",
+      "updatedAt": "2024-08-30T18:18:17Z",
+      "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "baseRefName": "main",
+      "baseRefOid": "c2f4e851a5989f4772d0c9e7c6d147611af7fd7b",
+      "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "headRefName": "bran/simple-replay",
+      "headRefOid": "7307a34f968f66ed83c6488ec78a76c324d1863d",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [
+        {
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "body": "A few thoughts:\r\n* This specifies proposal (2a) from [Bearing the cost of aggregation](https://docs.google.com/document/d/1LNzDEzY5CUlOlOjzk5Z0fkECDF-5gukV-SVwC1gj6Wo/edit#bookmark=id.c0uo88am22oz), extended to treat the leader-selected batch mode uniformly with the time-interval batch mode (as described in [a comment](https://docs.google.com/document/d/1LNzDEzY5CUlOlOjzk5Z0fkECDF-5gukV-SVwC1gj6Wo/edit?disco=AAABUyvf-TY)).\r\n* I am not so happy with the name \"report ID range\" for the new data structure described in the PR, as the structure is actually a `(timestamp, report ID interval)`. Thoughts on naming welcome.\r\n* I did a small amount of editorial work in the sections I was already touching; please review closely.",
+          "createdAt": "2024-08-30T00:23:49Z",
+          "updatedAt": "2024-08-30T00:23:49Z"
         }
       ],
       "reviews": []
