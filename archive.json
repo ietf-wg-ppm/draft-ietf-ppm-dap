@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-09-01T01:17:04.181677+00:00",
+  "timestamp": "2024-09-03T01:05:55.537748+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -71297,7 +71297,7 @@
       "labels": [],
       "body": "This parameter configures the maximum aggregation job size, allowing a standard way for the Helper to opt out of processing aggregation jobs which are too large.",
       "createdAt": "2024-08-28T21:26:24Z",
-      "updatedAt": "2024-08-30T18:17:19Z",
+      "updatedAt": "2024-09-02T09:25:26Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "c2f4e851a5989f4772d0c9e7c6d147611af7fd7b",
@@ -71315,6 +71315,13 @@
           "body": "Some notes:\r\n* The Leader behavior is a `MUST`, while the Helper behavior is a `SHOULD`. Since this parameter is intended to allow the Helper to protect itself from the Leader producing too-large aggregation jobs, I think this is acceptable. (Notably, this parameter does not need to be checked by both aggregators to achieve privacy/robustness properties, so it is at least _permissible_ for the Helper to ignore this check.)\r\n* We could get away without specifying this at all -- the Helper could simply abort on a too-large aggregation job even without this protocol text. However, I think it is useful to specify this so that we have a standardized error for debugging purposes, and so that task-provisioning schemes like taskprov can eventually standardize a way to negotiate this parameter.",
           "createdAt": "2024-08-28T21:29:29Z",
           "updatedAt": "2024-08-28T21:29:29Z"
+        },
+        {
+          "author": "simon-friedberger",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "Being explicit about this error seems like a good idea. Should there be an \"unlimited\" option? Since task parameter structs are not part of the spec there is no bit-size for this option and so it's not obvious what the value for \"maximum\" should be.",
+          "createdAt": "2024-09-02T09:25:25Z",
+          "updatedAt": "2024-09-02T09:25:25Z"
         }
       ],
       "reviews": [
@@ -71397,7 +71404,7 @@
       "labels": [],
       "body": "Specifically, we relax the check from the specific report ID, to intersection with intervals of report IDs. This will allow implementations to drop all long-term per-report storage, considerably reducing the storage requirements to implement the protocol. The tradeoff is in increased aggregation latency: typically, aggregation cannot begin until the Leader is sure that no further reports will arrive for a given time window.",
       "createdAt": "2024-08-30T00:21:13Z",
-      "updatedAt": "2024-08-30T18:18:17Z",
+      "updatedAt": "2024-09-02T10:02:39Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "c2f4e851a5989f4772d0c9e7c6d147611af7fd7b",
@@ -71417,7 +71424,68 @@
           "updatedAt": "2024-08-30T00:23:49Z"
         }
       ],
-      "reviews": []
+      "reviews": [
+        {
+          "id": "PRR_kwDOFEJYQs6HnCY_",
+          "commit": {
+            "abbreviatedOid": "7307a34"
+          },
+          "author": "simon-friedberger",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-09-02T09:37:04Z",
+          "updatedAt": "2024-09-02T09:37:04Z",
+          "comments": [
+            {
+              "originalPosition": 19,
+              "body": "Maybe be explicit about the requirement instead \"aggregation can begin as soon as the leader is willing to discard any further incoming reports for this time window.\"",
+              "createdAt": "2024-09-02T09:37:04Z",
+              "updatedAt": "2024-09-02T09:37:04Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6HnNkw",
+          "commit": {
+            "abbreviatedOid": "7307a34"
+          },
+          "author": "simon-friedberger",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-09-02T09:58:08Z",
+          "updatedAt": "2024-09-02T09:58:08Z",
+          "comments": [
+            {
+              "originalPosition": 28,
+              "body": "I agree that calling the new thing a \"report ID range\" makes everything hard to read. This sentence looks like it is comparing report ID ranges but it is actually comparing \"report ID ranges\".\r\n\r\nConsidering the fact that you're saying \"a set of\" here. Does that mean the old behavior would still be allowed by making each range have exactly one report ID?",
+              "createdAt": "2024-09-02T09:58:08Z",
+              "updatedAt": "2024-09-02T09:58:08Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6HnP13",
+          "commit": {
+            "abbreviatedOid": "7307a34"
+          },
+          "author": "simon-friedberger",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-09-02T10:02:38Z",
+          "updatedAt": "2024-09-02T10:02:39Z",
+          "comments": [
+            {
+              "originalPosition": 28,
+              "body": "To clarify, I am wondering why anybody would want to do this given that the report IDs are randomly assigned. Is the intent to allow people to recover from some amount of late arriving reports?",
+              "createdAt": "2024-09-02T10:02:38Z",
+              "updatedAt": "2024-09-02T10:02:39Z"
+            }
+          ]
+        }
+      ]
     }
   ]
 }
