@@ -1035,11 +1035,11 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <thead><tr>
 <td class="left">Internet-Draft</td>
 <td class="center">DAP-PPM</td>
-<td class="right">August 2024</td>
+<td class="right">September 2024</td>
 </tr></thead>
 <tfoot><tr>
 <td class="left">Geoghegan, et al.</td>
-<td class="center">Expires 3 March 2025</td>
+<td class="center">Expires 7 March 2025</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1052,12 +1052,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-ietf-ppm-dap-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2024-08-30" class="published">30 August 2024</time>
+<time datetime="2024-09-03" class="published">3 September 2024</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Standards Track</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2025-03-03">3 March 2025</time></dd>
+<dd class="expires"><time datetime="2025-03-07">7 March 2025</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -1131,7 +1131,7 @@ revealing any individual user's data.<a href="#section-abstract-1" class="pilcro
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 3 March 2025.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 7 March 2025.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1284,7 +1284,7 @@ revealing any individual user's data.<a href="#section-abstract-1" class="pilcro
                 </ul>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.2">
-                <p id="section-toc.1-1.5.2.2.1"><a href="#section-5.2" class="auto internal xref">5.2</a>.  <a href="#name-aggregation-jobs-replay-pro" class="internal xref">Aggregation Jobs &amp; Replay Protection</a></p>
+                <p id="section-toc.1-1.5.2.2.1"><a href="#section-5.2" class="auto internal xref">5.2</a>.  <a href="#name-aggregation-jobs-and-replay" class="internal xref">Aggregation Jobs and Replay Protection</a></p>
 <ul class="compact toc ulBare ulEmpty">
 <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.2.2.1">
                     <p id="section-toc.1-1.5.2.2.2.1.1"><a href="#section-5.2.1" class="auto internal xref">5.2.1</a>.  <a href="#name-leader" class="internal xref">Leader</a></p>
@@ -1852,6 +1852,13 @@ Comprised of a set of report shares.<a href="#section-1.2-2.36.1" class="pilcrow
           <dd style="margin-left: 1.5em" id="section-1.2-2.38">
             <p id="section-1.2-2.38.1">An encrypted input share comprising a piece of a report.<a href="#section-1.2-2.38.1" class="pilcrow">¶</a></p>
 </dd>
+          <dd class="break"></dd>
+<dt id="section-1.2-2.39">Time Window:</dt>
+          <dd style="margin-left: 1.5em" id="section-1.2-2.40">
+            <p id="section-1.2-2.40.1">An interval of time associated with a measurement task, whose duration is
+equal to the task's time precision and whose start has a UNIX timestamp value
+which is a multiple of the task's time precision.<a href="#section-1.2-2.40.1" class="pilcrow">¶</a></p>
+</dd>
         <dd class="break"></dd>
 </dl>
 </section>
@@ -2153,7 +2160,7 @@ standard tokens for use in the "type" field (within the DAP URN namespace
             </tr>
             <tr>
               <td class="text-left" rowspan="1" colspan="1">stepMismatch</td>
-              <td class="text-left" rowspan="1" colspan="1">The Aggregators disagree on the current step of the DAP aggregation protocol.</td>
+              <td class="text-left" rowspan="1" colspan="1">The Aggregators disagree on the current step of the DAP aggregation sub-protocol.</td>
             </tr>
             <tr>
               <td class="text-left" rowspan="1" colspan="1">batchOverlap</td>
@@ -2502,8 +2509,8 @@ defined in <span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-
         </ul>
 <p id="section-4.4-5">Note that the <code>leader_aggregator_url</code> and <code>helper_aggregator_url</code> values may
 include arbitrary path components.<a href="#section-4.4-5" class="pilcrow">¶</a></p>
-<p id="section-4.4-6">In addition, in order to facilitate the aggregation and collect protocols, each
-of the Aggregators is configured with following parameters:<a href="#section-4.4-6" class="pilcrow">¶</a></p>
+<p id="section-4.4-6">In addition, in order to facilitate the aggregation and collection
+sub-protocols, each of the Aggregators is configured with following parameters:<a href="#section-4.4-6" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-4.4-7.1">
             <p id="section-4.4-7.1.1"><code>collector_hpke_config</code>: The <span>[<a href="#HPKE" class="cite xref">HPKE</a>]</span> configuration of the Collector
@@ -2667,7 +2674,7 @@ number generator.<a href="#section-4.6.2-3.1.2.1.1" class="pilcrow">¶</a></p>
 </li>
                 <li class="normal" id="section-4.6.2-3.1.2.2">
                   <p id="section-4.6.2-3.1.2.2.1"><code>time</code> is the time at which the report was generated. The Client <span class="bcp14">SHOULD</span>
-round this value down to the nearest multiple of the task's
+truncate this value down to the nearest multiple of the task's
 <code>time_precision</code> in order to ensure that that the timestamp cannot be used
 to link a report back to the Client that generated it.<a href="#section-4.6.2-3.1.2.2.1" class="pilcrow">¶</a></p>
 </li>
@@ -2761,23 +2768,23 @@ does not succeed, the Client <span class="bcp14">SHOULD</span> abort and discont
 ignore it. In addition, it <span class="bcp14">MAY</span> alert the Client with error <code>reportRejected</code>. See
 the implementation note in <a href="#input-share-validation" class="auto internal xref">Section 4.7.1.4</a>.<a href="#section-4.6.2-20" class="pilcrow">¶</a></p>
 <p id="section-4.6.2-21">The Leader <span class="bcp14">MUST</span> ignore any report pertaining to a batch that has already been
-collected (see <a href="#input-share-validation" class="auto internal xref">Section 4.7.1.4</a> for details). Otherwise, comparing
-the aggregate result to the previous aggregate result may result in a privacy
+collected (see <a href="#input-share-validation" class="auto internal xref">Section 4.7.1.4</a> for details). Otherwise, comparing the
+aggregate result to the previous aggregate result may result in a privacy
 violation. Note that this is also enforced by the Helper during the aggregation
-interaction. The Leader <span class="bcp14">MAY</span> also abort the upload protocol and alert the
+interaction. The Leader <span class="bcp14">MAY</span> also abort the upload sub-protocol and alert the
 Client with error <code>reportRejected</code>.<a href="#section-4.6.2-21" class="pilcrow">¶</a></p>
 <p id="section-4.6.2-22">The Leader <span class="bcp14">MAY</span> ignore any report whose timestamp is past the task's
-<code>task_expiration</code>. When it does so, it <span class="bcp14">SHOULD</span> also abort the upload protocol and
-alert the Client with error <code>reportRejected</code>. Client <span class="bcp14">MAY</span> choose to opt out of
-the task if its own clock has passed <code>task_expiration</code>.<a href="#section-4.6.2-22" class="pilcrow">¶</a></p>
+<code>task_expiration</code>. When it does so, it <span class="bcp14">SHOULD</span> also abort the upload sub-protocol
+and alert the Client with error <code>reportRejected</code>. Client <span class="bcp14">MAY</span> choose to opt out
+of the task if its own clock has passed <code>task_expiration</code>.<a href="#section-4.6.2-22" class="pilcrow">¶</a></p>
 <p id="section-4.6.2-23">The Leader may need to buffer reports while waiting to aggregate them (e.g.,
 while waiting for an aggregation parameter from the Collector; see
 <a href="#collect-flow" class="auto internal xref">Section 4.8</a>). The Leader <span class="bcp14">SHOULD NOT</span> accept reports whose timestamps are too
 far in the future. Implementors <span class="bcp14">MAY</span> provide for some small leeway, usually no
 more than a few minutes, to account for clock skew. If the Leader rejects a
-report for this reason, it <span class="bcp14">SHOULD</span> abort the upload protocol and alert the Client
-with error <code>reportTooEarly</code>. In this situation, the Client <span class="bcp14">MAY</span> re-upload the
-report later on.<a href="#section-4.6.2-23" class="pilcrow">¶</a></p>
+report for this reason, it <span class="bcp14">SHOULD</span> abort the upload sub-protocol and alert the
+Client with error <code>reportTooEarly</code>. In this situation, the Client <span class="bcp14">MAY</span> re-upload
+the report later on.<a href="#section-4.6.2-23" class="pilcrow">¶</a></p>
 <p id="section-4.6.2-24">If the Leader's input share contains an unrecognized extension, or if two
 extensions have the same ExtensionType, then the Leader <span class="bcp14">MAY</span> abort the upload
 request with error "invalidMessage". Note that this behavior is not mandatory
@@ -2856,12 +2863,12 @@ refinement process. We instead think of these as properties of the output shares
 themselves: if preparation succeeds, then the resulting output shares are
 guaranteed to combine into a valid, refined measurement.<a href="#section-4.7-4" class="pilcrow">¶</a></p>
 <p id="section-4.7-5">VDAF preparation is mapped onto an aggregation job as illustrated in
-<a href="#agg-flow" class="auto internal xref">Figure 2</a>. The protocol is comprised of a sequence of HTTP requests from the
-Leader to the Helper, the first of which includes the aggregation parameter, the
-Helper's report share for each report in the job, and for each report the
-initialization step for preparation. The Helper's response, along with each
-subsequent request and response, carries the remaining messages exchanged during
-preparation.<a href="#section-4.7-5" class="pilcrow">¶</a></p>
+<a href="#agg-flow" class="auto internal xref">Figure 2</a>. The aggregation sub-protocol is comprised of a sequence of HTTP
+requests from the Leader to the Helper, the first of which includes the
+aggregation parameter, the Helper's report share for each report in the job, and
+for each report the initialization step for preparation. The Helper's response,
+along with each subsequent request and response, carries the remaining messages
+exchanged during preparation.<a href="#section-4.7-5" class="pilcrow">¶</a></p>
 <span id="name-overview-of-the-dap-aggrega"></span><div id="agg-flow">
 <figure id="figure-2">
           <div class="lang-ladder sourcecode" id="section-4.7-6.1">
@@ -2910,8 +2917,8 @@ aggregation parameter. However, in some situations it is possible to begin
 aggregation before a collection request arrives. For example, Prio3 has just one
 valid aggregation parameter (the empty string); or, perhaps the relevant
 aggregation parameter can be determined in a deployment-specific way. In these
-cases, aggregation can begin as soon as the Leader is confident that no
-additional reports will arrive for the time window being aggregated over.<a href="#section-4.7-8" class="pilcrow">¶</a></p>
+cases, aggregation can begin as soon as the Leader is willing to discard any
+further incoming reports for the time window being aggregated over.<a href="#section-4.7-8" class="pilcrow">¶</a></p>
 <p id="section-4.7-9">An aggregation job can be thought of as having three phases:<a href="#section-4.7-9" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-4.7-10.1">
@@ -3428,14 +3435,14 @@ ranges associated with a given set of reports are determined by the following
 procedure:<a href="#section-4.7.1.5-2" class="pilcrow">¶</a></p>
 <ol start="1" type="1" class="normal type-1" id="section-4.7.1.5-3">
 <li id="section-4.7.1.5-3.1">
-                <p id="section-4.7.1.5-3.1.1">Round each report's timestamp down to the nearest multiple of
+                <p id="section-4.7.1.5-3.1.1">Truncate each report's timestamp down to the nearest multiple of
 <code>time_precision</code>, and partition the set of reports into groups based on this
-rounded timestamp.<a href="#section-4.7.1.5-3.1.1" class="pilcrow">¶</a></p>
+truncated timestamp.<a href="#section-4.7.1.5-3.1.1" class="pilcrow">¶</a></p>
 </li>
               <li id="section-4.7.1.5-3.2">
                 <p id="section-4.7.1.5-3.2.1">For each partitioned group of reports, generate an interval from the smallest
 to the largest report ID in the group, inclusive. The report ID range for
-this partition is this interval, associated with the rounded timestamp that
+this partition is this interval, associated with the truncated timestamp that
 generated this partition.<a href="#section-4.7.1.5-3.2.1" class="pilcrow">¶</a></p>
 </li>
             </ol>
@@ -3643,7 +3650,7 @@ it can clean up its state.<a href="#section-4.7.2.2-20" class="pilcrow">¶</a></
             </h5>
 <p id="section-4.7.2.3-1"><code>AggregationJobContinueReq</code> messages contain a <code>step</code> field, allowing
 Aggregators to ensure that their peer is on an expected step of the DAP
-aggregation protocol. In particular, the intent is to allow recovery from a
+aggregation sub-protocol. In particular, the intent is to allow recovery from a
 scenario where the Helper successfully advances from step <code>n</code> to <code>n+1</code>, but its
 <code>AggregationJobResp</code> response to the Leader gets dropped due to something like a
 transient network failure. The Leader could then resend the request to have the
@@ -4205,7 +4212,7 @@ reports; and<a href="#section-5.1.2-2.1.1" class="pilcrow">¶</a></p>
 </li>
             <li class="normal" id="section-5.1.2-2.2">
               <p id="section-5.1.2-2.2.1">Publish and manage an HPKE configuration that can be used for the upload
-protocol; and<a href="#section-5.1.2-2.2.1" class="pilcrow">¶</a></p>
+sub-protocol; and<a href="#section-5.1.2-2.2.1" class="pilcrow">¶</a></p>
 </li>
             <li class="normal" id="section-5.1.2-2.3">
               <p id="section-5.1.2-2.3.1">Implement and store state for the replay mitigation in
@@ -4216,7 +4223,7 @@ protocol; and<a href="#section-5.1.2-2.2.1" class="pilcrow">¶</a></p>
 required to:<a href="#section-5.1.2-3" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-5.1.2-4.1">
-              <p id="section-5.1.2-4.1.1">Support the upload protocol and store reports; and<a href="#section-5.1.2-4.1.1" class="pilcrow">¶</a></p>
+              <p id="section-5.1.2-4.1.1">Support the upload sub-protocol and store reports; and<a href="#section-5.1.2-4.1.1" class="pilcrow">¶</a></p>
 </li>
             <li class="normal" id="section-5.1.2-4.2">
               <p id="section-5.1.2-4.2.1">Track batch report size during each collect flow and request encrypted output
@@ -4232,32 +4239,32 @@ shares from Helpers.<a href="#section-5.1.2-4.2.1" class="pilcrow">¶</a></p>
           </h4>
 <p id="section-5.1.3-1">Collectors statefully interact with Aggregators to produce an aggregate output.
 Their input to the protocol is the task parameters, configured out of band,
-which include the corresponding batch window and size. For each collect
-invocation, Collectors are required to keep state from the start of the protocol
-to the end as needed to produce the final aggregate output.<a href="#section-5.1.3-1" class="pilcrow">¶</a></p>
+which include the corresponding batch window and size. For each collection
+invocation, Collectors are required to keep state from the start of the
+sub-protocol to the end as needed to produce the final aggregate output.<a href="#section-5.1.3-1" class="pilcrow">¶</a></p>
 <p id="section-5.1.3-2">Collectors must also maintain state for the lifetime of each task, which
 includes key material associated with the HPKE key configuration.<a href="#section-5.1.3-2" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
 </div>
-<div id="aggregation-jobs-replay-protection">
+<div id="aggregation-jobs-and-replay-protection">
 <section id="section-5.2">
-        <h3 id="name-aggregation-jobs-replay-pro">
-<a href="#section-5.2" class="section-number selfRef">5.2. </a><a href="#name-aggregation-jobs-replay-pro" class="section-name selfRef">Aggregation Jobs &amp; Replay Protection</a>
+        <h3 id="name-aggregation-jobs-and-replay">
+<a href="#section-5.2" class="section-number selfRef">5.2. </a><a href="#name-aggregation-jobs-and-replay" class="section-name selfRef">Aggregation Jobs and Replay Protection</a>
         </h3>
 <div id="leader">
 <section id="section-5.2.1">
           <h4 id="name-leader">
 <a href="#section-5.2.1" class="section-number selfRef">5.2.1. </a><a href="#name-leader" class="section-name selfRef">Leader</a>
           </h4>
-<p id="section-5.2.1-1">As part of the aggregation protocol, the Leader is responsible for generating
-aggregation jobs. The Leader must produce aggregation jobs using reports with
-non-overlapping intervals of report IDs for each time window (see <a href="#agg-init" class="auto internal xref">Section 4.7.1</a>).
-Further, once an aggregation job has been created, further reports falling
-inside that time window and report ID interval must be rejected; this implies
-that if the Leader creates aggregation jobs too soon, reports may be
-unnecessarily rejected.<a href="#section-5.2.1-1" class="pilcrow">¶</a></p>
+<p id="section-5.2.1-1">As part of the aggregation sub-protocol, the Leader is responsible for
+generating aggregation jobs. The Leader must produce aggregation jobs using
+reports with non-intersecting intervals of report IDs for each time window (see
+<a href="#agg-init" class="auto internal xref">Section 4.7.1</a>). Further, once an aggregation job has been created, further
+reports falling inside that time window and report ID interval must be rejected;
+this implies that if the Leader creates aggregation jobs too soon, reports may
+be unnecessarily rejected.<a href="#section-5.2.1-1" class="pilcrow">¶</a></p>
 <p id="section-5.2.1-2">One strategy the Leader can use is to wait to generate aggregation jobs for a
 given time window until it is confident that no additional reports will arrive
 in that time window. For tasks using the time-interval batch mode, this might be
@@ -4273,7 +4280,7 @@ reports, at the cost of increasing aggregation latency.<a href="#section-5.2.1-2
           <h4 id="name-helper">
 <a href="#section-5.2.2" class="section-number selfRef">5.2.2. </a><a href="#name-helper" class="section-name selfRef">Helper</a>
           </h4>
-<p id="section-5.2.2-1">As part of the aggregation protocol, the Helper is responsible for verifying
+<p id="section-5.2.2-1">As part of the aggregation sub-protocol, the Helper is responsible for verifying
 that a single report is not aggregated more than once (see
 <a href="#input-share-validation" class="auto internal xref">Section 4.7.1.4</a>). The replay check is based on storage of intervals
 of report IDs for each time window. This might be implemented by a monolithic
@@ -4340,16 +4347,26 @@ designed to allow implementations to reduce operational costs in certain cases.<
 <p id="section-5.5.1-1">In general, the Aggregators are required to keep state for tasks and all valid
 reports for as long as collection requests can be made for them. However, it is
 not necessary to store the complete reports. Each Aggregator only needs to store
-an aggregate share for each batch, along with a flag indicating whether the
-aggregate share has been collected. This is due to the requirement that in the
-time-interval case, the batch interval respect the boundaries defined by the DAP
-parameters; and that in leader-selected case, a batch is determined entirely by
-a batch ID. (See <a href="#batch-validation" class="auto internal xref">Section 4.8.5</a>.)<a href="#section-5.5.1-1" class="pilcrow">¶</a></p>
-<p id="section-5.5.1-2">Furthermore, the Aggregators must store data related to a task as long as the
+an aggregate share for each possible time window (for time-interval) or batch ID
+(for leader-selected), along with a flag indicating whether the aggregate share
+has been collected. This is due to the requirement that in the time-interval
+case, the batch interval respect the boundaries defined by the DAP parameters;
+and that in leader-selected case, a batch is determined entirely by a batch ID.
+(See <a href="#batch-validation" class="auto internal xref">Section 4.8.5</a>.)<a href="#section-5.5.1-1" class="pilcrow">¶</a></p>
+<p id="section-5.5.1-2">However, Aggregators are also required to implement several per-report checks
+that require retaining a number of data artifacts. For example, to detect replay
+attacks, it is necessary for each Aggregator to retain the set of report ID
+ranges tracking reports that have been aggregated for the task so far. Depending
+on the task lifetime and report upload rate, this can result in high storage
+costs. To alleviate this burden, DAP allows Aggregators to drop this state as
+needed, so long as reports are dropped properly as described in
+<a href="#input-share-validation" class="auto internal xref">Section 4.7.1.4</a>. Aggregators <span class="bcp14">SHOULD</span> take steps to mitigate the risk
+of dropping reports (e.g., by evicting the oldest data first).<a href="#section-5.5.1-2" class="pilcrow">¶</a></p>
+<p id="section-5.5.1-3">Furthermore, the Aggregators must store data related to a task as long as the
 current time has not passed this task's <code>task_expiration</code>. Aggregator <span class="bcp14">MAY</span> delete
 the task and all data pertaining to this task after <code>task_expiration</code>.
 Implementors <span class="bcp14">SHOULD</span> provide for some leeway so the Collector can collect the
-batch after some delay.<a href="#section-5.5.1-2" class="pilcrow">¶</a></p>
+batch after some delay.<a href="#section-5.5.1-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -4633,7 +4650,7 @@ chosen independently of the generated reports.<a href="#section-7.6.1-5" class="
 <p id="section-7.6.2-1">An important parameter of a DAP deployment is the minimum batch size. If a batch
 includes too few reports, then the aggregate result can reveal information about
 individual measurements. Aggregators enforce the agreed-upon minimum batch size
-during the collection protocol, but implementations <span class="bcp14">SHOULD</span> also opt out of
+during the collection sub-protocol, but implementations <span class="bcp14">SHOULD</span> also opt out of
 participating in a DAP task if the minimum batch size is too small. This
 document does not specify how to choose an appropriate minimum batch size, but
 an appropriate value may be determined from the differential privacy (<a href="#dp" class="auto internal xref">Section 7.5</a>)

@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 3 March 2025                                         Cloudflare
+Expires: 7 March 2025                                         Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                                  Mozilla
                                                               C. A. Wood
                                                               Cloudflare
-                                                          30 August 2024
+                                                        3 September 2024
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -63,7 +63,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 3 March 2025.
+   This Internet-Draft will expire on 7 March 2025.
 
 Copyright Notice
 
@@ -116,7 +116,7 @@ Table of Contents
        5.1.1.  Client Capabilities
        5.1.2.  Aggregator Capabilities
        5.1.3.  Collector Capabilities
-     5.2.  Aggregation Jobs & Replay Protection
+     5.2.  Aggregation Jobs and Replay Protection
        5.2.1.  Leader
        5.2.2.  Helper
      5.3.  VDAFs and Compute Requirements
@@ -462,6 +462,11 @@ Table of Contents
    Report Share:  An encrypted input share comprising a piece of a
       report.
 
+   Time Window:  An interval of time associated with a measurement task,
+      whose duration is equal to the task's time precision and whose
+      start has a UNIX timestamp value which is a multiple of the task's
+      time precision.
+
 2.  Overview
 
    The protocol is executed by a large set of Clients and a pair of
@@ -720,7 +725,7 @@ Table of Contents
      +----------------------------+----------------------------------+
      | stepMismatch               | The Aggregators disagree on the  |
      |                            | current step of the DAP          |
-     |                            | aggregation protocol.            |
+     |                            | aggregation sub-protocol.        |
      +----------------------------+----------------------------------+
      | batchOverlap               | A request's query includes       |
      |                            | reports that were previously     |
@@ -1035,8 +1040,8 @@ struct {} Empty;
    Note that the leader_aggregator_url and helper_aggregator_url values
    may include arbitrary path components.
 
-   In addition, in order to facilitate the aggregation and collect
-   protocols, each of the Aggregators is configured with following
+   In addition, in order to facilitate the aggregation and collection
+   sub-protocols, each of the Aggregators is configured with following
    parameters:
 
    *  collector_hpke_config: The [HPKE] configuration of the Collector
@@ -1179,7 +1184,7 @@ struct {} Empty;
          cryptographically secure random number generator.
 
       -  time is the time at which the report was generated.  The Client
-         SHOULD round this value down to the nearest multiple of the
+         SHOULD truncate this value down to the nearest multiple of the
          task's time_precision in order to ensure that that the
          timestamp cannot be used to link a report back to the Client
          that generated it.
@@ -1281,13 +1286,13 @@ struct {} Empty;
    comparing the aggregate result to the previous aggregate result may
    result in a privacy violation.  Note that this is also enforced by
    the Helper during the aggregation interaction.  The Leader MAY also
-   abort the upload protocol and alert the Client with error
+   abort the upload sub-protocol and alert the Client with error
    reportRejected.
 
    The Leader MAY ignore any report whose timestamp is past the task's
    task_expiration.  When it does so, it SHOULD also abort the upload
-   protocol and alert the Client with error reportRejected.  Client MAY
-   choose to opt out of the task if its own clock has passed
+   sub-protocol and alert the Client with error reportRejected.  Client
+   MAY choose to opt out of the task if its own clock has passed
    task_expiration.
 
    The Leader may need to buffer reports while waiting to aggregate them
@@ -1296,7 +1301,7 @@ struct {} Empty;
    timestamps are too far in the future.  Implementors MAY provide for
    some small leeway, usually no more than a few minutes, to account for
    clock skew.  If the Leader rejects a report for this reason, it
-   SHOULD abort the upload protocol and alert the Client with error
+   SHOULD abort the upload sub-protocol and alert the Client with error
    reportTooEarly.  In this situation, the Client MAY re-upload the
    report later on.
 
@@ -1372,12 +1377,12 @@ struct {} Empty;
    to combine into a valid, refined measurement.
 
    VDAF preparation is mapped onto an aggregation job as illustrated in
-   Figure 2.  The protocol is comprised of a sequence of HTTP requests
-   from the Leader to the Helper, the first of which includes the
-   aggregation parameter, the Helper's report share for each report in
-   the job, and for each report the initialization step for preparation.
-   The Helper's response, along with each subsequent request and
-   response, carries the remaining messages exchanged during
+   Figure 2.  The aggregation sub-protocol is comprised of a sequence of
+   HTTP requests from the Leader to the Helper, the first of which
+   includes the aggregation parameter, the Helper's report share for
+   each report in the job, and for each report the initialization step
+   for preparation.  The Helper's response, along with each subsequent
+   request and response, carries the remaining messages exchanged during
    preparation.
 
      report, agg_param
@@ -1423,8 +1428,8 @@ struct {} Empty;
    For example, Prio3 has just one valid aggregation parameter (the
    empty string); or, perhaps the relevant aggregation parameter can be
    determined in a deployment-specific way.  In these cases, aggregation
-   can begin as soon as the Leader is confident that no additional
-   reports will arrive for the time window being aggregated over.
+   can begin as soon as the Leader is willing to discard any further
+   incoming reports for the time window being aggregated over.
 
    An aggregation job can be thought of as having three phases:
 
@@ -1880,14 +1885,14 @@ struct {} Empty;
    The report ID ranges associated with a given set of reports are
    determined by the following procedure:
 
-   1.  Round each report's timestamp down to the nearest multiple of
+   1.  Truncate each report's timestamp down to the nearest multiple of
        time_precision, and partition the set of reports into groups
-       based on this rounded timestamp.
+       based on this truncated timestamp.
 
    2.  For each partitioned group of reports, generate an interval from
        the smallest to the largest report ID in the group, inclusive.
        The report ID range for this partition is this interval,
-       associated with the rounded timestamp that generated this
+       associated with the truncated timestamp that generated this
        partition.
 
    The set of report ID ranges associated with a given aggregation job
@@ -2081,7 +2086,7 @@ struct {} Empty;
 
    AggregationJobContinueReq messages contain a step field, allowing
    Aggregators to ensure that their peer is on an expected step of the
-   DAP aggregation protocol.  In particular, the intent is to allow
+   DAP aggregation sub-protocol.  In particular, the intent is to allow
    recovery from a scenario where the Helper successfully advances from
    step n to n+1, but its AggregationJobResp response to the Leader gets
    dropped due to something like a transient network failure.  The
@@ -2577,7 +2582,7 @@ enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
       aggregating reports; and
 
    *  Publish and manage an HPKE configuration that can be used for the
-      upload protocol; and
+      upload sub-protocol; and
 
    *  Implement and store state for the replay mitigation in
       Section 4.7.1.4.
@@ -2585,7 +2590,7 @@ enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
    Beyond the minimal capabilities required of Helpers, Leaders are
    generally required to:
 
-   *  Support the upload protocol and store reports; and
+   *  Support the upload sub-protocol and store reports; and
 
    *  Track batch report size during each collect flow and request
       encrypted output shares from Helpers.
@@ -2595,21 +2600,21 @@ enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
    Collectors statefully interact with Aggregators to produce an
    aggregate output.  Their input to the protocol is the task
    parameters, configured out of band, which include the corresponding
-   batch window and size.  For each collect invocation, Collectors are
-   required to keep state from the start of the protocol to the end as
-   needed to produce the final aggregate output.
+   batch window and size.  For each collection invocation, Collectors
+   are required to keep state from the start of the sub-protocol to the
+   end as needed to produce the final aggregate output.
 
    Collectors must also maintain state for the lifetime of each task,
    which includes key material associated with the HPKE key
    configuration.
 
-5.2.  Aggregation Jobs & Replay Protection
+5.2.  Aggregation Jobs and Replay Protection
 
 5.2.1.  Leader
 
-   As part of the aggregation protocol, the Leader is responsible for
-   generating aggregation jobs.  The Leader must produce aggregation
-   jobs using reports with non-overlapping intervals of report IDs for
+   As part of the aggregation sub-protocol, the Leader is responsible
+   for generating aggregation jobs.  The Leader must produce aggregation
+   jobs using reports with non-intersecting intervals of report IDs for
    each time window (see Section 4.7.1).  Further, once an aggregation
    job has been created, further reports falling inside that time window
    and report ID interval must be rejected; this implies that if the
@@ -2628,14 +2633,14 @@ enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
 
 5.2.2.  Helper
 
-   As part of the aggregation protocol, the Helper is responsible for
-   verifying that a single report is not aggregated more than once (see
-   Section 4.7.1.4).  The replay check is based on storage of intervals
-   of report IDs for each time window.  This might be implemented by a
-   monolithic storage system, requiring a single transaction to perform
-   report checking.  Or it might be implemented by a sharded storage
-   system (sharding on task ID and/or time window), using a single
-   transaction per shard.
+   As part of the aggregation sub-protocol, the Helper is responsible
+   for verifying that a single report is not aggregated more than once
+   (see Section 4.7.1.4).  The replay check is based on storage of
+   intervals of report IDs for each time window.  This might be
+   implemented by a monolithic storage system, requiring a single
+   transaction to perform report checking.  Or it might be implemented
+   by a sharded storage system (sharding on task ID and/or time window),
+   using a single transaction per shard.
 
 5.3.  VDAFs and Compute Requirements
 
@@ -2692,11 +2697,23 @@ enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
    all valid reports for as long as collection requests can be made for
    them.  However, it is not necessary to store the complete reports.
    Each Aggregator only needs to store an aggregate share for each
-   batch, along with a flag indicating whether the aggregate share has
-   been collected.  This is due to the requirement that in the time-
+   possible time window (for time-interval) or batch ID (for leader-
+   selected), along with a flag indicating whether the aggregate share
+   has been collected.  This is due to the requirement that in the time-
    interval case, the batch interval respect the boundaries defined by
    the DAP parameters; and that in leader-selected case, a batch is
    determined entirely by a batch ID.  (See Section 4.8.5.)
+
+   However, Aggregators are also required to implement several per-
+   report checks that require retaining a number of data artifacts.  For
+   example, to detect replay attacks, it is necessary for each
+   Aggregator to retain the set of report ID ranges tracking reports
+   that have been aggregated for the task so far.  Depending on the task
+   lifetime and report upload rate, this can result in high storage
+   costs.  To alleviate this burden, DAP allows Aggregators to drop this
+   state as needed, so long as reports are dropped properly as described
+   in Section 4.7.1.4.  Aggregators SHOULD take steps to mitigate the
+   risk of dropping reports (e.g., by evicting the oldest data first).
 
    Furthermore, the Aggregators must store data related to a task as
    long as the current time has not passed this task's task_expiration.
@@ -2939,7 +2956,7 @@ enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
    An important parameter of a DAP deployment is the minimum batch size.
    If a batch includes too few reports, then the aggregate result can
    reveal information about individual measurements.  Aggregators
-   enforce the agreed-upon minimum batch size during the collection
+   enforce the agreed-upon minimum batch size during the collection sub-
    protocol, but implementations SHOULD also opt out of participating in
    a DAP task if the minimum batch size is too small.  This document
    does not specify how to choose an appropriate minimum batch size, but
