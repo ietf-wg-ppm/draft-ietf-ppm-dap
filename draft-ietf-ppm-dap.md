@@ -906,7 +906,9 @@ the following parameters associated with it:
   task. The task is considered completed after this time. Aggregators MAY reject
   reports that have timestamps later than `task_expiration`.
 * `max_aggregation_job_report_count`: The maximum number of reports which can be
-  included in a single aggregation job (see {{aggregate-flow}}).
+  included in a single aggregation job (see {{aggregate-flow}}). This parameter
+  is optional and may not be specified, in which case there is no specified
+  maximum aggregation job size.
 * A unique identifier for the VDAF in use for the task, e.g., one of the VDAFs
   defined in {{Section 10 of !VDAF}}.
 
@@ -1310,7 +1312,8 @@ of the task. The job ID is a 16-byte value, structured as follows:
 opaque AggregationJobID[16];
 ~~~
 
-The number of reports in the candidate set MUST be at most the
+If the task has specified a value for `max_aggregation_job_report_count`, the
+number of reports in the candidate set MUST be at most the
 `max_aggregation_job_report_count` configured for the task.
 
 The Leader can run this process for many sets of candidate reports in parallel
@@ -1500,9 +1503,10 @@ that the Leader will use to continue preparing the report.
 To begin this process, the Helper checks if it recognizes the task ID. If not,
 then it MUST abort with error `unrecognizedTask`.
 
-Next, the Helper checks that the number of `PrepareInit`s in the message is at
-most the `max_aggregation_job_report_count` configured for the task. If not,
-then it SHOULD abort with error `aggregationJobTooLarge`.
+Next, if the task has specified a value for `max_aggregation_job_report_count`,
+the Helper checks that the number of `PrepareInit`s in the message is at most
+the `max_aggregation_job_report_count` configured for the task. If this check
+fails, then the Helper SHOULD abort with error `aggregationJobTooLarge`.
 
 Next, the Helper checks that the report IDs in
 `AggregationJobInitReq.prepare_inits` are all distinct. If two preparation
