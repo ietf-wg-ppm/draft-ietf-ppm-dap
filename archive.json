@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-09-03T01:05:55.537748+00:00",
+  "timestamp": "2024-09-05T01:06:55.115050+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -71288,7 +71288,7 @@
     {
       "number": 573,
       "id": "PR_kwDOFEJYQs55wiJ8",
-      "title": "Add `max_aggregation_job_size` task parameter.",
+      "title": "Add `max_aggregation_job_report_count` task parameter.",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/573",
       "state": "OPEN",
       "author": "branlwyd",
@@ -71297,13 +71297,13 @@
       "labels": [],
       "body": "This parameter configures the maximum aggregation job size, allowing a standard way for the Helper to opt out of processing aggregation jobs which are too large.",
       "createdAt": "2024-08-28T21:26:24Z",
-      "updatedAt": "2024-09-02T09:25:26Z",
+      "updatedAt": "2024-09-03T22:42:47Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "c2f4e851a5989f4772d0c9e7c6d147611af7fd7b",
       "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "headRefName": "bran/max-agg-job-size",
-      "headRefOid": "fe5e8db1bf054dd1de280807942a240d11bd3f5b",
+      "headRefOid": "6973418c5def157b4bdd59f6bd3d2aa24ef3ad86",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
@@ -71322,6 +71322,20 @@
           "body": "Being explicit about this error seems like a good idea. Should there be an \"unlimited\" option? Since task parameter structs are not part of the spec there is no bit-size for this option and so it's not obvious what the value for \"maximum\" should be.",
           "createdAt": "2024-09-02T09:25:25Z",
           "updatedAt": "2024-09-02T09:25:25Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> Being explicit about this error seems like a good idea. Should there be an \"unlimited\" option? Since task parameter structs are not part of the spec there is no bit-size for this option and so it's not obvious what the value for \"maximum\" should be.\r\n\r\nWe could treat `max_aggregation_job_report_count == 0` as the unlimited case.",
+          "createdAt": "2024-09-03T19:19:34Z",
+          "updatedAt": "2024-09-03T19:19:34Z"
+        },
+        {
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "body": "I agree that this parameter should be optional. Since there is no specified encoding of this parameter (or, more generally, for a task configuration), I think we don't need to worry about sentinel values -- we can just say the parameter is optional & specify what to do if it is not configured, as we used to with `max_batch_size`.",
+          "createdAt": "2024-09-03T22:42:46Z",
+          "updatedAt": "2024-09-03T22:42:46Z"
         }
       ],
       "reviews": [
@@ -71404,13 +71418,13 @@
       "labels": [],
       "body": "Specifically, we relax the check from the specific report ID, to intersection with intervals of report IDs. This will allow implementations to drop all long-term per-report storage, considerably reducing the storage requirements to implement the protocol. The tradeoff is in increased aggregation latency: typically, aggregation cannot begin until the Leader is sure that no further reports will arrive for a given time window.",
       "createdAt": "2024-08-30T00:21:13Z",
-      "updatedAt": "2024-09-02T10:02:39Z",
+      "updatedAt": "2024-09-04T22:18:26Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "c2f4e851a5989f4772d0c9e7c6d147611af7fd7b",
       "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "headRefName": "bran/simple-replay",
-      "headRefOid": "7307a34f968f66ed83c6488ec78a76c324d1863d",
+      "headRefOid": "568a4e4e8e3697b3fe3f6b47db526da13eb7608d",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
@@ -71482,6 +71496,294 @@
               "body": "To clarify, I am wondering why anybody would want to do this given that the report IDs are randomly assigned. Is the intent to allow people to recover from some amount of late arriving reports?",
               "createdAt": "2024-09-02T10:02:38Z",
               "updatedAt": "2024-09-02T10:02:39Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6HzBha",
+          "commit": {
+            "abbreviatedOid": "7307a34"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-09-03T19:27:22Z",
+          "updatedAt": "2024-09-03T19:37:59Z",
+          "comments": [
+            {
+              "originalPosition": 28,
+              "body": "How strict do you think we should be? As we discussed on slack today, at a minimum we want the helper to be able to reject any range that overlaps with an already aggregated range. But the helper could make a smarter decision by \"merging\" the two ranges and rejecting only the overlap, in which case the MUST here would not be enforced by the helper.\r\n\r\n",
+              "createdAt": "2024-09-03T19:27:23Z",
+              "updatedAt": "2024-09-03T19:37:59Z"
+            },
+            {
+              "originalPosition": 69,
+              "body": "Let's make sure this is harmonized with the rest of the draft. I believe we say \"truncate\", not \"round\". However I haven't checked.",
+              "createdAt": "2024-09-03T19:29:44Z",
+              "updatedAt": "2024-09-03T19:37:59Z"
+            },
+            {
+              "originalPosition": 120,
+              "body": "Note that we never use \"&\" in place of \"and\" in this draft.\r\n```suggestion\r\n## Aggregation Jobs and Replay Protection\r\n```",
+              "createdAt": "2024-09-03T19:31:14Z",
+              "updatedAt": "2024-09-03T19:37:59Z"
+            },
+            {
+              "originalPosition": 124,
+              "body": "nit: consistency. I'd be cool with saying \"protocol\" instead of \"sub-protocol\", but let's track in an issue.\r\n```suggestion\r\nAs part of the aggregation sub-protocol, the Leader is responsible for generating\r\n```",
+              "createdAt": "2024-09-03T19:32:49Z",
+              "updatedAt": "2024-09-03T19:37:59Z"
+            },
+            {
+              "originalPosition": 126,
+              "body": "nit: consistency. FWIW I weakly prefer \"overlap\" to \"intersect\".\r\n```suggestion\r\nnon-intersecting intervals of report IDs for each time window (see {{agg-init}}).\r\n```",
+              "createdAt": "2024-09-03T19:33:33Z",
+              "updatedAt": "2024-09-03T19:37:59Z"
+            },
+            {
+              "originalPosition": 126,
+              "body": "Let's make sure \"time window\" is defined in the terms section of the doc",
+              "createdAt": "2024-09-03T19:34:00Z",
+              "updatedAt": "2024-09-03T19:37:59Z"
+            },
+            {
+              "originalPosition": 162,
+              "body": "I believe the old text still applies: a batch interval is a sequence of time windows; and the batch interval is not known at aggregation time.",
+              "createdAt": "2024-09-03T19:36:38Z",
+              "updatedAt": "2024-09-03T19:37:59Z"
+            },
+            {
+              "originalPosition": 175,
+              "body": "I think the core idea here still applies: it's just that we're storing report ranges rather than IDs.",
+              "createdAt": "2024-09-03T19:37:32Z",
+              "updatedAt": "2024-09-03T19:37:59Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6H0YK_",
+          "commit": {
+            "abbreviatedOid": "7307a34"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-09-03T22:59:18Z",
+          "updatedAt": "2024-09-03T22:59:18Z",
+          "comments": [
+            {
+              "originalPosition": 69,
+              "body": "We actually use both! I prefer `truncate` so I switched to that.",
+              "createdAt": "2024-09-03T22:59:18Z",
+              "updatedAt": "2024-09-03T22:59:18Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6H0YPd",
+          "commit": {
+            "abbreviatedOid": "7307a34"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-09-03T22:59:40Z",
+          "updatedAt": "2024-09-03T22:59:40Z",
+          "comments": [
+            {
+              "originalPosition": 120,
+              "body": "aagh, sorry, I keep making that mistake",
+              "createdAt": "2024-09-03T22:59:40Z",
+              "updatedAt": "2024-09-03T22:59:40Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6H0Zgx",
+          "commit": {
+            "abbreviatedOid": "7307a34"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-09-03T23:06:06Z",
+          "updatedAt": "2024-09-03T23:06:06Z",
+          "comments": [
+            {
+              "originalPosition": 124,
+              "body": "\ud83d\udc4d\ud83c\udffb It turned out there were a bunch of places that got this wrong -- I fixed them all up. There were a few places where it was ambiguous; for the most part I made as few changes as possible while still referring to \"sub-protocols\" when discussing only the upload/aggregation/collection portions of DAP.",
+              "createdAt": "2024-09-03T23:06:06Z",
+              "updatedAt": "2024-09-03T23:06:07Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6H0gA6",
+          "commit": {
+            "abbreviatedOid": "7307a34"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-09-03T23:38:17Z",
+          "updatedAt": "2024-09-03T23:38:17Z",
+          "comments": [
+            {
+              "originalPosition": 162,
+              "body": "Hmm, I think the old text was slightly inaccurate for the time-interval case: aggregators don't have to store an aggregate share for each possible a batch interval (i.e., sequence of time windows) -- an aggregator needs to store an aggregate share for each _time window_.\r\n\r\nI had felt that distinguishing between the batch modes was not so useful here; I restored the text, modified for accuracy.",
+              "createdAt": "2024-09-03T23:38:17Z",
+              "updatedAt": "2024-09-03T23:38:18Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6H0g3Y",
+          "commit": {
+            "abbreviatedOid": "7307a34"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-09-03T23:43:10Z",
+          "updatedAt": "2024-09-03T23:43:10Z",
+          "comments": [
+            {
+              "originalPosition": 175,
+              "body": "OK -- I dropped this because we'll now be storing perhaps a few thousand ID ranges per time window, but no objection to keeping this text around.",
+              "createdAt": "2024-09-03T23:43:10Z",
+              "updatedAt": "2024-09-03T23:43:10Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6H0iMI",
+          "commit": {
+            "abbreviatedOid": "7307a34"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-09-03T23:50:38Z",
+          "updatedAt": "2024-09-03T23:50:38Z",
+          "comments": [
+            {
+              "originalPosition": 28,
+              "body": "I think a `MUST` is appropriate here for the Leader: the Leader must follow this suggestion to avoid having otherwise-acceptable reports rejected as a replay.\r\n\r\nThe Helper can indeed make a few different choices about how to deal with an aggregation job which does intersect with a previous aggregation job. The relevant text for the Helper is currently:\r\n\r\n> Check if the report has been previously aggregated. If so, the input share MUST be marked as invalid with the error `report_replayed`. A report is considered previously aggregated if it intersects with a report ID range for a completed aggregation job (see {{report-id-ranges}}).\r\n\r\n... which implies to me that we have to effectively allow \"merging\" of ranges if they intersect, in the case that an intersecting aggregation job is received. (A Helper which does something more specific, e.g. marking individual report IDs as used, would work to avoid replays; but I'm not sure a Leader could take advantage of this without knowing the specific strategy used by the Helper.)\r\n\r\nI'm personally happy with this level of flexibility, but maybe the Helper should be more be more flexible? If so, we might consider relaxing the Leader's MUST here.",
+              "createdAt": "2024-09-03T23:50:38Z",
+              "updatedAt": "2024-09-03T23:50:38Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6H0jNM",
+          "commit": {
+            "abbreviatedOid": "7307a34"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-09-03T23:56:39Z",
+          "updatedAt": "2024-09-03T23:56:39Z",
+          "comments": [
+            {
+              "originalPosition": 28,
+              "body": "> I agree that calling the new thing a \"report ID range\" makes everything hard to read. This sentence looks like it is comparing report ID ranges but it is actually comparing \"report ID ranges\".\r\n\r\nIndeed; I am careful to use the term \"interval\" where an \"interval\" is truly needed. But \"report ID range\" does not capture that a \"report ID range\" includes a time window, too.\r\n\r\n> Considering the fact that you're saying \"a set of\" here. Does that mean the old behavior would still be allowed by making each range have exactly one report ID?\r\n\r\nNot quite -- an aggregation job may include reports in multiple time windows. In this case, there would be one \"report ID range\" for each time window represented in the aggregation job. See the report-id-ranges section for the full detail on how the \"report ID ranges\" for a given aggregation job are determined.\r\n\r\n> To clarify, I am wondering why anybody would want to do this given that the report IDs are randomly assigned. Is the intent to allow people to recover from some amount of late arriving reports?\r\n\r\nNope, I think late-arriving reports are effectively lost (with high probability) in this scheme. The \"report ID ranges\" in use are all \"maximal\" in the sense that they stretch from the smallest to the largest available report ID.",
+              "createdAt": "2024-09-03T23:56:39Z",
+              "updatedAt": "2024-09-03T23:57:54Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6H7kLc",
+          "commit": {
+            "abbreviatedOid": "7307a34"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-09-04T15:14:50Z",
+          "updatedAt": "2024-09-04T15:14:50Z",
+          "comments": [
+            {
+              "originalPosition": 28,
+              "body": "I prefer MUST here as well.",
+              "createdAt": "2024-09-04T15:14:50Z",
+              "updatedAt": "2024-09-04T15:14:51Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6H7lKn",
+          "commit": {
+            "abbreviatedOid": "7307a34"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-09-04T15:16:04Z",
+          "updatedAt": "2024-09-04T15:16:05Z",
+          "comments": [
+            {
+              "originalPosition": 175,
+              "body": "I'm just suggesting we update the text.",
+              "createdAt": "2024-09-04T15:16:04Z",
+              "updatedAt": "2024-09-04T15:16:05Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6H73EZ",
+          "commit": {
+            "abbreviatedOid": "7307a34"
+          },
+          "author": "simon-friedberger",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-09-04T15:45:05Z",
+          "updatedAt": "2024-09-04T15:45:05Z",
+          "comments": [
+            {
+              "originalPosition": 28,
+              "body": "I think if the \"set\" only covers the \"different time intervals\" part you need to clarify. The way it's written the ranges don't need to be maximal. Somebody could send 3 ranges for t1 and 7 ranges for t2 as longs as they in total cover all the reports. And in the limit, send one range per report and everything turns into linear search again.",
+              "createdAt": "2024-09-04T15:45:05Z",
+              "updatedAt": "2024-09-04T15:45:05Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6H_Qy6",
+          "commit": {
+            "abbreviatedOid": "568a4e4"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2024-09-04T22:15:31Z",
+          "updatedAt": "2024-09-04T22:18:26Z",
+          "comments": [
+            {
+              "originalPosition": 17,
+              "body": "I might also mention briefly what this is used for (replay protection for one!)",
+              "createdAt": "2024-09-04T22:15:31Z",
+              "updatedAt": "2024-09-04T22:18:26Z"
+            },
+            {
+              "originalPosition": 154,
+              "body": "```suggestion\r\nReplay protection is implemented using \"report ID ranges\". A report ID range is an\r\n```",
+              "createdAt": "2024-09-04T22:16:17Z",
+              "updatedAt": "2024-09-04T22:18:26Z"
             }
           ]
         }
