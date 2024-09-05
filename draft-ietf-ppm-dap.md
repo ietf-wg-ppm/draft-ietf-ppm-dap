@@ -405,7 +405,8 @@ Report Share:
 Time Window:
 : An interval of time associated with a measurement task, whose duration is
   equal to the task's time precision and whose start has a UNIX timestamp value
-  which is a multiple of the task's time precision.
+  which is a multiple of the task's time precision. Time windows are used for
+  replay protection, as well as defining batches in some batch modes.
 
 
 {:br}
@@ -1725,9 +1726,9 @@ If all of the above checks succeed, the input share is not marked as invalid.
 
 #### Report ID ranges {#report-id-ranges}
 
-Replay checking is implemented using "report ID ranges". A report ID range is an
-interval of report IDs (using lexicographic ordering), along with an associated
-timestamp.
+Replay protection is implemented using "report ID ranges". A report ID range is
+an interval of report IDs (using lexicographic ordering), along with an
+associated timestamp.
 
 A set of reports for a task determines a set of report ID ranges. The report ID
 ranges associated with a given set of reports are determined by the following
