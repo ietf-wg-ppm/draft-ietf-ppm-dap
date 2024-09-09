@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 9 March 2025                                         Cloudflare
+Expires: 13 March 2025                                        Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                                  Mozilla
                                                               C. A. Wood
                                                               Cloudflare
-                                                        5 September 2024
+                                                        9 September 2024
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -63,7 +63,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 9 March 2025.
+   This Internet-Draft will expire on 13 March 2025.
 
 Copyright Notice
 
@@ -2640,6 +2640,20 @@ enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
    in a given time window until that time window is a certain amount of
    time in the past; this effectively provides a grace period for late-
    arriving reports, at the cost of increasing aggregation latency.
+
+   In many implementations, the potential write contention associated
+   with processing of an aggregation job, for both the Leader and the
+   Helper, will correspond to the number of different time windows
+   associated with the reports in that window.  For that reason, the
+   Leader SHOULD produce aggregation jobs which touch as few time
+   windows as possible.  Similarly, in many implementations, the amount
+   of write contention that an aggregation job might encounter during
+   processing will correspond to the number of aggregation jobs being
+   concurrently processed which touch the same time windows or batches;
+   therefore, it is RECOMMENDED that the Leader should schedule
+   aggregation job processing in a way that minimizes the number of
+   concurrently-processed aggregation jobs touching the same time
+   windows or batches.
 
 5.2.2.  Helper
 
