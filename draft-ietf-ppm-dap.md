@@ -2464,6 +2464,18 @@ reports in a given time window until that time window is a certain amount of
 time in the past; this effectively provides a grace period for late-arriving
 reports, at the cost of increasing aggregation latency.
 
+In many implementations, the potential write contention associated with
+processing of an aggregation job, for both the Leader and the Helper, will
+correspond to the number of different time windows associated with the reports
+in that window. For that reason, the Leader SHOULD produce aggregation jobs
+which touch as few time windows as possible. Similarly, in many implementations,
+the amount of write contention that an aggregation job might encounter during
+processing will correspond to the number of aggregation jobs being concurrently
+processed which touch the same time windows or batches; therefore, it is
+RECOMMENDED that the Leader should schedule aggregation job processing in a way
+that minimizes the number of concurrently-processed aggregation jobs touching
+the same time windows or batches.
+
 ### Helper
 
 As part of the aggregation sub-protocol, the Helper is responsible for verifying
