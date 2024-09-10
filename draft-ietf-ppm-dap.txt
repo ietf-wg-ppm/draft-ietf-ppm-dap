@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 16 February 2025                                     Cloudflare
+Expires: 14 March 2025                                        Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                                  Mozilla
                                                               C. A. Wood
                                                               Cloudflare
-                                                          15 August 2024
+                                                       10 September 2024
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -63,7 +63,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 16 February 2025.
+   This Internet-Draft will expire on 14 March 2025.
 
 Copyright Notice
 
@@ -3505,9 +3505,9 @@ Normative References
               DOI 10.17487/RFC9458, January 2024,
               <https://www.rfc-editor.org/rfc/rfc9458>.
 
-   [SHS]      Dang, Q., "Secure Hash Standard", National Institute of
-              Standards and Technology, DOI 10.6028/nist.fips.180-4,
-              July 2015, <https://doi.org/10.6028/nist.fips.180-4>.
+   [SHS]      "Secure hash standard", National Institute of Standards
+              and Technology (U.S.), DOI 10.6028/nist.fips.180-4, 2015,
+              <https://doi.org/10.6028/nist.fips.180-4>.
 
    [VDAF]     Barnes, R., Cook, D., Patton, C., and P. Schoppmann,
               "Verifiable Distributed Aggregation Functions", Work in
