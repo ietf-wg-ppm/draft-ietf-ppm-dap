@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-09-08T01:12:28.467708+00:00",
+  "timestamp": "2024-09-10T01:07:47.855382+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -71418,13 +71418,13 @@
       "labels": [],
       "body": "Specifically, we relax the check from the specific report ID, to intersection with intervals of report IDs. This will allow implementations to drop all long-term per-report storage, considerably reducing the storage requirements to implement the protocol. The tradeoff is in increased aggregation latency: typically, aggregation cannot begin until the Leader is sure that no further reports will arrive for a given time window.",
       "createdAt": "2024-08-30T00:21:13Z",
-      "updatedAt": "2024-09-05T23:50:48Z",
+      "updatedAt": "2024-09-09T19:24:36Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "c2f4e851a5989f4772d0c9e7c6d147611af7fd7b",
       "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "headRefName": "bran/simple-replay",
-      "headRefOid": "0ad11c7c628db01e90d2ea3284d119ed391300b3",
+      "headRefOid": "aaa3733989d17c90332991568cdcdaf21dadfe14",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
@@ -71443,6 +71443,20 @@
           "body": "I renamed \"report ID range\" to \"report ID commitment\", in an attempt to alleviate confusion around the fact that a \"report ID range\" contained an \"interval of report IDs\" (but also a timestamp). Along with this change, a report ID commitment \"conflicts\" (rather than \"intersects\") with another report ID commitment.",
           "createdAt": "2024-09-05T23:36:43Z",
           "updatedAt": "2024-09-05T23:36:43Z"
+        },
+        {
+          "author": "mendess",
+          "authorAssociation": "NONE",
+          "body": "I think this change is very positive to the protocol, provided the leader is okay with the latency cost it will pay when using leader-selected. But I think one final tweak should be made\r\n\r\n### Problem\r\n\r\nLets assume the storage solution for replay protection is sharding on time the time window of reports. Meaning storage transactions only contend when they are trying to check for replays of two time windows.\r\n\r\nIf two Aggregation Jobs have reports belonging to the same time window then they will contend on the storage shard used. This gets even worse if the aggregation jobs have a \"mixed bag\" of time windows, which increases the chance that two jobs might contend on the time window.\r\n\r\n### Suggested change\r\n\r\nI think the protocol should encourage leaders (non normatively) to avoid having multiple aggregation jobs \"share time windows\". Put another way: It might create higher resource contention when N aggregation jobs contain reports belonging to the same time window.",
+          "createdAt": "2024-09-09T17:44:01Z",
+          "updatedAt": "2024-09-09T17:44:01Z"
+        },
+        {
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "body": "I agree with this suggestion; I added some non-normative text suggesting that the Leader avoid creating aggregation jobs which touch too many time windows, and avoid concurrently processing aggregation jobs which touch the same time windows or batches.\r\n\r\n\r\nedit to inclide an overly-pedantic nitpick: \r\n\r\n> provided the leader is okay with the latency cost it will pay when using leader-selected.\r\n\r\nNote that, with this PR, both the time-interval & leader-selected batch modes will see a similar increase in collection latency.",
+          "createdAt": "2024-09-09T19:14:19Z",
+          "updatedAt": "2024-09-09T19:24:36Z"
         }
       ],
       "reviews": [
