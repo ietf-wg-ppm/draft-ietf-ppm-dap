@@ -2391,6 +2391,11 @@ all possible VDAF configurations for any tasks which the deployment may be
 configured for. Otherwise, an attacker may deny service by uploading many
 expensive reports to a suitably-configured VDAF.
 
+The varying cost of VDAF computation means that aggregators deployments should
+negotiate reasonable limits for each VDAF configuration or measurement task, out
+of band with the protocol. For example, aggregators may agree on a maximum size
+for an aggregation job or on a maximum rate of incoming reports.
+
 Applications which require computationally-expensive VDAFs can mitigate the
 computation cost of aggregation in a few ways, such as producing aggregates over
 a sample of the data or choosing a representation of the data permitting a
