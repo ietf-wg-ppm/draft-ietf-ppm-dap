@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-09-10T01:07:47.855382+00:00",
+  "timestamp": "2024-09-12T01:07:11.836232+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -71290,21 +71290,21 @@
       "id": "PR_kwDOFEJYQs55wiJ8",
       "title": "Add `max_aggregation_job_report_count` task parameter.",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/573",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "branlwyd",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "This parameter configures the maximum aggregation job size, allowing a standard way for the Helper to opt out of processing aggregation jobs which are too large.",
       "createdAt": "2024-08-28T21:26:24Z",
-      "updatedAt": "2024-09-03T22:42:47Z",
+      "updatedAt": "2024-09-11T19:26:05Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "c2f4e851a5989f4772d0c9e7c6d147611af7fd7b",
       "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "headRefName": "bran/max-agg-job-size",
       "headRefOid": "6973418c5def157b4bdd59f6bd3d2aa24ef3ad86",
-      "closedAt": null,
+      "closedAt": "2024-09-11T19:26:05Z",
       "mergedAt": null,
       "mergedBy": null,
       "mergeCommit": null,
@@ -71336,6 +71336,41 @@
           "body": "I agree that this parameter should be optional. Since there is no specified encoding of this parameter (or, more generally, for a task configuration), I think we don't need to worry about sentinel values -- we can just say the parameter is optional & specify what to do if it is not configured, as we used to with `max_batch_size`.",
           "createdAt": "2024-09-03T22:42:46Z",
           "updatedAt": "2024-09-03T22:42:46Z"
+        },
+        {
+          "author": "kristineguo",
+          "authorAssociation": "NONE",
+          "body": "I\u2019m not sure this is fit for the task config. It makes clients privy to implementation-specific details for the aggregators and does not affect the actual task aggregation. I think it also lacks flexibility, as it pins the max job size for the entire lifetime of the task, preventing the leader from adjusting if needed. All in all, this feels too implementation specific to include into the spec.",
+          "createdAt": "2024-09-10T18:33:40Z",
+          "updatedAt": "2024-09-10T18:33:40Z"
+        },
+        {
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> It makes clients privy to implementation-specific details for the aggregators and does not affect the actual task aggregation.\r\n\r\nThe clients do not need to know this value -- only the aggregators do. (Also, I don't think \"affects task aggregation\" is a bar that task configuration values need to meet -- e.g. `collector_hpke_config` doesn't affect aggregation either, nor arguably do `min_batch_size` or `time_precision`.)\r\n\r\nFWIW, I think it might be worthwhile for us to write down which parts of the task configuration each protocol participant needs to know. This is slightly complicated -- for example, technically speaking the client does not need to know the task's `min_batch_size` in order to participate in the protocol; but the client may nonetheless wish to know this value to decide whether to participate, as it affects \"how private\" the aggregations are. We should probably write down which task configuration values are technically required for the protocol to work, and note which other task configuration values each participant might be interested in knowing.\r\n\r\n> I think it also lacks flexibility, as it pins the max job size for the entire lifetime of the task, preventing the leader from adjusting if needed.\r\n\r\nI think this is a fair concern -- this is intended as a configuration knob to allow the Helper to assert a maximum aggregation job size it is willing to aggregate. The Leader can send smaller jobs if it wishes, but there is no way for the Leader & Helper to negotiate a larger value if they wish to do so outside of creating an entirely new measurement task.",
+          "createdAt": "2024-09-10T21:06:02Z",
+          "updatedAt": "2024-09-10T21:06:02Z"
+        },
+        {
+          "author": "kristineguo",
+          "authorAssociation": "NONE",
+          "body": "The way it's framed in the spec, the `collector_hpke_config` and `vdaf_verify_key` are configured by the aggregators separately and are not present in the actual task params. Furthermore, for extensions like task binding and in band task provisioning, clients will be creating the TaskConfig struct. It feels weird that they may be able to dictate such specific implementation details of the aggregators.\r\n\r\nThus, if this `max_aggregation_job_report_count` is to be included, it should be treated similar to the `collector_hpke_config` and `vdaf_verify_key` params and configured by aggregators separately from the task itself.\r\n\r\n",
+          "createdAt": "2024-09-10T21:18:06Z",
+          "updatedAt": "2024-09-10T21:18:45Z"
+        },
+        {
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> The way it's framed in the spec, the `collector_hpke_config` and `vdaf_verify_key` are configured by the aggregators separately and are not present in the actual task params. Furthermore, for extensions like task binding and in band task provisioning, clients will be creating the TaskConfig struct. It feels weird that they may be able to dictate such specific implementation details of the aggregators.\r\n> \r\n> Thus, if this `max_aggregation_job_report_count` is to be included, it should be treated similar to the `collector_hpke_config` and `vdaf_verify_key` params and configured by aggregators separately from the task itself.\r\n\r\nI think you are correct -- for (eg) `taskprov`, including this parameter in the `TaskConfig` would give the clients too much control over the aggregators' behavior. The parameter could be included in the parameters configured out-of-band (likely parameterized per VDAF configuration), but this would significantly reduce the utility of this parameter.\r\n\r\nIt might be useful for other task-provisioning schemes that give more control to the aggregators in negotiating task parameters. But I don't think we have any in hand, certainly not any going through standardization.\r\n\r\nI have sent #576 which instead adds an operational consideration that maximum aggregation job size should be negotiated by the aggregators somehow, without specifying a parameter -- perhaps that will turn out to be sufficient, and this PR can be withdrawn.\r\n\r\n",
+          "createdAt": "2024-09-11T18:17:26Z",
+          "updatedAt": "2024-09-11T18:17:26Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Thanks @branlwyd, this resolution makes sense to me. Let's close this PR -- we can re-open if anyone feels strongly about it.",
+          "createdAt": "2024-09-11T19:16:52Z",
+          "updatedAt": "2024-09-11T19:16:52Z"
         }
       ],
       "reviews": [
@@ -71847,6 +71882,96 @@
               "updatedAt": "2024-09-05T23:50:48Z"
             }
           ]
+        }
+      ]
+    },
+    {
+      "number": 575,
+      "id": "PR_kwDOFEJYQs57AHLZ",
+      "title": "Bump upload-artifact to v4",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/575",
+      "state": "MERGED",
+      "author": "cjpatton",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "v2 has been deprecated:\r\nhttps://github.blog/changelog/2024-02-13-deprecation-notice-v1-and-v2-of-the-artifact-actions/",
+      "createdAt": "2024-09-10T15:33:16Z",
+      "updatedAt": "2024-09-10T16:55:16Z",
+      "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "baseRefName": "main",
+      "baseRefOid": "c2f4e851a5989f4772d0c9e7c6d147611af7fd7b",
+      "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "headRefName": "cjpatton/upload-artifact-4",
+      "headRefOid": "5ac7d3c164ba0dad1940d70849cdea5a6db4b889",
+      "closedAt": "2024-09-10T16:55:15Z",
+      "mergedAt": "2024-09-10T16:55:15Z",
+      "mergedBy": "cjpatton",
+      "mergeCommit": {
+        "oid": "7081e1d75f25e8c4c0ec66386f8c5cc097a9f8f1"
+      },
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOFEJYQs6IrdJP",
+          "commit": {
+            "abbreviatedOid": "5ac7d3c"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2024-09-10T16:50:23Z",
+          "updatedAt": "2024-09-10T16:50:23Z",
+          "comments": []
+        }
+      ]
+    },
+    {
+      "number": 576,
+      "id": "PR_kwDOFEJYQs57MpxP",
+      "title": "Add operational consideration around max aggregation job size.",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/576",
+      "state": "OPEN",
+      "author": "branlwyd",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "",
+      "createdAt": "2024-09-11T18:02:25Z",
+      "updatedAt": "2024-09-11T19:15:59Z",
+      "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "baseRefName": "main",
+      "baseRefOid": "7081e1d75f25e8c4c0ec66386f8c5cc097a9f8f1",
+      "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "headRefName": "bran/max-agg-job-size-operational",
+      "headRefOid": "3987ccffa119f8fa5077c908bef1a5a66eee9ec4",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [
+        {
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "body": "(For context, see discussion starting with https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/573#issuecomment-2341735324.)",
+          "createdAt": "2024-09-11T18:29:52Z",
+          "updatedAt": "2024-09-11T18:29:52Z"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "PRR_kwDOFEJYQs6I_t2U",
+          "commit": {
+            "abbreviatedOid": "3987ccf"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2024-09-11T19:15:59Z",
+          "updatedAt": "2024-09-11T19:15:59Z",
+          "comments": []
         }
       ]
     }
