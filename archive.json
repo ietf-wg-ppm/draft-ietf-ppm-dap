@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-09-12T01:07:11.836232+00:00",
+  "timestamp": "2024-09-15T01:14:56.634145+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -11261,6 +11261,24 @@
       "body": "@ekr, do you want to update this?",
       "createdAt": "2024-08-05T01:23:25Z",
       "updatedAt": "2024-08-05T01:23:25Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 577,
+      "id": "I_kwDOFEJYQs6WYN5u",
+      "title": "Use draft-irtf-cfrg-vdaf-12",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/577",
+      "state": "OPEN",
+      "author": "cjpatton",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [
+        "wire breaking"
+      ],
+      "body": "The next VDAF draft includes wire breaking changes for Prio3 and Poplar1:\r\nhttps://github.com/cfrg/draft-irtf-cfrg-vdaf/pull/415\r\n\r\nThere is also an API change that being considered that will impact DAP:\r\nhttps://github.com/cfrg/draft-irtf-cfrg-vdaf/issues/418\r\n\r\nLuckily the change is pretty simple for us: we would set the VDAF context string to something like `dap-<ver> task <task_id>` where `<ver>` is the draft version and `<task_id>` is the task ID.\r\n\r\nWhile this change is relatively minor from the spec's point of view, it'll add some complexity to DAP implementations that need to support multiple versions at the same time.",
+      "createdAt": "2024-09-12T17:09:57Z",
+      "updatedAt": "2024-09-12T17:21:05Z",
       "closedAt": null,
       "comments": []
     }
