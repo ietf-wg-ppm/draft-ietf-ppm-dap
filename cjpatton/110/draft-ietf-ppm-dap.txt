@@ -2017,7 +2017,7 @@ struct {} Empty;
    variant {
      ReportID report_id;
      PrepareRespState prepare_resp_state = continue;
-     opaque payload<0..2^32-1> = outbound;
+     opaque payload<10..2^32-1> = outbound;
    } PrepareResp;
 
    Otherwise, if outbound == None, then the Helper's response is
