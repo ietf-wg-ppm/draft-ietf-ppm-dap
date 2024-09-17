@@ -1542,7 +1542,7 @@ struct {} Empty;
    struct {
      opaque agg_param<0..2^32-1>;
      PartialBatchSelector part_batch_selector;
-     PrepareInit prepare_inits<34..2^32-1>;
+     PrepareInit prepare_inits<49..2^32-1>;
    } AggregationJobInitReq;
 
    This message consists of:
