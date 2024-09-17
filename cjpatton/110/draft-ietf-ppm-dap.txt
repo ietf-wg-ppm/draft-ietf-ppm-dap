@@ -1100,7 +1100,7 @@ struct {} Empty;
    HpkeConfig structures in decreasing order of preference.  This allows
    an Aggregator to support multiple HPKE configurations simultaneously.
 
-   HpkeConfig HpkeConfigList<8..2^16-1>;
+   HpkeConfig HpkeConfigList<10..2^16-1>;
 
    struct {
      HpkeConfigId id;
@@ -1219,7 +1219,7 @@ struct {} Empty;
 
    struct {
      Extension extensions<0..2^16-1>;
-     opaque payload<0..2^32-1>;
+     opaque payload<1..2^32-1>;
    } PlaintextInputShare;
 
    Field extensions is set to the list of extensions intended to be
@@ -1508,7 +1508,7 @@ struct {} Empty;
 
    struct {
      ReportShare report_share;
-     opaque payload<0..2^32-1>;
+     opaque payload<10..2^32-1>;
    } PrepareInit;
 
    Each of these messages is constructed as follows:
@@ -1542,7 +1542,7 @@ struct {} Empty;
    struct {
      opaque agg_param<0..2^32-1>;
      PartialBatchSelector part_batch_selector;
-     PrepareInit prepare_inits<1..2^32-1>;
+     PrepareInit prepare_inits<34..2^32-1>;
    } AggregationJobInitReq;
 
    This message consists of:
@@ -1671,7 +1671,7 @@ struct {} Empty;
      ReportID report_id;
      PrepareRespState prepare_resp_state;
      select (PrepareResp.prepare_resp_state) {
-       case continue: opaque payload<0..2^32-1>;
+       case continue: opaque payload<10..2^32-1>;
        case finished: Empty;
        case reject:   PrepareError prepare_error;
      };
@@ -1733,14 +1733,14 @@ struct {} Empty;
    variant {
      ReportID report_id;
      PrepareRespState prepare_resp_state = continue;
-     opaque payload<0..2^32-1> = outbound;
+     opaque payload<10..2^32-1> = outbound;
    } PrepareResp;
 
    Finally, the Helper creates an AggregationJobResp to send to the
    Leader.  This message is structured as follows:
 
    struct {
-     PrepareResp prepare_resps<1..2^32-1>;
+     PrepareResp prepare_resps<31..2^32-1>;
    } AggregationJobResp;
 
    where prepare_resps are the outbound prep steps computed in the
@@ -1890,7 +1890,7 @@ struct {} Empty;
 
    struct {
      ReportID report_id;
-     opaque payload<0..2^32-1>;
+     opaque payload<10..2^32-1>;
    } PrepareContinue;
 
    where report_id is the report ID associated with state and outbound,
@@ -1903,7 +1903,7 @@ struct {} Empty;
 
    struct {
      uint16 step;
-     PrepareContinue prepare_continues<1..2^32-1>;
+     PrepareContinue prepare_continues<30..2^32-1>;
    } AggregationJobContinueReq;
 
    The step field is the step of DAP aggregation that the Leader just
@@ -3475,7 +3475,9 @@ Normative References
               Content", RFC 5861, DOI 10.17487/RFC5861, May 2010,
               <https://www.rfc-editor.org/rfc/rfc5861>.
 
-   [RFC7807]  "*** BROKEN REFERENCE ***".
+   [RFC7807]  Nottingham, M. and E. Wilde, "Problem Details for HTTP
+              APIs", RFC 7807, DOI 10.17487/RFC7807, March 2016,
+              <https://www.rfc-editor.org/rfc/rfc7807>.
 
    [RFC8174]  Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC
               2119 Key Words", BCP 14, RFC 8174, DOI 10.17487/RFC8174,

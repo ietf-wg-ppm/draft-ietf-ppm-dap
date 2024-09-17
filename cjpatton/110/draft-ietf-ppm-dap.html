@@ -2567,7 +2567,7 @@ decreasing order of preference. This allows an Aggregator to support multiple
 HPKE configurations simultaneously.<a href="#section-4.6.1-3" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-4.6.1-4">
 <pre>
-HpkeConfig HpkeConfigList&lt;8..2^16-1&gt;;
+HpkeConfig HpkeConfigList&lt;10..2^16-1&gt;;
 
 struct {
   HpkeConfigId id;
@@ -2697,7 +2697,7 @@ share, and the second input share is considered to be the Helper's input share.<
 <pre>
 struct {
   Extension extensions&lt;0..2^16-1&gt;;
-  opaque payload&lt;0..2^32-1&gt;;
+  opaque payload&lt;1..2^32-1&gt;;
 } PlaintextInputShare;
 </pre><a href="#section-4.6.2-11" class="pilcrow">¶</a>
 </div>
@@ -3006,7 +3006,7 @@ struct {
 
 struct {
   ReportShare report_share;
-  opaque payload&lt;0..2^32-1&gt;;
+  opaque payload&lt;10..2^32-1&gt;;
 } PrepareInit;
 </pre><a href="#section-4.7.1.1-10" class="pilcrow">¶</a>
 </div>
@@ -3045,7 +3045,7 @@ struct {
 struct {
   opaque agg_param&lt;0..2^32-1&gt;;
   PartialBatchSelector part_batch_selector;
-  PrepareInit prepare_inits&lt;1..2^32-1&gt;;
+  PrepareInit prepare_inits&lt;34..2^32-1&gt;;
 } AggregationJobInitReq;
 </pre><a href="#section-4.7.1.1-15" class="pilcrow">¶</a>
 </div>
@@ -3184,7 +3184,7 @@ struct {
   ReportID report_id;
   PrepareRespState prepare_resp_state;
   select (PrepareResp.prepare_resp_state) {
-    case continue: opaque payload&lt;0..2^32-1&gt;;
+    case continue: opaque payload&lt;10..2^32-1&gt;;
     case finished: Empty;
     case reject:   PrepareError prepare_error;
   };
@@ -3262,7 +3262,7 @@ variant {
 variant {
   ReportID report_id;
   PrepareRespState prepare_resp_state = continue;
-  opaque payload&lt;0..2^32-1&gt; = outbound;
+  opaque payload&lt;10..2^32-1&gt; = outbound;
 } PrepareResp;
 </pre><a href="#section-4.7.1.2-17" class="pilcrow">¶</a>
 </div>
@@ -3271,7 +3271,7 @@ message is structured as follows:<a href="#section-4.7.1.2-18" class="pilcrow">�
 <div class="alignLeft art-text artwork" id="section-4.7.1.2-19">
 <pre>
 struct {
-  PrepareResp prepare_resps&lt;1..2^32-1&gt;;
+  PrepareResp prepare_resps&lt;31..2^32-1&gt;;
 } AggregationJobResp;
 </pre><a href="#section-4.7.1.2-19" class="pilcrow">¶</a>
 </div>
@@ -3432,7 +3432,7 @@ report the Leader constructs a preparation continuation message:<a href="#sectio
 <pre>
 struct {
   ReportID report_id;
-  opaque payload&lt;0..2^32-1&gt;;
+  opaque payload&lt;10..2^32-1&gt;;
 } PrepareContinue;
 </pre><a href="#section-4.7.2.1-3" class="pilcrow">¶</a>
 </div>
@@ -3445,7 +3445,7 @@ initialization (see <a href="#leader-init" class="auto internal xref">Section 4.
 <pre>
 struct {
   uint16 step;
-  PrepareContinue prepare_continues&lt;1..2^32-1&gt;;
+  PrepareContinue prepare_continues&lt;30..2^32-1&gt;;
 } AggregationJobContinueReq;
 </pre><a href="#section-4.7.2.1-6" class="pilcrow">¶</a>
 </div>
@@ -5800,7 +5800,7 @@ with the Reference field set to point to this specification.<a href="#section-8.
 <dd class="break"></dd>
 <dt id="RFC7807">[RFC7807]</dt>
         <dd>
-<span class="refTitle">"*** BROKEN REFERENCE ***"</span>. </dd>
+<span class="refAuthor">Nottingham, M.</span> and <span class="refAuthor">E. Wilde</span>, <span class="refTitle">"Problem Details for HTTP APIs"</span>, <span class="seriesInfo">RFC 7807</span>, <span class="seriesInfo">DOI 10.17487/RFC7807</span>, <time datetime="2016-03" class="refDate">March 2016</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc7807">https://www.rfc-editor.org/rfc/rfc7807</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="RFC8174">[RFC8174]</dt>
         <dd>
