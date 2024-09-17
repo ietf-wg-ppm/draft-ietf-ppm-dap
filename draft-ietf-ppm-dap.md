@@ -975,7 +975,7 @@ decreasing order of preference. This allows an Aggregator to support multiple
 HPKE configurations simultaneously.
 
 ~~~
-HpkeConfig HpkeConfigList<1..2^16-1>;
+HpkeConfig HpkeConfigList<10..2^16-1>;
 
 struct {
   HpkeConfigId id;
@@ -1093,7 +1093,7 @@ The Client then wraps each input share in the following structure:
 ~~~
 struct {
   Extension extensions<0..2^16-1>;
-  opaque payload<0..2^32-1>;
+  opaque payload<1..2^32-1>;
 } PlaintextInputShare;
 ~~~
 
@@ -1370,7 +1370,7 @@ struct {
 
 struct {
   ReportShare report_share;
-  opaque payload<0..2^32-1>;
+  opaque payload<5..2^32-1>;
 } PrepareInit;
 ~~~
 
@@ -1405,7 +1405,7 @@ struct {
 struct {
   opaque agg_param<0..2^32-1>;
   PartialBatchSelector part_batch_selector;
-  PrepareInit prepare_inits<1..2^32-1>;
+  PrepareInit prepare_inits<44..2^32-1>;
 } AggregationJobInitReq;
 ~~~
 
@@ -1528,7 +1528,7 @@ struct {
   ReportID report_id;
   PrepareRespState prepare_resp_state;
   select (PrepareResp.prepare_resp_state) {
-    case continue: opaque payload<0..2^32-1>;
+    case continue: opaque payload<5..2^32-1>;
     case finished: Empty;
     case reject:   PrepareError prepare_error;
   };
@@ -1592,7 +1592,7 @@ Otherwise the Helper responds with
 variant {
   ReportID report_id;
   PrepareRespState prepare_resp_state = continue;
-  opaque payload<0..2^32-1> = outbound;
+  opaque payload<5..2^32-1> = outbound;
 } PrepareResp;
 ~~~
 
@@ -1601,7 +1601,7 @@ message is structured as follows:
 
 ~~~
 struct {
-  PrepareResp prepare_resps<1..2^32-1>;
+  PrepareResp prepare_resps<26..2^32-1>;
 } AggregationJobResp;
 ~~~
 
@@ -1738,7 +1738,7 @@ report the Leader constructs a preparation continuation message:
 ~~~
 struct {
   ReportID report_id;
-  opaque payload<0..2^32-1>;
+  opaque payload<5..2^32-1>;
 } PrepareContinue;
 ~~~
 
@@ -1752,7 +1752,7 @@ initialization (see {{leader-init}}) with media type
 ~~~
 struct {
   uint16 step;
-  PrepareContinue prepare_continues<1..2^32-1>;
+  PrepareContinue prepare_continues<25..2^32-1>;
 } AggregationJobContinueReq;
 ~~~
 
@@ -1866,7 +1866,7 @@ Otherwise, if `outbound != None`, then the Helper's response is
 variant {
   ReportID report_id;
   PrepareRespState prepare_resp_state = continue;
-  opaque payload<0..2^32-1> = outbound;
+  opaque payload<5..2^32-1> = outbound;
 } PrepareResp;
 ~~~
 
