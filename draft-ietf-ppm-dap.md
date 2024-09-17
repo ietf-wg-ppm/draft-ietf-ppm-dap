@@ -2576,7 +2576,8 @@ different ways to address Sybil attacks, such as:
 1. Removing Client-specific metadata on individual reports, such as through the
    use of anonymizing proxies in the upload flow, as described in
    {{anon-proxy}}.
-1. Differential privacy ({{dp}}) can help mitigate Sybil attacks to some extent.
+1. Some mechanisms for differential privacy ({{dp}}) can help mitigate Sybil
+   attacks against privacy to some extent.
 
 ## Batch-selection Attacks {#batch-selection}
 
