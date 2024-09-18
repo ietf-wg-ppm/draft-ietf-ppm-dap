@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 14 March 2025                                        Cloudflare
+Expires: 22 March 2025                                        Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                                  Mozilla
                                                               C. A. Wood
                                                               Cloudflare
-                                                       10 September 2024
+                                                       18 September 2024
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -63,7 +63,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 14 March 2025.
+   This Internet-Draft will expire on 22 March 2025.
 
 Copyright Notice
 
@@ -2768,8 +2768,8 @@ enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
        through the use of anonymizing proxies in the upload flow, as
        described in Section 7.4.
 
-   3.  Differential privacy (Section 7.5) can help mitigate Sybil
-       attacks to some extent.
+   3.  Some mechanisms for differential privacy (Section 7.5) can help
+       mitigate Sybil attacks against privacy to some extent.
 
 7.2.  Batch-selection Attacks
 
