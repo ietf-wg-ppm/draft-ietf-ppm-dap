@@ -2894,7 +2894,8 @@ subsections.<a href="#section-4.7-7" class="pilcrow">¶</a></p>
 aggregation parameter. However, in some situations it is possible to begin
 aggregation as soon as reports arrive. For example, Prio3 has just one valid
 aggregation parameter (the empty string).<a href="#section-4.7-8" class="pilcrow">¶</a></p>
-<p id="section-4.7-9">An aggregation job can be thought of as having three phases:<a href="#section-4.7-9" class="pilcrow">¶</a></p>
+<p id="section-4.7-9">An aggregation job can be thought of as having three phases, which are
+described in the remaining subsections:<a href="#section-4.7-9" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-4.7-10.1">
             <p id="section-4.7-10.1.1">Initialization: Begin the aggregation flow by disseminating report shares and
@@ -2905,11 +2906,17 @@ initializing the VDAF prep state for each report.<a href="#section-4.7-10.1.1" c
 messages until preparation completes or an error occurs.<a href="#section-4.7-10.2.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-4.7-10.3">
-            <p id="section-4.7-10.3.1">Completion: Finish the aggregate flow, yielding an output share corresponding
-to each report share in the aggregation job.<a href="#section-4.7-10.3.1" class="pilcrow">¶</a></p>
+            <p id="section-4.7-10.3.1">Completion: Finish the aggregation flow, yielding an output share
+corresponding to each report share in the aggregation job.<a href="#section-4.7-10.3.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
-<p id="section-4.7-11">These phases are described in the following subsections.<a href="#section-4.7-11" class="pilcrow">¶</a></p>
+<p id="section-4.7-11">After an aggregation job is completed, each Aggregator stores the output shares
+until the aggregate share is collected as described in <a href="#collect-flow" class="auto internal xref">Section 4.8</a>. Note
+that it is usually not necessary to store output shares individually: depending
+on the batch mode and VDAF, the output shares can be merged into existing
+aggregate shares that are updated as aggregation jobs complete. This streaming
+aggregation is compatible with Prio3 and all batch modes specified in this
+document.<a href="#section-4.7-11" class="pilcrow">¶</a></p>
 <div id="agg-init">
 <section id="section-4.7.1">
           <h4 id="name-aggregate-initialization">
@@ -3868,11 +3875,11 @@ output shares, denoted <code>out_shares</code>, for the batch interval, as follo
 agg_share = Vdaf.aggregate(agg_param, out_shares)
 </pre><a href="#section-4.8.2-10" class="pilcrow">¶</a>
 </div>
-<p id="section-4.8.2-11">Implementation note: For most VDAFs, it is possible to aggregate output shares
-as they arrive rather than wait until the batch is collected. To do so however,
-it is necessary to enforce the batch parameters as described in
-<a href="#batch-validation" class="auto internal xref">Section 4.8.5</a> so that the Aggregator knows which aggregate share to
-update.<a href="#section-4.8.2-11" class="pilcrow">¶</a></p>
+<p id="section-4.8.2-11">Implementation note: For most VDAFs, including Prio3, it is possible to
+aggregate output shares as they arrive rather than wait until the batch is
+collected. For the batch modes specified in this document, it is necessary to
+enforce the batch parameters as described in <a href="#batch-validation" class="auto internal xref">Section 4.8.5</a> so that the
+Aggregator knows which aggregate share to update.<a href="#section-4.8.2-11" class="pilcrow">¶</a></p>
 <p id="section-4.8.2-12">The Helper then encrypts <code>agg_share</code> under the Collector's HPKE public key as
 described in <a href="#aggregate-share-encrypt" class="auto internal xref">Section 4.8.4</a>, yielding <code>encrypted_agg_share</code>.
 Encryption prevents the Leader from learning the actual result, as it only has
