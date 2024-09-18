@@ -1714,16 +1714,26 @@ struct {} Empty;
      };
    } PrepareResp;
 
-   First the Helper preprocesses each report as follows:
-
-   1.  Decrypt the input share for each report share as described in
-       Section 4.7.1.3.
-
-   2.  Check that the resulting input share is valid as described in
-       Section 4.7.1.4.
-
-   For any report that was rejected, the Helper sets the outbound
+   To begin, the Helper MAY resolve replays with the following
+   procedure.  It MUST perform this procedure prior to completing the
+   aggregation job.  For each report in the request, it checks if the
+   report ID corresponds to a report ID it has previously stored for
+   this task.  If so, it rejects the report by setting the outbound
    preparation response to
+
+   variant {
+     ReportID report_id;
+     PrepareRespState prepare_resp_state = reject;
+     PrepareError report_replayed;
+   } PrepareResp;
+
+   where report_id is the report ID . It then stores the ID of every
+   other report for replay protection going forward.
+
+   Next, helper decrypts each of its report shares as described in
+   Section 4.7.1.3, then checks input share validity as described in
+   Section 4.7.1.4.  For any report that was rejected, the Helper sets
+   the outbound preparation response to
 
    variant {
      ReportID report_id;
@@ -1731,10 +1741,9 @@ struct {} Empty;
      PrepareError prepare_error;
    } PrepareResp;
 
-   where report_id is the report ID and prepare_error is the indicated
-   error.  For all other reports it initializes the VDAF prep state as
-   follows (let inbound denote the payload of the prep step sent by the
-   Leader):
+   where and prepare_error is the indicated error.  For all other
+   reports it initializes the VDAF prep state as follows (let inbound
+   denote the payload of the prep step sent by the Leader):
 
 (state, outbound) = Vdaf.ping_pong_helper_init(vdaf_verify_key,
                                                agg_param,
@@ -1802,7 +1811,9 @@ struct {} Empty;
    Finally, if state == Continued(prep_state), then the Helper stores
    state to prepare for the next continuation step (Section 4.7.2.2).
    Otherwise, if state == Finished(out_share), then the Helper stores
-   out_share for use in the collection interaction (Section 4.8).
+   out_share for use in the collection interaction (Section 4.8).  It
+   MUST also store the corresponding report ID for replay protection if
+   it has not done so already.
 
 4.7.1.3.  Input Share Decryption
 
@@ -2076,7 +2087,9 @@ struct {} Empty;
    Finally, if state == Continued(prep_state), then the Helper stores
    state to prepare for the next continuation step (Section 4.7.2.2).
    Otherwise, if state == Finished(out_share), then the Helper stores
-   out_share for use in the collection interaction (Section 4.8).
+   out_share for use in the collection sub-protocol (Section 4.8).  It
+   MUST also store the report ID for replay protection if it has not
+   done so already.
 
    If for whatever reason the Leader must abandon the aggregation job,
    it SHOULD send an HTTP DELETE request to the aggregation job URI so
