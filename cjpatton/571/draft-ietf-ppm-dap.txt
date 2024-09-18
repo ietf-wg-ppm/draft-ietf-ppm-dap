@@ -1427,7 +1427,7 @@ struct {} Empty;
       shares and messages until preparation completes or an error
       occurs.
 
-   *  Completion: Finish the aggregate flow, yielding an output share
+   *  Completion: Finish the aggregation flow, yielding an output share
       corresponding to each report share in the aggregation job.
 
    After an aggregation job is completed, each Aggregator stores the
@@ -3483,7 +3483,9 @@ Normative References
               Content", RFC 5861, DOI 10.17487/RFC5861, May 2010,
               <https://www.rfc-editor.org/rfc/rfc5861>.
 
-   [RFC7807]  "*** BROKEN REFERENCE ***".
+   [RFC7807]  Nottingham, M. and E. Wilde, "Problem Details for HTTP
+              APIs", RFC 7807, DOI 10.17487/RFC7807, March 2016,
+              <https://www.rfc-editor.org/rfc/rfc7807>.
 
    [RFC8174]  Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC
               2119 Key Words", BCP 14, RFC 8174, DOI 10.17487/RFC8174,
