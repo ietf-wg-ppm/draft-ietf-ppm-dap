@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 21 March 2025                                        Cloudflare
+Expires: 22 March 2025                                        Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                                  Mozilla
                                                               C. A. Wood
                                                               Cloudflare
-                                                       17 September 2024
+                                                       18 September 2024
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -63,7 +63,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 21 March 2025.
+   This Internet-Draft will expire on 22 March 2025.
 
 Copyright Notice
 
@@ -1508,7 +1508,7 @@ struct {} Empty;
 
    struct {
      ReportShare report_share;
-     opaque payload<10..2^32-1>;
+     opaque payload<5..2^32-1>;
    } PrepareInit;
 
    Each of these messages is constructed as follows:
@@ -1542,7 +1542,7 @@ struct {} Empty;
    struct {
      opaque agg_param<0..2^32-1>;
      PartialBatchSelector part_batch_selector;
-     PrepareInit prepare_inits<49..2^32-1>;
+     PrepareInit prepare_inits<44..2^32-1>;
    } AggregationJobInitReq;
 
    This message consists of:
@@ -1671,7 +1671,7 @@ struct {} Empty;
      ReportID report_id;
      PrepareRespState prepare_resp_state;
      select (PrepareResp.prepare_resp_state) {
-       case continue: opaque payload<10..2^32-1>;
+       case continue: opaque payload<5..2^32-1>;
        case finished: Empty;
        case reject:   PrepareError prepare_error;
      };
@@ -1733,14 +1733,14 @@ struct {} Empty;
    variant {
      ReportID report_id;
      PrepareRespState prepare_resp_state = continue;
-     opaque payload<10..2^32-1> = outbound;
+     opaque payload<5..2^32-1> = outbound;
    } PrepareResp;
 
    Finally, the Helper creates an AggregationJobResp to send to the
    Leader.  This message is structured as follows:
 
    struct {
-     PrepareResp prepare_resps<31..2^32-1>;
+     PrepareResp prepare_resps<26..2^32-1>;
    } AggregationJobResp;
 
    where prepare_resps are the outbound prep steps computed in the
@@ -1890,7 +1890,7 @@ struct {} Empty;
 
    struct {
      ReportID report_id;
-     opaque payload<10..2^32-1>;
+     opaque payload<5..2^32-1>;
    } PrepareContinue;
 
    where report_id is the report ID associated with state and outbound,
@@ -1903,7 +1903,7 @@ struct {} Empty;
 
    struct {
      uint16 step;
-     PrepareContinue prepare_continues<30..2^32-1>;
+     PrepareContinue prepare_continues<25..2^32-1>;
    } AggregationJobContinueReq;
 
    The step field is the step of DAP aggregation that the Leader just
@@ -2017,7 +2017,7 @@ struct {} Empty;
    variant {
      ReportID report_id;
      PrepareRespState prepare_resp_state = continue;
-     opaque payload<10..2^32-1> = outbound;
+     opaque payload<5..2^32-1> = outbound;
    } PrepareResp;
 
    Otherwise, if outbound == None, then the Helper's response is
