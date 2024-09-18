@@ -1286,16 +1286,23 @@ aggregation parameter. However, in some situations it is possible to begin
 aggregation as soon as reports arrive. For example, Prio3 has just one valid
 aggregation parameter (the empty string).
 
-An aggregation job can be thought of as having three phases:
+An aggregation job can be thought of as having three phases, which are
+described in the remaining subsections:
 
 - Initialization: Begin the aggregation flow by disseminating report shares and
   initializing the VDAF prep state for each report.
 - Continuation: Continue the aggregation flow by exchanging prep shares and
   messages until preparation completes or an error occurs.
-- Completion: Finish the aggregate flow, yielding an output share corresponding
-  to each report share in the aggregation job.
+- Completion: Finish the aggregation flow, yielding an output share
+  corresponding to each report share in the aggregation job.
 
-These phases are described in the following subsections.
+After an aggregation job is completed, each Aggregator stores the output shares
+until the aggregate share is collected as described in {{collect-flow}}. Note
+that it is usually not necessary to store output shares individually: depending
+on the batch mode and VDAF, the output shares can be merged into existing
+aggregate shares that are updated as aggregation jobs complete. This streaming
+aggregation is compatible with Prio3 and all batch modes specified in this
+document.
 
 ### Aggregate Initialization {#agg-init}
 
@@ -2150,11 +2157,11 @@ output shares, denoted `out_shares`, for the batch interval, as follows:
 agg_share = Vdaf.aggregate(agg_param, out_shares)
 ~~~
 
-Implementation note: For most VDAFs, it is possible to aggregate output shares
-as they arrive rather than wait until the batch is collected. To do so however,
-it is necessary to enforce the batch parameters as described in
-{{batch-validation}} so that the Aggregator knows which aggregate share to
-update.
+Implementation note: For most VDAFs, including Prio3, it is possible to
+aggregate output shares as they arrive rather than wait until the batch is
+collected. For the batch modes specified in this document, it is necessary to
+enforce the batch parameters as described in {{batch-validation}} so that the
+Aggregator knows which aggregate share to update.
 
 The Helper then encrypts `agg_share` under the Collector's HPKE public key as
 described in {{aggregate-share-encrypt}}, yielding `encrypted_agg_share`.
