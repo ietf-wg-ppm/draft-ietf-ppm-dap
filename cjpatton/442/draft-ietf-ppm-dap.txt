@@ -1508,8 +1508,8 @@ struct {} Empty;
    removes it from the set of candidate reports.
 
    At this point, the Leader MAY store the ID of each report in the
-   candidate set.  It MUST do so before storing the output shares at the
-   end of the continuation phase (Section 4.7.2.1).
+   candidate set.  It MUST do for each output shares stored at the end
+   of the continuation phase (Section 4.7.2.1).
 
    Next, for each report the Leader executes the following procedure:
 
