@@ -1497,14 +1497,19 @@ struct {} Empty;
    2.  Decrypt the input share for each report share as described in
        Section 4.7.1.3.
 
-   3.  Check that the resulting input share is valid as described in
+   3.  For each report, check that input share is valid as described in
        Section 4.7.1.4.
 
-   4.  Check if the report ID corresponds to a report it has previously
-       aggregated for this task.  If so, mark it as invalid.
+   4.  For each report, check if the report ID corresponds to a report
+       it has previously stored for this task.  If so, mark it as
+       invalid.
 
    If any step invalidates the report, the Leader rejects the report and
    removes it from the set of candidate reports.
+
+   At this point, the Leader MAY store the ID of each report in the
+   candidate set.  It MUST do so before storing the output shares at the
+   end of the continuation phase (Section 4.7.2.1).
 
    Next, for each report the Leader executes the following procedure:
 
@@ -1989,9 +1994,8 @@ struct {} Empty;
    4.  Else the type is invalid, in which case the Leader MUST abort the
        aggregation job.
 
-   When the Leader stores the out_share, it also commits the
-   corresponding report ID to the set of IDs of reports aggregated for
-   the task.
+   When the Leader stores the out_share, it MUST store the report ID for
+   replay protection if it has not done so already.
 
 4.7.2.2.  Helper Continuation
 
