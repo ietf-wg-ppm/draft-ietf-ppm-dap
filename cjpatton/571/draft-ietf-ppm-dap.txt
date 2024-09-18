@@ -2776,8 +2776,8 @@ enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
        through the use of anonymizing proxies in the upload flow, as
        described in Section 7.4.
 
-   3.  Differential privacy (Section 7.5) can help mitigate Sybil
-       attacks to some extent.
+   3.  Some mechanisms for differential privacy (Section 7.5) can help
+       mitigate Sybil attacks against privacy to some extent.
 
 7.2.  Batch-selection Attacks
 
