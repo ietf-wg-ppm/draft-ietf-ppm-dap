@@ -1765,29 +1765,13 @@ struct {} Empty;
      PrepareError prepare_error = vdaf_prep_error;
    } PrepareResp;
 
-   If state == Continued(prep_state), then the Helper stores state to
-   prepare for the next continuation step (Section 4.7.2.2) and responds
-   with
+   Otherwise the Helper responds with
 
    variant {
      ReportID report_id;
      PrepareRespState prepare_resp_state = continue;
      opaque payload<0..2^32-1> = outbound;
    } PrepareResp;
-
-   If state == Finished(out_share), then the Helper checks whether
-   report_id is in the set of report IDs the Helper has aggregated for
-   this task.  If so, it responds with
-
-   variant {
-     ReportID report_id;
-     PrepareRespState prepare_resp_state = reject;
-     PrepareError prepare_error = report_replayed;
-   } PrepareResp;
-
-   Otherwise, it commits report_id to the set of aggregated report IDs
-   and stores out_share for use in the collection sub-protocol
-   (Section 4.8).
 
    Finally, the Helper creates an AggregationJobResp to send to the
    Leader.  This message is structured as follows:
@@ -1814,6 +1798,11 @@ struct {} Empty;
    aggregation job.  Once an aggregation job has been continued at least
    once (see Section 4.7.2), further requests to initialize that
    aggregation job MUST fail with an HTTP client error status code.
+
+   Finally, if state == Continued(prep_state), then the Helper stores
+   state to prepare for the next continuation step (Section 4.7.2.2).
+   Otherwise, if state == Finished(out_share), then the Helper stores
+   out_share for use in the collection interaction (Section 4.8).
 
 4.7.1.3.  Input Share Decryption
 
@@ -1872,7 +1861,21 @@ struct {} Empty;
        PlaintextInputShare are the same.  If so, the Aggregator MUST
        mark the input share as invalid with error invalid_message.
 
-   6.  If the report pertains to a batch that was previously collected,
+   6.  Check if the report has been previously aggregated.  If so, the
+       input share MUST be marked as invalid with the error
+       report_replayed.  A report is considered aggregated if its
+       contribution would be included in a relevant collection job.
+
+       *  Implementation note: To detect replay attacks, each Aggregator
+          is required to keep track of the set of reports it has
+          processed for a given task.  Because honest Clients choose the
+          report ID at random, it is sufficient to store the set of IDs
+          of processed reports.  However, implementations may find it
+          helpful to track additional information, like the timestamp,
+          so that the storage used for anti-replay can be sharded
+          efficiently.
+
+   7.  If the report pertains to a batch that was previously collected,
        then the input share MUST be marked as invalid with error
        batch_collected.
 
@@ -1890,7 +1893,7 @@ struct {} Empty;
           [TODO: If a section to clarify report and batch states is
           added this can be removed.  See Issue #384]
 
-   7.  Finally, if an Aggregator cannot determine if an input share is
+   8.  Finally, if an Aggregator cannot determine if an input share is
        valid, it MUST mark the input share as invalid with error
        report_dropped.  For example, if the Aggregator has evicted the
        state required to perform the check from long-term storage.  (See
@@ -1973,7 +1976,7 @@ struct {} Empty;
        process is complete: either state == Rejected(), in which case
        the Leader rejects the report and removes it from the candidate
        set; or state == Finished(out_share), in which case preparation
-       is complete and the Leader stores out_share for use in the
+       is complete and the Leader stores the output share for use in the
        collection sub-protocol Section 4.8.
 
    2.  Else if the type is "finished" and state == Finished(out_share),
@@ -2050,23 +2053,7 @@ struct {} Empty;
      PrepareError prepare_error = vdaf_prep_error;
    } PrepareResp;
 
-   If state == Continued(prep_state), then the Helper stores state to
-   prepare for the next continuation step (Section 4.7.2.2).
-
-   If state == Finished(out_share), then the Helper checks whether
-   report_id is in the set of report IDs the Helper has aggregated for
-   this task.  If so, it responds with
-
-   variant {
-     ReportID report_id;
-     PrepareRespState prepare_resp_state = reject;
-     PrepareError prepare_error = report_replayed;
-   } PrepareResp;
-
-   Otherwise, it commits report_id to the set of aggregated report IDs
-   and stores out_share for use in the collection sub-protocol
-   (Section 4.8).  Its response to the Leader depends on the value of
-   outbound.  If outbound != None, then the Helper's response is
+   Otherwise, if outbound != None, then the Helper's response is
 
    variant {
      ReportID report_id;
@@ -2086,6 +2073,11 @@ struct {} Empty;
    MUST match the Leader's request.  It responds to the Leader with HTTP
    status 200 OK, media type application/dap-aggregation-job-resp, and a
    body consisting of the AggregationJobResp.
+
+   Finally, if state == Continued(prep_state), then the Helper stores
+   state to prepare for the next continuation step (Section 4.7.2.2).
+   Otherwise, if state == Finished(out_share), then the Helper stores
+   out_share for use in the collection interaction (Section 4.8).
 
    If for whatever reason the Leader must abandon the aggregation job,
    it SHOULD send an HTTP DELETE request to the aggregation job URI so

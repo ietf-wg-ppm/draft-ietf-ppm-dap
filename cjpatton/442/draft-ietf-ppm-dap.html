@@ -2670,8 +2670,8 @@ struct {
 <ul class="normal">
 <li class="normal" id="section-4.6.2-3.1.2.1">
                   <p id="section-4.6.2-3.1.2.1.1"><code>report_id</code> is used by the Aggregators to ensure the report is not
-replayed (<a href="#agg-flow" class="auto internal xref">Figure 2</a>). The Client <span class="bcp14">MUST</span> generate this by generating 16
-random bytes using a cryptographically secure random number generator.<a href="#section-4.6.2-3.1.2.1.1" class="pilcrow">¶</a></p>
+ replayed (<a href="#agg-flow" class="auto internal xref">Figure 2</a>). The Client <span class="bcp14">MUST</span> generate this by generating 16
+ random bytes using a cryptographically secure random number generator.<a href="#section-4.6.2-3.1.2.1.1" class="pilcrow">¶</a></p>
 </li>
                 <li class="normal" id="section-4.6.2-3.1.2.2">
                   <p id="section-4.6.2-3.1.2.2.1"><code>time</code> is the time at which the report was generated. The Client <span class="bcp14">SHOULD</span>
@@ -3295,9 +3295,7 @@ variant {
 } PrepareResp;
 </pre><a href="#section-4.7.1.2-15" class="pilcrow">¶</a>
 </div>
-<p id="section-4.7.1.2-16">If <code>state == Continued(prep_state)</code>, then the Helper stores <code>state</code> to prepare
-for the next continuation step (<a href="#aggregation-helper-continuation" class="auto internal xref">Section 4.7.2.2</a>) and
-responds with<a href="#section-4.7.1.2-16" class="pilcrow">¶</a></p>
+<p id="section-4.7.1.2-16">Otherwise the Helper responds with<a href="#section-4.7.1.2-16" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-4.7.1.2-17">
 <pre>
 variant {
@@ -3307,42 +3305,32 @@ variant {
 } PrepareResp;
 </pre><a href="#section-4.7.1.2-17" class="pilcrow">¶</a>
 </div>
-<p id="section-4.7.1.2-18">If <code>state == Finished(out_share)</code>, then the Helper checks whether <code>report_id</code>
-is in the set of report IDs the Helper has aggregated for this task. If so, it
-responds with<a href="#section-4.7.1.2-18" class="pilcrow">¶</a></p>
+<p id="section-4.7.1.2-18">Finally, the Helper creates an <code>AggregationJobResp</code> to send to the Leader. This
+message is structured as follows:<a href="#section-4.7.1.2-18" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-4.7.1.2-19">
-<pre>
-variant {
-  ReportID report_id;
-  PrepareRespState prepare_resp_state = reject;
-  PrepareError prepare_error = report_replayed;
-} PrepareResp;
-</pre><a href="#section-4.7.1.2-19" class="pilcrow">¶</a>
-</div>
-<p id="section-4.7.1.2-20">Otherwise, it commits <code>report_id</code> to the set of aggregated report IDs and stores
-<code>out_share</code> for use in the collection sub-protocol (<a href="#collect-flow" class="auto internal xref">Section 4.8</a>).<a href="#section-4.7.1.2-20" class="pilcrow">¶</a></p>
-<p id="section-4.7.1.2-21">Finally, the Helper creates an <code>AggregationJobResp</code> to send to the Leader. This
-message is structured as follows:<a href="#section-4.7.1.2-21" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.7.1.2-22">
 <pre>
 struct {
   PrepareResp prepare_resps&lt;1..2^32-1&gt;;
 } AggregationJobResp;
-</pre><a href="#section-4.7.1.2-22" class="pilcrow">¶</a>
+</pre><a href="#section-4.7.1.2-19" class="pilcrow">¶</a>
 </div>
-<p id="section-4.7.1.2-23">where <code>prepare_resps</code> are the outbound prep steps computed in the previous step.
-The order <span class="bcp14">MUST</span> match <code>AggregationJobInitReq.prepare_inits</code>.<a href="#section-4.7.1.2-23" class="pilcrow">¶</a></p>
-<p id="section-4.7.1.2-24">The Helper responds to the Leader with HTTP status code 201 Created and a body
+<p id="section-4.7.1.2-20">where <code>prepare_resps</code> are the outbound prep steps computed in the previous step.
+The order <span class="bcp14">MUST</span> match <code>AggregationJobInitReq.prepare_inits</code>.<a href="#section-4.7.1.2-20" class="pilcrow">¶</a></p>
+<p id="section-4.7.1.2-21">The Helper responds to the Leader with HTTP status code 201 Created and a body
 consisting of the <code>AggregationJobResp</code>, with media type
-"application/dap-aggregation-job-resp".<a href="#section-4.7.1.2-24" class="pilcrow">¶</a></p>
-<p id="section-4.7.1.2-25">Changing an aggregation job's parameters is illegal, so further requests to
+"application/dap-aggregation-job-resp".<a href="#section-4.7.1.2-21" class="pilcrow">¶</a></p>
+<p id="section-4.7.1.2-22">Changing an aggregation job's parameters is illegal, so further requests to
 <code>PUT /tasks/{tasks}/aggregation_jobs/{aggregation-job-id}</code> for the same
 <code>aggregation-job-id</code> but with a different <code>AggregationJobInitReq</code> in the body
-<span class="bcp14">MUST</span> fail with an HTTP client error status code.<a href="#section-4.7.1.2-25" class="pilcrow">¶</a></p>
-<p id="section-4.7.1.2-26">Additionally, it is not possible to rewind or reset the state of an aggregation
+<span class="bcp14">MUST</span> fail with an HTTP client error status code.<a href="#section-4.7.1.2-22" class="pilcrow">¶</a></p>
+<p id="section-4.7.1.2-23">Additionally, it is not possible to rewind or reset the state of an aggregation
 job. Once an aggregation job has been continued at least once (see
 <a href="#agg-continue-flow" class="auto internal xref">Section 4.7.2</a>), further requests to initialize that aggregation job <span class="bcp14">MUST</span>
-fail with an HTTP client error status code.<a href="#section-4.7.1.2-26" class="pilcrow">¶</a></p>
+fail with an HTTP client error status code.<a href="#section-4.7.1.2-23" class="pilcrow">¶</a></p>
+<p id="section-4.7.1.2-24">Finally, if <code>state == Continued(prep_state)</code>, then the Helper stores <code>state</code> to
+prepare for the next continuation step (<a href="#aggregation-helper-continuation" class="auto internal xref">Section 4.7.2.2</a>).
+Otherwise, if <code>state == Finished(out_share)</code>, then the Helper stores <code>out_share</code>
+for use in the collection interaction (<a href="#collect-flow" class="auto internal xref">Section 4.8</a>).<a href="#section-4.7.1.2-24" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="input-share-decryption">
@@ -3410,30 +3398,46 @@ the same. If so, the Aggregator <span class="bcp14">MUST</span> mark the input s
 error <code>invalid_message</code>.<a href="#section-4.7.1.4-3.5.1" class="pilcrow">¶</a></p>
 </li>
               <li id="section-4.7.1.4-3.6">
-                <p id="section-4.7.1.4-3.6.1">If the report pertains to a batch that was previously collected, then the
-input share <span class="bcp14">MUST</span> be marked as invalid with error <code>batch_collected</code>.<a href="#section-4.7.1.4-3.6.1" class="pilcrow">¶</a></p>
+                <p id="section-4.7.1.4-3.6.1">Check if the report has been previously aggregated. If so, the input share
+<span class="bcp14">MUST</span> be marked as invalid with the error <code>report_replayed</code>. A report is
+considered aggregated if its contribution would be included in a relevant
+collection job.<a href="#section-4.7.1.4-3.6.1" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-4.7.1.4-3.6.2.1">
-                    <p id="section-4.7.1.4-3.6.2.1.1">Implementation note: The Leader considers a batch to be collected once it
+                    <p id="section-4.7.1.4-3.6.2.1.1">Implementation note: To detect replay attacks, each Aggregator is required
+to keep track of the set of reports it has processed for a given task.
+Because honest Clients choose the report ID at random, it is sufficient to
+store the set of IDs of processed reports. However, implementations may
+find it helpful to track additional information, like the timestamp, so
+that the storage used for anti-replay can be sharded efficiently.<a href="#section-4.7.1.4-3.6.2.1.1" class="pilcrow">¶</a></p>
+</li>
+                </ul>
+</li>
+              <li id="section-4.7.1.4-3.7">
+                <p id="section-4.7.1.4-3.7.1">If the report pertains to a batch that was previously collected, then the
+input share <span class="bcp14">MUST</span> be marked as invalid with error <code>batch_collected</code>.<a href="#section-4.7.1.4-3.7.1" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-4.7.1.4-3.7.2.1">
+                    <p id="section-4.7.1.4-3.7.2.1.1">Implementation note: The Leader considers a batch to be collected once it
 has completed a collection job for a CollectionReq message from the
 Collector; the Helper considers a batch to be collected once it has
 responded to an <code>AggregateShareReq</code> message from the Leader. A batch is
 determined by query (<a href="#batch-mode" class="auto internal xref">Section 4.3</a>) conveyed in these messages. Queries
 must satisfy the criteria covered in <a href="#batch-validation" class="auto internal xref">Section 4.8.5</a>. These criteria
 are meant to restrict queries in a way make it easy to determine wither a
-report pertains to a batch that was collected.<a href="#section-4.7.1.4-3.6.2.1.1" class="pilcrow">¶</a></p>
-<p id="section-4.7.1.4-3.6.2.1.2">
+report pertains to a batch that was collected.<a href="#section-4.7.1.4-3.7.2.1.1" class="pilcrow">¶</a></p>
+<p id="section-4.7.1.4-3.7.2.1.2">
 [TODO: If a section to clarify report and batch states is added this can be
-removed. See Issue #384]<a href="#section-4.7.1.4-3.6.2.1.2" class="pilcrow">¶</a></p>
+removed. See Issue #384]<a href="#section-4.7.1.4-3.7.2.1.2" class="pilcrow">¶</a></p>
 </li>
                 </ul>
 </li>
-              <li id="section-4.7.1.4-3.7">
-                <p id="section-4.7.1.4-3.7.1">Finally, if an Aggregator cannot determine if an input share is valid, it
+              <li id="section-4.7.1.4-3.8">
+                <p id="section-4.7.1.4-3.8.1">Finally, if an Aggregator cannot determine if an input share is valid, it
 <span class="bcp14">MUST</span> mark the input share as invalid with error <code>report_dropped</code>. For
 example, if the Aggregator has evicted the state required to perform the
 check from long-term storage. (See <a href="#reducing-storage-requirements" class="auto internal xref">Section 5.4.1</a> for
-details.)<a href="#section-4.7.1.4-3.7.1" class="pilcrow">¶</a></p>
+details.)<a href="#section-4.7.1.4-3.8.1" class="pilcrow">¶</a></p>
 </li>
             </ol>
 <p id="section-4.7.1.4-4">If all of the above checks succeed, the input share is not marked as invalid.<a href="#section-4.7.1.4-4" class="pilcrow">¶</a></p>
@@ -3514,7 +3518,7 @@ Leader stores <code>state</code> and <code>outbound</code> and proceeds to anoth
 step. If <code>outbound == None</code>, then the preparation process is complete: either
 <code>state == Rejected()</code>, in which case the Leader rejects the report and
 removes it from the candidate set; or <code>state == Finished(out_share)</code>, in
-which case preparation is complete and the Leader stores <code>out_share</code> for
+which case preparation is complete and the Leader stores the output share for
 use in the collection sub-protocol <a href="#collect-flow" class="auto internal xref">Section 4.8</a>.<a href="#section-4.7.2.1-12.1.3" class="pilcrow">¶</a></p>
 </li>
               <li id="section-4.7.2.1-12.2">
@@ -3596,50 +3600,37 @@ variant {
 } PrepareResp;
 </pre><a href="#section-4.7.2.2-13" class="pilcrow">¶</a>
 </div>
-<p id="section-4.7.2.2-14">If <code>state == Continued(prep_state)</code>, then the Helper stores <code>state</code> to
-prepare for the next continuation step (<a href="#aggregation-helper-continuation" class="auto internal xref">Section 4.7.2.2</a>).<a href="#section-4.7.2.2-14" class="pilcrow">¶</a></p>
-<p id="section-4.7.2.2-15">If <code>state == Finished(out_share)</code>, then the Helper checks whether <code>report_id</code>
-is in the set of report IDs the Helper has aggregated for this task. If so, it
-responds with<a href="#section-4.7.2.2-15" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.7.2.2-16">
-<pre>
-variant {
-  ReportID report_id;
-  PrepareRespState prepare_resp_state = reject;
-  PrepareError prepare_error = report_replayed;
-} PrepareResp;
-</pre><a href="#section-4.7.2.2-16" class="pilcrow">¶</a>
-</div>
-<p id="section-4.7.2.2-17">Otherwise, it commits <code>report_id</code> to the set of aggregated report IDs and
-stores <code>out_share</code> for use in the collection sub-protocol (<a href="#collect-flow" class="auto internal xref">Section 4.8</a>).
-Its response to the Leader depends on the value of <code>outbound</code>. If <code>outbound !=
-None</code>, then the Helper's response is<a href="#section-4.7.2.2-17" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.7.2.2-18">
+<p id="section-4.7.2.2-14">Otherwise, if <code>outbound != None</code>, then the Helper's response is<a href="#section-4.7.2.2-14" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-4.7.2.2-15">
 <pre>
 variant {
   ReportID report_id;
   PrepareRespState prepare_resp_state = continue;
   opaque payload&lt;0..2^32-1&gt; = outbound;
 } PrepareResp;
-</pre><a href="#section-4.7.2.2-18" class="pilcrow">¶</a>
+</pre><a href="#section-4.7.2.2-15" class="pilcrow">¶</a>
 </div>
-<p id="section-4.7.2.2-19">Otherwise, if <code>outbound == None</code>, then the Helper's response is<a href="#section-4.7.2.2-19" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.7.2.2-20">
+<p id="section-4.7.2.2-16">Otherwise, if <code>outbound == None</code>, then the Helper's response is<a href="#section-4.7.2.2-16" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-4.7.2.2-17">
 <pre>
 variant {
   ReportID report_id;
   PrepareRespState prepare_resp_state = finished;
 } PrepareResp;
-</pre><a href="#section-4.7.2.2-20" class="pilcrow">¶</a>
+</pre><a href="#section-4.7.2.2-17" class="pilcrow">¶</a>
 </div>
-<p id="section-4.7.2.2-21">Next, the Helper constructs an <code>AggregationJobResp</code> message
+<p id="section-4.7.2.2-18">Next, the Helper constructs an <code>AggregationJobResp</code> message
 (<a href="#aggregation-helper-init" class="auto internal xref">Section 4.7.1.2</a>) with each prep step. The order of the prep steps
 <span class="bcp14">MUST</span> match the Leader's request. It responds to the Leader with HTTP status 200
 OK, media type <code>application/dap-aggregation-job-resp</code>, and a body consisting of
-the <code>AggregationJobResp</code>.<a href="#section-4.7.2.2-21" class="pilcrow">¶</a></p>
-<p id="section-4.7.2.2-22">If for whatever reason the Leader must abandon the aggregation job, it <span class="bcp14">SHOULD</span>
+the <code>AggregationJobResp</code>.<a href="#section-4.7.2.2-18" class="pilcrow">¶</a></p>
+<p id="section-4.7.2.2-19">Finally, if <code>state == Continued(prep_state)</code>, then the Helper stores <code>state</code> to
+prepare for the next continuation step (<a href="#aggregation-helper-continuation" class="auto internal xref">Section 4.7.2.2</a>).
+Otherwise, if <code>state == Finished(out_share)</code>, then the Helper stores <code>out_share</code>
+for use in the collection interaction (<a href="#collect-flow" class="auto internal xref">Section 4.8</a>).<a href="#section-4.7.2.2-19" class="pilcrow">¶</a></p>
+<p id="section-4.7.2.2-20">If for whatever reason the Leader must abandon the aggregation job, it <span class="bcp14">SHOULD</span>
 send an HTTP DELETE request to the aggregation job URI so that the Helper knows
-it can clean up its state.<a href="#section-4.7.2.2-22" class="pilcrow">¶</a></p>
+it can clean up its state.<a href="#section-4.7.2.2-20" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="aggregation-step-skew-recovery">
