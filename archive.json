@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-09-17T00:56:27.627692+00:00",
+  "timestamp": "2024-09-19T01:08:53.727886+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -132,6 +132,21 @@
       "name": "wire breaking",
       "description": "",
       "color": "BF322F"
+    },
+    {
+      "name": "aggregation cost",
+      "description": "",
+      "color": "D5C1C8"
+    },
+    {
+      "name": "draft-12",
+      "description": "",
+      "color": "E8C741"
+    },
+    {
+      "name": "draft-13",
+      "description": "",
+      "color": "4ACC30"
     }
   ],
   "issues": [
@@ -2666,13 +2681,16 @@
       "state": "OPEN",
       "author": "ekr",
       "authorAssociation": "COLLABORATOR",
-      "assignees": [],
+      "assignees": [
+        "cjpatton"
+      ],
       "labels": [
-        "editorial"
+        "editorial",
+        "draft-12"
       ],
       "body": ".(E.g., `<23..479>` instead of `<1..2^16-1>`.)]",
       "createdAt": "2021-08-13T21:52:11Z",
-      "updatedAt": "2024-06-05T17:05:03Z",
+      "updatedAt": "2024-09-17T23:21:37Z",
       "closedAt": null,
       "comments": []
     },
@@ -3625,11 +3643,12 @@
       "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
       "labels": [
-        "editorial"
+        "editorial",
+        "draft-13"
       ],
       "body": "To make this document more understandable for those uninitiated in the IETF community, it would be helpful to add some ladder diagrams or a state machine diagram or something early in the document to show the overall flow of exchanges between the different entities involved.",
       "createdAt": "2021-10-08T20:55:06Z",
-      "updatedAt": "2023-10-24T22:04:31Z",
+      "updatedAt": "2024-09-18T15:00:17Z",
       "closedAt": null,
       "comments": []
     },
@@ -4442,17 +4461,20 @@
       "id": "I_kwDOFEJYQs5GYNsz",
       "title": "DP: Bound contribution from a single client",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/210",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "martinthomson",
       "authorAssociation": "CONTRIBUTOR",
-      "assignees": [],
+      "assignees": [
+        "cjpatton"
+      ],
       "labels": [
-        "editorial"
+        "editorial",
+        "draft-12"
       ],
       "body": "Seeing @chris-wood present on this made it clear that there are no mechanisms that might prevent a single client from contributing to aggregates multiple times.  This is problematic for the application of DP, as the contribution of any client needs to be bounded in order to place a finite bound on the DP noise.\r\n\r\nThere is currently a fixation on having fixed-sized duration for tasks and batch limits, but neither of these help.",
       "createdAt": "2022-03-25T12:45:04Z",
-      "updatedAt": "2023-10-24T22:07:26Z",
-      "closedAt": null,
+      "updatedAt": "2024-09-18T18:35:26Z",
+      "closedAt": "2024-09-18T18:35:26Z",
       "comments": [
         {
           "author": "simon-friedberger",
@@ -4481,6 +4503,13 @@
           "body": "I think that what you have there in S7.2 is OK.  Like in the paper you cite, I don't think that you can put meaningful protections in place for Sybil attacks.  That's not to say that some cases can't benefit from protections, so maybe an informative note about some potential approaches would be how to strike the balance.",
           "createdAt": "2023-10-18T21:38:43Z",
           "updatedAt": "2023-10-18T21:38:43Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "We already have a section about Sybil attacks and how they can be mitigated. DP is suggested, but of course this only applies to privacy. This PR clarifies this: https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/579",
+          "createdAt": "2024-09-17T23:12:28Z",
+          "updatedAt": "2024-09-17T23:12:28Z"
         }
       ]
     },
@@ -7786,15 +7815,14 @@
       "state": "OPEN",
       "author": "simon-friedberger",
       "authorAssociation": "CONTRIBUTOR",
-      "assignees": [
-        "tgeoghegan"
-      ],
+      "assignees": [],
       "labels": [
-        "editorial"
+        "editorial",
+        "draft-13"
       ],
       "body": "We are indicating that batches can already start aggregating before the collector sends a query at least in three places:\r\n\r\n2.1\r\n> The leader distributes the shares to the helpers and orchestrates the process of verifying them (see [Section 2.2](https://ietf-wg-ppm.github.io/draft-ietf-ppm-dap/draft-ietf-ppm-dap.html#validating-inputs)) and assembling them into a final measurement for the collector. Depending on the VDAF, it may be possible to incrementally process each report as it comes in, or may be necessary to wait until the entire batch of reports is received.\r\n\r\n4.4\r\n> Once a set of clients have uploaded their reports to the leader, the leader can send them to the helpers to be verified and aggregated. In order to enable the system to handle very large batches of reports, this process can be performed incrementally.\r\n\r\n4.5.2\r\n> Note that for most VDAFs, it is possible to aggregate output shares as they arrive rather than wait until the batch is collected. To do so however, it is necessary to enforce the batch parameters as described in [Section 4.5.6](https://ietf-wg-ppm.github.io/draft-ietf-ppm-dap/draft-ietf-ppm-dap.html#batch-validation) so that the aggregator knows which aggregate share to update.\r\n\r\nOptional, but we might want to expand 4.5.2 and give this process a name and clarify what it means to validate a _bucket_ (is this the name we're using?) because some of the point in 4.5.6 don't really apply. For example, a bucket may, by definition, contain too few reports.",
       "createdAt": "2022-11-29T08:22:12Z",
-      "updatedAt": "2024-06-13T16:52:16Z",
+      "updatedAt": "2024-09-18T18:57:01Z",
       "closedAt": null,
       "comments": [
         {
@@ -7803,6 +7831,13 @@
           "body": "Perhaps we should remove the mentioning of 4.5.6, since the \"bucket\" isn't a final batch and doesn't have to be valid at pre-aggregation stage.",
           "createdAt": "2022-12-01T19:19:41Z",
           "updatedAt": "2022-12-01T19:19:41Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Just wanted to note an observation here: to specify this normatively, we might need a syntactic change to VDAFs: https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/580#discussion_r1765530675\r\n\r\nOf course, there is a non-normative way to resolve this PR, which is to define \"batch bucket\", say there is an aggregate share per bucket, and say that each output share is \"added\" into the aggregate share of its bucket (without defining \"added\").",
+          "createdAt": "2024-09-18T18:57:00Z",
+          "updatedAt": "2024-09-18T18:57:00Z"
         }
       ]
     },
@@ -8682,11 +8717,12 @@
         "cjpatton"
       ],
       "labels": [
-        "editorial"
+        "editorial",
+        "draft-12"
       ],
       "body": "It looks like the entirely of the replay protection requirements are buried in an implementation note in [Section 4.4.1.4](https://ietf-wg-ppm.github.io/draft-ietf-ppm-dap/draft-ietf-ppm-dap.html#section-4.4.1.4-3.6.4.1).  The text here is pretty terse, so even though it is probably a good cue to someone who understands the problem pretty well, there are lots of bits missing:\r\n\r\n1. Normative language.  (Maybe this is covered by [this paragraph](https://ietf-wg-ppm.github.io/draft-ietf-ppm-dap/draft-ietf-ppm-dap.html#section-4.4.1.2-2), but that is also buried.)\r\n2. An explanation of the attack that this covers.[*]\r\n3. Discussion of the use of timestamps, clock skew, and the associated trade-offs.\r\n\r\nThis probably justifies a section of its own.\r\n\r\n[*] Replay attack mitigation wouldn't be necessary if you submit the data directly (and don't retry failed uploads ... and avoid using TLS early data).  Therefore, honest clients that submit data directly to the leader are only exposed to the possibility that the leader defects and replays the submission.  So maybe only helpers need to perform validation under this architecture.\r\n\r\n",
       "createdAt": "2023-04-27T06:01:00Z",
-      "updatedAt": "2023-11-01T16:44:33Z",
+      "updatedAt": "2024-09-18T22:30:32Z",
       "closedAt": null,
       "comments": [
         {
@@ -10714,11 +10750,12 @@
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [
-        "editorial"
+        "editorial",
+        "draft-13"
       ],
       "body": "It should also show what bits need to be \"eventually consistent\" versus transactional.",
       "createdAt": "2024-04-22T20:40:20Z",
-      "updatedAt": "2024-04-22T20:40:49Z",
+      "updatedAt": "2024-09-18T15:00:56Z",
       "closedAt": null,
       "comments": []
     },
@@ -10866,11 +10903,12 @@
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [
-        "operational considerations"
+        "operational considerations",
+        "draft-13"
       ],
       "body": "I think it would be helpful to explicitly list what sort of synchronization guarantees the aggregators need to uphold. Some of these are implicit in the text elsewhere, and they would be important to the architecture of a distributed aggregator. Here's what I have so far:\r\n\r\n- Leader\r\n  - The leader has to perform anti-replay checks between receiving a report and sending it in an aggregation job (i.e. deduplicating by ReportMetadata). This is easily amenable to approaches that only provide eventual consistency.\r\n  - The leader needs some synchronization between aggregate share requests and aggregation job requests to make sure it doesn't aggregate any new reports into a batch that has already been collected. This requirement is significantly different between time interval queries, where the client metadata determines the batch, and fixed size query, where the leader has full control of batches.\r\n  - The leader needs to synchronize between sending aggregation job requests and sending aggregate share requests, to ensure that it never has both an aggregate share request collecting a batch and an aggregation job that affects the same batch outstanding at the same time. Note that with time interval queries, there is a many-to-many mapping between aggregation jobs and batches, while with fixed size queries, each aggregation job impacts only one batch.\r\n- Helper\r\n  - The helper needs to perform duplicate report detection across aggregation job requests.\r\n  - The helper needs strong consistency between aggregation job requests and subsequent aggregate share requests, so that it includes every eligible output share in its aggregate share.",
       "createdAt": "2024-05-01T18:56:18Z",
-      "updatedAt": "2024-05-01T22:38:56Z",
+      "updatedAt": "2024-09-18T15:01:03Z",
       "closedAt": null,
       "comments": [
         {
@@ -10894,12 +10932,12 @@
         "cjpatton"
       ],
       "labels": [
-        "feature",
-        "ietf120"
+        "aggregation cost",
+        "draft-12"
       ],
       "body": "As mentioned in #556, replay protection implies a relatively stringent operational requirement for the Helper: many aggregation jobs might make concurrent transactions on the same database, which can easily overwhelm the database if not sufficiently provisioned.\r\n\r\nTo mitigate this problem, the Helper can cancel an aggregation job and ask the Leader to try again later. One option is to respond with HTTP status 429 and a \"retry-after\" header indicating when it should be safe to retry.\r\n\r\nI'd like to suggest that we spell this out explicitly in the draft.",
       "createdAt": "2024-05-01T20:01:38Z",
-      "updatedAt": "2024-08-08T22:44:45Z",
+      "updatedAt": "2024-09-17T23:21:11Z",
       "closedAt": null,
       "comments": [
         {
@@ -11122,11 +11160,12 @@
         "tgeoghegan"
       ],
       "labels": [
-        "editorial"
+        "editorial",
+        "draft-13"
       ],
       "body": "On the mailing list, @wbl observed that it's hard for readers to understand the relationship of reports to aggregation jobs to batches to aggregate shares. We should add a section between the introduction and the the sections describing the sub-interactions which discusses the lifecycle and cardinality of these objects. ",
       "createdAt": "2024-05-09T17:50:22Z",
-      "updatedAt": "2024-05-14T21:23:16Z",
+      "updatedAt": "2024-09-18T15:01:19Z",
       "closedAt": null,
       "comments": [
         {
@@ -11227,17 +11266,20 @@
       "id": "I_kwDOFEJYQs6ROQwV",
       "title": "Clarification request: Does aggregation happen in the AggregationJob?",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/571",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "bemasc",
       "authorAssociation": "NONE",
-      "assignees": [],
+      "assignees": [
+        "cjpatton"
+      ],
       "labels": [
-        "editorial"
+        "editorial",
+        "draft-12"
       ],
       "body": "Section 4.5 says that an Aggregation Job has three phases, the last of which is\r\n\r\n>    *  Completion: Finish the aggregate flow, yielding an output share\r\n      corresponding to each report share in the aggregation job.\r\n\r\nThat makes it sound like Aggregation Jobs don't perform any aggregation.  If that's true, maybe they should be called Preparation Jobs.  If it's false, maybe it can be corrected.",
       "createdAt": "2024-07-29T21:44:37Z",
-      "updatedAt": "2024-07-29T22:05:51Z",
-      "closedAt": null,
+      "updatedAt": "2024-09-18T20:42:42Z",
+      "closedAt": "2024-09-18T20:42:42Z",
       "comments": [
         {
           "author": "cjpatton",
@@ -11245,6 +11287,27 @@
           "body": "It's false: we leave it up to an implementation to decide whether it will store output shares individually or aggregate in a streaming fashion (once an output share is produced, add it to an aggregate share).\r\n\r\nA bit of pertinent history: Early on we wanted to allow the possibility that the aggregation function (i.e., the function computed by the VDAF) may be sensitive to the order of measurements. For example, you might have that $f(m_1, m_2, m_3) \\ne f(m_1, m_3, m_2)$. The VDAF draft doesn't rule this out, but in practice we have not found a need for this. In fact, no open source implementation of DAP that I'm aware of supports it.\r\n\r\nI think we can resolve this by clarifying that most of the time the aggregate share will usually be updated in a streaming fashion. (Thanks @bemasc for suggesting the terminology offline.)",
           "createdAt": "2024-07-29T21:54:44Z",
           "updatedAt": "2024-07-29T21:54:44Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "@bemasc there's an implementation note in {{collect-flow}} that describes streaming aggregation, but this is pretty buried. PR #580 defines this term in the overview for {{agg-flow}}. It also clarifies that future batch modes may be incompatible with this feature.",
+          "createdAt": "2024-09-18T14:43:23Z",
+          "updatedAt": "2024-09-18T14:43:23Z"
+        },
+        {
+          "author": "bemasc",
+          "authorAssociation": "NONE",
+          "body": "It seems like there are still some open questions here about terminology.",
+          "createdAt": "2024-09-18T19:58:46Z",
+          "updatedAt": "2024-09-18T19:58:46Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "As discussed offline: we resolved this in #580 by clarifying in the overview that we will usually do streaming aggregation. On the PR we discussed the possibility of strengthening this by making streaming aggregation normative text rather than an implementation detail.\r\n\r\nIf we don't end up doing this, then let's rename \"aggregation job\" to \"preparation job\" as you suggest.",
+          "createdAt": "2024-09-18T20:42:42Z",
+          "updatedAt": "2024-09-18T20:42:42Z"
         }
       ]
     },
@@ -11274,13 +11337,38 @@
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [
-        "wire breaking"
+        "wire breaking",
+        "draft-12"
       ],
       "body": "The next VDAF draft includes wire breaking changes for Prio3 and Poplar1:\r\nhttps://github.com/cfrg/draft-irtf-cfrg-vdaf/pull/415\r\n\r\nThere is also an API change that being considered that will impact DAP:\r\nhttps://github.com/cfrg/draft-irtf-cfrg-vdaf/issues/418\r\n\r\nLuckily the change is pretty simple for us: we would set the VDAF context string to something like `dap-<ver> task <task_id>` where `<ver>` is the draft version and `<task_id>` is the task ID.\r\n\r\nWhile this change is relatively minor from the spec's point of view, it'll add some complexity to DAP implementations that need to support multiple versions at the same time.",
       "createdAt": "2024-09-12T17:09:57Z",
-      "updatedAt": "2024-09-12T17:21:05Z",
+      "updatedAt": "2024-09-17T23:20:59Z",
       "closedAt": null,
       "comments": []
+    },
+    {
+      "number": 581,
+      "id": "I_kwDOFEJYQs6XFDxr",
+      "title": "Make streaming aggregation normative",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/581",
+      "state": "OPEN",
+      "author": "cjpatton",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "An issue that's been raised several times (most recently in #571) is that the term \"aggregation job\" is a misnomer since it doesn't actually say anything about aggregation. All it says is that, once an aggregation job is complete, each aggregator commits to the sequence of output shares they recovered. It's not until collection time that we call [`Vdaf.aggregate()`](https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-11#section-5.4) on the set of output shares to get our aggregate share for the batch.\r\n\r\nGiven this fact, it's been suggested we rename \"aggregation job\" to something like \"preparation job\", since the main thing that happens during this protocol is [VDAF preparation](https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-11#section-5.2).\r\n\r\nI don't recall precisely how this term entered our vocabulary, but part of the reason it stuck is that, in practice, we expect implementations to do some, if not most, of the aggregation during this phase. From [Section 4.7](https://ietf-wg-ppm.github.io/draft-ietf-ppm-dap/draft-ietf-ppm-dap.html#section-4.7-11):\r\n\r\n> After an aggregation job is completed, each Aggregator stores the output shares until the aggregate share is collected as described in [Section 4.8](https://ietf-wg-ppm.github.io/draft-ietf-ppm-dap/draft-ietf-ppm-dap.html#collect-flow). Note that it is usually not necessary to store output shares individually: depending on the batch mode and VDAF, the output shares can be merged into existing aggregate shares that are updated as aggregation jobs complete. This streaming aggregation is compatible with Prio3 and all batch modes specified in this document.\r\n\r\nIn other words, we expect \"streaming aggregation\" to be the norm for DAP implementations and \"delayed aggregation\" during the collection (credit @bemasc for this terminology) to be the rare exception. In theory, you could have a VDAF for which aggregation is sensitive to the order of output shares; or a batch mode may require us to store output shares individually until collection. Neither is true today, and to me both seem pretty unlikely.\r\n\r\nRather rename the aggregation sub-protocol, we could make this streaming aggregation feature normative. This would require two things:\r\n\r\n1. The concept of a \"batch bucket\" (#385). The definition of \"batch bucket\" depends on the batch mode: for time-interval, it's a window of time (determined by the `time_precision` task parameter); for leader-selected, it's simply a batch ID. Each bucket has an aggregate share. At the end of an aggregation job, we would add each output share into the aggregate share of the bucket it corresponds to.\r\n\r\n2. We need to be able to express syntactically how to update an aggregate share with an output share. This is precluded by the current VDAF syntax, [which only describes aggregating output shares into an aggregate share](https://cfrg.github.io/draft-irtf-cfrg-vdaf/draft-irtf-cfrg-vdaf.html#section-5.4). We would therefore need to modify the syntax.\r\n\r\nWe would then document delayed aggregation as a fallback in case the VDAF or batch mode requires it.",
+      "createdAt": "2024-09-18T20:39:17Z",
+      "updatedAt": "2024-09-18T21:17:10Z",
+      "closedAt": null,
+      "comments": [
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "I would be in favor of this change, but if we don't take this change, then I agree [with @branlwyd and @bemasc](https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/580#discussion_r1765268592) that we should rename \"aggregation job\".",
+          "createdAt": "2024-09-18T20:57:24Z",
+          "updatedAt": "2024-09-18T20:57:24Z"
+        }
+      ]
     }
   ],
   "pulls": [
@@ -66917,11 +67005,12 @@
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [
-        "wire breaking"
+        "wire breaking",
+        "draft-12"
       ],
       "body": "Batch mode is a more descriptive name than query type. And leader-selected is a more accurate name than fixed-size, since the batch sizes are not fixed -- any size above min_batch_size (and, if specified, below max_batch_size) is acceptable.\r\n\r\nThe max_batch_size parameter of the leader-selected query type is removed. This parameter does not need to be enforced by both aggregators, so it can be made implementation-specific.\r\n\r\nAlso, restore the partial batch selector to the Collection message; the included batch ID is required for the Collector to decrypt the aggregate shares, as it is included in the AAD. This bug was introduced in #554 & effectively breaks collection for the fixed-size query type in DAP-11.\r\n\r\nCloses #555.",
       "createdAt": "2024-06-13T23:56:57Z",
-      "updatedAt": "2024-07-26T23:51:41Z",
+      "updatedAt": "2024-09-18T20:48:32Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "7b5eeca998d7871089249a7efc8224d9a3651df0",
@@ -67586,11 +67675,12 @@
       "authorAssociation": "NONE",
       "assignees": [],
       "labels": [
-        "wire breaking"
+        "wire breaking",
+        "aggregation cost"
       ],
       "body": "Closes https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/557.\r\n\r\nAllows helper-side aggregate job preparation to be handled asynchronously,\r\nsimilarly to how collection jobs work. Briefly, after calls with\r\n`AggregationJobInitReq` and `AggregationJobContinueReq`, the leader polls\r\nthe helper at `GET /tasks/{task-id]/aggregation_jobs/{aggregation-job-id}`\r\nuntil receiving an `AggregationJobResp`.\r\n\r\nIn discussion in #577 we had soft consensus on making this the only option,\r\ni.e. for spec simplicity we don't need to also allow the old synchronous\r\nbehavior.",
       "createdAt": "2024-06-25T18:08:22Z",
-      "updatedAt": "2024-08-06T21:47:06Z",
+      "updatedAt": "2024-09-17T23:15:56Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "35f1274853c1c06a5132612b111debefe4fd17ac",
@@ -70324,10 +70414,12 @@
       "author": "tgeoghegan",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
-      "labels": [],
+      "labels": [
+        "draft-12"
+      ],
       "body": "Explains in detail how the syntax from RFC 8446 section 3.7 is repurposed for concise descriptions of structure variants. Additionally, the section on message encoding is moved to \"Protocol Definition\" to make the document flow better.\r\n\r\nCloses #472",
       "createdAt": "2024-07-06T00:05:12Z",
-      "updatedAt": "2024-07-27T17:08:52Z",
+      "updatedAt": "2024-09-18T20:48:53Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "83f1ea77fb9ff1f304779e775bb15efcf51a9269",
@@ -70694,11 +70786,12 @@
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [
-        "wire breaking"
+        "wire breaking",
+        "draft-12"
       ],
       "body": "As discussed in #505, putting the task ID into the HPKE configuration request leaks which tasks a client is participating in, which can otherwise be concealed by OHTTP. This commit removes the notion of per-task HPKE keys from DAP, requiring global keys.\r\n\r\nCloses #505",
       "createdAt": "2024-07-06T00:17:07Z",
-      "updatedAt": "2024-07-26T22:21:00Z",
+      "updatedAt": "2024-09-18T20:49:11Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "35f1274853c1c06a5132612b111debefe4fd17ac",
@@ -70778,10 +70871,12 @@
       "author": "suman-ganta",
       "authorAssociation": "NONE",
       "assignees": [],
-      "labels": [],
+      "labels": [
+        "draft-12"
+      ],
       "body": "Closes #541.\r\n\r\nMade versioning compatibilities explicit and an optional way to express draft versions.",
       "createdAt": "2024-07-08T23:17:45Z",
-      "updatedAt": "2024-08-15T21:28:58Z",
+      "updatedAt": "2024-09-18T20:49:26Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "9f05d0d21b14eecd3c539d643569f1c30c0ff472",
@@ -71228,11 +71323,12 @@
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [
-        "editorial"
+        "editorial",
+        "draft-12"
       ],
       "body": "This is mostly a clarification; some implementations were treating reports as aggregated if they had ever been included in an aggregation job, whether or not that job was successful or the individual report had successfully completed aggregation.",
       "createdAt": "2024-07-29T17:23:59Z",
-      "updatedAt": "2024-08-01T20:38:16Z",
+      "updatedAt": "2024-09-18T20:50:35Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "93fca5745c5b27d5a57a3b1195429d7935569961",
@@ -71315,7 +71411,7 @@
       "labels": [],
       "body": "This parameter configures the maximum aggregation job size, allowing a standard way for the Helper to opt out of processing aggregation jobs which are too large.",
       "createdAt": "2024-08-28T21:26:24Z",
-      "updatedAt": "2024-09-11T19:26:05Z",
+      "updatedAt": "2024-09-18T20:50:54Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "c2f4e851a5989f4772d0c9e7c6d147611af7fd7b",
@@ -71468,10 +71564,12 @@
       "author": "branlwyd",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
-      "labels": [],
+      "labels": [
+        "aggregation cost"
+      ],
       "body": "Specifically, we relax the check from the specific report ID, to intersection with intervals of report IDs. This will allow implementations to drop all long-term per-report storage, considerably reducing the storage requirements to implement the protocol. The tradeoff is in increased aggregation latency: typically, aggregation cannot begin until the Leader is sure that no further reports will arrive for a given time window.",
       "createdAt": "2024-08-30T00:21:13Z",
-      "updatedAt": "2024-09-09T19:24:36Z",
+      "updatedAt": "2024-09-17T23:14:48Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "c2f4e851a5989f4772d0c9e7c6d147611af7fd7b",
@@ -71912,10 +72010,12 @@
       "author": "cjpatton",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
-      "labels": [],
+      "labels": [
+        "draft-12"
+      ],
       "body": "v2 has been deprecated:\r\nhttps://github.blog/changelog/2024-02-13-deprecation-notice-v1-and-v2-of-the-artifact-actions/",
       "createdAt": "2024-09-10T15:33:16Z",
-      "updatedAt": "2024-09-10T16:55:16Z",
+      "updatedAt": "2024-09-18T20:50:10Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "c2f4e851a5989f4772d0c9e7c6d147611af7fd7b",
@@ -71954,10 +72054,12 @@
       "author": "branlwyd",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
-      "labels": [],
+      "labels": [
+        "aggregation cost"
+      ],
       "body": "",
       "createdAt": "2024-09-11T18:02:25Z",
-      "updatedAt": "2024-09-11T19:15:59Z",
+      "updatedAt": "2024-09-17T23:15:09Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "7081e1d75f25e8c4c0ec66386f8c5cc097a9f8f1",
@@ -71992,6 +72094,458 @@
           "comments": []
         }
       ]
+    },
+    {
+      "number": 578,
+      "id": "PR_kwDOFEJYQs5701bz",
+      "title": "tls-presentation: Fix limits for length-prefixed fields",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/578",
+      "state": "OPEN",
+      "author": "cjpatton",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [
+        "draft-12"
+      ],
+      "body": "Closes #110.\r\n\r\nAssume 10 bytes for the smallest VDAF ping pong message: https://github.com/cfrg/draft-irtf-cfrg-vdaf/pull/428\r\n\r\n\r\n* HpkeConfigList: The smallest HpkeConfig is 10 bytes: one byte for the\r\n  config ID, two bytes for each algorithm ID, 2 bytes for the public key\r\n  length prefix, and assume one byte for the public key (the actual\r\n  value depends on which HPKE KEM algorithms are supported).\r\n\r\n* PlaintextInputShare.payload: Assume 1 byte as the smallest input share\r\n  (the actual value depends on which VDAFs are supported).\r\n\r\n* PrepareInit.payload: 5 bytes lest ping pong message (see above)\r\n\r\n* AggregationJobInitReq.prepare_inits: The smallest PrepareInit is 45\r\n  bytes:\r\n\r\n   * PrepareInit.report_share: 16 bytes for the report ID, 8 bytes for\r\n     the timestamp, 0 bytes for the public share (this is empty for some\r\n     Prio3 variants), 2 bytes for the public share length prefix, and\r\n     for the HPKE ciphertext:\r\n\r\n      * 1 for the config ID\r\n\r\n      * assume 1 byte for the encapsulated key (depends on the supported\r\n        KEMs) and 2 bytes for the length prefix\r\n\r\n      * assume 1 byte for the ciphertext (depends on the supported\r\n        AEADs) and 4 bytes for the length prefix\r\n\r\n   * PrepareInit.payload: 5 bytes (smallest ping pong message) and 4\r\n     bytes for the length prefix\r\n\r\n* PrepareResp.payload: 5 bytes (smallest ping poing message)\r\n\r\n* AggregationJobJesp.prepare_resps: The smallest PrepareResp has 26 bytes:\r\n\r\n    * 16 bytes for the report ID, 1 byte for the variant discriminator,\r\n      and 5 + 4 bytes length prefix for the ping pong message.\r\n\r\n* PrepareContinue.payload: 5 bytes (smallest ping pong message)\r\n\r\n* AggregationJobContinueReq.prepare_continues: The smallest\r\n  PRepareContinue is 16 bytes for the report ID, and 5 + 4 bytes for\r\n  the payload.\r\n\r\n",
+      "createdAt": "2024-09-17T22:55:58Z",
+      "updatedAt": "2024-09-19T00:25:09Z",
+      "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "baseRefName": "main",
+      "baseRefOid": "7081e1d75f25e8c4c0ec66386f8c5cc097a9f8f1",
+      "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "headRefName": "cjpatton/110",
+      "headRefOid": "de0d0c8e51d5bc8de95b24eee7bf89111f668b6a",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> @branlwyd  I think we might be better served using a more lax set of ranges, perhaps `<0..MAX>` for fields which can be empty & `<1..MAX>` for fields which cannot be empty.\r\n> \r\n> I think the benefit of specifying to-the-byte minimums for fields is pretty marginal: I think malformed messages will fail to parse anyway. And the risk is that we get the minimum wrong, and risk rejecting messages that would otherwise be accepted.\r\n\r\nI agree with you, but I think our hands are tied here. The intent of [RFC 8446, Section 3.4](https://datatracker.ietf.org/doc/html/rfc8446#section-3.4) is pretty clear that the lower limit is supposed to be the size of the smallest vector. There are examples of this all over RFC 8446.\r\n\r\n",
+          "createdAt": "2024-09-18T17:54:23Z",
+          "updatedAt": "2024-09-18T17:54:23Z"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "PRR_kwDOFEJYQs6J28U-",
+          "commit": {
+            "abbreviatedOid": "6e17599"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "I think we might be better served using a more lax set of ranges, perhaps `<0..MAX>` for fields which can be empty & `<1..MAX>` for fields which cannot be empty.\r\n\r\nI think the benefit of specifying to-the-byte minimums for fields is pretty marginal: I think malformed messages will fail to parse anyway. And the risk is that we get the minimum wrong, and risk rejecting messages that would otherwise be accepted.",
+          "createdAt": "2024-09-18T14:27:37Z",
+          "updatedAt": "2024-09-18T14:30:24Z",
+          "comments": [
+            {
+              "originalPosition": 23,
+              "body": "I think the 10-byte minimum is incorrect; see https://github.com/cfrg/draft-irtf-cfrg-vdaf/pull/428/files#r1765155695.",
+              "createdAt": "2024-09-18T14:27:37Z",
+              "updatedAt": "2024-09-18T14:30:24Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6J3R9o",
+          "commit": {
+            "abbreviatedOid": "6e17599"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-09-18T14:55:40Z",
+          "updatedAt": "2024-09-18T14:55:40Z",
+          "comments": [
+            {
+              "originalPosition": 23,
+              "body": "Done, good catch.\r\n",
+              "createdAt": "2024-09-18T14:55:40Z",
+              "updatedAt": "2024-09-18T14:55:40Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 579,
+      "id": "PR_kwDOFEJYQs57071O",
+      "title": "Clarify which Sybil attack can be mitigated by DP",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/579",
+      "state": "MERGED",
+      "author": "cjpatton",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [
+        "draft-12"
+      ],
+      "body": "Closes #210.\r\n\r\nThe scope of this section includes both privacy and robustness Some DP mechanisms might help, to some extent, with privacy, but obviously it doesn't help with robustness.",
+      "createdAt": "2024-09-17T23:11:32Z",
+      "updatedAt": "2024-09-18T20:50:20Z",
+      "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "baseRefName": "main",
+      "baseRefOid": "7081e1d75f25e8c4c0ec66386f8c5cc097a9f8f1",
+      "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "headRefName": "cjpatton/210",
+      "headRefOid": "e7a8462afa110bd5fa81432989dd7d77d1530c2f",
+      "closedAt": "2024-09-18T18:35:25Z",
+      "mergedAt": "2024-09-18T18:35:25Z",
+      "mergedBy": "cjpatton",
+      "mergeCommit": {
+        "oid": "c5e17d252fbf9c26f1828b5ceefcea5ea558a3ca"
+      },
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOFEJYQs6J3BcV",
+          "commit": {
+            "abbreviatedOid": "e7a8462"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2024-09-18T14:35:05Z",
+          "updatedAt": "2024-09-18T14:35:05Z",
+          "comments": []
+        }
+      ]
+    },
+    {
+      "number": 580,
+      "id": "PR_kwDOFEJYQs576aU-",
+      "title": "Define streaming aggregation in overview",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/580",
+      "state": "MERGED",
+      "author": "cjpatton",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [
+        "draft-12"
+      ],
+      "body": "Closes #571.\r\n\r\nAlso, clarify that streaming aggregation is a feature of most, but not all, combinations of VDAFs and batch modes.",
+      "createdAt": "2024-09-18T14:42:01Z",
+      "updatedAt": "2024-09-18T20:51:09Z",
+      "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "baseRefName": "main",
+      "baseRefOid": "c5e17d252fbf9c26f1828b5ceefcea5ea558a3ca",
+      "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "headRefName": "cjpatton/571",
+      "headRefOid": "b4ba2823271f8565fc4b2f4e62e524f9e79a3831",
+      "closedAt": "2024-09-18T19:54:27Z",
+      "mergedAt": "2024-09-18T19:54:27Z",
+      "mergedBy": "cjpatton",
+      "mergeCommit": {
+        "oid": "365e9adb07e5e5fe6161e4d73c06157a1b5c7220"
+      },
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOFEJYQs6J3WqL",
+          "commit": {
+            "abbreviatedOid": "4a0c7c7"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "LGTM w/ one typo nit.",
+          "createdAt": "2024-09-18T15:02:06Z",
+          "updatedAt": "2024-09-18T15:02:56Z",
+          "comments": [
+            {
+              "originalPosition": 34,
+              "body": "```suggestion\r\nImplementation note: For most VDAFs, including Prio3, it is possible to\r\n```\r\n\r\n(typo)",
+              "createdAt": "2024-09-18T15:02:06Z",
+              "updatedAt": "2024-09-18T15:02:56Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6J3k_G",
+          "commit": {
+            "abbreviatedOid": "4a0c7c7"
+          },
+          "author": "bemasc",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-09-18T15:20:38Z",
+          "updatedAt": "2024-09-18T15:23:24Z",
+          "comments": [
+            {
+              "originalPosition": 12,
+              "body": "This is still weird.  If completing the aggregation job doesn't involve any aggregation, then it doesn't seem to be an aggregation job.  Maybe it's a preparation job, or a sub-aggregation job, or a pre-aggregation job.  Or maybe this phase isn't \"completion\"; maybe it's \"collection\".",
+              "createdAt": "2024-09-18T15:20:38Z",
+              "updatedAt": "2024-09-18T15:23:24Z"
+            },
+            {
+              "originalPosition": 11,
+              "body": "\"aggregate flow\" or \"aggregation flow\"?  \"aggregation flow\" or \"aggregation job\"?",
+              "createdAt": "2024-09-18T15:21:26Z",
+              "updatedAt": "2024-09-18T15:23:24Z"
+            },
+            {
+              "originalPosition": 21,
+              "body": "I wonder if it would be clearer to phrase this the other way: aggregation is part of the completion phase of each aggregation job, _but_ some future VDAF might require \"delayed aggregation\" (but probably not).",
+              "createdAt": "2024-09-18T15:23:04Z",
+              "updatedAt": "2024-09-18T15:23:24Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6J4rTr",
+          "commit": {
+            "abbreviatedOid": "4a0c7c7"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-09-18T17:27:32Z",
+          "updatedAt": "2024-09-18T17:27:32Z",
+          "comments": [
+            {
+              "originalPosition": 12,
+              "body": "I agree with this: while implementations _can_ (and, in practice, often _do_) aggregate the output shares into a running-total aggregate share at the end of processing an aggregation job, this is not required. And depending on the VDAF/batch mode in use, this aggregation may not be possible at this point in the protocol.\r\n\r\nSince performing aggregation at this stage is an optional performance optimization, I agree that \"aggregation job\" is not the best name.\r\n\r\nI would support \"preparation job\", since the process that is occurring is most correctly called \"VDAF preparation\". I think \"sub-aggregation job\"/\"pre-aggregation job\" are questionable for the same reason that \"aggregation job\" is.",
+              "createdAt": "2024-09-18T17:27:32Z",
+              "updatedAt": "2024-09-18T17:27:52Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6J446r",
+          "commit": {
+            "abbreviatedOid": "4a0c7c7"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-09-18T17:57:04Z",
+          "updatedAt": "2024-09-18T17:57:05Z",
+          "comments": [
+            {
+              "originalPosition": 11,
+              "body": "Changed to \"aggregation flow\" for consistency with above. We also refer to this as the \"aggregation sub-protocol\".",
+              "createdAt": "2024-09-18T17:57:04Z",
+              "updatedAt": "2024-09-18T17:57:05Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6J45Zg",
+          "commit": {
+            "abbreviatedOid": "4a0c7c7"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-09-18T17:58:08Z",
+          "updatedAt": "2024-09-18T17:58:08Z",
+          "comments": [
+            {
+              "originalPosition": 21,
+              "body": "Personally, I think the likelihood of any VDAF using delayed aggregation as a feature is remote enough that we don't have too twist too hard to anticipate it.",
+              "createdAt": "2024-09-18T17:58:08Z",
+              "updatedAt": "2024-09-18T17:58:08Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6J47H_",
+          "commit": {
+            "abbreviatedOid": "4a0c7c7"
+          },
+          "author": "bemasc",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-09-18T18:01:22Z",
+          "updatedAt": "2024-09-18T18:01:23Z",
+          "comments": [
+            {
+              "originalPosition": 21,
+              "body": "Right.  So I'm imagining that we say \"Completion of an aggregation job includes aggregation\" and then add some fine print about delayed aggregation.  That's the opposite of this proposal, which says \"Completion actually only means VDAF preparation\", and then notes that everyone will probably do streaming aggregation.",
+              "createdAt": "2024-09-18T18:01:22Z",
+              "updatedAt": "2024-09-18T18:01:23Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6J49Oe",
+          "commit": {
+            "abbreviatedOid": "4a0c7c7"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-09-18T18:05:23Z",
+          "updatedAt": "2024-09-18T18:05:23Z",
+          "comments": [
+            {
+              "originalPosition": 12,
+              "body": "\"Collection\" is a term used for the \"collection sub-protocol\", in which the batch is selected and the aggregate shares are computed. Let's not overload it.\r\n\r\nI'm open to renaming, but the terms  \"aggregation job\" and \"collection job\" are pretty baked in at this point, into code and into the way we talk about the protocol. In any case, let's please not let this discussion block this PR, as I think it's a positive improvement in any case. I\"ll even volunteer to file an issue and lead the discussion. \r\n\r\n",
+              "createdAt": "2024-09-18T18:05:23Z",
+              "updatedAt": "2024-09-18T18:05:23Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6J4-e1",
+          "commit": {
+            "abbreviatedOid": "4a0c7c7"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-09-18T18:08:10Z",
+          "updatedAt": "2024-09-18T18:08:10Z",
+          "comments": [
+            {
+              "originalPosition": 21,
+              "body": "I see what you're getting at. Let me give it a try.",
+              "createdAt": "2024-09-18T18:08:10Z",
+              "updatedAt": "2024-09-18T18:08:10Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6J5Ok6",
+          "commit": {
+            "abbreviatedOid": "4a0c7c7"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-09-18T18:35:00Z",
+          "updatedAt": "2024-09-18T18:35:00Z",
+          "comments": [
+            {
+              "originalPosition": 21,
+              "body": "Argh, there's a problem. To specify this rigorously, we need two things:\r\n\r\n1. The concept of a \"batch bucket\" (#385). The definition of \"batch bucket\" depends on the batch mode: for time-interval, it's a window of time; for leader-selected, it's simply a batch ID. Each bucket has an aggregate share. During the \"completion phase\" of an aggregation job, we would add each output share into the aggregate share of the bucket it corresponds to.\r\n\r\n2. We need to be able to express syntactically how to update an aggregate share with an output share. This is precluded by the current VDAF syntax, [which only describes aggregating output shares into an aggregate share](https://cfrg.github.io/draft-irtf-cfrg-vdaf/draft-irtf-cfrg-vdaf.html#section-5.4). We would therefore need to modify the syntax.\r\n\r\nWe want (1.) in any case, however I think (2.) requires some discussion. For what it's worth I'd be in favor of modifying the syntax to account for this, and I even argued for doing this in the past, but at the time there was a strong preference to keep the abstraction boundary where it is.\r\n\r\nI propose we merge this PR without this suggestion and kick off a discussion.",
+              "createdAt": "2024-09-18T18:35:00Z",
+              "updatedAt": "2024-09-18T18:52:05Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6J5RbX",
+          "commit": {
+            "abbreviatedOid": "4a0c7c7"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-09-18T18:39:29Z",
+          "updatedAt": "2024-09-18T18:39:29Z",
+          "comments": [
+            {
+              "originalPosition": 12,
+              "body": "FWIW, I agree that the renaming process would be somewhat painful in terms of the work it induces in existing implementations. I'm not sure that justifies avoiding a rename, however.",
+              "createdAt": "2024-09-18T18:39:29Z",
+              "updatedAt": "2024-09-18T18:39:29Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6J5V0j",
+          "commit": {
+            "abbreviatedOid": "4a0c7c7"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-09-18T18:49:24Z",
+          "updatedAt": "2024-09-18T18:49:24Z",
+          "comments": [
+            {
+              "originalPosition": 12,
+              "body": "Again, I'm not rejecting to renaming. I'm just trying to make incremental progress on the issues.",
+              "createdAt": "2024-09-18T18:49:24Z",
+              "updatedAt": "2024-09-18T18:49:24Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6J5fgV",
+          "commit": {
+            "abbreviatedOid": "b4ba282"
+          },
+          "author": "bemasc",
+          "authorAssociation": "NONE",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2024-09-18T19:11:31Z",
+          "updatedAt": "2024-09-18T19:27:00Z",
+          "comments": [
+            {
+              "originalPosition": 21,
+              "body": "Fine with me, but you might want to adjust the description so it doesn't close the Github issue.",
+              "createdAt": "2024-09-18T19:11:31Z",
+              "updatedAt": "2024-09-18T19:11:46Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6J5je5",
+          "commit": {
+            "abbreviatedOid": "4a0c7c7"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-09-18T19:21:03Z",
+          "updatedAt": "2024-09-18T19:21:03Z",
+          "comments": [
+            {
+              "originalPosition": 21,
+              "body": "I think the discussion is broader than the text of the issue, so I'd prefer to close and open a new issue to discuss making per-bucket aggregation normative.",
+              "createdAt": "2024-09-18T19:21:03Z",
+              "updatedAt": "2024-09-18T19:21:03Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 582,
+      "id": "PR_kwDOFEJYQs579y-a",
+      "title": "Tighten language around replay protection",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/582",
+      "state": "OPEN",
+      "author": "cjpatton",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [
+        "draft-12"
+      ],
+      "body": "Closes #442.\r\n\r\nAt the moment, we have very little normative/informative language around replay protection. The only normative language is buried in the \"input share validation\" subsection:\r\n\r\n> 1. Check if the report has been previously aggregated. If so, the input share\r\n>    MUST be marked as invalid with the error `report_replayed`. A report is\r\n>    considered aggregated if its contribution would be included in a relevant\r\n>    collection job.\r\n\r\nAnother problem is that we never say explicitly to record the IDs of aggregated reports. Here the Aggregator has a choice: it can avoid excess computation by storing the ID of every report it sees in an aggregation job, thereby ensuring reports that are rejected for some other reason aren't processed again; or it can avoid excess storage by only storing the IDs of output shares it wants to aggregate.\r\n\r\nThis change has several parts to it:\r\n\r\n1. Add a section to the protocol overview about replay protection (why/how) and a paragraph to the aggregation sub-protocol overview.\r\n\r\n1. Remove the replay check from the \"input share validation\" section.\r\n\r\n1. Have the Leader check for replays right after it has picked a candidate set of reports. Have it to store the IDs either before initialization or after completion of the aggregation job.\r\n\r\n1. Have the Helper resolve replays (reject replays and update the stored set) either at the beginning of an aggregation job or just before completing it.\r\n\r\n3. Be explicit about the use of report IDs for replay protection. This only impacts an implementation note, which envisions multiple schemes for replay protection, like hashing the report. This note has been moved from the \"input share validation\" section to operational considerations.\r\n\r\n4. Use the term \"collection sub-protocol\" more consistently. (There may still be instances of variants like \"collection interaction\".)",
+      "createdAt": "2024-09-19T00:24:53Z",
+      "updatedAt": "2024-09-19T00:25:18Z",
+      "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "baseRefName": "main",
+      "baseRefOid": "365e9adb07e5e5fe6161e4d73c06157a1b5c7220",
+      "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "headRefName": "cjpatton/442",
+      "headRefOid": "b6086fe1c4c106ea989c3de98e0ae2bf55cdf879",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": []
     }
   ]
 }
