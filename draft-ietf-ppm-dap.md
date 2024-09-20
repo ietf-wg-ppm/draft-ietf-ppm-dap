@@ -3,6 +3,7 @@ title: "Distributed Aggregation Protocol for Privacy Preserving Measurement"
 abbrev: DAP-PPM
 docname: draft-ietf-ppm-dap-latest
 category: std
+submissiontype: IETF
 
 venue:
   group: "Privacy Preserving Measurement"
@@ -47,36 +48,6 @@ author:
 
 
 informative:
-
-  CGB17:
-    title: "Prio: Private, Robust, and Scalable Computation of Aggregate Statistics"
-    date: 2017-03-14
-    target: "https://crypto.stanford.edu/prio/paper.pdf"
-    author:
-      - ins: H. Corrigan-Gibbs
-      - ins: D. Boneh
-
-  BBCGGI19:
-    title: "Zero-Knowledge Proofs on Secret-Shared Data via Fully Linear PCPs"
-    date: 2021-01-05
-    target: "https://eprint.iacr.org/2019/188"
-    author:
-      - ins: D. Boneh
-      - ins: E. Boyle
-      - ins: H. Corrigan-Gibbs
-      - ins: N. Gilboa
-      - ins: Y. Ishai
-
-  BBCGGI21:
-    title: "Lightweight Techniques for Private Heavy Hitters"
-    date: 2021-01-05
-    target: "https://eprint.iacr.org/2021/017"
-    author:
-      - ins: D. Boneh
-      - ins: E. Boyle
-      - ins: H. Corrigan-Gibbs
-      - ins: N. Gilboa
-      - ins: Y. Ishai
 
   Dou02:
     title: "The Sybil Attack"
@@ -399,7 +370,6 @@ Report:
 Report Share:
 : An encrypted input share comprising a piece of a report.
 
-
 {:br}
 
 # Overview {#overview}
@@ -433,7 +403,7 @@ provides two important properties:
 
 The overall system architecture is shown in {{dap-topology}}.
 
-~~~~
+~~~
 +--------+
 |        |
 | Client +----+
@@ -453,7 +423,7 @@ The overall system architecture is shown in {{dap-topology}}.
 +--------+          |   Helper   |
                     |            |
                     +------------+
-~~~~
+~~~
 {: #dap-topology title="System Architecture"}
 
 The main participants in the protocol are as follows:
@@ -482,6 +452,7 @@ Helper:
 : The Aggregator assisting the Leader with the computation. The protocol is
   designed so that the Helper is relatively lightweight, with most of the
   operational burden borne by the Leader.
+
 
 {:br}
 
@@ -632,7 +603,7 @@ refer to error types, rather than the full URNs. For example, an "error of type
 'invalidMessage'" refers to an error document with "type" value
 "urn:ietf:params:ppm:dap:error:invalidMessage".
 
-This document uses the verbs "abort" and "alert with [some error message]" to
+This document uses the verbs "abort" and "alert with \[some error message\]" to
 describe how protocol participants react to various error conditions. This
 implies HTTP status code 400 Bad Request unless explicitly specified otherwise.
 
@@ -686,7 +657,8 @@ variant {
   /* Field exists regardless of variant */
   uint32 always_present;
   ExampleEnum type = number;
-  /* Only fields included in the type == number variant is described */
+  /* Only fields included in the `type == number`
+    variant is described */
   uint32 a_number;
 } ExampleStruct;
 ~~~
@@ -735,14 +707,15 @@ uint64 Duration; /* Number of seconds elapsed between two instants */
 
 uint64 Time; /* seconds elapsed since start of UNIX epoch */
 
-/* An interval of time of length duration, where start is included and (start +
-duration) is excluded. */
+/* An interval of time of length duration, where start is included
+  and (start + duration) is excluded. */
 struct {
   Time start;
   Duration duration;
 } Interval;
 
-/* An ID used to uniquely identify a report in the context of a DAP task. */
+/* An ID used to uniquely identify a report in the context of a
+   DAP task. */
 opaque ReportID[16];
 
 /* The various roles in the DAP protocol. */
@@ -990,8 +963,6 @@ uint16 HpkeAeadId; /* Defined in [HPKE] */
 uint16 HpkeKemId;  /* Defined in [HPKE] */
 uint16 HpkeKdfId;  /* Defined in [HPKE] */
 ~~~
-
-[OPEN ISSUE: Decide whether to expand the width of the id.]
 
 Aggregators MUST allocate distinct id values for each `HpkeConfig` in an
 `HpkeConfigList`.
@@ -1451,8 +1422,6 @@ The Helper's response will be an `AggregationJobResp` message (see
 the same report IDs in the same order as the Leader's `AggregationJobInitReq`.
 Otherwise, the Leader MUST abort the aggregation job.
 
-[[OPEN ISSUE: consider relaxing this ordering constraint. See issue#217.]]
-
 Otherwise, the Leader proceeds as follows with each report:
 
 1. If the inbound prep response has type "continue", then the Leader computes
@@ -1565,11 +1534,12 @@ For all other reports it initializes the VDAF prep state as follows (let
 `inbound` denote the payload of the prep step sent by the Leader):
 
 ~~~
-(state, outbound) = Vdaf.ping_pong_helper_init(vdaf_verify_key,
-                                               agg_param,
-                                               report_id,
-                                               public_share,
-                                               plaintext_input_share.payload)
+(state, outbound) = Vdaf.ping_pong_helper_init(
+    vdaf_verify_key,
+    agg_param,
+    report_id,
+    public_share,
+    plaintext_input_share.payload)
 ~~~
 
 where:
@@ -1708,11 +1678,8 @@ following checks:
       responded to an `AggregateShareReq` message from the Leader. A batch is
       determined by query ({{batch-mode}}) conveyed in these messages. Queries
       must satisfy the criteria covered in {{batch-validation}}. These criteria
-      are meant to restrict queries in a way make it easy to determine wither a
-      report pertains to a batch that was collected.
-
-      [TODO: If a section to clarify report and batch states is added this can be
-      removed. See Issue #384]
+      are meant to restrict queries in a way that makes it easy to determine
+      wither a report pertains to a batch that was collected.
 
 1. Finally, if an Aggregator cannot determine if an input share is valid, it
    MUST mark the input share as invalid with error `report_dropped`. For
@@ -1777,8 +1744,6 @@ exactly the same report IDs in the same order as the Leader's
 `AggregationJobContinueReq`. Otherwise, the Leader MUST abort the aggregation
 job.
 
-[[OPEN ISSUE: consider relaxing this ordering constraint. See issue#217.]]
-
 Otherwise, the Leader proceeds as follows with each report:
 
 1. If the inbound prep response type is "continue" and the state is
@@ -1834,9 +1799,6 @@ If any of these checks fail, then the Helper MUST abort with error
 to the previous request, then the Helper MAY abort with error `invalidMessage`.
 (Note that a report may be missing, in which case the Helper should assume the
 Leader rejected it.)
-
-[OPEN ISSUE: Issue 438: It may be useful for the Leader to explicitly signal
-rejection.]
 
 Next, the Helper checks if the continuation step indicated by the request is
 correct. (For the first `AggregationJobContinueReq` the value should be `1`;
@@ -1921,11 +1883,6 @@ ensure that the Leader's `AggregationJobContinueReq` message did not change when
 it was re-sent (i.e., the two messages must be identical). This prevents the
 Leader from re-winding an aggregation job and re-running an aggregation step
 with different parameters.
-
-[[OPEN ISSUE: Allowing the Leader to "rewind" aggregation job state of the
-Helper may allow an attack on privacy. For instance, if the VDAF verification
-key changes, the prep shares in the Helper's response would change even if the
-consistency check is made. Security analysis is required. See #401.]]
 
 One way the Helper could address this would be to store a digest of the Leader's
 request, indexed by aggregation job ID and step, and refuse to service a request
@@ -2224,8 +2181,11 @@ Encrypting an aggregate share `agg_share` for a given `AggregateShareReq` is
 done as follows:
 
 ~~~
-enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
-  agg_share_aad, agg_share)
+(enc, payload) = SealBase(
+    pk,
+    "dap-11 aggregate share" || server_role || 0x00,
+    agg_share_aad,
+    agg_share)
 ~~~
 
 where `pk` is the HPKE public key encoded by the Collector's HPKE key,
@@ -2254,8 +2214,12 @@ Specifically, given an encrypted input share, denoted `enc_share`, for a given
 batch selector, decryption works as follows:
 
 ~~~
-agg_share = OpenBase(enc_share.enc, sk, "dap-11 aggregate share" ||
-  server_role || 0x00, agg_share_aad, enc_share.payload)
+agg_share = OpenBase(
+    enc_share.enc,
+    sk,
+    "dap-11 aggregate share" || server_role || 0x00,
+    agg_share_aad,
+    enc_share.payload)
 ~~~
 
 where `sk` is the HPKE secret key, `server_role` is the Role of the server that
@@ -2308,10 +2272,6 @@ tasks, it is sufficient (but not necessary) to check that the batch interval
 does not overlap with the batch interval of any previous query. If this batch
 interval check fails, then the Aggregator MAY abort with error of type
 "batchOverlap".
-
-[[OPEN ISSUE: #195 tracks how we might relax this constraint to allow for more
-collect query flexibility. As of now, this is quite rigid and doesn't give the
-Collector much room for mistakes.]]
 
 #### Time-interval Batch Mode {#time-interval-batch-validation}
 
@@ -2436,7 +2396,7 @@ computation cost of aggregation in a few ways, such as producing aggregates over
 a sample of the data or choosing a representation of the data permitting a
 simpler aggregation scheme.
 
-[[TODO: Discuss explicit key performance indicators, here or elsewhere.]]
+> TODO: Discuss explicit key performance indicators, here or elsewhere.
 
 ## Aggregation Utility and Soft Batch Deadlines
 
@@ -2752,11 +2712,12 @@ The definition for each media type is in the following subsections.
 Protocol message format evolution is supported through the definition of new
 formats that are identified by new media types.
 
-IANA [shall update / has updated] the "Media Types" registry at
-https://www.iana.org/assignments/media-types with the registration information
-in this section for all media types listed above.
+IANA shall update (RFC EDITOR: change "shall update" to "has update") the
+"Media Types" registry at https://www.iana.org/assignments/media-types
+with the registration information in this section for all media types
+listed above.
 
-[OPEN ISSUE: Solicit review of these allocations from domain experts.]
+> TODO Solicit review of these allocations from domain experts.
 
 ### Message versioning
 
@@ -3424,14 +3385,14 @@ following sections.
 This document requests creation of a new registry for Batch Modes. This registry
 should contain the following columns:
 
-[TODO: define how we want to structure this registry when the time comes]
+> TODO Define how we want to structure this registry.
 
 ### Upload Extension Registry
 
 This document requests creation of a new registry for extensions to the Upload
 protocol. This registry should contain the following columns:
 
-[TODO: define how we want to structure this registry when the time comes]
+> TODO Define how we want to structure this registry.
 
 ### Prepare Error Registry {#prepare-error-reg}
 
@@ -3452,9 +3413,9 @@ with this document as the reference.
 
 ## URN Sub-namespace for DAP (urn:ietf:params:ppm:dap) {#urn-space}
 
-The following value [will be/has been] registered in the "IETF URN Sub-namespace
-for Registered Protocol Parameter Identifiers" registry, following the template
-in {{!RFC3553}}:
+The following value will be (RFC EDITOR: change "will be" to "has been")
+registered in the "IETF URN Sub-namespace for Registered Protocol
+Parameter Identifiers" registry, following the template in {{!RFC3553}}:
 
 ~~~
 Registry name:  dap
