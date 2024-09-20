@@ -792,13 +792,14 @@ Table of Contents
    Then we describe the specific variant of ExampleStruct where type ==
    number with a variant block like so:
 
- variant {
-   /* Field exists regardless of variant */
-   uint32 always_present;
-   ExampleEnum type = number;
-   /* Only fields included in the type == number variant is described */
-   uint32 a_number;
- } ExampleStruct;
+   variant {
+     /* Field exists regardless of variant */
+     uint32 always_present;
+     ExampleEnum type = number;
+     /* Only fields included in the `type == number`
+       variant is described */
+     uint32 a_number;
+   } ExampleStruct;
 
    The protocol text accompanying this would explain how implementations
    should handle the always_present and a_number fields but not type.
@@ -834,45 +835,45 @@ Table of Contents
 
    The following are some basic type definitions used in other messages:
 
-  /* ASCII encoded URL. e.g., "https://example.com" */
-  opaque Url<1..2^16-1>;
+   /* ASCII encoded URL. e.g., "https://example.com" */
+   opaque Url<1..2^16-1>;
 
-  uint64 Duration; /* Number of seconds elapsed between two instants */
+   uint64 Duration; /* Number of seconds elapsed between two instants */
 
-  uint64 Time; /* seconds elapsed since start of UNIX epoch */
+   uint64 Time; /* seconds elapsed since start of UNIX epoch */
 
-  /* An interval of time of length duration, where start is included and
-    (start + duration) is excluded. */
-  struct {
-    Time start;
-    Duration duration;
-  } Interval;
+   /* An interval of time of length duration, where start is included
+     and (start + duration) is excluded. */
+   struct {
+     Time start;
+     Duration duration;
+   } Interval;
 
-  /* An ID used to uniquely identify a report in the context of a
-     DAP task. */
-  opaque ReportID[16];
+   /* An ID used to uniquely identify a report in the context of a
+      DAP task. */
+   opaque ReportID[16];
 
-  /* The various roles in the DAP protocol. */
-  enum {
-    collector(0),
-    client(1),
-    leader(2),
-    helper(3),
-    (255)
-  } Role;
+   /* The various roles in the DAP protocol. */
+   enum {
+     collector(0),
+     client(1),
+     leader(2),
+     helper(3),
+     (255)
+   } Role;
 
-  /* Identifier for a server's HPKE configuration */
-  uint8 HpkeConfigId;
+   /* Identifier for a server's HPKE configuration */
+   uint8 HpkeConfigId;
 
-  /* An HPKE ciphertext. */
-  struct {
-    HpkeConfigId config_id;    /* config ID */
-    opaque enc<1..2^16-1>;     /* encapsulated HPKE key */
-    opaque payload<1..2^32-1>; /* ciphertext */
-  } HpkeCiphertext;
+   /* An HPKE ciphertext. */
+   struct {
+     HpkeConfigId config_id;    /* config ID */
+     opaque enc<1..2^16-1>;     /* encapsulated HPKE key */
+     opaque payload<1..2^32-1>; /* ciphertext */
+   } HpkeCiphertext;
 
-  /* Represent a zero-length byte string. */
-  struct {} Empty;
+   /* Represent a zero-length byte string. */
+   struct {} Empty;
 
    DAP uses the 16-byte ReportID as the nonce parameter for the VDAF
    shard and prep_init methods (see [VDAF], Section 5).  Additionally,

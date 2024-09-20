@@ -2225,7 +2225,8 @@ variant {
   /* Field exists regardless of variant */
   uint32 always_present;
   ExampleEnum type = number;
-  /* Only fields included in the type == number variant is described */
+  /* Only fields included in the `type == number`
+    variant is described */
   uint32 a_number;
 } ExampleStruct;
 </pre><a href="#section-4.1-6" class="pilcrow">¶</a>
@@ -2277,8 +2278,8 @@ uint64 Duration; /* Number of seconds elapsed between two instants */
 
 uint64 Time; /* seconds elapsed since start of UNIX epoch */
 
-/* An interval of time of length duration, where start is included and
-  (start + duration) is excluded. */
+/* An interval of time of length duration, where start is included
+  and (start + duration) is excluded. */
 struct {
   Time start;
   Duration duration;
