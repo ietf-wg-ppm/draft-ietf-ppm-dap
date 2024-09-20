@@ -1853,12 +1853,9 @@ Table of Contents
           AggregateShareReq message from the Leader.  A batch is
           determined by query (Section 4.3) conveyed in these messages.
           Queries must satisfy the criteria covered in Section 4.8.5.
-          These criteria are meant to restrict queries in a way make it
-          easy to determine wither a report pertains to a batch that was
-          collected.
-
-          [TODO: If a section to clarify report and batch states is
-          added this can be removed.  See Issue #384]
+          These criteria are meant to restrict queries in a way that
+          makes it easy to determine wither a report pertains to a batch
+          that was collected.
 
    8.  Finally, if an Aggregator cannot determine if an input share is
        valid, it MUST mark the input share as invalid with error
