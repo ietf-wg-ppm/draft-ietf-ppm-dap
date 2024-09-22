@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-09-19T01:08:53.727886+00:00",
+  "timestamp": "2024-09-22T01:15:14.066963+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -147,6 +147,11 @@
       "name": "draft-13",
       "description": "",
       "color": "4ACC30"
+    },
+    {
+      "name": "pre-WGLC",
+      "description": "",
+      "color": "C01CED"
     }
   ],
   "issues": [
@@ -10937,7 +10942,7 @@
       ],
       "body": "As mentioned in #556, replay protection implies a relatively stringent operational requirement for the Helper: many aggregation jobs might make concurrent transactions on the same database, which can easily overwhelm the database if not sufficiently provisioned.\r\n\r\nTo mitigate this problem, the Helper can cancel an aggregation job and ask the Leader to try again later. One option is to respond with HTTP status 429 and a \"retry-after\" header indicating when it should be safe to retry.\r\n\r\nI'd like to suggest that we spell this out explicitly in the draft.",
       "createdAt": "2024-05-01T20:01:38Z",
-      "updatedAt": "2024-09-17T23:21:11Z",
+      "updatedAt": "2024-09-19T02:53:56Z",
       "closedAt": null,
       "comments": [
         {
@@ -11051,6 +11056,13 @@
           "body": "> However, I think that our current exploration of consistent hashing and other techniques is more likely to produce a good outcome here.\r\n\r\n[Consisting hashing is already used in Daphne](https://mailarchive.ietf.org/arch/msg/ppm/uJDUCZPJ9EYgeVE-90aFx489OPI/) to shard replay protection across multiple actors. This is the main tool we have to reduce the latency of resolving storage transactions across aggregation jobs.\r\n\r\n\r\n> I would like to avoid the need for asynchronous processing. It creates a burden for the leader that is almost exactly the same as what you were concerned about, it just hides it. So, if we can get the processing cost down -- in particular, to remove any reliance on consistent global state -- I would like to see the asynchronous stuff removed. It complicates where the protocol should be simplified.\r\n\r\nWhat consistent global state are you thinking of here?\r\n\r\nBy all means, let's explore ways to mitigate costs, but we need to start turning our intuition about what might be possible into concrete proposals on paper. \r\n\r\n@bemasc's [proposal on the list](https://mailarchive.ietf.org/arch/msg/ppm/rNpe3Ky070_voM5BAk3ICieF6OI/) is a good first step, but there are some concerns it doesn't fully address. I'll reply with details on the list in a moment, but at a high level, there is a certain amount of computation both aggregators have to do ($O(m \\cdot n \\cdot \\log n)$, where $m$ is the batch size and $n$ is the size of measurement); and unlike the leader, it has to carry out that computation on the hot path of HTTP requests.\r\n\r\nGiven the operational requirements currently in the draft, our expectation is that whatever burden exists for coordinating the computation is meant to be born by the leader, not the helper. So if there is an irreducible cost that some aggregator has to pay, it should be payed by the leader.",
           "createdAt": "2024-07-31T16:20:42Z",
           "updatedAt": "2024-07-31T19:26:16Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Here's how we'll close this issue (see [the list thread](https://mailarchive.ietf.org/arch/msg/ppm/mPYFQ9-AjfbSZ5r67gJyJ4cSaBw/) for details):\r\n* Merge #576 \r\n* Merge either #564 or #574 depending on whether the latency added by #574 is too high.",
+          "createdAt": "2024-09-19T01:18:47Z",
+          "updatedAt": "2024-09-19T02:53:56Z"
         }
       ]
     },
@@ -11320,10 +11332,12 @@
       "author": "martinthomson",
       "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
-      "labels": [],
+      "labels": [
+        "editorial"
+      ],
       "body": "@ekr, do you want to update this?",
       "createdAt": "2024-08-05T01:23:25Z",
-      "updatedAt": "2024-08-05T01:23:25Z",
+      "updatedAt": "2024-09-20T20:02:51Z",
       "closedAt": null,
       "comments": []
     },
@@ -11355,10 +11369,12 @@
       "author": "cjpatton",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
-      "labels": [],
+      "labels": [
+        "draft-13"
+      ],
       "body": "An issue that's been raised several times (most recently in #571) is that the term \"aggregation job\" is a misnomer since it doesn't actually say anything about aggregation. All it says is that, once an aggregation job is complete, each aggregator commits to the sequence of output shares they recovered. It's not until collection time that we call [`Vdaf.aggregate()`](https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-11#section-5.4) on the set of output shares to get our aggregate share for the batch.\r\n\r\nGiven this fact, it's been suggested we rename \"aggregation job\" to something like \"preparation job\", since the main thing that happens during this protocol is [VDAF preparation](https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-11#section-5.2).\r\n\r\nI don't recall precisely how this term entered our vocabulary, but part of the reason it stuck is that, in practice, we expect implementations to do some, if not most, of the aggregation during this phase. From [Section 4.7](https://ietf-wg-ppm.github.io/draft-ietf-ppm-dap/draft-ietf-ppm-dap.html#section-4.7-11):\r\n\r\n> After an aggregation job is completed, each Aggregator stores the output shares until the aggregate share is collected as described in [Section 4.8](https://ietf-wg-ppm.github.io/draft-ietf-ppm-dap/draft-ietf-ppm-dap.html#collect-flow). Note that it is usually not necessary to store output shares individually: depending on the batch mode and VDAF, the output shares can be merged into existing aggregate shares that are updated as aggregation jobs complete. This streaming aggregation is compatible with Prio3 and all batch modes specified in this document.\r\n\r\nIn other words, we expect \"streaming aggregation\" to be the norm for DAP implementations and \"delayed aggregation\" during the collection (credit @bemasc for this terminology) to be the rare exception. In theory, you could have a VDAF for which aggregation is sensitive to the order of output shares; or a batch mode may require us to store output shares individually until collection. Neither is true today, and to me both seem pretty unlikely.\r\n\r\nRather rename the aggregation sub-protocol, we could make this streaming aggregation feature normative. This would require two things:\r\n\r\n1. The concept of a \"batch bucket\" (#385). The definition of \"batch bucket\" depends on the batch mode: for time-interval, it's a window of time (determined by the `time_precision` task parameter); for leader-selected, it's simply a batch ID. Each bucket has an aggregate share. At the end of an aggregation job, we would add each output share into the aggregate share of the bucket it corresponds to.\r\n\r\n2. We need to be able to express syntactically how to update an aggregate share with an output share. This is precluded by the current VDAF syntax, [which only describes aggregating output shares into an aggregate share](https://cfrg.github.io/draft-irtf-cfrg-vdaf/draft-irtf-cfrg-vdaf.html#section-5.4). We would therefore need to modify the syntax.\r\n\r\nWe would then document delayed aggregation as a fallback in case the VDAF or batch mode requires it.",
       "createdAt": "2024-09-18T20:39:17Z",
-      "updatedAt": "2024-09-18T21:17:10Z",
+      "updatedAt": "2024-09-20T20:03:36Z",
       "closedAt": null,
       "comments": [
         {
@@ -11369,6 +11385,43 @@
           "updatedAt": "2024-09-18T20:57:24Z"
         }
       ]
+    },
+    {
+      "number": 583,
+      "id": "I_kwDOFEJYQs6XXb5S",
+      "title": "Complete IANA considerations",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/583",
+      "state": "OPEN",
+      "author": "cjpatton",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [
+        "pre-WGLC"
+      ],
+      "body": "- [ ]  Go through this section and make sure it's aligned with the body of the draft.\r\n- [ ] Define the \"Batch Mode Registry\"\r\n- [ ] Define the \"Upload Extension Registry\"\r\n- [ ] Solicit review of media type allocations from domain experts (HTTPDIR review?)",
+      "createdAt": "2024-09-20T19:17:35Z",
+      "updatedAt": "2024-09-20T19:24:46Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 584,
+      "id": "I_kwDOFEJYQs6XXlPj",
+      "title": "Discuss \"key peformance indicators\" for VDAFs",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/584",
+      "state": "OPEN",
+      "author": "cjpatton",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [
+        "operational considerations",
+        "draft-13"
+      ],
+      "body": "This is a TODO in the operational considerations section. I'm not sure what the intent was, but the commit goes back to one of @chris-wood's first back in 2021: 1eca0d1c\r\n\r\nI suppose it's a good idea to warn operators about which costs they need to pay attention to. A couple I've noticed, from my own experience:\r\n1. The output shares can be quite big, so try to aggregate as quickly as possible to save memory (cf. #581) and be mindful of storage cost when splitting the aggregate share across multiple buckets (cf. #385).\r\n2. Think of Prio3 as being an $O(n \\log n)$ algorithm, where $n$ is the \"length\" of the data being aggregated.\r\n3. For Poplar1, the cost of preparation (IDPF evaluation in particular) increases as the length of the aggregation parameter increases.\r\n\r\nAnything else?",
+      "createdAt": "2024-09-20T19:32:38Z",
+      "updatedAt": "2024-09-20T20:03:48Z",
+      "closedAt": null,
+      "comments": []
     }
   ],
   "pulls": [
@@ -71567,9 +71620,9 @@
       "labels": [
         "aggregation cost"
       ],
-      "body": "Specifically, we relax the check from the specific report ID, to intersection with intervals of report IDs. This will allow implementations to drop all long-term per-report storage, considerably reducing the storage requirements to implement the protocol. The tradeoff is in increased aggregation latency: typically, aggregation cannot begin until the Leader is sure that no further reports will arrive for a given time window.",
+      "body": "Closes #557.\r\n\r\nSpecifically, we relax the check from the specific report ID, to intersection with intervals of report IDs. This will allow implementations to drop all long-term per-report storage, considerably reducing the storage requirements to implement the protocol. The tradeoff is in increased aggregation latency: typically, aggregation cannot begin until the Leader is sure that no further reports will arrive for a given time window.",
       "createdAt": "2024-08-30T00:21:13Z",
-      "updatedAt": "2024-09-17T23:14:48Z",
+      "updatedAt": "2024-09-20T22:18:00Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "c2f4e851a5989f4772d0c9e7c6d147611af7fd7b",
@@ -71998,6 +72051,104 @@
               "updatedAt": "2024-09-05T23:50:48Z"
             }
           ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6KP-r8",
+          "commit": {
+            "abbreviatedOid": "aaa3733"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "This is an editorial review, and I will defer to those who are knee-deep in implementation on whether the change is a good idea.",
+          "createdAt": "2024-09-20T22:07:45Z",
+          "updatedAt": "2024-09-20T22:18:00Z",
+          "comments": [
+            {
+              "originalPosition": 28,
+              "body": "Orthongonal nit: back when we got a review from HTTPDIR, we got a recommendation to use the term \"interaction\" or \"sub-interaction\" instead of \"sub-protocol\". Mostly this was cleaned up in #450, but I appear to have missed this one.",
+              "createdAt": "2024-09-20T22:07:45Z",
+              "updatedAt": "2024-09-20T22:18:00Z"
+            },
+            {
+              "originalPosition": 39,
+              "body": "As above: prefer \"interaction\" to \"sub-protocol\", per HTTPDIR's advice.",
+              "createdAt": "2024-09-20T22:08:19Z",
+              "updatedAt": "2024-09-20T22:18:00Z"
+            },
+            {
+              "originalPosition": 48,
+              "body": "I don't object to using the verb \"truncate\" here (is the precedent [Go's `time.Truncate`](https://pkg.go.dev/time#Time.Truncate)?), but \"truncate [...] down\" is awkward. There's no such thing as \"truncating up\" so why say \"truncate down\"?\r\n```suggestion\r\n      truncate this value to the nearest multiple of the task's\r\n```",
+              "createdAt": "2024-09-20T22:10:59Z",
+              "updatedAt": "2024-09-20T22:18:00Z"
+            },
+            {
+              "originalPosition": 62,
+              "body": "As above: prefer \"interaction\" to \"sub-protocol\", per HTTPDIR's advice.\r\n",
+              "createdAt": "2024-09-20T22:11:29Z",
+              "updatedAt": "2024-09-20T22:18:00Z"
+            },
+            {
+              "originalPosition": 69,
+              "body": "As above: prefer \"interaction\" to \"sub-protocol\", per HTTPDIR's advice.",
+              "createdAt": "2024-09-20T22:11:41Z",
+              "updatedAt": "2024-09-20T22:18:00Z"
+            },
+            {
+              "originalPosition": 81,
+              "body": "As above: prefer \"interaction\" to \"sub-protocol\", per HTTPDIR's advice.",
+              "createdAt": "2024-09-20T22:11:48Z",
+              "updatedAt": "2024-09-20T22:18:00Z"
+            },
+            {
+              "originalPosition": 97,
+              "body": "As above: prefer \"interaction\" to \"sub-protocol\", per HTTPDIR's advice.",
+              "createdAt": "2024-09-20T22:12:06Z",
+              "updatedAt": "2024-09-20T22:18:00Z"
+            },
+            {
+              "originalPosition": 156,
+              "body": "An interval of time makes sense, but an interval of report IDs is a strange notion.\r\n```suggestion\r\ncommitment is an ordered set of report IDs (using lexicographic ordering),\r\n```",
+              "createdAt": "2024-09-20T22:13:31Z",
+              "updatedAt": "2024-09-20T22:18:00Z"
+            },
+            {
+              "originalPosition": 168,
+              "body": "```suggestion\r\n   reports on a key generated by truncating each report's timestamp to the\r\n```",
+              "createdAt": "2024-09-20T22:14:11Z",
+              "updatedAt": "2024-09-20T22:18:00Z"
+            },
+            {
+              "originalPosition": 194,
+              "body": "As above: prefer \"interaction\" to \"sub-protocol\", per HTTPDIR's advice.",
+              "createdAt": "2024-09-20T22:15:21Z",
+              "updatedAt": "2024-09-20T22:18:00Z"
+            },
+            {
+              "originalPosition": 222,
+              "body": "As above: prefer \"interaction\" to \"sub-protocol\", per HTTPDIR's advice.",
+              "createdAt": "2024-09-20T22:15:34Z",
+              "updatedAt": "2024-09-20T22:18:00Z"
+            },
+            {
+              "originalPosition": 230,
+              "body": "As above: prefer \"interaction\" to \"sub-protocol\", per HTTPDIR's advice.",
+              "createdAt": "2024-09-20T22:15:40Z",
+              "updatedAt": "2024-09-20T22:18:00Z"
+            },
+            {
+              "originalPosition": 248,
+              "body": "As above: prefer \"interaction\" to \"sub-protocol\", per HTTPDIR's advice.",
+              "createdAt": "2024-09-20T22:15:47Z",
+              "updatedAt": "2024-09-20T22:18:00Z"
+            },
+            {
+              "originalPosition": 340,
+              "body": "As above: prefer \"interaction\" to \"sub-protocol\", per HTTPDIR's advice.",
+              "createdAt": "2024-09-20T22:17:14Z",
+              "updatedAt": "2024-09-20T22:18:00Z"
+            }
+          ]
         }
       ]
     },
@@ -72055,11 +72206,12 @@
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [
-        "aggregation cost"
+        "aggregation cost",
+        "draft-12"
       ],
-      "body": "",
+      "body": "Partially addresses #557.",
       "createdAt": "2024-09-11T18:02:25Z",
-      "updatedAt": "2024-09-17T23:15:09Z",
+      "updatedAt": "2024-09-20T22:04:12Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "7081e1d75f25e8c4c0ec66386f8c5cc097a9f8f1",
@@ -72091,6 +72243,19 @@
           "body": "",
           "createdAt": "2024-09-11T19:15:59Z",
           "updatedAt": "2024-09-11T19:15:59Z",
+          "comments": []
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6KP86q",
+          "commit": {
+            "abbreviatedOid": "3987ccf"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "Seems like a sensible thing for aggregators to agree on!",
+          "createdAt": "2024-09-20T22:04:12Z",
+          "updatedAt": "2024-09-20T22:04:12Z",
           "comments": []
         }
       ]
@@ -72540,6 +72705,35 @@
       "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "headRefName": "cjpatton/442",
       "headRefOid": "b6086fe1c4c106ea989c3de98e0ae2bf55cdf879",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 585,
+      "id": "PR_kwDOFEJYQs58Nbus",
+      "title": " Fix all build warnings, remove references to closed issues",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/585",
+      "state": "OPEN",
+      "author": "cjpatton",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [
+        "editorial",
+        "draft-12"
+      ],
+      "body": "* Add a submission type (IETF).\r\n* Remove unused references.\r\n* Remove square brackets, which markdown wants to interpret as a link. In one case we escape the brackets, e.g., `\\[`, `\\]`, in other cases we rework the text.\r\n* Fix all instances of art being too wide.\r\n* Remove OPEN ISSUE about the size of the HPKE config ID, as there's no reason to change this at this point.\r\n* Remove OPEN ISSUE referencing #217 (relax ordering of prep inits).\r\n* Remove TODO referencing #384 (latest discussion is #581).\r\n* Remove OPEN ISSUE referencing #438 (Leader signals rejection).\r\n* Remove OPEN ISSUE referencing #401 (aggregation job rewinding).\r\n* Remove OPEN ISSUE referencing #195 (collection flexibility).",
+      "createdAt": "2024-09-20T20:01:19Z",
+      "updatedAt": "2024-09-20T20:01:38Z",
+      "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "baseRefName": "main",
+      "baseRefOid": "365e9adb07e5e5fe6161e4d73c06157a1b5c7220",
+      "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "headRefName": "cjpatton/warnings",
+      "headRefOid": "0a6fcee4a9b216a811ed7edf9a381494bca4594d",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
