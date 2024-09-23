@@ -2981,15 +2981,12 @@ AggregationJobID.<a href="#section-4.7.1.1-1" class="pilcrow">¶</a></p>
 <p id="section-4.7.1.1-2">Next, for each report in the candidate set, it checks if the report ID
 corresponds to a report ID it has previously stored for this task. If so, it
 marks the report as invalid and removes it from the candidate set.<a href="#section-4.7.1.1-2" class="pilcrow">¶</a></p>
-<p id="section-4.7.1.1-3">At this point, the Leader <span class="bcp14">MAY</span> store the ID of each report in the candidate set.
-It <span class="bcp14">MUST</span> do so at the end of the continuation phase
-(<a href="#aggregation-leader-continuation" class="auto internal xref">Section 4.7.2.1</a>).<a href="#section-4.7.1.1-3" class="pilcrow">¶</a></p>
-<p id="section-4.7.1.1-4">Next, the Leader decrypts each of its report shares as described in
+<p id="section-4.7.1.1-3">Next, the Leader decrypts each of its report shares as described in
 <a href="#input-share-decryption" class="auto internal xref">Section 4.7.1.3</a>, then checks input share validity as described in
 <a href="#input-share-validation" class="auto internal xref">Section 4.7.1.4</a>. If either step invalidates the report, the Leader
-rejects the report and removes it from the set of candidate reports.<a href="#section-4.7.1.1-4" class="pilcrow">¶</a></p>
-<p id="section-4.7.1.1-5">Next, for each report the Leader executes the following procedure:<a href="#section-4.7.1.1-5" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.7.1.1-6">
+rejects the report and removes it from the set of candidate reports.<a href="#section-4.7.1.1-3" class="pilcrow">¶</a></p>
+<p id="section-4.7.1.1-4">Next, for each report the Leader executes the following procedure:<a href="#section-4.7.1.1-4" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-4.7.1.1-5">
 <pre>
 (state, outbound) = Vdaf.ping_pong_leader_init(
     vdaf_verify_key,
@@ -2997,35 +2994,35 @@ rejects the report and removes it from the set of candidate reports.<a href="#se
     report_id,
     public_share,
     plaintext_input_share.payload)
-</pre><a href="#section-4.7.1.1-6" class="pilcrow">¶</a>
+</pre><a href="#section-4.7.1.1-5" class="pilcrow">¶</a>
 </div>
-<p id="section-4.7.1.1-7">where:<a href="#section-4.7.1.1-7" class="pilcrow">¶</a></p>
+<p id="section-4.7.1.1-6">where:<a href="#section-4.7.1.1-6" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-4.7.1.1-8.1">
-                <p id="section-4.7.1.1-8.1.1"><code>vdaf_verify_key</code> is the VDAF verification key for the task<a href="#section-4.7.1.1-8.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="section-4.7.1.1-7.1">
+                <p id="section-4.7.1.1-7.1.1"><code>vdaf_verify_key</code> is the VDAF verification key for the task<a href="#section-4.7.1.1-7.1.1" class="pilcrow">¶</a></p>
 </li>
-              <li class="normal" id="section-4.7.1.1-8.2">
-                <p id="section-4.7.1.1-8.2.1"><code>agg_param</code> is the VDAF aggregation parameter provided by the Collector (see
-<a href="#collect-flow" class="auto internal xref">Section 4.8</a>)<a href="#section-4.7.1.1-8.2.1" class="pilcrow">¶</a></p>
+              <li class="normal" id="section-4.7.1.1-7.2">
+                <p id="section-4.7.1.1-7.2.1"><code>agg_param</code> is the VDAF aggregation parameter provided by the Collector (see
+<a href="#collect-flow" class="auto internal xref">Section 4.8</a>)<a href="#section-4.7.1.1-7.2.1" class="pilcrow">¶</a></p>
 </li>
-              <li class="normal" id="section-4.7.1.1-8.3">
-                <p id="section-4.7.1.1-8.3.1"><code>report_id</code> is the report ID, used as the nonce for VDAF sharding<a href="#section-4.7.1.1-8.3.1" class="pilcrow">¶</a></p>
+              <li class="normal" id="section-4.7.1.1-7.3">
+                <p id="section-4.7.1.1-7.3.1"><code>report_id</code> is the report ID, used as the nonce for VDAF sharding<a href="#section-4.7.1.1-7.3.1" class="pilcrow">¶</a></p>
 </li>
-              <li class="normal" id="section-4.7.1.1-8.4">
-                <p id="section-4.7.1.1-8.4.1"><code>public_share</code> is the report's public share<a href="#section-4.7.1.1-8.4.1" class="pilcrow">¶</a></p>
+              <li class="normal" id="section-4.7.1.1-7.4">
+                <p id="section-4.7.1.1-7.4.1"><code>public_share</code> is the report's public share<a href="#section-4.7.1.1-7.4.1" class="pilcrow">¶</a></p>
 </li>
-              <li class="normal" id="section-4.7.1.1-8.5">
-                <p id="section-4.7.1.1-8.5.1"><code>plaintext_input_share</code> is the Leader's <code>PlaintextInputShare</code><a href="#section-4.7.1.1-8.5.1" class="pilcrow">¶</a></p>
+              <li class="normal" id="section-4.7.1.1-7.5">
+                <p id="section-4.7.1.1-7.5.1"><code>plaintext_input_share</code> is the Leader's <code>PlaintextInputShare</code><a href="#section-4.7.1.1-7.5.1" class="pilcrow">¶</a></p>
 </li>
             </ul>
-<p id="section-4.7.1.1-9">The methods are defined in <span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-08#section-5.8" class="relref">Section 5.8</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>. This process determines
+<p id="section-4.7.1.1-8">The methods are defined in <span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-08#section-5.8" class="relref">Section 5.8</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>. This process determines
 the initial per-report <code>state</code>, as well as the initial <code>outbound</code> message to
 send to the Helper. If <code>state</code> is of type <code>Rejected</code>, then the report is
 rejected and removed from the set of candidate reports, and no message is sent
-to the Helper.<a href="#section-4.7.1.1-9" class="pilcrow">¶</a></p>
-<p id="section-4.7.1.1-10">If <code>state</code> is of type <code>Continued</code>, then  the Leader constructs a <code>PrepareInit</code>
-message structured as follows:<a href="#section-4.7.1.1-10" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.7.1.1-11">
+to the Helper.<a href="#section-4.7.1.1-8" class="pilcrow">¶</a></p>
+<p id="section-4.7.1.1-9">If <code>state</code> is of type <code>Continued</code>, then  the Leader constructs a <code>PrepareInit</code>
+message structured as follows:<a href="#section-4.7.1.1-9" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-4.7.1.1-10">
 <pre>
 struct {
   ReportMetadata report_metadata;
@@ -3037,29 +3034,29 @@ struct {
   ReportShare report_share;
   opaque payload&lt;0..2^32-1&gt;;
 } PrepareInit;
-</pre><a href="#section-4.7.1.1-11" class="pilcrow">¶</a>
+</pre><a href="#section-4.7.1.1-10" class="pilcrow">¶</a>
 </div>
-<p id="section-4.7.1.1-12">Each of these messages is constructed as follows:<a href="#section-4.7.1.1-12" class="pilcrow">¶</a></p>
+<p id="section-4.7.1.1-11">Each of these messages is constructed as follows:<a href="#section-4.7.1.1-11" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-4.7.1.1-13.1">
-                <p id="section-4.7.1.1-13.1.1"><code>report_share.report_metadata</code> is the report's metadata.<a href="#section-4.7.1.1-13.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="section-4.7.1.1-12.1">
+                <p id="section-4.7.1.1-12.1.1"><code>report_share.report_metadata</code> is the report's metadata.<a href="#section-4.7.1.1-12.1.1" class="pilcrow">¶</a></p>
 </li>
-              <li class="normal" id="section-4.7.1.1-13.2">
-                <p id="section-4.7.1.1-13.2.1"><code>report_share.public_share</code> is the report's public share.<a href="#section-4.7.1.1-13.2.1" class="pilcrow">¶</a></p>
+              <li class="normal" id="section-4.7.1.1-12.2">
+                <p id="section-4.7.1.1-12.2.1"><code>report_share.public_share</code> is the report's public share.<a href="#section-4.7.1.1-12.2.1" class="pilcrow">¶</a></p>
 </li>
-              <li class="normal" id="section-4.7.1.1-13.3">
-                <p id="section-4.7.1.1-13.3.1"><code>report_share.encrypted_input_share</code> is the intended recipient's (i.e.
-Helper's) encrypted input share.<a href="#section-4.7.1.1-13.3.1" class="pilcrow">¶</a></p>
+              <li class="normal" id="section-4.7.1.1-12.3">
+                <p id="section-4.7.1.1-12.3.1"><code>report_share.encrypted_input_share</code> is the intended recipient's (i.e.
+Helper's) encrypted input share.<a href="#section-4.7.1.1-12.3.1" class="pilcrow">¶</a></p>
 </li>
-              <li class="normal" id="section-4.7.1.1-13.4">
-                <p id="section-4.7.1.1-13.4.1"><code>payload</code> is set to the <code>outbound</code> message computed by the previous step.<a href="#section-4.7.1.1-13.4.1" class="pilcrow">¶</a></p>
+              <li class="normal" id="section-4.7.1.1-12.4">
+                <p id="section-4.7.1.1-12.4.1"><code>payload</code> is set to the <code>outbound</code> message computed by the previous step.<a href="#section-4.7.1.1-12.4.1" class="pilcrow">¶</a></p>
 </li>
             </ul>
-<p id="section-4.7.1.1-14">It is not possible for <code>state</code> to be of type <code>Finished</code> during Leader
-initialization.<a href="#section-4.7.1.1-14" class="pilcrow">¶</a></p>
-<p id="section-4.7.1.1-15">Once all the report shares have been initialized, the Leader creates an
-<code>AggregationJobInitReq</code> message structured as follows:<a href="#section-4.7.1.1-15" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.7.1.1-16">
+<p id="section-4.7.1.1-13">It is not possible for <code>state</code> to be of type <code>Finished</code> during Leader
+initialization.<a href="#section-4.7.1.1-13" class="pilcrow">¶</a></p>
+<p id="section-4.7.1.1-14">Once all the report shares have been initialized, the Leader creates an
+<code>AggregationJobInitReq</code> message structured as follows:<a href="#section-4.7.1.1-14" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-4.7.1.1-15">
 <pre>
 opaque BatchID[32];
 
@@ -3076,93 +3073,95 @@ struct {
   PartialBatchSelector part_batch_selector;
   PrepareInit prepare_inits&lt;1..2^32-1&gt;;
 } AggregationJobInitReq;
-</pre><a href="#section-4.7.1.1-16" class="pilcrow">¶</a>
+</pre><a href="#section-4.7.1.1-15" class="pilcrow">¶</a>
 </div>
-<p id="section-4.7.1.1-17">This message consists of:<a href="#section-4.7.1.1-17" class="pilcrow">¶</a></p>
+<p id="section-4.7.1.1-16">This message consists of:<a href="#section-4.7.1.1-16" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-4.7.1.1-18.1">
-                <p id="section-4.7.1.1-18.1.1"><code>agg_param</code>: The VDAF aggregation parameter.<a href="#section-4.7.1.1-18.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="section-4.7.1.1-17.1">
+                <p id="section-4.7.1.1-17.1.1"><code>agg_param</code>: The VDAF aggregation parameter.<a href="#section-4.7.1.1-17.1.1" class="pilcrow">¶</a></p>
 </li>
-              <li class="normal" id="section-4.7.1.1-18.2">
-                <p id="section-4.7.1.1-18.2.1"><code>part_batch_selector</code>: The "partial batch selector" used by the Aggregators to
-determine how to aggregate each report:<a href="#section-4.7.1.1-18.2.1" class="pilcrow">¶</a></p>
+              <li class="normal" id="section-4.7.1.1-17.2">
+                <p id="section-4.7.1.1-17.2.1"><code>part_batch_selector</code>: The "partial batch selector" used by the Aggregators to
+determine how to aggregate each report:<a href="#section-4.7.1.1-17.2.1" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-4.7.1.1-18.2.2.1">
-                    <p id="section-4.7.1.1-18.2.2.1.1">For leader-selected tasks, the Leader specifies a "batch ID" that
+<li class="normal" id="section-4.7.1.1-17.2.2.1">
+                    <p id="section-4.7.1.1-17.2.2.1.1">For leader-selected tasks, the Leader specifies a "batch ID" that
 determines the batch to which each report for this aggregation job
-belongs.<a href="#section-4.7.1.1-18.2.2.1.1" class="pilcrow">¶</a></p>
+belongs.<a href="#section-4.7.1.1-17.2.2.1.1" class="pilcrow">¶</a></p>
 </li>
                 </ul>
-<p id="section-4.7.1.1-18.2.3">
+<p id="section-4.7.1.1-17.2.3">
 The indicated batch mode <span class="bcp14">MUST</span> match the task's batch mode. Otherwise, the
-Helper <span class="bcp14">MUST</span> abort with error <code>invalidMessage</code>.<a href="#section-4.7.1.1-18.2.3" class="pilcrow">¶</a></p>
-<p id="section-4.7.1.1-18.2.4">
+Helper <span class="bcp14">MUST</span> abort with error <code>invalidMessage</code>.<a href="#section-4.7.1.1-17.2.3" class="pilcrow">¶</a></p>
+<p id="section-4.7.1.1-17.2.4">
 This field is called the "partial" batch selector because, depending on the
 batch mode, it may not determine a batch. In particular, if the batch mode is
 <code>time_interval</code>, the batch is not determined until the Collector's query is
-issued (see <a href="#batch-mode" class="auto internal xref">Section 4.3</a>).<a href="#section-4.7.1.1-18.2.4" class="pilcrow">¶</a></p>
+issued (see <a href="#batch-mode" class="auto internal xref">Section 4.3</a>).<a href="#section-4.7.1.1-17.2.4" class="pilcrow">¶</a></p>
 </li>
-              <li class="normal" id="section-4.7.1.1-18.3">
-                <p id="section-4.7.1.1-18.3.1"><code>prepare_inits</code>: the sequence of <code>PrepareInit</code> messages constructed in the
-previous step.<a href="#section-4.7.1.1-18.3.1" class="pilcrow">¶</a></p>
+              <li class="normal" id="section-4.7.1.1-17.3">
+                <p id="section-4.7.1.1-17.3.1"><code>prepare_inits</code>: the sequence of <code>PrepareInit</code> messages constructed in the
+previous step.<a href="#section-4.7.1.1-17.3.1" class="pilcrow">¶</a></p>
 </li>
             </ul>
-<p id="section-4.7.1.1-19">Finally, the Leader sends a PUT request to
+<p id="section-4.7.1.1-18">Finally, the Leader sends a PUT request to
 <code>{helper}/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}</code>. The payload
 is set to <code>AggregationJobInitReq</code> and the media type is set to
-"application/dap-aggregation-job-init-req".<a href="#section-4.7.1.1-19" class="pilcrow">¶</a></p>
-<p id="section-4.7.1.1-20">The Leader <span class="bcp14">MUST</span> authenticate its requests to the Helper using a scheme that
-meets the requirements in <a href="#request-authentication" class="auto internal xref">Section 3.1</a>.<a href="#section-4.7.1.1-20" class="pilcrow">¶</a></p>
-<p id="section-4.7.1.1-21">The Helper's response will be an <code>AggregationJobResp</code> message (see
+"application/dap-aggregation-job-init-req".<a href="#section-4.7.1.1-18" class="pilcrow">¶</a></p>
+<p id="section-4.7.1.1-19">The Leader <span class="bcp14">MUST</span> authenticate its requests to the Helper using a scheme that
+meets the requirements in <a href="#request-authentication" class="auto internal xref">Section 3.1</a>.<a href="#section-4.7.1.1-19" class="pilcrow">¶</a></p>
+<p id="section-4.7.1.1-20">The Helper's response will be an <code>AggregationJobResp</code> message (see
 <a href="#aggregation-helper-init" class="auto internal xref">Section 4.7.1.2</a>. The response's <code>prepare_resps</code> must include exactly
 the same report IDs in the same order as the Leader's <code>AggregationJobInitReq</code>.
-Otherwise, the Leader <span class="bcp14">MUST</span> abort the aggregation job.<a href="#section-4.7.1.1-21" class="pilcrow">¶</a></p>
-<p id="section-4.7.1.1-22">Otherwise, the Leader proceeds as follows with each report:<a href="#section-4.7.1.1-22" class="pilcrow">¶</a></p>
-<ol start="1" type="1" class="normal type-1" id="section-4.7.1.1-23">
-<li id="section-4.7.1.1-23.1">
-                <p id="section-4.7.1.1-23.1.1">If the inbound prep response has type "continue", then the Leader computes<a href="#section-4.7.1.1-23.1.1" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.7.1.1-23.1.2">
+Otherwise, the Leader <span class="bcp14">MUST</span> abort the aggregation job.<a href="#section-4.7.1.1-20" class="pilcrow">¶</a></p>
+<p id="section-4.7.1.1-21">Otherwise, the Leader proceeds as follows with each report:<a href="#section-4.7.1.1-21" class="pilcrow">¶</a></p>
+<ol start="1" type="1" class="normal type-1" id="section-4.7.1.1-22">
+<li id="section-4.7.1.1-22.1">
+                <p id="section-4.7.1.1-22.1.1">If the inbound prep response has type "continue", then the Leader computes<a href="#section-4.7.1.1-22.1.1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-4.7.1.1-22.1.2">
 <pre>
 (state, outbound) = Vdaf.ping_pong_leader_continued(agg_param,
                                                     prev_state,
                                                     inbound)
-</pre><a href="#section-4.7.1.1-23.1.2" class="pilcrow">¶</a>
+</pre><a href="#section-4.7.1.1-22.1.2" class="pilcrow">¶</a>
 </div>
-<p id="section-4.7.1.1-23.1.3">
-where:<a href="#section-4.7.1.1-23.1.3" class="pilcrow">¶</a></p>
+<p id="section-4.7.1.1-22.1.3">
+where:<a href="#section-4.7.1.1-22.1.3" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-4.7.1.1-23.1.4.1">
-                    <p id="section-4.7.1.1-23.1.4.1.1"><code>agg_param</code> is the VDAF aggregation parameter provided by the Collector (see
-<a href="#collect-flow" class="auto internal xref">Section 4.8</a>)<a href="#section-4.7.1.1-23.1.4.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="section-4.7.1.1-22.1.4.1">
+                    <p id="section-4.7.1.1-22.1.4.1.1"><code>agg_param</code> is the VDAF aggregation parameter provided by the Collector (see
+<a href="#collect-flow" class="auto internal xref">Section 4.8</a>)<a href="#section-4.7.1.1-22.1.4.1.1" class="pilcrow">¶</a></p>
 </li>
-                  <li class="normal" id="section-4.7.1.1-23.1.4.2">
-                    <p id="section-4.7.1.1-23.1.4.2.1"><code>prev_state</code> is the state computed earlier by calling
-<code>Vdaf.ping_pong_leader_init</code> or <code>Vdaf.ping_pong_leader_continued</code><a href="#section-4.7.1.1-23.1.4.2.1" class="pilcrow">¶</a></p>
+                  <li class="normal" id="section-4.7.1.1-22.1.4.2">
+                    <p id="section-4.7.1.1-22.1.4.2.1"><code>prev_state</code> is the state computed earlier by calling
+<code>Vdaf.ping_pong_leader_init</code> or <code>Vdaf.ping_pong_leader_continued</code><a href="#section-4.7.1.1-22.1.4.2.1" class="pilcrow">¶</a></p>
 </li>
-                  <li class="normal" id="section-4.7.1.1-23.1.4.3">
-                    <p id="section-4.7.1.1-23.1.4.3.1"><code>inbound</code> is the message payload in the <code>PrepareResp</code><a href="#section-4.7.1.1-23.1.4.3.1" class="pilcrow">¶</a></p>
+                  <li class="normal" id="section-4.7.1.1-22.1.4.3">
+                    <p id="section-4.7.1.1-22.1.4.3.1"><code>inbound</code> is the message payload in the <code>PrepareResp</code><a href="#section-4.7.1.1-22.1.4.3.1" class="pilcrow">¶</a></p>
 </li>
                 </ul>
-<p id="section-4.7.1.1-23.1.5">
+<p id="section-4.7.1.1-22.1.5">
 If <code>outbound != None</code>, then the Leader stores <code>state</code> and <code>outbound</code> and
 proceeds to <a href="#aggregation-leader-continuation" class="auto internal xref">Section 4.7.2.1</a>. If <code>outbound == None</code>, then
 the preparation process is complete: either <code>state == Rejected()</code>, in which
 case the Leader rejects the report and removes it from the candidate set; or
 <code>state == Finished(out_share)</code>, in which case preparation is complete and the
 Leader stores the output share for use in the collection interaction
-<a href="#collect-flow" class="auto internal xref">Section 4.8</a>.<a href="#section-4.7.1.1-23.1.5" class="pilcrow">¶</a></p>
+<a href="#collect-flow" class="auto internal xref">Section 4.8</a>.<a href="#section-4.7.1.1-22.1.5" class="pilcrow">¶</a></p>
 </li>
-              <li id="section-4.7.1.1-23.2">
-                <p id="section-4.7.1.1-23.2.1">Else if the type is "reject", then the Leader rejects the report and removes
+              <li id="section-4.7.1.1-22.2">
+                <p id="section-4.7.1.1-22.2.1">Else if the type is "reject", then the Leader rejects the report and removes
 it from the candidate set. The Leader <span class="bcp14">MUST NOT</span> include the report in a
 subsequent aggregation job, unless the error is <code>report_too_early</code>, in which
-case the Leader <span class="bcp14">MAY</span> include the report in a subsequent aggregation job.<a href="#section-4.7.1.1-23.2.1" class="pilcrow">¶</a></p>
+case the Leader <span class="bcp14">MAY</span> include the report in a subsequent aggregation job.<a href="#section-4.7.1.1-22.2.1" class="pilcrow">¶</a></p>
 </li>
-              <li id="section-4.7.1.1-23.3">
-                <p id="section-4.7.1.1-23.3.1">Else the type is invalid, in which case the Leader <span class="bcp14">MUST</span> abort the
-aggregation job.<a href="#section-4.7.1.1-23.3.1" class="pilcrow">¶</a></p>
+              <li id="section-4.7.1.1-22.3">
+                <p id="section-4.7.1.1-22.3.1">Else the type is invalid, in which case the Leader <span class="bcp14">MUST</span> abort the
+aggregation job.<a href="#section-4.7.1.1-22.3.1" class="pilcrow">¶</a></p>
 </li>
             </ol>
+<p id="section-4.7.1.1-23">When the Leader stores the <code>out_share</code>, it <span class="bcp14">MUST</span> also store the report ID for
+replay protection.<a href="#section-4.7.1.1-23" class="pilcrow">¶</a></p>
 <p id="section-4.7.1.1-24">(Note: Since VDAF preparation completes in a constant number of rounds, it will
 never be the case that some reports are completed and others are not.)<a href="#section-4.7.1.1-24" class="pilcrow">¶</a></p>
 </section>
@@ -3219,12 +3218,9 @@ struct {
 } PrepareResp;
 </pre><a href="#section-4.7.1.2-5" class="pilcrow">¶</a>
 </div>
-<p id="section-4.7.1.2-6">The Helper <span class="bcp14">MUST</span> resolve replays with the following procedure. It <span class="bcp14">MAY</span> do so at
-this point, immediately upon receiving the <code>AggregationJobInitReq</code>, but it <span class="bcp14">MUST</span>
-do so prior to completing the aggregation job. For each report in the request,
-it checks if the report ID corresponds to a report ID it has previously stored
-for this task. If so, it rejects the report by setting the outbound preparation
-response to<a href="#section-4.7.1.2-6" class="pilcrow">¶</a></p>
+<p id="section-4.7.1.2-6">First, for each report in the request, the Helper <span class="bcp14">MAY</span> check if the report ID
+corresponds to a report ID it has previously stored for this task. If so, it
+rejects the report by setting the outbound preparation response to<a href="#section-4.7.1.2-6" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-4.7.1.2-7">
 <pre>
 variant {
@@ -3234,9 +3230,9 @@ variant {
 } PrepareResp;
 </pre><a href="#section-4.7.1.2-7" class="pilcrow">¶</a>
 </div>
-<p id="section-4.7.1.2-8">where <code>report_id</code> is the report ID. It then stores the ID of every other report
-for replay protection going forward.<a href="#section-4.7.1.2-8" class="pilcrow">¶</a></p>
-<p id="section-4.7.1.2-9">Next, the Helper decrypts each of its report shares as described in
+<p id="section-4.7.1.2-8">where <code>report_id</code> is the report ID. Note that the Helper must perform this
+check before completing the aggregation job.<a href="#section-4.7.1.2-8" class="pilcrow">¶</a></p>
+<p id="section-4.7.1.2-9">Next the Helper decrypts each of its remaining report shares as described in
 <a href="#input-share-decryption" class="auto internal xref">Section 4.7.1.3</a>, then checks input share validity as described in
 <a href="#input-share-validation" class="auto internal xref">Section 4.7.1.4</a>. For any report that was rejected, the Helper sets
 the outbound preparation response to<a href="#section-4.7.1.2-9" class="pilcrow">¶</a></p>
@@ -3249,9 +3245,9 @@ variant {
 } PrepareResp;
 </pre><a href="#section-4.7.1.2-10" class="pilcrow">¶</a>
 </div>
-<p id="section-4.7.1.2-11">where and <code>prepare_error</code> is the indicated error. For all other reports it
-initializes the VDAF prep state as follows (let <code>inbound</code> denote the payload of
-the prep step sent by the Leader):<a href="#section-4.7.1.2-11" class="pilcrow">¶</a></p>
+<p id="section-4.7.1.2-11">where <code>report_id</code> is the report ID and <code>prepare_error</code> is the indicated error.
+For all other reports it initializes the VDAF prep state as follows (let
+<code>inbound</code> denote the payload of the prep step sent by the Leader):<a href="#section-4.7.1.2-11" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-4.7.1.2-12">
 <pre>
 (state, outbound) = Vdaf.ping_pong_helper_init(
@@ -3305,9 +3301,9 @@ variant {
 </div>
 <p id="section-4.7.1.2-19">If <code>state == Continued(prep_state)</code>, then the Helper stores <code>state</code> to
 prepare for the next continuation step (<a href="#aggregation-helper-continuation" class="auto internal xref">Section 4.7.2.2</a>).<a href="#section-4.7.1.2-19" class="pilcrow">¶</a></p>
-<p id="section-4.7.1.2-20">If <code>state == Finished(out_share)</code>, the Helper <span class="bcp14">MUST</span> resolve replay of the report
-if it has not done so already. It does so by checking if the report ID was
-previously stored for this task. If so, it responds with<a href="#section-4.7.1.2-20" class="pilcrow">¶</a></p>
+<p id="section-4.7.1.2-20">If <code>state == Finished(out_share)</code>, the Helper <span class="bcp14">MUST</span> resolve replay of the
+report. It does so by checking if the report ID was previously stored for this
+task. If so, it responds with<a href="#section-4.7.1.2-20" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-4.7.1.2-21">
 <pre>
 variant {
@@ -3542,7 +3538,7 @@ aggregation job.<a href="#section-4.7.2.1-11.4.1" class="pilcrow">¶</a></p>
 </li>
             </ol>
 <p id="section-4.7.2.1-12">When the Leader stores the <code>out_share</code>, it <span class="bcp14">MUST</span> also store the report ID for
-replay protection if it has not done so already.<a href="#section-4.7.2.1-12" class="pilcrow">¶</a></p>
+replay protection.<a href="#section-4.7.2.1-12" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="aggregation-helper-continuation">
@@ -3606,9 +3602,9 @@ variant {
 </div>
 <p id="section-4.7.2.2-13">If <code>state == Continued(prep_state)</code>, then the Helper stores <code>state</code> to
 prepare for the next continuation step (<a href="#aggregation-helper-continuation" class="auto internal xref">Section 4.7.2.2</a>).<a href="#section-4.7.2.2-13" class="pilcrow">¶</a></p>
-<p id="section-4.7.2.2-14">If <code>state == Finished(out_share)</code>, the Helper <span class="bcp14">MUST</span> resolve replay of the report
-if it has not done so already. It does so by checking if the report ID was
-previously stored for this task. If so, it responds with<a href="#section-4.7.2.2-14" class="pilcrow">¶</a></p>
+<p id="section-4.7.2.2-14">If <code>state == Finished(out_share)</code>, the Helper <span class="bcp14">MUST</span> resolve replay of the
+report. It does so by checking if the report ID was previously stored for this
+task. If so, it responds with<a href="#section-4.7.2.2-14" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-4.7.2.2-15">
 <pre>
 variant {
