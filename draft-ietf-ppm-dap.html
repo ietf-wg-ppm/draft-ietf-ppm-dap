@@ -4226,13 +4226,17 @@ chosen length, as each vector element must be processed in turn.<a href="#sectio
 all possible VDAF configurations for any tasks which the deployment may be
 configured for. Otherwise, an attacker may deny service by uploading many
 expensive reports to a suitably-configured VDAF.<a href="#section-5.2-2" class="pilcrow">¶</a></p>
-<p id="section-5.2-3">Applications which require computationally-expensive VDAFs can mitigate the
+<p id="section-5.2-3">The varying cost of VDAF computation means that aggregators deployments should
+negotiate reasonable limits for each VDAF configuration or measurement task, out
+of band with the protocol. For example, aggregators may agree on a maximum size
+for an aggregation job or on a maximum rate of incoming reports.<a href="#section-5.2-3" class="pilcrow">¶</a></p>
+<p id="section-5.2-4">Applications which require computationally-expensive VDAFs can mitigate the
 computation cost of aggregation in a few ways, such as producing aggregates over
 a sample of the data or choosing a representation of the data permitting a
-simpler aggregation scheme.<a href="#section-5.2-3" class="pilcrow">¶</a></p>
+simpler aggregation scheme.<a href="#section-5.2-4" class="pilcrow">¶</a></p>
 <ul class="normal ulEmpty">
-<li class="normal ulEmpty" id="section-5.2-4.1">
-            <p id="section-5.2-4.1.1">TODO: Discuss explicit key performance indicators, here or elsewhere.<a href="#section-5.2-4.1.1" class="pilcrow">¶</a></p>
+<li class="normal ulEmpty" id="section-5.2-5.1">
+            <p id="section-5.2-5.1.1">TODO: Discuss explicit key performance indicators, here or elsewhere.<a href="#section-5.2-5.1.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 </section>
