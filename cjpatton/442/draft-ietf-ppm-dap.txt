@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 23 March 2025                                        Cloudflare
+Expires: 27 March 2025                                        Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                                  Mozilla
                                                               C. A. Wood
                                                               Cloudflare
-                                                       19 September 2024
+                                                       23 September 2024
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -63,7 +63,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 23 March 2025.
+   This Internet-Draft will expire on 27 March 2025.
 
 Copyright Notice
 
@@ -1458,7 +1458,7 @@ struct {} Empty;
    compatible with Prio3 and all batch modes specified in this document.
 
    Apart from VDAF preparation, another important task of the
-   aggregation sub-protocol is to prevent replay protection
+   aggregation interaction is to prevent replay protection
    (Section 2.3).  Along with the output shares, each Aggregator records
    the IDs of all reports it is has aggregated for a given task: before
    committing to an output share, it checks whether the corresponding
@@ -1997,11 +1997,11 @@ struct {} Empty;
        the Leader rejects the report and removes it from the candidate
        set; or state == Finished(out_share), in which case preparation
        is complete and the Leader stores the output share for use in the
-       collection sub-protocol Section 4.8.
+       collection interaction Section 4.8.
 
    2.  Else if the type is "finished" and state == Finished(out_share),
        then preparation is complete and the Leader stores the output
-       share for use in the collection sub-protocol (Section 4.8).
+       share for use in the collection interaction (Section 4.8).
 
    3.  Else if the type is "reject", then the Leader rejects the report
        and removes it from the candidate set.
@@ -2087,7 +2087,7 @@ struct {} Empty;
    } PrepareResp;
 
    Otherwise it stores the report ID for replay protection and out_share
-   for use in the collection sub-protocol (Section 4.8).
+   for use in the collection interaction (Section 4.8).
 
    The Helper's response depends on the value of outbound.  If outbound
    != None, then the Helper's response is
