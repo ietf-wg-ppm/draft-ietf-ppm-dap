@@ -1458,7 +1458,7 @@ Table of Contents
    compatible with Prio3 and all batch modes specified in this document.
 
    Apart from VDAF preparation, another important task of the
-   aggregation interaction is to prevent replay protection
+   aggregation interaction is to provide replay protection
    (Section 2.3).  Along with the output shares, each Aggregator records
    the IDs of all reports it is has aggregated for a given task: before
    committing to an output share, it checks whether the corresponding

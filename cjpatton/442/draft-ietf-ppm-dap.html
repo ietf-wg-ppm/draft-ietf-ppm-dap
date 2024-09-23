@@ -2940,7 +2940,7 @@ aggregate shares that are updated as aggregation jobs complete. This streaming
 aggregation is compatible with Prio3 and all batch modes specified in this
 document.<a href="#section-4.7-11" class="pilcrow">¶</a></p>
 <p id="section-4.7-12">Apart from VDAF preparation, another important task of the aggregation
-interaction is to prevent replay protection (<a href="#replay-protection" class="auto internal xref">Section 2.3</a>). Along with
+interaction is to provide replay protection (<a href="#replay-protection" class="auto internal xref">Section 2.3</a>). Along with
 the output shares, each Aggregator records the IDs of all reports it is has
 aggregated for a given task: before committing to an output share, it checks
 whether the corresponding report ID is in the set of stored IDs.<a href="#section-4.7-12" class="pilcrow">¶</a></p>
