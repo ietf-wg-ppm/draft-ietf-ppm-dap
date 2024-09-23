@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 22 March 2025                                        Cloudflare
+Expires: 27 March 2025                                        Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                                  Mozilla
                                                               C. A. Wood
                                                               Cloudflare
-                                                       18 September 2024
+                                                       23 September 2024
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -63,7 +63,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 22 March 2025.
+   This Internet-Draft will expire on 27 March 2025.
 
 Copyright Notice
 
@@ -792,13 +792,14 @@ Table of Contents
    Then we describe the specific variant of ExampleStruct where type ==
    number with a variant block like so:
 
- variant {
-   /* Field exists regardless of variant */
-   uint32 always_present;
-   ExampleEnum type = number;
-   /* Only fields included in the type == number variant is described */
-   uint32 a_number;
- } ExampleStruct;
+   variant {
+     /* Field exists regardless of variant */
+     uint32 always_present;
+     ExampleEnum type = number;
+     /* Only fields included in the `type == number`
+       variant is described */
+     uint32 a_number;
+   } ExampleStruct;
 
    The protocol text accompanying this would explain how implementations
    should handle the always_present and a_number fields but not type.
@@ -834,44 +835,45 @@ Table of Contents
 
    The following are some basic type definitions used in other messages:
 
-/* ASCII encoded URL. e.g., "https://example.com" */
-opaque Url<1..2^16-1>;
+   /* ASCII encoded URL. e.g., "https://example.com" */
+   opaque Url<1..2^16-1>;
 
-uint64 Duration; /* Number of seconds elapsed between two instants */
+   uint64 Duration; /* Number of seconds elapsed between two instants */
 
-uint64 Time; /* seconds elapsed since start of UNIX epoch */
+   uint64 Time; /* seconds elapsed since start of UNIX epoch */
 
-/* An interval of time of length duration, where start is included and (start +
-duration) is excluded. */
-struct {
-  Time start;
-  Duration duration;
-} Interval;
+   /* An interval of time of length duration, where start is included
+     and (start + duration) is excluded. */
+   struct {
+     Time start;
+     Duration duration;
+   } Interval;
 
-/* An ID used to uniquely identify a report in the context of a DAP task. */
-opaque ReportID[16];
+   /* An ID used to uniquely identify a report in the context of a
+      DAP task. */
+   opaque ReportID[16];
 
-/* The various roles in the DAP protocol. */
-enum {
-  collector(0),
-  client(1),
-  leader(2),
-  helper(3),
-  (255)
-} Role;
+   /* The various roles in the DAP protocol. */
+   enum {
+     collector(0),
+     client(1),
+     leader(2),
+     helper(3),
+     (255)
+   } Role;
 
-/* Identifier for a server's HPKE configuration */
-uint8 HpkeConfigId;
+   /* Identifier for a server's HPKE configuration */
+   uint8 HpkeConfigId;
 
-/* An HPKE ciphertext. */
-struct {
-  HpkeConfigId config_id;    /* config ID */
-  opaque enc<1..2^16-1>;     /* encapsulated HPKE key */
-  opaque payload<1..2^32-1>; /* ciphertext */
-} HpkeCiphertext;
+   /* An HPKE ciphertext. */
+   struct {
+     HpkeConfigId config_id;    /* config ID */
+     opaque enc<1..2^16-1>;     /* encapsulated HPKE key */
+     opaque payload<1..2^32-1>; /* ciphertext */
+   } HpkeCiphertext;
 
-/* Represent a zero-length byte string. */
-struct {} Empty;
+   /* Represent a zero-length byte string. */
+   struct {} Empty;
 
    DAP uses the 16-byte ReportID as the nonce parameter for the VDAF
    shard and prep_init methods (see [VDAF], Section 5).  Additionally,
@@ -1114,8 +1116,6 @@ struct {} Empty;
    uint16 HpkeAeadId; /* Defined in [HPKE] */
    uint16 HpkeKemId;  /* Defined in [HPKE] */
    uint16 HpkeKdfId;  /* Defined in [HPKE] */
-
-   [OPEN ISSUE: Decide whether to expand the width of the id.]
 
    Aggregators MUST allocate distinct id values for each HpkeConfig in
    an HpkeConfigList.
@@ -1589,9 +1589,6 @@ struct {} Empty;
    AggregationJobInitReq.  Otherwise, the Leader MUST abort the
    aggregation job.
 
-   [[OPEN ISSUE: consider relaxing this ordering constraint.  See
-   issue#217.]]
-
    Otherwise, the Leader proceeds as follows with each report:
 
    1.  If the inbound prep response has type "continue", then the Leader
@@ -1706,11 +1703,12 @@ struct {} Empty;
    follows (let inbound denote the payload of the prep step sent by the
    Leader):
 
-(state, outbound) = Vdaf.ping_pong_helper_init(vdaf_verify_key,
-                                               agg_param,
-                                               report_id,
-                                               public_share,
-                                               plaintext_input_share.payload)
+   (state, outbound) = Vdaf.ping_pong_helper_init(
+       vdaf_verify_key,
+       agg_param,
+       report_id,
+       public_share,
+       plaintext_input_share.payload)
 
    where:
 
@@ -1856,12 +1854,9 @@ struct {} Empty;
           AggregateShareReq message from the Leader.  A batch is
           determined by query (Section 4.3) conveyed in these messages.
           Queries must satisfy the criteria covered in Section 4.8.5.
-          These criteria are meant to restrict queries in a way make it
-          easy to determine wither a report pertains to a batch that was
-          collected.
-
-          [TODO: If a section to clarify report and batch states is
-          added this can be removed.  See Issue #384]
+          These criteria are meant to restrict queries in a way that
+          makes it easy to determine wither a report pertains to a batch
+          that was collected.
 
    8.  Finally, if an Aggregator cannot determine if an input share is
        valid, it MUST mark the input share as invalid with error
@@ -1928,9 +1923,6 @@ struct {} Empty;
    AggregationJobContinueReq.  Otherwise, the Leader MUST abort the
    aggregation job.
 
-   [[OPEN ISSUE: consider relaxing this ordering constraint.  See
-   issue#217.]]
-
    Otherwise, the Leader proceeds as follows with each report:
 
    1.  If the inbound prep response type is "continue" and the state is
@@ -1988,9 +1980,6 @@ struct {} Empty;
    relative to the previous request, then the Helper MAY abort with
    error invalidMessage.  (Note that a report may be missing, in which
    case the Helper should assume the Leader rejected it.)
-
-   [OPEN ISSUE: Issue 438: It may be useful for the Leader to explicitly
-   signal rejection.]
 
    Next, the Helper checks if the continuation step indicated by the
    request is correct.  (For the first AggregationJobContinueReq the
@@ -2071,12 +2060,6 @@ struct {} Empty;
    must be identical).  This prevents the Leader from re-winding an
    aggregation job and re-running an aggregation step with different
    parameters.
-
-   [[OPEN ISSUE: Allowing the Leader to "rewind" aggregation job state
-   of the Helper may allow an attack on privacy.  For instance, if the
-   VDAF verification key changes, the prep shares in the Helper's
-   response would change even if the consistency check is made.
-   Security analysis is required.  See #401.]]
 
    One way the Helper could address this would be to store a digest of
    the Leader's request, indexed by aggregation job ID and step, and
@@ -2378,8 +2361,11 @@ struct {} Empty;
    Encrypting an aggregate share agg_share for a given AggregateShareReq
    is done as follows:
 
-enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
-  agg_share_aad, agg_share)
+   (enc, payload) = SealBase(
+       pk,
+       "dap-11 aggregate share" || server_role || 0x00,
+       agg_share_aad,
+       agg_share)
 
    where pk is the HPKE public key encoded by the Collector's HPKE key,
    server_role is the Role of the encrypting server (0x02 for the Leader
@@ -2408,8 +2394,12 @@ enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
    process.  Specifically, given an encrypted input share, denoted
    enc_share, for a given batch selector, decryption works as follows:
 
-   agg_share = OpenBase(enc_share.enc, sk, "dap-11 aggregate share" ||
-     server_role || 0x00, agg_share_aad, enc_share.payload)
+   agg_share = OpenBase(
+       enc_share.enc,
+       sk,
+       "dap-11 aggregate share" || server_role || 0x00,
+       agg_share_aad,
+       enc_share.payload)
 
    where sk is the HPKE secret key, server_role is the Role of the
    server that sent the aggregate share (0x02 for the Leader and 0x03
@@ -2467,10 +2457,6 @@ enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
    the batch interval of any previous query.  If this batch interval
    check fails, then the Aggregator MAY abort with error of type
    "batchOverlap".
-
-   [[OPEN ISSUE: #195 tracks how we might relax this constraint to allow
-   for more collect query flexibility.  As of now, this is quite rigid
-   and doesn't give the Collector much room for mistakes.]]
 
 4.8.5.1.  Time-interval Batch Mode
 
@@ -2606,8 +2592,8 @@ enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
    producing aggregates over a sample of the data or choosing a
    representation of the data permitting a simpler aggregation scheme.
 
-   [[TODO: Discuss explicit key performance indicators, here or
-   elsewhere.]]
+      TODO: Discuss explicit key performance indicators, here or
+      elsewhere.
 
 5.3.  Aggregation Utility and Soft Batch Deadlines
 
@@ -2968,12 +2954,12 @@ enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
    Protocol message format evolution is supported through the definition
    of new formats that are identified by new media types.
 
-   IANA [shall update / has updated] the "Media Types" registry at
-   https://www.iana.org/assignments/media-types with the registration
-   information in this section for all media types listed above.
+   IANA shall update (RFC EDITOR: change "shall update" to "has update")
+   the "Media Types" registry at https://www.iana.org/assignments/media-
+   types with the registration information in this section for all media
+   types listed above.
 
-   [OPEN ISSUE: Solicit review of these allocations from domain
-   experts.]
+      TODO Solicit review of these allocations from domain experts.
 
 8.1.1.  Message versioning
 
@@ -3372,8 +3358,7 @@ enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
    This document requests creation of a new registry for Batch Modes.
    This registry should contain the following columns:
 
-   [TODO: define how we want to structure this registry when the time
-   comes]
+      TODO Define how we want to structure this registry.
 
 8.2.2.  Upload Extension Registry
 
@@ -3381,8 +3366,7 @@ enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
    the Upload protocol.  This registry should contain the following
    columns:
 
-   [TODO: define how we want to structure this registry when the time
-   comes]
+      TODO Define how we want to structure this registry.
 
 8.2.3.  Prepare Error Registry
 
@@ -3400,9 +3384,10 @@ enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
 
 8.3.  URN Sub-namespace for DAP (urn:ietf:params:ppm:dap)
 
-   The following value [will be/has been] registered in the "IETF URN
-   Sub-namespace for Registered Protocol Parameter Identifiers"
-   registry, following the template in [RFC3553]:
+   The following value will be (RFC EDITOR: change "will be" to "has
+   been") registered in the "IETF URN Sub-namespace for Registered
+   Protocol Parameter Identifiers" registry, following the template in
+   [RFC3553]:
 
    Registry name:  dap
 
@@ -3524,20 +3509,6 @@ Normative References
               draft-irtf-cfrg-vdaf-08>.
 
 Informative References
-
-   [BBCGGI19] Boneh, D., Boyle, E., Corrigan-Gibbs, H., Gilboa, N., and
-              Y. Ishai, "Zero-Knowledge Proofs on Secret-Shared Data via
-              Fully Linear PCPs", 5 January 2021,
-              <https://eprint.iacr.org/2019/188>.
-
-   [BBCGGI21] Boneh, D., Boyle, E., Corrigan-Gibbs, H., Gilboa, N., and
-              Y. Ishai, "Lightweight Techniques for Private Heavy
-              Hitters", 5 January 2021,
-              <https://eprint.iacr.org/2021/017>.
-
-   [CGB17]    Corrigan-Gibbs, H. and D. Boneh, "Prio: Private, Robust,
-              and Scalable Computation of Aggregate Statistics", 14
-              March 2017, <https://crypto.stanford.edu/prio/paper.pdf>.
 
    [Dou02]    Douceur, J., "The Sybil Attack", 10 October 2022,
               <https://link.springer.com/
