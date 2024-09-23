@@ -2639,7 +2639,7 @@ enc, payload = SealBase(pk, "dap-11 aggregate share" || server_role || 0x00,
    *  Implement and store state for the form of inter- and intra-batch
       replay mitigation in Figure 2.  This requires storing the report
       IDs of all reports processed for a given task.  Implementations
-      may find it helpfu to track additional information, like the
+      may find it helpful to track additional information, like the
       timestamp, so that the storage used for anti-replay can be sharded
       efficiently.
 
