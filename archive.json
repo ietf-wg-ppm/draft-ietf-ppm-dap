@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-09-22T01:15:14.066963+00:00",
+  "timestamp": "2024-09-24T01:11:00.832119+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -2695,9 +2695,24 @@
       ],
       "body": ".(E.g., `<23..479>` instead of `<1..2^16-1>`.)]",
       "createdAt": "2021-08-13T21:52:11Z",
-      "updatedAt": "2024-09-17T23:21:37Z",
+      "updatedAt": "2024-09-23T19:24:07Z",
       "closedAt": null,
-      "comments": []
+      "comments": [
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "@branlwyd and @tgeoghegan raised objections to this change. @branlwyd [suggests](https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/578#pullrequestreview-2312881470) we use `1` as the minimum whereever the length prefixed field is never going to be empty and to use `0` otherwise. @tgeoghegan [suggests](https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/578#issuecomment-2366835583) we use `0` everywhere.\r\n\r\nIf I were the tie breaker, I'd vote for just using `0` everywhere. However I think we need to try to get more feedback on this question before we make a call.",
+          "createdAt": "2024-09-23T14:58:08Z",
+          "updatedAt": "2024-09-23T14:58:08Z"
+        },
+        {
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "body": "FWIW, I have no objection to using `0` everywhere if that's the popular sentiment. My only objection is to computing to-the-byte minimums for required messages -- it's very easy to get it wrong, and IMO we should handle parsing errors for embedded encoded messages at the point they are parsed, rather than while parsing the message containing them.\r\n\r\n[edit] one additional consideration: if we do move to using `0` as the lower-bound for all encoded-message fields, anywhere we switch from `1` to `0` we should introduce text indicating that the list contained in the relevant field cannot be empty.",
+          "createdAt": "2024-09-23T19:05:59Z",
+          "updatedAt": "2024-09-23T19:24:07Z"
+        }
+      ]
     },
     {
       "number": 111,
@@ -11374,7 +11389,7 @@
       ],
       "body": "An issue that's been raised several times (most recently in #571) is that the term \"aggregation job\" is a misnomer since it doesn't actually say anything about aggregation. All it says is that, once an aggregation job is complete, each aggregator commits to the sequence of output shares they recovered. It's not until collection time that we call [`Vdaf.aggregate()`](https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-11#section-5.4) on the set of output shares to get our aggregate share for the batch.\r\n\r\nGiven this fact, it's been suggested we rename \"aggregation job\" to something like \"preparation job\", since the main thing that happens during this protocol is [VDAF preparation](https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-11#section-5.2).\r\n\r\nI don't recall precisely how this term entered our vocabulary, but part of the reason it stuck is that, in practice, we expect implementations to do some, if not most, of the aggregation during this phase. From [Section 4.7](https://ietf-wg-ppm.github.io/draft-ietf-ppm-dap/draft-ietf-ppm-dap.html#section-4.7-11):\r\n\r\n> After an aggregation job is completed, each Aggregator stores the output shares until the aggregate share is collected as described in [Section 4.8](https://ietf-wg-ppm.github.io/draft-ietf-ppm-dap/draft-ietf-ppm-dap.html#collect-flow). Note that it is usually not necessary to store output shares individually: depending on the batch mode and VDAF, the output shares can be merged into existing aggregate shares that are updated as aggregation jobs complete. This streaming aggregation is compatible with Prio3 and all batch modes specified in this document.\r\n\r\nIn other words, we expect \"streaming aggregation\" to be the norm for DAP implementations and \"delayed aggregation\" during the collection (credit @bemasc for this terminology) to be the rare exception. In theory, you could have a VDAF for which aggregation is sensitive to the order of output shares; or a batch mode may require us to store output shares individually until collection. Neither is true today, and to me both seem pretty unlikely.\r\n\r\nRather rename the aggregation sub-protocol, we could make this streaming aggregation feature normative. This would require two things:\r\n\r\n1. The concept of a \"batch bucket\" (#385). The definition of \"batch bucket\" depends on the batch mode: for time-interval, it's a window of time (determined by the `time_precision` task parameter); for leader-selected, it's simply a batch ID. Each bucket has an aggregate share. At the end of an aggregation job, we would add each output share into the aggregate share of the bucket it corresponds to.\r\n\r\n2. We need to be able to express syntactically how to update an aggregate share with an output share. This is precluded by the current VDAF syntax, [which only describes aggregating output shares into an aggregate share](https://cfrg.github.io/draft-irtf-cfrg-vdaf/draft-irtf-cfrg-vdaf.html#section-5.4). We would therefore need to modify the syntax.\r\n\r\nWe would then document delayed aggregation as a fallback in case the VDAF or batch mode requires it.",
       "createdAt": "2024-09-18T20:39:17Z",
-      "updatedAt": "2024-09-20T20:03:36Z",
+      "updatedAt": "2024-09-23T18:19:30Z",
       "closedAt": null,
       "comments": [
         {
@@ -11383,6 +11398,13 @@
           "body": "I would be in favor of this change, but if we don't take this change, then I agree [with @branlwyd and @bemasc](https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/580#discussion_r1765268592) that we should rename \"aggregation job\".",
           "createdAt": "2024-09-18T20:57:24Z",
           "updatedAt": "2024-09-18T20:57:24Z"
+        },
+        {
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "body": "I'm in favor of this change.\r\n\r\n> In theory, you could have a VDAF for which aggregation is sensitive to the order of output shares; or a batch mode may require us to store output shares individually until collection. Neither is true today, and to me both seem pretty unlikely.\r\n\r\nI agree that both of these are pretty unlikely. In particular, the storage cost of retaining all output shares individually would be rather high.",
+          "createdAt": "2024-09-23T18:19:29Z",
+          "updatedAt": "2024-09-23T18:19:29Z"
         }
       ]
     },
@@ -67729,17 +67751,18 @@
       "assignees": [],
       "labels": [
         "wire breaking",
-        "aggregation cost"
+        "aggregation cost",
+        "draft-12"
       ],
       "body": "Closes https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/557.\r\n\r\nAllows helper-side aggregate job preparation to be handled asynchronously,\r\nsimilarly to how collection jobs work. Briefly, after calls with\r\n`AggregationJobInitReq` and `AggregationJobContinueReq`, the leader polls\r\nthe helper at `GET /tasks/{task-id]/aggregation_jobs/{aggregation-job-id}`\r\nuntil receiving an `AggregationJobResp`.\r\n\r\nIn discussion in #577 we had soft consensus on making this the only option,\r\ni.e. for spec simplicity we don't need to also allow the old synchronous\r\nbehavior.",
       "createdAt": "2024-06-25T18:08:22Z",
-      "updatedAt": "2024-09-17T23:15:56Z",
+      "updatedAt": "2024-09-23T18:56:58Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
-      "baseRefOid": "35f1274853c1c06a5132612b111debefe4fd17ac",
+      "baseRefOid": "78e37b3432b65d7c01f75c51fd52d36aedc9884f",
       "headRepository": "inahga/draft-ietf-ppm-dap",
       "headRefName": "inahga/async-helper-agg-jobs",
-      "headRefOid": "d62e7e08993edcf437a9624e4663d10e4e5f5c93",
+      "headRefOid": "89a09d3f8dbc1159138780afc0a5d5cccfc55c45",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
@@ -67961,6 +67984,13 @@
           "body": "In perusing prior art for HTTP polling in IETF specs, I consulted ACME https://www.rfc-editor.org/rfc/rfc8555#section-7.5.1, which more or less taught me \"less is more\". In my latest pass I've edited for brevity, as I think overspecifying the behavior partially leads to the perception of this proposal being too complex. (Not that it's an invalid perception, but overspecifying doesn't help the matter :smile:).\r\n\r\nNotably I hoist up mention of media types, shortened mentions of URIs, and dropped the `MAY wait for job to be ready...` statements. In the latter case, I believe it goes without saying, since the behavior is 100% legal with or without mention of it.",
           "createdAt": "2024-08-06T21:47:05Z",
           "updatedAt": "2024-08-06T21:47:05Z"
+        },
+        {
+          "author": "inahga",
+          "authorAssociation": "NONE",
+          "body": "I have rebased this PR in preparation for merge. But before merging, it could use 1-2 other close reads.",
+          "createdAt": "2024-09-23T17:05:14Z",
+          "updatedAt": "2024-09-23T17:05:14Z"
         }
       ],
       "reviews": [
@@ -72201,7 +72231,7 @@
       "id": "PR_kwDOFEJYQs57MpxP",
       "title": "Add operational consideration around max aggregation job size.",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/576",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "branlwyd",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
@@ -72211,17 +72241,19 @@
       ],
       "body": "Partially addresses #557.",
       "createdAt": "2024-09-11T18:02:25Z",
-      "updatedAt": "2024-09-20T22:04:12Z",
+      "updatedAt": "2024-09-23T16:01:56Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "7081e1d75f25e8c4c0ec66386f8c5cc097a9f8f1",
       "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "headRefName": "bran/max-agg-job-size-operational",
       "headRefOid": "3987ccffa119f8fa5077c908bef1a5a66eee9ec4",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "closedAt": "2024-09-23T16:01:56Z",
+      "mergedAt": "2024-09-23T16:01:56Z",
+      "mergedBy": "cjpatton",
+      "mergeCommit": {
+        "oid": "78e37b3432b65d7c01f75c51fd52d36aedc9884f"
+      },
       "comments": [
         {
           "author": "branlwyd",
@@ -72265,7 +72297,7 @@
       "id": "PR_kwDOFEJYQs5701bz",
       "title": "tls-presentation: Fix limits for length-prefixed fields",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/578",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "cjpatton",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
@@ -72274,14 +72306,14 @@
       ],
       "body": "Closes #110.\r\n\r\nAssume 10 bytes for the smallest VDAF ping pong message: https://github.com/cfrg/draft-irtf-cfrg-vdaf/pull/428\r\n\r\n\r\n* HpkeConfigList: The smallest HpkeConfig is 10 bytes: one byte for the\r\n  config ID, two bytes for each algorithm ID, 2 bytes for the public key\r\n  length prefix, and assume one byte for the public key (the actual\r\n  value depends on which HPKE KEM algorithms are supported).\r\n\r\n* PlaintextInputShare.payload: Assume 1 byte as the smallest input share\r\n  (the actual value depends on which VDAFs are supported).\r\n\r\n* PrepareInit.payload: 5 bytes lest ping pong message (see above)\r\n\r\n* AggregationJobInitReq.prepare_inits: The smallest PrepareInit is 45\r\n  bytes:\r\n\r\n   * PrepareInit.report_share: 16 bytes for the report ID, 8 bytes for\r\n     the timestamp, 0 bytes for the public share (this is empty for some\r\n     Prio3 variants), 2 bytes for the public share length prefix, and\r\n     for the HPKE ciphertext:\r\n\r\n      * 1 for the config ID\r\n\r\n      * assume 1 byte for the encapsulated key (depends on the supported\r\n        KEMs) and 2 bytes for the length prefix\r\n\r\n      * assume 1 byte for the ciphertext (depends on the supported\r\n        AEADs) and 4 bytes for the length prefix\r\n\r\n   * PrepareInit.payload: 5 bytes (smallest ping pong message) and 4\r\n     bytes for the length prefix\r\n\r\n* PrepareResp.payload: 5 bytes (smallest ping poing message)\r\n\r\n* AggregationJobJesp.prepare_resps: The smallest PrepareResp has 26 bytes:\r\n\r\n    * 16 bytes for the report ID, 1 byte for the variant discriminator,\r\n      and 5 + 4 bytes length prefix for the ping pong message.\r\n\r\n* PrepareContinue.payload: 5 bytes (smallest ping pong message)\r\n\r\n* AggregationJobContinueReq.prepare_continues: The smallest\r\n  PRepareContinue is 16 bytes for the report ID, and 5 + 4 bytes for\r\n  the payload.\r\n\r\n",
       "createdAt": "2024-09-17T22:55:58Z",
-      "updatedAt": "2024-09-19T00:25:09Z",
+      "updatedAt": "2024-09-23T14:54:39Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "7081e1d75f25e8c4c0ec66386f8c5cc097a9f8f1",
       "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "headRefName": "cjpatton/110",
       "headRefOid": "de0d0c8e51d5bc8de95b24eee7bf89111f668b6a",
-      "closedAt": null,
+      "closedAt": "2024-09-23T14:54:39Z",
       "mergedAt": null,
       "mergedBy": null,
       "mergeCommit": null,
@@ -72292,6 +72324,20 @@
           "body": "> @branlwyd  I think we might be better served using a more lax set of ranges, perhaps `<0..MAX>` for fields which can be empty & `<1..MAX>` for fields which cannot be empty.\r\n> \r\n> I think the benefit of specifying to-the-byte minimums for fields is pretty marginal: I think malformed messages will fail to parse anyway. And the risk is that we get the minimum wrong, and risk rejecting messages that would otherwise be accepted.\r\n\r\nI agree with you, but I think our hands are tied here. The intent of [RFC 8446, Section 3.4](https://datatracker.ietf.org/doc/html/rfc8446#section-3.4) is pretty clear that the lower limit is supposed to be the size of the smallest vector. There are examples of this all over RFC 8446.\r\n\r\n",
           "createdAt": "2024-09-18T17:54:23Z",
           "updatedAt": "2024-09-18T17:54:23Z"
+        },
+        {
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "body": "I agree with Brandon that sprinkling constants like this throughout the document isn't ideal. Even in the context of your reading of RFC 8446, I think we can get away with using `0` as the minimum size in all cases in this PR.\r\n\r\nI think we can imagine a degenerate testing VDAF for which things like input or output shares could have length 0. Imagine a dummy VDAF where the leader gets the entire input and the helper gets an empty byte string as its input share. On that basis, I think we can justify making the minimum length of various `payload` fields 0.\r\n\r\nAny list of objects (i.e., `HpkeConfigList` or the `prepare_inits` in an aggregation job) _could_ be empty. Those messages are useless in the protocol, of course, but I think they're valid encodings of messages on the wire. In particular, I worry about nudging implementations into checking things at the wrong layer.\r\n\r\nIf the protocol text asserts that field `prepare_inits` of structure `AggregationJobInitReq` will always be at least 44 bytes, then implementations will want to verify this in their message decoding routines at the transport layer. When the resulting decoded structure makes it to the DAP application logic, it probably looks like a `Vec<AggregationJobInitReq>` (or `ArrayList<AggregationJobInitReq>` or `[]AggregationJobInitReq` or whatever your preferred language's syntax is). In a robust implementation, the application logic receiving that list needs to be ready for the case where the incoming list/vector/slice is empty, regardless of what guarantees the transport or message decode layer might provide. So I think we might as well allow empty lists in the message syntax, such that implementations are guided toward handling this error/edge case in only one place, which is easier to test and maintain.\r\n\r\nI think what I'm describing is essentially consistent with what MLS, which also uses an extended RFC 8446 syntax, already does. That document extensively uses a notation [`opaque variable<V>`](https://datatracker.ietf.org/doc/html/rfc9420#section-2.1.2), which allows a vector of 0..2^30 bytes. However I'm not suggesting we adopt their variable length vector encoding, just citing it as prior art.\r\n\r\nLong story short: I think we should use 0 as the minimum bound for all messages. ",
+          "createdAt": "2024-09-22T15:21:57Z",
+          "updatedAt": "2024-09-22T15:21:57Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Alright, we have some disagreement here, so I'll raise this on the list. Hopefully we can settle it at the interim.",
+          "createdAt": "2024-09-23T14:54:39Z",
+          "updatedAt": "2024-09-23T14:54:39Z"
         }
       ],
       "reviews": [
@@ -72696,28 +72742,283 @@
       "labels": [
         "draft-12"
       ],
-      "body": "Closes #442.\r\n\r\nAt the moment, we have very little normative/informative language around replay protection. The only normative language is buried in the \"input share validation\" subsection:\r\n\r\n> 1. Check if the report has been previously aggregated. If so, the input share\r\n>    MUST be marked as invalid with the error `report_replayed`. A report is\r\n>    considered aggregated if its contribution would be included in a relevant\r\n>    collection job.\r\n\r\nAnother problem is that we never say explicitly to record the IDs of aggregated reports. Here the Aggregator has a choice: it can avoid excess computation by storing the ID of every report it sees in an aggregation job, thereby ensuring reports that are rejected for some other reason aren't processed again; or it can avoid excess storage by only storing the IDs of output shares it wants to aggregate.\r\n\r\nThis change has several parts to it:\r\n\r\n1. Add a section to the protocol overview about replay protection (why/how) and a paragraph to the aggregation sub-protocol overview.\r\n\r\n1. Remove the replay check from the \"input share validation\" section.\r\n\r\n1. Have the Leader check for replays right after it has picked a candidate set of reports. Have it to store the IDs either before initialization or after completion of the aggregation job.\r\n\r\n1. Have the Helper resolve replays (reject replays and update the stored set) either at the beginning of an aggregation job or just before completing it.\r\n\r\n3. Be explicit about the use of report IDs for replay protection. This only impacts an implementation note, which envisions multiple schemes for replay protection, like hashing the report. This note has been moved from the \"input share validation\" section to operational considerations.\r\n\r\n4. Use the term \"collection sub-protocol\" more consistently. (There may still be instances of variants like \"collection interaction\".)",
+      "body": "Closes #442.\r\n\r\nAt the moment, we have very little normative/informative language around replay protection. The only normative language is buried in the \"input share validation\" subsection:\r\n\r\n> 1. Check if the report has been previously aggregated. If so, the input share\r\n>    MUST be marked as invalid with the error `report_replayed`. A report is\r\n>    considered aggregated if its contribution would be included in a relevant\r\n>    collection job.\r\n\r\nAnother problem is that we never say explicitly to record the IDs of aggregated reports. Here the Aggregator has a choice: it can avoid excess computation by storing the ID of every report it sees in an aggregation job, thereby ensuring reports that are rejected for some other reason aren't processed again; or it can avoid excess storage by only storing the IDs of output shares it wants to aggregate.\r\n\r\nThis change has several parts to it:\r\n\r\n1. Add a section to the protocol overview about replay protection (why/how) and a paragraph to the aggregation sub-protocol overview.\r\n\r\n1. Remove the replay check from the \"input share validation\" section.\r\n\r\n1. Have the Leader check for replays right after it has picked a candidate set of reports. Have it to store the IDs either before initialization or after completion of the aggregation job.\r\n\r\n1. Have the Helper resolve replays (reject replays and update the stored set) either at the beginning of an aggregation job or just before completing it.\r\n\r\n3. Be explicit about the use of report IDs for replay protection. This only impacts an implementation note, which envisions multiple schemes for replay protection, like hashing the report. This note has been moved from the \"input share validation\" section to operational considerations.",
       "createdAt": "2024-09-19T00:24:53Z",
-      "updatedAt": "2024-09-19T00:25:18Z",
+      "updatedAt": "2024-09-23T22:20:00Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
-      "baseRefOid": "365e9adb07e5e5fe6161e4d73c06157a1b5c7220",
+      "baseRefOid": "78e37b3432b65d7c01f75c51fd52d36aedc9884f",
       "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "headRefName": "cjpatton/442",
-      "headRefOid": "b6086fe1c4c106ea989c3de98e0ae2bf55cdf879",
+      "headRefOid": "78ad3b5020218da7abfd3836db41008a60489a1f",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
       "mergeCommit": null,
-      "comments": [],
-      "reviews": []
+      "comments": [
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Took Tim's suggestions, rebased, and squashed.",
+          "createdAt": "2024-09-23T14:52:27Z",
+          "updatedAt": "2024-09-23T14:52:36Z"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "PRR_kwDOFEJYQs6KVbCH",
+          "commit": {
+            "abbreviatedOid": "b6086fe"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2024-09-22T14:58:25Z",
+          "updatedAt": "2024-09-22T15:02:08Z",
+          "comments": [
+            {
+              "originalPosition": 54,
+              "body": "As discussed in [#574](https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/574#discussion_r1769310446), I think we should prefer \"interaction\" to \"sub-protocol\" per HTTPDIR's advice.",
+              "createdAt": "2024-09-22T14:58:25Z",
+              "updatedAt": "2024-09-22T15:02:08Z"
+            },
+            {
+              "originalPosition": 99,
+              "body": "It's a bit confusing that this is a MAY in one sentence and a MUST in the next. I guess the idea is that the helper is allowed to defer replay checks if it wants to?",
+              "createdAt": "2024-09-22T15:00:15Z",
+              "updatedAt": "2024-09-22T15:02:08Z"
+            },
+            {
+              "originalPosition": 183,
+              "body": "As above, prefer \"interaction\" to \"sub-protocol\" per HTTPDIR review.",
+              "createdAt": "2024-09-22T15:01:15Z",
+              "updatedAt": "2024-09-22T15:02:08Z"
+            },
+            {
+              "originalPosition": 188,
+              "body": "As above, prefer \"interaction\" to \"sub-protocol\" per HTTPDIR review.",
+              "createdAt": "2024-09-22T15:01:18Z",
+              "updatedAt": "2024-09-22T15:02:08Z"
+            },
+            {
+              "originalPosition": 248,
+              "body": "```suggestion\r\n  reports processed for a given task. Implementations may find it helpful to\r\n```",
+              "createdAt": "2024-09-22T15:01:51Z",
+              "updatedAt": "2024-09-22T15:02:08Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6KbtIX",
+          "commit": {
+            "abbreviatedOid": "b6086fe"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-09-23T14:46:04Z",
+          "updatedAt": "2024-09-23T14:51:57Z",
+          "comments": [
+            {
+              "originalPosition": 54,
+              "body": "Thanks for catching this, will fix throughout this PR. I'll follow up with a more complete fix in another PR.",
+              "createdAt": "2024-09-23T14:46:04Z",
+              "updatedAt": "2024-09-23T14:51:57Z"
+            },
+            {
+              "originalPosition": 99,
+              "body": "Yes, that's the idea.",
+              "createdAt": "2024-09-23T14:50:07Z",
+              "updatedAt": "2024-09-23T14:51:57Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6KcjCA",
+          "commit": {
+            "abbreviatedOid": "d0cfe1d"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-09-23T16:06:41Z",
+          "updatedAt": "2024-09-23T16:06:41Z",
+          "comments": [
+            {
+              "originalPosition": 99,
+              "body": "Alright. This a little more laborious but I think it's less ambiguous:\r\n\r\n> The Helper MUST resolve replays with the following procedure. It MAY do so immediately upon receiving the `AggregationJobInitReq`, but it MUST do so prior to completing the aggregation job. For each report...",
+              "createdAt": "2024-09-23T16:06:41Z",
+              "updatedAt": "2024-09-23T16:06:41Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6Kcmsc",
+          "commit": {
+            "abbreviatedOid": "b6086fe"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-09-23T16:13:34Z",
+          "updatedAt": "2024-09-23T16:13:34Z",
+          "comments": [
+            {
+              "originalPosition": 99,
+              "body": "Done.",
+              "createdAt": "2024-09-23T16:13:34Z",
+              "updatedAt": "2024-09-23T16:13:34Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6KeQ2q",
+          "commit": {
+            "abbreviatedOid": "097c039"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-09-23T19:57:50Z",
+          "updatedAt": "2024-09-23T20:58:20Z",
+          "comments": [
+            {
+              "originalPosition": 54,
+              "body": "```suggestion\r\ninteraction is to provide replay protection ({{replay-protection}}). Along with\r\n```\r\n\r\n(or alternatively, \"... to prevent report replays\", perhaps)",
+              "createdAt": "2024-09-23T19:57:50Z",
+              "updatedAt": "2024-09-23T20:58:20Z"
+            },
+            {
+              "originalPosition": 133,
+              "body": "I think we should restore the text \"`report_id` is the report ID\" (\"... of the rejected report\"?)\r\n\r\nIf not, we should change the text \"where and\" to just read \"where\" (editorial/grammar fix).",
+              "createdAt": "2024-09-23T20:11:36Z",
+              "updatedAt": "2024-09-23T20:58:20Z"
+            },
+            {
+              "originalPosition": 80,
+              "body": "I think these semantics are slightly incorrect with regards to `report_too_early`.\r\n\r\nI think we can **check** whether the report ID is a replay here or at time of commitment (or both). However, I think we need to **store** the report ID as \"used\" only at time of commitment.\r\n\r\nIf we both check & store the report ID as \"used\" here, at time of initialization, we can't send the report again in case of a `report_too_early` error.\r\n\r\nThe same issue affects the Helper logic: we can check at any step, but we should only store on commitment.",
+              "createdAt": "2024-09-23T20:31:14Z",
+              "updatedAt": "2024-09-23T20:58:20Z"
+            },
+            {
+              "originalPosition": 192,
+              "body": "I think we want to both check & store here, rather than only storing here. (this may have been the intent)\r\n\r\nOtherwise, a Leader which checks at time of creation but only stores at time of completion could:\r\n1) Generate two distinct aggregation jobs, both containing some report R. Both will check R against the report ID set, but will pass since R has not yet been stored in the set.\r\n2) Concurrently step both aggregation jobs to completion. The Helper _should_ reject at least one of the copies of R as a replay; but if it doesn't, the Leader would store the report ID twice, rejecting neither copy of R.\r\n\r\nThat is, we are potentially left open to replay if the Helper's check is mis-implemented.",
+              "createdAt": "2024-09-23T20:42:54Z",
+              "updatedAt": "2024-09-23T20:58:20Z"
+            },
+            {
+              "originalPosition": 192,
+              "body": "editorial: I think this text would fit better in the numbered list handling the `Finished(out_share)` case.",
+              "createdAt": "2024-09-23T20:44:59Z",
+              "updatedAt": "2024-09-23T20:58:20Z"
+            },
+            {
+              "originalPosition": 89,
+              "body": "I think we should have some text suggesting that the `Finished(out_share)` case might require replay-checking, around L1473 of this snaphost, similarly to what is written in the Leader Continuation section for the `Finished` state handling.",
+              "createdAt": "2024-09-23T20:50:27Z",
+              "updatedAt": "2024-09-23T20:58:20Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6KfioV",
+          "commit": {
+            "abbreviatedOid": "c4eade5"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-09-23T21:45:05Z",
+          "updatedAt": "2024-09-23T21:56:10Z",
+          "comments": [
+            {
+              "originalPosition": 192,
+              "body": "ack, won't fix. (I don't think that flows works, but we can revisit once the semantics is right.)",
+              "createdAt": "2024-09-23T21:45:06Z",
+              "updatedAt": "2024-09-23T21:56:10Z"
+            },
+            {
+              "originalPosition": 80,
+              "body": "Alright, to resolve this I'm going to take away the choice of when to store.",
+              "createdAt": "2024-09-23T21:55:54Z",
+              "updatedAt": "2024-09-23T21:56:10Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6Kf5FP",
+          "commit": {
+            "abbreviatedOid": "c4eade5"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-09-23T22:14:41Z",
+          "updatedAt": "2024-09-23T22:14:44Z",
+          "comments": [
+            {
+              "originalPosition": 89,
+              "body": "Done.",
+              "createdAt": "2024-09-23T22:14:41Z",
+              "updatedAt": "2024-09-23T22:14:44Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6Kf6CU",
+          "commit": {
+            "abbreviatedOid": "097c039"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-09-23T22:18:40Z",
+          "updatedAt": "2024-09-23T22:18:40Z",
+          "comments": [
+            {
+              "originalPosition": 192,
+              "body": "The intent was only to store here. The only time the Leader checks is just after creating the aggregation job. It's therefore the Leader's responsibility to make sure it doesn't accidentally replay a report.\r\n\r\nOn the other hand, it's also the responsibility of the Helper to make sure a report isn't replayed. In other words, the scenario you're describing here is handled the same as an attack by a malicious Leader. I don't think we need to split hairs here.",
+              "createdAt": "2024-09-23T22:18:40Z",
+              "updatedAt": "2024-09-23T22:18:40Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs6Kf6Uq",
+          "commit": {
+            "abbreviatedOid": "097c039"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-09-23T22:19:56Z",
+          "updatedAt": "2024-09-23T22:19:56Z",
+          "comments": [
+            {
+              "originalPosition": 192,
+              "body": "Ok, having fixed everything else, I think what you're describing works but is repetitive. I'd rather not have to repeat \"MUST store the report ID for replay protection\" more times than we have to. But if you feel strongly about this I can fix.",
+              "createdAt": "2024-09-23T22:19:56Z",
+              "updatedAt": "2024-09-23T22:19:56Z"
+            }
+          ]
+        }
+      ]
     },
     {
       "number": 585,
       "id": "PR_kwDOFEJYQs58Nbus",
       "title": " Fix all build warnings, remove references to closed issues",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/585",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "cjpatton",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
@@ -72727,19 +73028,35 @@
       ],
       "body": "* Add a submission type (IETF).\r\n* Remove unused references.\r\n* Remove square brackets, which markdown wants to interpret as a link. In one case we escape the brackets, e.g., `\\[`, `\\]`, in other cases we rework the text.\r\n* Fix all instances of art being too wide.\r\n* Remove OPEN ISSUE about the size of the HPKE config ID, as there's no reason to change this at this point.\r\n* Remove OPEN ISSUE referencing #217 (relax ordering of prep inits).\r\n* Remove TODO referencing #384 (latest discussion is #581).\r\n* Remove OPEN ISSUE referencing #438 (Leader signals rejection).\r\n* Remove OPEN ISSUE referencing #401 (aggregation job rewinding).\r\n* Remove OPEN ISSUE referencing #195 (collection flexibility).",
       "createdAt": "2024-09-20T20:01:19Z",
-      "updatedAt": "2024-09-20T20:01:38Z",
+      "updatedAt": "2024-09-23T14:44:53Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "365e9adb07e5e5fe6161e4d73c06157a1b5c7220",
       "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "headRefName": "cjpatton/warnings",
       "headRefOid": "0a6fcee4a9b216a811ed7edf9a381494bca4594d",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "closedAt": "2024-09-23T14:44:53Z",
+      "mergedAt": "2024-09-23T14:44:53Z",
+      "mergedBy": "cjpatton",
+      "mergeCommit": {
+        "oid": "188b1131df2c99d4cbc631e60f4303e906f8c41e"
+      },
       "comments": [],
-      "reviews": []
+      "reviews": [
+        {
+          "id": "PRR_kwDOFEJYQs6KVa4t",
+          "commit": {
+            "abbreviatedOid": "0a6fcee"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2024-09-22T14:54:46Z",
+          "updatedAt": "2024-09-22T14:54:46Z",
+          "comments": []
+        }
+      ]
     }
   ]
 }
