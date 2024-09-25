@@ -87,6 +87,7 @@ Table of Contents
    2.  Overview
      2.1.  System Architecture
      2.2.  Validating Inputs
+     2.3.  Replay Protection
    3.  Message Transport
      3.1.  HTTPS Request Authentication
      3.2.  Errors
@@ -618,6 +619,25 @@ Table of Contents
    measurement system and DAP does not attempt to address it; it merely
    ensures that the data is within acceptable limits, so the Client
    could not report 10^6s or -20s.
+
+2.3.  Replay Protection
+
+   Another goal of DAP is to mitigate replay attacks in which a report
+   is aggregated multiple times within a batch or across multiple
+   batches.  This would allow the attacker to learn more information
+   about the underlying measurement than it would otherwise.
+
+   When a Client generates a report, it also generates a random nonce,
+   called the "report ID".  Each Aggregator is responsible for storing
+   the IDs of reports it has aggregated for a given task.  To check
+   whether a report has been replayed, it checks whether the report's ID
+   is in the set of stored IDs.
+
+   Note that IDs do not need to be stored indefinitely.  The protocol
+   allows Aggregators to enforce replay only for a sliding time window
+   --- say, within the last two weeks of the current time --- and reject
+   reports that fall outside of the replay window.  This allows
+   implementation to save resources by forgetting old report IDs.
 
 3.  Message Transport
 
@@ -1167,10 +1187,10 @@ Table of Contents
 
    *  report_metadata is public metadata describing the report.
 
-      -  report_id is used by the Aggregators to ensure the report
-         appears in at most one batch (see Section 4.7.1.4).  The Client
-         MUST generate this by generating 16 random bytes using a
-         cryptographically secure random number generator.
+      -  report_id is used by the Aggregators to ensure the report is
+         not replayed (Figure 2).  The Client MUST generate this by
+         generating 16 random bytes using a cryptographically secure
+         random number generator.
 
       -  time is the time at which the report was generated.  The Client
          SHOULD round this value down to the nearest multiple of the
@@ -1267,8 +1287,7 @@ Table of Contents
 
    If a report's ID matches that of a previously uploaded report, the
    Leader MUST ignore it.  In addition, it MAY alert the Client with
-   error reportRejected.  See the implementation note in
-   Section 4.7.1.4.
+   error reportRejected.
 
    The Leader MUST ignore any report pertaining to a batch that has
    already been collected (see Section 4.7.1.4 for details).  Otherwise,
@@ -1452,6 +1471,13 @@ Table of Contents
    as aggregation jobs complete.  This streaming aggregation is
    compatible with Prio3 and all batch modes specified in this document.
 
+   Apart from VDAF preparation, another important task of the
+   aggregation interaction is to provide replay protection
+   (Section 2.3).  Along with the output shares, each Aggregator records
+   the IDs of all reports it is has aggregated for a given task: before
+   committing to an output share, it checks whether the corresponding
+   report ID is in the set of stored IDs.
+
 4.7.1.  Aggregate Initialization
 
    The Leader begins an aggregation job by choosing a set of candidate
@@ -1476,19 +1502,18 @@ Table of Contents
 
 4.7.1.1.  Leader Initialization
 
-   The Leader begins the aggregate initialization phase with the set of
-   candidate reports as follows:
+   The Leader begins the aggregate initialization by sampling a fresh
+   AggregationJobID.
 
-   1.  Generate a fresh AggregationJobID.
+   Next, for each report in the candidate set, it checks if the report
+   ID corresponds to a report ID it has previously stored for this task.
+   If so, it marks the report as invalid and removes it from the
+   candidate set.
 
-   2.  Decrypt the input share for each report share as described in
-       Section 4.7.1.3.
-
-   3.  Check that the resulting input share is valid as described in
-       Section 4.7.1.4.
-
-   If any step invalidates the report, the Leader rejects the report and
-   removes it from the set of candidate reports.
+   Next, the Leader decrypts each of its report shares as described in
+   Section 4.7.1.3, then checks input share validity as described in
+   Section 4.7.1.4.  If either step invalidates the report, the Leader
+   rejects the report and removes it from the set of candidate reports.
 
    Next, for each report the Leader executes the following procedure:
 
@@ -1647,6 +1672,9 @@ Table of Contents
    3.  Else the type is invalid, in which case the Leader MUST abort the
        aggregation job.
 
+   When the Leader stores the out_share, it MUST also store the report
+   ID for replay protection.
+
    (Note: Since VDAF preparation completes in a constant number of
    rounds, it will never be the case that some reports are completed and
    others are not.)
@@ -1704,16 +1732,24 @@ Table of Contents
      };
    } PrepareResp;
 
-   First the Helper preprocesses each report as follows:
-
-   1.  Decrypt the input share for each report share as described in
-       Section 4.7.1.3.
-
-   2.  Check that the resulting input share is valid as described in
-       Section 4.7.1.4.
-
-   For any report that was rejected, the Helper sets the outbound
+   First, for each report in the request, the Helper MAY check if the
+   report ID corresponds to a report ID it has previously stored for
+   this task.  If so, it rejects the report by setting the outbound
    preparation response to
+
+   variant {
+     ReportID report_id;
+     PrepareRespState prepare_resp_state = reject;
+     PrepareError report_replayed;
+   } PrepareResp;
+
+   where report_id is the report ID.  Note that the Helper must perform
+   this check before completing the aggregation job.
+
+   Next the Helper decrypts each of its remaining report shares as
+   described in Section 4.7.1.3, then checks input share validity as
+   described in Section 4.7.1.4.  For any report that was rejected, the
+   Helper sets the outbound preparation response to
 
    variant {
      ReportID report_id;
@@ -1764,6 +1800,22 @@ Table of Contents
      opaque payload<0..2^32-1> = outbound;
    } PrepareResp;
 
+   If state == Continued(prep_state), then the Helper stores state to
+   prepare for the next continuation step (Section 4.7.2.2).
+
+   If state == Finished(out_share), the Helper MUST resolve replay of
+   the report.  It does so by checking if the report ID was previously
+   stored for this task.  If so, it responds with
+
+   variant {
+     ReportID report_id;
+     PrepareRespState prepare_resp_state = reject;
+     PrepareError report_replayed;
+   } PrepareResp;
+
+   Otherwise it stores the report ID for replay protection and out_share
+   for use in the collection sub-protocol (Section 4.8).
+
    Finally, the Helper creates an AggregationJobResp to send to the
    Leader.  This message is structured as follows:
 
@@ -1813,11 +1865,6 @@ Table of Contents
    aggregation job.  Once an aggregation job has been continued at least
    once (see Section 4.7.2), further requests to initialize that
    aggregation job MUST fail with an HTTP client error status code.
-
-   Finally, if state == Continued(prep_state), then the Helper stores
-   state to prepare for the next continuation step (Section 4.7.2.2).
-   Otherwise, if state == Finished(out_share), then the Helper stores
-   out_share for use in the collection interaction (Section 4.8).
 
 4.7.1.3.  Input Share Decryption
 
@@ -1997,13 +2044,16 @@ Table of Contents
 
    2.  Else if the type is "finished" and state == Finished(out_share),
        then preparation is complete and the Leader stores the output
-       share for use in the collection flow (Section 4.8).
+       share for use in the collection interaction (Section 4.8).
 
    3.  Else if the type is "reject", then the Leader rejects the report
        and removes it from the candidate set.
 
    4.  Else the type is invalid, in which case the Leader MUST abort the
        aggregation job.
+
+   When the Leader stores the out_share, it MUST also store the report
+   ID for replay protection.
 
 4.7.2.2.  Helper Continuation
 
@@ -2063,7 +2113,24 @@ Table of Contents
      PrepareError prepare_error = vdaf_prep_error;
    } PrepareResp;
 
-   Otherwise, if outbound != None, then the Helper's response is
+   If state == Continued(prep_state), then the Helper stores state to
+   prepare for the next continuation step (Section 4.7.2.2).
+
+   If state == Finished(out_share), the Helper MUST resolve replay of
+   the report.  It does so by checking if the report ID was previously
+   stored for this task.  If so, it responds with
+
+   variant {
+     ReportID report_id;
+     PrepareRespState prepare_resp_state = reject;
+     PrepareError report_replayed;
+   } PrepareResp;
+
+   Otherwise it stores the report ID for replay protection and out_share
+   for use in the collection interaction (Section 4.8).
+
+   The Helper's response depends on the value of outbound.  If outbound
+   != None, then the Helper's response is
 
    variant {
      ReportID report_id;
@@ -2098,11 +2165,6 @@ Table of Contents
    the job.  When the aggregation job is processing, the response SHOULD
    include a Retry-After header field to suggest a polling interval to
    the Leader.
-
-   Finally, if state == Continued(prep_state), then the Helper stores
-   state to prepare for the next continuation step (Section 4.7.2.2).
-   Otherwise, if state == Finished(out_share), then the Helper stores
-   out_share for use in the collection interaction (Section 4.8).
 
    If for whatever reason the Leader must abandon the aggregation job,
    it SHOULD send an HTTP DELETE request to {helper}/tasks/{task-
@@ -2628,7 +2690,11 @@ Table of Contents
    In addition, for each DAP task, the Leader is required to:
 
    *  Implement and store state for the form of inter- and intra-batch
-      replay mitigation in Section 4.7.1.4.
+      replay mitigation in Figure 2.  This requires storing the report
+      IDs of all reports processed for a given task.  Implementations
+      may find it helpful to track additional information, like the
+      timestamp, so that the storage used for anti-replay can be sharded
+      efficiently.
 
 5.1.3.  Collector Capabilities
 
