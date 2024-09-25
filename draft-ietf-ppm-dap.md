@@ -449,6 +449,9 @@ variant {
 Encoding and decoding of these messages as byte strings also follows
 {{RFC8446}}.
 
+Finally, for variable-length vectors, the lower length limit is `0` rather than
+the length of the smallest vector.
+
 # Overview {#overview}
 
 The protocol is executed by a large set of Clients and a pair of servers
@@ -721,7 +724,7 @@ The following are some basic type definitions used in other messages:
 
 ~~~
 /* ASCII encoded URL. e.g., "https://example.com" */
-opaque Url<1..2^16-1>;
+opaque Url<0..2^16-1>;
 
 uint64 Duration; /* Number of seconds elapsed between two instants */
 
@@ -753,8 +756,8 @@ uint8 HpkeConfigId;
 /* An HPKE ciphertext. */
 struct {
   HpkeConfigId config_id;    /* config ID */
-  opaque enc<1..2^16-1>;     /* encapsulated HPKE key */
-  opaque payload<1..2^32-1>; /* ciphertext */
+  opaque enc<0..2^16-1>;     /* encapsulated HPKE key */
+  opaque payload<0..2^32-1>; /* ciphertext */
 } HpkeCiphertext;
 
 /* Represent a zero-length byte string. */
@@ -968,7 +971,7 @@ decreasing order of preference. This allows an Aggregator to support multiple
 HPKE configurations simultaneously.
 
 ~~~
-HpkeConfig HpkeConfigList<1..2^16-1>;
+HpkeConfig HpkeConfigList<0..2^16-1>;
 
 struct {
   HpkeConfigId id;
@@ -978,7 +981,7 @@ struct {
   HpkePublicKey public_key;
 } HpkeConfig;
 
-opaque HpkePublicKey<1..2^16-1>;
+opaque HpkePublicKey<0..2^16-1>;
 uint16 HpkeAeadId; /* Defined in [HPKE] */
 uint16 HpkeKemId;  /* Defined in [HPKE] */
 uint16 HpkeKdfId;  /* Defined in [HPKE] */
@@ -1419,7 +1422,7 @@ struct {
 struct {
   opaque agg_param<0..2^32-1>;
   PartialBatchSelector part_batch_selector;
-  PrepareInit prepare_inits<1..2^32-1>;
+  PrepareInit prepare_inits<0..2^32-1>;
 } AggregationJobInitReq;
 ~~~
 
@@ -1818,7 +1821,7 @@ type "application/dap-aggregation-job-continue-req" and body structured as:
 ~~~
 struct {
   uint16 step;
-  PrepareContinue prepare_continues<1..2^32-1>;
+  PrepareContinue prepare_continues<0..2^32-1>;
 } AggregationJobContinueReq;
 ~~~
 
