@@ -2513,28 +2513,38 @@ includes key material associated with the HPKE key configuration.
 
 ## VDAFs and Compute Requirements
 
-The choice of VDAF can impact the computation required for a DAP task. For
-instance, the Prio3SumVec VDAF {{!VDAF}} requires each measurement to be vectors
-of the same length, which all parties need to agree on prior to VDAF execution.
-The computation required for such tasks increases linearly as a function of the
-chosen length, as each vector element must be processed in turn.
+The choice of VDAF can impact the computation and storage required for a DAP
+task:
 
-Therefore, care must be taken that a DAP deployment can handle VDAF execution of
-all possible VDAF configurations for any tasks which the deployment may be
-configured for. Otherwise, an attacker may deny service by uploading many
-expensive reports to a suitably-configured VDAF.
+* The runtime of VDAF sharding and preparation is related to the "size" of the
+  underlying measurements. For example, the Prio3SumVec VDAF defined in
+  {{Section 7 of !VDAF}} requires each measurement to be a vector of the same
+  length, which all parties need to agree on prior to VDAF execution. The
+  computation required for such tasks increases linearly as a function of the
+  chosen length, as each vector element must be processed in turn.
 
-The varying cost of VDAF computation means that aggregators deployments should
-negotiate reasonable limits for each VDAF configuration or measurement task, out
-of band with the protocol. For example, aggregators may agree on a maximum size
-for an aggregation job or on a maximum rate of incoming reports.
+* The runtime of VDAF preparation is related to the size of the aggregation
+  parameter. For example for Poplar1 defined in {{Section 8 of !VDAF}},
+  preparation takes as input a sequence of so-called "candidate prefixes", and
+  the amount of computation is linear in the number of prefixes.
+
+* The storage requirements for aggregate shares vary depending on the size of
+  the measurements and/or the aggregation parameter.
+
+To account for these factors, care must be taken that a DAP deployment can
+handle VDAF execution of all possible configurations for any tasks which the
+deployment may be configured for. Otherwise, an attacker may deny service by
+uploading many expensive reports to a suitably-configured VDAF.
+
+The varying cost of VDAF computation means that Aggregators should negotiate
+reasonable limits for each VDAF configuration, out of band with the protocol.
+For example, Aggregators may agree on a maximum size for an aggregation job or
+on a maximum rate of incoming reports.
 
 Applications which require computationally-expensive VDAFs can mitigate the
 computation cost of aggregation in a few ways, such as producing aggregates over
 a sample of the data or choosing a representation of the data permitting a
 simpler aggregation scheme.
-
-> TODO: Discuss explicit key performance indicators, here or elsewhere.
 
 ## Aggregation Utility and Soft Batch Deadlines
 
