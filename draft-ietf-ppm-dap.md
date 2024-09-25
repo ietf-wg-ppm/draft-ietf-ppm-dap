@@ -37,7 +37,7 @@ author:
  -
        ins: E. Rescorla
        name: Eric Rescorla
-       organization: Mozilla
+       organization: Independent
        email: ekr@rtfm.com
 
  -
