@@ -3566,7 +3566,7 @@ Contributors
        ISRG
        inahga@divviup.org
 
-       Krstine Guo
+       Kristine Guo
        Apple
        kristine_guo@apple.com
 
