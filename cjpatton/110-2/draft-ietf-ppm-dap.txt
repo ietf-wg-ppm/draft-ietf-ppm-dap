@@ -831,7 +831,7 @@ Table of Contents
    Encoding and decoding of these messages as byte strings also follows
    [RFC8446].
 
-   Finally, for variable-length vetors, the lower length limit to 0
+   Finally, for variable-length vectors, the lower length limit is 0
    rather than the length of the smallest vector.
 
 4.2.  Basic Type Definitions
