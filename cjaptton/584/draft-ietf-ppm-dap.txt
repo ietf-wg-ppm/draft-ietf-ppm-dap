@@ -2717,7 +2717,7 @@ Table of Contents
    *  The runtime of VDAF sharding and preparation is related to the
       "size" of the underlying measurements.  For example, the
       Prio3SumVec VDAF defined in Section 7 of [VDAF] requires each
-      measurement to be vectors of the same length, which all parties
+      measurement to be a vector of the same length, which all parties
       need to agree on prior to VDAF execution.  The computation
       required for such tasks increases linearly as a function of the
       chosen length, as each vector element must be processed in turn.
