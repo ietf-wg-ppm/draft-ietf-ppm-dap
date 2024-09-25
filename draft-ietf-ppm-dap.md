@@ -3584,6 +3584,18 @@ with the Reference field set to point to this specification.
     ISRG
     dcook@divviup.org
 
+    Suman Ganta
+    Apple
+    sganta2@apple.com
+
+    Ameer Ghani
+    ISRG
+    inahga@divviup.org
+
+    Kristine Guo
+    Apple
+    kristine_guo@apple.com
+
     Charlie Harrison
     Google
     csharrison@chromium.org
