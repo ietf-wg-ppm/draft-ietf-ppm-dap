@@ -901,8 +901,8 @@ the following parameters associated with it:
 Note that the `leader_aggregator_url` and `helper_aggregator_url` values may
 include arbitrary path components.
 
-In addition, in order to facilitate the aggregation and collect protocols, each
-of the Aggregators is configured with following parameters:
+In addition, in order to facilitate the aggregation and collection
+interactions, each of the Aggregators is configured with following parameters:
 
 * `collector_hpke_config`: The {{!HPKE=RFC9180}} configuration of the Collector
   (described in {{hpke-config}}); see {{compliance}} for information about the
@@ -1137,22 +1137,22 @@ The Leader MUST ignore any report pertaining to a batch that has already been
 collected (see {{input-share-validation}} for details). Otherwise, comparing
 the aggregate result to the previous aggregate result may result in a privacy
 violation. Note that this is also enforced by the Helper during the aggregation
-interaction. The Leader MAY also abort the upload protocol and alert the
+interaction. The Leader MAY also abort the upload interaction and alert the
 Client with error `reportRejected`.
 
 The Leader MAY ignore any report whose timestamp is past the task's
-`task_expiration`. When it does so, it SHOULD also abort the upload protocol and
-alert the Client with error `reportRejected`. Client MAY choose to opt out of
-the task if its own clock has passed `task_expiration`.
+`task_expiration`. When it does so, it SHOULD also abort the upload interaction
+and alert the Client with error `reportRejected`. Client MAY choose to opt out
+of the task if its own clock has passed `task_expiration`.
 
 The Leader may need to buffer reports while waiting to aggregate them (e.g.,
 while waiting for an aggregation parameter from the Collector; see
 {{collect-flow}}). The Leader SHOULD NOT accept reports whose timestamps are too
 far in the future. Implementors MAY provide for some small leeway, usually no
 more than a few minutes, to account for clock skew. If the Leader rejects a
-report for this reason, it SHOULD abort the upload protocol and alert the Client
-with error `reportTooEarly`. In this situation, the Client MAY re-upload the
-report later on.
+report for this reason, it SHOULD abort the upload interaction and alert the
+Client with error `reportTooEarly`. In this situation, the Client MAY re-upload
+the report later on.
 
 If the Leader's input share contains an unrecognized extension, or if two
 extensions have the same ExtensionType, then the Leader MAY abort the upload
@@ -1643,7 +1643,7 @@ variant {
 ~~~
 
 Otherwise it stores the report ID for replay protection and `out_share` for use
-in the collection sub-protocol ({{collect-flow}}).
+in the collection interaction ({{collect-flow}}).
 
 Finally, the Helper creates an `AggregationJobResp` to send to the Leader. This
 message is structured as follows:
@@ -1996,15 +1996,15 @@ Helper knows it can clean up its state.
 #### Recovering from Aggregation Step Skew {#aggregation-step-skew-recovery}
 
 `AggregationJobContinueReq` messages contain a `step` field, allowing
-Aggregators to ensure that their peer is on an expected step of the DAP
-aggregation protocol. In particular, the intent is to allow recovery from a
-scenario where the Helper successfully advances from step `n` to `n+1`, but its
-`AggregationJobResp` response to the Leader gets dropped due to something like a
-transient network failure. The Leader could then resend the request to have the
-Helper advance to step `n+1` and the Helper should be able to retransmit the
-`AggregationJobResp` that was previously dropped. To make that kind of recovery
-possible, Aggregator implementations SHOULD checkpoint the most recent step's
-prep state and messages to durable storage such that the Leader can
+Aggregators to ensure that their peer is on an expected step of DAP
+aggregation. In particular, the intent is to allow recovery from a scenario
+where the Helper successfully advances from step `n` to `n+1`, but its
+`AggregationJobResp` response to the Leader gets dropped due to something like
+a transient network failure. The Leader could then resend the request to have
+the Helper advance to step `n+1` and the Helper should be able to retransmit
+the `AggregationJobResp` that was previously dropped. To make that kind of
+recovery possible, Aggregator implementations SHOULD checkpoint the most recent
+step's prep state and messages to durable storage such that the Leader can
 re-construct continuation requests and the Helper can re-construct continuation
 responses as needed.
 
@@ -2477,7 +2477,7 @@ Helpers are generally required to:
 - Support the aggregate interaction, which includes validating and aggregating
   reports; and
 - Publish and manage an HPKE configuration that can be used for the upload
-  protocol.
+  interaction.
 
 In addition, for each DAP task, the Helper is required to:
 
@@ -2490,7 +2490,7 @@ In addition, for each DAP task, the Helper is required to:
 Beyond the minimal capabilities required of Helpers, Leaders are generally
 required to:
 
-- Support the upload protocol and store reports; and
+- Support the upload interaction and store reports; and
 - Track batch report size during each collect flow and request encrypted output
   shares from Helpers.
 
@@ -2558,8 +2558,8 @@ necessarily cause failure in the system.
 An example of a soft real-time constraint is the expectation that input data can
 be verified and aggregated in a period equal to data collection, given some
 computational budget. Meeting these deadlines will require efficient
-implementations of the input-validation protocol. Applications might batch
-requests or utilize more efficient serialization to improve throughput.
+implementations of the VDAF. Applications might batch requests or utilize more
+efficient serialization to improve throughput.
 
 Some applications may be constrained by the time that it takes to reach a
 privacy threshold defined by a minimum number of reports. One possible solution
@@ -2807,9 +2807,9 @@ chosen independently of the generated reports.
 ### Batch Parameters
 
 An important parameter of a DAP deployment is the minimum batch size. If a batch
-includes too few reports, then the aggregate result can reveal information about
-individual measurements. Aggregators enforce the agreed-upon minimum batch size
-during the collection protocol, but implementations SHOULD also opt out of
+includes too few reports, then the aggregate result can reveal information
+about individual measurements. Aggregators enforce the agreed-upon minimum
+batch size during collection, but implementations SHOULD also opt out of
 participating in a DAP task if the minimum batch size is too small. This
 document does not specify how to choose an appropriate minimum batch size, but
 an appropriate value may be determined from the differential privacy ({{dp}})
@@ -3539,8 +3539,9 @@ should contain the following columns:
 
 ### Upload Extension Registry
 
-This document requests creation of a new registry for extensions to the Upload
-protocol. This registry should contain the following columns:
+This document requests creation of a new registry for extensions to the upload
+interaction ({{upload-flow}}). This registry should contain the following
+columns:
 
 > TODO Define how we want to structure this registry.
 
