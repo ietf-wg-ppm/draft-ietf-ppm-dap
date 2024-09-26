@@ -4331,28 +4331,40 @@ includes key material associated with the HPKE key configuration.<a href="#secti
         <h3 id="name-vdafs-and-compute-requireme">
 <a href="#section-5.2" class="section-number selfRef">5.2. </a><a href="#name-vdafs-and-compute-requireme" class="section-name selfRef">VDAFs and Compute Requirements</a>
         </h3>
-<p id="section-5.2-1">The choice of VDAF can impact the computation required for a DAP task. For
-instance, the Prio3SumVec VDAF <span>[<a href="#VDAF" class="cite xref">VDAF</a>]</span> requires each measurement to be vectors
-of the same length, which all parties need to agree on prior to VDAF execution.
-The computation required for such tasks increases linearly as a function of the
-chosen length, as each vector element must be processed in turn.<a href="#section-5.2-1" class="pilcrow">¶</a></p>
-<p id="section-5.2-2">Therefore, care must be taken that a DAP deployment can handle VDAF execution of
-all possible VDAF configurations for any tasks which the deployment may be
-configured for. Otherwise, an attacker may deny service by uploading many
-expensive reports to a suitably-configured VDAF.<a href="#section-5.2-2" class="pilcrow">¶</a></p>
-<p id="section-5.2-3">The varying cost of VDAF computation means that aggregators deployments should
-negotiate reasonable limits for each VDAF configuration or measurement task, out
-of band with the protocol. For example, aggregators may agree on a maximum size
-for an aggregation job or on a maximum rate of incoming reports.<a href="#section-5.2-3" class="pilcrow">¶</a></p>
-<p id="section-5.2-4">Applications which require computationally-expensive VDAFs can mitigate the
-computation cost of aggregation in a few ways, such as producing aggregates over
-a sample of the data or choosing a representation of the data permitting a
-simpler aggregation scheme.<a href="#section-5.2-4" class="pilcrow">¶</a></p>
-<ul class="normal ulEmpty">
-<li class="normal ulEmpty" id="section-5.2-5.1">
-            <p id="section-5.2-5.1.1">TODO: Discuss explicit key performance indicators, here or elsewhere.<a href="#section-5.2-5.1.1" class="pilcrow">¶</a></p>
+<p id="section-5.2-1">The choice of VDAF can impact the computation and storage required for a DAP
+task:<a href="#section-5.2-1" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-5.2-2.1">
+            <p id="section-5.2-2.1.1">The runtime of VDAF sharding and preparation is related to the "size" of the
+underlying measurements. For example, the Prio3SumVec VDAF defined in
+<span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-08#section-7" class="relref">Section 7</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span> requires each measurement to be a vector of the same
+length, which all parties need to agree on prior to VDAF execution. The
+computation required for such tasks increases linearly as a function of the
+chosen length, as each vector element must be processed in turn.<a href="#section-5.2-2.1.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-5.2-2.2">
+            <p id="section-5.2-2.2.1">The runtime of VDAF preparation is related to the size of the aggregation
+parameter. For example for Poplar1 defined in <span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-08#section-8" class="relref">Section 8</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>,
+preparation takes as input a sequence of so-called "candidate prefixes", and
+the amount of computation is linear in the number of prefixes.<a href="#section-5.2-2.2.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-5.2-2.3">
+            <p id="section-5.2-2.3.1">The storage requirements for aggregate shares vary depending on the size of
+the measurements and/or the aggregation parameter.<a href="#section-5.2-2.3.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
+<p id="section-5.2-3">To account for these factors, care must be taken that a DAP deployment can
+handle VDAF execution of all possible configurations for any tasks which the
+deployment may be configured for. Otherwise, an attacker may deny service by
+uploading many expensive reports to a suitably-configured VDAF.<a href="#section-5.2-3" class="pilcrow">¶</a></p>
+<p id="section-5.2-4">The varying cost of VDAF computation means that Aggregators should negotiate
+reasonable limits for each VDAF configuration, out of band with the protocol.
+For example, Aggregators may agree on a maximum size for an aggregation job or
+on a maximum rate of incoming reports.<a href="#section-5.2-4" class="pilcrow">¶</a></p>
+<p id="section-5.2-5">Applications which require computationally-expensive VDAFs can mitigate the
+computation cost of aggregation in a few ways, such as producing aggregates over
+a sample of the data or choosing a representation of the data permitting a
+simpler aggregation scheme.<a href="#section-5.2-5" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="aggregation-utility-and-soft-batch-deadlines">
