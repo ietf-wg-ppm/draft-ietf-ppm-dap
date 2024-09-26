@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 29 March 2025                                        Cloudflare
+Expires: 30 March 2025                                        Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                                  Mozilla
                                                               C. A. Wood
                                                               Cloudflare
-                                                       25 September 2024
+                                                       26 September 2024
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -63,7 +63,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 29 March 2025.
+   This Internet-Draft will expire on 30 March 2025.
 
 Copyright Notice
 
@@ -2290,9 +2290,8 @@ Table of Contents
    After receiving the response to its CollectionReq, the Collector
    makes an HTTP GET request to {leader}/tasks/{task-
    id}/collection_jobs/{collection-job-id} to check on the status of the
-   collect job and eventually obtain the result.  Note that since the
-   request has an empty body, no media type is set.  If the collection
-   job is not finished yet, the Leader responds with HTTP status 202
+   collect job and eventually obtain the result.  If the collection job
+   is not finished yet, the Leader responds with HTTP status 202
    Accepted.  The response MAY include a Retry-After header field to
    suggest a polling interval to the Collector.
 
