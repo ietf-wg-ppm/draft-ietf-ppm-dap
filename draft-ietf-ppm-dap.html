@@ -3826,11 +3826,13 @@ described in <a href="#aggregate-flow" class="auto internal xref">Section 4.7</a
 <code>PUT /tasks/{tasks}/collection_jobs/{collection-job-id}</code> for the same
 <code>collection-job-id</code> but with a different <code>CollectionReq</code> in the body <span class="bcp14">MUST</span> fail
 with an HTTP client error status code.<a href="#section-4.8.1-14" class="pilcrow">¶</a></p>
-<p id="section-4.8.1-15">After receiving the response to its <code>CollectionReq</code>, the Collector makes an HTTP
-GET request to the collection job URI to check on the status of the collect job
-and eventually obtain the result. If the collection job is not finished yet, the
-Leader responds with HTTP status 202 Accepted. The response <span class="bcp14">MAY</span> include a
-Retry-After header field to suggest a polling interval to the Collector.<a href="#section-4.8.1-15" class="pilcrow">¶</a></p>
+<p id="section-4.8.1-15">After receiving the response to its <code>CollectionReq</code>, the Collector makes an
+HTTP GET request to
+<code>{leader}/tasks/{task-id}/collection_jobs/{collection-job-id}</code> to check on the
+status of the collect job and eventually obtain the result. If the collection job is not
+finished yet, the Leader responds with HTTP status 202 Accepted. The response
+<span class="bcp14">MAY</span> include a Retry-After header field to suggest a polling interval to the
+Collector.<a href="#section-4.8.1-15" class="pilcrow">¶</a></p>
 <p id="section-4.8.1-16">Asynchronously from any request from the Collector, the Leader attempts to run
 the collection job. It first checks whether it can construct a batch for the
 collection job by applying the requirements in <a href="#batch-validation" class="auto internal xref">Section 4.8.5</a>. If so, then

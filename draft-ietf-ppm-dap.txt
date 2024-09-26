@@ -2288,11 +2288,12 @@ Table of Contents
    the body MUST fail with an HTTP client error status code.
 
    After receiving the response to its CollectionReq, the Collector
-   makes an HTTP GET request to the collection job URI to check on the
-   status of the collect job and eventually obtain the result.  If the
-   collection job is not finished yet, the Leader responds with HTTP
-   status 202 Accepted.  The response MAY include a Retry-After header
-   field to suggest a polling interval to the Collector.
+   makes an HTTP GET request to {leader}/tasks/{task-
+   id}/collection_jobs/{collection-job-id} to check on the status of the
+   collect job and eventually obtain the result.  If the collection job
+   is not finished yet, the Leader responds with HTTP status 202
+   Accepted.  The response MAY include a Retry-After header field to
+   suggest a polling interval to the Collector.
 
    Asynchronously from any request from the Collector, the Leader
    attempts to run the collection job.  It first checks whether it can
