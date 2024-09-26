@@ -2524,8 +2524,8 @@ defined in <span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-
         </ul>
 <p id="section-4.3-5">Note that the <code>leader_aggregator_url</code> and <code>helper_aggregator_url</code> values may
 include arbitrary path components.<a href="#section-4.3-5" class="pilcrow">¶</a></p>
-<p id="section-4.3-6">In addition, in order to facilitate the aggregation and collect protocols, each
-of the Aggregators is configured with following parameters:<a href="#section-4.3-6" class="pilcrow">¶</a></p>
+<p id="section-4.3-6">In addition, in order to facilitate the aggregation and collection
+interactions, each of the Aggregators is configured with following parameters:<a href="#section-4.3-6" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-4.3-7.1">
             <p id="section-4.3-7.1.1"><code>collector_hpke_config</code>: The <span>[<a href="#HPKE" class="cite xref">HPKE</a>]</span> configuration of the Collector
@@ -2783,20 +2783,20 @@ ignore it. In addition, it <span class="bcp14">MAY</span> alert the Client with 
 collected (see <a href="#input-share-validation" class="auto internal xref">Section 4.6.1.4</a> for details). Otherwise, comparing
 the aggregate result to the previous aggregate result may result in a privacy
 violation. Note that this is also enforced by the Helper during the aggregation
-interaction. The Leader <span class="bcp14">MAY</span> also abort the upload protocol and alert the
+interaction. The Leader <span class="bcp14">MAY</span> also abort the upload interaction and alert the
 Client with error <code>reportRejected</code>.<a href="#section-4.5.2-21" class="pilcrow">¶</a></p>
 <p id="section-4.5.2-22">The Leader <span class="bcp14">MAY</span> ignore any report whose timestamp is past the task's
-<code>task_expiration</code>. When it does so, it <span class="bcp14">SHOULD</span> also abort the upload protocol and
-alert the Client with error <code>reportRejected</code>. Client <span class="bcp14">MAY</span> choose to opt out of
-the task if its own clock has passed <code>task_expiration</code>.<a href="#section-4.5.2-22" class="pilcrow">¶</a></p>
+<code>task_expiration</code>. When it does so, it <span class="bcp14">SHOULD</span> also abort the upload interaction
+and alert the Client with error <code>reportRejected</code>. Client <span class="bcp14">MAY</span> choose to opt out
+of the task if its own clock has passed <code>task_expiration</code>.<a href="#section-4.5.2-22" class="pilcrow">¶</a></p>
 <p id="section-4.5.2-23">The Leader may need to buffer reports while waiting to aggregate them (e.g.,
 while waiting for an aggregation parameter from the Collector; see
 <a href="#collect-flow" class="auto internal xref">Section 4.7</a>). The Leader <span class="bcp14">SHOULD NOT</span> accept reports whose timestamps are too
 far in the future. Implementors <span class="bcp14">MAY</span> provide for some small leeway, usually no
 more than a few minutes, to account for clock skew. If the Leader rejects a
-report for this reason, it <span class="bcp14">SHOULD</span> abort the upload protocol and alert the Client
-with error <code>reportTooEarly</code>. In this situation, the Client <span class="bcp14">MAY</span> re-upload the
-report later on.<a href="#section-4.5.2-23" class="pilcrow">¶</a></p>
+report for this reason, it <span class="bcp14">SHOULD</span> abort the upload interaction and alert the
+Client with error <code>reportTooEarly</code>. In this situation, the Client <span class="bcp14">MAY</span> re-upload
+the report later on.<a href="#section-4.5.2-23" class="pilcrow">¶</a></p>
 <p id="section-4.5.2-24">If the Leader's input share contains an unrecognized extension, or if two
 extensions have the same ExtensionType, then the Leader <span class="bcp14">MAY</span> abort the upload
 request with error "invalidMessage". Note that this behavior is not mandatory
@@ -3343,7 +3343,7 @@ variant {
 </pre><a href="#section-4.6.1.2-21" class="pilcrow">¶</a>
 </div>
 <p id="section-4.6.1.2-22">Otherwise it stores the report ID for replay protection and <code>out_share</code> for use
-in the collection sub-protocol (<a href="#collect-flow" class="auto internal xref">Section 4.7</a>).<a href="#section-4.6.1.2-22" class="pilcrow">¶</a></p>
+in the collection interaction (<a href="#collect-flow" class="auto internal xref">Section 4.7</a>).<a href="#section-4.6.1.2-22" class="pilcrow">¶</a></p>
 <p id="section-4.6.1.2-23">Finally, the Helper creates an <code>AggregationJobResp</code> to send to the Leader. This
 message is structured as follows:<a href="#section-4.6.1.2-23" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-4.6.1.2-24">
@@ -3723,15 +3723,15 @@ Helper knows it can clean up its state.<a href="#section-4.6.2.2-24" class="pilc
 <a href="#section-4.6.2.3" class="section-number selfRef">4.6.2.3. </a><a href="#name-recovering-from-aggregation" class="section-name selfRef">Recovering from Aggregation Step Skew</a>
             </h5>
 <p id="section-4.6.2.3-1"><code>AggregationJobContinueReq</code> messages contain a <code>step</code> field, allowing
-Aggregators to ensure that their peer is on an expected step of the DAP
-aggregation protocol. In particular, the intent is to allow recovery from a
-scenario where the Helper successfully advances from step <code>n</code> to <code>n+1</code>, but its
-<code>AggregationJobResp</code> response to the Leader gets dropped due to something like a
-transient network failure. The Leader could then resend the request to have the
-Helper advance to step <code>n+1</code> and the Helper should be able to retransmit the
-<code>AggregationJobResp</code> that was previously dropped. To make that kind of recovery
-possible, Aggregator implementations <span class="bcp14">SHOULD</span> checkpoint the most recent step's
-prep state and messages to durable storage such that the Leader can
+Aggregators to ensure that their peer is on an expected step of DAP
+aggregation. In particular, the intent is to allow recovery from a scenario
+where the Helper successfully advances from step <code>n</code> to <code>n+1</code>, but its
+<code>AggregationJobResp</code> response to the Leader gets dropped due to something like
+a transient network failure. The Leader could then resend the request to have
+the Helper advance to step <code>n+1</code> and the Helper should be able to retransmit
+the <code>AggregationJobResp</code> that was previously dropped. To make that kind of
+recovery possible, Aggregator implementations <span class="bcp14">SHOULD</span> checkpoint the most recent
+step's prep state and messages to durable storage such that the Leader can
 re-construct continuation requests and the Helper can re-construct continuation
 responses as needed.<a href="#section-4.6.2.3-1" class="pilcrow">¶</a></p>
 <p id="section-4.6.2.3-2">When implementing an aggregation step skew recovery strategy, the Helper <span class="bcp14">SHOULD</span>
@@ -4288,7 +4288,7 @@ reports; and<a href="#section-5.1.2-2.1.1" class="pilcrow">¶</a></p>
 </li>
             <li class="normal" id="section-5.1.2-2.2">
               <p id="section-5.1.2-2.2.1">Publish and manage an HPKE configuration that can be used for the upload
-protocol.<a href="#section-5.1.2-2.2.1" class="pilcrow">¶</a></p>
+interaction.<a href="#section-5.1.2-2.2.1" class="pilcrow">¶</a></p>
 </li>
           </ul>
 <p id="section-5.1.2-3">In addition, for each DAP task, the Helper is required to:<a href="#section-5.1.2-3" class="pilcrow">¶</a></p>
@@ -4305,7 +4305,7 @@ mitigation. The replay mitigation strategy is described in
 required to:<a href="#section-5.1.2-5" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-5.1.2-6.1">
-              <p id="section-5.1.2-6.1.1">Support the upload protocol and store reports; and<a href="#section-5.1.2-6.1.1" class="pilcrow">¶</a></p>
+              <p id="section-5.1.2-6.1.1">Support the upload interaction and store reports; and<a href="#section-5.1.2-6.1.1" class="pilcrow">¶</a></p>
 </li>
             <li class="normal" id="section-5.1.2-6.2">
               <p id="section-5.1.2-6.2.1">Track batch report size during each collect flow and request encrypted output
@@ -4393,8 +4393,8 @@ necessarily cause failure in the system.<a href="#section-5.3-1" class="pilcrow"
 <p id="section-5.3-2">An example of a soft real-time constraint is the expectation that input data can
 be verified and aggregated in a period equal to data collection, given some
 computational budget. Meeting these deadlines will require efficient
-implementations of the input-validation protocol. Applications might batch
-requests or utilize more efficient serialization to improve throughput.<a href="#section-5.3-2" class="pilcrow">¶</a></p>
+implementations of the VDAF. Applications might batch requests or utilize more
+efficient serialization to improve throughput.<a href="#section-5.3-2" class="pilcrow">¶</a></p>
 <p id="section-5.3-3">Some applications may be constrained by the time that it takes to reach a
 privacy threshold defined by a minimum number of reports. One possible solution
 is to increase the reporting period so more samples can be collected, balanced
@@ -4718,9 +4718,9 @@ chosen independently of the generated reports.<a href="#section-7.6.1-5" class="
 <a href="#section-7.6.2" class="section-number selfRef">7.6.2. </a><a href="#name-batch-parameters" class="section-name selfRef">Batch Parameters</a>
           </h4>
 <p id="section-7.6.2-1">An important parameter of a DAP deployment is the minimum batch size. If a batch
-includes too few reports, then the aggregate result can reveal information about
-individual measurements. Aggregators enforce the agreed-upon minimum batch size
-during the collection protocol, but implementations <span class="bcp14">SHOULD</span> also opt out of
+includes too few reports, then the aggregate result can reveal information
+about individual measurements. Aggregators enforce the agreed-upon minimum
+batch size during collection, but implementations <span class="bcp14">SHOULD</span> also opt out of
 participating in a DAP task if the minimum batch size is too small. This
 document does not specify how to choose an appropriate minimum batch size, but
 an appropriate value may be determined from the differential privacy (<a href="#dp" class="auto internal xref">Section 7.5</a>)
@@ -5818,8 +5818,9 @@ should contain the following columns:<a href="#section-8.2.1-1" class="pilcrow">
           <h4 id="name-upload-extension-registry">
 <a href="#section-8.2.2" class="section-number selfRef">8.2.2. </a><a href="#name-upload-extension-registry" class="section-name selfRef">Upload Extension Registry</a>
           </h4>
-<p id="section-8.2.2-1">This document requests creation of a new registry for extensions to the Upload
-protocol. This registry should contain the following columns:<a href="#section-8.2.2-1" class="pilcrow">¶</a></p>
+<p id="section-8.2.2-1">This document requests creation of a new registry for extensions to the upload
+interaction (<a href="#upload-flow" class="auto internal xref">Section 4.5</a>). This registry should contain the following
+columns:<a href="#section-8.2.2-1" class="pilcrow">¶</a></p>
 <ul class="normal ulEmpty">
 <li class="normal ulEmpty" id="section-8.2.2-2.1">
               <p id="section-8.2.2-2.1.1">TODO Define how we want to structure this registry.<a href="#section-8.2.2-2.1.1" class="pilcrow">¶</a></p>
