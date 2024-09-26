@@ -9,7 +9,7 @@ Expires: 30 March 2025                                        Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
-                                                                 Mozilla
+                                                             Independent
                                                               C. A. Wood
                                                               Cloudflare
                                                        26 September 2024
@@ -3711,7 +3711,7 @@ Authors' Addresses
 
 
    Eric Rescorla
-   Mozilla
+   Independent
    Email: ekr@rtfm.com
 
 
