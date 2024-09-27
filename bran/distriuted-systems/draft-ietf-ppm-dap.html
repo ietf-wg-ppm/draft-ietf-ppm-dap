@@ -1039,7 +1039,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
 </tr></thead>
 <tfoot><tr>
 <td class="left">Geoghegan, et al.</td>
-<td class="center">Expires 30 March 2025</td>
+<td class="center">Expires 31 March 2025</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1052,12 +1052,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-ietf-ppm-dap-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2024-09-26" class="published">26 September 2024</time>
+<time datetime="2024-09-27" class="published">27 September 2024</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Standards Track</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2025-03-30">30 March 2025</time></dd>
+<dd class="expires"><time datetime="2025-03-31">31 March 2025</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -1131,7 +1131,7 @@ revealing any individual user's data.<a href="#section-abstract-1" class="pilcro
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 30 March 2025.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 31 March 2025.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -4430,8 +4430,8 @@ tradeoffs.<a href="#section-5.4.2-1" class="pilcrow">¶</a></p>
 duplicated ID, including concurrently-uploaded reports. This might be
 implemented by synchronization or via an eventually-consistent process. If the
 Leader wishes to alert the Client with a <code>reportRejected</code> error,
-synchronization will be necessary to ensure exactly one concurrently-uploaded
-report is accepted.<a href="#section-5.4.2-2.1.1" class="pilcrow">¶</a></p>
+synchronization will be necessary to ensure all but one concurrent request
+receive the error.<a href="#section-5.4.2-2.1.1" class="pilcrow">¶</a></p>
 </li>
             <li class="normal" id="section-5.4.2-2.2">
               <p id="section-5.4.2-2.2.1">The Leader is responsible for generating aggregation jobs, and will generally

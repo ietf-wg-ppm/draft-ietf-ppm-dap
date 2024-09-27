@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 30 March 2025                                        Cloudflare
+Expires: 31 March 2025                                        Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                                  Mozilla
                                                               C. A. Wood
                                                               Cloudflare
-                                                       26 September 2024
+                                                       27 September 2024
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -63,7 +63,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 30 March 2025.
+   This Internet-Draft will expire on 31 March 2025.
 
 Copyright Notice
 
@@ -2807,8 +2807,8 @@ Table of Contents
       reports.  This might be implemented by synchronization or via an
       eventually-consistent process.  If the Leader wishes to alert the
       Client with a reportRejected error, synchronization will be
-      necessary to ensure exactly one concurrently-uploaded report is
-      accepted.
+      necessary to ensure all but one concurrent request receive the
+      error.
 
    *  The Leader is responsible for generating aggregation jobs, and
       will generally want to place each report in exactly one
