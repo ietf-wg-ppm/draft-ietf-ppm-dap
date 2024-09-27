@@ -2985,6 +2985,13 @@ and Helper then run the aggregate initialization flow to accomplish two tasks:<a
 </li>
           </ol>
 <p id="section-4.7.1-5">The Leader and Helper initialization behavior is detailed below.<a href="#section-4.7.1-5" class="pilcrow">¶</a></p>
+<p id="section-4.7.1-6">Implementation note: the Leader will generally want to associate each report
+with a single aggregation job, as otherwise the duplicated reports will
+eventually be discarded as a replay. However, it is likely not appropriate to
+directly use the used-ID storage used for replay protection to determine which
+reports can be added to an aggregation job: certain errors (e.g.
+<code>report_too_early</code>) allow the report to be added to another aggregation job in
+the future; but storage into the used-ID storage is permanent.<a href="#section-4.7.1-6" class="pilcrow">¶</a></p>
 <div id="leader-init">
 <section id="section-4.7.1.1">
             <h5 id="name-leader-initialization">

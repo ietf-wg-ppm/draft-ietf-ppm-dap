@@ -1501,6 +1501,15 @@ Table of Contents
 
    The Leader and Helper initialization behavior is detailed below.
 
+   Implementation note: the Leader will generally want to associate each
+   report with a single aggregation job, as otherwise the duplicated
+   reports will eventually be discarded as a replay.  However, it is
+   likely not appropriate to directly use the used-ID storage used for
+   replay protection to determine which reports can be added to an
+   aggregation job: certain errors (e.g. report_too_early) allow the
+   report to be added to another aggregation job in the future; but
+   storage into the used-ID storage is permanent.
+
 4.7.1.1.  Leader Initialization
 
    The Leader begins the aggregate initialization by sampling a fresh
