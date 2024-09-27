@@ -1832,7 +1832,7 @@ following checks:
    input share MUST be marked as invalid with error `batch_collected`.
 
     * Implementation note: The Leader considers a batch to be collected once it
-      has completed a collection job for a CollectionReq message from the
+      has completed a collection job for a CollectionJobReq message from the
       Collector; the Helper considers a batch to be collected once it has
       responded to an `AggregateShareReq` message from the Leader. A batch is
       determined by query ({{batch-mode}}) conveyed in these messages. Queries
@@ -2128,14 +2128,14 @@ This ID value MUST be unique within the scope of the corresponding DAP task.
 
 To initiate the collection job, the collector issues a PUT request to
 `{leader}/tasks/{task-id}/collection_jobs/{collection-job-id}`. The body of the
-request has media type "application/dap-collect-req", and it is structured as
-follows:
+request has media type "application/dap-collection-job-req", and it is structured
+as follows:
 
 ~~~ tls-presentation
 struct {
   Query query;
   opaque agg_param<0..2^32-1>; /* VDAF aggregation parameter */
-} CollectionReq;
+} CollectionJobReq;
 ~~~
 
 The named parameters are:
@@ -2159,54 +2159,30 @@ aggregation parameter in advance. For example, for Prio3 the only valid
 aggregation parameter is the empty string. For these reasons, the collection
 job is handled asynchronously.
 
-Upon receipt of a `CollectionReq`, the Leader begins by checking that it
+Upon receipt of a `CollectionJobReq`, the Leader begins by checking that it
 recognizes the task ID in the request path. If not, it MUST abort with error
 `unrecognizedTask`.
 
 The Leader MAY further validate the request according to the requirements in
 {{batch-validation}} and abort with the indicated error, though some conditions
 such as the number of valid reports may not be verifiable while handling the
-CollectionReq message, and the batch will have to be re-validated later on
+`CollectionJobReq` message, and the batch will have to be re-validated later on
 regardless.
 
-If the Leader finds the CollectionReq to be valid, it immediately responds with
-HTTP status 201.
-
-The Leader then begins working with the Helper to aggregate the reports
-satisfying the query (or continues this process, depending on the VDAF) as
-described in {{aggregate-flow}}.
-
 Changing a collection job's parameters is illegal, so further requests to
-`PUT /tasks/{tasks}/collection_jobs/{collection-job-id}` for the same
-`collection-job-id` but with a different `CollectionReq` in the body MUST fail
-with an HTTP client error status code.
+`PUT /tasks/{task-id}/collection_jobs/{collection-job-id}` for the same
+`collection-job-id` but with a different `CollectionJobReq` in the body MUST
+fail with an HTTP client error status code.
 
-After receiving the response to its `CollectionReq`, the Collector makes an
-HTTP GET request to
-`{leader}/tasks/{task-id}/collection_jobs/{collection-job-id}` to check on the
-status of the collect job and eventually obtain the result. If the collection job is not
-finished yet, the Leader responds with HTTP status 202 Accepted. The response
-MAY include a Retry-After header field to suggest a polling interval to the
-Collector.
-
-Asynchronously from any request from the Collector, the Leader attempts to run
-the collection job. It first checks whether it can construct a batch for the
-collection job by applying the requirements in {{batch-validation}}. If so, then
-the Leader obtains the Helper's aggregate share following the aggregate-share
-request flow described in {{collect-aggregate}}. If not, it either aborts the
-collection job or tries again later, depending on which requirement in
-{{batch-validation}} was not met. If the Leader has a pending aggregation job
-that overlaps with the batch and aggregation parameter for the collection job,
-the Leader MUST first complete the aggregation job before proceeding and
-requesting an aggregate share from the Helper. This avoids a race condition
-between aggregation and collection jobs that can yield trivial batch mismatch
-errors.
-
-Once both aggregate shares are successfully obtained, the Leader responds to
-subsequent HTTP GET requests to the collection job with HTTP status code 200 OK
-and a body consisting of a `Collection`:
+The Leader responds to `CollectionJobReq`s with a `CollectionJobResp`, which is
+structured as follows:
 
 ~~~ tls-presentation
+enum {
+  processing(0),
+  finished(1),
+} CollectionJobStatus;
+
 struct {
   PartialBatchSelector part_batch_selector;
   uint64 report_count;
@@ -2214,9 +2190,17 @@ struct {
   HpkeCiphertext leader_encrypted_agg_share;
   HpkeCiphertext helper_encrypted_agg_share;
 } Collection;
+
+struct {
+  CollectionJobStatus status;
+  select (CollectionJob.status) {
+    case processing: Empty;
+    case finished:   Collection;
+  }
+} CollectionJobResp;
 ~~~
 
-The body's media type is "application/dap-collection". The `Collection`
+The body's media type is "application/dap-collection-job-resp". The `Collection`
 structure includes the following:
 
 * `part_batch_selector`: Information used to bind the aggregate result to the
@@ -2230,13 +2214,48 @@ structure includes the following:
   reports included in the batch, such that the interval's start and duration are
   both multiples of the task's `time_precision` parameter. Note that in the case
   of a time-interval query (see {{batch-mode}}), this interval can be smaller
-  than the one in the corresponding `CollectionReq.query`.
+  than the one in the corresponding `CollectionJobReq.query`.
 
 * `leader_encrypted_agg_share`: The Leader's aggregate share, encrypted to the
   Collector (see {{aggregate-share-encrypt}}).
 
 * `helper_encrypted_agg_share`: The Helper's aggregate share, encrypted to the
   Collector (see {{aggregate-share-encrypt}}).
+
+If the Leader finds the `CollectionJobReq` to be valid, it immediately responds
+with HTTP status 201 Created with a body containing a `CollectionJobResp` with
+the `status` field set to `processing`. The Leader SHOULD include a Retry-After
+header field to suggest a polling interval to the Collector.
+
+After receiving the response to its `CollectionJobReq`, the Collector
+periodically makes HTTP GET requests
+`/tasks/{task-id}/collection_jobs/{collection-job-id}` to check on the status
+of the collect job and eventually obtain the result. The Leader responds to GET
+requests with HTTP status 200 and the `status` field reflecting the current
+state of the job. When the collection job is `processing`, the response SHOULD
+include a Retry-After header field to suggest a polling interval to the
+Collector.
+
+The Leader then begins working with the Helper to aggregate the reports
+satisfying the query (or continues this process, depending on the VDAF) as
+described in {{aggregate-flow}}.
+
+The Leader first checks whether it can construct a batch for the
+collection job by applying the requirements in {{batch-validation}}. If so, then
+the Leader obtains the Helper's aggregate share following the aggregate-share
+request flow described in {{collect-aggregate}}. If not, it either aborts the
+collection job or tries again later, depending on which requirement in
+{{batch-validation}} was not met. If the Leader has a pending aggregation job
+that overlaps with the batch and aggregation parameter for the collection job,
+the Leader MUST first complete the aggregation job before proceeding and
+requesting an aggregate share from the Helper. This avoids a race condition
+between aggregation and collection jobs that can yield trivial batch mismatch
+errors.
+
+Once both aggregate shares are successfully obtained, the Leader responds to
+subsequent HTTP GET requests with the `status` field set to `finished` and the
+`Collection` field populated with the encrypted aggregate shares. The Collector
+stops polling once receiving this final request.
 
 If obtaining aggregate shares fails, then the Leader responds to subsequent HTTP
 GET requests to the collection job with an HTTP error status and a problem
@@ -2295,8 +2314,8 @@ message contains the following parameters:
 * `agg_param`: The opaque aggregation parameter for the VDAF being executed.
   This value MUST match the AggregationJobInitReq message for each aggregation
   job used to compute the aggregate shares (see {{leader-init}}) and the
-  aggregation parameter indicated by the Collector in the CollectionReq message
-  (see {{collect-init}}).
+  aggregation parameter indicated by the Collector in the CollectionJobReq
+  message (see {{collect-init}}).
 
 * `report_count`: The number number of reports included in the batch.
 
@@ -2990,8 +3009,8 @@ corresponding media types types:
 - AggregationJobContinueReq {{aggregation-leader-continuation}}: "application/dap-aggregation-job-continue-req"
 - AggregateShareReq {{collect-flow}}: "application/dap-aggregate-share-req"
 - AggregateShare {{collect-flow}}: "application/dap-aggregate-share"
-- CollectionReq {{collect-flow}}: "application/dap-collect-req"
-- Collection {{collect-flow}}: "application/dap-collection"
+- CollectionJobReq {{collect-flow}}: "application/dap-collection-job-req"
+- CollectionJobResp {{collect-flow}}: "application/dap-collection-job-resp"
 
 The definition for each media type is in the following subsections.
 
@@ -3518,7 +3537,7 @@ Change controller:
 
 : IESG
 
-### "application/dap-collect-req" media type
+### "application/dap-collection-job-req" media type
 
 Type name:
 
@@ -3526,7 +3545,7 @@ Type name:
 
 Subtype name:
 
-: dap-collect-req
+: dap-collection-job-req
 
 Required parameters:
 
@@ -3589,7 +3608,7 @@ Change controller:
 
 : IESG
 
-### "application/dap-collection" media type
+### "application/dap-collection-job-resp" media type
 
 Type name:
 
@@ -3597,7 +3616,7 @@ Type name:
 
 Subtype name:
 
-: dap-collection
+: dap-collection-job-resp
 
 Required parameters:
 
