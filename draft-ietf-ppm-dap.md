@@ -292,7 +292,7 @@ input is ever seen in the clear by any aggregator.
 
 {::boilerplate bcp14-tagged}
 
-### Glossory of Terms
+### Glossary of Terms
 
 Aggregate result:
 : The output of the aggregation function computed over a batch of measurements
