@@ -2821,13 +2821,17 @@ Table of Contents
 
    *  The Leader is responsible for generating aggregation jobs, and
       will generally want to place each report in exactly one
-      aggregation job.  This may require synchronization between
-      different components of the system which are generating
-      aggregation jobs.  Note that placing a report into more than one
-      aggregation job will result in a loss of throughput, rather than a
-      loss of correctness, privacy, or robustness, so it is acceptable
-      for implementations to use an eventually-consistent scheme which
-      may rarely place a report into multiple aggregation jobs.
+      aggregation job.  (The only event in which a Leader will want to
+      place a report in multiple aggregation jobs is if the Helper
+      rejects the report with report_too_early, in which case the Leader
+      can place the report into a later aggregation job.)  This may
+      require synchronization between different components of the system
+      which are generating aggregation jobs.  Note that placing a report
+      into more than one aggregation job will result in a loss of
+      throughput, rather than a loss of correctness, privacy, or
+      robustness, so it is acceptable for implementations to use an
+      eventually-consistent scheme which may rarely place a report into
+      multiple aggregation jobs.
 
    *  Aggregation is implemented as a sequence of aggregation steps by
       both the Leader and the Helper.  The Leader must ensure that each

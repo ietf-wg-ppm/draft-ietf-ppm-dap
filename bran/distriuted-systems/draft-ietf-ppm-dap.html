@@ -4443,7 +4443,10 @@ receive the error.<a href="#section-5.4.2-2.1.1" class="pilcrow">¶</a></p>
 </li>
             <li class="normal" id="section-5.4.2-2.2">
               <p id="section-5.4.2-2.2.1">The Leader is responsible for generating aggregation jobs, and will generally
-want to place each report in exactly one aggregation job. This may require
+want to place each report in exactly one aggregation job. (The only event in
+which a Leader will want to place a report in multiple aggregation jobs is if
+the Helper rejects the report with <code>report_too_early</code>, in which case the
+Leader can place the report into a later aggregation job.) This may require
 synchronization between different components of the system which are
 generating aggregation jobs. Note that placing a report into more than one
 aggregation job will result in a loss of throughput, rather than a loss of
