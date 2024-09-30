@@ -1930,6 +1930,8 @@ variant {
 </div>
 <p id="section-1.3-12">Encoding and decoding of these messages as byte strings also follows
 <span>[<a href="#RFC8446" class="cite xref">RFC8446</a>]</span>.<a href="#section-1.3-12" class="pilcrow">¶</a></p>
+<p id="section-1.3-13">Finally, for variable-length vectors, the lower length limit is <code>0</code> rather than
+the length of the smallest vector.<a href="#section-1.3-13" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -2307,7 +2309,7 @@ we define these resources and the messages used to act on them.<a href="#section
 <div class="alignLeft art-text artwork" id="section-4.1-2">
 <pre>
 /* ASCII encoded URL. e.g., "https://example.com" */
-opaque Url&lt;1..2^16-1&gt;;
+opaque Url&lt;0..2^16-1&gt;;
 
 uint64 Duration; /* Number of seconds elapsed between two instants */
 
@@ -2339,8 +2341,8 @@ uint8 HpkeConfigId;
 /* An HPKE ciphertext. */
 struct {
   HpkeConfigId config_id;    /* config ID */
-  opaque enc&lt;1..2^16-1&gt;;     /* encapsulated HPKE key */
-  opaque payload&lt;1..2^32-1&gt;; /* ciphertext */
+  opaque enc&lt;0..2^16-1&gt;;     /* encapsulated HPKE key */
+  opaque payload&lt;0..2^32-1&gt;; /* ciphertext */
 } HpkeCiphertext;
 
 /* Represent a zero-length byte string. */
@@ -2604,7 +2606,7 @@ decreasing order of preference. This allows an Aggregator to support multiple
 HPKE configurations simultaneously.<a href="#section-4.5.1-3" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-4.5.1-4">
 <pre>
-HpkeConfig HpkeConfigList&lt;1..2^16-1&gt;;
+HpkeConfig HpkeConfigList&lt;0..2^16-1&gt;;
 
 struct {
   HpkeConfigId id;
@@ -2614,7 +2616,7 @@ struct {
   HpkePublicKey public_key;
 } HpkeConfig;
 
-opaque HpkePublicKey&lt;1..2^16-1&gt;;
+opaque HpkePublicKey&lt;0..2^16-1&gt;;
 uint16 HpkeAeadId; /* Defined in [HPKE] */
 uint16 HpkeKemId;  /* Defined in [HPKE] */
 uint16 HpkeKdfId;  /* Defined in [HPKE] */
@@ -3094,7 +3096,7 @@ struct {
 struct {
   opaque agg_param&lt;0..2^32-1&gt;;
   PartialBatchSelector part_batch_selector;
-  PrepareInit prepare_inits&lt;1..2^32-1&gt;;
+  PrepareInit prepare_inits&lt;0..2^32-1&gt;;
 } AggregationJobInitReq;
 </pre><a href="#section-4.6.1.1-15" class="pilcrow">¶</a>
 </div>
@@ -3538,7 +3540,7 @@ type "application/dap-aggregation-job-continue-req" and body structured as:<a hr
 <pre>
 struct {
   uint16 step;
-  PrepareContinue prepare_continues&lt;1..2^32-1&gt;;
+  PrepareContinue prepare_continues&lt;0..2^32-1&gt;;
 } AggregationJobContinueReq;
 </pre><a href="#section-4.6.2.1-6" class="pilcrow">¶</a>
 </div>
