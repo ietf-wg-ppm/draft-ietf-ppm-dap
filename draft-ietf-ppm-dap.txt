@@ -152,10 +152,10 @@ Table of Contents
        8.2.2.  Upload Extension Registry
        8.2.3.  Prepare Error Registry
      8.3.  URN Sub-namespace for DAP (urn:ietf:params:ppm:dap)
+   9.  References
+     9.1.  Normative References
+     9.2.  Informative References
    Contributors
-   References
-     Normative References
-     Informative References
    Authors' Addresses
 
 1.  Introduction
@@ -3560,58 +3560,9 @@ Table of Contents
    Section 3.2 above, with the Reference field set to point to this
    specification.
 
-Contributors
+9.  References
 
-       Josh Aas
-       ISRG
-       josh@abetterinternet.org
-
-       Junye Chen
-       Apple
-       junyec@apple.com
-
-       David Cook
-       ISRG
-       dcook@divviup.org
-
-       Suman Ganta
-       Apple
-       sganta2@apple.com
-
-       Ameer Ghani
-       ISRG
-       inahga@divviup.org
-
-       Kristine Guo
-       Apple
-       kristine_guo@apple.com
-
-       Charlie Harrison
-       Google
-       csharrison@chromium.org
-
-       Peter Saint-Andre
-       stpeter@gmail.com
-
-       Shivan Sahib
-       Brave
-       shivankaulsahib@gmail.com
-
-       Phillipp Schoppmann
-       Google
-       schoppmann@google.com
-
-       Martin Thomson
-       Mozilla
-       mt@mozilla.com
-
-       Shan Wang
-       Apple
-       shan_wang@apple.com
-
-References
-
-Normative References
+9.1.  Normative References
 
    [HPKE]     Barnes, R., Bhargavan, K., Lipp, B., and C. Wood, "Hybrid
               Public Key Encryption", RFC 9180, DOI 10.17487/RFC9180,
@@ -3679,7 +3630,7 @@ Normative References
               November 2023, <https://datatracker.ietf.org/doc/html/
               draft-irtf-cfrg-vdaf-08>.
 
-Informative References
+9.2.  Informative References
 
    [Dou02]    Douceur, J., "The Sybil Attack", 10 October 2022,
               <https://link.springer.com/
@@ -3708,6 +3659,67 @@ Informative References
               August 2016,
               <https://privacytools.seas.harvard.edu/files/privacytools/
               files/complexityprivacy_1.pdf>.
+
+Contributors
+
+   Josh Aas
+   ISRG
+   Email: josh@abetterinternet.org
+
+
+   Junye Chen
+   Apple
+   Email: junyec@apple.com
+
+
+   David Cook
+   ISRG
+   Email: dcook@divviup.org
+
+
+   Suman Ganta
+   Apple
+   Email: sganta2@apple.com
+
+
+   Ameer Ghani
+   ISRG
+   Email: inahga@divviup.org
+
+
+   Kristine Guo
+   Apple
+   Email: kristine_guo@apple.com
+
+
+   Charlie Harrison
+   Google
+   Email: csharrison@chromium.org
+
+
+   Peter Saint-Andre
+   Email: stpeter@gmail.com
+
+
+   Shivan Sahib
+   Brave
+   Email: shivankaulsahib@gmail.com
+
+
+   Phillipp Schoppmann
+   Google
+   Email: schoppmann@google.com
+
+
+   Martin Thomson
+   Mozilla
+   Email: mt@mozilla.com
+
+
+   Shan Wang
+   Apple
+   Email: shan_wang@apple.com
+
 
 Authors' Addresses
 

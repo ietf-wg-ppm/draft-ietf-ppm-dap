@@ -1405,21 +1405,21 @@ revealing any individual user's data.<a href="#section-abstract-1" class="pilcro
             </ul>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9">
-            <p id="section-toc.1-1.9.1"><a href="#section-9" class="auto internal xref"></a><a href="#name-contributors" class="internal xref">Contributors</a></p>
-</li>
-          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.10">
-            <p id="section-toc.1-1.10.1"><a href="#section-10" class="auto internal xref"></a><a href="#name-references" class="internal xref">References</a></p>
+            <p id="section-toc.1-1.9.1"><a href="#section-9" class="auto internal xref">9</a>.  <a href="#name-references" class="internal xref">References</a></p>
 <ul class="compact toc ulBare ulEmpty">
-<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.10.2.1">
-                <p id="section-toc.1-1.10.2.1.1"><a href="#section-10.1" class="auto internal xref"></a><a href="#name-normative-references" class="internal xref">Normative References</a></p>
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9.2.1">
+                <p id="section-toc.1-1.9.2.1.1"><a href="#section-9.1" class="auto internal xref">9.1</a>.  <a href="#name-normative-references" class="internal xref">Normative References</a></p>
 </li>
-              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.10.2.2">
-                <p id="section-toc.1-1.10.2.2.1"><a href="#section-10.2" class="auto internal xref"></a><a href="#name-informative-references" class="internal xref">Informative References</a></p>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9.2.2">
+                <p id="section-toc.1-1.9.2.2.1"><a href="#section-9.2" class="auto internal xref">9.2</a>.  <a href="#name-informative-references" class="internal xref">Informative References</a></p>
 </li>
             </ul>
 </li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.10">
+            <p id="section-toc.1-1.10.1"><a href="#appendix-A" class="auto internal xref"></a><a href="#name-contributors" class="internal xref">Contributors</a></p>
+</li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.11">
-            <p id="section-toc.1-1.11.1"><a href="#appendix-A" class="auto internal xref"></a><a href="#name-authors-addresses" class="internal xref">Authors' Addresses</a></p>
+            <p id="section-toc.1-1.11.1"><a href="#appendix-B" class="auto internal xref"></a><a href="#name-authors-addresses" class="internal xref">Authors' Addresses</a></p>
 </li>
         </ul>
 </nav>
@@ -1868,7 +1868,7 @@ are constants. In this document, we do not use that notation, but use something
 similar to describe specific variants of structures containing enumerated types,
 described in <span>[<a href="#RFC8446" class="cite xref">RFC8446</a>], <a href="https://rfc-editor.org/rfc/rfc8446#section-3.8" class="relref">Section 3.8</a></span>.<a href="#section-1.3-2" class="pilcrow">¶</a></p>
 <p id="section-1.3-3">For example, suppose we have an enumeration and a structure defined as follows:<a href="#section-1.3-3" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-1.3-4">
+<div class="lang-tls-presentation sourcecode" id="section-1.3-4">
 <pre>
 enum {
   number(0),
@@ -1888,7 +1888,7 @@ struct {
 </div>
 <p id="section-1.3-5">Then we describe the specific variant of <code>ExampleStruct</code> where <code>type == number</code>
 with a <code>variant</code> block like so:<a href="#section-1.3-5" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-1.3-6">
+<div class="lang-tls-presentation sourcecode" id="section-1.3-6">
 <pre>
 variant {
   /* Field exists regardless of variant */
@@ -1905,7 +1905,7 @@ handle the <code>always_present</code> and <code>a_number</code> fields but not 
 mean that the <code>type</code> field of <code>ExampleStruct</code> can only ever have value <code>number</code>.<a href="#section-1.3-7" class="pilcrow">¶</a></p>
 <p id="section-1.3-8">This notation can also be used in structures where the enum field does not
 affect what fields are or are not present in the structure. For example:<a href="#section-1.3-8" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-1.3-9">
+<div class="lang-tls-presentation sourcecode" id="section-1.3-9">
 <pre>
 enum {
   something(0),
@@ -1920,7 +1920,7 @@ struct {
 </pre><a href="#section-1.3-9" class="pilcrow">¶</a>
 </div>
 <p id="section-1.3-10">The protocol text might include a description like:<a href="#section-1.3-10" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-1.3-11">
+<div class="lang-tls-presentation sourcecode" id="section-1.3-11">
 <pre>
 variant {
   FailureReason failure_reason = something;
@@ -2306,7 +2306,7 @@ we define these resources and the messages used to act on them.<a href="#section
 <a href="#section-4.1" class="section-number selfRef">4.1. </a><a href="#name-basic-type-definitions" class="section-name selfRef">Basic Type Definitions</a>
         </h3>
 <p id="section-4.1-1">The following are some basic type definitions used in other messages:<a href="#section-4.1-1" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.1-2">
+<div class="lang-tls-presentation sourcecode" id="section-4.1-2">
 <pre>
 /* ASCII encoded URL. e.g., "https://example.com" */
 opaque Url&lt;0..2^16-1&gt;;
@@ -2390,7 +2390,7 @@ aggregate shares encrypted to the Collector.<a href="#section-4.2-1" class="pilc
 both how reports may be partitioned into batches, as well as how these batches
 are addressed and the semantics of the query used for collection.<a href="#section-4.2-2" class="pilcrow">¶</a></p>
 <p id="section-4.2-3">This document defines the following batch modes:<a href="#section-4.2-3" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.2-4">
+<div class="lang-tls-presentation sourcecode" id="section-4.2-4">
 <pre>
 enum {
   reserved(0), /* Reserved for testing purposes */
@@ -2407,7 +2407,7 @@ Future specifications may introduce new batch modes as needed (see
 available batch modes.<a href="#section-4.2-5" class="pilcrow">¶</a></p>
 <p id="section-4.2-6">A query includes parameters used by the Aggregators to select a batch of
 reports specific to the given batch mode. A query is defined as follows:<a href="#section-4.2-6" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.2-7">
+<div class="lang-tls-presentation sourcecode" id="section-4.2-7">
 <pre>
 struct {
   BatchMode batch_mode;
@@ -2492,7 +2492,7 @@ coordinated.<a href="#section-4.2.2-3" class="pilcrow">¶</a></p>
         </h3>
 <p id="section-4.3-1">Prior to the start of execution of the protocol, each participant must agree on
 the configuration for each task. A task is uniquely identified by its task ID:<a href="#section-4.3-1" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.3-2">
+<div class="lang-tls-presentation sourcecode" id="section-4.3-2">
 <pre>
 opaque TaskID[32];
 </pre><a href="#section-4.3-2" class="pilcrow">¶</a>
@@ -2604,7 +2604,7 @@ an <code>HpkeConfigList</code> value, with media type "application/dap-hpke-conf
 The <code>HpkeConfigList</code> structure contains one or more <code>HpkeConfig</code> structures in
 decreasing order of preference. This allows an Aggregator to support multiple
 HPKE configurations simultaneously.<a href="#section-4.5.1-3" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.5.1-4">
+<div class="lang-tls-presentation sourcecode" id="section-4.5.1-4">
 <pre>
 HpkeConfig HpkeConfigList&lt;0..2^16-1&gt;;
 
@@ -2642,7 +2642,7 @@ or AEAD algorithm triple.<a href="#section-4.5.1-7.3.1" class="pilcrow">¶</a></
 resource <span>[<a href="#RFC5861" class="cite xref">RFC5861</a>]</span>. Aggregators <span class="bcp14">SHOULD</span> favor long cache lifetimes to avoid
 frequent cache revalidation, e.g., on the order of days. Aggregators can control
 this cached lifetime with the Cache-Control header, as in this example:<a href="#section-4.5.1-8" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.5.1-9">
+<div class="lang-http-message sourcecode" id="section-4.5.1-9">
 <pre>
   Cache-Control: max-age=86400
 </pre><a href="#section-4.5.1-9" class="pilcrow">¶</a>
@@ -2663,7 +2663,7 @@ at least twice the cache lifetime in order to avoid rejecting reports.<a href="#
 <p id="section-4.5.2-1">Clients upload reports by using an HTTP POST to
 <code>{leader}/tasks/{task-id}/reports</code>. The payload is a <code>Report</code>, with media type
 "application/dap-report", structured as follows:<a href="#section-4.5.2-1" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.5.2-2">
+<div class="lang-tls-presentation sourcecode" id="section-4.5.2-2">
 <pre>
 struct {
   ReportID report_id;
@@ -2713,7 +2713,7 @@ that meets the requirements in <a href="#request-authentication" class="auto int
 in <span><a href="https://rfc-editor.org/rfc/rfc9110#section-9.2.2" class="relref">Section 9.2.2</a> of [<a href="#RFC9110" class="cite xref">RFC9110</a>]</span>.<a href="#section-4.5.2-5" class="pilcrow">¶</a></p>
 <p id="section-4.5.2-6">To generate a report, the Client begins by sharding its measurement into input
 shares and the public share using the VDAF's sharding algorithm (<span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-08#section-5.1" class="relref">Section 5.1</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>), using the report ID as the nonce:<a href="#section-4.5.2-6" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.5.2-7">
+<div class="lang-pseudocode sourcecode" id="section-4.5.2-7">
 <pre>
 (public_share, input_shares) = Vdaf.shard(
     measurement, /* plaintext measurement */
@@ -2730,7 +2730,7 @@ generator.<a href="#section-4.5.2-8" class="pilcrow">¶</a></p>
 returned from the sharding algorithm is considered to be the Leader's input
 share, and the second input share is considered to be the Helper's input share.<a href="#section-4.5.2-9" class="pilcrow">¶</a></p>
 <p id="section-4.5.2-10">The Client then wraps each input share in the following structure:<a href="#section-4.5.2-10" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.5.2-11">
+<div class="lang-tls-presentation sourcecode" id="section-4.5.2-11">
 <pre>
 struct {
   Extension extensions&lt;0..2^16-1&gt;;
@@ -2743,7 +2743,7 @@ the given Aggregator. (See <a href="#upload-extensions" class="auto internal xre
 Aggregator's input share output by the VDAF sharding algorithm.<a href="#section-4.5.2-12" class="pilcrow">¶</a></p>
 <p id="section-4.5.2-13">Next, the Client encrypts each PlaintextInputShare <code>plaintext_input_share</code> as
 follows:<a href="#section-4.5.2-13" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.5.2-14">
+<div class="lang-pseudocode sourcecode" id="section-4.5.2-14">
 <pre>
 enc, payload = SealBase(pk,
   "dap-11 input share" || 0x01 || server_role,
@@ -2758,7 +2758,7 @@ message of type InputShareAad defined below, constructed from the same values as
 the corresponding fields in the report. The <code>SealBase()</code> function is as
 specified in <span>[<a href="#HPKE" class="cite xref">HPKE</a>], <a href="https://rfc-editor.org/rfc/rfc9180#section-6.1" class="relref">Section 6.1</a></span> for the ciphersuite indicated by the HPKE
 configuration.<a href="#section-4.5.2-15" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.5.2-16">
+<div class="lang-tls-presentation sourcecode" id="section-4.5.2-16">
 <pre>
 struct {
   TaskID task_id;
@@ -2817,7 +2817,7 @@ example, a DAP deployment might use some out-of-band mechanism for an Aggregator
 to verify that reports come from authenticated Clients. It will likely be useful
 to bind the extension to the input share via HPKE encryption.)<a href="#section-4.5.3-1" class="pilcrow">¶</a></p>
 <p id="section-4.5.3-2">Each extension is a tag-length encoded value of the following form:<a href="#section-4.5.3-2" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.5.3-3">
+<div class="lang-tls-presentation sourcecode" id="section-4.5.3-3">
 <pre>
 struct {
   ExtensionType extension_type;
@@ -2885,7 +2885,7 @@ subsequent request and response, carries the remaining messages exchanged during
 preparation.<a href="#section-4.6-5" class="pilcrow">¶</a></p>
 <span id="name-overview-of-the-dap-aggrega"></span><div id="agg-flow">
 <figure id="figure-2">
-          <div class="lang-ladder sourcecode" id="section-4.6-6.1">
+          <div class="alignLeft art-text artwork" id="section-4.6-6.1">
 <pre>
   report, agg_param
    |
@@ -2977,7 +2977,7 @@ whether the corresponding report ID is in the set of stored IDs.<a href="#sectio
 <p id="section-4.6.1-1">The Leader begins an aggregation job by choosing a set of candidate reports that
 pertain to the same DAP task and a job ID which <span class="bcp14">MUST</span> be unique within the scope
 of the task. The job ID is a 16-byte value, structured as follows:<a href="#section-4.6.1-1" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.6.1-2">
+<div class="lang-tls-presentation sourcecode" id="section-4.6.1-2">
 <pre>
 opaque AggregationJobID[16];
 </pre><a href="#section-4.6.1-2" class="pilcrow">¶</a>
@@ -3011,7 +3011,7 @@ marks the report as invalid and removes it from the candidate set.<a href="#sect
 <a href="#input-share-validation" class="auto internal xref">Section 4.6.1.4</a>. If either step invalidates the report, the Leader
 rejects the report and removes it from the set of candidate reports.<a href="#section-4.6.1.1-3" class="pilcrow">¶</a></p>
 <p id="section-4.6.1.1-4">Next, for each report the Leader executes the following procedure:<a href="#section-4.6.1.1-4" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.6.1.1-5">
+<div class="lang-pseudocode sourcecode" id="section-4.6.1.1-5">
 <pre>
 (state, outbound) = Vdaf.ping_pong_leader_init(
     vdaf_verify_key,
@@ -3047,7 +3047,7 @@ rejected and removed from the set of candidate reports, and no message is sent
 to the Helper.<a href="#section-4.6.1.1-8" class="pilcrow">¶</a></p>
 <p id="section-4.6.1.1-9">If <code>state</code> is of type <code>Continued</code>, then the Leader constructs a <code>PrepareInit</code>
 message structured as follows:<a href="#section-4.6.1.1-9" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.6.1.1-10">
+<div class="lang-tls-presentation sourcecode" id="section-4.6.1.1-10">
 <pre>
 struct {
   ReportMetadata report_metadata;
@@ -3081,7 +3081,7 @@ Helper's) encrypted input share.<a href="#section-4.6.1.1-12.3.1" class="pilcrow
 initialization.<a href="#section-4.6.1.1-13" class="pilcrow">¶</a></p>
 <p id="section-4.6.1.1-14">Once all the report shares have been initialized, the Leader creates an
 <code>AggregationJobInitReq</code> message structured as follows:<a href="#section-4.6.1.1-14" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.6.1.1-15">
+<div class="lang-tls-presentation sourcecode" id="section-4.6.1.1-15">
 <pre>
 opaque BatchID[32];
 
@@ -3149,7 +3149,7 @@ the Leader <span class="bcp14">MUST</span> abort the aggregation job.<a href="#s
 <ol start="1" type="1" class="normal type-1" id="section-4.6.1.1-23">
 <li id="section-4.6.1.1-23.1">
                 <p id="section-4.6.1.1-23.1.1">If the inbound prep response has type "continue", then the Leader computes<a href="#section-4.6.1.1-23.1.1" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.6.1.1-23.1.2">
+<div class="lang-pseudocode sourcecode" id="section-4.6.1.1-23.1.2">
 <pre>
 (state, outbound) = Vdaf.ping_pong_leader_continued(agg_param,
                                                     prev_state,
@@ -3215,7 +3215,7 @@ initialization messages have the same report ID, then the Helper <span class="bc
 error <code>invalidMessage</code>.<a href="#section-4.6.1.2-3" class="pilcrow">¶</a></p>
 <p id="section-4.6.1.2-4">To process the aggregation job, the Helper computes an outbound prepare step
 for each report share. This includes the following structures:<a href="#section-4.6.1.2-4" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.6.1.2-5">
+<div class="lang-tls-presentation sourcecode" id="section-4.6.1.2-5">
 <pre>
 enum {
   continue(0),
@@ -3252,7 +3252,7 @@ struct {
 <p id="section-4.6.1.2-6">First, for each report in the request, the Helper <span class="bcp14">MAY</span> check if the report ID
 corresponds to a report ID it has previously stored for this task. If so, it
 rejects the report by setting the outbound preparation response to<a href="#section-4.6.1.2-6" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.6.1.2-7">
+<div class="lang-tls-presentation sourcecode" id="section-4.6.1.2-7">
 <pre>
 variant {
   ReportID report_id;
@@ -3267,7 +3267,7 @@ check before completing the aggregation job.<a href="#section-4.6.1.2-8" class="
 <a href="#input-share-decryption" class="auto internal xref">Section 4.6.1.3</a>, then checks input share validity as described in
 <a href="#input-share-validation" class="auto internal xref">Section 4.6.1.4</a>. For any report that was rejected, the Helper sets
 the outbound preparation response to<a href="#section-4.6.1.2-9" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.6.1.2-10">
+<div class="lang-tls-presentation sourcecode" id="section-4.6.1.2-10">
 <pre>
 variant {
   ReportID report_id;
@@ -3279,7 +3279,7 @@ variant {
 <p id="section-4.6.1.2-11">where <code>report_id</code> is the report ID and <code>prepare_error</code> is the indicated error.
 For all other reports it initializes the VDAF prep state as follows (let
 <code>inbound</code> denote the payload of the prep step sent by the Leader):<a href="#section-4.6.1.2-11" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.6.1.2-12">
+<div class="lang-pseudocode sourcecode" id="section-4.6.1.2-12">
 <pre>
 (state, outbound) = Vdaf.ping_pong_helper_init(
     vdaf_verify_key,
@@ -3311,7 +3311,7 @@ For all other reports it initializes the VDAF prep state as follows (let
 <p id="section-4.6.1.2-15">This procedure determines the initial per-report <code>state</code>, as well as the
 initial <code>outbound</code> message to send in response to the Leader. If <code>state</code> is of
 type <code>Rejected</code>, then the Helper responds with<a href="#section-4.6.1.2-15" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.6.1.2-16">
+<div class="lang-tls-presentation sourcecode" id="section-4.6.1.2-16">
 <pre>
 variant {
   ReportID report_id;
@@ -3321,7 +3321,7 @@ variant {
 </pre><a href="#section-4.6.1.2-16" class="pilcrow">¶</a>
 </div>
 <p id="section-4.6.1.2-17">Otherwise the Helper responds with<a href="#section-4.6.1.2-17" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.6.1.2-18">
+<div class="lang-tls-presentation sourcecode" id="section-4.6.1.2-18">
 <pre>
 variant {
   ReportID report_id;
@@ -3335,7 +3335,7 @@ prepare for the next continuation step (<a href="#aggregation-helper-continuatio
 <p id="section-4.6.1.2-20">If <code>state == Finished(out_share)</code>, the Helper <span class="bcp14">MUST</span> resolve replay of the
 report. It does so by checking if the report ID was previously stored for this
 task. If so, it responds with<a href="#section-4.6.1.2-20" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.6.1.2-21">
+<div class="lang-tls-presentation sourcecode" id="section-4.6.1.2-21">
 <pre>
 variant {
   ReportID report_id;
@@ -3348,7 +3348,7 @@ variant {
 in the collection interaction (<a href="#collect-flow" class="auto internal xref">Section 4.7</a>).<a href="#section-4.6.1.2-22" class="pilcrow">¶</a></p>
 <p id="section-4.6.1.2-23">Finally, the Helper creates an <code>AggregationJobResp</code> to send to the Leader. This
 message is structured as follows:<a href="#section-4.6.1.2-23" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.6.1.2-24">
+<div class="lang-tls-presentation sourcecode" id="section-4.6.1.2-24">
 <pre>
 enum {
   processing(0),
@@ -3406,7 +3406,7 @@ from <code>task_id</code>, <code>report_metadata</code>, and <code>public_share<
 <code>input_share_aad</code>. Then, the Aggregator looks up the HPKE config and
 corresponding secret key indicated by <code>encrypted_input_share.config_id</code> and
 attempts decryption of the payload with the following procedure:<a href="#section-4.6.1.3-1" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.6.1.3-2">
+<div class="lang-pseudocode sourcecode" id="section-4.6.1.3-2">
 <pre>
 plaintext_input_share = OpenBase(encrypted_input_share.enc, sk,
   "dap-11 input share" || 0x01 || server_role,
@@ -3523,7 +3523,7 @@ that require more than one round.<a href="#section-4.6.2-2" class="pilcrow">¶</
 first continuation after initialization). Then it instructs the Helper to
 advance the aggregation job to the step the Leader has just reached. For each
 report the Leader constructs a preparation continuation message:<a href="#section-4.6.2.1-2" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.6.2.1-3">
+<div class="lang-tls-presentation sourcecode" id="section-4.6.2.1-3">
 <pre>
 struct {
   ReportID report_id;
@@ -3536,7 +3536,7 @@ struct {
 <p id="section-4.6.2.1-5">Next, the Leader sends a POST request to
 <code>{helper}/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}</code> with media
 type "application/dap-aggregation-job-continue-req" and body structured as:<a href="#section-4.6.2.1-5" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.6.2.1-6">
+<div class="lang-tls-presentation sourcecode" id="section-4.6.2.1-6">
 <pre>
 struct {
   uint16 step;
@@ -3565,7 +3565,7 @@ same order as the Leader's <code>AggregationJobContinueReq</code>. Otherwise, th
 <li id="section-4.6.2.1-12.1">
                 <p id="section-4.6.2.1-12.1.1">If the inbound prep response type is "continue" and the state is
 <code>Continued(prep_state)</code>, then the Leader computes<a href="#section-4.6.2.1-12.1.1" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.6.2.1-12.1.2">
+<div class="lang-pseudocode sourcecode" id="section-4.6.2.1-12.1.2">
 <pre>
 (state, outbound) = Vdaf.ping_pong_leader_continued(agg_param,
                                                     state,
@@ -3643,7 +3643,7 @@ aggregation job. In this case it <span class="bcp14">SHOULD</span> verify that t
 Helper <span class="bcp14">MUST</span> abort with error <code>stepMismatch</code>.<a href="#section-4.6.2.2-8" class="pilcrow">¶</a></p>
 <p id="section-4.6.2.2-9">Let <code>inbound</code> denote the payload of the prep step. For each report, the Helper
 computes the following:<a href="#section-4.6.2.2-9" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.6.2.2-10">
+<div class="lang-pseudocode sourcecode" id="section-4.6.2.2-10">
 <pre>
 (state, outbound) = Vdaf.ping_pong_helper_continued(agg_param,
                                                     state,
@@ -3651,7 +3651,7 @@ computes the following:<a href="#section-4.6.2.2-9" class="pilcrow">¶</a></p>
 </pre><a href="#section-4.6.2.2-10" class="pilcrow">¶</a>
 </div>
 <p id="section-4.6.2.2-11">If <code>state == Rejected()</code>, then the Helper's response is<a href="#section-4.6.2.2-11" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.6.2.2-12">
+<div class="lang-tls-presentation sourcecode" id="section-4.6.2.2-12">
 <pre>
 variant {
   ReportID report_id;
@@ -3665,7 +3665,7 @@ prepare for the next continuation step (<a href="#aggregation-helper-continuatio
 <p id="section-4.6.2.2-14">If <code>state == Finished(out_share)</code>, the Helper <span class="bcp14">MUST</span> resolve replay of the
 report. It does so by checking if the report ID was previously stored for this
 task. If so, it responds with<a href="#section-4.6.2.2-14" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.6.2.2-15">
+<div class="lang-tls-presentation sourcecode" id="section-4.6.2.2-15">
 <pre>
 variant {
   ReportID report_id;
@@ -3678,7 +3678,7 @@ variant {
 in the collection interaction (<a href="#collect-flow" class="auto internal xref">Section 4.7</a>).<a href="#section-4.6.2.2-16" class="pilcrow">¶</a></p>
 <p id="section-4.6.2.2-17">The Helper's response depends on the value of <code>outbound</code>. If <code>outbound !=
 None</code>, then the Helper's response is<a href="#section-4.6.2.2-17" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.6.2.2-18">
+<div class="lang-tls-presentation sourcecode" id="section-4.6.2.2-18">
 <pre>
 variant {
   ReportID report_id;
@@ -3688,7 +3688,7 @@ variant {
 </pre><a href="#section-4.6.2.2-18" class="pilcrow">¶</a>
 </div>
 <p id="section-4.6.2.2-19">Otherwise, if <code>outbound == None</code>, then the Helper's response is<a href="#section-4.6.2.2-19" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.6.2.2-20">
+<div class="lang-tls-presentation sourcecode" id="section-4.6.2.2-20">
 <pre>
 variant {
   ReportID report_id;
@@ -3782,7 +3782,7 @@ specified in <a href="#collect-aggregate" class="auto internal xref">Section 4.7
 <a href="#section-4.7.1" class="section-number selfRef">4.7.1. </a><a href="#name-collection-job-initializati" class="section-name selfRef">Collection Job Initialization</a>
           </h4>
 <p id="section-4.7.1-1">First, the Collector chooses a collection job ID:<a href="#section-4.7.1-1" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.7.1-2">
+<div class="lang-tls-presentation sourcecode" id="section-4.7.1-2">
 <pre>
 opaque CollectionJobID[16];
 </pre><a href="#section-4.7.1-2" class="pilcrow">¶</a>
@@ -3792,7 +3792,7 @@ opaque CollectionJobID[16];
 <code>{leader}/tasks/{task-id}/collection_jobs/{collection-job-id}</code>. The body of the
 request has media type "application/dap-collect-req", and it is structured as
 follows:<a href="#section-4.7.1-4" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.7.1-5">
+<div class="lang-tls-presentation sourcecode" id="section-4.7.1-5">
 <pre>
 struct {
   Query query;
@@ -3862,7 +3862,7 @@ errors.<a href="#section-4.7.1-16" class="pilcrow">¶</a></p>
 <p id="section-4.7.1-17">Once both aggregate shares are successfully obtained, the Leader responds to
 subsequent HTTP GET requests to the collection job with HTTP status code 200 OK
 and a body consisting of a <code>Collection</code>:<a href="#section-4.7.1-17" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.7.1-18">
+<div class="lang-tls-presentation sourcecode" id="section-4.7.1-18">
 <pre>
 struct {
   PartialBatchSelector part_batch_selector;
@@ -3924,7 +3924,7 @@ Client reports included in the aggregation, then combining the hash values with
 a bitwise-XOR operation.<a href="#section-4.7.2-1" class="pilcrow">¶</a></p>
 <p id="section-4.7.2-2">Then the Leader sends a POST request to
 <code>{helper}/tasks/{task-id}/aggregate_shares</code> with the following message:<a href="#section-4.7.2-2" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.7.2-3">
+<div class="lang-tls-presentation sourcecode" id="section-4.7.2-3">
 <pre>
 struct {
   BatchMode batch_mode;
@@ -3988,7 +3988,7 @@ computed values. If not, then it <span class="bcp14">MUST</span> abort with an e
 "batchMismatch".<a href="#section-4.7.2-8" class="pilcrow">¶</a></p>
 <p id="section-4.7.2-9">Next, it computes the aggregate share <code>agg_share</code> corresponding to the set of
 output shares, denoted <code>out_shares</code>, for the batch interval, as follows:<a href="#section-4.7.2-9" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.7.2-10">
+<div class="lang-pseudocode sourcecode" id="section-4.7.2-10">
 <pre>
 agg_share = Vdaf.aggregate(agg_param, out_shares)
 </pre><a href="#section-4.7.2-10" class="pilcrow">¶</a>
@@ -4005,7 +4005,7 @@ its own aggregate share and cannot compute the Helper's.<a href="#section-4.7.2-
 <p id="section-4.7.2-13">The Helper responds to the Leader with HTTP status code 200 OK and a body
 consisting of an <code>AggregateShare</code>, with media type
 "application/dap-aggregate-share":<a href="#section-4.7.2-13" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.7.2-14">
+<div class="lang-tls-presentation sourcecode" id="section-4.7.2-14">
 <pre>
 struct {
   HpkeCiphertext encrypted_aggregate_share;
@@ -4045,7 +4045,7 @@ particular, let <code>leader_agg_share</code> denote the Leader's aggregate shar
 <code>helper_agg_share</code> denote the Helper's aggregate share, let <code>report_count</code>
 denote the report count sent by the Leader, and let <code>agg_param</code> be the opaque
 aggregation parameter. The final aggregate result is computed as follows:<a href="#section-4.7.3-1" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.7.3-2">
+<div class="lang-pseudocode sourcecode" id="section-4.7.3-2">
 <pre>
 agg_result = Vdaf.unshard(agg_param,
                           [leader_agg_share, helper_agg_share],
@@ -4061,7 +4061,7 @@ agg_result = Vdaf.unshard(agg_param,
           </h4>
 <p id="section-4.7.4-1">Encrypting an aggregate share <code>agg_share</code> for a given <code>AggregateShareReq</code> is
 done as follows:<a href="#section-4.7.4-1" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.7.4-2">
+<div class="lang-pseudocode sourcecode" id="section-4.7.4-2">
 <pre>
 (enc, payload) = SealBase(
     pk,
@@ -4076,7 +4076,7 @@ done as follows:<a href="#section-4.7.4-1" class="pilcrow">¶</a></p>
 Collector), and <code>agg_share_aad</code> is a value of type <code>AggregateShareAad</code>. The
 <code>SealBase()</code> function is as specified in <span>[<a href="#HPKE" class="cite xref">HPKE</a>], <a href="https://rfc-editor.org/rfc/rfc9180#section-6.1" class="relref">Section 6.1</a></span> for the
 ciphersuite indicated by the HPKE configuration.<a href="#section-4.7.4-3" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.7.4-4">
+<div class="lang-tls-presentation sourcecode" id="section-4.7.4-4">
 <pre>
 struct {
   TaskID task_id;
@@ -4101,7 +4101,7 @@ struct {
 <p id="section-4.7.4-6">The Collector decrypts these aggregate shares using the opposite process.
 Specifically, given an encrypted input share, denoted <code>enc_share</code>, for a given
 batch selector, decryption works as follows:<a href="#section-4.7.4-6" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.7.4-7">
+<div class="lang-pseudocode sourcecode" id="section-4.7.4-7">
 <pre>
 agg_share = OpenBase(
     enc_share.enc,
@@ -4695,7 +4695,7 @@ be rotated. One way to ensure that the verification key is generated
 independently from any given report is to derive the key based on the task ID
 and some previously agreed upon secret (verify_key_seed) between Aggregators, as
 follows:<a href="#section-7.6.1-2" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-7.6.1-3">
+<div class="lang-pseudocode sourcecode" id="section-7.6.1-3">
 <pre>
 verify_key = HKDF-Expand(
     HKDF-Extract(
@@ -5885,72 +5885,15 @@ with the Reference field set to point to this specification.<a href="#section-8.
 </div>
 </section>
 </div>
-<div id="contributors">
-<section id="section-9">
-      <h2 id="name-contributors">
-<a href="#name-contributors" class="section-name selfRef">Contributors</a>
-      </h2>
-<div class="alignLeft art-text artwork" id="section-9-1">
-<pre>
-    Josh Aas
-    ISRG
-    josh@abetterinternet.org
-
-    Junye Chen
-    Apple
-    junyec@apple.com
-
-    David Cook
-    ISRG
-    dcook@divviup.org
-
-    Suman Ganta
-    Apple
-    sganta2@apple.com
-
-    Ameer Ghani
-    ISRG
-    inahga@divviup.org
-
-    Kristine Guo
-    Apple
-    kristine_guo@apple.com
-
-    Charlie Harrison
-    Google
-    csharrison@chromium.org
-
-    Peter Saint-Andre
-    stpeter@gmail.com
-
-    Shivan Sahib
-    Brave
-    shivankaulsahib@gmail.com
-
-    Phillipp Schoppmann
-    Google
-    schoppmann@google.com
-
-    Martin Thomson
-    Mozilla
-    mt@mozilla.com
-
-    Shan Wang
-    Apple
-    shan_wang@apple.com
-</pre><a href="#section-9-1" class="pilcrow">¶</a>
-</div>
-</section>
-</div>
 <div id="sec-combined-references">
-<section id="section-10">
+<section id="section-9">
       <h2 id="name-references">
-<a href="#name-references" class="section-name selfRef">References</a>
+<a href="#section-9" class="section-number selfRef">9. </a><a href="#name-references" class="section-name selfRef">References</a>
       </h2>
 <div id="sec-normative-references">
-<section id="section-10.1">
+<section id="section-9.1">
         <h3 id="name-normative-references">
-<a href="#name-normative-references" class="section-name selfRef">Normative References</a>
+<a href="#section-9.1" class="section-number selfRef">9.1. </a><a href="#name-normative-references" class="section-name selfRef">Normative References</a>
         </h3>
 <dl class="references">
 <dt id="HPKE">[HPKE]</dt>
@@ -6017,9 +5960,9 @@ with the Reference field set to point to this specification.<a href="#section-8.
 </section>
 </div>
 <div id="sec-informative-references">
-<section id="section-10.2">
+<section id="section-9.2">
         <h3 id="name-informative-references">
-<a href="#name-informative-references" class="section-name selfRef">Informative References</a>
+<a href="#section-9.2" class="section-number selfRef">9.2. </a><a href="#name-informative-references" class="section-name selfRef">Informative References</a>
         </h3>
 <dl class="references">
 <dt id="Dou02">[Dou02]</dt>
@@ -6047,8 +5990,110 @@ with the Reference field set to point to this specification.<a href="#section-8.
 </div>
 </section>
 </div>
-<div id="authors-addresses">
+<div id="contributors">
 <section id="appendix-A">
+      <h2 id="name-contributors">
+<a href="#name-contributors" class="section-name selfRef">Contributors</a>
+      </h2>
+<address class="vcard">
+        <div dir="auto" class="left"><span class="fn nameRole">Josh Aas</span></div>
+<div dir="auto" class="left"><span class="org">ISRG</span></div>
+<div class="email">
+<span>Email:</span>
+<a href="mailto:josh@abetterinternet.org" class="email">josh@abetterinternet.org</a>
+</div>
+</address>
+<address class="vcard">
+        <div dir="auto" class="left"><span class="fn nameRole">Junye Chen</span></div>
+<div dir="auto" class="left"><span class="org">Apple</span></div>
+<div class="email">
+<span>Email:</span>
+<a href="mailto:junyec@apple.com" class="email">junyec@apple.com</a>
+</div>
+</address>
+<address class="vcard">
+        <div dir="auto" class="left"><span class="fn nameRole">David Cook</span></div>
+<div dir="auto" class="left"><span class="org">ISRG</span></div>
+<div class="email">
+<span>Email:</span>
+<a href="mailto:dcook@divviup.org" class="email">dcook@divviup.org</a>
+</div>
+</address>
+<address class="vcard">
+        <div dir="auto" class="left"><span class="fn nameRole">Suman Ganta</span></div>
+<div dir="auto" class="left"><span class="org">Apple</span></div>
+<div class="email">
+<span>Email:</span>
+<a href="mailto:sganta2@apple.com" class="email">sganta2@apple.com</a>
+</div>
+</address>
+<address class="vcard">
+        <div dir="auto" class="left"><span class="fn nameRole">Ameer Ghani</span></div>
+<div dir="auto" class="left"><span class="org">ISRG</span></div>
+<div class="email">
+<span>Email:</span>
+<a href="mailto:inahga@divviup.org" class="email">inahga@divviup.org</a>
+</div>
+</address>
+<address class="vcard">
+        <div dir="auto" class="left"><span class="fn nameRole">Kristine Guo</span></div>
+<div dir="auto" class="left"><span class="org">Apple</span></div>
+<div class="email">
+<span>Email:</span>
+<a href="mailto:kristine_guo@apple.com" class="email">kristine_guo@apple.com</a>
+</div>
+</address>
+<address class="vcard">
+        <div dir="auto" class="left"><span class="fn nameRole">Charlie Harrison</span></div>
+<div dir="auto" class="left"><span class="org">Google</span></div>
+<div class="email">
+<span>Email:</span>
+<a href="mailto:csharrison@chromium.org" class="email">csharrison@chromium.org</a>
+</div>
+</address>
+<address class="vcard">
+        <div dir="auto" class="left"><span class="fn nameRole">Peter Saint-Andre</span></div>
+<div class="email">
+<span>Email:</span>
+<a href="mailto:stpeter@gmail.com" class="email">stpeter@gmail.com</a>
+</div>
+</address>
+<address class="vcard">
+        <div dir="auto" class="left"><span class="fn nameRole">Shivan Sahib</span></div>
+<div dir="auto" class="left"><span class="org">Brave</span></div>
+<div class="email">
+<span>Email:</span>
+<a href="mailto:shivankaulsahib@gmail.com" class="email">shivankaulsahib@gmail.com</a>
+</div>
+</address>
+<address class="vcard">
+        <div dir="auto" class="left"><span class="fn nameRole">Phillipp Schoppmann</span></div>
+<div dir="auto" class="left"><span class="org">Google</span></div>
+<div class="email">
+<span>Email:</span>
+<a href="mailto:schoppmann@google.com" class="email">schoppmann@google.com</a>
+</div>
+</address>
+<address class="vcard">
+        <div dir="auto" class="left"><span class="fn nameRole">Martin Thomson</span></div>
+<div dir="auto" class="left"><span class="org">Mozilla</span></div>
+<div class="email">
+<span>Email:</span>
+<a href="mailto:mt@mozilla.com" class="email">mt@mozilla.com</a>
+</div>
+</address>
+<address class="vcard">
+        <div dir="auto" class="left"><span class="fn nameRole">Shan Wang</span></div>
+<div dir="auto" class="left"><span class="org">Apple</span></div>
+<div class="email">
+<span>Email:</span>
+<a href="mailto:shan_wang@apple.com" class="email">shan_wang@apple.com</a>
+</div>
+</address>
+</section>
+</div>
+<div id="authors-addresses">
+<section id="appendix-B">
       <h2 id="name-authors-addresses">
 <a href="#name-authors-addresses" class="section-name selfRef">Authors' Addresses</a>
       </h2>
