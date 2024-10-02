@@ -46,6 +46,65 @@ author:
        organization: Cloudflare
        email: caw@heapingbits.net
 
+contributor:
+ -
+       name: Josh Aas
+       org: ISRG
+       email: josh@abetterinternet.org
+
+ -
+       name: Junye Chen
+       org: Apple
+       email: junyec@apple.com
+
+ -
+       name: David Cook
+       org: ISRG
+       email: dcook@divviup.org
+
+ -
+       name: Suman Ganta
+       org: Apple
+       email: sganta2@apple.com
+
+ -
+       name: Ameer Ghani
+       org: ISRG
+       email: inahga@divviup.org
+
+ -
+       name: Kristine Guo
+       org: Apple
+       email: kristine_guo@apple.com
+
+ -
+       name: Charlie Harrison
+       org: Google
+       email: csharrison@chromium.org
+
+ -
+       name: Peter Saint-Andre
+       email: stpeter@gmail.com
+
+ -
+       name: Shivan Sahib
+       org: Brave
+       email: shivankaulsahib@gmail.com
+
+ -
+       name: Phillipp Schoppmann
+       org: Google
+       email: schoppmann@google.com
+
+ -
+       name: Martin Thomson
+       org: Mozilla
+       email: mt@mozilla.com
+
+ -
+       name: Shan Wang
+       org: Apple
+       email: shan_wang@apple.com
 
 informative:
 
@@ -3586,56 +3645,5 @@ Index value:  No transformation needed.
 Initial contents: The types and descriptions in the table in {{errors}} above,
 with the Reference field set to point to this specification.
 
-
-# Contributors
-{:numbered="false"}
-~~~
-    Josh Aas
-    ISRG
-    josh@abetterinternet.org
-
-    Junye Chen
-    Apple
-    junyec@apple.com
-
-    David Cook
-    ISRG
-    dcook@divviup.org
-
-    Suman Ganta
-    Apple
-    sganta2@apple.com
-
-    Ameer Ghani
-    ISRG
-    inahga@divviup.org
-
-    Kristine Guo
-    Apple
-    kristine_guo@apple.com
-
-    Charlie Harrison
-    Google
-    csharrison@chromium.org
-
-    Peter Saint-Andre
-    stpeter@gmail.com
-
-    Shivan Sahib
-    Brave
-    shivankaulsahib@gmail.com
-
-    Phillipp Schoppmann
-    Google
-    schoppmann@google.com
-
-    Martin Thomson
-    Mozilla
-    mt@mozilla.com
-
-    Shan Wang
-    Apple
-    shan_wang@apple.com
-~~~
 
 --- back
