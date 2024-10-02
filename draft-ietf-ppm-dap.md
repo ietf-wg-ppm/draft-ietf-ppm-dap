@@ -1774,7 +1774,7 @@ following checks:
       determined by query ({{batch-mode}}) conveyed in these messages. Queries
       must satisfy the criteria covered in {{batch-validation}}. These criteria
       are meant to restrict queries in a way that makes it easy to determine
-      wither a report pertains to a batch that was collected.
+      whether a report pertains to a batch that was collected.
 
 1. Finally, if an Aggregator cannot determine if an input share is valid, it
    MUST mark the input share as invalid with error `report_dropped`. For
@@ -2867,7 +2867,7 @@ The definition for each media type is in the following subsections.
 Protocol message format evolution is supported through the definition of new
 formats that are identified by new media types.
 
-IANA shall update (RFC EDITOR: change "shall update" to "has update") the
+IANA shall update (RFC EDITOR: change "shall update" to "has updated") the
 "Media Types" registry at https://www.iana.org/assignments/media-types
 with the registration information in this section for all media types
 listed above.
