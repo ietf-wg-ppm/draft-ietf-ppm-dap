@@ -386,7 +386,7 @@ described in {{!RFC8446, Section 3.8}}.
 
 For example, suppose we have an enumeration and a structure defined as follows:
 
-~~~
+~~~ tls-presentation
 enum {
   number(0),
   string(1),
@@ -406,7 +406,7 @@ struct {
 Then we describe the specific variant of `ExampleStruct` where `type == number`
 with a `variant` block like so:
 
-~~~
+~~~ tls-presentation
 variant {
   /* Field exists regardless of variant */
   uint32 always_present;
@@ -424,7 +424,7 @@ mean that the `type` field of `ExampleStruct` can only ever have value `number`.
 This notation can also be used in structures where the enum field does not
 affect what fields are or are not present in the structure. For example:
 
-~~~
+~~~ tls-presentation
 enum {
   something(0),
   something_else(1),
@@ -439,7 +439,7 @@ struct {
 
 The protocol text might include a description like:
 
-~~~
+~~~ tls-presentation
 variant {
   FailureReason failure_reason = something;
   opaque another_field<0..256>;
@@ -722,7 +722,7 @@ we define these resources and the messages used to act on them.
 
 The following are some basic type definitions used in other messages:
 
-~~~
+~~~ tls-presentation
 /* ASCII encoded URL. e.g., "https://example.com" */
 opaque Url<0..2^16-1>;
 
@@ -791,7 +791,7 @@ are addressed and the semantics of the query used for collection.
 
 This document defines the following batch modes:
 
-~~~
+~~~ tls-presentation
 enum {
   reserved(0), /* Reserved for testing purposes */
   time_interval(1),
@@ -809,7 +809,7 @@ available batch modes.
 A query includes parameters used by the Aggregators to select a batch of
 reports specific to the given batch mode. A query is defined as follows:
 
-~~~
+~~~ tls-presentation
 struct {
   BatchMode batch_mode;
   select (Query.batch_mode) {
@@ -882,7 +882,7 @@ coordinated.
 Prior to the start of execution of the protocol, each participant must agree on
 the configuration for each task. A task is uniquely identified by its task ID:
 
-~~~
+~~~ tls-presentation
 opaque TaskID[32];
 ~~~
 
@@ -970,7 +970,7 @@ The `HpkeConfigList` structure contains one or more `HpkeConfig` structures in
 decreasing order of preference. This allows an Aggregator to support multiple
 HPKE configurations simultaneously.
 
-~~~
+~~~ tls-presentation
 HpkeConfig HpkeConfigList<0..2^16-1>;
 
 struct {
@@ -1003,7 +1003,7 @@ resource {{!RFC5861}}. Aggregators SHOULD favor long cache lifetimes to avoid
 frequent cache revalidation, e.g., on the order of days. Aggregators can control
 this cached lifetime with the Cache-Control header, as in this example:
 
-~~~
+~~~ http-message
   Cache-Control: max-age=86400
 ~~~
 
@@ -1021,7 +1021,7 @@ Clients upload reports by using an HTTP POST to
 `{leader}/tasks/{task-id}/reports`. The payload is a `Report`, with media type
 "application/dap-report", structured as follows:
 
-~~~
+~~~ tls-presentation
 struct {
   ReportID report_id;
   Time time;
@@ -1064,7 +1064,7 @@ To generate a report, the Client begins by sharding its measurement into input
 shares and the public share using the VDAF's sharding algorithm ({{Section 5.1
 of !VDAF}}), using the report ID as the nonce:
 
-~~~
+~~~ pseudocode
 (public_share, input_shares) = Vdaf.shard(
     measurement, /* plaintext measurement */
     report_id,   /* nonce */
@@ -1083,7 +1083,7 @@ share, and the second input share is considered to be the Helper's input share.
 
 The Client then wraps each input share in the following structure:
 
-~~~
+~~~ tls-presentation
 struct {
   Extension extensions<0..2^16-1>;
   opaque payload<0..2^32-1>;
@@ -1097,7 +1097,7 @@ Aggregator's input share output by the VDAF sharding algorithm.
 Next, the Client encrypts each PlaintextInputShare `plaintext_input_share` as
 follows:
 
-~~~
+~~~ pseudocode
 enc, payload = SealBase(pk,
   "dap-11 input share" || 0x01 || server_role,
   input_share_aad, plaintext_input_share)
@@ -1112,7 +1112,7 @@ the corresponding fields in the report. The `SealBase()` function is as
 specified in {{!HPKE, Section 6.1}} for the ciphersuite indicated by the HPKE
 configuration.
 
-~~~
+~~~ tls-presentation
 struct {
   TaskID task_id;
   ReportMetadata report_metadata;
@@ -1175,7 +1175,7 @@ to bind the extension to the input share via HPKE encryption.)
 
 Each extension is a tag-length encoded value of the following form:
 
-~~~
+~~~ tls-presentation
 struct {
   ExtensionType extension_type;
   opaque extension_data<0..2^16-1>;
@@ -1235,7 +1235,7 @@ initialization step for preparation. The Helper's response, along with each
 subsequent request and response, carries the remaining messages exchanged during
 preparation.
 
-~~~ ladder
+~~~
   report, agg_param
    |
    v
@@ -1320,7 +1320,7 @@ The Leader begins an aggregation job by choosing a set of candidate reports that
 pertain to the same DAP task and a job ID which MUST be unique within the scope
 of the task. The job ID is a 16-byte value, structured as follows:
 
-~~~
+~~~ tls-presentation
 opaque AggregationJobID[16];
 ~~~
 
@@ -1351,7 +1351,7 @@ rejects the report and removes it from the set of candidate reports.
 
 Next, for each report the Leader executes the following procedure:
 
-~~~
+~~~ pseudocode
 (state, outbound) = Vdaf.ping_pong_leader_init(
     vdaf_verify_key,
     agg_param,
@@ -1378,7 +1378,7 @@ to the Helper.
 If `state` is of type `Continued`, then the Leader constructs a `PrepareInit`
 message structured as follows:
 
-~~~
+~~~ tls-presentation
 struct {
   ReportMetadata report_metadata;
   opaque public_share<0..2^32-1>;
@@ -1408,7 +1408,7 @@ initialization.
 Once all the report shares have been initialized, the Leader creates an
 `AggregationJobInitReq` message structured as follows:
 
-~~~
+~~~ tls-presentation
 opaque BatchID[32];
 
 struct {
@@ -1472,7 +1472,7 @@ Otherwise, the Leader proceeds as follows with each report:
 
 1. If the inbound prep response has type "continue", then the Leader computes
 
-   ~~~
+   ~~~ pseudocode
    (state, outbound) = Vdaf.ping_pong_leader_continued(agg_param,
                                                        prev_state,
                                                        inbound)
@@ -1527,7 +1527,7 @@ error `invalidMessage`.
 To process the aggregation job, the Helper computes an outbound prepare step
 for each report share. This includes the following structures:
 
-~~~
+~~~ tls-presentation
 enum {
   continue(0),
   finished(1)
@@ -1564,7 +1564,7 @@ First, for each report in the request, the Helper MAY check if the report ID
 corresponds to a report ID it has previously stored for this task. If so, it
 rejects the report by setting the outbound preparation response to
 
-~~~
+~~~ tls-presentation
 variant {
   ReportID report_id;
   PrepareRespState prepare_resp_state = reject;
@@ -1580,7 +1580,7 @@ Next the Helper decrypts each of its remaining report shares as described in
 {{input-share-validation}}. For any report that was rejected, the Helper sets
 the outbound preparation response to
 
-~~~
+~~~ tls-presentation
 variant {
   ReportID report_id;
   PrepareRespState prepare_resp_state = reject;
@@ -1592,7 +1592,7 @@ where `report_id` is the report ID and `prepare_error` is the indicated error.
 For all other reports it initializes the VDAF prep state as follows (let
 `inbound` denote the payload of the prep step sent by the Leader):
 
-~~~
+~~~ pseudocode
 (state, outbound) = Vdaf.ping_pong_helper_init(
     vdaf_verify_key,
     agg_param,
@@ -1614,7 +1614,7 @@ This procedure determines the initial per-report `state`, as well as the
 initial `outbound` message to send in response to the Leader. If `state` is of
 type `Rejected`, then the Helper responds with
 
-~~~
+~~~ tls-presentation
 variant {
   ReportID report_id;
   PrepareRespState prepare_resp_state = reject;
@@ -1624,7 +1624,7 @@ variant {
 
 Otherwise the Helper responds with
 
-~~~
+~~~ tls-presentation
 variant {
   ReportID report_id;
   PrepareRespState prepare_resp_state = continue;
@@ -1639,7 +1639,7 @@ If `state == Finished(out_share)`, the Helper MUST resolve replay of the
 report. It does so by checking if the report ID was previously stored for this
 task. If so, it responds with
 
-~~~
+~~~ tls-presentation
 variant {
   ReportID report_id;
   PrepareRespState prepare_resp_state = reject;
@@ -1653,7 +1653,7 @@ in the collection interaction ({{collect-flow}}).
 Finally, the Helper creates an `AggregationJobResp` to send to the Leader. This
 message is structured as follows:
 
-~~~
+~~~ tls-presentation
 enum {
   processing(0),
   finished(1),
@@ -1711,7 +1711,7 @@ from `task_id`, `report_metadata`, and `public_share`. Let this be denoted by
 corresponding secret key indicated by `encrypted_input_share.config_id` and
 attempts decryption of the payload with the following procedure:
 
-~~~
+~~~ pseudocode
 plaintext_input_share = OpenBase(encrypted_input_share.enc, sk,
   "dap-11 input share" || 0x01 || server_role,
   input_share_aad, encrypted_input_share.payload)
@@ -1804,7 +1804,7 @@ first continuation after initialization). Then it instructs the Helper to
 advance the aggregation job to the step the Leader has just reached. For each
 report the Leader constructs a preparation continuation message:
 
-~~~
+~~~ tls-presentation
 struct {
   ReportID report_id;
   opaque payload<0..2^32-1>;
@@ -1818,7 +1818,7 @@ Next, the Leader sends a POST request to
 `{helper}/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}` with media
 type "application/dap-aggregation-job-continue-req" and body structured as:
 
-~~~
+~~~ tls-presentation
 struct {
   uint16 step;
   PrepareContinue prepare_continues<0..2^32-1>;
@@ -1850,7 +1850,7 @@ Otherwise, the Leader proceeds as follows with each report:
 1. If the inbound prep response type is "continue" and the state is
    `Continued(prep_state)`, then the Leader computes
 
-   ~~~
+   ~~~ pseudocode
    (state, outbound) = Vdaf.ping_pong_leader_continued(agg_param,
                                                        state,
                                                        inbound)
@@ -1919,7 +1919,7 @@ Helper MUST abort with error `stepMismatch`.
 Let `inbound` denote the payload of the prep step. For each report, the Helper
 computes the following:
 
-~~~
+~~~ pseudocode
 (state, outbound) = Vdaf.ping_pong_helper_continued(agg_param,
                                                     state,
                                                     inbound)
@@ -1927,7 +1927,7 @@ computes the following:
 
 If `state == Rejected()`, then the Helper's response is
 
-~~~
+~~~ tls-presentation
 variant {
   ReportID report_id;
   PrepareRespState prepare_resp_state = reject;
@@ -1942,7 +1942,7 @@ If `state == Finished(out_share)`, the Helper MUST resolve replay of the
 report. It does so by checking if the report ID was previously stored for this
 task. If so, it responds with
 
-~~~
+~~~ tls-presentation
 variant {
   ReportID report_id;
   PrepareRespState prepare_resp_state = reject;
@@ -1956,7 +1956,7 @@ in the collection interaction ({{collect-flow}}).
 The Helper's response depends on the value of `outbound`. If `outbound !=
 None`, then the Helper's response is
 
-~~~
+~~~ tls-presentation
 variant {
   ReportID report_id;
   PrepareRespState prepare_resp_state = continue;
@@ -1966,7 +1966,7 @@ variant {
 
 Otherwise, if `outbound == None`, then the Helper's response is
 
-~~~
+~~~ tls-presentation
 variant {
   ReportID report_id;
   PrepareRespState prepare_resp_state = finished;
@@ -2048,7 +2048,7 @@ This overall process is referred to as a "collection job".
 
 First, the Collector chooses a collection job ID:
 
-~~~
+~~~ tls-presentation
 opaque CollectionJobID[16];
 ~~~
 
@@ -2059,7 +2059,7 @@ To initiate the collection job, the collector issues a PUT request to
 request has media type "application/dap-collect-req", and it is structured as
 follows:
 
-~~~
+~~~ tls-presentation
 struct {
   Query query;
   opaque agg_param<0..2^32-1>; /* VDAF aggregation parameter */
@@ -2134,7 +2134,7 @@ Once both aggregate shares are successfully obtained, the Leader responds to
 subsequent HTTP GET requests to the collection job with HTTP status code 200 OK
 and a body consisting of a `Collection`:
 
-~~~
+~~~ tls-presentation
 struct {
   PartialBatchSelector part_batch_selector;
   uint64 report_count;
@@ -2189,7 +2189,7 @@ a bitwise-XOR operation.
 Then the Leader sends a POST request to
 `{helper}/tasks/{task-id}/aggregate_shares` with the following message:
 
-~~~
+~~~ tls-presentation
 struct {
   BatchMode batch_mode;
   select (BatchSelector.batch_mode) {
@@ -2247,7 +2247,7 @@ computed values. If not, then it MUST abort with an error of type
 Next, it computes the aggregate share `agg_share` corresponding to the set of
 output shares, denoted `out_shares`, for the batch interval, as follows:
 
-~~~
+~~~ pseudocode
 agg_share = Vdaf.aggregate(agg_param, out_shares)
 ~~~
 
@@ -2266,7 +2266,7 @@ The Helper responds to the Leader with HTTP status code 200 OK and a body
 consisting of an `AggregateShare`, with media type
 "application/dap-aggregate-share":
 
-~~~
+~~~ tls-presentation
 struct {
   HpkeCiphertext encrypted_aggregate_share;
 } AggregateShare;
@@ -2306,7 +2306,7 @@ particular, let `leader_agg_share` denote the Leader's aggregate share,
 denote the report count sent by the Leader, and let `agg_param` be the opaque
 aggregation parameter. The final aggregate result is computed as follows:
 
-~~~
+~~~ pseudocode
 agg_result = Vdaf.unshard(agg_param,
                           [leader_agg_share, helper_agg_share],
                           report_count)
@@ -2317,7 +2317,7 @@ agg_result = Vdaf.unshard(agg_param,
 Encrypting an aggregate share `agg_share` for a given `AggregateShareReq` is
 done as follows:
 
-~~~
+~~~ pseudocode
 (enc, payload) = SealBase(
     pk,
     "dap-11 aggregate share" || server_role || 0x00,
@@ -2332,7 +2332,7 @@ Collector), and `agg_share_aad` is a value of type `AggregateShareAad`. The
 `SealBase()` function is as specified in {{!HPKE, Section 6.1}} for the
 ciphersuite indicated by the HPKE configuration.
 
-~~~
+~~~ tls-presentation
 struct {
   TaskID task_id;
   opaque agg_param<0..2^32-1>;
@@ -2350,7 +2350,7 @@ The Collector decrypts these aggregate shares using the opposite process.
 Specifically, given an encrypted input share, denoted `enc_share`, for a given
 batch selector, decryption works as follows:
 
-~~~
+~~~ pseudocode
 agg_share = OpenBase(
     enc_share.enc,
     sk,
@@ -2791,7 +2791,7 @@ independently from any given report is to derive the key based on the task ID
 and some previously agreed upon secret (verify_key_seed) between Aggregators, as
 follows:
 
-~~~
+~~~ pseudocode
 verify_key = HKDF-Expand(
     HKDF-Extract(
         "verify_key",    # salt
