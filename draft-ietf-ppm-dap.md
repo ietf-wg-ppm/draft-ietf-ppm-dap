@@ -523,7 +523,7 @@ else about the measurements. We call `F` the "aggregation function".
 
 This protocol is extensible and allows for the addition of new cryptographic
 schemes that implement the VDAF interface specified in
-{{!VDAF=I-D.draft-irtf-cfrg-vdaf-08}}. This protocol only supports VDAFs which
+{{!VDAF=I-D.draft-irtf-cfrg-vdaf-12}}. This protocol only supports VDAFs which
 require a single collection to provide useful results.
 
 VDAFs rely on secret sharing to protect the privacy of the measurements. Rather
@@ -1125,16 +1125,17 @@ of !VDAF}}), using the report ID as the nonce:
 
 ~~~ pseudocode
 (public_share, input_shares) = Vdaf.shard(
+    "dap-11" || task_id,
     measurement, /* plaintext measurement */
     report_id,   /* nonce */
     rand,        /* randomness for sharding algorithm */
 )
 ~~~
 
-The last input comprises the randomness consumed by the sharding algorithm. The
-sharding randomness is a random byte string of length specified by the VDAF. The
-Client MUST generate this using a cryptographically secure random number
-generator.
+where `task_id` is the task ID. The last input comprises the randomness
+consumed by the sharding algorithm. The sharding randomness is a random byte
+string of length specified by the VDAF. The Client MUST generate this using a
+cryptographically secure random number generator.
 
 The sharding algorithm will return two input shares. The first input share
 returned from the sharding algorithm is considered to be the Leader's input
@@ -1421,6 +1422,7 @@ Next, for each report the Leader executes the following procedure:
 ~~~ pseudocode
 (state, outbound) = Vdaf.ping_pong_leader_init(
     vdaf_verify_key,
+    "dap-11" || task_id,
     agg_param,
     report_id,
     public_share,
@@ -1430,6 +1432,7 @@ Next, for each report the Leader executes the following procedure:
 where:
 
 * `vdaf_verify_key` is the VDAF verification key for the task
+* `task_id` is the task ID
 * `agg_param` is the VDAF aggregation parameter provided by the Collector (see
   {{collect-flow}})
 * `report_id` is the report ID, used as the nonce for VDAF sharding
@@ -1540,13 +1543,17 @@ Otherwise, the Leader proceeds as follows with each report:
 1. If the inbound prep response has type "continue", then the Leader computes
 
    ~~~ pseudocode
-   (state, outbound) = Vdaf.ping_pong_leader_continued(agg_param,
-                                                       prev_state,
-                                                       inbound)
+   (state, outbound) = Vdaf.ping_pong_leader_continued(
+       "dap-11" || task_id,
+       agg_param,
+       prev_state,
+       inbound,
+   )
    ~~~
 
    where:
 
+   * `task_id` is the task ID
    * `agg_param` is the VDAF aggregation parameter provided by the Collector (see
      {{collect-flow}})
    * `prev_state` is the state computed earlier by calling
@@ -1662,6 +1669,7 @@ For all other reports it initializes the VDAF prep state as follows (let
 ~~~ pseudocode
 (state, outbound) = Vdaf.ping_pong_helper_init(
     vdaf_verify_key,
+    "dap-11" || task_id,
     agg_param,
     report_id,
     public_share,
@@ -1671,6 +1679,7 @@ For all other reports it initializes the VDAF prep state as follows (let
 where:
 
 * `vdaf_verify_key` is the VDAF verification key for the task
+* `task_id` is the task ID
 * `agg_param` is the VDAF aggregation parameter sent in the
   `AggregationJobInitReq`
 * `report_id` is the report ID
@@ -1919,12 +1928,15 @@ Otherwise, the Leader proceeds as follows with each report:
    `Continued(prep_state)`, then the Leader computes
 
    ~~~ pseudocode
-   (state, outbound) = Vdaf.ping_pong_leader_continued(agg_param,
-                                                       state,
-                                                       inbound)
+   (state, outbound) = Vdaf.ping_pong_leader_continued(
+       "dap-11" || task_id,
+       agg_param,
+       state,
+       inbound,
+   )
    ~~~
 
-   where `inbound` is the message payload. If `outbound != None`, then the
+   where `task_id` is the task ID and `inbound` is the message payload. If `outbound != None`, then the
    Leader stores `state` and `outbound` and proceeds to another continuation
    step. If `outbound == None`, then the preparation process is complete: either
    `state == Rejected()`, in which case the Leader rejects the report and
@@ -1988,12 +2000,16 @@ Let `inbound` denote the payload of the prep step. For each report, the Helper
 computes the following:
 
 ~~~ pseudocode
-(state, outbound) = Vdaf.ping_pong_helper_continued(agg_param,
-                                                    state,
-                                                    inbound)
+(state, outbound) = Vdaf.ping_pong_helper_continued(
+    "dap-11" || task_id,
+    agg_param,
+    state,
+    inbound,
+)
 ~~~
 
-If `state == Rejected()`, then the Helper's response is
+where `task_id` is the task ID. If `state == Rejected()`, then the Helper's
+response is
 
 ~~~ tls-presentation
 variant {
