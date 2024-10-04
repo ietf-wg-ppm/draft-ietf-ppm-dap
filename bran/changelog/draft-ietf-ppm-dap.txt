@@ -178,7 +178,7 @@ Table of Contents
    12:
 
    *  Add support for "asynchronous" aggregation, based on the Leader
-      polling the Helper for collection. (*)
+      polling the Helper for completion. (*)
 
    *  Clarify the requirements around report replay protection.
 
