@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 7 April 2025                                         Cloudflare
+Expires: 10 April 2025                                        Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                          4 October 2024
+                                                          7 October 2024
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -63,7 +63,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 7 April 2025.
+   This Internet-Draft will expire on 10 April 2025.
 
 Copyright Notice
 
@@ -2066,14 +2066,15 @@ Table of Contents
           inbound,
       )
 
-       where inbound is the message payload.  If outbound != None, then
-       the Leader stores state and outbound and proceeds to another
-       continuation step.  If outbound == None, then the preparation
-       process is complete: either state == Rejected(), in which case
-       the Leader rejects the report and removes it from the candidate
-       set; or state == Finished(out_share), in which case preparation
-       is complete and the Leader stores the output share for use in the
-       collection interaction Section 4.7.
+       where task_id is the task ID and inbound is the message payload.
+       If outbound != None, then the Leader stores state and outbound
+       and proceeds to another continuation step.  If outbound == None,
+       then the preparation process is complete: either state ==
+       Rejected(), in which case the Leader rejects the report and
+       removes it from the candidate set; or state ==
+       Finished(out_share), in which case preparation is complete and
+       the Leader stores the output share for use in the collection
+       interaction Section 4.7.
 
    2.  Else if the type is "finished" and state == Finished(out_share),
        then preparation is complete and the Leader stores the output
