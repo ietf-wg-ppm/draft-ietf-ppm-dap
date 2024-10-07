@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 5 April 2025                                         Cloudflare
+Expires: 10 April 2025                                        Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                          2 October 2024
+                                                          7 October 2024
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -63,7 +63,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 5 April 2025.
+   This Internet-Draft will expire on 10 April 2025.
 
 Copyright Notice
 
@@ -1227,15 +1227,17 @@ Table of Contents
    algorithm (Section 5.1 of [VDAF]), using the report ID as the nonce:
 
    (public_share, input_shares) = Vdaf.shard(
+       "dap-11" || task_id,
        measurement, /* plaintext measurement */
        report_id,   /* nonce */
        rand,        /* randomness for sharding algorithm */
    )
 
-   The last input comprises the randomness consumed by the sharding
-   algorithm.  The sharding randomness is a random byte string of length
-   specified by the VDAF.  The Client MUST generate this using a
-   cryptographically secure random number generator.
+   where task_id is the task ID.  The last input comprises the
+   randomness consumed by the sharding algorithm.  The sharding
+   randomness is a random byte string of length specified by the VDAF.
+   The Client MUST generate this using a cryptographically secure random
+   number generator.
 
    The sharding algorithm will return two input shares.  The first input
    share returned from the sharding algorithm is considered to be the
@@ -1535,6 +1537,7 @@ Table of Contents
 
    (state, outbound) = Vdaf.ping_pong_leader_init(
        vdaf_verify_key,
+       "dap-11" || task_id,
        agg_param,
        report_id,
        public_share,
@@ -1543,6 +1546,8 @@ Table of Contents
    where:
 
    *  vdaf_verify_key is the VDAF verification key for the task
+
+   *  task_id is the task ID
 
    *  agg_param is the VDAF aggregation parameter provided by the
       Collector (see Section 4.7)
@@ -1657,11 +1662,16 @@ Table of Contents
    1.  If the inbound prep response has type "continue", then the Leader
        computes
 
-      (state, outbound) = Vdaf.ping_pong_leader_continued(agg_param,
-                                                          prev_state,
-                                                          inbound)
+      (state, outbound) = Vdaf.ping_pong_leader_continued(
+          "dap-11" || task_id,
+          agg_param,
+          prev_state,
+          inbound,
+      )
 
        where:
+
+       *  task_id is the task ID
 
        *  agg_param is the VDAF aggregation parameter provided by the
           Collector (see Section 4.7)
@@ -1780,6 +1790,7 @@ Table of Contents
 
    (state, outbound) = Vdaf.ping_pong_helper_init(
        vdaf_verify_key,
+       "dap-11" || task_id,
        agg_param,
        report_id,
        public_share,
@@ -1788,6 +1799,8 @@ Table of Contents
    where:
 
    *  vdaf_verify_key is the VDAF verification key for the task
+
+   *  task_id is the task ID
 
    *  agg_param is the VDAF aggregation parameter sent in the
       AggregationJobInitReq
@@ -2046,18 +2059,22 @@ Table of Contents
    1.  If the inbound prep response type is "continue" and the state is
        Continued(prep_state), then the Leader computes
 
-      (state, outbound) = Vdaf.ping_pong_leader_continued(agg_param,
-                                                          state,
-                                                          inbound)
+      (state, outbound) = Vdaf.ping_pong_leader_continued(
+          "dap-11" || task_id,
+          agg_param,
+          state,
+          inbound,
+      )
 
-       where inbound is the message payload.  If outbound != None, then
-       the Leader stores state and outbound and proceeds to another
-       continuation step.  If outbound == None, then the preparation
-       process is complete: either state == Rejected(), in which case
-       the Leader rejects the report and removes it from the candidate
-       set; or state == Finished(out_share), in which case preparation
-       is complete and the Leader stores the output share for use in the
-       collection interaction Section 4.7.
+       where task_id is the task ID and inbound is the message payload.
+       If outbound != None, then the Leader stores state and outbound
+       and proceeds to another continuation step.  If outbound == None,
+       then the preparation process is complete: either state ==
+       Rejected(), in which case the Leader rejects the report and
+       removes it from the candidate set; or state ==
+       Finished(out_share), in which case preparation is complete and
+       the Leader stores the output share for use in the collection
+       interaction Section 4.7.
 
    2.  Else if the type is "finished" and state == Finished(out_share),
        then preparation is complete and the Leader stores the output
@@ -2118,11 +2135,15 @@ Table of Contents
    Let inbound denote the payload of the prep step.  For each report,
    the Helper computes the following:
 
-   (state, outbound) = Vdaf.ping_pong_helper_continued(agg_param,
-                                                       state,
-                                                       inbound)
+   (state, outbound) = Vdaf.ping_pong_helper_continued(
+       "dap-11" || task_id,
+       agg_param,
+       state,
+       inbound,
+   )
 
-   If state == Rejected(), then the Helper's response is
+   where task_id is the task ID.  If state == Rejected(), then the
+   Helper's response is
 
    variant {
      ReportID report_id;
@@ -3705,9 +3726,9 @@ Table of Contents
 
    [VDAF]     Barnes, R., Cook, D., Patton, C., and P. Schoppmann,
               "Verifiable Distributed Aggregation Functions", Work in
-              Progress, Internet-Draft, draft-irtf-cfrg-vdaf-08, 20
-              November 2023, <https://datatracker.ietf.org/doc/html/
-              draft-irtf-cfrg-vdaf-08>.
+              Progress, Internet-Draft, draft-irtf-cfrg-vdaf-12, 4
+              October 2024, <https://datatracker.ietf.org/doc/html/
+              draft-irtf-cfrg-vdaf-12>.
 
 9.2.  Informative References
 
