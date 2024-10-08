@@ -2233,10 +2233,10 @@ structure includes the following:
   than the one in the corresponding `CollectionReq.query`.
 
 * `leader_encrypted_agg_share`: The Leader's aggregate share, encrypted to the
-  Collector.
+  Collector (see {{aggregate-share-encrypt}}).
 
 * `helper_encrypted_agg_share`: The Helper's aggregate share, encrypted to the
-  Collector.
+  Collector (see {{aggregate-share-encrypt}}).
 
 If obtaining aggregate shares fails, then the Leader responds to subsequent HTTP
 GET requests to the collection job with an HTTP error status and a problem
