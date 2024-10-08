@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 10 April 2025                                        Cloudflare
+Expires: 11 April 2025                                        Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                          7 October 2024
+                                                          8 October 2024
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -63,7 +63,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 10 April 2025.
+   This Internet-Draft will expire on 11 April 2025.
 
 Copyright Notice
 
@@ -2363,10 +2363,10 @@ Table of Contents
       than the one in the corresponding CollectionReq.query.
 
    *  leader_encrypted_agg_share: The Leader's aggregate share,
-      encrypted to the Collector.
+      encrypted to the Collector (see Section 4.7.4).
 
    *  helper_encrypted_agg_share: The Helper's aggregate share,
-      encrypted to the Collector.
+      encrypted to the Collector (see Section 4.7.4).
 
    If obtaining aggregate shares fails, then the Leader responds to
    subsequent HTTP GET requests to the collection job with an HTTP error
