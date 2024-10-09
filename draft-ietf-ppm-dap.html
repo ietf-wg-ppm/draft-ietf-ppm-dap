@@ -3152,11 +3152,11 @@ type of "application/dap-aggregation-job-init-req" and a body containing the
 meets the requirements in <a href="#request-authentication" class="auto internal xref">Section 3.1</a>.<a href="#section-4.6.1.1-19" class="pilcrow">¶</a></p>
 <p id="section-4.6.1.1-20">The Helper responds with HTTP status 201 Created with a body containing an
 <code>AggregationJobResp</code> (see <a href="#aggregation-helper-init" class="auto internal xref">Section 4.6.1.2</a>). If the <code>status</code> field
-is <code>finished</code>, the Leader proceeds onward. Otherwise, if the <code>status</code> field is
+is <code>ready</code>, the Leader proceeds onward. Otherwise, if the <code>status</code> field is
 <code>processing</code>, the Leader polls the aggregation job by sending GET requests to
-the URI indicated in the Location header field, until the <code>status</code> is
-<code>finished</code>. The Helper's response when processing <span class="bcp14">SHOULD</span> include a Retry-After
-header to suggest a polling interval to the Leader.<a href="#section-4.6.1.1-20" class="pilcrow">¶</a></p>
+the URI indicated in the Location header field, until the <code>status</code> is <code>ready</code>.
+The Helper's response when processing <span class="bcp14">SHOULD</span> include a Retry-After header to
+suggest a polling interval to the Leader.<a href="#section-4.6.1.1-20" class="pilcrow">¶</a></p>
 <p id="section-4.6.1.1-21">The <code>AggregationJobResp.prepare_resps</code> field must include exactly the same
 report IDs in the same order as the Leader's <code>AggregationJobInitReq</code>. Otherwise,
 the Leader <span class="bcp14">MUST</span> abort the aggregation job.<a href="#section-4.6.1.1-21" class="pilcrow">¶</a></p>
@@ -3377,14 +3377,14 @@ message is structured as follows:<a href="#section-4.6.1.2-23" class="pilcrow">�
 <pre>
 enum {
   processing(0),
-  finished(1),
+  ready(1),
 } AggregationJobStatus;
 
 struct {
   AggregationJobStatus status;
   select (AggregationJobResp.status) {
     case processing: Empty;
-    case finished:   PrepareResp prepare_resps&lt;0..2^32-1&gt;;
+    case ready:      PrepareResp prepare_resps&lt;0..2^32-1&gt;;
   };
 } AggregationJobResp;
 </pre><a href="#section-4.6.1.2-24" class="pilcrow">¶</a>
@@ -3562,10 +3562,10 @@ preparation continuation messages constructed in the previous step. The
 meets the requirements in <a href="#request-authentication" class="auto internal xref">Section 3.1</a>.<a href="#section-4.6.2.1-8" class="pilcrow">¶</a></p>
 <p id="section-4.6.2.1-9">The Helper responds with HTTP status 202 Accepted with a body containing an
 <code>AggregationJobResp</code> (see <a href="#aggregation-helper-init" class="auto internal xref">Section 4.6.1.2</a>). If the <code>status</code> field
-is <code>finished</code>, the Leader proceeds onward. Otherwise, if the <code>status</code> field is
+is <code>ready</code>, the Leader proceeds onward. Otherwise, if the <code>status</code> field is
 <code>processing</code>, the Leader polls the aggregation job by sending GET requests to
 the URI indicated in the Location header field, until the <code>status</code> is
-<code>finished</code>. The Helper's response when processing <span class="bcp14">SHOULD</span> include a Retry-After
+<code>ready</code>. The Helper's response when processing <span class="bcp14">SHOULD</span> include a Retry-After
 header to suggest a polling interval to the Leader.<a href="#section-4.6.2.1-9" class="pilcrow">¶</a></p>
 <p id="section-4.6.2.1-10">The response's <code>prepare_resps</code> <span class="bcp14">MUST</span> include exactly the same report IDs in the
 same order as the Leader's <code>AggregationJobContinueReq</code>. Otherwise, the Leader
@@ -3858,7 +3858,7 @@ structured as follows:<a href="#section-4.7.1-13" class="pilcrow">¶</a></p>
 <pre>
 enum {
   processing(0),
-  finished(1),
+  ready(1),
 } CollectionJobStatus;
 
 struct {
@@ -3873,7 +3873,7 @@ struct {
   CollectionJobStatus status;
   select (CollectionJob.status) {
     case processing: Empty;
-    case finished:   Collection;
+    case ready:      Collection;
   }
 } CollectionJobResp;
 </pre><a href="#section-4.7.1-14" class="pilcrow">¶</a>
@@ -3933,7 +3933,7 @@ requesting an aggregate share from the Helper. This avoids a race condition
 between aggregation and collection jobs that can yield trivial batch mismatch
 errors.<a href="#section-4.7.1-20" class="pilcrow">¶</a></p>
 <p id="section-4.7.1-21">Once both aggregate shares are successfully obtained, the Leader responds to
-subsequent HTTP GET requests with the <code>status</code> field set to <code>finished</code> and the
+subsequent HTTP GET requests with the <code>status</code> field set to <code>ready</code> and the
 <code>Collection</code> field populated with the encrypted aggregate shares. The Collector
 stops polling once receiving this final request.<a href="#section-4.7.1-21" class="pilcrow">¶</a></p>
 <p id="section-4.7.1-22">If obtaining aggregate shares fails, then the Leader responds to subsequent HTTP
