@@ -4929,21 +4929,21 @@ corresponding media types types:<a href="#section-8.1-1" class="pilcrow">¶</a><
 </li>
         </ul>
 <p id="section-8.1-3">Protocol message format evolution is supported through the definition of new
-formats that are identified by new media types.<a href="#section-8.1-3" class="pilcrow">¶</a></p>
-<p id="section-8.1-4">Media types for the HTTP requests are specific to this version of DAP. When a
-new major enhancement is proposed that results in newer IETF specification for
-DAP, a new set of media types need to be defined. In other words, newer
-versions of DAP will not be backward compatible with this version of DAP.<a href="#section-8.1-4" class="pilcrow">¶</a></p>
-<p id="section-8.1-5">(RFC EDITOR: Remove this paragraph.) HTTP requests with DAP media types <span class="bcp14">MAY</span>
+formats that are identified by new media types. The messages above are specific
+to this specification. When a new major enhancement is proposed that results in
+newer IETF specification for DAP, a new set of media types will be defined. In
+other words, newer versions of DAP will not be backward compatible with this
+version of DAP.<a href="#section-8.1-3" class="pilcrow">¶</a></p>
+<p id="section-8.1-4">(RFC EDITOR: Remove this paragraph.) HTTP requests with DAP media types <span class="bcp14">MAY</span>
 express an optional parameter 'version', following <span><a href="https://rfc-editor.org/rfc/rfc9110#section-8.3" class="relref">Section 8.3</a> of [<a href="#RFC9110" class="cite xref">RFC9110</a>]</span>.
 Value of this parameter indicates current draft version of the protocol the
 component is using. This <span class="bcp14">MAY</span> be used as a hint by the receiver of the request
 to do compatibility checks between client and server. For example, A report
 submission to leader from a client that supports draft-ietf-ppm-dap-09 could
-have the header <code>Media-Type: application/dap-report;version=09</code>.<a href="#section-8.1-5" class="pilcrow">¶</a></p>
-<p id="section-8.1-6">The definition for each media type is in one of the following subsections. The
+have the header <code>Media-Type: application/dap-report;version=09</code>.<a href="#section-8.1-4" class="pilcrow">¶</a></p>
+<p id="section-8.1-5">The definition for each media type is in one of the following subsections. The
 "Media Types" registry at https://www.iana.org/assignments/media-types will be
-(RFC EDITOR: replace "will be" with "has been") updated with this information.<a href="#section-8.1-6" class="pilcrow">¶</a></p>
+(RFC EDITOR: replace "will be" with "has been") updated with this information.<a href="#section-8.1-5" class="pilcrow">¶</a></p>
 <div id="applicationdap-hpke-config-list-media-type">
 <section id="section-8.1.1">
           <h4 id="name-application-dap-hpke-config">

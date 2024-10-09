@@ -3230,13 +3230,12 @@ Table of Contents
       resp"
 
    Protocol message format evolution is supported through the definition
-   of new formats that are identified by new media types.
-
-   Media types for the HTTP requests are specific to this version of
-   DAP.  When a new major enhancement is proposed that results in newer
-   IETF specification for DAP, a new set of media types need to be
-   defined.  In other words, newer versions of DAP will not be backward
-   compatible with this version of DAP.
+   of new formats that are identified by new media types.  The messages
+   above are specific to this specification.  When a new major
+   enhancement is proposed that results in newer IETF specification for
+   DAP, a new set of media types will be defined.  In other words, newer
+   versions of DAP will not be backward compatible with this version of
+   DAP.
 
    (RFC EDITOR: Remove this paragraph.)  HTTP requests with DAP media
    types MAY express an optional parameter 'version', following
