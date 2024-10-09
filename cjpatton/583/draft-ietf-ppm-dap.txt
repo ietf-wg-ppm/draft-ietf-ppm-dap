@@ -3753,7 +3753,7 @@ Table of Contents
 
    Index value:  No transformation needed.
 
-   The initial contents of this registry are the types and descriptions
+   The initial contents of this namespace are the types and descriptions
    in Table 1, with the Reference field set to RFC XXXX.
 
 9.  References
