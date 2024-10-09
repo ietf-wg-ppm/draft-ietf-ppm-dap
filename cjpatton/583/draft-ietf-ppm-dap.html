@@ -2199,6 +2199,7 @@ error (the 4xx or 5xx classes, respectively, from <span><a href="https://rfc-edi
 <p id="section-3.2-3">To facilitate automatic response to errors, this document defines the following
 standard tokens for use in the "type" field (within the DAP URN namespace
 "urn:ietf:params:ppm:dap:error:"):<a href="#section-3.2-3" class="pilcrow">¶</a></p>
+<div id="urn">
 <table class="center" id="table-1">
           <caption><a href="#table-1" class="selfRef">Table 1</a></caption>
 <thead>
@@ -2262,6 +2263,7 @@ standard tokens for use in the "type" field (within the DAP URN namespace
             </tr>
           </tbody>
         </table>
+</div>
 <p id="section-3.2-5">This list is not exhaustive. The server <span class="bcp14">MAY</span> return errors set to a URI other
 than those defined above. Servers <span class="bcp14">MUST NOT</span> use the DAP URN namespace for errors
 not listed in the appropriate IANA registry (see <a href="#urn-space" class="auto internal xref">Section 8.3</a>). The "detail"
@@ -5926,9 +5928,9 @@ Required policy <span>[<a href="#RFC8126" class="cite xref">RFC8126</a>]</span>.
           <h4 id="name-batch-modes-registry">
 <a href="#section-8.2.1" class="section-number selfRef">8.2.1. </a><a href="#name-batch-modes-registry" class="section-name selfRef">Batch Modes Registry</a>
           </h4>
-<p id="section-8.2.1-1">This document requests creation of a new registry called "Batch Mode
-Identifiers" for DAP batch modes (<a href="#batch-mode" class="auto internal xref">Section 4.2</a>). This registry should contain
-the following columns:<a href="#section-8.2.1-1" class="pilcrow">¶</a></p>
+<p id="section-8.2.1-1">A new registry will be (RFC EDITOR: change "will be" to "has been") created
+called "Batch Mode Identifiers" for DAP batch modes (<a href="#batch-mode" class="auto internal xref">Section 4.2</a>). This
+registry should contain the following columns:<a href="#section-8.2.1-1" class="pilcrow">¶</a></p>
 <span class="break"></span><dl class="dlParallel" id="section-8.2.1-2">
             <dt id="section-8.2.1-2.1">Value:</dt>
             <dd style="margin-left: 1.5em" id="section-8.2.1-2.2">
@@ -5946,7 +5948,7 @@ the following columns:<a href="#section-8.2.1-1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
 </dl>
-<p id="section-8.2.1-3">The initial contents of this registry are:<a href="#section-8.2.1-3" class="pilcrow">¶</a></p>
+<p id="section-8.2.1-3">The initial contents of this registry listed in <a href="#batch-mode-id" class="auto internal xref">Table 2</a>.<a href="#section-8.2.1-3" class="pilcrow">¶</a></p>
 <span id="name-initial-contents-of-the-bat"></span><div id="batch-mode-id">
 <table class="center" id="table-2">
             <caption>
@@ -6003,9 +6005,9 @@ this document.)<a href="#section-8.2.1-5" class="pilcrow">¶</a></p>
           <h4 id="name-upload-extension-registry">
 <a href="#section-8.2.2" class="section-number selfRef">8.2.2. </a><a href="#name-upload-extension-registry" class="section-name selfRef">Upload Extension Registry</a>
           </h4>
-<p id="section-8.2.2-1">This document requests creation of a new registry called "Upload Extension
-Identifiers" for extensions to the upload interaction (<a href="#upload-flow" class="auto internal xref">Section 4.5</a>). This
-registry should contain the following columns:<a href="#section-8.2.2-1" class="pilcrow">¶</a></p>
+<p id="section-8.2.2-1">A new registry will be (RFC EDITOR: change "will be" to "has been") created
+called "Upload Extension Identifiers" for extensions to the upload interaction
+(<a href="#upload-flow" class="auto internal xref">Section 4.5</a>). This registry should contain the following columns:<a href="#section-8.2.2-1" class="pilcrow">¶</a></p>
 <span class="break"></span><dl class="dlParallel" id="section-8.2.2-2">
             <dt id="section-8.2.2-2.1">Value:</dt>
             <dd style="margin-left: 1.5em" id="section-8.2.2-2.2">
@@ -6023,7 +6025,7 @@ registry should contain the following columns:<a href="#section-8.2.2-1" class="
 </dd>
           <dd class="break"></dd>
 </dl>
-<p id="section-8.2.2-3">The initial contents of this registry are:<a href="#section-8.2.2-3" class="pilcrow">¶</a></p>
+<p id="section-8.2.2-3">The initial contents of this registry are listed in <a href="#upload-extension-id" class="auto internal xref">Table 3</a>.<a href="#section-8.2.2-3" class="pilcrow">¶</a></p>
 <span id="name-initial-contents-of-the-upl"></span><div id="upload-extension-id">
 <table class="center" id="table-3">
             <caption>
@@ -6059,9 +6061,9 @@ this document.)<a href="#section-8.2.2-5" class="pilcrow">¶</a></p>
           <h4 id="name-prepare-error-registry">
 <a href="#section-8.2.3" class="section-number selfRef">8.2.3. </a><a href="#name-prepare-error-registry" class="section-name selfRef">Prepare Error Registry</a>
           </h4>
-<p id="section-8.2.3-1">This document requests creation of a new registry called "Prepare Error
-Identifiers" for reasons for rejecting reports during the aggregation
-interaction (<a href="#aggregation-helper-init" class="auto internal xref">Section 4.6.1.2</a>).<a href="#section-8.2.3-1" class="pilcrow">¶</a></p>
+<p id="section-8.2.3-1">A new registry will be (RFC EDITOR: change "will be" to "has been") created
+called "Prepare Error Identifiers" for reasons for rejecting reports during the
+aggregation interaction (<a href="#aggregation-helper-init" class="auto internal xref">Section 4.6.1.2</a>).<a href="#section-8.2.3-1" class="pilcrow">¶</a></p>
 <span class="break"></span><dl class="dlParallel" id="section-8.2.3-2">
             <dt id="section-8.2.3-2.1">Value:</dt>
             <dd style="margin-left: 1.5em" id="section-8.2.3-2.2">
@@ -6215,15 +6217,17 @@ Parameter Identifiers" registry, following the template in <span>[<a href="#RFC3
 <pre>
 Registry name:  dap
 
-Specification:  [[THIS DOCUMENT]]
+Specification:  RFC XXXX
 
 Repository:  http://www.iana.org/assignments/dap
 
 Index value:  No transformation needed.
 </pre><a href="#section-8.3-2" class="pilcrow">¶</a>
 </div>
-<p id="section-8.3-3">Initial contents: The types and descriptions in the table in <a href="#errors" class="auto internal xref">Section 3.2</a> above,
-with the Reference field set to point to this specification.<a href="#section-8.3-3" class="pilcrow">¶</a></p>
+<p id="section-8.3-3">The initial contents of this registry are the types and descriptions in
+<a href="#urn" class="auto internal xref">Table 1</a>, with the Reference field set to RFC XXXX. (RFC EDITOR: Replace "RFC
+XXXX" in this paragraph and above with the RFC number assigned to this
+document.)<a href="#section-8.3-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>

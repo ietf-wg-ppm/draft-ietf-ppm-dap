@@ -3630,9 +3630,9 @@ Table of Contents
 
 8.2.1.  Batch Modes Registry
 
-   This document requests creation of a new registry called "Batch Mode
-   Identifiers" for DAP batch modes (Section 4.2).  This registry should
-   contain the following columns:
+   A new registry will be (RFC EDITOR: change "will be" to "has been")
+   created called "Batch Mode Identifiers" for DAP batch modes
+   (Section 4.2).  This registry should contain the following columns:
 
    Value:  The one-byte identifier for the batch mode
 
@@ -3640,7 +3640,7 @@ Table of Contents
 
    Reference:  Where the batch mode is defined
 
-   The initial contents of this registry are:
+   The initial contents of this registry listed in Table 2.
 
           +=======+=================+===========================+
           | Value | Name            | Reference                 |
@@ -3660,9 +3660,10 @@ Table of Contents
 
 8.2.2.  Upload Extension Registry
 
-   This document requests creation of a new registry called "Upload
-   Extension Identifiers" for extensions to the upload interaction
-   (Section 4.5).  This registry should contain the following columns:
+   A new registry will be (RFC EDITOR: change "will be" to "has been")
+   created called "Upload Extension Identifiers" for extensions to the
+   upload interaction (Section 4.5).  This registry should contain the
+   following columns:
 
    Value:  The two-byte identifier for the upload extension
 
@@ -3670,7 +3671,7 @@ Table of Contents
 
    Reference:  Where the upload extension is defined
 
-   The initial contents of this registry are:
+   The initial contents of this registry are listed in Table 3.
 
                      +========+==========+===========+
                      | Value  | Name     | Reference |
@@ -3687,9 +3688,9 @@ Table of Contents
 
 8.2.3.  Prepare Error Registry
 
-   This document requests creation of a new registry called "Prepare
-   Error Identifiers" for reasons for rejecting reports during the
-   aggregation interaction (Section 4.6.1.2).
+   A new registry will be (RFC EDITOR: change "will be" to "has been")
+   created called "Prepare Error Identifiers" for reasons for rejecting
+   reports during the aggregation interaction (Section 4.6.1.2).
 
    Value:  The one-byte identifier of the prepare error
 
@@ -3738,15 +3739,16 @@ Table of Contents
 
    Registry name:  dap
 
-   Specification:  [[THIS DOCUMENT]]
+   Specification:  RFC XXXX
 
    Repository:  http://www.iana.org/assignments/dap
 
    Index value:  No transformation needed.
 
-   Initial contents: The types and descriptions in the table in
-   Section 3.2 above, with the Reference field set to point to this
-   specification.
+   The initial contents of this registry are the types and descriptions
+   in Table 1, with the Reference field set to RFC XXXX.  (RFC EDITOR:
+   Replace "RFC XXXX" in this paragraph and above with the RFC number
+   assigned to this document.)
 
 9.  References
 
