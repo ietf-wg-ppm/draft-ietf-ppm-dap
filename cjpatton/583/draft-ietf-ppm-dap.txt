@@ -3250,7 +3250,7 @@ Table of Contents
    The definition for each media type is in one of the following
    subsections.  The "Media Types" registry at
    https://www.iana.org/assignments/media-types will be (RFC EDITOR:
-   change "will be" with has been") updated with this information.
+   replace "will be" with "has been") updated with this information.
 
 8.1.1.  "application/dap-hpke-config-list" media type
 
