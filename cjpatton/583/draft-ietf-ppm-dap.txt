@@ -3246,10 +3246,10 @@ Table of Contents
    to leader from a client that supports draft-ietf-ppm-dap-09 could
    have the header Media-Type: application/dap-report;version=09.
 
-   The definition for each media type is in one of the following
-   subsections.  The "Media Types" registry at
-   https://www.iana.org/assignments/media-types will be (RFC EDITOR:
-   replace "will be" with "has been") updated with this information.
+   The "Media Types" registry at https://www.iana.org/assignments/media-
+   types will be (RFC EDITOR: replace "will be" with "has been") updated
+   to include each of these media types.  The information required for
+   each media type is listed in the remaining subsections.
 
 8.1.1.  "application/dap-hpke-config-list" media type
 
