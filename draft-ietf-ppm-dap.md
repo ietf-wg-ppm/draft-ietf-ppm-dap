@@ -1528,11 +1528,11 @@ meets the requirements in {{request-authentication}}.
 
 The Helper responds with HTTP status 201 Created with a body containing an
 `AggregationJobResp` (see {{aggregation-helper-init}}). If the `status` field
-is `finished`, the Leader proceeds onward. Otherwise, if the `status` field is
+is `ready`, the Leader proceeds onward. Otherwise, if the `status` field is
 `processing`, the Leader polls the aggregation job by sending GET requests to
-the URI indicated in the Location header field, until the `status` is
-`finished`. The Helper's response when processing SHOULD include a Retry-After
-header to suggest a polling interval to the Leader.
+the URI indicated in the Location header field, until the `status` is `ready`.
+The Helper's response when processing SHOULD include a Retry-After header to
+suggest a polling interval to the Leader.
 
 The `AggregationJobResp.prepare_resps` field must include exactly the same
 report IDs in the same order as the Leader's `AggregationJobInitReq`. Otherwise,
@@ -1732,14 +1732,14 @@ message is structured as follows:
 ~~~ tls-presentation
 enum {
   processing(0),
-  finished(1),
+  ready(1),
 } AggregationJobStatus;
 
 struct {
   AggregationJobStatus status;
   select (AggregationJobResp.status) {
     case processing: Empty;
-    case finished:   PrepareResp prepare_resps<0..2^32-1>;
+    case ready:      PrepareResp prepare_resps<0..2^32-1>;
   };
 } AggregationJobResp;
 ~~~
@@ -1900,10 +1900,10 @@ meets the requirements in {{request-authentication}}.
 
 The Helper responds with HTTP status 202 Accepted with a body containing an
 `AggregationJobResp` (see {{aggregation-helper-init}}). If the `status` field
-is `finished`, the Leader proceeds onward. Otherwise, if the `status` field is
+is `ready`, the Leader proceeds onward. Otherwise, if the `status` field is
 `processing`, the Leader polls the aggregation job by sending GET requests to
 the URI indicated in the Location header field, until the `status` is
-`finished`. The Helper's response when processing SHOULD include a Retry-After
+`ready`. The Helper's response when processing SHOULD include a Retry-After
 header to suggest a polling interval to the Leader.
 
 The response's `prepare_resps` MUST include exactly the same report IDs in the
@@ -2180,7 +2180,7 @@ structured as follows:
 ~~~ tls-presentation
 enum {
   processing(0),
-  finished(1),
+  ready(1),
 } CollectionJobStatus;
 
 struct {
@@ -2195,7 +2195,7 @@ struct {
   CollectionJobStatus status;
   select (CollectionJob.status) {
     case processing: Empty;
-    case finished:   Collection;
+    case ready:      Collection;
   }
 } CollectionJobResp;
 ~~~
@@ -2253,7 +2253,7 @@ between aggregation and collection jobs that can yield trivial batch mismatch
 errors.
 
 Once both aggregate shares are successfully obtained, the Leader responds to
-subsequent HTTP GET requests with the `status` field set to `finished` and the
+subsequent HTTP GET requests with the `status` field set to `ready` and the
 `Collection` field populated with the encrypted aggregate shares. The Collector
 stops polling once receiving this final request.
 
