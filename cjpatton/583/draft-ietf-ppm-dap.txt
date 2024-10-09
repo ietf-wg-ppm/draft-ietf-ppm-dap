@@ -3625,7 +3625,8 @@ Table of Contents
 
    This document also requests creation of a new "Distributed
    Aggregation Protocol (DAP)" page.  This page will contain several new
-   registries, described in the following sections.
+   registries, described in the following sections.  All registries are
+   administered under the Specification Required policy [RFC8126].
 
 8.2.1.  Batch Modes Registry
 
@@ -3780,6 +3781,11 @@ Table of Contents
    [RFC7807]  Nottingham, M. and E. Wilde, "Problem Details for HTTP
               APIs", RFC 7807, DOI 10.17487/RFC7807, March 2016,
               <https://www.rfc-editor.org/rfc/rfc7807>.
+
+   [RFC8126]  Cotton, M., Leiba, B., and T. Narten, "Guidelines for
+              Writing an IANA Considerations Section in RFCs", BCP 26,
+              RFC 8126, DOI 10.17487/RFC8126, June 2017,
+              <https://www.rfc-editor.org/rfc/rfc8126>.
 
    [RFC8174]  Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC
               2119 Key Words", BCP 14, RFC 8174, DOI 10.17487/RFC8174,
