@@ -3193,6 +3193,13 @@ Table of Contents
 
 8.  IANA Considerations
 
+   This document requests registry of new media types (Section 8.1),
+   creation of new codepoint registries (Section 8.2), and registration
+   of an IETF URN sub-namespace (Section 8.3).
+
+   (RFC EDITOR: In the remainder of this section, replace "RFC XXXX"
+   with the RFC number assigned to this document.)
+
 8.1.  Protocol Message Media Types
 
    This specification defines the following protocol messages, along
@@ -3240,16 +3247,10 @@ Table of Contents
    to leader from a client that supports draft-ietf-ppm-dap-09 could
    have the header Media-Type: application/dap-report;version=09.
 
-   IANA shall update (RFC EDITOR: change "shall update" to "has
-   updated") the
-
    The definition for each media type is in one of the following
    subsections.  The "Media Types" registry at
    https://www.iana.org/assignments/media-types will be (RFC EDITOR:
    change "will be" with has been") updated with this information.
-
-   (RFC EDITOR: In the remaining subsections, replace "RFC XXXX" with
-   the RFC number assigned to this document.)
 
 8.1.1.  "application/dap-hpke-config-list" media type
 
@@ -3672,9 +3673,6 @@ Table of Contents
                 Table 2: Initial contents of the Batch Mode
                            Identifiers registry.
 
-   (RFC EDITOR: Please replace "RFC XXXX" above with the RFC number
-   assigned to this document.)
-
 8.2.2.  Upload Extension Registry
 
    A new registry will be (RFC EDITOR: change "will be" to "has been")
@@ -3699,9 +3697,6 @@ Table of Contents
                         Table 3: Initial contents of
                             the Upload Extension
                            Identifiers registry.
-
-   (RFC EDITOR: Please replace "RFC XXXX" above with the RFC number
-   assigned to this document.)
 
 8.2.3.  Prepare Error Registry
 
@@ -3744,9 +3739,6 @@ Table of Contents
         Table 4: Initial contents of the Prepare Error Identifiers
                                 registry.
 
-   (RFC EDITOR: Please replace "RFC XXXX" above with the RFC number
-   assigned to this document.)
-
 8.3.  URN Sub-namespace for DAP (urn:ietf:params:ppm:dap)
 
    The following value will be (RFC EDITOR: change "will be" to "has
@@ -3763,9 +3755,7 @@ Table of Contents
    Index value:  No transformation needed.
 
    The initial contents of this registry are the types and descriptions
-   in Table 1, with the Reference field set to RFC XXXX.  (RFC EDITOR:
-   Replace "RFC XXXX" in this paragraph and above with the RFC number
-   assigned to this document.)
+   in Table 1, with the Reference field set to RFC XXXX.
 
 9.  References
 

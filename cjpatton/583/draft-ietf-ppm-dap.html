@@ -4887,7 +4887,12 @@ the input shares and defeat privacy.<a href="#section-7.7-1" class="pilcrow">¶<
       <h2 id="name-iana-considerations">
 <a href="#section-8" class="section-number selfRef">8. </a><a href="#name-iana-considerations" class="section-name selfRef">IANA Considerations</a>
       </h2>
-<div id="protocol-message-media-types">
+<p id="section-8-1">This document requests registry of new media types (<a href="#iana-media-types" class="auto internal xref">Section 8.1</a>),
+creation of new codepoint registries (<a href="#iana-codepoints" class="auto internal xref">Section 8.2</a>), and registration of
+an IETF URN sub-namespace (<a href="#urn-space" class="auto internal xref">Section 8.3</a>).<a href="#section-8-1" class="pilcrow">¶</a></p>
+<p id="section-8-2">(RFC EDITOR: In the remainder of this section, replace "RFC XXXX" with the RFC
+number assigned to this document.)<a href="#section-8-2" class="pilcrow">¶</a></p>
+<div id="iana-media-types">
 <section id="section-8.1">
         <h3 id="name-protocol-message-media-type">
 <a href="#section-8.1" class="section-number selfRef">8.1. </a><a href="#name-protocol-message-media-type" class="section-name selfRef">Protocol Message Media Types</a>
@@ -4936,12 +4941,9 @@ component is using. This <span class="bcp14">MAY</span> be used as a hint by the
 to do compatibility checks between client and server. For example, A report
 submission to leader from a client that supports draft-ietf-ppm-dap-09 could
 have the header <code>Media-Type: application/dap-report;version=09</code>.<a href="#section-8.1-5" class="pilcrow">¶</a></p>
-<p id="section-8.1-6">IANA shall update (RFC EDITOR: change "shall update" to "has updated") the<a href="#section-8.1-6" class="pilcrow">¶</a></p>
-<p id="section-8.1-7">The definition for each media type is in one of the following subsections. The
+<p id="section-8.1-6">The definition for each media type is in one of the following subsections. The
 "Media Types" registry at https://www.iana.org/assignments/media-types will be
-(RFC EDITOR: change "will be" with has been") updated with this information.<a href="#section-8.1-7" class="pilcrow">¶</a></p>
-<p id="section-8.1-8">(RFC EDITOR: In the remaining subsections, replace "RFC XXXX" with the RFC
-number assigned to this document.)<a href="#section-8.1-8" class="pilcrow">¶</a></p>
+(RFC EDITOR: change "will be" with has been") updated with this information.<a href="#section-8.1-6" class="pilcrow">¶</a></p>
 <div id="applicationdap-hpke-config-list-media-type">
 <section id="section-8.1.1">
           <h4 id="name-application-dap-hpke-config">
@@ -5898,7 +5900,7 @@ number assigned to this document.)<a href="#section-8.1-8" class="pilcrow">¶</a
 </div>
 </section>
 </div>
-<div id="dap-type-registries">
+<div id="iana-codepoints">
 <section id="section-8.2">
         <h3 id="name-dap-type-registries">
 <a href="#section-8.2" class="section-number selfRef">8.2. </a><a href="#name-dap-type-registries" class="section-name selfRef">DAP Type Registries</a>
@@ -5980,8 +5982,6 @@ registry should contain the following columns:<a href="#section-8.2.1-1" class="
             </tbody>
           </table>
 </div>
-<p id="section-8.2.1-5">(RFC EDITOR: Please replace "RFC XXXX" above with the RFC number assigned to
-this document.)<a href="#section-8.2.1-5" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="upload-extension-registry">
@@ -6036,8 +6036,6 @@ called "Upload Extension Identifiers" for extensions to the upload interaction
             </tbody>
           </table>
 </div>
-<p id="section-8.2.2-5">(RFC EDITOR: Please replace "RFC XXXX" above with the RFC number assigned to
-this document.)<a href="#section-8.2.2-5" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="prepare-error-reg">
@@ -6183,8 +6181,6 @@ aggregation interaction (<a href="#aggregation-helper-init" class="auto internal
             </tbody>
           </table>
 </div>
-<p id="section-8.2.3-5">(RFC EDITOR: Please replace "RFC XXXX" above with the RFC number assigned to
-this document.)<a href="#section-8.2.3-5" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -6209,9 +6205,7 @@ Index value:  No transformation needed.
 </pre><a href="#section-8.3-2" class="pilcrow">¶</a>
 </div>
 <p id="section-8.3-3">The initial contents of this registry are the types and descriptions in
-<a href="#urn-space-errors" class="auto internal xref">Table 1</a>, with the Reference field set to RFC XXXX. (RFC EDITOR:
-Replace "RFC XXXX" in this paragraph and above with the RFC number assigned to
-this document.)<a href="#section-8.3-3" class="pilcrow">¶</a></p>
+<a href="#urn-space-errors" class="auto internal xref">Table 1</a>, with the Reference field set to RFC XXXX.<a href="#section-8.3-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
