@@ -1743,13 +1743,13 @@ Table of Contents
    } PrepareRespState;
 
    enum {
-     batch_collected(0),
-     report_replayed(1),
-     report_dropped(2),
-     hpke_unknown_config_id(3),
-     hpke_decrypt_error(4),
-     vdaf_prep_error(5),
-     TODO_remove_me(6), /* TODO: replace/remove before RFC. */
+     reserved(0),
+     batch_collected(1),
+     report_replayed(2),
+     report_dropped(3),
+     hpke_unknown_config_id(4),
+     hpke_decrypt_error(5),
+     vdaf_prep_error(6),
      task_expired(7),
      invalid_message(8),
      report_too_early(9),
@@ -3696,16 +3696,37 @@ Table of Contents
 
    Reference:  Where the prepare error is defined
 
-   The initial contents of this registry are:
+   The initial contents of this registry are listed below in Table 4.
 
-   | Value | Name | Reference |:------|:-------|:--------| | 0x00
-   batch_collected(0), report_replayed(1), report_dropped(2),
-   hpke_unknown_config_id(3), hpke_decrypt_error(4), vdaf_prep_error(5),
-   TODO_remove_me(6), /* TODO: replace/remove before RFC. */
-   task_expired(7), invalid_message(8), report_too_early(9),
+     +=======+========================+=============================+
+     | Value | Name                   | Reference                   |
+     +=======+========================+=============================+
+     | 0x00  | reserved               | Section 4.6.1.2 of RFX XXXX |
+     +-------+------------------------+-----------------------------+
+     | 0x01  | batch_collected        | Section 4.6.1.2 of RFX XXXX |
+     +-------+------------------------+-----------------------------+
+     | 0x02  | report_replayed        | Section 4.6.1.2 of RFX XXXX |
+     +-------+------------------------+-----------------------------+
+     | 0x03  | report_dropped         | Section 4.6.1.2 of RFX XXXX |
+     +-------+------------------------+-----------------------------+
+     | 0x04  | hpke_unknown_config_id | Section 4.6.1.2 of RFX XXXX |
+     +-------+------------------------+-----------------------------+
+     | 0x05  | hpke_decrypt_error     | Section 4.6.1.2 of RFX XXXX |
+     +-------+------------------------+-----------------------------+
+     | 0x06  | vdaf_prep_error        | Section 4.6.1.2 of RFX XXXX |
+     +-------+------------------------+-----------------------------+
+     | 0x07  | task_expired           | Section 4.6.1.2 of RFX XXXX |
+     +-------+------------------------+-----------------------------+
+     | 0x08  | invalid_message        | Section 4.6.1.2 of RFX XXXX |
+     +-------+------------------------+-----------------------------+
+     | 0x09  | report_too_early       | Section 4.6.1.2 of RFX XXXX |
+     +-------+------------------------+-----------------------------+
 
-   The initial contents of this registry are as defined in
-   Section 4.6.1.2, with this document as the reference.
+        Table 4: Initial contents of the Prepare Error Identifiers
+                                registry.
+
+   (RFC EDITOR: Please replace "RFC XXXX" above with the RFC number
+   assigned to this document.)
 
 8.3.  URN Sub-namespace for DAP (urn:ietf:params:ppm:dap)
 

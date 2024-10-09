@@ -3260,13 +3260,13 @@ enum {
 } PrepareRespState;
 
 enum {
-  batch_collected(0),
-  report_replayed(1),
-  report_dropped(2),
-  hpke_unknown_config_id(3),
-  hpke_decrypt_error(4),
-  vdaf_prep_error(5),
-  TODO_remove_me(6), /* TODO: replace/remove before RFC. */
+  reserved(0),
+  batch_collected(1),
+  report_replayed(2),
+  report_dropped(3),
+  hpke_unknown_config_id(4),
+  hpke_decrypt_error(5),
+  vdaf_prep_error(6),
   task_expired(7),
   invalid_message(8),
   report_too_early(9),
@@ -6078,22 +6078,126 @@ interaction (<a href="#aggregation-helper-init" class="auto internal xref">Secti
 </dd>
           <dd class="break"></dd>
 </dl>
-<p id="section-8.2.3-3">The initial contents of this registry are:<a href="#section-8.2.3-3" class="pilcrow">¶</a></p>
-<p id="section-8.2.3-4">| Value | Name | Reference
-|:------|:-------|:--------|
-| <code>0x00</code>
-  batch_collected(0),
-  report_replayed(1),
-  report_dropped(2),
-  hpke_unknown_config_id(3),
-  hpke_decrypt_error(4),
-  vdaf_prep_error(5),
-  TODO_remove_me(6), /* TODO: replace/remove before RFC. */
-  task_expired(7),
-  invalid_message(8),
-  report_too_early(9),<a href="#section-8.2.3-4" class="pilcrow">¶</a></p>
-<p id="section-8.2.3-5">The initial contents of this registry are as defined in <a href="#aggregation-helper-init" class="auto internal xref">Section 4.6.1.2</a>,
-with this document as the reference.<a href="#section-8.2.3-5" class="pilcrow">¶</a></p>
+<p id="section-8.2.3-3">The initial contents of this registry are listed below in <a href="#prepare-error-id" class="auto internal xref">Table 4</a>.<a href="#section-8.2.3-3" class="pilcrow">¶</a></p>
+<span id="name-initial-contents-of-the-pre"></span><div id="prepare-error-id">
+<table class="center" id="table-4">
+            <caption>
+<a href="#table-4" class="selfRef">Table 4</a>:
+<a href="#name-initial-contents-of-the-pre" class="selfRef">Initial contents of the Prepare Error Identifiers registry.</a>
+            </caption>
+<thead>
+              <tr>
+                <th class="text-left" rowspan="1" colspan="1">Value</th>
+                <th class="text-left" rowspan="1" colspan="1">Name</th>
+                <th class="text-left" rowspan="1" colspan="1">Reference</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="text-left" rowspan="1" colspan="1">
+                  <code>0x00</code>
+</td>
+                <td class="text-left" rowspan="1" colspan="1">
+                  <code>reserved</code>
+</td>
+                <td class="text-left" rowspan="1" colspan="1">
+                  <a href="#aggregation-helper-init" class="auto internal xref">Section 4.6.1.2</a> of RFX XXXX</td>
+              </tr>
+              <tr>
+                <td class="text-left" rowspan="1" colspan="1">
+                  <code>0x01</code>
+</td>
+                <td class="text-left" rowspan="1" colspan="1">
+                  <code>batch_collected</code>
+</td>
+                <td class="text-left" rowspan="1" colspan="1">
+                  <a href="#aggregation-helper-init" class="auto internal xref">Section 4.6.1.2</a> of RFX XXXX</td>
+              </tr>
+              <tr>
+                <td class="text-left" rowspan="1" colspan="1">
+                  <code>0x02</code>
+</td>
+                <td class="text-left" rowspan="1" colspan="1">
+                  <code>report_replayed</code>
+</td>
+                <td class="text-left" rowspan="1" colspan="1">
+                  <a href="#aggregation-helper-init" class="auto internal xref">Section 4.6.1.2</a> of RFX XXXX</td>
+              </tr>
+              <tr>
+                <td class="text-left" rowspan="1" colspan="1">
+                  <code>0x03</code>
+</td>
+                <td class="text-left" rowspan="1" colspan="1">
+                  <code>report_dropped</code>
+</td>
+                <td class="text-left" rowspan="1" colspan="1">
+                  <a href="#aggregation-helper-init" class="auto internal xref">Section 4.6.1.2</a> of RFX XXXX</td>
+              </tr>
+              <tr>
+                <td class="text-left" rowspan="1" colspan="1">
+                  <code>0x04</code>
+</td>
+                <td class="text-left" rowspan="1" colspan="1">
+                  <code>hpke_unknown_config_id</code>
+</td>
+                <td class="text-left" rowspan="1" colspan="1">
+                  <a href="#aggregation-helper-init" class="auto internal xref">Section 4.6.1.2</a> of RFX XXXX</td>
+              </tr>
+              <tr>
+                <td class="text-left" rowspan="1" colspan="1">
+                  <code>0x05</code>
+</td>
+                <td class="text-left" rowspan="1" colspan="1">
+                  <code>hpke_decrypt_error</code>
+</td>
+                <td class="text-left" rowspan="1" colspan="1">
+                  <a href="#aggregation-helper-init" class="auto internal xref">Section 4.6.1.2</a> of RFX XXXX</td>
+              </tr>
+              <tr>
+                <td class="text-left" rowspan="1" colspan="1">
+                  <code>0x06</code>
+</td>
+                <td class="text-left" rowspan="1" colspan="1">
+                  <code>vdaf_prep_error</code>
+</td>
+                <td class="text-left" rowspan="1" colspan="1">
+                  <a href="#aggregation-helper-init" class="auto internal xref">Section 4.6.1.2</a> of RFX XXXX</td>
+              </tr>
+              <tr>
+                <td class="text-left" rowspan="1" colspan="1">
+                  <code>0x07</code>
+</td>
+                <td class="text-left" rowspan="1" colspan="1">
+                  <code>task_expired</code>
+</td>
+                <td class="text-left" rowspan="1" colspan="1">
+                  <a href="#aggregation-helper-init" class="auto internal xref">Section 4.6.1.2</a> of RFX XXXX</td>
+              </tr>
+              <tr>
+                <td class="text-left" rowspan="1" colspan="1">
+                  <code>0x08</code>
+</td>
+                <td class="text-left" rowspan="1" colspan="1">
+                  <code>invalid_message</code>
+</td>
+                <td class="text-left" rowspan="1" colspan="1">
+                  <a href="#aggregation-helper-init" class="auto internal xref">Section 4.6.1.2</a> of RFX XXXX</td>
+              </tr>
+              <tr>
+                <td class="text-left" rowspan="1" colspan="1">
+                  <code>0x09</code>
+</td>
+                <td class="text-left" rowspan="1" colspan="1">
+                  <code>report_too_early</code>
+</td>
+                <td class="text-left" rowspan="1" colspan="1">
+                  <a href="#aggregation-helper-init" class="auto internal xref">Section 4.6.1.2</a> of RFX XXXX</td>
+              </tr>
+            </tbody>
+          </table>
+</div>
+<p id="section-8.2.3-5">(RFC EDITOR: Please replace "RFC XXXX" above with the RFC number assigned to
+this document.)<a href="#section-8.2.3-5" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
