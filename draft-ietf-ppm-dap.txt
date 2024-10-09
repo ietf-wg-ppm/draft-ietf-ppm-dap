@@ -1735,13 +1735,13 @@ Table of Contents
    } PrepareRespState;
 
    enum {
-     batch_collected(0),
-     report_replayed(1),
-     report_dropped(2),
-     hpke_unknown_config_id(3),
-     hpke_decrypt_error(4),
-     vdaf_prep_error(5),
-     TODO_remove_me(6), /* TODO: replace/remove before RFC. */
+     reserved(0),
+     batch_collected(1),
+     report_replayed(2),
+     report_dropped(3),
+     hpke_unknown_config_id(4),
+     hpke_decrypt_error(5),
+     vdaf_prep_error(6),
      task_expired(7),
      invalid_message(8),
      report_too_early(9),
