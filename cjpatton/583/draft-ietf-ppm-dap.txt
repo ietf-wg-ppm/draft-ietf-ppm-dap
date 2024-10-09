@@ -765,8 +765,7 @@ Table of Contents
    classes, respectively, from Section 15 of [RFC9110]).
 
    To facilitate automatic response to errors, this document defines the
-   following standard tokens for use in the "type" field (within the DAP
-   URN namespace "urn:ietf:params:ppm:dap:error:"):
+   following standard tokens for use in the "type" field:
 
      +============================+==================================+
      | Type                       | Description                      |
