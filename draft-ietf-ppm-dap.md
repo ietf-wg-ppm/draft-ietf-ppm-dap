@@ -1,6 +1,6 @@
 ---
 title: "Distributed Aggregation Protocol for Privacy Preserving Measurement"
-abbrev: DAP-PPM
+abbrev: DAP
 docname: draft-ietf-ppm-dap-latest
 category: std
 submissiontype: IETF
