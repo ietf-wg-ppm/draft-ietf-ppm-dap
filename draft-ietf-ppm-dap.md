@@ -725,8 +725,7 @@ a problem detail object, the HTTP status code MUST indicate a client or server
 error (the 4xx or 5xx classes, respectively, from {{Section 15 of !RFC9110}}).
 
 To facilitate automatic response to errors, this document defines the following
-standard tokens for use in the "type" field (within the DAP URN namespace
-"urn:ietf:params:ppm:dap:error:"):
+standard tokens for use in the "type" field:
 
 | Type                       | Description                                                                                  |
 |:---------------------------|:---------------------------------------------------------------------------------------------|
@@ -743,6 +742,7 @@ standard tokens for use in the "type" field (within the DAP URN namespace
 | unauthorizedRequest        | Authentication of an HTTP request failed (see {{request-authentication}}). |
 | stepMismatch               | The Aggregators disagree on the current step of the DAP aggregation protocol. |
 | batchOverlap               | A request's query includes reports that were previously collected in a different batch. |
+{: #urn-space-errors = "DAP errors. All are scoped to the errors sub-namespace of the DAP URN, e.g., urn:ietf:params:ppm:dap:error:invalidMessage."}
 
 This list is not exhaustive. The server MAY return errors set to a URI other
 than those defined above. Servers MUST NOT use the DAP URN namespace for errors
@@ -853,8 +853,6 @@ This document defines the following batch modes:
 ~~~ tls-presentation
 enum {
   reserved(0), /* Reserved for testing purposes */
-  time_interval(1),
-  leader_selected(2),
   (255)
 } BatchMode;
 ~~~
@@ -898,6 +896,13 @@ The parameters pertaining to specific batch modes are described in
 
 ### Time-interval Batch Mode {#time-interval-batch-mode}
 
+~~~ tls-presentation
+enum {
+  time_interval(1),
+  (255)
+} BatchMode;
+~~~
+
 The time-interval batch mode is designed to support applications in which
 reports are collected into batches grouped by an interval of time. The Collector
 specifies a "batch interval" that determines the time range for reports included
@@ -915,6 +920,13 @@ decide to issue queries out-of-order. In addition, the Collector may need to
 vary the duration to adjust to changing report upload rates.
 
 ### Leader-selected Batch Mode {#leader-selected-batch-mode}
+
+~~~ tls-presentation
+enum {
+  leader_selected(2),
+  (255)
+} BatchMode;
+~~~
 
 The leader-selected batch mode is used to support applications in which it is
 acceptable for reports to be batched in an arbitrary fashion by the Leader. Each
@@ -1242,7 +1254,7 @@ struct {
 } Extension;
 
 enum {
-  TBD(0),
+  reserved(0),
   (65535)
 } ExtensionType;
 ~~~
@@ -2997,7 +3009,14 @@ the input shares and defeat privacy.
 
 # IANA Considerations
 
-## Protocol Message Media Types
+This document requests registry of new media types ({{iana-media-types}}),
+creation of new codepoint registries ({{iana-codepoints}}), and registration of
+an IETF URN sub-namespace ({{urn-space}}).
+
+(RFC EDITOR: In the remainder of this section, replace "RFC XXXX" with the RFC
+number assigned to this document.)
+
+## Protocol Message Media Types {#iana-media-types}
 
 This specification defines the following protocol messages, along with their
 corresponding media types types:
@@ -3007,38 +3026,31 @@ corresponding media types types:
 - AggregationJobInitReq {{leader-init}}: "application/dap-aggregation-job-init-req"
 - AggregationJobResp {{aggregation-helper-init}}: "application/dap-aggregation-job-resp"
 - AggregationJobContinueReq {{aggregation-leader-continuation}}: "application/dap-aggregation-job-continue-req"
-- AggregateShareReq {{collect-flow}}: "application/dap-aggregate-share-req"
-- AggregateShare {{collect-flow}}: "application/dap-aggregate-share"
-- CollectionJobReq {{collect-flow}}: "application/dap-collection-job-req"
-- CollectionJobResp {{collect-flow}}: "application/dap-collection-job-resp"
-
-The definition for each media type is in the following subsections.
+- AggregateShareReq {{collect-aggregate}}: "application/dap-aggregate-share-req"
+- AggregateShare {{collect-aggregate}}: "application/dap-aggregate-share"
+- CollectionJobReq {{collect-init}}: "application/dap-collection-job-req"
+- CollectionJobResp {{collect-init}}: "application/dap-collection-job-resp"
 
 Protocol message format evolution is supported through the definition of new
-formats that are identified by new media types.
+formats that are identified by new media types. The messages above are specific
+to this specification. When a new major enhancement is proposed that results in
+newer IETF specification for DAP, a new set of media types will be defined. In
+other words, newer versions of DAP will not be backward compatible with this
+version of DAP.
 
-IANA shall update (RFC EDITOR: change "shall update" to "has updated") the
-"Media Types" registry at https://www.iana.org/assignments/media-types
-with the registration information in this section for all media types
-listed above.
-
-> TODO Solicit review of these allocations from domain experts.
-
-### Message versioning
-
-Media types for the HTTP requests are specific to this version of DAP. When a
-new major enhancement is proposed that results in newer IETF specification
-for DAP, a new set of media types need to be defined. In other words, newer
-versions of DAP will not be backward compatible with this version of DAP.
-
-(NOTE TO RFC EDITOR: Remove this paragraph.) HTTP requests with DAP media types
-MAY express an optional parameter 'version', following {{Section 8.3 of !RFC9110}}.
+(RFC EDITOR: Remove this paragraph.) HTTP requests with DAP media types MAY
+express an optional parameter 'version', following {{Section 8.3 of !RFC9110}}.
 Value of this parameter indicates current draft version of the protocol the
 component is using. This MAY be used as a hint by the receiver of the request
 to do compatibility checks between client and server.
 For example, A report submission to leader from a client that supports
 draft-ietf-ppm-dap-09 could have the header
 `Media-Type: application/dap-report;version=09`.
+
+The "Media Types" registry at https://www.iana.org/assignments/media-types will
+be (RFC EDITOR: replace "will be" with "has been") updated to include each of
+these media types. The information required for each media type is listed in
+the remaining subsections.
 
 ### "application/dap-hpke-config-list" media type
 
@@ -3064,7 +3076,7 @@ Encoding considerations:
 
 Security considerations:
 
-: see {{task-configuration}}
+: see {{upload-flow}} of the published specification
 
 Interoperability considerations:
 
@@ -3072,7 +3084,7 @@ Interoperability considerations:
 
 Published specification:
 
-: this specification
+: RFC XXXX
 
 Applications that use this media type:
 
@@ -3093,7 +3105,7 @@ Additional information:
 
 Person and email address to contact for further information:
 
-: see Authors' Addresses section
+: see Authors' Addresses section of the published specification
 
 Intended usage:
 
@@ -3105,7 +3117,7 @@ Restrictions on usage:
 
 Author:
 
-: see Authors' Addresses section
+: see Authors' Addresses section of the published specification
 
 Change controller:
 
@@ -3135,7 +3147,7 @@ Encoding considerations:
 
 Security considerations:
 
-: see {{upload-request}}
+: see {{upload-flow}} of the published specification
 
 Interoperability considerations:
 
@@ -3143,7 +3155,7 @@ Interoperability considerations:
 
 Published specification:
 
-: this specification
+: RFC XXXX
 
 Applications that use this media type:
 
@@ -3164,7 +3176,7 @@ Additional information:
 
 Person and email address to contact for further information:
 
-: see Authors' Addresses section
+: see Authors' Addresses section of the published specification
 
 Intended usage:
 
@@ -3176,7 +3188,7 @@ Restrictions on usage:
 
 Author:
 
-: see Authors' Addresses section
+: see Authors' Addresses section of the published specification
 
 Change controller:
 
@@ -3206,7 +3218,7 @@ Encoding considerations:
 
 Security considerations:
 
-: see {{collect-flow}}
+: see {{aggregate-flow}} of the published specification
 
 Interoperability considerations:
 
@@ -3214,7 +3226,7 @@ Interoperability considerations:
 
 Published specification:
 
-: this specification
+: RFC XXXX
 
 Applications that use this media type:
 
@@ -3235,7 +3247,7 @@ Additional information:
 
 Person and email address to contact for further information:
 
-: see Authors' Addresses section
+: see Authors' Addresses section of the published specification
 
 Intended usage:
 
@@ -3247,7 +3259,7 @@ Restrictions on usage:
 
 Author:
 
-: see Authors' Addresses section
+: see Authors' Addresses section of the published specification
 
 Change controller:
 
@@ -3277,7 +3289,7 @@ Encoding considerations:
 
 Security considerations:
 
-: see {{collect-flow}}
+: see {{aggregate-flow}} of the published specification
 
 Interoperability considerations:
 
@@ -3285,7 +3297,7 @@ Interoperability considerations:
 
 Published specification:
 
-: this specification
+: RFC XXXX
 
 Applications that use this media type:
 
@@ -3306,7 +3318,7 @@ Additional information:
 
 Person and email address to contact for further information:
 
-: see Authors' Addresses section
+: see Authors' Addresses section of the published specification
 
 Intended usage:
 
@@ -3318,7 +3330,7 @@ Restrictions on usage:
 
 Author:
 
-: see Authors' Addresses section
+: see Authors' Addresses section of the published specification
 
 Change controller:
 
@@ -3348,7 +3360,7 @@ Encoding considerations:
 
 Security considerations:
 
-: see {{collect-flow}}
+: see {{aggregate-flow}} of the published specification
 
 Interoperability considerations:
 
@@ -3356,7 +3368,7 @@ Interoperability considerations:
 
 Published specification:
 
-: this specification
+: RFC XXXX
 
 Applications that use this media type:
 
@@ -3377,7 +3389,7 @@ Additional information:
 
 Person and email address to contact for further information:
 
-: see Authors' Addresses section
+: see Authors' Addresses section of the published specification
 
 Intended usage:
 
@@ -3389,7 +3401,7 @@ Restrictions on usage:
 
 Author:
 
-: see Authors' Addresses section
+: see Authors' Addresses section of the published specification
 
 Change controller:
 
@@ -3419,7 +3431,7 @@ Encoding considerations:
 
 Security considerations:
 
-: see {{collect-flow}}
+: see {{collect-flow}} of the published specification
 
 Interoperability considerations:
 
@@ -3427,7 +3439,7 @@ Interoperability considerations:
 
 Published specification:
 
-: this specification
+: RFC XXXX
 
 Applications that use this media type:
 
@@ -3448,7 +3460,7 @@ Additional information:
 
 Person and email address to contact for further information:
 
-: see Authors' Addresses section
+: see Authors' Addresses section of the published specification
 
 Intended usage:
 
@@ -3460,7 +3472,7 @@ Restrictions on usage:
 
 Author:
 
-: see Authors' Addresses section
+: see Authors' Addresses section of the published specification
 
 Change controller:
 
@@ -3490,7 +3502,7 @@ Encoding considerations:
 
 Security considerations:
 
-: see {{collect-flow}}
+: see {{collect-flow}} of the published specification
 
 Interoperability considerations:
 
@@ -3498,7 +3510,7 @@ Interoperability considerations:
 
 Published specification:
 
-: this specification
+: RFC XXXX
 
 Applications that use this media type:
 
@@ -3519,7 +3531,7 @@ Additional information:
 
 Person and email address to contact for further information:
 
-: see Authors' Addresses section
+: see Authors' Addresses section of the published specification
 
 Intended usage:
 
@@ -3531,7 +3543,7 @@ Restrictions on usage:
 
 Author:
 
-: see Authors' Addresses section
+: see Authors' Addresses section of the published specification
 
 Change controller:
 
@@ -3561,7 +3573,7 @@ Encoding considerations:
 
 Security considerations:
 
-: see {{collect-flow}}
+: see {{collect-flow}} of the published specification
 
 Interoperability considerations:
 
@@ -3569,7 +3581,7 @@ Interoperability considerations:
 
 Published specification:
 
-: this specification
+: RFC XXXX
 
 Applications that use this media type:
 
@@ -3590,7 +3602,7 @@ Additional information:
 
 Person and email address to contact for further information:
 
-: see Authors' Addresses section
+: see Authors' Addresses section of the published specification
 
 Intended usage:
 
@@ -3602,7 +3614,7 @@ Restrictions on usage:
 
 Author:
 
-: see Authors' Addresses section
+: see Authors' Addresses section of the published specification
 
 Change controller:
 
@@ -3632,7 +3644,7 @@ Encoding considerations:
 
 Security considerations:
 
-: see {{collect-flow}}
+: see {{collect-flow}} of the published specification
 
 Interoperability considerations:
 
@@ -3640,7 +3652,7 @@ Interoperability considerations:
 
 Published specification:
 
-: this specification
+: RFC XXXX
 
 Applications that use this media type:
 
@@ -3661,7 +3673,7 @@ Additional information:
 
 Person and email address to contact for further information:
 
-: see Authors' Addresses section
+: see Authors' Addresses section of the published specification
 
 Intended usage:
 
@@ -3673,49 +3685,95 @@ Restrictions on usage:
 
 Author:
 
-: see Authors' Addresses section
+: see Authors' Addresses section of the published specification
 
 Change controller:
 
 : IESG
 
-## DAP Type Registries
+## DAP Type Registries {#iana-codepoints}
 
 This document also requests creation of a new "Distributed Aggregation Protocol
-Parameters" page. This page will contain several new registries, described in the
-following sections.
+(DAP)" page. This page will contain several new registries, described in the
+following sections. All registries are administered under the Specification
+Required policy {{!RFC8126}}.
 
 ### Batch Modes Registry {#batch-mode-reg}
 
-This document requests creation of a new registry for Batch Modes. This registry
-should contain the following columns:
+A new registry will be (RFC EDITOR: change "will be" to "has been") created
+called "Batch Mode Identifiers" for DAP batch modes ({{batch-mode}}). This
+registry should contain the following columns:
 
-> TODO Define how we want to structure this registry.
+Value:
+: The one-byte identifier for the batch mode
+
+Name:
+: The name of the batch mode
+
+Reference:
+: Where the batch mode is defined
+
+The initial contents of this registry listed in {{batch-mode-id}}.
+
+| Value  | Name              | Reference                                  |
+|:-------|:------------------|:-------------------------------------------|
+| `0x00` | `reserved`        | {{batch-mode}} of RFC XXXX                 |
+| `0x01` | `time_interval`   | {{time-interval-batch-mode}} of RFC XXXX   |
+| `0x02` | `leader_selected` | {{leader-selected-batch-mode}} of RFC XXXX |
+{: #batch-mode-id title="Initial contents of the Batch Mode Identifiers registry."}
 
 ### Upload Extension Registry
 
-This document requests creation of a new registry for extensions to the upload
-interaction ({{upload-flow}}). This registry should contain the following
-columns:
+A new registry will be (RFC EDITOR: change "will be" to "has been") created
+called "Upload Extension Identifiers" for extensions to the upload interaction
+({{upload-flow}}). This registry should contain the following columns:
 
-> TODO Define how we want to structure this registry.
+Value:
+: The two-byte identifier for the upload extension
+
+Name:
+: The name of the upload extension
+
+Reference:
+: Where the upload extension is defined
+
+The initial contents of this registry are listed in {{upload-extension-id}}.
+
+| Value    | Name              | Reference |
+|:---------|:------------------|:----------|
+| `0x0000` | `reserved`        | RFC XXXX  |
+{: #upload-extension-id title="Initial contents of the Upload Extension Identifiers registry."}
 
 ### Prepare Error Registry {#prepare-error-reg}
 
-This document requests creation of a new registry for PrepareError values. This
-registry should contain the following columns:
-
-Name:
-: The name of the PrepareError value
+A new registry will be (RFC EDITOR: change "will be" to "has been") created
+called "Prepare Error Identifiers" for reasons for rejecting reports during the
+aggregation interaction ({{aggregation-helper-init}}).
 
 Value:
-: The 1-byte value of the PrepareError value
+: The one-byte identifier of the prepare error
+
+Name:
+: The name of the prepare error
 
 Reference:
-: A reference to where the PrepareError type is defined.
+: Where the prepare error is defined
 
-The initial contents of this registry are as defined in {{aggregation-helper-init}},
-with this document as the reference.
+The initial contents of this registry are listed below in {{prepare-error-id}}.
+
+| Value  | Name                     | Reference                               |
+|:-------|:-------------------------|:----------------------------------------|
+| `0x00` | `reserved`               | {{aggregation-helper-init}} of RFX XXXX |
+| `0x01` | `batch_collected`        | {{aggregation-helper-init}} of RFX XXXX |
+| `0x02` | `report_replayed`        | {{aggregation-helper-init}} of RFX XXXX |
+| `0x03` | `report_dropped`         | {{aggregation-helper-init}} of RFX XXXX |
+| `0x04` | `hpke_unknown_config_id` | {{aggregation-helper-init}} of RFX XXXX |
+| `0x05` | `hpke_decrypt_error`     | {{aggregation-helper-init}} of RFX XXXX |
+| `0x06` | `vdaf_prep_error`        | {{aggregation-helper-init}} of RFX XXXX |
+| `0x07` | `task_expired`           | {{aggregation-helper-init}} of RFX XXXX |
+| `0x08` | `invalid_message`        | {{aggregation-helper-init}} of RFX XXXX |
+| `0x09` | `report_too_early`       | {{aggregation-helper-init}} of RFX XXXX |
+{: #prepare-error-id title="Initial contents of the Prepare Error Identifiers registry."}
 
 ## URN Sub-namespace for DAP (urn:ietf:params:ppm:dap) {#urn-space}
 
@@ -3726,15 +3784,14 @@ Parameter Identifiers" registry, following the template in {{!RFC3553}}:
 ~~~
 Registry name:  dap
 
-Specification:  [[THIS DOCUMENT]]
+Specification:  RFC XXXX
 
 Repository:  http://www.iana.org/assignments/dap
 
 Index value:  No transformation needed.
 ~~~
 
-Initial contents: The types and descriptions in the table in {{errors}} above,
-with the Reference field set to point to this specification.
-
+The initial contents of this namespace are the types and descriptions in
+{{urn-space-errors}}, with the Reference field set to RFC XXXX.
 
 --- back
