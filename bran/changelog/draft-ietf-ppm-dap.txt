@@ -193,20 +193,21 @@ Table of Contents
 
    *  Remove support for per-task HPKE configurations. (*)
 
-   *  Remove the max_batch_size parameter of the fixed-size query type.
-
    *  Rename "query type" to "batch mode", to align the name of this
       configuration value with its functionality.
 
    *  Rename the "fixed-size" batch mode to "leader-selected", to align
       the name with the behavior of this query type.
 
+   *  Remove the max_batch_size parameter of the "fixed-size" batch
+      mode.
+
    *  Restore the part_batch_selector field of the Collection structure,
       which was removed in draft 11, as it is required to decrypt
       collection results in some cases. (*)
 
    *  Update PrepareError allocations in order to remove an unused value
-      and to reserve the zero value as unused. (*)
+      and to reserve the zero value for testing. (*)
 
    *  Document distributed-system and synchronization concerns in the
       operational considerations section.
@@ -214,10 +215,10 @@ Table of Contents
    *  Document additional storage and runtime requirements in the
       operational considerations section.
 
-   *  Document deviations from the RFC 8446 presentation language for
-      structures described in this specification.
+   *  Document deviations from the presentation language of Section 3 of
+      [RFC8446] for structures described in this specification.
 
-   *  Clarify that differential privacy mitigations will help with
+   *  Clarify that differential privacy mitigations can help with
       privacy, rather than robustness, in the operational considerations
       section.
 
