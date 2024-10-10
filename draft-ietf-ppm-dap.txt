@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 12 April 2025                                        Cloudflare
+Expires: 13 April 2025                                        Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                          9 October 2024
+                                                         10 October 2024
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -63,7 +63,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 12 April 2025.
+   This Internet-Draft will expire on 13 April 2025.
 
 Copyright Notice
 
@@ -177,17 +177,52 @@ Table of Contents
 
    12:
 
-   *  Remove the max_batch_size parameter of the fixed-size query type.
+   *  Bump draft-irtf-cfrg-vdaf-08 to 12 [VDAF], and specify the newly-
+      defined application context string to be a concatenation of the
+      DAP version in use with the task ID. (*)
 
-   *  Rename the "fixed-size" query type to "leader-selected", to align
-      the name with the behavior of this query type.
+   *  Add support for "asynchronous" aggregation, based on the Leader
+      polling the Helper for the result of each step of aggregation. (*)
+
+   *  Update collection semantics to match the new aggregation semantics
+      introduced in support of asynchronous aggregation. (*)
+
+   *  Clarify the requirements around report replay protection, defining
+      when and how report IDs must be checked and stored in order to
+      correctly detect replays.
+
+   *  Remove support for per-task HPKE configurations. (*)
 
    *  Rename "query type" to "batch mode", to align the name of this
       configuration value with its functionality.
 
+   *  Rename the "fixed-size" batch mode to "leader-selected", to align
+      the name with the behavior of this query type.
+
+   *  Remove the max_batch_size parameter of the "fixed-size" batch
+      mode.
+
    *  Restore the part_batch_selector field of the Collection structure,
       which was removed in draft 11, as it is required to decrypt
       collection results in some cases. (*)
+
+   *  Update PrepareError allocations in order to remove an unused value
+      and to reserve the zero value for testing. (*)
+
+   *  Document distributed-system and synchronization concerns in the
+      operational considerations section.
+
+   *  Document additional storage and runtime requirements in the
+      operational considerations section.
+
+   *  Document deviations from the presentation language of Section 3 of
+      [RFC8446] for structures described in this specification.
+
+   *  Clarify that differential privacy mitigations can help with
+      privacy, rather than robustness, in the operational considerations
+      section.
+
+   *  Bump version tag from "dap-11" to "dap-12". (*)
 
    11:
 
@@ -1227,7 +1262,7 @@ Table of Contents
    algorithm (Section 5.1 of [VDAF]), using the report ID as the nonce:
 
    (public_share, input_shares) = Vdaf.shard(
-       "dap-11" || task_id,
+       "dap-12" || task_id,
        measurement, /* plaintext measurement */
        report_id,   /* nonce */
        rand,        /* randomness for sharding algorithm */
@@ -1260,7 +1295,7 @@ Table of Contents
    plaintext_input_share as follows:
 
    enc, payload = SealBase(pk,
-     "dap-11 input share" || 0x01 || server_role,
+     "dap-12 input share" || 0x01 || server_role,
      input_share_aad, plaintext_input_share)
 
    where pk is the Aggregator's public key; 0x01 represents the Role of
@@ -1537,7 +1572,7 @@ Table of Contents
 
    (state, outbound) = Vdaf.ping_pong_leader_init(
        vdaf_verify_key,
-       "dap-11" || task_id,
+       "dap-12" || task_id,
        agg_param,
        report_id,
        public_share,
@@ -1663,7 +1698,7 @@ Table of Contents
        computes
 
       (state, outbound) = Vdaf.ping_pong_leader_continued(
-          "dap-11" || task_id,
+          "dap-12" || task_id,
           agg_param,
           prev_state,
           inbound,
@@ -1790,7 +1825,7 @@ Table of Contents
 
    (state, outbound) = Vdaf.ping_pong_helper_init(
        vdaf_verify_key,
-       "dap-11" || task_id,
+       "dap-12" || task_id,
        agg_param,
        report_id,
        public_share,
@@ -1909,7 +1944,7 @@ Table of Contents
    and attempts decryption of the payload with the following procedure:
 
    plaintext_input_share = OpenBase(encrypted_input_share.enc, sk,
-     "dap-11 input share" || 0x01 || server_role,
+     "dap-12 input share" || 0x01 || server_role,
      input_share_aad, encrypted_input_share.payload)
 
    where sk is the HPKE secret key, 0x01 represents the Role of the
@@ -2046,7 +2081,7 @@ Table of Contents
        Continued(prep_state), then the Leader computes
 
       (state, outbound) = Vdaf.ping_pong_leader_continued(
-          "dap-11" || task_id,
+          "dap-12" || task_id,
           agg_param,
           state,
           inbound,
@@ -2122,7 +2157,7 @@ Table of Contents
    the Helper computes the following:
 
    (state, outbound) = Vdaf.ping_pong_helper_continued(
-       "dap-11" || task_id,
+       "dap-12" || task_id,
        agg_param,
        state,
        inbound,
@@ -2541,7 +2576,7 @@ Table of Contents
 
    (enc, payload) = SealBase(
        pk,
-       "dap-11 aggregate share" || server_role || 0x00,
+       "dap-12 aggregate share" || server_role || 0x00,
        agg_share_aad,
        agg_share)
 
@@ -2575,7 +2610,7 @@ Table of Contents
    agg_share = OpenBase(
        enc_share.enc,
        sk,
-       "dap-11 aggregate share" || server_role || 0x00,
+       "dap-12 aggregate share" || server_role || 0x00,
        agg_share_aad,
        enc_share.payload)
 
