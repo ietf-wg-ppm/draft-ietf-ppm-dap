@@ -214,8 +214,8 @@ Table of Contents
    *  Document additional storage and runtime requirements in the
       operational considerations section.
 
-   *  Document deviations to the RFC 8446 presentation language used in
-      this specification.
+   *  Document deviations from the RFC 8446 presentation language for
+      structures described in this specification.
 
    *  Clarify that differential privacy mitigations will help with
       privacy, rather than robustness, in the operational considerations
