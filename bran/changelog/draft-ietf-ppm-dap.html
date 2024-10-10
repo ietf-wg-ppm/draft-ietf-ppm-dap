@@ -1034,7 +1034,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <table class="ears">
 <thead><tr>
 <td class="left">Internet-Draft</td>
-<td class="center">DAP-PPM</td>
+<td class="center">DAP</td>
 <td class="right">October 2024</td>
 </tr></thead>
 <tfoot><tr>
@@ -1381,10 +1381,10 @@ revealing any individual user's data.<a href="#section-abstract-1" class="pilcro
                     <p id="section-toc.1-1.8.2.1.2.8.1"><a href="#section-8.1.8" class="auto internal xref">8.1.8</a>.  <a href="#name-application-dap-aggregate-sh" class="internal xref">"application/dap-aggregate-share" media type</a></p>
 </li>
                   <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8.2.1.2.9">
-                    <p id="section-toc.1-1.8.2.1.2.9.1"><a href="#section-8.1.9" class="auto internal xref">8.1.9</a>.  <a href="#name-application-dap-collect-req" class="internal xref">"application/dap-collect-req" media type</a></p>
+                    <p id="section-toc.1-1.8.2.1.2.9.1"><a href="#section-8.1.9" class="auto internal xref">8.1.9</a>.  <a href="#name-application-dap-collection-" class="internal xref">"application/dap-collection-job-req" media type</a></p>
 </li>
                   <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8.2.1.2.10">
-                    <p id="section-toc.1-1.8.2.1.2.10.1"><a href="#section-8.1.10" class="auto internal xref">8.1.10</a>. <a href="#name-application-dap-collection-" class="internal xref">"application/dap-collection" media type</a></p>
+                    <p id="section-toc.1-1.8.2.1.2.10.1"><a href="#section-8.1.10" class="auto internal xref">8.1.10</a>. <a href="#name-application-dap-collection-j" class="internal xref">"application/dap-collection-job-resp" media type</a></p>
 </li>
                 </ul>
 </li>
@@ -3195,11 +3195,11 @@ type of "application/dap-aggregation-job-init-req" and a body containing the
 meets the requirements in <a href="#request-authentication" class="auto internal xref">Section 3.1</a>.<a href="#section-4.6.1.1-19" class="pilcrow">¶</a></p>
 <p id="section-4.6.1.1-20">The Helper responds with HTTP status 201 Created with a body containing an
 <code>AggregationJobResp</code> (see <a href="#aggregation-helper-init" class="auto internal xref">Section 4.6.1.2</a>). If the <code>status</code> field
-is <code>finished</code>, the Leader proceeds onward. Otherwise, if the <code>status</code> field is
+is <code>ready</code>, the Leader proceeds onward. Otherwise, if the <code>status</code> field is
 <code>processing</code>, the Leader polls the aggregation job by sending GET requests to
-the URI indicated in the Location header field, until the <code>status</code> is
-<code>finished</code>. The Helper's response when processing <span class="bcp14">SHOULD</span> include a Retry-After
-header to suggest a polling interval to the Leader.<a href="#section-4.6.1.1-20" class="pilcrow">¶</a></p>
+the URI indicated in the Location header field, until the <code>status</code> is <code>ready</code>.
+The Helper's response when processing <span class="bcp14">SHOULD</span> include a Retry-After header to
+suggest a polling interval to the Leader.<a href="#section-4.6.1.1-20" class="pilcrow">¶</a></p>
 <p id="section-4.6.1.1-21">The <code>AggregationJobResp.prepare_resps</code> field must include exactly the same
 report IDs in the same order as the Leader's <code>AggregationJobInitReq</code>. Otherwise,
 the Leader <span class="bcp14">MUST</span> abort the aggregation job.<a href="#section-4.6.1.1-21" class="pilcrow">¶</a></p>
@@ -3289,13 +3289,13 @@ enum {
 } PrepareRespState;
 
 enum {
-  batch_collected(0),
-  report_replayed(1),
-  report_dropped(2),
-  hpke_unknown_config_id(3),
-  hpke_decrypt_error(4),
-  vdaf_prep_error(5),
-  TODO_remove_me(6), /* TODO: replace/remove before RFC. */
+  reserved(0),
+  batch_collected(1),
+  report_replayed(2),
+  report_dropped(3),
+  hpke_unknown_config_id(4),
+  hpke_decrypt_error(5),
+  vdaf_prep_error(6),
   task_expired(7),
   invalid_message(8),
   report_too_early(9),
@@ -3420,14 +3420,14 @@ message is structured as follows:<a href="#section-4.6.1.2-23" class="pilcrow">�
 <pre>
 enum {
   processing(0),
-  finished(1),
+  ready(1),
 } AggregationJobStatus;
 
 struct {
   AggregationJobStatus status;
   select (AggregationJobResp.status) {
     case processing: Empty;
-    case finished:   PrepareResp prepare_resps&lt;0..2^32-1&gt;;
+    case ready:      PrepareResp prepare_resps&lt;0..2^32-1&gt;;
   };
 } AggregationJobResp;
 </pre><a href="#section-4.6.1.2-24" class="pilcrow">¶</a>
@@ -3530,7 +3530,7 @@ input share <span class="bcp14">MUST</span> be marked as invalid with error <cod
 <ul class="normal">
 <li class="normal" id="section-4.6.1.4-3.6.2.1">
                     <p id="section-4.6.1.4-3.6.2.1.1">Implementation note: The Leader considers a batch to be collected once it
-has completed a collection job for a CollectionReq message from the
+has completed a collection job for a CollectionJobReq message from the
 Collector; the Helper considers a batch to be collected once it has
 responded to an <code>AggregateShareReq</code> message from the Leader. A batch is
 determined by query (<a href="#batch-mode" class="auto internal xref">Section 4.2</a>) conveyed in these messages. Queries
@@ -3605,10 +3605,10 @@ preparation continuation messages constructed in the previous step. The
 meets the requirements in <a href="#request-authentication" class="auto internal xref">Section 3.1</a>.<a href="#section-4.6.2.1-8" class="pilcrow">¶</a></p>
 <p id="section-4.6.2.1-9">The Helper responds with HTTP status 202 Accepted with a body containing an
 <code>AggregationJobResp</code> (see <a href="#aggregation-helper-init" class="auto internal xref">Section 4.6.1.2</a>). If the <code>status</code> field
-is <code>finished</code>, the Leader proceeds onward. Otherwise, if the <code>status</code> field is
+is <code>ready</code>, the Leader proceeds onward. Otherwise, if the <code>status</code> field is
 <code>processing</code>, the Leader polls the aggregation job by sending GET requests to
 the URI indicated in the Location header field, until the <code>status</code> is
-<code>finished</code>. The Helper's response when processing <span class="bcp14">SHOULD</span> include a Retry-After
+<code>ready</code>. The Helper's response when processing <span class="bcp14">SHOULD</span> include a Retry-After
 header to suggest a polling interval to the Leader.<a href="#section-4.6.2.1-9" class="pilcrow">¶</a></p>
 <p id="section-4.6.2.1-10">The response's <code>prepare_resps</code> <span class="bcp14">MUST</span> include exactly the same report IDs in the
 same order as the Leader's <code>AggregationJobContinueReq</code>. Otherwise, the Leader
@@ -3850,14 +3850,14 @@ opaque CollectionJobID[16];
 <p id="section-4.7.1-3">This ID value <span class="bcp14">MUST</span> be unique within the scope of the corresponding DAP task.<a href="#section-4.7.1-3" class="pilcrow">¶</a></p>
 <p id="section-4.7.1-4">To initiate the collection job, the collector issues a PUT request to
 <code>{leader}/tasks/{task-id}/collection_jobs/{collection-job-id}</code>. The body of the
-request has media type "application/dap-collect-req", and it is structured as
-follows:<a href="#section-4.7.1-4" class="pilcrow">¶</a></p>
+request has media type "application/dap-collection-job-req", and it is structured
+as follows:<a href="#section-4.7.1-4" class="pilcrow">¶</a></p>
 <div class="lang-tls-presentation sourcecode" id="section-4.7.1-5">
 <pre>
 struct {
   Query query;
   opaque agg_param&lt;0..2^32-1&gt;; /* VDAF aggregation parameter */
-} CollectionReq;
+} CollectionJobReq;
 </pre><a href="#section-4.7.1-5" class="pilcrow">¶</a>
 </div>
 <p id="section-4.7.1-6">The named parameters are:<a href="#section-4.7.1-6" class="pilcrow">¶</a></p>
@@ -3883,32 +3883,88 @@ known until this point. In certain situations it is possible to predict the
 aggregation parameter in advance. For example, for Prio3 the only valid
 aggregation parameter is the empty string. For these reasons, the collection
 job is handled asynchronously.<a href="#section-4.7.1-9" class="pilcrow">¶</a></p>
-<p id="section-4.7.1-10">Upon receipt of a <code>CollectionReq</code>, the Leader begins by checking that it
+<p id="section-4.7.1-10">Upon receipt of a <code>CollectionJobReq</code>, the Leader begins by checking that it
 recognizes the task ID in the request path. If not, it <span class="bcp14">MUST</span> abort with error
 <code>unrecognizedTask</code>.<a href="#section-4.7.1-10" class="pilcrow">¶</a></p>
 <p id="section-4.7.1-11">The Leader <span class="bcp14">MAY</span> further validate the request according to the requirements in
 <a href="#batch-validation" class="auto internal xref">Section 4.7.5</a> and abort with the indicated error, though some conditions
 such as the number of valid reports may not be verifiable while handling the
-CollectionReq message, and the batch will have to be re-validated later on
+<code>CollectionJobReq</code> message, and the batch will have to be re-validated later on
 regardless.<a href="#section-4.7.1-11" class="pilcrow">¶</a></p>
-<p id="section-4.7.1-12">If the Leader finds the CollectionReq to be valid, it immediately responds with
-HTTP status 201.<a href="#section-4.7.1-12" class="pilcrow">¶</a></p>
-<p id="section-4.7.1-13">The Leader then begins working with the Helper to aggregate the reports
+<p id="section-4.7.1-12">Changing a collection job's parameters is illegal, so further requests to
+<code>PUT /tasks/{task-id}/collection_jobs/{collection-job-id}</code> for the same
+<code>collection-job-id</code> but with a different <code>CollectionJobReq</code> in the body <span class="bcp14">MUST</span>
+fail with an HTTP client error status code.<a href="#section-4.7.1-12" class="pilcrow">¶</a></p>
+<p id="section-4.7.1-13">The Leader responds to <code>CollectionJobReq</code>s with a <code>CollectionJobResp</code>, which is
+structured as follows:<a href="#section-4.7.1-13" class="pilcrow">¶</a></p>
+<div class="lang-tls-presentation sourcecode" id="section-4.7.1-14">
+<pre>
+enum {
+  processing(0),
+  ready(1),
+} CollectionJobStatus;
+
+struct {
+  PartialBatchSelector part_batch_selector;
+  uint64 report_count;
+  Interval interval;
+  HpkeCiphertext leader_encrypted_agg_share;
+  HpkeCiphertext helper_encrypted_agg_share;
+} Collection;
+
+struct {
+  CollectionJobStatus status;
+  select (CollectionJob.status) {
+    case processing: Empty;
+    case ready:      Collection;
+  }
+} CollectionJobResp;
+</pre><a href="#section-4.7.1-14" class="pilcrow">¶</a>
+</div>
+<p id="section-4.7.1-15">The body's media type is "application/dap-collection-job-resp". The <code>Collection</code>
+structure includes the following:<a href="#section-4.7.1-15" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-4.7.1-16.1">
+              <p id="section-4.7.1-16.1.1"><code>part_batch_selector</code>: Information used to bind the aggregate result to the
+query. For leader-selected tasks, this includes the batch ID assigned to the
+batch by the Leader. The indicated batch mode <span class="bcp14">MUST</span> match the task's batch
+mode.<a href="#section-4.7.1-16.1.1" class="pilcrow">¶</a></p>
+</li>
+            <li class="normal" id="section-4.7.1-16.2">
+              <p id="section-4.7.1-16.2.1"><code>report_count</code>: The number of reports included in the batch.<a href="#section-4.7.1-16.2.1" class="pilcrow">¶</a></p>
+</li>
+            <li class="normal" id="section-4.7.1-16.3">
+              <p id="section-4.7.1-16.3.1"><code>interval</code>: The smallest interval of time that contains the timestamps of all
+reports included in the batch, such that the interval's start and duration are
+both multiples of the task's <code>time_precision</code> parameter. Note that in the case
+of a time-interval query (see <a href="#batch-mode" class="auto internal xref">Section 4.2</a>), this interval can be smaller
+than the one in the corresponding <code>CollectionJobReq.query</code>.<a href="#section-4.7.1-16.3.1" class="pilcrow">¶</a></p>
+</li>
+            <li class="normal" id="section-4.7.1-16.4">
+              <p id="section-4.7.1-16.4.1"><code>leader_encrypted_agg_share</code>: The Leader's aggregate share, encrypted to the
+Collector (see <a href="#aggregate-share-encrypt" class="auto internal xref">Section 4.7.4</a>).<a href="#section-4.7.1-16.4.1" class="pilcrow">¶</a></p>
+</li>
+            <li class="normal" id="section-4.7.1-16.5">
+              <p id="section-4.7.1-16.5.1"><code>helper_encrypted_agg_share</code>: The Helper's aggregate share, encrypted to the
+Collector (see <a href="#aggregate-share-encrypt" class="auto internal xref">Section 4.7.4</a>).<a href="#section-4.7.1-16.5.1" class="pilcrow">¶</a></p>
+</li>
+          </ul>
+<p id="section-4.7.1-17">If the Leader finds the <code>CollectionJobReq</code> to be valid, it immediately responds
+with HTTP status 201 Created with a body containing a <code>CollectionJobResp</code> with
+the <code>status</code> field set to <code>processing</code>. The Leader <span class="bcp14">SHOULD</span> include a Retry-After
+header field to suggest a polling interval to the Collector.<a href="#section-4.7.1-17" class="pilcrow">¶</a></p>
+<p id="section-4.7.1-18">After receiving the response to its <code>CollectionJobReq</code>, the Collector
+periodically makes HTTP GET requests
+<code>/tasks/{task-id}/collection_jobs/{collection-job-id}</code> to check on the status
+of the collect job and eventually obtain the result. The Leader responds to GET
+requests with HTTP status 200 and the <code>status</code> field reflecting the current
+state of the job. When the collection job is <code>processing</code>, the response <span class="bcp14">SHOULD</span>
+include a Retry-After header field to suggest a polling interval to the
+Collector.<a href="#section-4.7.1-18" class="pilcrow">¶</a></p>
+<p id="section-4.7.1-19">The Leader then begins working with the Helper to aggregate the reports
 satisfying the query (or continues this process, depending on the VDAF) as
-described in <a href="#aggregate-flow" class="auto internal xref">Section 4.6</a>.<a href="#section-4.7.1-13" class="pilcrow">¶</a></p>
-<p id="section-4.7.1-14">Changing a collection job's parameters is illegal, so further requests to
-<code>PUT /tasks/{tasks}/collection_jobs/{collection-job-id}</code> for the same
-<code>collection-job-id</code> but with a different <code>CollectionReq</code> in the body <span class="bcp14">MUST</span> fail
-with an HTTP client error status code.<a href="#section-4.7.1-14" class="pilcrow">¶</a></p>
-<p id="section-4.7.1-15">After receiving the response to its <code>CollectionReq</code>, the Collector makes an
-HTTP GET request to
-<code>{leader}/tasks/{task-id}/collection_jobs/{collection-job-id}</code> to check on the
-status of the collect job and eventually obtain the result. If the collection job is not
-finished yet, the Leader responds with HTTP status 202 Accepted. The response
-<span class="bcp14">MAY</span> include a Retry-After header field to suggest a polling interval to the
-Collector.<a href="#section-4.7.1-15" class="pilcrow">¶</a></p>
-<p id="section-4.7.1-16">Asynchronously from any request from the Collector, the Leader attempts to run
-the collection job. It first checks whether it can construct a batch for the
+described in <a href="#aggregate-flow" class="auto internal xref">Section 4.6</a>.<a href="#section-4.7.1-19" class="pilcrow">¶</a></p>
+<p id="section-4.7.1-20">The Leader first checks whether it can construct a batch for the
 collection job by applying the requirements in <a href="#batch-validation" class="auto internal xref">Section 4.7.5</a>. If so, then
 the Leader obtains the Helper's aggregate share following the aggregate-share
 request flow described in <a href="#collect-aggregate" class="auto internal xref">Section 4.7.2</a>. If not, it either aborts the
@@ -3918,57 +3974,19 @@ that overlaps with the batch and aggregation parameter for the collection job,
 the Leader <span class="bcp14">MUST</span> first complete the aggregation job before proceeding and
 requesting an aggregate share from the Helper. This avoids a race condition
 between aggregation and collection jobs that can yield trivial batch mismatch
-errors.<a href="#section-4.7.1-16" class="pilcrow">¶</a></p>
-<p id="section-4.7.1-17">Once both aggregate shares are successfully obtained, the Leader responds to
-subsequent HTTP GET requests to the collection job with HTTP status code 200 OK
-and a body consisting of a <code>Collection</code>:<a href="#section-4.7.1-17" class="pilcrow">¶</a></p>
-<div class="lang-tls-presentation sourcecode" id="section-4.7.1-18">
-<pre>
-struct {
-  PartialBatchSelector part_batch_selector;
-  uint64 report_count;
-  Interval interval;
-  HpkeCiphertext leader_encrypted_agg_share;
-  HpkeCiphertext helper_encrypted_agg_share;
-} Collection;
-</pre><a href="#section-4.7.1-18" class="pilcrow">¶</a>
-</div>
-<p id="section-4.7.1-19">The body's media type is "application/dap-collection". The <code>Collection</code>
-structure includes the following:<a href="#section-4.7.1-19" class="pilcrow">¶</a></p>
-<ul class="normal">
-<li class="normal" id="section-4.7.1-20.1">
-              <p id="section-4.7.1-20.1.1"><code>part_batch_selector</code>: Information used to bind the aggregate result to the
-query. For leader-selected tasks, this includes the batch ID assigned to the
-batch by the Leader. The indicated batch mode <span class="bcp14">MUST</span> match the task's batch
-mode.<a href="#section-4.7.1-20.1.1" class="pilcrow">¶</a></p>
-</li>
-            <li class="normal" id="section-4.7.1-20.2">
-              <p id="section-4.7.1-20.2.1"><code>report_count</code>: The number of reports included in the batch.<a href="#section-4.7.1-20.2.1" class="pilcrow">¶</a></p>
-</li>
-            <li class="normal" id="section-4.7.1-20.3">
-              <p id="section-4.7.1-20.3.1"><code>interval</code>: The smallest interval of time that contains the timestamps of all
-reports included in the batch, such that the interval's start and duration are
-both multiples of the task's <code>time_precision</code> parameter. Note that in the case
-of a time-interval query (see <a href="#batch-mode" class="auto internal xref">Section 4.2</a>), this interval can be smaller
-than the one in the corresponding <code>CollectionReq.query</code>.<a href="#section-4.7.1-20.3.1" class="pilcrow">¶</a></p>
-</li>
-            <li class="normal" id="section-4.7.1-20.4">
-              <p id="section-4.7.1-20.4.1"><code>leader_encrypted_agg_share</code>: The Leader's aggregate share, encrypted to the
-Collector.<a href="#section-4.7.1-20.4.1" class="pilcrow">¶</a></p>
-</li>
-            <li class="normal" id="section-4.7.1-20.5">
-              <p id="section-4.7.1-20.5.1"><code>helper_encrypted_agg_share</code>: The Helper's aggregate share, encrypted to the
-Collector.<a href="#section-4.7.1-20.5.1" class="pilcrow">¶</a></p>
-</li>
-          </ul>
-<p id="section-4.7.1-21">If obtaining aggregate shares fails, then the Leader responds to subsequent HTTP
+errors.<a href="#section-4.7.1-20" class="pilcrow">¶</a></p>
+<p id="section-4.7.1-21">Once both aggregate shares are successfully obtained, the Leader responds to
+subsequent HTTP GET requests with the <code>status</code> field set to <code>ready</code> and the
+<code>Collection</code> field populated with the encrypted aggregate shares. The Collector
+stops polling once receiving this final request.<a href="#section-4.7.1-21" class="pilcrow">¶</a></p>
+<p id="section-4.7.1-22">If obtaining aggregate shares fails, then the Leader responds to subsequent HTTP
 GET requests to the collection job with an HTTP error status and a problem
-document as described in <a href="#errors" class="auto internal xref">Section 3.2</a>.<a href="#section-4.7.1-21" class="pilcrow">¶</a></p>
-<p id="section-4.7.1-22">The Leader <span class="bcp14">MAY</span> respond with HTTP status 204 No Content to requests to a
-collection job if the results have been deleted.<a href="#section-4.7.1-22" class="pilcrow">¶</a></p>
-<p id="section-4.7.1-23">The Collector can send an HTTP DELETE request to the collection job, which
+document as described in <a href="#errors" class="auto internal xref">Section 3.2</a>.<a href="#section-4.7.1-22" class="pilcrow">¶</a></p>
+<p id="section-4.7.1-23">The Leader <span class="bcp14">MAY</span> respond with HTTP status 204 No Content to requests to a
+collection job if the results have been deleted.<a href="#section-4.7.1-23" class="pilcrow">¶</a></p>
+<p id="section-4.7.1-24">The Collector can send an HTTP DELETE request to the collection job, which
 indicates to the Leader that it can abandon the collection job and discard all
-state related to it.<a href="#section-4.7.1-23" class="pilcrow">¶</a></p>
+state related to it.<a href="#section-4.7.1-24" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="collect-aggregate">
@@ -4025,8 +4043,8 @@ Helper <span class="bcp14">MUST</span> abort with "invalidMessage".<a href="#sec
               <p id="section-4.7.2-5.2.1"><code>agg_param</code>: The opaque aggregation parameter for the VDAF being executed.
 This value <span class="bcp14">MUST</span> match the AggregationJobInitReq message for each aggregation
 job used to compute the aggregate shares (see <a href="#leader-init" class="auto internal xref">Section 4.6.1.1</a>) and the
-aggregation parameter indicated by the Collector in the CollectionReq message
-(see <a href="#collect-init" class="auto internal xref">Section 4.7.1</a>).<a href="#section-4.7.2-5.2.1" class="pilcrow">¶</a></p>
+aggregation parameter indicated by the Collector in the CollectionJobReq
+message (see <a href="#collect-init" class="auto internal xref">Section 4.7.1</a>).<a href="#section-4.7.2-5.2.1" class="pilcrow">¶</a></p>
 </li>
             <li class="normal" id="section-4.7.2-5.3">
               <p id="section-4.7.2-5.3.1"><code>report_count</code>: The number number of reports included in the batch.<a href="#section-4.7.2-5.3.1" class="pilcrow">¶</a></p>
@@ -4930,10 +4948,10 @@ corresponding media types types:<a href="#section-8.1-1" class="pilcrow">¶</a><
             <p id="section-8.1-2.7.1">AggregateShare <a href="#collect-flow" class="auto internal xref">Section 4.7</a>: "application/dap-aggregate-share"<a href="#section-8.1-2.7.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-2.8">
-            <p id="section-8.1-2.8.1">CollectionReq <a href="#collect-flow" class="auto internal xref">Section 4.7</a>: "application/dap-collect-req"<a href="#section-8.1-2.8.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-2.8.1">CollectionJobReq <a href="#collect-flow" class="auto internal xref">Section 4.7</a>: "application/dap-collection-job-req"<a href="#section-8.1-2.8.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.1-2.9">
-            <p id="section-8.1-2.9.1">Collection <a href="#collect-flow" class="auto internal xref">Section 4.7</a>: "application/dap-collection"<a href="#section-8.1-2.9.1" class="pilcrow">¶</a></p>
+            <p id="section-8.1-2.9.1">CollectionJobResp <a href="#collect-flow" class="auto internal xref">Section 4.7</a>: "application/dap-collection-job-resp"<a href="#section-8.1-2.9.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 <p id="section-8.1-3">The definition for each media type is in the following subsections.<a href="#section-8.1-3" class="pilcrow">¶</a></p>
@@ -5709,10 +5727,10 @@ draft-ietf-ppm-dap-09 could have the header
 </dl>
 </section>
 </div>
-<div id="applicationdap-collect-req-media-type">
+<div id="applicationdap-collection-job-req-media-type">
 <section id="section-8.1.9">
-          <h4 id="name-application-dap-collect-req">
-<a href="#section-8.1.9" class="section-number selfRef">8.1.9. </a><a href="#name-application-dap-collect-req" class="section-name selfRef">"application/dap-collect-req" media type</a>
+          <h4 id="name-application-dap-collection-">
+<a href="#section-8.1.9" class="section-number selfRef">8.1.9. </a><a href="#name-application-dap-collection-" class="section-name selfRef">"application/dap-collection-job-req" media type</a>
           </h4>
 <span class="break"></span><dl class="dlParallel" id="section-8.1.9-1">
             <dt id="section-8.1.9-1.1">Type name:</dt>
@@ -5722,7 +5740,7 @@ draft-ietf-ppm-dap-09 could have the header
             <dd class="break"></dd>
 <dt id="section-8.1.9-1.3">Subtype name:</dt>
             <dd style="margin-left: 1.5em" id="section-8.1.9-1.4">
-              <p id="section-8.1.9-1.4.1">dap-collect-req<a href="#section-8.1.9-1.4.1" class="pilcrow">¶</a></p>
+              <p id="section-8.1.9-1.4.1">dap-collection-job-req<a href="#section-8.1.9-1.4.1" class="pilcrow">¶</a></p>
 </dd>
             <dd class="break"></dd>
 <dt id="section-8.1.9-1.5">Required parameters:</dt>
@@ -5815,10 +5833,10 @@ draft-ietf-ppm-dap-09 could have the header
 </dl>
 </section>
 </div>
-<div id="applicationdap-collection-media-type">
+<div id="applicationdap-collection-job-resp-media-type">
 <section id="section-8.1.10">
-          <h4 id="name-application-dap-collection-">
-<a href="#section-8.1.10" class="section-number selfRef">8.1.10. </a><a href="#name-application-dap-collection-" class="section-name selfRef">"application/dap-collection" media type</a>
+          <h4 id="name-application-dap-collection-j">
+<a href="#section-8.1.10" class="section-number selfRef">8.1.10. </a><a href="#name-application-dap-collection-j" class="section-name selfRef">"application/dap-collection-job-resp" media type</a>
           </h4>
 <span class="break"></span><dl class="dlParallel" id="section-8.1.10-1">
             <dt id="section-8.1.10-1.1">Type name:</dt>
@@ -5828,7 +5846,7 @@ draft-ietf-ppm-dap-09 could have the header
             <dd class="break"></dd>
 <dt id="section-8.1.10-1.3">Subtype name:</dt>
             <dd style="margin-left: 1.5em" id="section-8.1.10-1.4">
-              <p id="section-8.1.10-1.4.1">dap-collection<a href="#section-8.1.10-1.4.1" class="pilcrow">¶</a></p>
+              <p id="section-8.1.10-1.4.1">dap-collection-job-resp<a href="#section-8.1.10-1.4.1" class="pilcrow">¶</a></p>
 </dd>
             <dd class="break"></dd>
 <dt id="section-8.1.10-1.5">Required parameters:</dt>
