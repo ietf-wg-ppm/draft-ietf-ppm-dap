@@ -152,17 +152,50 @@ input is ever seen in the clear by any aggregator.
 
 12:
 
-- Remove the `max_batch_size` parameter of the fixed-size query type.
+- Bump draft-irtf-cfrg-vdaf-08 to 12 {{!VDAF}}, and specify the newly-defined
+  application context string to be a concatenation of the DAP version in use
+  with the task ID. (\*)
 
-- Rename the "fixed-size" query type to "leader-selected", to align the name
-  with the behavior of this query type.
+- Add support for "asynchronous" aggregation, based on the Leader polling the
+  Helper for the result of each step of aggregation. (\*)
+
+- Update collection semantics to match the new aggregation semantics introduced
+  in support of asynchronous aggregation. (\*)
+
+- Clarify the requirements around report replay protection, defining when and
+  how report IDs must be checked and stored in order to correctly detect
+  replays.
+
+- Remove support for per-task HPKE configurations. (\*)
 
 - Rename "query type" to "batch mode", to align the name of this configuration
   value with its functionality.
 
+- Rename the "fixed-size" batch mode to "leader-selected", to align the name
+  with the behavior of this query type.
+
+- Remove the `max_batch_size` parameter of the "fixed-size" batch mode.
+
 - Restore the `part_batch_selector` field of the `Collection` structure, which
   was removed in draft 11, as it is required to decrypt collection results in
   some cases. (\*)
+
+- Update `PrepareError` allocations in order to remove an unused value and to
+  reserve the zero value for testing. (\*)
+
+- Document distributed-system and synchronization concerns in the operational
+  considerations section.
+
+- Document additional storage and runtime requirements in the operational
+  considerations section.
+
+- Document deviations from the presentation language of {{Section 3 of
+  !RFC8446}} for structures described in this specification.
+
+- Clarify that differential privacy mitigations can help with privacy, rather
+  than robustness, in the operational considerations section.
+
+- Bump version tag from "dap-11" to "dap-12". (\*)
 
 11:
 
@@ -1125,7 +1158,7 @@ of !VDAF}}), using the report ID as the nonce:
 
 ~~~ pseudocode
 (public_share, input_shares) = Vdaf.shard(
-    "dap-11" || task_id,
+    "dap-12" || task_id,
     measurement, /* plaintext measurement */
     report_id,   /* nonce */
     rand,        /* randomness for sharding algorithm */
@@ -1159,7 +1192,7 @@ follows:
 
 ~~~ pseudocode
 enc, payload = SealBase(pk,
-  "dap-11 input share" || 0x01 || server_role,
+  "dap-12 input share" || 0x01 || server_role,
   input_share_aad, plaintext_input_share)
 ~~~
 
@@ -1422,7 +1455,7 @@ Next, for each report the Leader executes the following procedure:
 ~~~ pseudocode
 (state, outbound) = Vdaf.ping_pong_leader_init(
     vdaf_verify_key,
-    "dap-11" || task_id,
+    "dap-12" || task_id,
     agg_param,
     report_id,
     public_share,
@@ -1544,7 +1577,7 @@ Otherwise, the Leader proceeds as follows with each report:
 
    ~~~ pseudocode
    (state, outbound) = Vdaf.ping_pong_leader_continued(
-       "dap-11" || task_id,
+       "dap-12" || task_id,
        agg_param,
        prev_state,
        inbound,
@@ -1669,7 +1702,7 @@ For all other reports it initializes the VDAF prep state as follows (let
 ~~~ pseudocode
 (state, outbound) = Vdaf.ping_pong_helper_init(
     vdaf_verify_key,
-    "dap-11" || task_id,
+    "dap-12" || task_id,
     agg_param,
     report_id,
     public_share,
@@ -1789,7 +1822,7 @@ attempts decryption of the payload with the following procedure:
 
 ~~~ pseudocode
 plaintext_input_share = OpenBase(encrypted_input_share.enc, sk,
-  "dap-11 input share" || 0x01 || server_role,
+  "dap-12 input share" || 0x01 || server_role,
   input_share_aad, encrypted_input_share.payload)
 ~~~
 
@@ -1917,7 +1950,7 @@ Otherwise, the Leader proceeds as follows with each report:
 
    ~~~ pseudocode
    (state, outbound) = Vdaf.ping_pong_leader_continued(
-       "dap-11" || task_id,
+       "dap-12" || task_id,
        agg_param,
        state,
        inbound,
@@ -1989,7 +2022,7 @@ computes the following:
 
 ~~~ pseudocode
 (state, outbound) = Vdaf.ping_pong_helper_continued(
-    "dap-11" || task_id,
+    "dap-12" || task_id,
     agg_param,
     state,
     inbound,
@@ -2411,7 +2444,7 @@ done as follows:
 ~~~ pseudocode
 (enc, payload) = SealBase(
     pk,
-    "dap-11 aggregate share" || server_role || 0x00,
+    "dap-12 aggregate share" || server_role || 0x00,
     agg_share_aad,
     agg_share)
 ~~~
@@ -2445,7 +2478,7 @@ batch selector, decryption works as follows:
 agg_share = OpenBase(
     enc_share.enc,
     sk,
-    "dap-11 aggregate share" || server_role || 0x00,
+    "dap-12 aggregate share" || server_role || 0x00,
     agg_share_aad,
     enc_share.payload)
 ~~~
