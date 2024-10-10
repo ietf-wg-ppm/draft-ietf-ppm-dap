@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 12 April 2025                                        Cloudflare
+Expires: 13 April 2025                                        Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                          9 October 2024
+                                                         10 October 2024
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -63,7 +63,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 12 April 2025.
+   This Internet-Draft will expire on 13 April 2025.
 
 Copyright Notice
 
@@ -177,33 +177,49 @@ Table of Contents
 
    12:
 
-   *  Bump draft-irtf-cfrg-vdaf-08 to 12 [VDAF]. (*)
+   *  Bump draft-irtf-cfrg-vdaf-08 to 12 [VDAF], and specify the newly-
+      defined application context string to be a concatenation of the
+      DAP version in use with the task ID. (*)
 
    *  Add support for "asynchronous" aggregation, based on the Leader
-      polling the Helper for completion. (*)
+      polling the Helper for the result of each step of aggregation. (*)
 
    *  Update collection semantics to match the new aggregation semantics
       introduced in support of asynchronous aggregation. (*)
 
-   *  Clarify the requirements around report replay protection.
+   *  Clarify the requirements around report replay protection, defining
+      when and how report IDs must be checked and stored in order to
+      correctly detect replays.
+
+   *  Remove support for per-task HPKE configurations. (*)
 
    *  Remove the max_batch_size parameter of the fixed-size query type.
-
-   *  Rename the "fixed-size" query type to "leader-selected", to align
-      the name with the behavior of this query type.
 
    *  Rename "query type" to "batch mode", to align the name of this
       configuration value with its functionality.
 
+   *  Rename the "fixed-size" batch mode to "leader-selected", to align
+      the name with the behavior of this query type.
+
    *  Restore the part_batch_selector field of the Collection structure,
       which was removed in draft 11, as it is required to decrypt
       collection results in some cases. (*)
+
+   *  Update PrepareError allocations in order to remove an unused value
+      and to reserve the zero value as unused. (*)
 
    *  Document distributed-system and synchronization concerns in the
       operational considerations section.
 
    *  Document additional storage and runtime requirements in the
       operational considerations section.
+
+   *  Document deviations to the RFC 8446 presentation language used in
+      this specification.
+
+   *  Clarify that differential privacy mitigations will help with
+      privacy, rather than robustness, in the operational considerations
+      section.
 
    *  Bump version tag from "dap-11" to "dap-12". (*)
 
