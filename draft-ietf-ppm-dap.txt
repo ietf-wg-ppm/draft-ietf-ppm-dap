@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 13 April 2025                                        Cloudflare
+Expires: 18 April 2025                                        Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                         10 October 2024
+                                                         15 October 2024
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -63,7 +63,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 13 April 2025.
+   This Internet-Draft will expire on 18 April 2025.
 
 Copyright Notice
 
@@ -137,17 +137,16 @@ Table of Contents
      7.7.  Infrastructure Diversity
    8.  IANA Considerations
      8.1.  Protocol Message Media Types
-       8.1.1.  Message versioning
-       8.1.2.  "application/dap-hpke-config-list" media type
-       8.1.3.  "application/dap-report" media type
-       8.1.4.  "application/dap-aggregation-job-init-req" media type
-       8.1.5.  "application/dap-aggregation-job-resp" media type
-       8.1.6.  "application/dap-aggregation-job-continue-req" media
+       8.1.1.  "application/dap-hpke-config-list" media type
+       8.1.2.  "application/dap-report" media type
+       8.1.3.  "application/dap-aggregation-job-init-req" media type
+       8.1.4.  "application/dap-aggregation-job-resp" media type
+       8.1.5.  "application/dap-aggregation-job-continue-req" media
                type
-       8.1.7.  "application/dap-aggregate-share-req" media type
-       8.1.8.  "application/dap-aggregate-share" media type
-       8.1.9.  "application/dap-collection-job-req" media type
-       8.1.10. "application/dap-collection-job-resp" media type
+       8.1.6.  "application/dap-aggregate-share-req" media type
+       8.1.7.  "application/dap-aggregate-share" media type
+       8.1.8.  "application/dap-collection-job-req" media type
+       8.1.9.  "application/dap-collection-job-resp" media type
      8.2.  DAP Type Registries
        8.2.1.  Batch Modes Registry
        8.2.2.  Upload Extension Registry
@@ -800,8 +799,7 @@ Table of Contents
    classes, respectively, from Section 15 of [RFC9110]).
 
    To facilitate automatic response to errors, this document defines the
-   following standard tokens for use in the "type" field (within the DAP
-   URN namespace "urn:ietf:params:ppm:dap:error:"):
+   following standard tokens for use in the "type" field:
 
      +============================+==================================+
      | Type                       | Description                      |
@@ -973,8 +971,6 @@ Table of Contents
 
    enum {
      reserved(0), /* Reserved for testing purposes */
-     time_interval(1),
-     leader_selected(2),
      (255)
    } BatchMode;
 
@@ -1018,6 +1014,11 @@ Table of Contents
 
 4.2.1.  Time-interval Batch Mode
 
+   enum {
+     time_interval(1),
+     (255)
+   } BatchMode;
+
    The time-interval batch mode is designed to support applications in
    which reports are collected into batches grouped by an interval of
    time.  The Collector specifies a "batch interval" that determines the
@@ -1036,6 +1037,11 @@ Table of Contents
    duration to adjust to changing report upload rates.
 
 4.2.2.  Leader-selected Batch Mode
+
+   enum {
+     leader_selected(2),
+     (255)
+   } BatchMode;
 
    The leader-selected batch mode is used to support applications in
    which it is acceptable for reports to be batched in an arbitrary
@@ -1381,7 +1387,7 @@ Table of Contents
    } Extension;
 
    enum {
-     TBD(0),
+     reserved(0),
      (65535)
    } ExtensionType;
 
@@ -3222,6 +3228,13 @@ Table of Contents
 
 8.  IANA Considerations
 
+   This document requests registry of new media types (Section 8.1),
+   creation of new codepoint registries (Section 8.2), and registration
+   of an IETF URN sub-namespace (Section 8.3).
+
+   (RFC EDITOR: In the remainder of this section, replace "RFC XXXX"
+   with the RFC number assigned to this document.)
+
 8.1.  Protocol Message Media Types
 
    This specification defines the following protocol messages, along
@@ -3240,38 +3253,27 @@ Table of Contents
    *  AggregationJobContinueReq Section 4.6.2.1: "application/dap-
       aggregation-job-continue-req"
 
-   *  AggregateShareReq Section 4.7: "application/dap-aggregate-share-
+   *  AggregateShareReq Section 4.7.2: "application/dap-aggregate-share-
       req"
 
-   *  AggregateShare Section 4.7: "application/dap-aggregate-share"
+   *  AggregateShare Section 4.7.2: "application/dap-aggregate-share"
 
-   *  CollectionJobReq Section 4.7: "application/dap-collection-job-req"
+   *  CollectionJobReq Section 4.7.1: "application/dap-collection-job-
+      req"
 
-   *  CollectionJobResp Section 4.7: "application/dap-collection-job-
+   *  CollectionJobResp Section 4.7.1: "application/dap-collection-job-
       resp"
 
-   The definition for each media type is in the following subsections.
-
    Protocol message format evolution is supported through the definition
-   of new formats that are identified by new media types.
+   of new formats that are identified by new media types.  The messages
+   above are specific to this specification.  When a new major
+   enhancement is proposed that results in newer IETF specification for
+   DAP, a new set of media types will be defined.  In other words, newer
+   versions of DAP will not be backward compatible with this version of
+   DAP.
 
-   IANA shall update (RFC EDITOR: change "shall update" to "has
-   updated") the "Media Types" registry at
-   https://www.iana.org/assignments/media-types with the registration
-   information in this section for all media types listed above.
-
-      TODO Solicit review of these allocations from domain experts.
-
-8.1.1.  Message versioning
-
-   Media types for the HTTP requests are specific to this version of
-   DAP.  When a new major enhancement is proposed that results in newer
-   IETF specification for DAP, a new set of media types need to be
-   defined.  In other words, newer versions of DAP will not be backward
-   compatible with this version of DAP.
-
-   (NOTE TO RFC EDITOR: Remove this paragraph.)  HTTP requests with DAP
-   media types MAY express an optional parameter 'version', following
+   (RFC EDITOR: Remove this paragraph.)  HTTP requests with DAP media
+   types MAY express an optional parameter 'version', following
    Section 8.3 of [RFC9110].  Value of this parameter indicates current
    draft version of the protocol the component is using.  This MAY be
    used as a hint by the receiver of the request to do compatibility
@@ -3279,7 +3281,12 @@ Table of Contents
    to leader from a client that supports draft-ietf-ppm-dap-09 could
    have the header Media-Type: application/dap-report;version=09.
 
-8.1.2.  "application/dap-hpke-config-list" media type
+   The "Media Types" registry at https://www.iana.org/assignments/media-
+   types will be (RFC EDITOR: replace "will be" with "has been") updated
+   to include each of these media types.  The information required for
+   each media type is listed in the remaining subsections.
+
+8.1.1.  "application/dap-hpke-config-list" media type
 
    Type name:  application
 
@@ -3291,11 +3298,12 @@ Table of Contents
 
    Encoding considerations:  only "8bit" or "binary" is permitted
 
-   Security considerations:  see Section 4.3
+   Security considerations:  see Section 4.5 of the published
+      specification
 
    Interoperability considerations:  N/A
 
-   Published specification:  this specification
+   Published specification:  RFC XXXX
 
    Applications that use this media type:  N/A
 
@@ -3310,17 +3318,18 @@ Table of Contents
                             Macintosh file type code(s):  N/A
 
    Person and email address to contact for further information:  see Aut
-      hors' Addresses section
+      hors' Addresses section of the published specification
 
    Intended usage:  COMMON
 
    Restrictions on usage:  N/A
 
-   Author:  see Authors' Addresses section
+   Author:  see Authors' Addresses section of the published
+      specification
 
    Change controller:  IESG
 
-8.1.3.  "application/dap-report" media type
+8.1.2.  "application/dap-report" media type
 
    Type name:  application
 
@@ -3332,11 +3341,12 @@ Table of Contents
 
    Encoding considerations:  only "8bit" or "binary" is permitted
 
-   Security considerations:  see Section 4.5.2
+   Security considerations:  see Section 4.5 of the published
+      specification
 
    Interoperability considerations:  N/A
 
-   Published specification:  this specification
+   Published specification:  RFC XXXX
 
    Applications that use this media type:  N/A
 
@@ -3351,17 +3361,18 @@ Table of Contents
                             Macintosh file type code(s):  N/A
 
    Person and email address to contact for further information:  see Aut
-      hors' Addresses section
+      hors' Addresses section of the published specification
 
    Intended usage:  COMMON
 
    Restrictions on usage:  N/A
 
-   Author:  see Authors' Addresses section
+   Author:  see Authors' Addresses section of the published
+      specification
 
    Change controller:  IESG
 
-8.1.4.  "application/dap-aggregation-job-init-req" media type
+8.1.3.  "application/dap-aggregation-job-init-req" media type
 
    Type name:  application
 
@@ -3373,11 +3384,12 @@ Table of Contents
 
    Encoding considerations:  only "8bit" or "binary" is permitted
 
-   Security considerations:  see Section 4.7
+   Security considerations:  see Section 4.6 of the published
+      specification
 
    Interoperability considerations:  N/A
 
-   Published specification:  this specification
+   Published specification:  RFC XXXX
 
    Applications that use this media type:  N/A
 
@@ -3392,17 +3404,18 @@ Table of Contents
                             Macintosh file type code(s):  N/A
 
    Person and email address to contact for further information:  see Aut
-      hors' Addresses section
+      hors' Addresses section of the published specification
 
    Intended usage:  COMMON
 
    Restrictions on usage:  N/A
 
-   Author:  see Authors' Addresses section
+   Author:  see Authors' Addresses section of the published
+      specification
 
    Change controller:  IESG
 
-8.1.5.  "application/dap-aggregation-job-resp" media type
+8.1.4.  "application/dap-aggregation-job-resp" media type
 
    Type name:  application
 
@@ -3414,11 +3427,12 @@ Table of Contents
 
    Encoding considerations:  only "8bit" or "binary" is permitted
 
-   Security considerations:  see Section 4.7
+   Security considerations:  see Section 4.6 of the published
+      specification
 
    Interoperability considerations:  N/A
 
-   Published specification:  this specification
+   Published specification:  RFC XXXX
 
    Applications that use this media type:  N/A
 
@@ -3433,17 +3447,18 @@ Table of Contents
                             Macintosh file type code(s):  N/A
 
    Person and email address to contact for further information:  see Aut
-      hors' Addresses section
+      hors' Addresses section of the published specification
 
    Intended usage:  COMMON
 
    Restrictions on usage:  N/A
 
-   Author:  see Authors' Addresses section
+   Author:  see Authors' Addresses section of the published
+      specification
 
    Change controller:  IESG
 
-8.1.6.  "application/dap-aggregation-job-continue-req" media type
+8.1.5.  "application/dap-aggregation-job-continue-req" media type
 
    Type name:  application
 
@@ -3455,11 +3470,12 @@ Table of Contents
 
    Encoding considerations:  only "8bit" or "binary" is permitted
 
-   Security considerations:  see Section 4.7
+   Security considerations:  see Section 4.6 of the published
+      specification
 
    Interoperability considerations:  N/A
 
-   Published specification:  this specification
+   Published specification:  RFC XXXX
 
    Applications that use this media type:  N/A
 
@@ -3474,17 +3490,18 @@ Table of Contents
                             Macintosh file type code(s):  N/A
 
    Person and email address to contact for further information:  see Aut
-      hors' Addresses section
+      hors' Addresses section of the published specification
 
    Intended usage:  COMMON
 
    Restrictions on usage:  N/A
 
-   Author:  see Authors' Addresses section
+   Author:  see Authors' Addresses section of the published
+      specification
 
    Change controller:  IESG
 
-8.1.7.  "application/dap-aggregate-share-req" media type
+8.1.6.  "application/dap-aggregate-share-req" media type
 
    Type name:  application
 
@@ -3496,11 +3513,12 @@ Table of Contents
 
    Encoding considerations:  only "8bit" or "binary" is permitted
 
-   Security considerations:  see Section 4.7
+   Security considerations:  see Section 4.7 of the published
+      specification
 
    Interoperability considerations:  N/A
 
-   Published specification:  this specification
+   Published specification:  RFC XXXX
 
    Applications that use this media type:  N/A
 
@@ -3515,17 +3533,18 @@ Table of Contents
                             Macintosh file type code(s):  N/A
 
    Person and email address to contact for further information:  see Aut
-      hors' Addresses section
+      hors' Addresses section of the published specification
 
    Intended usage:  COMMON
 
    Restrictions on usage:  N/A
 
-   Author:  see Authors' Addresses section
+   Author:  see Authors' Addresses section of the published
+      specification
 
    Change controller:  IESG
 
-8.1.8.  "application/dap-aggregate-share" media type
+8.1.7.  "application/dap-aggregate-share" media type
 
    Type name:  application
 
@@ -3537,11 +3556,12 @@ Table of Contents
 
    Encoding considerations:  only "8bit" or "binary" is permitted
 
-   Security considerations:  see Section 4.7
+   Security considerations:  see Section 4.7 of the published
+      specification
 
    Interoperability considerations:  N/A
 
-   Published specification:  this specification
+   Published specification:  RFC XXXX
 
    Applications that use this media type:  N/A
 
@@ -3556,17 +3576,18 @@ Table of Contents
                             Macintosh file type code(s):  N/A
 
    Person and email address to contact for further information:  see Aut
-      hors' Addresses section
+      hors' Addresses section of the published specification
 
    Intended usage:  COMMON
 
    Restrictions on usage:  N/A
 
-   Author:  see Authors' Addresses section
+   Author:  see Authors' Addresses section of the published
+      specification
 
    Change controller:  IESG
 
-8.1.9.  "application/dap-collection-job-req" media type
+8.1.8.  "application/dap-collection-job-req" media type
 
    Type name:  application
 
@@ -3578,11 +3599,12 @@ Table of Contents
 
    Encoding considerations:  only "8bit" or "binary" is permitted
 
-   Security considerations:  see Section 4.7
+   Security considerations:  see Section 4.7 of the published
+      specification
 
    Interoperability considerations:  N/A
 
-   Published specification:  this specification
+   Published specification:  RFC XXXX
 
    Applications that use this media type:  N/A
 
@@ -3597,17 +3619,18 @@ Table of Contents
                             Macintosh file type code(s):  N/A
 
    Person and email address to contact for further information:  see Aut
-      hors' Addresses section
+      hors' Addresses section of the published specification
 
    Intended usage:  COMMON
 
    Restrictions on usage:  N/A
 
-   Author:  see Authors' Addresses section
+   Author:  see Authors' Addresses section of the published
+      specification
 
    Change controller:  IESG
 
-8.1.10.  "application/dap-collection-job-resp" media type
+8.1.9.  "application/dap-collection-job-resp" media type
 
    Type name:  application
 
@@ -3619,11 +3642,12 @@ Table of Contents
 
    Encoding considerations:  only "8bit" or "binary" is permitted
 
-   Security considerations:  see Section 4.7
+   Security considerations:  see Section 4.7 of the published
+      specification
 
    Interoperability considerations:  N/A
 
-   Published specification:  this specification
+   Published specification:  RFC XXXX
 
    Applications that use this media type:  N/A
 
@@ -3638,50 +3662,116 @@ Table of Contents
                             Macintosh file type code(s):  N/A
 
    Person and email address to contact for further information:  see Aut
-      hors' Addresses section
+      hors' Addresses section of the published specification
 
    Intended usage:  COMMON
 
    Restrictions on usage:  N/A
 
-   Author:  see Authors' Addresses section
+   Author:  see Authors' Addresses section of the published
+      specification
 
    Change controller:  IESG
 
 8.2.  DAP Type Registries
 
    This document also requests creation of a new "Distributed
-   Aggregation Protocol Parameters" page.  This page will contain
-   several new registries, described in the following sections.
+   Aggregation Protocol (DAP)" page.  This page will contain several new
+   registries, described in the following sections.  All registries are
+   administered under the Specification Required policy [RFC8126].
 
 8.2.1.  Batch Modes Registry
 
-   This document requests creation of a new registry for Batch Modes.
-   This registry should contain the following columns:
+   A new registry will be (RFC EDITOR: change "will be" to "has been")
+   created called "Batch Mode Identifiers" for DAP batch modes
+   (Section 4.2).  This registry should contain the following columns:
 
-      TODO Define how we want to structure this registry.
+   Value:  The one-byte identifier for the batch mode
+
+   Name:  The name of the batch mode
+
+   Reference:  Where the batch mode is defined
+
+   The initial contents of this registry listed in Table 2.
+
+          +=======+=================+===========================+
+          | Value | Name            | Reference                 |
+          +=======+=================+===========================+
+          | 0x00  | reserved        | Section 4.2 of RFC XXXX   |
+          +-------+-----------------+---------------------------+
+          | 0x01  | time_interval   | Section 4.2.1 of RFC XXXX |
+          +-------+-----------------+---------------------------+
+          | 0x02  | leader_selected | Section 4.2.2 of RFC XXXX |
+          +-------+-----------------+---------------------------+
+
+                Table 2: Initial contents of the Batch Mode
+                           Identifiers registry.
 
 8.2.2.  Upload Extension Registry
 
-   This document requests creation of a new registry for extensions to
-   the upload interaction (Section 4.5).  This registry should contain
-   the following columns:
+   A new registry will be (RFC EDITOR: change "will be" to "has been")
+   created called "Upload Extension Identifiers" for extensions to the
+   upload interaction (Section 4.5).  This registry should contain the
+   following columns:
 
-      TODO Define how we want to structure this registry.
+   Value:  The two-byte identifier for the upload extension
+
+   Name:  The name of the upload extension
+
+   Reference:  Where the upload extension is defined
+
+   The initial contents of this registry are listed in Table 3.
+
+                     +========+==========+===========+
+                     | Value  | Name     | Reference |
+                     +========+==========+===========+
+                     | 0x0000 | reserved | RFC XXXX  |
+                     +--------+----------+-----------+
+
+                        Table 3: Initial contents of
+                            the Upload Extension
+                           Identifiers registry.
 
 8.2.3.  Prepare Error Registry
 
-   This document requests creation of a new registry for PrepareError
-   values.  This registry should contain the following columns:
+   A new registry will be (RFC EDITOR: change "will be" to "has been")
+   created called "Prepare Error Identifiers" for reasons for rejecting
+   reports during the aggregation interaction (Section 4.6.1.2).
 
-   Name:  The name of the PrepareError value
+   Value:  The one-byte identifier of the prepare error
 
-   Value:  The 1-byte value of the PrepareError value
+   Name:  The name of the prepare error
 
-   Reference:  A reference to where the PrepareError type is defined.
+   Reference:  Where the prepare error is defined
 
-   The initial contents of this registry are as defined in
-   Section 4.6.1.2, with this document as the reference.
+   The initial contents of this registry are listed below in Table 4.
+
+     +=======+========================+=============================+
+     | Value | Name                   | Reference                   |
+     +=======+========================+=============================+
+     | 0x00  | reserved               | Section 4.6.1.2 of RFX XXXX |
+     +-------+------------------------+-----------------------------+
+     | 0x01  | batch_collected        | Section 4.6.1.2 of RFX XXXX |
+     +-------+------------------------+-----------------------------+
+     | 0x02  | report_replayed        | Section 4.6.1.2 of RFX XXXX |
+     +-------+------------------------+-----------------------------+
+     | 0x03  | report_dropped         | Section 4.6.1.2 of RFX XXXX |
+     +-------+------------------------+-----------------------------+
+     | 0x04  | hpke_unknown_config_id | Section 4.6.1.2 of RFX XXXX |
+     +-------+------------------------+-----------------------------+
+     | 0x05  | hpke_decrypt_error     | Section 4.6.1.2 of RFX XXXX |
+     +-------+------------------------+-----------------------------+
+     | 0x06  | vdaf_prep_error        | Section 4.6.1.2 of RFX XXXX |
+     +-------+------------------------+-----------------------------+
+     | 0x07  | task_expired           | Section 4.6.1.2 of RFX XXXX |
+     +-------+------------------------+-----------------------------+
+     | 0x08  | invalid_message        | Section 4.6.1.2 of RFX XXXX |
+     +-------+------------------------+-----------------------------+
+     | 0x09  | report_too_early       | Section 4.6.1.2 of RFX XXXX |
+     +-------+------------------------+-----------------------------+
+
+        Table 4: Initial contents of the Prepare Error Identifiers
+                                registry.
 
 8.3.  URN Sub-namespace for DAP (urn:ietf:params:ppm:dap)
 
@@ -3692,15 +3782,14 @@ Table of Contents
 
    Registry name:  dap
 
-   Specification:  [[THIS DOCUMENT]]
+   Specification:  RFC XXXX
 
    Repository:  http://www.iana.org/assignments/dap
 
    Index value:  No transformation needed.
 
-   Initial contents: The types and descriptions in the table in
-   Section 3.2 above, with the Reference field set to point to this
-   specification.
+   The initial contents of this namespace are the types and descriptions
+   in Table 1, with the Reference field set to RFC XXXX.
 
 9.  References
 
@@ -3735,6 +3824,11 @@ Table of Contents
    [RFC7807]  Nottingham, M. and E. Wilde, "Problem Details for HTTP
               APIs", RFC 7807, DOI 10.17487/RFC7807, March 2016,
               <https://www.rfc-editor.org/rfc/rfc7807>.
+
+   [RFC8126]  Cotton, M., Leiba, B., and T. Narten, "Guidelines for
+              Writing an IANA Considerations Section in RFCs", BCP 26,
+              RFC 8126, DOI 10.17487/RFC8126, June 2017,
+              <https://www.rfc-editor.org/rfc/rfc8126>.
 
    [RFC8174]  Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC
               2119 Key Words", BCP 14, RFC 8174, DOI 10.17487/RFC8174,
