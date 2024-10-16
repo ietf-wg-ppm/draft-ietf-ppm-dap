@@ -1666,7 +1666,7 @@ enum {
   invalid_message(8),
   report_too_early(9),
   (255)
-} PrepareError;
+} ReportError;
 
 struct {
   ReportID report_id;
@@ -1674,7 +1674,7 @@ struct {
   select (PrepareResp.prepare_resp_state) {
     case continue: opaque payload<0..2^32-1>;
     case finished: Empty;
-    case reject:   PrepareError prepare_error;
+    case reject:   ReportError report_error;
   };
 } PrepareResp;
 ~~~
@@ -1687,7 +1687,7 @@ rejects the report by setting the outbound preparation response to
 variant {
   ReportID report_id;
   PrepareRespState prepare_resp_state = reject;
-  PrepareError report_replayed;
+  ReportError report_error = report_replayed;
 } PrepareResp;
 ~~~
 
@@ -1703,11 +1703,11 @@ the outbound preparation response to
 variant {
   ReportID report_id;
   PrepareRespState prepare_resp_state = reject;
-  PrepareError prepare_error;
+  ReportError report_error;
 } PrepareResp;
 ~~~
 
-where `report_id` is the report ID and `prepare_error` is the indicated error.
+where `report_id` is the report ID and `report_error` is the indicated error.
 For all other reports it initializes the VDAF prep state as follows (let
 `inbound` denote the payload of the prep step sent by the Leader):
 
@@ -1739,7 +1739,7 @@ type `Rejected`, then the Helper responds with
 variant {
   ReportID report_id;
   PrepareRespState prepare_resp_state = reject;
-  PrepareError prepare_error = vdaf_prep_error;
+  ReportError report_error = vdaf_prep_error;
 } PrepareResp;
 ~~~
 
@@ -1764,7 +1764,7 @@ task. If so, it responds with
 variant {
   ReportID report_id;
   PrepareRespState prepare_resp_state = reject;
-  PrepareError report_replayed;
+  Reporterror report_error = report_replayed;
 } PrepareResp;
 ~~~
 
@@ -1849,7 +1849,7 @@ the resulting PlaintextInputShare `plaintext_input_share`.
 #### Input Share Validation {#input-share-validation}
 
 Validating an input share will either succeed or fail. In the case of failure,
-the input share is marked as invalid with a corresponding PrepareError.
+the input share is marked as invalid with a corresponding report error.
 
 Before beginning the preparation step, Aggregators are required to perform the
 following checks:
@@ -2048,7 +2048,7 @@ response is
 variant {
   ReportID report_id;
   PrepareRespState prepare_resp_state = reject;
-  PrepareError prepare_error = vdaf_prep_error;
+  ReportError report_error = vdaf_prep_error;
 } PrepareResp;
 ~~~
 
@@ -2063,7 +2063,7 @@ task. If so, it responds with
 variant {
   ReportID report_id;
   PrepareRespState prepare_resp_state = reject;
-  PrepareError report_replayed;
+  ReportError report_error = report_replayed;
 } PrepareResp;
 ~~~
 
@@ -3777,22 +3777,22 @@ The initial contents of this registry are listed in {{upload-extension-id}}.
 | `0x0000` | `reserved`        | RFC XXXX  |
 {: #upload-extension-id title="Initial contents of the Upload Extension Identifiers registry."}
 
-### Prepare Error Registry {#prepare-error-reg}
+### Report Error Registry {#report-error-reg}
 
 A new registry will be (RFC EDITOR: change "will be" to "has been") created
-called "Prepare Error Identifiers" for reasons for rejecting reports during the
+called "Report Error Identifiers" for reasons for rejecting reports during the
 aggregation interaction ({{aggregation-helper-init}}).
 
 Value:
-: The one-byte identifier of the prepare error
+: The one-byte identifier of the report error
 
 Name:
-: The name of the prepare error
+: The name of the report error
 
 Reference:
-: Where the prepare error is defined
+: Where the report error is defined
 
-The initial contents of this registry are listed below in {{prepare-error-id}}.
+The initial contents of this registry are listed below in {{report-error-id}}.
 
 | Value  | Name                     | Reference                               |
 |:-------|:-------------------------|:----------------------------------------|
@@ -3806,7 +3806,7 @@ The initial contents of this registry are listed below in {{prepare-error-id}}.
 | `0x07` | `task_expired`           | {{aggregation-helper-init}} of RFX XXXX |
 | `0x08` | `invalid_message`        | {{aggregation-helper-init}} of RFX XXXX |
 | `0x09` | `report_too_early`       | {{aggregation-helper-init}} of RFX XXXX |
-{: #prepare-error-id title="Initial contents of the Prepare Error Identifiers registry."}
+{: #report-error-id title="Initial contents of the Report Error Identifiers registry."}
 
 ## URN Sub-namespace for DAP (urn:ietf:params:ppm:dap) {#urn-space}
 
