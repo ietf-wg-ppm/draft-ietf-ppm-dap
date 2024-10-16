@@ -544,7 +544,8 @@ Table of Contents
    The protocol text accompanying this would explain how implementations
    should handle the always_present and a_number fields, but not the
    type field.  This does not mean that the type field of ExampleStruct
-   can only ever have value number.
+   can only ever have value number; it means only that it has this type
+   in this instance.
 
    This notation can also be used in structures where the enum field
    does not affect what fields are or are not present in the structure.
