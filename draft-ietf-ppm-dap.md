@@ -1195,9 +1195,9 @@ struct {
 } PlaintextInputShare;
 ~~~
 
-Field `extensions` is set to the list of extensions intended to be consumed by
-the given Aggregator. (See {{upload-extensions}}.) Field `payload` is set to the
-Aggregator's input share output by the VDAF sharding algorithm.
+Field `extensions` is set to the list of report extensions intended to be
+consumed by the given Aggregator. (See {{report-extensions}}.) Field `payload`
+is set to the Aggregator's input share output by the VDAF sharding algorithm.
 
 Next, the Client encrypts each PlaintextInputShare `plaintext_input_share` as
 follows:
@@ -1264,12 +1264,12 @@ report for this reason, it SHOULD abort the upload interaction and alert the
 Client with error `reportTooEarly`. In this situation, the Client MAY re-upload
 the report later on.
 
-If the Leader's input share contains an unrecognized extension, or if two
-extensions have the same ExtensionType, then the Leader MAY abort the upload
-request with error "invalidMessage". Note that this behavior is not mandatory
-because it requires the Leader to decrypt its input share.
+If the Leader's input share contains an unrecognized report extension, or if
+two report extensions have the same ExtensionType, then the Leader MAY abort
+the upload request with error "invalidMessage". Note that this behavior is not
+mandatory because it requires the Leader to decrypt its input share.
 
-### Upload Extensions {#upload-extensions}
+### Report Extensions {#report-extensions}
 
 Each PlaintextInputShare carries a list of extensions that Clients use to convey
 additional information to the Aggregator. Some extensions might be intended for
@@ -1866,12 +1866,13 @@ following checks:
    If so, the Aggregator MAY mark the input share as invalid with the error
    `task_expired`.
 
-1. Check if the PlaintextInputShare contains unrecognized extensions. If so, the
-   Aggregator MUST mark the input share as invalid with error `invalid_message`.
+1. Check if the PlaintextInputShare contains unrecognized report extensions. If
+   so, the Aggregator MUST mark the input share as invalid with error
+   `invalid_message`.
 
-1. Check if the ExtensionType of any two extensions in PlaintextInputShare are
-   the same. If so, the Aggregator MUST mark the input share as invalid with
-   error `invalid_message`.
+1. Check if the ExtensionType of any two report extensions in
+   PlaintextInputShare are the same. If so, the Aggregator MUST mark the input
+   share as invalid with error `invalid_message`.
 
 1. If the report pertains to a batch that was previously collected, then the
    input share MUST be marked as invalid with error `batch_collected`.
@@ -2928,11 +2929,11 @@ programmed with an identity), Client authentication can help Aggregators (or an
 authenticating proxy deployed between Clients and the Aggregators; see
 {{anon-proxy}}) ensure that all reports come from authentic Clients. Note that
 because the Helper never handles messages directly from the Clients, reports
-would need to include an extension ({{upload-extensions}}) to convey
+would need to include an extension ({{report-extensions}}) to convey
 authentication information to the Helper. For example, a deployment might
 include a Privacy Pass token ({{?I-D.draft-ietf-privacypass-architecture-16}})
-in an extension to allow both Aggregators to independently verify the Client's
-identity.
+in a report extension to allow both Aggregators to independently verify the
+Client's identity.
 
 However, in some deployments, it will not be practical to require Clients to
 authenticate, so Client authentication is not mandatory in DAP. For example, a
@@ -3028,7 +3029,7 @@ Depending on the deployment model, agreement can require that task parameters
 are visible to all parties such that each party can choose whether to
 participate based on the value of any parameter. This includes the parameters
 enumerated in {{task-configuration}} and any additional parameters implied by
-upload extensions {{upload-extensions}} used by the task. Since meaningful
+report extensions {{report-extensions}} used by the task. Since meaningful
 privacy requires that multiple Clients contribute to a task, they should also
 share a consistent view of the task configuration.
 
@@ -3755,10 +3756,10 @@ The initial contents of this registry listed in {{batch-mode-id}}.
 | `0x02` | `leader_selected` | {{leader-selected-batch-mode}} of RFC XXXX |
 {: #batch-mode-id title="Initial contents of the Batch Mode Identifiers registry."}
 
-### Upload Extension Registry
+### Report Extension Registry
 
 A new registry will be (RFC EDITOR: change "will be" to "has been") created
-called "Upload Extension Identifiers" for extensions to the upload interaction
+called "Report Extension Identifiers" for extensions to the upload interaction
 ({{upload-flow}}). This registry should contain the following columns:
 
 Value:
@@ -3775,7 +3776,7 @@ The initial contents of this registry are listed in {{upload-extension-id}}.
 | Value    | Name              | Reference |
 |:---------|:------------------|:----------|
 | `0x0000` | `reserved`        | RFC XXXX  |
-{: #upload-extension-id title="Initial contents of the Upload Extension Identifiers registry."}
+{: #upload-extension-id title="Initial contents of the Report Extension Identifiers registry."}
 
 ### Prepare Error Registry {#prepare-error-reg}
 
