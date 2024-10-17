@@ -575,9 +575,9 @@ Aggregators. This scheme has two important properties:
 * Given only one of the input shares, it is impossible to deduce the plaintext
   measurement from which it was generated.
 
-* Aggregators compute secret shares of the aggregate result by first
-  aggregating their shares locally into "aggregate shares", then combining
-  their aggregate shares into the aggregate result.
+* Aggregators can compute secret shares of the aggregate result by aggregating
+  their shares locally into "aggregate shares", which may later be combined
+  into the aggregate result.
 
 Note that some VDAFs allow measurements to be aggregated multiple times,
 each time with a different aggregation parameter; however, DAP only allows each
