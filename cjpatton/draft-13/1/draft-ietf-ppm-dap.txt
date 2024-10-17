@@ -498,7 +498,8 @@ Table of Contents
       each Aggregator.
 
    Report share:  An input share encrypted under the HPKE public key of
-      an Aggregator.
+      an Aggregator.  The report share also includes some associated
+      data used for processing the report.
 
 1.3.  Representation Language
 
