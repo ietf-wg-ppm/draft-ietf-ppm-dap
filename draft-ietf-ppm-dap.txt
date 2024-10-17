@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 18 April 2025                                        Cloudflare
+Expires: 20 April 2025                                        Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                         15 October 2024
+                                                         17 October 2024
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -63,7 +63,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 18 April 2025.
+   This Internet-Draft will expire on 20 April 2025.
 
 Copyright Notice
 
@@ -150,7 +150,7 @@ Table of Contents
      8.2.  DAP Type Registries
        8.2.1.  Batch Modes Registry
        8.2.2.  Upload Extension Registry
-       8.2.3.  Prepare Error Registry
+       8.2.3.  Report Error Registry
      8.3.  URN Sub-namespace for DAP (urn:ietf:params:ppm:dap)
    9.  References
      9.1.  Normative References
@@ -1787,7 +1787,7 @@ Table of Contents
      invalid_message(8),
      report_too_early(9),
      (255)
-   } PrepareError;
+   } ReportError;
 
    struct {
      ReportID report_id;
@@ -1795,7 +1795,7 @@ Table of Contents
      select (PrepareResp.prepare_resp_state) {
        case continue: opaque payload<0..2^32-1>;
        case finished: Empty;
-       case reject:   PrepareError prepare_error;
+       case reject:   ReportError report_error;
      };
    } PrepareResp;
 
@@ -1807,7 +1807,7 @@ Table of Contents
    variant {
      ReportID report_id;
      PrepareRespState prepare_resp_state = reject;
-     PrepareError report_replayed;
+     ReportError report_error = report_replayed;
    } PrepareResp;
 
    where report_id is the report ID.  Note that the Helper must perform
@@ -1821,10 +1821,10 @@ Table of Contents
    variant {
      ReportID report_id;
      PrepareRespState prepare_resp_state = reject;
-     PrepareError prepare_error;
+     ReportError report_error;
    } PrepareResp;
 
-   where report_id is the report ID and prepare_error is the indicated
+   where report_id is the report ID and report_error is the indicated
    error.  For all other reports it initializes the VDAF prep state as
    follows (let inbound denote the payload of the prep step sent by the
    Leader):
@@ -1859,7 +1859,7 @@ Table of Contents
    variant {
      ReportID report_id;
      PrepareRespState prepare_resp_state = reject;
-     PrepareError prepare_error = vdaf_prep_error;
+     ReportError report_error = vdaf_prep_error;
    } PrepareResp;
 
    Otherwise the Helper responds with
@@ -1880,7 +1880,7 @@ Table of Contents
    variant {
      ReportID report_id;
      PrepareRespState prepare_resp_state = reject;
-     PrepareError report_replayed;
+     Reporterror report_error = report_replayed;
    } PrepareResp;
 
    Otherwise it stores the report ID for replay protection and out_share
@@ -1966,7 +1966,7 @@ Table of Contents
 
    Validating an input share will either succeed or fail.  In the case
    of failure, the input share is marked as invalid with a corresponding
-   PrepareError.
+   report error.
 
    Before beginning the preparation step, Aggregators are required to
    perform the following checks:
@@ -2175,7 +2175,7 @@ Table of Contents
    variant {
      ReportID report_id;
      PrepareRespState prepare_resp_state = reject;
-     PrepareError prepare_error = vdaf_prep_error;
+     ReportError report_error = vdaf_prep_error;
    } PrepareResp;
 
    If state == Continued(prep_state), then the Helper stores state to
@@ -2188,7 +2188,7 @@ Table of Contents
    variant {
      ReportID report_id;
      PrepareRespState prepare_resp_state = reject;
-     PrepareError report_replayed;
+     ReportError report_error = report_replayed;
    } PrepareResp;
 
    Otherwise it stores the report ID for replay protection and out_share
@@ -3732,17 +3732,17 @@ Table of Contents
                             the Upload Extension
                            Identifiers registry.
 
-8.2.3.  Prepare Error Registry
+8.2.3.  Report Error Registry
 
    A new registry will be (RFC EDITOR: change "will be" to "has been")
-   created called "Prepare Error Identifiers" for reasons for rejecting
+   created called "Report Error Identifiers" for reasons for rejecting
    reports during the aggregation interaction (Section 4.6.1.2).
 
-   Value:  The one-byte identifier of the prepare error
+   Value:  The one-byte identifier of the report error
 
-   Name:  The name of the prepare error
+   Name:  The name of the report error
 
-   Reference:  Where the prepare error is defined
+   Reference:  Where the report error is defined
 
    The initial contents of this registry are listed below in Table 4.
 
@@ -3770,7 +3770,7 @@ Table of Contents
      | 0x09  | report_too_early       | Section 4.6.1.2 of RFX XXXX |
      +-------+------------------------+-----------------------------+
 
-        Table 4: Initial contents of the Prepare Error Identifiers
+        Table 4: Initial contents of the Report Error Identifiers
                                 registry.
 
 8.3.  URN Sub-namespace for DAP (urn:ietf:params:ppm:dap)
