@@ -103,7 +103,7 @@ Table of Contents
      4.5.  Uploading Reports
        4.5.1.  HPKE Configuration Request
        4.5.2.  Upload Request
-       4.5.3.  Upload Extensions
+       4.5.3.  Report Extensions
      4.6.  Verifying and Aggregating Reports
        4.6.1.  Aggregate Initialization
        4.6.2.  Aggregate Continuation
@@ -149,7 +149,7 @@ Table of Contents
        8.1.9.  "application/dap-collection-job-resp" media type
      8.2.  DAP Type Registries
        8.2.1.  Batch Modes Registry
-       8.2.2.  Upload Extension Registry
+       8.2.2.  Report Extension Registry
        8.2.3.  Report Error Registry
      8.3.  URN Sub-namespace for DAP (urn:ietf:params:ppm:dap)
    9.  References
@@ -1292,8 +1292,8 @@ Table of Contents
      opaque payload<0..2^32-1>;
    } PlaintextInputShare;
 
-   Field extensions is set to the list of extensions intended to be
-   consumed by the given Aggregator.  (See Section 4.5.3.)  Field
+   Field extensions is set to the list of report extensions intended to
+   be consumed by the given Aggregator.  (See Section 4.5.3.)  Field
    payload is set to the Aggregator's input share output by the VDAF
    sharding algorithm.
 
@@ -1363,13 +1363,13 @@ Table of Contents
    reportTooEarly.  In this situation, the Client MAY re-upload the
    report later on.
 
-   If the Leader's input share contains an unrecognized extension, or if
-   two extensions have the same ExtensionType, then the Leader MAY abort
-   the upload request with error "invalidMessage".  Note that this
-   behavior is not mandatory because it requires the Leader to decrypt
-   its input share.
+   If the Leader's input share contains an unrecognized report
+   extension, or if two report extensions have the same ExtensionType,
+   then the Leader MAY abort the upload request with error
+   "invalidMessage".  Note that this behavior is not mandatory because
+   it requires the Leader to decrypt its input share.
 
-4.5.3.  Upload Extensions
+4.5.3.  Report Extensions
 
    Each PlaintextInputShare carries a list of extensions that Clients
    use to convey additional information to the Aggregator.  Some
@@ -1985,11 +1985,11 @@ Table of Contents
        task_expiration time.  If so, the Aggregator MAY mark the input
        share as invalid with the error task_expired.
 
-   4.  Check if the PlaintextInputShare contains unrecognized
+   4.  Check if the PlaintextInputShare contains unrecognized report
        extensions.  If so, the Aggregator MUST mark the input share as
        invalid with error invalid_message.
 
-   5.  Check if the ExtensionType of any two extensions in
+   5.  Check if the ExtensionType of any two report extensions in
        PlaintextInputShare are the same.  If so, the Aggregator MUST
        mark the input share as invalid with error invalid_message.
 
@@ -3112,8 +3112,9 @@ Table of Contents
    messages directly from the Clients, reports would need to include an
    extension (Section 4.5.3) to convey authentication information to the
    Helper.  For example, a deployment might include a Privacy Pass token
-   ([I-D.draft-ietf-privacypass-architecture-16]) in an extension to
-   allow both Aggregators to independently verify the Client's identity.
+   ([I-D.draft-ietf-privacypass-architecture-16]) in a report extension
+   to allow both Aggregators to independently verify the Client's
+   identity.
 
    However, in some deployments, it will not be practical to require
    Clients to authenticate, so Client authentication is not mandatory in
@@ -3212,7 +3213,7 @@ Table of Contents
    parameters are visible to all parties such that each party can choose
    whether to participate based on the value of any parameter.  This
    includes the parameters enumerated in Section 4.3 and any additional
-   parameters implied by upload extensions Section 4.5.3 used by the
+   parameters implied by report extensions Section 4.5.3 used by the
    task.  Since meaningful privacy requires that multiple Clients
    contribute to a task, they should also share a consistent view of the
    task configuration.
@@ -3707,10 +3708,10 @@ Table of Contents
                 Table 2: Initial contents of the Batch Mode
                            Identifiers registry.
 
-8.2.2.  Upload Extension Registry
+8.2.2.  Report Extension Registry
 
    A new registry will be (RFC EDITOR: change "will be" to "has been")
-   created called "Upload Extension Identifiers" for extensions to the
+   created called "Report Extension Identifiers" for extensions to the
    upload interaction (Section 4.5).  This registry should contain the
    following columns:
 
@@ -3729,7 +3730,7 @@ Table of Contents
                      +--------+----------+-----------+
 
                         Table 3: Initial contents of
-                            the Upload Extension
+                            the Report Extension
                            Identifiers registry.
 
 8.2.3.  Report Error Registry
