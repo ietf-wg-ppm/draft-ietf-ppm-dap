@@ -1813,12 +1813,11 @@ same `aggregation-job-id` but with a different `AggregationJobInitReq` in the
 body MUST fail with an HTTP client error status code. For further requests with
 the same `AggregationJobInitReq` in the body, the Helper SHOULD respond as it
 did for the original `AggregationJobInitReq`, or otherwise fail with an HTTP
-client error status code.
-
-Additionally, it is not possible to rewind or reset the state of an aggregation
-job. Once an aggregation job has been continued at least once (see
-{{agg-continue-flow}}), further requests to initialize that aggregation job MUST
-fail with an HTTP client error status code.
+client error status code. The Helper SHOULD allow the aggregation job to be
+replayed even if the aggregation job has been continued (see
+{{agg-continue-flow}}), to allow for a Leader to recover from state skew between
+the Leader and Helper by replaying the aggregation; see
+{{aggregation-step-skew-recovery}} for more detail on the recovery process.
 
 #### Input Share Decryption {#input-share-decryption}
 
@@ -2019,14 +2018,8 @@ to the previous request, then the Helper MAY abort with error `invalidMessage`.
 Leader rejected it.)
 
 Next, the Helper checks if the continuation step indicated by the request is
-correct. (For the first `AggregationJobContinueReq` the value should be `1`;
-for the second the value should be `2`; and so on.) If the Leader is one step
-behind (e.g., the Leader has resent the previous HTTP request), then the Helper
-MAY attempt to recover by sending the same response as it did for the previous
-`AggregationJobContinueReq`, without performing any additional work on the
-aggregation job. In this case it SHOULD verify that the contents of the
-`AggregationJobContinueReq` are identical to the previous message (see
-{{aggregation-step-skew-recovery}}). Otherwise, if the step is incorrect, the
+correct. (For the first `AggregationJobContinueReq` the value should be `1`; for
+the second the value should be `2`; and so on.) If the step is incorrect, the
 Helper MUST abort with error `stepMismatch`.
 
 Let `inbound` denote the payload of the prep step. For each report, the Helper
@@ -2118,28 +2111,30 @@ Helper knows it can clean up its state.
 #### Recovering from Aggregation Step Skew {#aggregation-step-skew-recovery}
 
 `AggregationJobContinueReq` messages contain a `step` field, allowing
-Aggregators to ensure that their peer is on an expected step of DAP
-aggregation. In particular, the intent is to allow recovery from a scenario
-where the Helper successfully advances from step `n` to `n+1`, but its
-`AggregationJobResp` response to the Leader gets dropped due to something like
-a transient network failure. The Leader could then resend the request to have
-the Helper advance to step `n+1` and the Helper should be able to retransmit
-the `AggregationJobResp` that was previously dropped. To make that kind of
-recovery possible, Aggregator implementations SHOULD checkpoint the most recent
-step's prep state and messages to durable storage such that the Leader can
-re-construct continuation requests and the Helper can re-construct continuation
-responses as needed.
+Aggregators to ensure that their peer is on the expected step of DAP
+aggregation. In particular, the intent is to allow detection and recovery from a
+scenario where the Helper and the Leader have differing views of the current
+aggregation step, which may occur if an `AggregationJobResp` response to the
+Leader is dropped due to a transient network failure. The Leader could then
+resend the original `AggregationJobInitReq` message to restart the aggregation
+process, allowing aggregation to complete successfully. To make this kind of
+recovery possible, Leader implementations SHOULD retain enough information to
+reconstruct the `AggregationJobInitReq` message in the case that the aggregation
+process becomes desynchronized.
 
 When implementing an aggregation step skew recovery strategy, the Helper SHOULD
-ensure that the Leader's `AggregationJobContinueReq` message did not change when
-it was re-sent (i.e., the two messages must be identical). This prevents the
-Leader from re-winding an aggregation job and re-running an aggregation step
-with different parameters.
+ensure that the Leader's `AggregationJobInitReq` message did not change when it
+was re-sent (i.e., the two messages must be identical). This prevents the Leader
+from re-winding an aggregation job and re-running aggregation with different
+parameters.
 
-One way the Helper could address this would be to store a digest of the Leader's
-request, indexed by aggregation job ID and step, and refuse to service a request
-for a given aggregation step unless it matches the previously seen request (if
-any).
+One way the Helper could implement this would be to store a digest of the
+Leader's request, indexed by aggregation job ID, and refuse to service a re-sent
+request unless it matches the previously seen request.
+
+Implementation note: in the case that the Leader replays an aggregation which
+the Helper considers to be complete, the Helper should ensure it does not commit
+the results of the aggregation to its aggregate shares more than once.
 
 ## Collecting Results {#collect-flow}
 
