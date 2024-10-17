@@ -570,7 +570,7 @@ compute it.
 VDAFs rely on secret sharing to protect the privacy of the measurements. Rather
 than sending its measurement in the clear, each Client shards its measurement
 into a pair of "input shares" and sends an input share to each of the
-Aggregators. This provides two important properties:
+Aggregators. This scheme has two important properties:
 
 * Given only one of the input shares, it is impossible to deduce the plaintext
   measurement from which it was generated.
@@ -579,8 +579,8 @@ Aggregators. This provides two important properties:
   aggregating their shares locally into "aggregate shares", then combining
   their aggregate shares into the aggregate result.
 
-Note that VDAFs in general allow measurements to be aggregated multiple times,
-each time with a different aggregation parameter; DAP however only allows each
+Note that some VDAFs allow measurements to be aggregated multiple times,
+each time with a different aggregation parameter; however, DAP only allows each
 measurement to be aggregated once.
 
 ## System Architecture {#system-architecture}
@@ -676,7 +676,7 @@ Client's plaintext measurement. To an Aggregator, a secret share of a valid
 measurement is indistinguishable from a secret share of an invalid measurement.
 
 In DAP, input validation is accomplished by an interactive computation between
-the Leader and Helper.At the beginning of this computation, each Aggregator is
+the Leader and Helper. At the beginning of this computation, each Aggregator is
 in possession of an input share uploaded by the Client. At the end of the
 computation, each Aggregator is in possession of either an "output share" that
 is ready to be aggregated or an indication that the underlying data is invalid,
