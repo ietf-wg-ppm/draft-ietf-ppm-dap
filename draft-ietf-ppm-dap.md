@@ -1814,9 +1814,9 @@ body MUST fail with an HTTP client error status code. For further requests with
 the same `AggregationJobInitReq` in the body, the Helper SHOULD respond as it
 did for the original `AggregationJobInitReq`, or otherwise fail with an HTTP
 client error status code. The Helper SHOULD allow the aggregation job to be
-replayed even if the aggregation job has been continued (see
+restarted even if the aggregation job has been continued (see
 {{agg-continue-flow}}), to allow for a Leader to recover from state skew between
-the Leader and Helper by replaying the aggregation; see
+the Leader and Helper by restarting the aggregation; see
 {{aggregation-step-skew-recovery}} for more detail on the recovery process.
 
 #### Input Share Decryption {#input-share-decryption}
@@ -2110,21 +2110,33 @@ Helper knows it can clean up its state.
 
 #### Recovering from Aggregation Step Skew {#aggregation-step-skew-recovery}
 
+An aggregation job may require many round trips over the network to complete. If
+one of the Aggregators fails during this process in a manner that results in it
+losing its state, then the Aggregators risk losing the data associated with the
+aggregation job, or in some cases all of the batches associated with the
+aggregation job (if one of the Aggregators considers the aggregation to be
+complete but the other does not, the Aggregators will encounter a
+`batchMismatch` error on attempting to collect the batches associated with the
+aggregation job). This section describes how Aggregators can recover from this
+scenario.
+
 `AggregationJobContinueReq` messages contain a `step` field, allowing
 Aggregators to ensure that their peer is on the expected step of DAP
-aggregation. In particular, the intent is to allow detection and recovery from a
-scenario where the Helper and the Leader have differing views of the current
-aggregation step, which may occur if an `AggregationJobResp` response to the
-Leader is dropped due to a transient network failure. The Leader could then
-resend the original `AggregationJobInitReq` message to restart the aggregation
-process, allowing aggregation to complete successfully. To make this kind of
-recovery possible, Leader implementations SHOULD retain enough information to
-reconstruct the `AggregationJobInitReq` message in the case that the aggregation
-process becomes desynchronized.
+aggregation. An aggregation job is said to be "skewed" if the Leader and Helper
+have a different view of the last completed step of aggregation; for example, if
+the Leader does not receive or successfully process an `AggregationJobResp` from
+the Helper, the Leader will believe that the last completed step is one less
+than the Helper. The intent of the `step` field is to allow detection and
+recovery from a skewed aggregation job. When the Leader receives a
+`stepMismatch` error, it SHOULD re-send the original `AggregationJobInitReq`
+message to restart the aggregation process and allow aggregation to complete
+successfully. To make this kind of recovery possible, Leader implementations
+SHOULD retain enough information to reconstruct the `AggregationJobInitReq`
+message in the case that the aggregation process becomes desynchronized.
 
-When implementing an aggregation step skew recovery strategy, the Helper SHOULD
-ensure that the Leader's `AggregationJobInitReq` message did not change when it
-was re-sent (i.e., the two messages must be identical). This prevents the Leader
+Changing an aggregation job's parameters is illegal, so the Helper MUST ensure
+that the Leader's `AggregationJobInitReq` message did not change when it was
+re-sent (i.e., the two messages must be identical). This prevents the Leader
 from re-winding an aggregation job and re-running aggregation with different
 parameters.
 
@@ -2132,8 +2144,8 @@ One way the Helper could implement this would be to store a digest of the
 Leader's request, indexed by aggregation job ID, and refuse to service a re-sent
 request unless it matches the previously seen request.
 
-Implementation note: in the case that the Leader replays an aggregation which
-the Helper considers to be complete, the Helper should ensure it does not commit
+Implementation note: in the case that the Leader restarts an aggregation which
+the Helper considers to be complete, the Helper must ensure it does not commit
 the results of the aggregation to its aggregate shares more than once.
 
 ## Collecting Results {#collect-flow}
