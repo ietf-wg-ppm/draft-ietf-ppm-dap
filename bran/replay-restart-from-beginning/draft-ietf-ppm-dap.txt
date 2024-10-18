@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 20 April 2025                                        Cloudflare
+Expires: 21 April 2025                                        Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                         17 October 2024
+                                                         18 October 2024
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -63,7 +63,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 20 April 2025.
+   This Internet-Draft will expire on 21 April 2025.
 
 Copyright Notice
 
@@ -1930,9 +1930,9 @@ Table of Contents
    AggregationJobInitReq in the body, the Helper SHOULD respond as it
    did for the original AggregationJobInitReq, or otherwise fail with an
    HTTP client error status code.  The Helper SHOULD allow the
-   aggregation job to be replayed even if the aggregation job has been
+   aggregation job to be restarted even if the aggregation job has been
    continued (see Section 4.6.2), to allow for a Leader to recover from
-   state skew between the Leader and Helper by replaying the
+   state skew between the Leader and Helper by restarting the
    aggregation; see Section 4.6.2.3 for more detail on the recovery
    process.
 
@@ -2232,22 +2232,36 @@ Table of Contents
 
 4.6.2.3.  Recovering from Aggregation Step Skew
 
+   An aggregation job may require many round trips over the network to
+   complete.  If one of the Aggregators fails during this process in a
+   manner that results in it losing its state, then the Aggregators risk
+   losing the data associated with the aggregation job, or in some cases
+   all of the batches associated with the aggregation job (if one of the
+   Aggregators considers the aggregation to be complete but the other
+   does not, the Aggregators will encounter a batchMismatch error on
+   attempting to collect the batches associated with the aggregation
+   job).  This section describes how Aggregators can recover from this
+   scenario.
+
    AggregationJobContinueReq messages contain a step field, allowing
    Aggregators to ensure that their peer is on the expected step of DAP
-   aggregation.  In particular, the intent is to allow detection and
-   recovery from a scenario where the Helper and the Leader have
-   differing views of the current aggregation step, which may occur if
-   an AggregationJobResp response to the Leader is dropped due to a
-   transient network failure.  The Leader could then resend the original
-   AggregationJobInitReq message to restart the aggregation process,
-   allowing aggregation to complete successfully.  To make this kind of
+   aggregation.  An aggregation job is said to be "skewed" if the Leader
+   and Helper have a different view of the last completed step of
+   aggregation; for example, if the Leader does not receive or
+   successfully process an AggregationJobResp from the Helper, the
+   Leader will believe that the last completed step is one less than the
+   Helper.  The intent of the step field is to allow detection and
+   recovery from a skewed aggregation job.  When the Leader receives a
+   stepMismatch error, it SHOULD re-send the original
+   AggregationJobInitReq message to restart the aggregation process and
+   allow aggregation to complete successfully.  To make this kind of
    recovery possible, Leader implementations SHOULD retain enough
    information to reconstruct the AggregationJobInitReq message in the
    case that the aggregation process becomes desynchronized.
 
-   When implementing an aggregation step skew recovery strategy, the
-   Helper SHOULD ensure that the Leader's AggregationJobInitReq message
-   did not change when it was re-sent (i.e., the two messages must be
+   Changing an aggregation job's parameters is illegal, so the Helper
+   MUST ensure that the Leader's AggregationJobInitReq message did not
+   change when it was re-sent (i.e., the two messages must be
    identical).  This prevents the Leader from re-winding an aggregation
    job and re-running aggregation with different parameters.
 
@@ -2256,10 +2270,10 @@ Table of Contents
    service a re-sent request unless it matches the previously seen
    request.
 
-   Implementation note: in the case that the Leader replays an
+   Implementation note: in the case that the Leader restarts an
    aggregation which the Helper considers to be complete, the Helper
-   should ensure it does not commit the results of the aggregation to
-   its aggregate shares more than once.
+   must ensure it does not commit the results of the aggregation to its
+   aggregate shares more than once.
 
 4.7.  Collecting Results
 
