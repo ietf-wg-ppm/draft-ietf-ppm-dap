@@ -1815,9 +1815,10 @@ the same `AggregationJobInitReq` in the body, the Helper SHOULD respond as it
 did for the original `AggregationJobInitReq`, or otherwise fail with an HTTP
 client error status code. The Helper SHOULD allow the aggregation job to be
 restarted even if the aggregation job has been continued (see
-{{agg-continue-flow}}), to allow for a Leader to recover from state skew between
-the Leader and Helper by restarting the aggregation; see
-{{aggregation-step-skew-recovery}} for more detail on the recovery process.
+{{agg-continue-flow}}) to allow for a Leader to recover from state skew between
+the Leader and Helper by re-sending the original `AggregationJobInitReq`
+unchanged; see {{aggregation-step-skew-recovery}} for more detail on the
+recovery process.
 
 #### Input Share Decryption {#input-share-decryption}
 
@@ -2113,26 +2114,24 @@ Helper knows it can clean up its state.
 An aggregation job may require many round trips over the network to complete. If
 one of the Aggregators fails during this process in a manner that results in it
 losing its state, then the Aggregators risk losing the data associated with the
-aggregation job, or in some cases all of the batches associated with the
-aggregation job (if one of the Aggregators considers the aggregation to be
-complete but the other does not, the Aggregators will encounter a
-`batchMismatch` error on attempting to collect the batches associated with the
-aggregation job). This section describes how Aggregators can recover from this
-scenario.
+aggregation job, or in some cases, all of the batches associated with the
+aggregation job. (For example, if one of the Aggregators considers the
+aggregation to be complete but the other does not, the Aggregators will
+encounter a `batchMismatch` error on attempting to collect the batches
+associated with the aggregation job.) This section describes how Aggregators can
+recover from such failures.
 
 `AggregationJobContinueReq` messages contain a `step` field, allowing
 Aggregators to ensure that their peer is on the expected step of DAP
 aggregation. An aggregation job is said to be "skewed" if the Leader and Helper
-have a different view of the last completed step of aggregation; for example, if
+have a different view of the last completed step of aggregation. For example, if
 the Leader does not receive or successfully process an `AggregationJobResp` from
-the Helper, the Leader will believe that the last completed step is one less
-than the Helper. The intent of the `step` field is to allow detection and
-recovery from a skewed aggregation job. When the Leader receives a
-`stepMismatch` error, it SHOULD re-send the original `AggregationJobInitReq`
-message to restart the aggregation process and allow aggregation to complete
-successfully. To make this kind of recovery possible, Leader implementations
-SHOULD retain enough information to reconstruct the `AggregationJobInitReq`
-message in the case that the aggregation process becomes desynchronized.
+the Helper due to a failure of the underlying transport or hardware, the Leader
+will believe that the last completed step is one less than the Helper. The
+intent of the `step` field is to allow detection and recovery from a skewed
+aggregation job. When the Leader receives a `stepMismatch` error, it SHOULD
+re-send the original `AggregationJobInitReq` message to restart the aggregation
+process and allow aggregation to complete successfully.
 
 Changing an aggregation job's parameters is illegal, so the Helper MUST ensure
 that the Leader's `AggregationJobInitReq` message did not change when it was
@@ -2145,8 +2144,8 @@ Leader's request, indexed by aggregation job ID, and refuse to service a re-sent
 request unless it matches the previously seen request.
 
 Implementation note: in the case that the Leader restarts an aggregation which
-the Helper considers to be complete, the Helper must ensure it does not commit
-the results of the aggregation to its aggregate shares more than once.
+the Helper considers to be complete, the Helper MUST NOT commit the results of
+the aggregation to its aggregate shares more than once.
 
 ## Collecting Results {#collect-flow}
 
