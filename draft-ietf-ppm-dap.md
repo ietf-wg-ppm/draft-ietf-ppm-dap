@@ -1009,9 +1009,14 @@ the following parameters associated with it:
   are grouped into batches and the properties that all batches for this task
   must have. The party MUST NOT configure the task if it does not recognize the
   batch mode.
-* `task_expiration`: The time up to which Clients are expected to upload to this
-  task. The task is considered completed after this time. Aggregators MAY reject
-  reports that have timestamps later than `task_expiration`.
+* `task_start`: The time from which the Clients will start uploading reports
+  to a task. The Client is not expected to upload its report if the Client's
+  clock is earlier than `task_start`. Aggregators MAY reject reports with
+  timestamps earlier than `task_start`.
+* `task_duration`: The duration of a task. The task is considered completed
+  after the end time `task_start + task_duration`. Aggregators MAY reject
+  reports that have timestamps later than the end time, and MAY reject the task
+  if `task_duration` is too long.
 * A unique identifier for the VDAF in use for the task, e.g., one of the VDAFs
   defined in {{Section 10 of !VDAF}}.
 
@@ -1258,10 +1263,11 @@ violation. Note that this is also enforced by the Helper during the aggregation
 interaction. The Leader MAY also abort the upload interaction and alert the
 Client with error `reportRejected`.
 
-The Leader MAY ignore any report whose timestamp is past the task's
-`task_expiration`. When it does so, it SHOULD also abort the upload interaction
-and alert the Client with error `reportRejected`. Client MAY choose to opt out
-of the task if its own clock has passed `task_expiration`.
+The Leader MAY ignore any report whose timestamp is before the task's
+`task_start`, or is past the end time `task_start + task_duration`. When it does
+so, it SHOULD also abort the upload interaction and alert the Client with error
+`reportRejected`. Client MAY choose to opt out of the task if its own clock is
+earlier than `task_start`, or is past `task_start + task_duration`.
 
 The Leader may need to buffer reports while waiting to aggregate them (e.g.,
 while waiting for an aggregation parameter from the Collector; see
@@ -1673,6 +1679,7 @@ enum {
   task_expired(7),
   invalid_message(8),
   report_too_early(9),
+  task_not_started(10),
   (255)
 } ReportError;
 
@@ -1870,9 +1877,13 @@ following checks:
    skew. If a report is rejected for this reason, the Aggregator SHOULD mark the
    input share as invalid with the error `report_too_early`.
 
-1. Check if the report's timestamp has passed the task's `task_expiration` time.
-   If so, the Aggregator MAY mark the input share as invalid with the error
-   `task_expired`.
+1. Check if the report's timestamp is before the task's `task_start` time. If
+   so, the Aggregator MAY mark the input share as invalid with the error
+   `task_not_started`.
+
+1. Check if the report's timestamp is past the task's end time, given by
+   `task_start + task_duration`. If so, the Aggregator MAY mark the input share
+   as invalid with the error `task_expired`.
 
 1. Check if the PlaintextInputShare contains unrecognized report extensions. If
    so, the Aggregator MUST mark the input share as invalid with error
@@ -2744,10 +2755,10 @@ Aggregators SHOULD take steps to mitigate the risk of dropping reports (e.g., by
 evicting the oldest data first).
 
 Furthermore, the Aggregators must store data related to a task as long as the
-current time has not passed this task's `task_expiration`. Aggregator MAY delete
-the task and all data pertaining to this task after `task_expiration`.
-Implementors SHOULD provide for some leeway so the Collector can collect the
-batch after some delay.
+current time has not passed this task's end time `task_start + task_duration`.
+Aggregator MAY delete the task and all data pertaining to this task after the
+end time. Implementors SHOULD provide for some leeway so the Collector can
+collect the batch after some delay.
 
 ### Distributed-systems and Synchronization Concerns {#distributed-systems}
 
@@ -3815,6 +3826,7 @@ The initial contents of this registry are listed below in {{report-error-id}}.
 | `0x07` | `task_expired`           | {{aggregation-helper-init}} of RFX XXXX |
 | `0x08` | `invalid_message`        | {{aggregation-helper-init}} of RFX XXXX |
 | `0x09` | `report_too_early`       | {{aggregation-helper-init}} of RFX XXXX |
+| `0x10` | `task_not_started`       | {{aggregation-helper-init}} of RFX XXXX |
 {: #report-error-id title="Initial contents of the Report Error Identifiers registry."}
 
 ## URN Sub-namespace for DAP (urn:ietf:params:ppm:dap) {#urn-space}
