@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 20 April 2025                                        Cloudflare
+Expires: 26 April 2025                                        Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                         17 October 2024
+                                                         23 October 2024
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -63,7 +63,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 20 April 2025.
+   This Internet-Draft will expire on 26 April 2025.
 
 Copyright Notice
 
