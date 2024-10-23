@@ -562,7 +562,8 @@ else about the measurements. We call `F` the "aggregation function".
 This protocol is extensible and allows for the addition of new cryptographic
 schemes that implement the VDAF interface specified in
 {{!VDAF=I-D.draft-irtf-cfrg-vdaf-12}}. This protocol only supports VDAFs which
-require a single collection to provide useful results.
+require a single collection to provide useful results, and whose aggregation
+results are independent of the order in which measurements are aggregated.
 
 VDAFs rely on secret sharing to protect the privacy of the measurements. Rather
 than sending its input in the clear, each Client shards its measurement into a
