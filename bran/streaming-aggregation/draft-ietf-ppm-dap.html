@@ -4119,10 +4119,11 @@ ID the Leader has chosen for this collection job.<a href="#section-4.7.2-3.2.1" 
 <p id="section-4.7.2-4">The Leader then combines the values inside the batch bucket as follows:<a href="#section-4.7.2-4" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-4.7.2-5.1">
-              <p id="section-4.7.2-5.1.1">Aggregate shares are combined via <code>Vdaf.merge(agg_param, agg_shares)</code> ((see <span>[<a href="#VDAF" class="cite xref">VDAF</a>], <a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-12#section-4.4" class="relref">Section 4.4</a></span>)), where
-<code>agg_param</code> is the aggregation parameter provided in the <code>CollectionJobReq</code>,
-and <code>agg_shares</code> are the (partial) aggregate shares in the batch buckets. The
-result is the final aggregate share for this collection job.<a href="#section-4.7.2-5.1.1" class="pilcrow">¶</a></p>
+              <p id="section-4.7.2-5.1.1">Aggregate shares are combined via <code>Vdaf.merge(agg_param, agg_shares)</code> ((see
+<span>[<a href="#VDAF" class="cite xref">VDAF</a>], <a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-12#section-4.4" class="relref">Section 4.4</a></span>)), where <code>agg_param</code> is the aggregation parameter
+provided in the <code>CollectionJobReq</code>, and <code>agg_shares</code> are the (partial)
+aggregate shares in the batch buckets. The result is the final aggregate share
+for this collection job.<a href="#section-4.7.2-5.1.1" class="pilcrow">¶</a></p>
 </li>
             <li class="normal" id="section-4.7.2-5.2">
               <p id="section-4.7.2-5.2.1">Report counts are combined via summing.<a href="#section-4.7.2-5.2.1" class="pilcrow">¶</a></p>
