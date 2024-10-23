@@ -414,8 +414,9 @@ Batch:
   result. As defined in {{!VDAF}}.
 
 Batch bucket:
-: Data associated with a given batch allowing the aggregators to perform
-  incremental aggregation.
+: State associated with a given batch allowing the aggregators to perform
+  incremental aggregation. Depending on the batch mode, there may be many batch
+  buckets tracking the state of a single batch.
 
 Batch duration:
 : The time difference between the oldest and newest report in a batch.
@@ -2139,33 +2140,37 @@ When aggregation recovers an output share, it must be stored into an appropriate
 "batch bucket", which is defined in this section. The data stored in a batch
 bucket is kept for eventual use in the {{collect-flow}}.
 
-Batch buckets are indexed by an aggregation parameter, as well as a batch
-mode-specific "batch bucket identifier":
+Batch buckets are indexed by a batch mode-specific "batch bucket identifier":
 
 * For the time-interval batch mode, the batch bucket identifier is an interval
   of time whose beginning is a multiple of the task's `time_precision` and whose
   duration is equal to the task's `time_precision`. The identifier associated
   with a given output share is the unique such interval containing the client
-  timestamp of the report the output share was recovered from.
+  timestamp of the report the output share was recovered from; for example, if
+  the task's `time_precision` is 1000 seconds and the report's timestamp is
+  1729629081, the relevant batch bucket identifier is `(1729629000, 1000)`. (The
+  first element of the pair denotes the start of the batch interval and the
+  second denotes the duration.)
 * For the leader-selected batch mode, the batch bucket identifier is a batch ID.
   The identifier associated with a given output share is the batch ID of the
-  related aggregation.
+  related aggregation job.
 
 A few different pieces of information are associated with each batch bucket:
 
 * An VDAF-specific aggregate share, as defined in {{!VDAF}}.
 * A count of a number of reports included in the batch bucket.
-* A 32-byte checksum value.
+* A 32-byte checksum value, as defined below.
 
 When processing an output share `out_share`, the following procedure is used to
 update the batch buckets:
 
-* Look up the existing batch bucket for the aggregation parameter `agg_param`
-  associated with the aggregation job, and the batch bucket identifier
+* Look up the existing batch bucket for the batch bucket identifier
   associated with the aggregation job and output share.
   * If there is no existing batch bucket, initialize a new one. The initial
-    aggregate share value is computed as `Vdaf.agg_init(agg_param)`; the initial
-    count is `0`; and the initial checksum is 32 zero bytes.
+    aggregate share value is computed as `Vdaf.agg_init(agg_param)`, where
+    `agg_param` is the aggregation parameter associated with the aggregation job
+    (see {{!VDAF, Section 4.4}}); the initial count is `0`; and the initial
+    checksum is 32 zero bytes.
 * Update the aggregate share `agg_share` to `Vdaf.agg_update(agg_param,
   agg_share, out_share)`.
 * Increment the count by 1.
@@ -2173,13 +2178,14 @@ update the batch buckets:
   SHA256 {{!SHS=DOI.10.6028/NIST.FIPS.180-4}} hash of the report ID associated
   with the output share.
 
-Implementation note: this text describes a single set of values associated with
-each batch bucket. However, implementations are free to shard the aggregate
+Implementation note: this section describes a single set of values associated
+with each batch bucket. However, implementations are free to shard the aggregate
 share/count/checksum values associated with the batch bucket, combining them
 back into a single set of values when reading the batch bucket. This may be
 useful to avoid write contention. The aggregate share values are combined using
-`Vdaf.merge(agg_param, agg_shares)`, the count values are combined by summing,
-and the checksum values are combined by bitwise XOR.
+`Vdaf.merge(agg_param, agg_shares)` (see {{!VDAF, Section 4.4}}), the count
+values are combined by summing, and the checksum values are combined by bitwise
+XOR.
 
 #### Recovering from Aggregation Step Skew {#aggregation-step-skew-recovery}
 
@@ -2267,8 +2273,10 @@ running aggregation jobs ({{aggregate-flow}}) until the Collector initiates a
 collection job. This is because, in general, the aggregation parameter is not
 known until this point. In certain situations it is possible to predict the
 aggregation parameter in advance. For example, for Prio3 the only valid
-aggregation parameter is the empty string. For these reasons, the collection
-job is handled asynchronously.
+aggregation parameter is the empty string. For these reasons, the collection job
+is handled asynchronously. If aggregation is performed eagerly, the Leader MUST
+validate that the aggregation parameter received in the `CollectionJobReq`
+matches the aggregation parameter used in aggregations.
 
 Upon receipt of a `CollectionJobReq`, the Leader begins by checking that it
 recognizes the task ID in the request path. If not, it MUST abort with error
@@ -2388,20 +2396,19 @@ First, the Leader retrieves all batch buckets ({{batch-buckets}}) associated
 with this collection job. The batch buckets to retrieve depend on the batch mode
 of this task:
 
-* For time-interval tasks, this is all batch buckets associated with the
-  aggregation parameter provided in the `CollectionJobReq`, and whose batch
-  bucket identifiers are contained within the batch interval specified in the
+* For time-interval tasks, this is all batch buckets whose batch bucket
+  identifiers are contained within the batch interval specified in the
   `CollectionJobReq`'s query.
-* For leader-selected tasks, this is the batch bucket associated with the
-  aggregation parameter provided in the `CollectionJobReq`, and the batch ID the
-  Leader has chosen for this collection job.
+* For leader-selected tasks, this is the batch bucket associated with the batch
+  ID the Leader has chosen for this collection job.
 
-The Leader then combines the values inside the batch bucket, as so:
+The Leader then combines the values inside the batch bucket as follows:
 
-* Aggregate shares are combined via `Vdaf.merge(agg_param, agg_shares)`, where
-  `agg_param` is the aggregation parameter provided in the `CollectionJobReq`,
-  and `agg_shares` are the (partial) aggregate shares in the batch buckets. The
-  result is the final aggregate share for this collection job.
+* Aggregate shares are combined via `Vdaf.merge(agg_param, agg_shares)` ((see
+  {{!VDAF, Section 4.4}})), where `agg_param` is the aggregation parameter
+  provided in the `CollectionJobReq`, and `agg_shares` are the (partial)
+  aggregate shares in the batch buckets. The result is the final aggregate share
+  for this collection job.
 * Report counts are combined via summing.
 * Checksums are combined via bitwise XOR.
 
@@ -2457,13 +2464,16 @@ To handle the Leader's request, the Helper first ensures that it recognizes the
 task ID in the request path. If not, it MUST abort with error
 `unrecognizedTask`. The Helper then verifies that the request meets the
 requirements for batch parameters following the procedure in
-{{batch-validation}}.
+{{batch-validation}}. The Helper MUST validate that the aggregation parameter
+matches the aggregation parameter used during aggregation of this batch;
+otherwise, it aborts with "invalidMessage".
 
 Next, the Helper retrieves and combines the batch buckets associated with the
-request using the same process used by the Leader, arriving at its final
-aggregate share, report count, and checksum values. If the Helper's computed
-report count and checksum values do not match the values provided in the
-`AggregateShareReq`, it MUST abort with an error of type "batchMismatch".
+request using the same process used by the Leader (as described at the beginning
+of this section {{collect-aggregate}}), arriving at its final aggregate share,
+report count, and checksum values. If the Helper's computed report count and
+checksum values do not match the values provided in the `AggregateShareReq`, it
+MUST abort with an error of type "batchMismatch".
 
 The Helper then encrypts `agg_share` under the Collector's HPKE public key as
 described in {{aggregate-share-encrypt}}, yielding `encrypted_agg_share`.
