@@ -1544,7 +1544,7 @@ struct {
 
 struct {
   opaque agg_param<0..2^32-1>;
-  PartialBatchSelector part_batch_selector;
+  opaque part_batch_selector<0..2^16-1>;
   PrepareInit prepare_inits<0..2^32-1>;
 } AggregationJobInitReq;
 ~~~
@@ -1553,12 +1553,14 @@ This message consists of:
 
 * `agg_param`: The VDAF aggregation parameter.
 
-* `part_batch_selector`: The "partial batch selector" used by the Aggregators to
-  determine how to aggregate each report:
+* `part_batch_selector`: The "partial batch selector" used by the Aggregators
+  to determine how to aggregate each report. The content of this field is a
+  `PartialBatchSelector` as defined above. The structure depends on the
+  indicated batch mode; the length prefix is to ensure the message can be
+  decoded even if the indicated batch mode is not recognized.
 
-    * For leader-selected tasks, the Leader specifies a "batch ID" that
-      determines the batch to which each report for this aggregation job
-      belongs.
+  For leader-selected tasks, the Leader specifies a "batch ID" that determines
+  the batch to which each report for this aggregation job belongs.
 
   The indicated batch mode MUST match the task's batch mode. Otherwise, the
   Helper MUST abort with error `invalidMessage`.
@@ -2187,15 +2189,20 @@ as follows:
 
 ~~~ tls-presentation
 struct {
-  Query query;
+  opaque query<0..2^16-1>;
   opaque agg_param<0..2^32-1>; /* VDAF aggregation parameter */
 } CollectionJobReq;
 ~~~
 
 The named parameters are:
 
-* `query`, the Collector's query. The indicated batch mode MUST match the task's
-  batch mode. Otherwise, the Leader MUST abort with error "invalidMessage".
+* `query`, the Collector's query. The content of this field is a `Query` as
+  defined in {{batch-mode}}, whose structure depends on the indicated batch
+  mode. The length prefix is to ensure the message can be decoded even if the
+  indicated batch mode is not recognized. The indicated batch mode MUST match
+  the task's batch mode. Otherwise, the Leader MUST abort with error
+  "invalidMessage".
+
 * `agg_param`, an aggregation parameter for the VDAF being executed. This is the
   same value as in `AggregationJobInitReq` (see {{leader-init}}).
 
@@ -2344,7 +2351,7 @@ struct {
 } BatchSelector;
 
 struct {
-  BatchSelector batch_selector;
+  opaque batch_selector<0..2^16-1>;
   opaque agg_param<0..2^32-1>;
   uint64 report_count;
   opaque checksum[32];
@@ -2354,9 +2361,13 @@ struct {
 The media type of the request is "application/dap-aggregate-share-req". The
 message contains the following parameters:
 
-* `batch_selector`: The "batch selector", which encodes parameters used to
-  determine the batch being aggregated. The value depends on the batch mode for
-  the task:
+* `batch_selector`: The "batch selector". The content of this field is a
+  `BatchSelector` as defined above, the structure of which depends on the
+  indicated batch mode. The length prefix is used to ensure the message can be
+  decoded even if the indicated batch mode is not recognized.
+
+  The batch selector encodes parameters used to determine the batch being
+  aggregated. The value depends on the batch mode for the task:
 
     * For time-interval tasks, the request specifies the batch interval.
 
@@ -3049,7 +3060,7 @@ all participating Aggregators stored unencrypted input shares on the same cloud
 object storage service, then that cloud vendor would be able to reassemble all
 the input shares and defeat privacy.
 
-# IANA Considerations
+# IANA Considerations {#iana}
 
 This document requests registry of new media types ({{iana-media-types}}),
 creation of new codepoint registries ({{iana-codepoints}}), and registration of
@@ -3835,5 +3846,34 @@ Index value:  No transformation needed.
 
 The initial contents of this namespace are the types and descriptions in
 {{urn-space-errors}}, with the Reference field set to RFC XXXX.
+
+# Extending this Document
+
+The behavior of DAP may be extended or modified by future documents defining
+one or more of the following:
+
+1. a new batch mode ({{batch-mode}})
+1. a new report extension ({{report-extensions}})
+1. a new report error ({{aggregation-helper-init}})
+1. a new entry in the URN sub-namespace for DAP ({{urn-space-errors}})
+
+Each of these requires registration of a codepoint or other value; see
+{{iana}}. No other considerations are required except in the following cases:
+
+* When a document defines a new batch mode, it MUST include a section titled
+  "DAP Considerations" specifying the following:
+
+    * The contents of the `Query` ({{batch-mode}}), `PartialBatchSelector`
+      ({{leader-init}}), and `BatchSelector` ({{collect-aggregate}}) structures
+      exchanged over the network during aggregation and collection when the new
+      batch mode is indicated
+
+    * How reports are partitioned into batches and how the Aggregators prevent
+      overlaps ({{batch-validation}})
+
+* When a document defines a new report extension, it SHOULD include in its
+  "Security Considerations" section some discussion of how the extension
+  impacts the security of DAP with respect to the threat model in
+  {{sec-considerations}}.
 
 --- back
