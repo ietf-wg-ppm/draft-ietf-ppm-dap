@@ -889,116 +889,42 @@ VDAF types:
 
 ## Batch Modes, Batches, and Queries {#batch-mode}
 
-Aggregated results are computed based on sets of reports, called "batches". The
-Collector requests the aggregated results for a given batch via a "query". The
-Aggregators use this query to carry out the aggregation flow and produce
-aggregate shares encrypted to the Collector.
+An aggregate result is computed from a set of reports, called a "batch". The
+Collector requests the aggregate result by making a "query"; the Aggregators
+use this query to select a batch for aggregation.
 
 Each measurement task has a preconfigured "batch mode". The batch mode defines
 both how reports may be partitioned into batches, as well as how these batches
 are addressed and the semantics of the query used for collection.
 
-This document defines the time-interval and leader-selected batch modes.
+This document defines two batch modes:
+
+* time-interval ({{time-interval-batch-mode}}) in which the query specifies a
+  time interval, and the batch consists of all reports with a timestamp in that
+  interval.
+
+* leader-selected ({{leader-selected-batch-mode}}) in which the Leader assigns
+  reports to batches itself, and the Collector's query simply requests the
+  aggregate result for the "next" batch of reports.
+
+Future documents may define additional batch modes for DAP; see
+{{extending-this-doc}}. Implementations are free to implement only a subset of
+the available batch modes.
+
 Batch modes are identified with a single byte in serialized messages, as
 follows:
 
 ~~~ tls-presentation
 enum {
-  reserved(0), /* Reserved for testing purposes */
+  reserved(0),
   (255)
 } BatchMode;
 ~~~
 
-The time-interval batch mode is described in {{time-interval-batch-mode}}; the
-leader-selected batch mode is described in {{leader-selected-batch-mode}}.
-Future specifications may introduce new batch modes as needed (see
-{{batch-mode-reg}}). Implementations are free to implement only a subset of the
-available batch modes.
-
-A query includes parameters used by the Aggregators to select a batch of
-reports specific to the given batch mode. A query is defined as follows:
-
-~~~ tls-presentation
-struct {
-  BatchMode batch_mode;
-  select (Query.batch_mode) {
-    case time_interval: Interval batch_interval;
-    case leader_selected: Empty;
-  }
-} Query;
-~~~
-
-The query is issued in-band as part of the collect interaction
-({{collect-flow}}). Its content is determined by the batch mode, which in turn
-is determined by the measurement task, which is configured out-of-band. All
-batch modes have the following configuration parameters in common:
-
-- `min_batch_size` - The smallest number of reports the batch is allowed to
-  include. In a sense, this parameter controls the degree of privacy that will
-  be obtained: the larger the minimum batch size, the higher degree of privacy.
-  However, this ultimately depends on the application and the nature of the
-  measurements and aggregation function.
-
-- `time_precision` - Clients use this value to truncate their report timestamps;
-  see {{upload-flow}}. Additional semantics may apply, depending on the batch
-  mode. (See {{batch-validation}} for details.)
-
-The parameters pertaining to specific batch modes are described in
-{{time-interval-batch-mode}} and {{leader-selected-batch-mode}}.
-
-### Time-interval Batch Mode {#time-interval-batch-mode}
-
-~~~ tls-presentation
-enum {
-  time_interval(1),
-  (255)
-} BatchMode;
-~~~
-
-The time-interval batch mode is designed to support applications in which
-reports are collected into batches grouped by an interval of time. The Collector
-specifies a "batch interval" that determines the time range for reports included
-in the batch. For each report in the batch, the time at which that report was
-generated (see {{upload-flow}}) MUST fall within the batch interval specified by
-the Collector.
-
-Typically the Collector issues queries for which the batch intervals are
-continuous, monotonically increasing, and have the same duration. For example,
-the sequence of batch intervals `(1659544000, 1000)`, `(1659545000, 1000)`,
-`(1659546000, 1000)`, `(1659547000, 1000)` satisfies these conditions. (The
-first element of the pair denotes the start of the batch interval and the second
-denotes the duration.) However, this is not a requirement--the Collector may
-decide to issue queries out-of-order. In addition, the Collector may need to
-vary the duration to adjust to changing report upload rates.
-
-### Leader-selected Batch Mode {#leader-selected-batch-mode}
-
-~~~ tls-presentation
-enum {
-  leader_selected(2),
-  (255)
-} BatchMode;
-~~~
-
-The leader-selected batch mode is used to support applications in which it is
-acceptable for reports to be batched in an arbitrary fashion by the Leader. Each
-batch of reports is identified by an opaque "batch ID". Both the reports
-included in each batch and the ID for each batch are allocated in an arbitrary
-fashion by the Leader.
-
-The Collector will not know the set of batch IDs available for collection. To
-get the aggregate of a batch, the Collector issues a query, which does not
-include any information specifying a particular batch (see {{batch-mode}}). The
-Leader selects a recent batch to aggregate. The Leader MUST select a batch that
-has not yet been associated with a collection job.
-
-The Aggregators can output batches of any size that is larger than or equal to
-`min_batch_size`. The target batch size, if any, is implementation-specific, and
-may be equal to or greater than the minimum batch size. Deciding how soon
-batches should be output is also implementation-specific. Exactly sizing batches
-may be challenging for Leader deployments in which multiple, independent nodes
-running the aggregate interaction (see {{aggregate-flow}}) need to be
-coordinated.
+The query is issued to the Leader by the Collector during the collection
+interaction ({{collect-flow}}). In addition, information used to guide batch
+selection is conveyed from the Leader to the Helper when initializing
+aggregation ({{aggregate-flow}}) and finalizing the aggregate shares.
 
 ## Task Configuration {#task-configuration}
 
@@ -1027,8 +953,16 @@ the following parameters associated with it:
   after the end time `task_start + task_duration`. Aggregators MUST reject
   reports that have timestamps later than the end time, and MAY choose to opt
   out of the task if `task_duration` is too long.
+* `time_precision`: Clients use this value to truncate their report timestamps;
+  see {{upload-flow}}. Additional semantics may apply, depending on the batch
+  mode. (See {{batch-validation}} for details.)
 * A unique identifier for the VDAF in use for the task, e.g., one of the VDAFs
   defined in {{Section 10 of !VDAF}}.
+* `min_batch_size`: The smallest number of reports the batch is allowed to
+  include. In a sense, this parameter controls the degree of privacy that will
+  be obtained: the larger the minimum batch size, the higher degree of privacy.
+  However, this ultimately depends on the application and the nature of the
+  measurements and aggregation function.
 
 Note that the `leader_aggregator_url` and `helper_aggregator_url` values may
 include arbitrary path components.
@@ -1431,9 +1365,10 @@ In general, aggregation cannot begin until the Collector specifies a query and
 an aggregation parameter. However, depending on the VDAF and batch mode in use,
 it is often possible to begin aggregation as soon as reports arrive. For
 example, Prio3 has just one valid aggregation parameter (the empty string), and
-thus allows for eager aggregation; and both the time-interval and
-leader-selected batch modes defined in this document allow for eager
-aggregation.
+thus allows for eager aggregation; and both the time-interval
+({{time-interval-batch-mode}}) and leader-selected
+({{leader-selected-batch-mode}}) batch modes defined in this document allow for
+eager aggregation.
 
 An aggregation job can be thought of as having three phases, which are
 described in the remaining subsections:
@@ -1566,10 +1501,7 @@ opaque BatchID[32];
 
 struct {
   BatchMode batch_mode;
-  select (PartialBatchSelector.batch_mode) {
-    case time_interval: Empty;
-    case leader_selected: BatchID batch_id;
-  };
+  opaque config<0..2^16-1>;
 } PartialBatchSelector;
 
 struct {
@@ -1583,12 +1515,15 @@ This message consists of:
 
 * `agg_param`: The VDAF aggregation parameter.
 
-* `part_batch_selector`: The "partial batch selector" used by the Aggregators to
-  determine how to aggregate each report:
+* `part_batch_selector`: The "partial batch selector" used by the Aggregators
+  to determine how to aggregate each report. Its contents depends on the
+  indicated batch mode: for time-interval mode, the `config` field is empty
+  ({{time-interval-batch-mode}}); for leader-selected tasks, the Leader
+  specifies a "batch ID" that determines the batch to which each report for
+  this aggregation job belongs ({{leader-selected-batch-mode}}).
 
-    * For leader-selected tasks, the Leader specifies a "batch ID" that
-      determines the batch to which each report for this aggregation job
-      belongs.
+  Documents that define batch modes MUST specify the content this field; see
+  {{extending-this-doc}} for details.
 
   The indicated batch mode MUST match the task's batch mode. Otherwise, the
   Helper MUST abort with error `invalidMessage`.
@@ -2023,7 +1958,7 @@ Otherwise, the Leader proceeds as follows with each report:
    proceeds to another continuation step. If `outbound == None`, then the
    preparation process is complete: either `state == Rejected()`, in which case
    the Leader rejects the report and removes it from the candidate set; or
-   `state == Finished(out_share)`, in which case preparation is complete and and
+   `state == Finished(out_share)`, in which case preparation is complete and
    the Leader updates the relevant batch bucket with `out_share` as described in
    {{batch-buckets}}.
 
@@ -2177,20 +2112,13 @@ When aggregation recovers an output share, it must be stored into an appropriate
 "batch bucket", which is defined in this section. The data stored in a batch
 bucket is kept for eventual use in the {{collect-flow}}.
 
-Batch buckets are indexed by a batch mode-specific "batch bucket identifier":
+Batch buckets are indexed by a "batch bucket identifier" as as specified by the
+task's batch mode:
 
-* For the time-interval batch mode, the batch bucket identifier is an interval
-  of time whose beginning is a multiple of the task's `time_precision` and whose
-  duration is equal to the task's `time_precision`. The identifier associated
-  with a given output share is the unique such interval containing the client
-  timestamp of the report the output share was recovered from; for example, if
-  the task's `time_precision` is 1000 seconds and the report's timestamp is
-  1729629081, the relevant batch bucket identifier is `(1729629000, 1000)`. (The
-  first element of the pair denotes the start of the batch interval and the
-  second denotes the duration.)
-* For the leader-selected batch mode, the batch bucket identifier is a batch ID.
-  The identifier associated with a given output share is the batch ID of the
-  related aggregation job.
+* For the time-interval batch mode ({{time-interval-batch-mode}}, the batch
+  bucket identifier is an interval of time and is determined by the report's timestamp.
+* For the leader-selected batch mode ({{leader-selected-batch-mode}}), the
+  batch bucket identifier is the batch ID and indicated in the aggregation job.
 
 A few different pieces of information are associated with each batch bucket:
 
@@ -2287,6 +2215,11 @@ as follows:
 
 ~~~ tls-presentation
 struct {
+  BatchMode batch_mode;
+  opaque config<0..2^16-1>;
+} Query;
+
+struct {
   Query query;
   opaque agg_param<0..2^32-1>; /* VDAF aggregation parameter */
 } CollectionJobReq;
@@ -2294,8 +2227,19 @@ struct {
 
 The named parameters are:
 
-* `query`, the Collector's query. The indicated batch mode MUST match the task's
-  batch mode. Otherwise, the Leader MUST abort with error "invalidMessage".
+* `query`, the Collector's query. The content of this field depends on the
+  indicated batch mode: for time-interval mode, the `config` field contains the
+  requested time interval ({{time-interval-batch-mode}}); for leader-selected
+  mode, the `config` field is empty, and the Collector gets the aggregate
+  result for the next batch selected by the Leader
+  ({{leader-selected-batch-mode}}).
+
+  Batch modes defined by future documents MUST specify the content of this field;
+  see {{extending-this-doc}} for details.
+
+  The indicated batch mode MUST match the task's batch mode. Otherwise, the
+  Leader MUST abort with error "invalidMessage".
+
 * `agg_param`, an aggregation parameter for the VDAF being executed. This is the
   same value as in `AggregationJobInitReq` (see {{leader-init}}).
 
@@ -2367,10 +2311,10 @@ structure includes the following:
 * `report_count`: The number of reports included in the batch.
 
 * `interval`: The smallest interval of time that contains the timestamps of all
-  reports included in the batch, such that the interval's start and duration are
-  both multiples of the task's `time_precision` parameter. Note that in the case
-  of a time-interval query (see {{batch-mode}}), this interval can be smaller
-  than the one in the corresponding `CollectionJobReq.query`.
+  reports included in the batch, such that the interval's start and duration
+  are both multiples of the task's `time_precision` parameter. Note that in the
+  case of a time-interval query ({{time-interval-batch-mode}}), this interval
+  can be smaller than the one in the corresponding `CollectionJobReq.query`.
 
 * `leader_encrypted_agg_share`: The Leader's aggregate share, encrypted to the
   Collector (see {{aggregate-share-encrypt}}).
@@ -2433,11 +2377,12 @@ First, the Leader retrieves all batch buckets ({{batch-buckets}}) associated
 with this collection job. The batch buckets to retrieve depend on the batch mode
 of this task:
 
-* For time-interval tasks, this is all batch buckets whose batch bucket
-  identifiers are contained within the batch interval specified in the
-  `CollectionJobReq`'s query.
-* For leader-selected tasks, this is the batch bucket associated with the batch
-  ID the Leader has chosen for this collection job.
+* For time-interval ({{time-interval-batch-mode}}), this is all batch buckets
+  whose batch bucket identifiers are contained within the batch interval
+  specified in the `CollectionJobReq`'s query.
+* For leader-selected ({{leader-selected-batch-mode}}), this is the batch
+  bucket associated with the batch ID the Leader has chosen for this collection
+  job.
 
 The Leader then combines the values inside the batch bucket as follows:
 
@@ -2455,10 +2400,7 @@ Then the Leader sends a POST request to
 ~~~ tls-presentation
 struct {
   BatchMode batch_mode;
-  select (BatchSelector.batch_mode) {
-    case time_interval: Interval batch_interval;
-    case leader_selected: BatchID batch_id;
-  };
+  opaque config<0..2^16-1>;
 } BatchSelector;
 
 struct {
@@ -2472,13 +2414,14 @@ struct {
 The media type of the request is "application/dap-aggregate-share-req". The
 message contains the following parameters:
 
-* `batch_selector`: The "batch selector", which encodes parameters used to
-  determine the batch being aggregated. The value depends on the batch mode for
-  the task:
+* `batch_selector`: The "batch selector", the contents of which depends on the
+  indicated batch mode: for time-interval mode, the `config` field contains the
+  time interval selected by the Collector ({{time-interval-batch-mode}}); in
+  leader-selected mode, the field contains the batch ID selected by the Leader
+  ({{leader-selected-batch-mode}}).
 
-    * For time-interval tasks, the request specifies the batch interval.
-
-    * For leader-selected tasks, the request specifies the batch ID.
+  Future documents that new batch modes MUST specify the contents of the
+  `config` field; see {{extending-this-doc}} for details.
 
   The indicated batch mode MUST match the task's batch mode. Otherwise, the
   Helper MUST abort with "invalidMessage".
@@ -2618,36 +2561,34 @@ sent the aggregate share (`0x02` for the Leader and `0x03` for the Helper),
 `0x00` represents the Role of the recipient (always the Collector), and
 `agg_share_aad` is an `AggregateShareAad` message constructed from the task ID
 and the aggregation parameter in the collect request, and a batch selector. The
-value of the batch selector used in `agg_share_aad` is computed by the Collector
-from its query and the response to its query as follows:
+value of the batch selector used in `agg_share_aad` is determined by the batch mode.
 
-* For time-interval tasks, the batch selector is the batch interval specified in
-  the query.
+* For time-interval ({{time-interval-batch-mode}}), the batch selector is the
+  batch interval specified in the query.
 
-* For leader-selected tasks, the batch selector is the batch ID sent in the
-  response.
+* For leader-selected ({{leader-selected-batch-mode}}), the batch selector is
+  the batch ID sent in the response.
 
 The `OpenBase()` function is as specified in {{!HPKE, Section 6.1}} for the
 ciphersuite indicated by the HPKE configuration.
 
 ### Batch Validation {#batch-validation}
 
-Before a Leader runs a collection job or a Helper responds to an
-AggregateShareReq, it must first check that the job or request does not violate
-the parameters associated with the DAP task. It does so as described here. Where
-we say that an Aggregator MUST abort with some error, then:
+When the Leader receives a `Query` in the request from the Collector during
+collection initialization ({{collect-init}}), it must first check that the
+batch determined by the query can be collected. It does so as described here.
+The Helper performs the same check when it receives a `BatchSelector` in the
+request from the Leader for its aggregate share ({{collect-aggregate}}).
 
-- Leaders should respond to subsequent HTTP GET requests to the collection job
-  with the indicated error.
-- Helpers should respond to the AggregateShareReq with the indicated error.
-
-First the Aggregator checks that the batch respects any "boundaries" determined
-by the batch mode. These are described in the subsections below. If the boundary
-check fails, then the Aggregator MUST abort with an error of type
+First, the Aggregator checks if the request (the `CollectionJobReq` for the
+Leader and the `AggregateShareReq` for the Helper) identifies a valid set of
+batch buckets ({{batch-buckets}}). If not, it MUST abort the request with
 "batchInvalid".
 
-Next, the Aggregator checks that batch contains a valid number of reports, as
-determined by the batch mode. If the size check fails, then Helpers MUST abort
+Next, the Aggregator checks that batch contains a valid number of reports. The
+Aggregator checks that `len(X) >= min_batch_size`, where `X` is the set of
+reports successfully aggregated into the batch and `min_batch_size` is the
+minimum batch size for the task. If this check fails, then Helpers MUST abort
 with an error of type "invalidBatchSize". Leaders SHOULD wait for more reports
 to be validated and try the collection job again later.
 
@@ -2656,21 +2597,94 @@ distinct aggregation parameters. If the batch has been queried with more than
 one distinct aggregation parameter, the Aggregator MUST abort with error of type
 "batchQueriedMultipleTimes".
 
-Finally, the Aggregator checks that the batch does not contain a report that was
-included in any previous batch. If this batch overlap check fails, then the
-Aggregator MUST abort with error of type "batchOverlap". For time-interval
-tasks, it is sufficient (but not necessary) to check that the batch interval
-does not overlap with the batch interval of any previous query. If this batch
-interval check fails, then the Aggregator MAY abort with error of type
-"batchOverlap".
+Next, the Aggregator checks if the set of batch buckets identified by the
+request overlaps with the batch buckets that have already been collected. If
+so, it MUST abort with "batchOverlap".
 
-#### Time-interval Batch Mode {#time-interval-batch-validation}
+Finally, the batch mode may define additional batch validation rules.
 
-##### Boundary Check
+# Batch Modes
 
-The batch boundaries are determined by the `time_precision` field of the task
-configuration. For the `batch_interval` included with the query, the Aggregator
-checks that:
+This section defines an initial set of batch modes for DAP. New batch modes may
+be defined by future documents following the guidelines in
+{{extending-this-doc}}.
+
+Each batch mode specifies the following:
+
+1. The value of the `config` field of `Query`, `PartialBatchSelector`, and
+   `BatchSelector`
+
+1. Batch buckets ({{batch-buckets}}): how reports are assigned to batch
+   buckets; how each bucket is identified; and how batch buckets are mapped to
+   batches and how batch buckets
+
+## Time Interval {#time-interval-batch-mode}
+
+~~~ tls-presentation
+enum {
+  time_interval(1),
+  (255)
+} BatchMode;
+~~~
+
+The time-interval batch mode is designed to support applications in which
+reports are collected into batches grouped by an interval of time. The Collector
+specifies a "batch interval" that determines the time range for reports included
+in the batch. For each report in the batch, the time at which that report was
+generated (see {{upload-flow}}) MUST fall within the batch interval specified by
+the Collector.
+
+Typically the Collector issues queries for which the batch intervals are
+continuous, monotonically increasing, and have the same duration. For example,
+the sequence of batch intervals `(1659544000, 1000)`, `(1659545000, 1000)`,
+`(1659546000, 1000)`, `(1659547000, 1000)` satisfies these conditions. (The
+first element of the pair denotes the start of the batch interval and the second
+denotes the duration.) However, this is not a requirement--the Collector may
+decide to issue queries out-of-order. In addition, the Collector may need to
+vary the duration to adjust to changing report upload rates.
+
+### Query Configuration
+
+The payload of `Query.config` is
+
+~~~ tls-presentation
+struct {
+  Interval batch_interval;
+} TimeIntervalQueryConfig;
+~~~
+
+where `batch_interval` is the batch interval requested by the Collector.
+
+### Partial Batch Selector Configuration
+
+The payload of `PartialBatchSelector.config` is empty.
+
+### Batch Selector Configuration
+
+The payload of `BatchSelector.config` is
+
+~~~ tls-presentation
+struct {
+  Interval batch_interval;
+} TimeIntervalBatchSelectorConfig;
+~~~
+
+where `batch_interval` is the batch interval requested by the Collector.
+
+### Batch Buckets {#time-interval-batch-buckets}
+
+Each batch bucket is identified by an interval of time whose beginning is a
+multiple of the task's `time_precision` and whose duration is equal to the
+task's `time_precision`. The identifier associated with a given report is the
+unique such interval containing the timestamp of the report; for example, if
+the task's `time_precision` is 1000 seconds and the report's timestamp is
+1729629081, the relevant batch bucket identifier is `(1729629000, 1000)`. The
+first element of the pair denotes the start of the batch interval and the
+second denotes the duration.
+
+The `Query` received by the Leader determines a valid set of batch bucket
+identifiers if the following conditions hold (likewise for the `BatchSelector`
+received by the Helper):
 
 * `batch_interval.duration >= time_precision` (this field determines,
   effectively, the minimum batch duration)
@@ -2678,30 +2692,78 @@ checks that:
 * both `batch_interval.start` and `batch_interval.duration` are divisible by
   `time_precision`
 
-These measures ensure that Aggregators can efficiently "pre-aggregate" output
-shares recovered during the aggregation interaction.
+A batch consists of a sequence of contiguous batch buckets. That is, the set of
+batch buckets identifiers for the batch interval is
+`(batch_interval.start,
+  batch_interval.start + time_precision)`,
+`(batch_interval.start + time_precision,
+  batch_interval.start + 2*time_precision)`, ...,
+`(batch_interval.start + batch_interval.duration - time_precision) +
+  batch_interval.start + batch_interval.duration)`.
 
-##### Size Check
+## Leader-selected Batch Mode {#leader-selected-batch-mode}
 
-The query configuration specifies the minimum batch size, `min_batch_size`. The
-Aggregator checks that `len(X) >= min_batch_size`, where `X` is the set of
-reports successfully aggregated into the batch.
+~~~ tls-presentation
+enum {
+  leader_selected(2),
+  (255)
+} BatchMode;
+~~~
 
-#### Leader-selected Batch Mode {#leader-selected-batch-validation}
+The leader-selected batch mode is used to support applications in which it is
+acceptable for reports to be batched in an arbitrary fashion by the Leader. Each
+batch of reports is identified by an opaque "batch ID". Both the reports
+included in each batch and the ID for each batch are allocated in an arbitrary
+fashion by the Leader.
 
-##### Boundary Check
+The Collector will not know the set of batch IDs available for collection. To
+get the aggregate of a batch, the Collector issues a query, which does not
+include any information specifying a particular batch (see {{batch-mode}}). The
+Leader selects a recent batch to aggregate. The Leader MUST select a batch that
+has not yet been associated with a collection job.
 
-The batch boundaries are defined by opaque batch IDs. Thus the Aggregator needs
-to check that the query is associated with a known batch ID; specifically, for
-an `AggregateShareReq`, the Helper checks that the batch ID provided by the
-Leader corresponds to a batch ID used in a previous `AggregationJobInitReq` for
-the task.
+The Aggregators can output batches of any size that is larger than or equal to
+`min_batch_size`. The target batch size, if any, is implementation-specific, and
+may be equal to or greater than the minimum batch size. Deciding how soon
+batches should be output is also implementation-specific. Exactly sizing batches
+may be challenging for Leader deployments in which multiple, independent nodes
+running the aggregate interaction (see {{aggregate-flow}}) need to be
+coordinated.
 
-##### Size Check
+### Query Configuration
 
-The query configuration specifies the minimum batch size, `min_batch_size`. The
-Aggregator checks that `len(X) >= min_batch_size`, where `X` is the set of
-reports successfully aggregated into the batch.
+They payload of `Query.config` is empty; the request merely indicates the
+Collector would like the next batch selected by the Leader.
+
+### Partial Batch Selector Configuration
+
+The payload of `PartialBatchSelector.config` is:
+
+~~~ tls-presentation
+struct {
+  BatchID batch_id;
+} LeaderSelectedPartialBatchSelectorConfig;
+~~~
+
+where `batch_id` is the batch ID selected by the Leader.
+
+### Batch Selector Configuration
+
+The payload of `BatchSelector.config` is:
+
+~~~ tls-presentation
+struct {
+  BatchID batch_id;
+} LeaderSelectedBatchSelectorConfig;
+~~~
+
+where `batch_id` is the batch ID selected by the Leader.
+
+### Batch Buckets {#leader-selected-batch-buckets}
+
+Each batch consists of a single bucket and is identified by the batch ID
+selected by the Leader. A report is assigned to the batch indicated by the
+`PartialBatchSelector` during aggregation.
 
 # Operational Considerations {#operational-capabilities}
 
@@ -3158,7 +3220,7 @@ all participating Aggregators stored unencrypted input shares on the same cloud
 object storage service, then that cloud vendor would be able to reassemble all
 the input shares and defeat privacy.
 
-# IANA Considerations
+# IANA Considerations {#iana}
 
 This document requests registry of new media types ({{iana-media-types}}),
 creation of new codepoint registries ({{iana-codepoints}}), and registration of
@@ -3945,5 +4007,35 @@ Index value:  No transformation needed.
 
 The initial contents of this namespace are the types and descriptions in
 {{urn-space-errors}}, with the Reference field set to RFC XXXX.
+
+# Extending this Document {#extending-this-doc}
+
+The behavior of DAP may be extended or modified by future documents defining
+one or more of the following:
+
+1. a new batch mode ({{batch-mode}})
+1. a new report extension ({{report-extensions}})
+1. a new report error ({{aggregation-helper-init}})
+1. a new entry in the URN sub-namespace for DAP ({{urn-space-errors}})
+
+Each of these requires registration of a codepoint or other value; see
+{{iana}}. No other considerations are required except in the following cases:
+
+* When a document defines a new batch mode, it MUST include a section titled
+  "DAP Batch Mode Considerations" specifying the following:
+
+    * The value of the `config` field of `Query`, `PartialBatchSelector`, and
+      `BatchSelector`
+
+    * Batch buckets ({{batch-buckets}}): how reports are assigned to batch
+      buckets; how each bucket is identified; and how batch buckets are mapped to
+      batches.
+
+  See {{batch-modes}} for examples.
+
+* When a document defines a new report extension, it SHOULD include in its
+  "Security Considerations" section some discussion of how the extension
+  impacts the security of DAP with respect to the threat model in
+  {{sec-considerations}}.
 
 --- back
