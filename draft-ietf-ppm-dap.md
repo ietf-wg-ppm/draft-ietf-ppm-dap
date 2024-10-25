@@ -889,7 +889,9 @@ Each measurement task has a preconfigured "batch mode". The batch mode defines
 both how reports may be partitioned into batches, as well as how these batches
 are addressed and the semantics of the query used for collection.
 
-This document defines the following batch modes:
+This document defines the time-interval and leader-selected batch modes.
+Batch modes are identified with a single byte in serialized messages, as
+follows:
 
 ~~~ tls-presentation
 enum {
