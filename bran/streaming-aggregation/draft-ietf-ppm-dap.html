@@ -1039,7 +1039,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
 </tr></thead>
 <tfoot><tr>
 <td class="left">Geoghegan, et al.</td>
-<td class="center">Expires 26 April 2025</td>
+<td class="center">Expires 28 April 2025</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1052,12 +1052,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-ietf-ppm-dap-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2024-10-23" class="published">23 October 2024</time>
+<time datetime="2024-10-25" class="published">25 October 2024</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Standards Track</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2025-04-26">26 April 2025</time></dd>
+<dd class="expires"><time datetime="2025-04-28">28 April 2025</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -1131,7 +1131,7 @@ revealing any individual user's data.<a href="#section-abstract-1" class="pilcro
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 26 April 2025.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 28 April 2025.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -2443,7 +2443,9 @@ aggregate shares encrypted to the Collector.<a href="#section-4.2-1" class="pilc
 <p id="section-4.2-2">Each measurement task has a preconfigured "batch mode". The batch mode defines
 both how reports may be partitioned into batches, as well as how these batches
 are addressed and the semantics of the query used for collection.<a href="#section-4.2-2" class="pilcrow">¶</a></p>
-<p id="section-4.2-3">This document defines the following batch modes:<a href="#section-4.2-3" class="pilcrow">¶</a></p>
+<p id="section-4.2-3">This document defines the time-interval and leader-selected batch modes.
+Batch modes are identified with a single byte in serialized messages, as
+follows:<a href="#section-4.2-3" class="pilcrow">¶</a></p>
 <div class="lang-tls-presentation sourcecode" id="section-4.2-4">
 <pre>
 enum {
@@ -2583,13 +2585,20 @@ must have. The party <span class="bcp14">MUST NOT</span> configure the task if i
 batch mode.<a href="#section-4.3-4.3.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-4.3-4.4">
-            <p id="section-4.3-4.4.1"><code>task_expiration</code>: The time up to which Clients are expected to upload to this
-task. The task is considered completed after this time. Aggregators <span class="bcp14">MAY</span> reject
-reports that have timestamps later than <code>task_expiration</code>.<a href="#section-4.3-4.4.1" class="pilcrow">¶</a></p>
+            <p id="section-4.3-4.4.1"><code>task_start</code>: The time from which the Clients will start uploading reports
+to a task. The Client is not expected to upload its report if the Client's
+clock is earlier than <code>task_start</code>. Aggregators <span class="bcp14">MAY</span> reject reports with
+timestamps earlier than <code>task_start</code>.<a href="#section-4.3-4.4.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-4.3-4.5">
-            <p id="section-4.3-4.5.1">A unique identifier for the VDAF in use for the task, e.g., one of the VDAFs
-defined in <span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-12#section-10" class="relref">Section 10</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>.<a href="#section-4.3-4.5.1" class="pilcrow">¶</a></p>
+            <p id="section-4.3-4.5.1"><code>task_duration</code>: The duration of a task. The task is considered completed
+after the end time <code>task_start + task_duration</code>. Aggregators <span class="bcp14">MAY</span> reject
+reports that have timestamps later than the end time, and <span class="bcp14">MAY</span> reject the task
+if <code>task_duration</code> is too long.<a href="#section-4.3-4.5.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-4.3-4.6">
+            <p id="section-4.3-4.6.1">A unique identifier for the VDAF in use for the task, e.g., one of the VDAFs
+defined in <span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-12#section-10" class="relref">Section 10</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>.<a href="#section-4.3-4.6.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 <p id="section-4.3-5">Note that the <code>leader_aggregator_url</code> and <code>helper_aggregator_url</code> values may
@@ -2856,10 +2865,11 @@ the aggregate result to the previous aggregate result may result in a privacy
 violation. Note that this is also enforced by the Helper during the aggregation
 interaction. The Leader <span class="bcp14">MAY</span> also abort the upload interaction and alert the
 Client with error <code>reportRejected</code>.<a href="#section-4.5.2-21" class="pilcrow">¶</a></p>
-<p id="section-4.5.2-22">The Leader <span class="bcp14">MAY</span> ignore any report whose timestamp is past the task's
-<code>task_expiration</code>. When it does so, it <span class="bcp14">SHOULD</span> also abort the upload interaction
-and alert the Client with error <code>reportRejected</code>. Client <span class="bcp14">MAY</span> choose to opt out
-of the task if its own clock has passed <code>task_expiration</code>.<a href="#section-4.5.2-22" class="pilcrow">¶</a></p>
+<p id="section-4.5.2-22">The Leader <span class="bcp14">MAY</span> ignore any report whose timestamp is before the task's
+<code>task_start</code>, or is past the end time <code>task_start + task_duration</code>. When it does
+so, it <span class="bcp14">SHOULD</span> also abort the upload interaction and alert the Client with error
+<code>reportRejected</code>. Client <span class="bcp14">MAY</span> choose to opt out of the task if its own clock is
+earlier than <code>task_start</code>, or is past <code>task_start + task_duration</code>.<a href="#section-4.5.2-22" class="pilcrow">¶</a></p>
 <p id="section-4.5.2-23">The Leader may need to buffer reports while waiting to aggregate them (e.g.,
 while waiting for an aggregation parameter from the Collector; see
 <a href="#collect-flow" class="auto internal xref">Section 4.7</a>). The Leader <span class="bcp14">SHOULD NOT</span> accept reports whose timestamps are too
@@ -3006,9 +3016,9 @@ and use case. For instance, resource-intensive use cases, such as replay checks
 across vast numbers of reports and preparation of large histograms, may be
 better suited for the asynchronous model. For use cases where datastore
 performance is a concern, the synchronous model may be better suited.<a href="#section-4.6-8" class="pilcrow">¶</a></p>
-<p id="section-4.6-9">In general, reports cannot be aggregated until the Collector specifies a query
-and an aggregation parameter. However, depending on the VDAF and batch mode in
-use, it is often possible to begin aggregation as soon as reports arrive. For
+<p id="section-4.6-9">In general, aggregation cannot begin until the Collector specifies a query and
+an aggregation parameter. However, depending on the VDAF and batch mode in use,
+it is often possible to begin aggregation as soon as reports arrive. For
 example, Prio3 has just one valid aggregation parameter (the empty string), and
 thus allows for eager aggregation; and both the time-interval and
 leader-selected batch modes defined in this document allow for eager
@@ -3322,6 +3332,7 @@ enum {
   task_expired(7),
   invalid_message(8),
   report_too_early(9),
+  task_not_started(10),
   (255)
 } ReportError;
 
@@ -3534,26 +3545,31 @@ skew. If a report is rejected for this reason, the Aggregator <span class="bcp14
 input share as invalid with the error <code>report_too_early</code>.<a href="#section-4.6.1.4-3.2.1" class="pilcrow">¶</a></p>
 </li>
               <li id="section-4.6.1.4-3.3">
-                <p id="section-4.6.1.4-3.3.1">Check if the report's timestamp has passed the task's <code>task_expiration</code> time.
-If so, the Aggregator <span class="bcp14">MAY</span> mark the input share as invalid with the error
-<code>task_expired</code>.<a href="#section-4.6.1.4-3.3.1" class="pilcrow">¶</a></p>
+                <p id="section-4.6.1.4-3.3.1">Check if the report's timestamp is before the task's <code>task_start</code> time. If
+so, the Aggregator <span class="bcp14">MAY</span> mark the input share as invalid with the error
+<code>task_not_started</code>.<a href="#section-4.6.1.4-3.3.1" class="pilcrow">¶</a></p>
 </li>
               <li id="section-4.6.1.4-3.4">
-                <p id="section-4.6.1.4-3.4.1">Check if the PlaintextInputShare contains unrecognized report extensions. If
-so, the Aggregator <span class="bcp14">MUST</span> mark the input share as invalid with error
-<code>invalid_message</code>.<a href="#section-4.6.1.4-3.4.1" class="pilcrow">¶</a></p>
+                <p id="section-4.6.1.4-3.4.1">Check if the report's timestamp is past the task's end time, given by
+<code>task_start + task_duration</code>. If so, the Aggregator <span class="bcp14">MAY</span> mark the input share
+as invalid with the error <code>task_expired</code>.<a href="#section-4.6.1.4-3.4.1" class="pilcrow">¶</a></p>
 </li>
               <li id="section-4.6.1.4-3.5">
-                <p id="section-4.6.1.4-3.5.1">Check if the ExtensionType of any two report extensions in
-PlaintextInputShare are the same. If so, the Aggregator <span class="bcp14">MUST</span> mark the input
-share as invalid with error <code>invalid_message</code>.<a href="#section-4.6.1.4-3.5.1" class="pilcrow">¶</a></p>
+                <p id="section-4.6.1.4-3.5.1">Check if the PlaintextInputShare contains unrecognized report extensions. If
+so, the Aggregator <span class="bcp14">MUST</span> mark the input share as invalid with error
+<code>invalid_message</code>.<a href="#section-4.6.1.4-3.5.1" class="pilcrow">¶</a></p>
 </li>
               <li id="section-4.6.1.4-3.6">
-                <p id="section-4.6.1.4-3.6.1">If the report pertains to a batch that was previously collected, then the
-input share <span class="bcp14">MUST</span> be marked as invalid with error <code>batch_collected</code>.<a href="#section-4.6.1.4-3.6.1" class="pilcrow">¶</a></p>
+                <p id="section-4.6.1.4-3.6.1">Check if the ExtensionType of any two report extensions in
+PlaintextInputShare are the same. If so, the Aggregator <span class="bcp14">MUST</span> mark the input
+share as invalid with error <code>invalid_message</code>.<a href="#section-4.6.1.4-3.6.1" class="pilcrow">¶</a></p>
+</li>
+              <li id="section-4.6.1.4-3.7">
+                <p id="section-4.6.1.4-3.7.1">If the report pertains to a batch that was previously collected, then the
+input share <span class="bcp14">MUST</span> be marked as invalid with error <code>batch_collected</code>.<a href="#section-4.6.1.4-3.7.1" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-4.6.1.4-3.6.2.1">
-                    <p id="section-4.6.1.4-3.6.2.1.1">Implementation note: The Leader considers a batch to be collected once it
+<li class="normal" id="section-4.6.1.4-3.7.2.1">
+                    <p id="section-4.6.1.4-3.7.2.1.1">Implementation note: The Leader considers a batch to be collected once it
 has completed a collection job for a CollectionJobReq message from the
 Collector; the Helper considers a batch to be collected once it has
 responded to an <code>AggregateShareReq</code> message from the Leader. A batch is
@@ -3561,16 +3577,16 @@ determined by query (<a href="#batch-mode" class="auto internal xref">Section 4.
 must satisfy the criteria covered in <a href="#batch-validation" class="auto internal xref">Section 4.7.5</a>. These criteria
 are meant to restrict queries in a way that makes it easy to determine
 whether a report pertains to a batch that was collected. See
-<a href="#distributed-systems" class="auto internal xref">Section 5.4.2</a> for more information.<a href="#section-4.6.1.4-3.6.2.1.1" class="pilcrow">¶</a></p>
+<a href="#distributed-systems" class="auto internal xref">Section 5.4.2</a> for more information.<a href="#section-4.6.1.4-3.7.2.1.1" class="pilcrow">¶</a></p>
 </li>
                 </ul>
 </li>
-              <li id="section-4.6.1.4-3.7">
-                <p id="section-4.6.1.4-3.7.1">Finally, if an Aggregator cannot determine if an input share is valid, it
+              <li id="section-4.6.1.4-3.8">
+                <p id="section-4.6.1.4-3.8.1">Finally, if an Aggregator cannot determine if an input share is valid, it
 <span class="bcp14">MUST</span> mark the input share as invalid with error <code>report_dropped</code>. For
 example, if the Aggregator has evicted the state required to perform the
 check from long-term storage. (See <a href="#reducing-storage-requirements" class="auto internal xref">Section 5.4.1</a> for
-details.)<a href="#section-4.6.1.4-3.7.1" class="pilcrow">¶</a></p>
+details.)<a href="#section-4.6.1.4-3.8.1" class="pilcrow">¶</a></p>
 </li>
             </ol>
 <p id="section-4.6.1.4-4">If all of the above checks succeed, the input share is not marked as invalid.<a href="#section-4.6.1.4-4" class="pilcrow">¶</a></p>
@@ -3834,7 +3850,7 @@ related aggregation job.<a href="#section-4.6.2.3-3.2.1" class="pilcrow">¶</a><
 <p id="section-4.6.2.3-4">A few different pieces of information are associated with each batch bucket:<a href="#section-4.6.2.3-4" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-4.6.2.3-5.1">
-                <p id="section-4.6.2.3-5.1.1">An VDAF-specific aggregate share, as defined in <span>[<a href="#VDAF" class="cite xref">VDAF</a>]</span>.<a href="#section-4.6.2.3-5.1.1" class="pilcrow">¶</a></p>
+                <p id="section-4.6.2.3-5.1.1">A VDAF-specific aggregate share, as defined in <span>[<a href="#VDAF" class="cite xref">VDAF</a>]</span>.<a href="#section-4.6.2.3-5.1.1" class="pilcrow">¶</a></p>
 </li>
               <li class="normal" id="section-4.6.2.3-5.2">
                 <p id="section-4.6.2.3-5.2.1">A count of a number of reports included in the batch bucket.<a href="#section-4.6.2.3-5.2.1" class="pilcrow">¶</a></p>
@@ -4635,10 +4651,10 @@ long as reports are dropped properly as described in <a href="#input-share-valid
 Aggregators <span class="bcp14">SHOULD</span> take steps to mitigate the risk of dropping reports (e.g., by
 evicting the oldest data first).<a href="#section-5.4.1-2" class="pilcrow">¶</a></p>
 <p id="section-5.4.1-3">Furthermore, the Aggregators must store data related to a task as long as the
-current time has not passed this task's <code>task_expiration</code>. Aggregator <span class="bcp14">MAY</span> delete
-the task and all data pertaining to this task after <code>task_expiration</code>.
-Implementors <span class="bcp14">SHOULD</span> provide for some leeway so the Collector can collect the
-batch after some delay.<a href="#section-5.4.1-3" class="pilcrow">¶</a></p>
+current time has not passed this task's end time <code>task_start + task_duration</code>.
+Aggregator <span class="bcp14">MAY</span> delete the task and all data pertaining to this task after the
+end time. Implementors <span class="bcp14">SHOULD</span> provide for some leeway so the Collector can
+collect the batch after some delay.<a href="#section-5.4.1-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="distributed-systems">
@@ -6330,6 +6346,16 @@ aggregation interaction (<a href="#aggregation-helper-init" class="auto internal
 </td>
                 <td class="text-left" rowspan="1" colspan="1">
                   <code>report_too_early</code>
+</td>
+                <td class="text-left" rowspan="1" colspan="1">
+                  <a href="#aggregation-helper-init" class="auto internal xref">Section 4.6.1.2</a> of RFX XXXX</td>
+              </tr>
+              <tr>
+                <td class="text-left" rowspan="1" colspan="1">
+                  <code>0x10</code>
+</td>
+                <td class="text-left" rowspan="1" colspan="1">
+                  <code>task_not_started</code>
 </td>
                 <td class="text-left" rowspan="1" colspan="1">
                   <a href="#aggregation-helper-init" class="auto internal xref">Section 4.6.1.2</a> of RFX XXXX</td>

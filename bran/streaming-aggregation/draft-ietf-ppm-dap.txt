@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 26 April 2025                                        Cloudflare
+Expires: 28 April 2025                                        Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                         23 October 2024
+                                                         25 October 2024
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -63,7 +63,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 26 April 2025.
+   This Internet-Draft will expire on 28 April 2025.
 
 Copyright Notice
 
@@ -978,7 +978,9 @@ Table of Contents
    well as how these batches are addressed and the semantics of the
    query used for collection.
 
-   This document defines the following batch modes:
+   This document defines the time-interval and leader-selected batch
+   modes.  Batch modes are identified with a single byte in serialized
+   messages, as follows:
 
    enum {
      reserved(0), /* Reserved for testing purposes */
@@ -1099,10 +1101,16 @@ Table of Contents
       batches for this task must have.  The party MUST NOT configure the
       task if it does not recognize the batch mode.
 
-   *  task_expiration: The time up to which Clients are expected to
-      upload to this task.  The task is considered completed after this
-      time.  Aggregators MAY reject reports that have timestamps later
-      than task_expiration.
+   *  task_start: The time from which the Clients will start uploading
+      reports to a task.  The Client is not expected to upload its
+      report if the Client's clock is earlier than task_start.
+      Aggregators MAY reject reports with timestamps earlier than
+      task_start.
+
+   *  task_duration: The duration of a task.  The task is considered
+      completed after the end time task_start + task_duration.
+      Aggregators MAY reject reports that have timestamps later than the
+      end time, and MAY reject the task if task_duration is too long.
 
    *  A unique identifier for the VDAF in use for the task, e.g., one of
       the VDAFs defined in Section 10 of [VDAF].
@@ -1358,11 +1366,12 @@ Table of Contents
    abort the upload interaction and alert the Client with error
    reportRejected.
 
-   The Leader MAY ignore any report whose timestamp is past the task's
-   task_expiration.  When it does so, it SHOULD also abort the upload
-   interaction and alert the Client with error reportRejected.  Client
-   MAY choose to opt out of the task if its own clock has passed
-   task_expiration.
+   The Leader MAY ignore any report whose timestamp is before the task's
+   task_start, or is past the end time task_start + task_duration.  When
+   it does so, it SHOULD also abort the upload interaction and alert the
+   Client with error reportRejected.  Client MAY choose to opt out of
+   the task if its own clock is earlier than task_start, or is past
+   task_start + task_duration.
 
    The Leader may need to buffer reports while waiting to aggregate them
    (e.g., while waiting for an aggregation parameter from the Collector;
@@ -1505,13 +1514,13 @@ Table of Contents
    cases where datastore performance is a concern, the synchronous model
    may be better suited.
 
-   In general, reports cannot be aggregated until the Collector
-   specifies a query and an aggregation parameter.  However, depending
-   on the VDAF and batch mode in use, it is often possible to begin
-   aggregation as soon as reports arrive.  For example, Prio3 has just
-   one valid aggregation parameter (the empty string), and thus allows
-   for eager aggregation; and both the time-interval and leader-selected
-   batch modes defined in this document allow for eager aggregation.
+   In general, aggregation cannot begin until the Collector specifies a
+   query and an aggregation parameter.  However, depending on the VDAF
+   and batch mode in use, it is often possible to begin aggregation as
+   soon as reports arrive.  For example, Prio3 has just one valid
+   aggregation parameter (the empty string), and thus allows for eager
+   aggregation; and both the time-interval and leader-selected batch
+   modes defined in this document allow for eager aggregation.
 
    An aggregation job can be thought of as having three phases, which
    are described in the remaining subsections:
@@ -1798,6 +1807,7 @@ Table of Contents
      task_expired(7),
      invalid_message(8),
      report_too_early(9),
+     task_not_started(10),
      (255)
    } ReportError;
 
@@ -1994,19 +2004,23 @@ Table of Contents
        this reason, the Aggregator SHOULD mark the input share as
        invalid with the error report_too_early.
 
-   3.  Check if the report's timestamp has passed the task's
-       task_expiration time.  If so, the Aggregator MAY mark the input
-       share as invalid with the error task_expired.
+   3.  Check if the report's timestamp is before the task's task_start
+       time.  If so, the Aggregator MAY mark the input share as invalid
+       with the error task_not_started.
 
-   4.  Check if the PlaintextInputShare contains unrecognized report
+   4.  Check if the report's timestamp is past the task's end time,
+       given by task_start + task_duration.  If so, the Aggregator MAY
+       mark the input share as invalid with the error task_expired.
+
+   5.  Check if the PlaintextInputShare contains unrecognized report
        extensions.  If so, the Aggregator MUST mark the input share as
        invalid with error invalid_message.
 
-   5.  Check if the ExtensionType of any two report extensions in
+   6.  Check if the ExtensionType of any two report extensions in
        PlaintextInputShare are the same.  If so, the Aggregator MUST
        mark the input share as invalid with error invalid_message.
 
-   6.  If the report pertains to a batch that was previously collected,
+   7.  If the report pertains to a batch that was previously collected,
        then the input share MUST be marked as invalid with error
        batch_collected.
 
@@ -2022,7 +2036,7 @@ Table of Contents
           batch that was collected.  See Section 5.4.2 for more
           information.
 
-   7.  Finally, if an Aggregator cannot determine if an input share is
+   8.  Finally, if an Aggregator cannot determine if an input share is
        valid, it MUST mark the input share as invalid with error
        report_dropped.  For example, if the Aggregator has evicted the
        state required to perform the check from long-term storage.  (See
@@ -2278,7 +2292,7 @@ Table of Contents
    A few different pieces of information are associated with each batch
    bucket:
 
-   *  An VDAF-specific aggregate share, as defined in [VDAF].
+   *  A VDAF-specific aggregate share, as defined in [VDAF].
 
    *  A count of a number of reports included in the batch bucket.
 
@@ -2981,10 +2995,11 @@ Table of Contents
    of dropping reports (e.g., by evicting the oldest data first).
 
    Furthermore, the Aggregators must store data related to a task as
-   long as the current time has not passed this task's task_expiration.
-   Aggregator MAY delete the task and all data pertaining to this task
-   after task_expiration.  Implementors SHOULD provide for some leeway
-   so the Collector can collect the batch after some delay.
+   long as the current time has not passed this task's end time
+   task_start + task_duration.  Aggregator MAY delete the task and all
+   data pertaining to this task after the end time.  Implementors SHOULD
+   provide for some leeway so the Collector can collect the batch after
+   some delay.
 
 5.4.2.  Distributed-systems and Synchronization Concerns
 
@@ -3866,6 +3881,8 @@ Table of Contents
      | 0x08  | invalid_message        | Section 4.6.1.2 of RFX XXXX |
      +-------+------------------------+-----------------------------+
      | 0x09  | report_too_early       | Section 4.6.1.2 of RFX XXXX |
+     +-------+------------------------+-----------------------------+
+     | 0x10  | task_not_started       | Section 4.6.1.2 of RFX XXXX |
      +-------+------------------------+-----------------------------+
 
         Table 4: Initial contents of the Report Error Identifiers
