@@ -1019,14 +1019,13 @@ the following parameters associated with it:
   are grouped into batches and the properties that all batches for this task
   must have. The party MUST NOT configure the task if it does not recognize the
   batch mode.
-* `task_start`: The time from which the Clients will start uploading reports
-  to a task. The Client is not expected to upload its report if the Client's
-  clock is earlier than `task_start`. Aggregators MAY reject reports with
-  timestamps earlier than `task_start`.
+* `task_start`: The time from which the Clients will start uploading reports to
+  a task. Aggregators MUST reject reports with timestamps earlier than
+  `task_start`.
 * `task_duration`: The duration of a task. The task is considered completed
-  after the end time `task_start + task_duration`. Aggregators MAY reject
-  reports that have timestamps later than the end time, and MAY reject the task
-  if `task_duration` is too long.
+  after the end time `task_start + task_duration`. Aggregators MUST reject
+  reports that have timestamps later than the end time, and MAY choose to opt
+  out of the task if `task_duration` is too long.
 * A unique identifier for the VDAF in use for the task, e.g., one of the VDAFs
   defined in {{Section 10 of !VDAF}}.
 
@@ -1273,11 +1272,11 @@ violation. Note that this is also enforced by the Helper during the aggregation
 interaction. The Leader MAY also abort the upload interaction and alert the
 Client with error `reportRejected`.
 
-The Leader MAY ignore any report whose timestamp is before the task's
+The Leader MUST ignore any report whose timestamp is before the task's
 `task_start`, or is past the end time `task_start + task_duration`. When it does
 so, it SHOULD also abort the upload interaction and alert the Client with error
-`reportRejected`. Client MAY choose to opt out of the task if its own clock is
-earlier than `task_start`, or is past `task_start + task_duration`.
+`reportRejected`. Clients MUST NOT upload a report if its timestamp would be
+earlier than `task_start` or later than `task_start + task_duration`.
 
 The Leader may need to buffer reports while waiting to aggregate them (e.g.,
 while waiting for an aggregation parameter from the Collector; see
@@ -1889,12 +1888,12 @@ following checks:
    input share as invalid with the error `report_too_early`.
 
 1. Check if the report's timestamp is before the task's `task_start` time. If
-   so, the Aggregator MAY mark the input share as invalid with the error
+   so, the Aggregator MUST mark the input share as invalid with the error
    `task_not_started`.
 
 1. Check if the report's timestamp is past the task's end time, given by
-   `task_start + task_duration`. If so, the Aggregator MAY mark the input share
-   as invalid with the error `task_expired`.
+   `task_start + task_duration`. If so, the Aggregator MUST mark the input
+   share as invalid with the error `task_expired`.
 
 1. Check if the PlaintextInputShare contains unrecognized report extensions. If
    so, the Aggregator MUST mark the input share as invalid with error
