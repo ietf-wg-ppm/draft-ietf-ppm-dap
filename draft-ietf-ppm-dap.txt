@@ -970,7 +970,9 @@ Table of Contents
    well as how these batches are addressed and the semantics of the
    query used for collection.
 
-   This document defines the following batch modes:
+   This document defines the time-interval and leader-selected batch
+   modes.  Batch modes are identified with a single byte in serialized
+   messages, as follows:
 
    enum {
      reserved(0), /* Reserved for testing purposes */

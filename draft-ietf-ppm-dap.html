@@ -2433,7 +2433,9 @@ aggregate shares encrypted to the Collector.<a href="#section-4.2-1" class="pilc
 <p id="section-4.2-2">Each measurement task has a preconfigured "batch mode". The batch mode defines
 both how reports may be partitioned into batches, as well as how these batches
 are addressed and the semantics of the query used for collection.<a href="#section-4.2-2" class="pilcrow">¶</a></p>
-<p id="section-4.2-3">This document defines the following batch modes:<a href="#section-4.2-3" class="pilcrow">¶</a></p>
+<p id="section-4.2-3">This document defines the time-interval and leader-selected batch modes.
+Batch modes are identified with a single byte in serialized messages, as
+follows:<a href="#section-4.2-3" class="pilcrow">¶</a></p>
 <div class="lang-tls-presentation sourcecode" id="section-4.2-4">
 <pre>
 enum {
