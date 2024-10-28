@@ -2855,8 +2855,8 @@ Client with error <code>reportRejected</code>.<a href="#section-4.5.2-21" class=
 <p id="section-4.5.2-22">The Leader <span class="bcp14">MUST</span> ignore any report whose timestamp is before the task's
 <code>task_start</code>, or is past the end time <code>task_start + task_duration</code>. When it does
 so, it <span class="bcp14">SHOULD</span> also abort the upload interaction and alert the Client with error
-<code>reportRejected</code>. Clients <span class="bcp14">MUST NOT</span> upload a report if its own clock is earlier
-than <code>task_start</code> or is past <code>task_start + task_duration</code>.<a href="#section-4.5.2-22" class="pilcrow">¶</a></p>
+<code>reportRejected</code>. Clients <span class="bcp14">MUST NOT</span> upload a report's timestamp would be earlier
+than <code>task_start</code> or past <code>task_start + task_duration</code>.<a href="#section-4.5.2-22" class="pilcrow">¶</a></p>
 <p id="section-4.5.2-23">The Leader may need to buffer reports while waiting to aggregate them (e.g.,
 while waiting for an aggregation parameter from the Collector; see
 <a href="#collect-flow" class="auto internal xref">Section 4.7</a>). The Leader <span class="bcp14">SHOULD NOT</span> accept reports whose timestamps are too

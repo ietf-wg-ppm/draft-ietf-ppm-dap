@@ -1359,8 +1359,8 @@ Table of Contents
    task's task_start, or is past the end time task_start +
    task_duration.  When it does so, it SHOULD also abort the upload
    interaction and alert the Client with error reportRejected.  Clients
-   MUST NOT upload a report if its own clock is earlier than task_start
-   or is past task_start + task_duration.
+   MUST NOT upload a report's timestamp would be earlier than task_start
+   or past task_start + task_duration.
 
    The Leader may need to buffer reports while waiting to aggregate them
    (e.g., while waiting for an aggregation parameter from the Collector;
