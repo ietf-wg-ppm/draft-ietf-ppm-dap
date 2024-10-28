@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 28 April 2025                                        Cloudflare
+Expires: 1 May 2025                                           Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                         25 October 2024
+                                                         28 October 2024
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -63,7 +63,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 28 April 2025.
+   This Internet-Draft will expire on 1 May 2025.
 
 Copyright Notice
 
@@ -1358,7 +1358,7 @@ Table of Contents
    The Leader MUST ignore any report whose timestamp is before the
    task's task_start, or is past the end time task_start +
    task_duration.  When it does so, it SHOULD also abort the upload
-   interaction and alert the Client with error reportRejected.  Client
+   interaction and alert the Client with error reportRejected.  Clients
    MUST NOT upload a report if its own clock is earlier than task_start
    or is past task_start + task_duration.
 
