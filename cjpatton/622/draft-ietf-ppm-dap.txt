@@ -1691,7 +1691,7 @@ Table of Contents
 
    struct {
      opaque agg_param<0..2^32-1>;
-     opaque part_batch_selector<0..2^16-1>;
+     PartialBatchSelector part_batch_selector;
      PrepareInit prepare_inits<0..2^32-1>;
    } AggregationJobInitReq;
 
@@ -2616,7 +2616,7 @@ Table of Contents
    } BatchSelector;
 
    struct {
-     BatchSelector batch_selector<0..2^16-1>;
+     BatchSelector batch_selector;
      opaque agg_param<0..2^32-1>;
      uint64 report_count;
      opaque checksum[32];

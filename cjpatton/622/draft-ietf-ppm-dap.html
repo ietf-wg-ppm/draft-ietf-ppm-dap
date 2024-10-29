@@ -3269,7 +3269,7 @@ struct {
 
 struct {
   opaque agg_param&lt;0..2^32-1&gt;;
-  opaque part_batch_selector&lt;0..2^16-1&gt;;
+  PartialBatchSelector part_batch_selector;
   PrepareInit prepare_inits&lt;0..2^32-1&gt;;
 } AggregationJobInitReq;
 </pre><a href="#section-4.6.1.1-15" class="pilcrow">¶</a>
@@ -4256,7 +4256,7 @@ struct {
 } BatchSelector;
 
 struct {
-  BatchSelector batch_selector&lt;0..2^16-1&gt;;
+  BatchSelector batch_selector;
   opaque agg_param&lt;0..2^32-1&gt;;
   uint64 report_count;
   opaque checksum[32];
