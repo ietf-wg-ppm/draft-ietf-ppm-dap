@@ -3037,9 +3037,10 @@ performance is a concern, the synchronous model may be better suited.<a href="#s
 an aggregation parameter. However, depending on the VDAF and batch mode in use,
 it is often possible to begin aggregation as soon as reports arrive. For
 example, Prio3 has just one valid aggregation parameter (the empty string), and
-thus allows for eager aggregation; and both the time-interval and
-leader-selected batch modes defined in this document allow for eager
-aggregation.<a href="#section-4.6-9" class="pilcrow">¶</a></p>
+thus allows for eager aggregation; and both the time-interval
+(<a href="#time-interval-batch-mode" class="auto internal xref">Section 5.1</a>) and leader-selected
+(<a href="#leader-selected-batch-mode" class="auto internal xref">Section 5.2</a>) batch modes defined in this document allow for
+eager aggregation.<a href="#section-4.6-9" class="pilcrow">¶</a></p>
 <p id="section-4.6-10">An aggregation job can be thought of as having three phases, which are
 described in the remaining subsections:<a href="#section-4.6-10" class="pilcrow">¶</a></p>
 <ul class="normal">
@@ -3842,23 +3843,16 @@ Helper knows it can clean up its state.<a href="#section-4.6.2.2-24" class="pilc
 <p id="section-4.6.2.3-1">When aggregation recovers an output share, it must be stored into an appropriate
 "batch bucket", which is defined in this section. The data stored in a batch
 bucket is kept for eventual use in the <a href="#collect-flow" class="auto internal xref">Section 4.7</a>.<a href="#section-4.6.2.3-1" class="pilcrow">¶</a></p>
-<p id="section-4.6.2.3-2">Batch buckets are indexed by a batch mode-specific "batch bucket identifier":<a href="#section-4.6.2.3-2" class="pilcrow">¶</a></p>
+<p id="section-4.6.2.3-2">Batch buckets are indexed by a "batch bucket identifier" as as specified by the
+task's batch mode:<a href="#section-4.6.2.3-2" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-4.6.2.3-3.1">
-                <p id="section-4.6.2.3-3.1.1">For the time-interval batch mode, the batch bucket identifier is an interval
-of time whose beginning is a multiple of the task's <code>time_precision</code> and whose
-duration is equal to the task's <code>time_precision</code>. The identifier associated
-with a given output share is the unique such interval containing the client
-timestamp of the report the output share was recovered from; for example, if
-the task's <code>time_precision</code> is 1000 seconds and the report's timestamp is
-1729629081, the relevant batch bucket identifier is <code>(1729629000, 1000)</code>. (The
-first element of the pair denotes the start of the batch interval and the
-second denotes the duration.)<a href="#section-4.6.2.3-3.1.1" class="pilcrow">¶</a></p>
+                <p id="section-4.6.2.3-3.1.1">For the time-interval batch mode (<a href="#time-interval-batch-mode" class="auto internal xref">Section 5.1</a>, the batch
+bucket identifier and is determined by the report's timestamp.<a href="#section-4.6.2.3-3.1.1" class="pilcrow">¶</a></p>
 </li>
               <li class="normal" id="section-4.6.2.3-3.2">
-                <p id="section-4.6.2.3-3.2.1">For the leader-selected batch mode, the batch bucket identifier is a batch ID.
-The identifier associated with a given output share is the batch ID of the
-related aggregation job.<a href="#section-4.6.2.3-3.2.1" class="pilcrow">¶</a></p>
+                <p id="section-4.6.2.3-3.2.1">For the leader-selected batch mode (<a href="#leader-selected-batch-mode" class="auto internal xref">Section 5.2</a>), the
+batch bucket identifier is the batch ID and indicated in the aggregation job.<a href="#section-4.6.2.3-3.2.1" class="pilcrow">¶</a></p>
 </li>
             </ul>
 <p id="section-4.6.2.3-4">A few different pieces of information are associated with each batch bucket:<a href="#section-4.6.2.3-4" class="pilcrow">¶</a></p>
@@ -4010,19 +4004,18 @@ result for the next batch selected by the Leader
 <p id="section-4.7.1-7.1.2">
 Batch modes defined by future documents <span class="bcp14">MUST</span> specify the content this field;
 see <a href="#extending-this-doc" class="auto internal xref">Section 10</a> for details.<a href="#section-4.7.1-7.1.2" class="pilcrow">¶</a></p>
+<p id="section-4.7.1-7.1.3">
+The indicated batch mode <span class="bcp14">MUST</span> match the task's batch mode. Otherwise, the
+Leader <span class="bcp14">MUST</span> abort with error "invalidMessage".<a href="#section-4.7.1-7.1.3" class="pilcrow">¶</a></p>
+</li>
+            <li class="normal" id="section-4.7.1-7.2">
+              <p id="section-4.7.1-7.2.1"><code>agg_param</code>, an aggregation parameter for the VDAF being executed. This is the
+same value as in <code>AggregationJobInitReq</code> (see <a href="#leader-init" class="auto internal xref">Section 4.6.1.1</a>).<a href="#section-4.7.1-7.2.1" class="pilcrow">¶</a></p>
 </li>
           </ul>
-<p id="section-4.7.1-8">The indicated batch mode <span class="bcp14">MUST</span> match the task's batch mode. Otherwise, the
- Leader <span class="bcp14">MUST</span> abort with error "invalidMessage".<a href="#section-4.7.1-8" class="pilcrow">¶</a></p>
-<ul class="normal">
-<li class="normal" id="section-4.7.1-9.1">
-              <p id="section-4.7.1-9.1.1"><code>agg_param</code>, an aggregation parameter for the VDAF being executed. This is the
-same value as in <code>AggregationJobInitReq</code> (see <a href="#leader-init" class="auto internal xref">Section 4.6.1.1</a>).<a href="#section-4.7.1-9.1.1" class="pilcrow">¶</a></p>
-</li>
-          </ul>
-<p id="section-4.7.1-10">Collectors <span class="bcp14">MUST</span> authenticate their requests to Leaders using a scheme that meets
-the requirements in <a href="#request-authentication" class="auto internal xref">Section 3.1</a>.<a href="#section-4.7.1-10" class="pilcrow">¶</a></p>
-<p id="section-4.7.1-11">Depending on the VDAF scheme and how the Leader is configured, the Leader and
+<p id="section-4.7.1-8">Collectors <span class="bcp14">MUST</span> authenticate their requests to Leaders using a scheme that meets
+the requirements in <a href="#request-authentication" class="auto internal xref">Section 3.1</a>.<a href="#section-4.7.1-8" class="pilcrow">¶</a></p>
+<p id="section-4.7.1-9">Depending on the VDAF scheme and how the Leader is configured, the Leader and
 Helper may already have prepared a sufficient number of reports satisfying the
 query and be ready to return the aggregate shares right away. However, this is
 not always the case. In fact, for some VDAFs, it is not be possible to begin
@@ -4033,22 +4026,22 @@ aggregation parameter in advance. For example, for Prio3 the only valid
 aggregation parameter is the empty string. For these reasons, the collection job
 is handled asynchronously. If aggregation is performed eagerly, the Leader <span class="bcp14">MUST</span>
 validate that the aggregation parameter received in the <code>CollectionJobReq</code>
-matches the aggregation parameter used in aggregations.<a href="#section-4.7.1-11" class="pilcrow">¶</a></p>
-<p id="section-4.7.1-12">Upon receipt of a <code>CollectionJobReq</code>, the Leader begins by checking that it
+matches the aggregation parameter used in aggregations.<a href="#section-4.7.1-9" class="pilcrow">¶</a></p>
+<p id="section-4.7.1-10">Upon receipt of a <code>CollectionJobReq</code>, the Leader begins by checking that it
 recognizes the task ID in the request path. If not, it <span class="bcp14">MUST</span> abort with error
-<code>unrecognizedTask</code>.<a href="#section-4.7.1-12" class="pilcrow">¶</a></p>
-<p id="section-4.7.1-13">The Leader <span class="bcp14">MAY</span> further validate the request according to the requirements in
+<code>unrecognizedTask</code>.<a href="#section-4.7.1-10" class="pilcrow">¶</a></p>
+<p id="section-4.7.1-11">The Leader <span class="bcp14">MAY</span> further validate the request according to the requirements in
 <a href="#batch-validation" class="auto internal xref">Section 4.7.5</a> and abort with the indicated error, though some conditions
 such as the number of valid reports may not be verifiable while handling the
 <code>CollectionJobReq</code> message, and the batch will have to be re-validated later on
-regardless.<a href="#section-4.7.1-13" class="pilcrow">¶</a></p>
-<p id="section-4.7.1-14">Changing a collection job's parameters is illegal, so further requests to
+regardless.<a href="#section-4.7.1-11" class="pilcrow">¶</a></p>
+<p id="section-4.7.1-12">Changing a collection job's parameters is illegal, so further requests to
 <code>PUT /tasks/{task-id}/collection_jobs/{collection-job-id}</code> for the same
 <code>collection-job-id</code> but with a different <code>CollectionJobReq</code> in the body <span class="bcp14">MUST</span>
-fail with an HTTP client error status code.<a href="#section-4.7.1-14" class="pilcrow">¶</a></p>
-<p id="section-4.7.1-15">The Leader responds to <code>CollectionJobReq</code>s with a <code>CollectionJobResp</code>, which is
-structured as follows:<a href="#section-4.7.1-15" class="pilcrow">¶</a></p>
-<div class="lang-tls-presentation sourcecode" id="section-4.7.1-16">
+fail with an HTTP client error status code.<a href="#section-4.7.1-12" class="pilcrow">¶</a></p>
+<p id="section-4.7.1-13">The Leader responds to <code>CollectionJobReq</code>s with a <code>CollectionJobResp</code>, which is
+structured as follows:<a href="#section-4.7.1-13" class="pilcrow">¶</a></p>
+<div class="lang-tls-presentation sourcecode" id="section-4.7.1-14">
 <pre>
 enum {
   processing(0),
@@ -4070,52 +4063,52 @@ struct {
     case ready:      Collection;
   }
 } CollectionJobResp;
-</pre><a href="#section-4.7.1-16" class="pilcrow">¶</a>
+</pre><a href="#section-4.7.1-14" class="pilcrow">¶</a>
 </div>
-<p id="section-4.7.1-17">The body's media type is "application/dap-collection-job-resp". The <code>Collection</code>
-structure includes the following:<a href="#section-4.7.1-17" class="pilcrow">¶</a></p>
+<p id="section-4.7.1-15">The body's media type is "application/dap-collection-job-resp". The <code>Collection</code>
+structure includes the following:<a href="#section-4.7.1-15" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-4.7.1-18.1">
-              <p id="section-4.7.1-18.1.1"><code>part_batch_selector</code>: Information used to bind the aggregate result to the
+<li class="normal" id="section-4.7.1-16.1">
+              <p id="section-4.7.1-16.1.1"><code>part_batch_selector</code>: Information used to bind the aggregate result to the
 query. For leader-selected tasks, this includes the batch ID assigned to the
 batch by the Leader. The indicated batch mode <span class="bcp14">MUST</span> match the task's batch
-mode.<a href="#section-4.7.1-18.1.1" class="pilcrow">¶</a></p>
+mode.<a href="#section-4.7.1-16.1.1" class="pilcrow">¶</a></p>
 </li>
-            <li class="normal" id="section-4.7.1-18.2">
-              <p id="section-4.7.1-18.2.1"><code>report_count</code>: The number of reports included in the batch.<a href="#section-4.7.1-18.2.1" class="pilcrow">¶</a></p>
+            <li class="normal" id="section-4.7.1-16.2">
+              <p id="section-4.7.1-16.2.1"><code>report_count</code>: The number of reports included in the batch.<a href="#section-4.7.1-16.2.1" class="pilcrow">¶</a></p>
 </li>
-            <li class="normal" id="section-4.7.1-18.3">
-              <p id="section-4.7.1-18.3.1"><code>interval</code>: The smallest interval of time that contains the timestamps of all
-reports included in the batch, such that the interval's start and duration are
-both multiples of the task's <code>time_precision</code> parameter. Note that in the case
-of a time-interval query (see <a href="#batch-mode" class="auto internal xref">Section 4.2</a>), this interval can be smaller
-than the one in the corresponding <code>CollectionJobReq.query</code>.<a href="#section-4.7.1-18.3.1" class="pilcrow">¶</a></p>
+            <li class="normal" id="section-4.7.1-16.3">
+              <p id="section-4.7.1-16.3.1"><code>interval</code>: The smallest interval of time that contains the timestamps of all
+reports included in the batch, such that the interval's start and duration
+are both multiples of the task's <code>time_precision</code> parameter. Note that in the
+case of a time-interval query (<a href="#time-interval-batch-mode" class="auto internal xref">Section 5.1</a>), this interval
+can be smaller than the one in the corresponding <code>CollectionJobReq.query</code>.<a href="#section-4.7.1-16.3.1" class="pilcrow">¶</a></p>
 </li>
-            <li class="normal" id="section-4.7.1-18.4">
-              <p id="section-4.7.1-18.4.1"><code>leader_encrypted_agg_share</code>: The Leader's aggregate share, encrypted to the
-Collector (see <a href="#aggregate-share-encrypt" class="auto internal xref">Section 4.7.4</a>).<a href="#section-4.7.1-18.4.1" class="pilcrow">¶</a></p>
+            <li class="normal" id="section-4.7.1-16.4">
+              <p id="section-4.7.1-16.4.1"><code>leader_encrypted_agg_share</code>: The Leader's aggregate share, encrypted to the
+Collector (see <a href="#aggregate-share-encrypt" class="auto internal xref">Section 4.7.4</a>).<a href="#section-4.7.1-16.4.1" class="pilcrow">¶</a></p>
 </li>
-            <li class="normal" id="section-4.7.1-18.5">
-              <p id="section-4.7.1-18.5.1"><code>helper_encrypted_agg_share</code>: The Helper's aggregate share, encrypted to the
-Collector (see <a href="#aggregate-share-encrypt" class="auto internal xref">Section 4.7.4</a>).<a href="#section-4.7.1-18.5.1" class="pilcrow">¶</a></p>
+            <li class="normal" id="section-4.7.1-16.5">
+              <p id="section-4.7.1-16.5.1"><code>helper_encrypted_agg_share</code>: The Helper's aggregate share, encrypted to the
+Collector (see <a href="#aggregate-share-encrypt" class="auto internal xref">Section 4.7.4</a>).<a href="#section-4.7.1-16.5.1" class="pilcrow">¶</a></p>
 </li>
           </ul>
-<p id="section-4.7.1-19">If the Leader finds the <code>CollectionJobReq</code> to be valid, it immediately responds
+<p id="section-4.7.1-17">If the Leader finds the <code>CollectionJobReq</code> to be valid, it immediately responds
 with HTTP status 201 Created with a body containing a <code>CollectionJobResp</code> with
 the <code>status</code> field set to <code>processing</code>. The Leader <span class="bcp14">SHOULD</span> include a Retry-After
-header field to suggest a polling interval to the Collector.<a href="#section-4.7.1-19" class="pilcrow">¶</a></p>
-<p id="section-4.7.1-20">After receiving the response to its <code>CollectionJobReq</code>, the Collector
+header field to suggest a polling interval to the Collector.<a href="#section-4.7.1-17" class="pilcrow">¶</a></p>
+<p id="section-4.7.1-18">After receiving the response to its <code>CollectionJobReq</code>, the Collector
 periodically makes HTTP GET requests
 <code>/tasks/{task-id}/collection_jobs/{collection-job-id}</code> to check on the status
 of the collect job and eventually obtain the result. The Leader responds to GET
 requests with HTTP status 200 and the <code>status</code> field reflecting the current
 state of the job. When the collection job is <code>processing</code>, the response <span class="bcp14">SHOULD</span>
 include a Retry-After header field to suggest a polling interval to the
-Collector.<a href="#section-4.7.1-20" class="pilcrow">¶</a></p>
-<p id="section-4.7.1-21">The Leader then begins working with the Helper to aggregate the reports
+Collector.<a href="#section-4.7.1-18" class="pilcrow">¶</a></p>
+<p id="section-4.7.1-19">The Leader then begins working with the Helper to aggregate the reports
 satisfying the query (or continues this process, depending on the VDAF) as
-described in <a href="#aggregate-flow" class="auto internal xref">Section 4.6</a>.<a href="#section-4.7.1-21" class="pilcrow">¶</a></p>
-<p id="section-4.7.1-22">The Leader first checks whether it can construct a batch for the
+described in <a href="#aggregate-flow" class="auto internal xref">Section 4.6</a>.<a href="#section-4.7.1-19" class="pilcrow">¶</a></p>
+<p id="section-4.7.1-20">The Leader first checks whether it can construct a batch for the
 collection job by applying the requirements in <a href="#batch-validation" class="auto internal xref">Section 4.7.5</a>. If so, then
 the Leader obtains the Helper's aggregate share following the aggregate-share
 request flow described in <a href="#collect-aggregate" class="auto internal xref">Section 4.7.2</a>. If not, it either aborts the
@@ -4125,19 +4118,19 @@ that overlaps with the batch and aggregation parameter for the collection job,
 the Leader <span class="bcp14">MUST</span> first complete the aggregation job before proceeding and
 requesting an aggregate share from the Helper. This avoids a race condition
 between aggregation and collection jobs that can yield trivial batch mismatch
-errors.<a href="#section-4.7.1-22" class="pilcrow">¶</a></p>
-<p id="section-4.7.1-23">Once both aggregate shares are successfully obtained, the Leader responds to
+errors.<a href="#section-4.7.1-20" class="pilcrow">¶</a></p>
+<p id="section-4.7.1-21">Once both aggregate shares are successfully obtained, the Leader responds to
 subsequent HTTP GET requests with the <code>status</code> field set to <code>ready</code> and the
 <code>Collection</code> field populated with the encrypted aggregate shares. The Collector
-stops polling once receiving this final request.<a href="#section-4.7.1-23" class="pilcrow">¶</a></p>
-<p id="section-4.7.1-24">If obtaining aggregate shares fails, then the Leader responds to subsequent HTTP
+stops polling once receiving this final request.<a href="#section-4.7.1-21" class="pilcrow">¶</a></p>
+<p id="section-4.7.1-22">If obtaining aggregate shares fails, then the Leader responds to subsequent HTTP
 GET requests to the collection job with an HTTP error status and a problem
-document as described in <a href="#errors" class="auto internal xref">Section 3.2</a>.<a href="#section-4.7.1-24" class="pilcrow">¶</a></p>
-<p id="section-4.7.1-25">The Leader <span class="bcp14">MAY</span> respond with HTTP status 204 No Content to requests to a
-collection job if the results have been deleted.<a href="#section-4.7.1-25" class="pilcrow">¶</a></p>
-<p id="section-4.7.1-26">The Collector can send an HTTP DELETE request to the collection job, which
+document as described in <a href="#errors" class="auto internal xref">Section 3.2</a>.<a href="#section-4.7.1-22" class="pilcrow">¶</a></p>
+<p id="section-4.7.1-23">The Leader <span class="bcp14">MAY</span> respond with HTTP status 204 No Content to requests to a
+collection job if the results have been deleted.<a href="#section-4.7.1-23" class="pilcrow">¶</a></p>
+<p id="section-4.7.1-24">The Collector can send an HTTP DELETE request to the collection job, which
 indicates to the Leader that it can abandon the collection job and discard all
-state related to it.<a href="#section-4.7.1-26" class="pilcrow">¶</a></p>
+state related to it.<a href="#section-4.7.1-24" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="collect-aggregate">
@@ -4152,13 +4145,14 @@ with this collection job. The batch buckets to retrieve depend on the batch mode
 of this task:<a href="#section-4.7.2-2" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-4.7.2-3.1">
-              <p id="section-4.7.2-3.1.1">For time-interval tasks, this is all batch buckets whose batch bucket
-identifiers are contained within the batch interval specified in the
-<code>CollectionJobReq</code>'s query.<a href="#section-4.7.2-3.1.1" class="pilcrow">¶</a></p>
+              <p id="section-4.7.2-3.1.1">For time-interval (<a href="#time-interval-batch-mode" class="auto internal xref">Section 5.1</a>), this is all batch buckets
+whose batch bucket identifiers are contained within the batch interval
+specified in the <code>CollectionJobReq</code>'s query.<a href="#section-4.7.2-3.1.1" class="pilcrow">¶</a></p>
 </li>
             <li class="normal" id="section-4.7.2-3.2">
-              <p id="section-4.7.2-3.2.1">For leader-selected tasks, this is the batch bucket associated with the batch
-ID the Leader has chosen for this collection job.<a href="#section-4.7.2-3.2.1" class="pilcrow">¶</a></p>
+              <p id="section-4.7.2-3.2.1">For leader-selected (<a href="#leader-selected-batch-mode" class="auto internal xref">Section 5.2</a>), this is the batch
+bucket associated with the batch ID the Leader has chosen for this collection
+job.<a href="#section-4.7.2-3.2.1" class="pilcrow">¶</a></p>
 </li>
           </ul>
 <p id="section-4.7.2-4">The Leader then combines the values inside the batch bucket as follows:<a href="#section-4.7.2-4" class="pilcrow">¶</a></p>
@@ -4357,16 +4351,15 @@ sent the aggregate share (<code>0x02</code> for the Leader and <code>0x03</code>
 <code>0x00</code> represents the Role of the recipient (always the Collector), and
 <code>agg_share_aad</code> is an <code>AggregateShareAad</code> message constructed from the task ID
 and the aggregation parameter in the collect request, and a batch selector. The
-value of the batch selector used in <code>agg_share_aad</code> is computed by the Collector
-from its query and the response to its query as follows:<a href="#section-4.7.4-8" class="pilcrow">¶</a></p>
+value of the batch selector used in <code>agg_share_aad</code> is determined by the batch mode.<a href="#section-4.7.4-8" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-4.7.4-9.1">
-              <p id="section-4.7.4-9.1.1">For time-interval tasks, the batch selector is the batch interval specified in
-the query.<a href="#section-4.7.4-9.1.1" class="pilcrow">¶</a></p>
+              <p id="section-4.7.4-9.1.1">For time-interval (<a href="#time-interval-batch-mode" class="auto internal xref">Section 5.1</a>), the batch selector is the
+batch interval specified in the query.<a href="#section-4.7.4-9.1.1" class="pilcrow">¶</a></p>
 </li>
             <li class="normal" id="section-4.7.4-9.2">
-              <p id="section-4.7.4-9.2.1">For leader-selected tasks, the batch selector is the batch ID sent in the
-response.<a href="#section-4.7.4-9.2.1" class="pilcrow">¶</a></p>
+              <p id="section-4.7.4-9.2.1">For leader-selected (<a href="#leader-selected-batch-mode" class="auto internal xref">Section 5.2</a>), the batch selector is
+the batch ID sent in the response.<a href="#section-4.7.4-9.2.1" class="pilcrow">¶</a></p>
 </li>
           </ul>
 <p id="section-4.7.4-10">The <code>OpenBase()</code> function is as specified in <span>[<a href="#HPKE" class="cite xref">HPKE</a>], <a href="https://rfc-editor.org/rfc/rfc9180#section-6.1" class="relref">Section 6.1</a></span> for the
@@ -4400,9 +4393,6 @@ one distinct aggregation parameter, the Aggregator <span class="bcp14">MUST</spa
 <p id="section-4.7.5-6">Next, the Aggregator checks if the set of batch bucket identified by by the
 request overlaps with the batch buckets that have already been collected. If
 so, it <span class="bcp14">MUST</span> abort with "batchOverlap".<a href="#section-4.7.5-6" class="pilcrow">¶</a></p>
-<p id="section-4.7.5-7">Finally, the batch mode may specify additional batch validation checks. See
-<a href="#time-interval-batch-mode" class="auto internal xref">Section 5.1</a> for time-interval and
-<a href="#leader-selected-batch-mode" class="auto internal xref">Section 5.2</a> for leader-selected.<a href="#section-4.7.5-7" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
