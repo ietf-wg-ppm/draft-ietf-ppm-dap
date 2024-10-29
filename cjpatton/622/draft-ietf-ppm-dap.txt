@@ -117,11 +117,11 @@ Table of Contents
        5.1.2.  Partial Batch Selector Configuration
        5.1.3.  Batch Selector Configuration
        5.1.4.  Batch Buckets
-       5.1.5.  Leader-selected Batch Mode
-       5.1.6.  Query Configuration
-       5.1.7.  Partial Batch Selector Configuration
-       5.1.8.  Batch Selector Configuration
-       5.1.9.  Batch Buckets
+     5.2.  Leader-selected Batch Mode
+       5.2.1.  Query Configuration
+       5.2.2.  Partial Batch Selector Configuration
+       5.2.3.  Batch Selector Configuration
+       5.2.4.  Batch Buckets
    6.  Operational Considerations
      6.1.  Protocol Participant Capabilities
        6.1.1.  Client Capabilities
@@ -977,11 +977,10 @@ Table of Contents
 
 4.2.  Batch Modes, Batches, and Queries
 
-   Aggregate results are computed based on sets of reports, called
-   "batches".  The Collector requests the aggregate result for a given
-   batch via a "query".  The Aggregators use this query to carry out the
-   aggregation flow and produce aggregate shares encrypted to the
-   Collector.
+   An aggregate result is computed from a sets of reports, called a
+   "batch".  The Collector requests the aggregate result for a given
+   batch via a "query".  The Aggregators use this query to select a
+   batch for aggregation.
 
    Each measurement task has a preconfigured "batch mode".  The batch
    mode defines both how reports may be partitioned into batches, as
@@ -994,9 +993,9 @@ Table of Contents
       interval, and the batch consists of all reports with a timestamp
       in that interval.
 
-   *  leader-selected (Section 5.1.5) in which the Leader assigns
-      reports to batches itself, and the Collector's query simply
-      requests the aggregate result for the "next" batch of reports.
+   *  leader-selected (Section 5.2) in which the Leader assigns reports
+      to batches itself, and the Collector's query simply requests the
+      aggregate result for the "next" batch of reports.
 
    Future documents may define additional batch modes for DAP; see
    Section 10.
@@ -1012,8 +1011,8 @@ Table of Contents
    The query is issued to the Leader by the Collector during the
    collection interaction (Section 4.7).  In addition, information used
    to guide batch selection is conveyed from the Leader to the Helper
-   when initializing aggregation (Section 4.6) and finalizing
-   collection.
+   when initializing aggregation (Section 4.6) and finalizing the
+   aggregate shares.
 
 4.3.  Task Configuration
 
@@ -1628,7 +1627,7 @@ Table of Contents
       mode, the config field is empty (Section 5.1); for leader-selected
       tasks, the Leader specifies a "batch ID" that determines the batch
       to which each report for this aggregation job belongs
-      (Section 5.1.5).
+      (Section 5.2).
 
       Documents that define batch modes MUST specify the content this
       field; see Section 10 for details.
@@ -2359,7 +2358,7 @@ Table of Contents
       field contains the requested time interval (Section 5.1); for
       leader-selected mode, the config field is empty, and the Collector
       gets the aggregate result for the next batch selected by the
-      Leader (Section 5.1.5).
+      Leader (Section 5.2).
 
       Batch modes defined by future documents MUST specify the content
       this field; see Section 10 for details.
@@ -2552,7 +2551,7 @@ Table of Contents
       depends on the indicated batch mode: for time-interval mode, the
       config field contains the time interval selected by the Collector
       (Section 5.1); in leader-selected mode, the field contains the
-      batch ID selected by the Leader (Section 5.1.5).
+      batch ID selected by the Leader (Section 5.2).
 
       Future documents that new batch modes MUST specify the contents of
       the config field; see Section 10 for details.
@@ -2742,7 +2741,7 @@ Table of Contents
    collected.  If so, it MUST abort with "batchOverlap".
 
    Finally, the batch mode may specify additional batch validation
-   checks.  See Section 5.1 for time-interval and Section 5.1.5 for
+   checks.  See Section 5.1 for time-interval and Section 5.2 for
    leader-selected.
 
 5.  Batch Modes
@@ -2839,7 +2838,7 @@ Table of Contents
    2*batch_interval.duration, batch_interval.start +
    3*batch_interval.duration), and so on.
 
-5.1.5.  Leader-selected Batch Mode
+5.2.  Leader-selected Batch Mode
 
    enum {
      leader_selected(2),
@@ -2869,12 +2868,12 @@ Table of Contents
    nodes running the aggregate interaction (see Section 4.6) need to be
    coordinated.
 
-5.1.6.  Query Configuration
+5.2.1.  Query Configuration
 
    They payload of Query.config is empty; the request merely indicates
    the Collector would like the next batch selected by the Leader.
 
-5.1.7.  Partial Batch Selector Configuration
+5.2.2.  Partial Batch Selector Configuration
 
    The payload of PartialBatchSelector.config is:
 
@@ -2884,7 +2883,7 @@ Table of Contents
 
    where batch_id is the batch ID selected by the Leader.
 
-5.1.8.  Batch Selector Configuration
+5.2.3.  Batch Selector Configuration
 
    The payload of BatchSelector.config is:
 
@@ -2894,7 +2893,7 @@ Table of Contents
 
    where batch_id is the batch ID selected by the Leader.
 
-5.1.9.  Batch Buckets
+5.2.4.  Batch Buckets
 
    Each batch consists of a single bucket and is identified by the batch
    ID selected by the Leader.  A report is assigned to the batch
@@ -3879,15 +3878,15 @@ Table of Contents
 
    The initial contents of this registry listed in Table 2.
 
-          +=======+=================+===========================+
-          | Value | Name            | Reference                 |
-          +=======+=================+===========================+
-          | 0x00  | reserved        | Section 4.2 of RFC XXXX   |
-          +-------+-----------------+---------------------------+
-          | 0x01  | time_interval   | Section 5.1 of RFC XXXX   |
-          +-------+-----------------+---------------------------+
-          | 0x02  | leader_selected | Section 5.1.5 of RFC XXXX |
-          +-------+-----------------+---------------------------+
+           +=======+=================+=========================+
+           | Value | Name            | Reference               |
+           +=======+=================+=========================+
+           | 0x00  | reserved        | Section 4.2 of RFC XXXX |
+           +-------+-----------------+-------------------------+
+           | 0x01  | time_interval   | Section 5.1 of RFC XXXX |
+           +-------+-----------------+-------------------------+
+           | 0x02  | leader_selected | Section 5.2 of RFC XXXX |
+           +-------+-----------------+-------------------------+
 
                 Table 2: Initial contents of the Batch Mode
                            Identifiers registry.
