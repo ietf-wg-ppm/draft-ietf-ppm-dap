@@ -998,7 +998,8 @@ Table of Contents
       aggregate result for the "next" batch of reports.
 
    Future documents may define additional batch modes for DAP; see
-   Section 10.
+   Section 10.  Implementations are free to implement only a subset of
+   the available batch modes.
 
    Batch modes are identified with a single byte in serialized messages,
    as follows:
