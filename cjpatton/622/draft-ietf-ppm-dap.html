@@ -4374,26 +4374,27 @@ ciphersuite indicated by the HPKE configuration.<a href="#section-4.7.4-10" clas
           </h4>
 <p id="section-4.7.5-1">When the Leader receives a <code>Query</code> in the request from the Collector during
 collection initialization (<a href="#collect-init" class="auto internal xref">Section 4.7.1</a>), it must first check that the
-batch determined by the query can be collected. It does so as described here.<a href="#section-4.7.5-1" class="pilcrow">¶</a></p>
-<p id="section-4.7.5-2">The Helper performs the same check when it receives a <code>BatchSelector</code> in the
-request from the Leader for its aggregate share (<a href="#collect-aggregate" class="auto internal xref">Section 4.7.2</a>).<a href="#section-4.7.5-2" class="pilcrow">¶</a></p>
-<p id="section-4.7.5-3">First, the Aggregator checks if the request (the <code>CollectionJobReq</code> for the
+batch determined by the query can be collected. It does so as described here.
+The Helper performs the same check when it receives a <code>BatchSelector</code> in the
+request from the Leader for its aggregate share (<a href="#collect-aggregate" class="auto internal xref">Section 4.7.2</a>).<a href="#section-4.7.5-1" class="pilcrow">¶</a></p>
+<p id="section-4.7.5-2">First, the Aggregator checks if the request (the <code>CollectionJobReq</code> for the
 Leader and the <code>AggregateShareReq</code> for the Helper) identifies a valid set of
 batch buckets (<a href="#batch-buckets" class="auto internal xref">Section 4.6.2.3</a>). If not, it <span class="bcp14">MUST</span> abort the request with
-"batchInvalid".<a href="#section-4.7.5-3" class="pilcrow">¶</a></p>
-<p id="section-4.7.5-4">Next, the Aggregator checks that batch contains a valid number of reports. The
+"batchInvalid".<a href="#section-4.7.5-2" class="pilcrow">¶</a></p>
+<p id="section-4.7.5-3">Next, the Aggregator checks that batch contains a valid number of reports. The
 Aggregator checks that <code>len(X) &gt;= min_batch_size</code>, where <code>X</code> is the set of
 reports successfully aggregated into the batch and <code>min_batch_size</code> is the
 minimum batch size for the task. If this check fails, then Helpers <span class="bcp14">MUST</span> abort
 with an error of type "invalidBatchSize". Leaders <span class="bcp14">SHOULD</span> wait for more reports
-to be validated and try the collection job again later.<a href="#section-4.7.5-4" class="pilcrow">¶</a></p>
-<p id="section-4.7.5-5">Next, the Aggregator checks that the batch has not been queried with multiple
+to be validated and try the collection job again later.<a href="#section-4.7.5-3" class="pilcrow">¶</a></p>
+<p id="section-4.7.5-4">Next, the Aggregator checks that the batch has not been queried with multiple
 distinct aggregation parameters. If the batch has been queried with more than
 one distinct aggregation parameter, the Aggregator <span class="bcp14">MUST</span> abort with error of type
-"batchQueriedMultipleTimes".<a href="#section-4.7.5-5" class="pilcrow">¶</a></p>
-<p id="section-4.7.5-6">Next, the Aggregator checks if the set of batch bucket identified by by the
+"batchQueriedMultipleTimes".<a href="#section-4.7.5-4" class="pilcrow">¶</a></p>
+<p id="section-4.7.5-5">Next, the Aggregator checks if the set of batch bucket identified by by the
 request overlaps with the batch buckets that have already been collected. If
-so, it <span class="bcp14">MUST</span> abort with "batchOverlap".<a href="#section-4.7.5-6" class="pilcrow">¶</a></p>
+so, it <span class="bcp14">MUST</span> abort with "batchOverlap".<a href="#section-4.7.5-5" class="pilcrow">¶</a></p>
+<p id="section-4.7.5-6">Finally, the batch mode may define additional batch validation rules.<a href="#section-4.7.5-6" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>

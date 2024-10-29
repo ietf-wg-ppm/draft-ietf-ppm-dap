@@ -2705,11 +2705,9 @@ Table of Contents
    When the Leader receives a Query in the request from the Collector
    during collection initialization (Section 4.7.1), it must first check
    that the batch determined by the query can be collected.  It does so
-   as described here.
-
-   The Helper performs the same check when it receives a BatchSelector
-   in the request from the Leader for its aggregate share
-   (Section 4.7.2).
+   as described here.  The Helper performs the same check when it
+   receives a BatchSelector in the request from the Leader for its
+   aggregate share (Section 4.7.2).
 
    First, the Aggregator checks if the request (the CollectionJobReq for
    the Leader and the AggregateShareReq for the Helper) identifies a
@@ -2732,6 +2730,8 @@ Table of Contents
    Next, the Aggregator checks if the set of batch bucket identified by
    by the request overlaps with the batch buckets that have already been
    collected.  If so, it MUST abort with "batchOverlap".
+
+   Finally, the batch mode may define additional batch validation rules.
 
 5.  Batch Modes
 
