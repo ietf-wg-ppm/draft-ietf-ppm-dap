@@ -1391,8 +1391,8 @@ Table of Contents
    extension, then the Leader MAY abort the upload request with error
    "unsupportedExtension."  If the Leader does abort for this reason, it
    MAY indicate the unsupported extensions in the resulting problem
-   document via an extension field (Section 3.2 of [RFC9457])
-   "unsupported_extensions" on the problem document; this field MUST
+   document via an extension member (Section 3.2 of [RFC9457])
+   "unsupported_extensions" on the problem document; this member MUST
    contain an array of numeric values indicating the extension code
    points which were not recognized.
 

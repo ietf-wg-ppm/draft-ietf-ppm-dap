@@ -2938,10 +2938,9 @@ the report later on.<a href="#section-4.5.2-23" class="pilcrow">¶</a></p>
 <p id="section-4.5.2-24">If the Leader's input share contains an unrecognized report extension, then the
 Leader <span class="bcp14">MAY</span> abort the upload request with error "unsupportedExtension." If the
 Leader does abort for this reason, it <span class="bcp14">MAY</span> indicate the unsupported extensions in
-the resulting problem document via an extension field (<span><a href="https://rfc-editor.org/rfc/rfc9457#section-3.2" class="relref">Section 3.2</a> of [<a href="#RFC9457" class="cite xref">RFC9457</a>]</span>) "unsupported_extensions"
-on the problem document; this field
-<span class="bcp14">MUST</span> contain an array of numeric values indicating the extension code points
-which were not recognized.<a href="#section-4.5.2-24" class="pilcrow">¶</a></p>
+the resulting problem document via an extension member (<span><a href="https://rfc-editor.org/rfc/rfc9457#section-3.2" class="relref">Section 3.2</a> of [<a href="#RFC9457" class="cite xref">RFC9457</a>]</span>) "unsupported_extensions" on the problem document; this member <span class="bcp14">MUST</span>
+contain an array of numeric values indicating the extension code points which
+were not recognized.<a href="#section-4.5.2-24" class="pilcrow">¶</a></p>
 <p id="section-4.5.2-25">If the Leader's input share contains two extensions with the same type, then the
 Leader <span class="bcp14">MAY</span> abort the upload request with error "invalidMessage".<a href="#section-4.5.2-25" class="pilcrow">¶</a></p>
 <p id="section-4.5.2-26">(Note that validation of extensions is not mandatory here because it requires
