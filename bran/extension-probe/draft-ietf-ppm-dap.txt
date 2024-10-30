@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 2 May 2025                                           Cloudflare
+Expires: 3 May 2025                                           Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                         29 October 2024
+                                                         30 October 2024
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -63,7 +63,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 2 May 2025.
+   This Internet-Draft will expire on 3 May 2025.
 
 Copyright Notice
 
@@ -1391,12 +1391,13 @@ Table of Contents
    extension, then the Leader MAY abort the upload request with error
    "unsupportedExtension."  If the Leader does abort for this reason, it
    MAY indicate the unsupported extensions in the resulting problem
-   document via an extension field "unsupported_extensions" on the
-   problem document; this field MUST contain an array of numeric values
-   indicating the extension code points which were not recognized.
+   document via an extension field (Section 3.2 of [RFC9457])
+   "unsupported_extensions" on the problem document; this field MUST
+   contain an array of numeric values indicating the extension code
+   points which were not recognized.
 
    If the Leader's input share contains two extensions with the same
-   type, then the Leader MAY abort th eupload request with error
+   type, then the Leader MAY abort the upload request with error
    "invalidMessage".
 
    (Note that validation of extensions is not mandatory here because it
