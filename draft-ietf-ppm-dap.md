@@ -791,6 +791,7 @@ standard tokens for use in the "type" field:
 | unauthorizedRequest        | Authentication of an HTTP request failed (see {{request-authentication}}). |
 | stepMismatch               | The Aggregators disagree on the current step of the DAP aggregation protocol. |
 | batchOverlap               | A request's query includes reports that were previously collected in a different batch. |
+| unsupportedExtension       | An upload request's extensions list includes an unknown extension. |
 {: #urn-space-errors = "DAP errors. All are scoped to the errors sub-namespace of the DAP URN, e.g., urn:ietf:params:ppm:dap:error:invalidMessage."}
 
 This list is not exhaustive. The server MAY return errors set to a URI other
@@ -1287,10 +1288,23 @@ report for this reason, it SHOULD abort the upload interaction and alert the
 Client with error `reportTooEarly`. In this situation, the Client MAY re-upload
 the report later on.
 
-If the Leader's input share contains an unrecognized report extension, or if
-two report extensions have the same ExtensionType, then the Leader MAY abort
-the upload request with error "invalidMessage". Note that this behavior is not
-mandatory because it requires the Leader to decrypt its input share.
+If the Leader's input share contains an unrecognized report extension, then the
+Leader MAY abort the upload request with error "unsupportedExtension." If the
+Leader does abort for this reason, it MAY indicate the unsupported extensions in
+the resulting problem document via an extension member ({{Section 3.2 of
+!RFC9457}}) "unsupported_extensions" on the problem document; this member MUST
+contain an array of numeric values indicating the extension code points which
+were not recognized. For example, if the report upload contained two unsupported
+extensions with code points `23` and `42`, the "unsupported_extensions" member
+would contain the value `[23, 42]`.
+
+If the Leader's input share contains two extensions with the same type, then the
+Leader MAY abort the upload request with error "invalidMessage".
+
+(Note that validation of extensions is not mandatory here because it requires
+the Leader to decrypt its input share. The Leader also cannot validate the
+Helper's extensions because it cannot decrypt the Helper's input share.
+Mandatory validation of extensions will occur during aggregation.)
 
 ### Report Extensions {#report-extensions}
 
