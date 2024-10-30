@@ -1394,7 +1394,9 @@ Table of Contents
    document via an extension member (Section 3.2 of [RFC9457])
    "unsupported_extensions" on the problem document; this member MUST
    contain an array of numeric values indicating the extension code
-   points which were not recognized.
+   points which were not recognized.  For example, if the report upload
+   contained two unsupported extensions with code points 23 and 42, the
+   "unsupported_extensions" member would contain the value [23, 42].
 
    If the Leader's input share contains two extensions with the same
    type, then the Leader MAY abort the upload request with error
