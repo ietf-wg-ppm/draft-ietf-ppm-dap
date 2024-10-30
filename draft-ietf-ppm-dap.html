@@ -3344,6 +3344,10 @@ aggregation job.<a href="#section-4.6.1.1-23.3.1" class="pilcrow">¶</a></p>
 the report ID for replay protection.<a href="#section-4.6.1.1-24" class="pilcrow">¶</a></p>
 <p id="section-4.6.1.1-25">(Note: Since VDAF preparation completes in a constant number of rounds, it will
 never be the case that some reports are completed and others are not.)<a href="#section-4.6.1.1-25" class="pilcrow">¶</a></p>
+<p id="section-4.6.1.1-26">If the Leader fails to process the response from the Helper, for example because
+of a transient failure such as a network connection failure or process crash,
+the Leader <span class="bcp14">SHOULD</span> re-send the original request unmodified in order to attempt
+recovery (see <a href="#aggregation-step-skew-recovery" class="auto internal xref">Section 4.6.2.4</a>).<a href="#section-4.6.1.1-26" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="aggregation-helper-init">
@@ -3746,6 +3750,10 @@ aggregation job.<a href="#section-4.6.2.1-12.4.1" class="pilcrow">¶</a></p>
             </ol>
 <p id="section-4.6.2.1-13">When the Leader stores the <code>out_share</code>, it <span class="bcp14">MUST</span> also store the report ID for
 replay protection.<a href="#section-4.6.2.1-13" class="pilcrow">¶</a></p>
+<p id="section-4.6.2.1-14">If the Leader fails to process the response from the Helper, for example because
+of a transient failure such as a network connection failure or process crash,
+the Leader <span class="bcp14">SHOULD</span> re-send the original request unmodified in order to attempt
+recovery (see <a href="#aggregation-step-skew-recovery" class="auto internal xref">Section 4.6.2.4</a>).<a href="#section-4.6.2.1-14" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="aggregation-helper-continuation">
@@ -3781,15 +3789,16 @@ to the previous request, then the Helper <span class="bcp14">MAY</span> abort wi
 (Note that a report may be missing, in which case the Helper should assume the
 Leader rejected it.)<a href="#section-4.6.2.2-7" class="pilcrow">¶</a></p>
 <p id="section-4.6.2.2-8">Next, the Helper checks if the continuation step indicated by the request is
-correct. (For the first <code>AggregationJobContinueReq</code> the value should be <code>1</code>;
-for the second the value should be <code>2</code>; and so on.) If the Leader is one step
-behind (e.g., the Leader has resent the previous HTTP request), then the Helper
-<span class="bcp14">MAY</span> attempt to recover by sending the same response as it did for the previous
+correct. (For the first <code>AggregationJobContinueReq</code> the value should be <code>1</code>; for
+the second the value should be <code>2</code>; and so on.) If the Leader is one step behind
+(e.g., the Leader has resent the previous HTTP request), then the Helper <span class="bcp14">MAY</span>
+attempt to recover by sending the same response as it did for the previous
 <code>AggregationJobContinueReq</code>, without performing any additional work on the
 aggregation job. In this case it <span class="bcp14">SHOULD</span> verify that the contents of the
 <code>AggregationJobContinueReq</code> are identical to the previous message (see
-<a href="#aggregation-step-skew-recovery" class="auto internal xref">Section 4.6.2.4</a>). Otherwise, if the step is incorrect, the
-Helper <span class="bcp14">MUST</span> abort with error <code>stepMismatch</code>.<a href="#section-4.6.2.2-8" class="pilcrow">¶</a></p>
+<a href="#aggregation-step-skew-recovery" class="auto internal xref">Section 4.6.2.4</a>). Otherwise, if the step is incorrect or if
+the Helper does not wish to attempt recovery, the Helper <span class="bcp14">MUST</span> abort with error
+<code>stepMismatch</code>.<a href="#section-4.6.2.2-8" class="pilcrow">¶</a></p>
 <p id="section-4.6.2.2-9">Let <code>inbound</code> denote the payload of the prep step. For each report, the Helper
 computes the following:<a href="#section-4.6.2.2-9" class="pilcrow">¶</a></p>
 <div class="lang-pseudocode sourcecode" id="section-4.6.2.2-10">
