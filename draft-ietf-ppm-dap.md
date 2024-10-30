@@ -1652,6 +1652,11 @@ the report ID for replay protection.
 (Note: Since VDAF preparation completes in a constant number of rounds, it will
 never be the case that some reports are completed and others are not.)
 
+If the Leader fails to process the response from the Helper, for example because
+of a transient failure such as a network connection failure or process crash,
+the Leader SHOULD re-send the original request unmodified in order to attempt
+recovery (see {{aggregation-step-skew-recovery}}).
+
 #### Helper Initialization {#aggregation-helper-init}
 
 The Helper begins an aggregation job when it receives an `AggregationJobInitReq`
@@ -2022,6 +2027,11 @@ Otherwise, the Leader proceeds as follows with each report:
 When the Leader stores the `out_share`, it MUST also store the report ID for
 replay protection.
 
+If the Leader fails to process the response from the Helper, for example because
+of a transient failure such as a network connection failure or process crash,
+the Leader SHOULD re-send the original request unmodified in order to attempt
+recovery (see {{aggregation-step-skew-recovery}}).
+
 #### Helper Continuation {#aggregation-helper-continuation}
 
 The Helper begins each step of continuation with a sequence of `state` objects,
@@ -2051,15 +2061,16 @@ to the previous request, then the Helper MAY abort with error `invalidMessage`.
 Leader rejected it.)
 
 Next, the Helper checks if the continuation step indicated by the request is
-correct. (For the first `AggregationJobContinueReq` the value should be `1`;
-for the second the value should be `2`; and so on.) If the Leader is one step
-behind (e.g., the Leader has resent the previous HTTP request), then the Helper
-MAY attempt to recover by sending the same response as it did for the previous
+correct. (For the first `AggregationJobContinueReq` the value should be `1`; for
+the second the value should be `2`; and so on.) If the Leader is one step behind
+(e.g., the Leader has resent the previous HTTP request), then the Helper MAY
+attempt to recover by sending the same response as it did for the previous
 `AggregationJobContinueReq`, without performing any additional work on the
 aggregation job. In this case it SHOULD verify that the contents of the
 `AggregationJobContinueReq` are identical to the previous message (see
-{{aggregation-step-skew-recovery}}). Otherwise, if the step is incorrect, the
-Helper MUST abort with error `stepMismatch`.
+{{aggregation-step-skew-recovery}}). Otherwise, if the step is incorrect or if
+the Helper does not wish to attempt recovery, the Helper MUST abort with error
+`stepMismatch`.
 
 Let `inbound` denote the payload of the prep step. For each report, the Helper
 computes the following:
