@@ -1246,7 +1246,7 @@ Table of Contents
    struct {
      ReportID report_id;
      Time time;
-     Extension public_extensions<0..2^32-1>;
+     Extension public_extensions<0..2^16-1>;
    } ReportMetadata;
 
    struct {

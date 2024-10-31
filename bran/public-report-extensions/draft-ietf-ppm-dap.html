@@ -2801,7 +2801,7 @@ at least twice the cache lifetime in order to avoid rejecting reports.<a href="#
 struct {
   ReportID report_id;
   Time time;
-  Extension public_extensions&lt;0..2^32-1&gt;;
+  Extension public_extensions&lt;0..2^16-1&gt;;
 } ReportMetadata;
 
 struct {
