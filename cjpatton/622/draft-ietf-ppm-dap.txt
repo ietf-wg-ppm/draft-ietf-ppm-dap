@@ -871,6 +871,10 @@ Table of Contents
      |                            | reports that were previously     |
      |                            | collected in a different batch.  |
      +----------------------------+----------------------------------+
+     | unsupportedExtension       | An upload request's extensions   |
+     |                            | list includes an unknown         |
+     |                            | extension.                       |
+     +----------------------------+----------------------------------+
 
                                   Table 1
 
@@ -1038,15 +1042,14 @@ Table of Contents
       task if it does not recognize the batch mode.
 
    *  task_start: The time from which the Clients will start uploading
-      reports to a task.  The Client is not expected to upload its
-      report if the Client's clock is earlier than task_start.
-      Aggregators MAY reject reports with timestamps earlier than
-      task_start.
+      reports to a task.  Aggregators MUST reject reports with
+      timestamps earlier than task_start.
 
    *  task_duration: The duration of a task.  The task is considered
       completed after the end time task_start + task_duration.
-      Aggregators MAY reject reports that have timestamps later than the
-      end time, and MAY reject the task if task_duration is too long.
+      Aggregators MUST reject reports that have timestamps later than
+      the end time, and MAY choose to opt out of the task if
+      task_duration is too long.
 
    *  time_precision: Clients use this value to truncate their report
       timestamps; see Section 4.5.  Additional semantics may apply,
@@ -1313,12 +1316,12 @@ Table of Contents
    abort the upload interaction and alert the Client with error
    reportRejected.
 
-   The Leader MAY ignore any report whose timestamp is before the task's
-   task_start, or is past the end time task_start + task_duration.  When
-   it does so, it SHOULD also abort the upload interaction and alert the
-   Client with error reportRejected.  Client MAY choose to opt out of
-   the task if its own clock is earlier than task_start, or is past
-   task_start + task_duration.
+   The Leader MUST ignore any report whose timestamp is before the
+   task's task_start, or is past the end time task_start +
+   task_duration.  When it does so, it SHOULD also abort the upload
+   interaction and alert the Client with error reportRejected.  Clients
+   MUST NOT upload a report if its timestamp would be earlier than
+   task_start or later than task_start + task_duration.
 
    The Leader may need to buffer reports while waiting to aggregate them
    (e.g., while waiting for an aggregation parameter from the Collector;
@@ -1331,10 +1334,25 @@ Table of Contents
    report later on.
 
    If the Leader's input share contains an unrecognized report
-   extension, or if two report extensions have the same ExtensionType,
-   then the Leader MAY abort the upload request with error
-   "invalidMessage".  Note that this behavior is not mandatory because
-   it requires the Leader to decrypt its input share.
+   extension, then the Leader MAY abort the upload request with error
+   "unsupportedExtension."  If the Leader does abort for this reason, it
+   MAY indicate the unsupported extensions in the resulting problem
+   document via an extension member (Section 3.2 of [RFC9457])
+   "unsupported_extensions" on the problem document; this member MUST
+   contain an array of numeric values indicating the extension code
+   points which were not recognized.  For example, if the report upload
+   contained two unsupported extensions with code points 23 and 42, the
+   "unsupported_extensions" member would contain the value [23, 42].
+
+   If the Leader's input share contains two extensions with the same
+   type, then the Leader MAY abort the upload request with error
+   "invalidMessage".
+
+   (Note that validation of extensions is not mandatory here because it
+   requires the Leader to decrypt its input share.  The Leader also
+   cannot validate the Helper's extensions because it cannot decrypt the
+   Helper's input share.  Mandatory validation of extensions will occur
+   during aggregation.)
 
 4.5.3.  Report Extensions
 
@@ -1716,6 +1734,12 @@ Table of Contents
    rounds, it will never be the case that some reports are completed and
    others are not.)
 
+   If the Leader fails to process the response from the Helper, for
+   example because of a transient failure such as a network connection
+   failure or process crash, the Leader SHOULD re-send the original
+   request unmodified in order to attempt recovery (see
+   Section 4.6.2.4).
+
 4.6.1.2.  Helper Initialization
 
    The Helper begins an aggregation job when it receives an
@@ -1954,11 +1978,11 @@ Table of Contents
        invalid with the error report_too_early.
 
    3.  Check if the report's timestamp is before the task's task_start
-       time.  If so, the Aggregator MAY mark the input share as invalid
+       time.  If so, the Aggregator MUST mark the input share as invalid
        with the error task_not_started.
 
    4.  Check if the report's timestamp is past the task's end time,
-       given by task_start + task_duration.  If so, the Aggregator MAY
+       given by task_start + task_duration.  If so, the Aggregator MUST
        mark the input share as invalid with the error task_expired.
 
    5.  Check if the PlaintextInputShare contains unrecognized report
@@ -2092,6 +2116,12 @@ Table of Contents
    When the Leader stores the out_share, it MUST also store the report
    ID for replay protection.
 
+   If the Leader fails to process the response from the Helper, for
+   example because of a transient failure such as a network connection
+   failure or process crash, the Leader SHOULD re-send the original
+   request unmodified in order to attempt recovery (see
+   Section 4.6.2.4).
+
 4.6.2.2.  Helper Continuation
 
    The Helper begins each step of continuation with a sequence of state
@@ -2132,8 +2162,9 @@ Table of Contents
    AggregationJobContinueReq, without performing any additional work on
    the aggregation job.  In this case it SHOULD verify that the contents
    of the AggregationJobContinueReq are identical to the previous
-   message (see Section 4.6.2.4).  Otherwise, if the step is incorrect,
-   the Helper MUST abort with error stepMismatch.
+   message (see Section 4.6.2.4).  Otherwise, if the step is incorrect
+   or if the Helper does not wish to attempt recovery, the Helper MUST
+   abort with error stepMismatch.
 
    Let inbound denote the payload of the prep step.  For each report,
    the Helper computes the following:
