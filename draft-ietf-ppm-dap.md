@@ -154,6 +154,33 @@ aggregator.
 
 (\*) Indicates a change that breaks wire compatibility with the previous draft.
 
+13:
+
+- Bump draft-irtf-cfrg-vdaf-12 to 13 {{!VDAF}} and adopt the streaming
+  aggregation interface. Accordingly, clarify that DAP is only compatible with
+  VDAFs for which aggregation is order insensitive.
+
+- Add public extensions to report metadata. (\*)
+
+- Improve extension points for batch modes. (\*)
+
+- During the upload interaction, allow the Leader to indicate to the Client which
+  set of report extensions it doesn't support.
+
+- Add a start time to task parameters and require rejection of reports outside
+  of the time validity window. Incidentally, replace the task end time with a
+  task duration parameter.
+
+- Clarify underspecified behavior around aggregation skew recovery.
+
+- Improve IANA considerations and add guidelines for extending DAP.
+
+- Rename "upload extension" to "report extension", and "prepare error" to
+  "report error", to better align the names of these types with their
+  functionality.
+
+- Bump version tag from "dap-12" to "dap-13". (\*)
+
 12:
 
 - Bump draft-irtf-cfrg-vdaf-08 to 12 {{!VDAF}}, and specify the newly-defined
