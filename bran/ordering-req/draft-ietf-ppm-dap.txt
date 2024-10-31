@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 11 April 2025                                        Cloudflare
+Expires: 4 May 2025                                           Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                          8 October 2024
+                                                         31 October 2024
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -63,7 +63,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 11 April 2025.
+   This Internet-Draft will expire on 4 May 2025.
 
 Copyright Notice
 
@@ -549,7 +549,8 @@ Table of Contents
    cryptographic schemes that implement the VDAF interface specified in
    [VDAF].  This protocol only supports VDAFs which require a single
    collection to provide useful results, and whose aggregation results
-   are independent of the order in which measurements are aggregated.
+   are independent of the order in which measurements are aggregated
+   (see Section 4.4.1 of [VDAF]).
 
    VDAFs rely on secret sharing to protect the privacy of the
    measurements.  Rather than sending its input in the clear, each
