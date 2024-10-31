@@ -2823,12 +2823,11 @@ Table of Contents
 
    A batch consists of a sequence of contiguous batch buckets.  That is,
    the set of batch buckets identifiers for the batch interval is
-   (batch_interval.start, batch_interval.start +
-   batch_interval.duration), (batch_interval.start +
-   batch_interval.duration, batch_interval.start +
-   2*batch_interval.duration), (batch_interval.start +
-   2*batch_interval.duration, batch_interval.start +
-   3*batch_interval.duration), and so on.
+   (batch_interval.start, batch_interval.start + time_precision),
+   (batch_interval.start + time_precision, batch_interval.start +
+   2*time_precision), ..., (batch_interval.start +
+   batch_interval.duration - time_precision) + batch_interval.start +
+   batch_interval.duration).
 
 5.2.  Leader-selected Batch Mode
 
@@ -3995,7 +3994,7 @@ Table of Contents
 
       -  Batch buckets (Section 4.6.2.3): how reports are assigned to
          batch buckets; how each bucket is identified; and how batch
-         buckets are mapped to batches and how batch buckets
+         buckets are mapped to batches.
 
       See Section 5 for examples.
 

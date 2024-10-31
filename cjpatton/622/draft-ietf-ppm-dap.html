@@ -4516,11 +4516,12 @@ effectively, the minimum batch duration)<a href="#section-5.1.4-3.1.1" class="pi
           </ul>
 <p id="section-5.1.4-4">A batch consists of a sequence of contiguous batch buckets. That is, the set of
 batch buckets identifiers for the batch interval is
-<code>(batch_interval.start, batch_interval.start + batch_interval.duration)</code>,
-<code>(batch_interval.start + batch_interval.duration, batch_interval.start +
-2*batch_interval.duration)</code>, <code>(batch_interval.start +
-2*batch_interval.duration, batch_interval.start + 3*batch_interval.duration)</code>,
-and so on.<a href="#section-5.1.4-4" class="pilcrow">¶</a></p>
+<code>(batch_interval.start,
+  batch_interval.start + time_precision)</code>,
+<code>(batch_interval.start + time_precision,
+  batch_interval.start + 2*time_precision)</code>, ...,
+<code>(batch_interval.start + batch_interval.duration - time_precision) +
+  batch_interval.start + batch_interval.duration)</code>.<a href="#section-5.1.4-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -6577,7 +6578,7 @@ one or more of the following:<a href="#section-10-1" class="pilcrow">¶</a></p>
             <li class="normal" id="section-10-4.1.2.2">
               <p id="section-10-4.1.2.2.1">Batch buckets (<a href="#batch-buckets" class="auto internal xref">Section 4.6.2.3</a>): how reports are assigned to batch
 buckets; how each bucket is identified; and how batch buckets are mapped to
-batches and how batch buckets<a href="#section-10-4.1.2.2.1" class="pilcrow">¶</a></p>
+batches.<a href="#section-10-4.1.2.2.1" class="pilcrow">¶</a></p>
 </li>
           </ul>
 <p id="section-10-4.1.3">
