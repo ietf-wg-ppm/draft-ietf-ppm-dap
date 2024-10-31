@@ -2825,7 +2825,7 @@ Table of Contents
 
    struct {
      Interval batch_interval;
-   } TimeIntervalBatchSelector;
+   } TimeIntervalBatchSelectorConfig;
 
    where batch_interval is the batch interval requested by the
    Collector.
