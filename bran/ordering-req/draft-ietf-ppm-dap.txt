@@ -605,10 +605,7 @@ Table of Contents
    cryptographic schemes that compute different aggregation functions.
    In particular, the aggregation function is determined by the
    Verifiable Distributed Aggregation Function, or VDAF [VDAF], used to
-   securely compute it.  This protocol only supports VDAFs which require
-   a single collection to provide useful results, and whose aggregation
-   results are independent of the order in which measurements are
-   aggregated (see Section 4.4.1 of [VDAF]).
+   securely compute it.
 
    VDAFs rely on secret sharing to protect the privacy of the
    measurements.  Rather than sending its measurement in the clear, each
@@ -622,6 +619,14 @@ Table of Contents
    *  Aggregators can compute secret shares of the aggregate result by
       aggregating their shares locally into "aggregate shares", which
       may later be combined into the aggregate result.
+
+   Note that some VDAFs allow measurements to be aggregated multiple
+   times, each time with a different aggregation parameter; however, DAP
+   only allows each measurement to be aggregated once.  Similarly, some
+   VDAFs produce aggregate values which depend on the order in which the
+   measurementas are aggregated; however, DAP only supports VDAFs whose
+   aggregation results are independent of the order in which
+   measurements are aggregated (see Section 4.4.1 of [VDAF]).
 
 2.1.  System Architecture
 

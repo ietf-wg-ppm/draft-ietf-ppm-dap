@@ -2094,9 +2094,7 @@ the "aggregation function" and <code>agg_result</code> the "aggregate result".<a
 schemes that compute different aggregation functions. In particular, the
 aggregation function is determined by the Verifiable Distributed Aggregation
 Function, or VDAF <span>[<a href="#VDAF" class="cite xref">VDAF</a>]</span>, used to securely
-compute it. This protocol only supports VDAFs which require a single collection
-to provide useful results, and whose aggregation results are independent of the
-order in which measurements are aggregated (see <span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-12#section-4.4.1" class="relref">Section 4.4.1</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>).<a href="#section-2-2" class="pilcrow">¶</a></p>
+compute it.<a href="#section-2-2" class="pilcrow">¶</a></p>
 <p id="section-2-3">VDAFs rely on secret sharing to protect the privacy of the measurements. Rather
 than sending its measurement in the clear, each Client shards its measurement
 into a pair of "input shares" and sends an input share to each of the
@@ -2112,6 +2110,12 @@ their shares locally into "aggregate shares", which may later be combined
 into the aggregate result.<a href="#section-2-4.2.1" class="pilcrow">¶</a></p>
 </li>
       </ul>
+<p id="section-2-5">Note that some VDAFs allow measurements to be aggregated multiple times, each
+time with a different aggregation parameter; however, DAP only allows each
+measurement to be aggregated once. Similarly, some VDAFs produce aggregate
+values which depend on the order in which the measurementas are aggregated;
+however, DAP only supports VDAFs whose aggregation results are independent of
+the order in which measurements are aggregated (see <span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-12#section-4.4.1" class="relref">Section 4.4.1</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>).<a href="#section-2-5" class="pilcrow">¶</a></p>
 <div id="system-architecture">
 <section id="section-2.1">
         <h3 id="name-system-architecture">
