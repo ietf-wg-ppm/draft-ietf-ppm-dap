@@ -1089,6 +1089,7 @@ Clients upload reports by using an HTTP POST to
 struct {
   ReportID report_id;
   Time time;
+  Extension public_extensions<0..2^16-1>;
 } ReportMetadata;
 
 struct {
@@ -1109,6 +1110,9 @@ struct {
       round this value down to the nearest multiple of the task's
       `time_precision` in order to ensure that that the timestamp cannot be used
       to link a report back to the Client that generated it.
+
+    * `public_extensions` is the list of public report extensions; see
+      {{report-extensions}}.
 
 * `public_share` is the public share output by the VDAF sharding algorithm. Note
   that the public share might be empty, depending on the VDAF.
@@ -1150,14 +1154,15 @@ The Client then wraps each input share in the following structure:
 
 ~~~ tls-presentation
 struct {
-  Extension extensions<0..2^16-1>;
+  Extension private_extensions<0..2^16-1>;
   opaque payload<0..2^32-1>;
 } PlaintextInputShare;
 ~~~
 
-Field `extensions` is set to the list of report extensions intended to be
-consumed by the given Aggregator. (See {{report-extensions}}.) Field `payload`
-is set to the Aggregator's input share output by the VDAF sharding algorithm.
+Field `private_extensions` is set to the list of private report extensions
+intended to be consumed by the given Aggregator. (See {{report-extensions}}.)
+Field `payload` is set to the Aggregator's input share output by the VDAF
+sharding algorithm.
 
 Next, the Client encrypts each PlaintextInputShare `plaintext_input_share` as
 follows:
@@ -1225,7 +1230,8 @@ report for this reason, it SHOULD abort the upload interaction and alert the
 Client with error `reportTooEarly`. In this situation, the Client MAY re-upload
 the report later on.
 
-If the Leader's input share contains an unrecognized report extension, then the
+If the report contains an unrecognized public report extension, or if the
+Leader's input share contains an unrecognized private report extension, then the
 Leader MAY abort the upload request with error "unsupportedExtension." If the
 Leader does abort for this reason, it MAY indicate the unsupported extensions in
 the resulting problem document via an extension member ({{Section 3.2 of
@@ -1235,8 +1241,9 @@ were not recognized. For example, if the report upload contained two unsupported
 extensions with code points `23` and `42`, the "unsupported_extensions" member
 would contain the value `[23, 42]`.
 
-If the Leader's input share contains two extensions with the same type, then the
-Leader MAY abort the upload request with error "invalidMessage".
+If the same extension type appears more than once among the public extensions
+and the private extensions in the Leader's input share, then the Leader MAY
+abort the upload request with error "invalidMessage".
 
 (Note that validation of extensions is not mandatory here because it requires
 the Leader to decrypt its input share. The Leader also cannot validate the
@@ -1245,9 +1252,11 @@ Mandatory validation of extensions will occur during aggregation.)
 
 ### Report Extensions {#report-extensions}
 
-Each PlaintextInputShare carries a list of extensions that Clients use to convey
-additional information to the Aggregator. Some extensions might be intended for
-both Aggregators; others may only be intended for a specific Aggregator. (For
+Each `ReportMetadata` contains a list of extensions public to both aggregators,
+and each `PlaintextInputShare` contains a list of extensions private to the
+relevant Aggregator. Clients use these extensions to convey additional
+information to the Aggregators. Some extensions might be intended for both
+Aggregators; others may only be intended for a specific Aggregator. (For
 example, a DAP deployment might use some out-of-band mechanism for an Aggregator
 to verify that reports come from authenticated Clients. It will likely be useful
 to bind the extension to the input share via HPKE encryption.)
@@ -1488,8 +1497,7 @@ Each of these messages is constructed as follows:
 
   * `report_share.public_share` is the report's public share.
 
-  * `report_share.encrypted_input_share` is the intended recipient's (i.e.
-    Helper's) encrypted input share.
+  * `report_share.encrypted_input_share` is the Helper's encrypted input share.
 
   * `payload` is set to the `outbound` message computed by the previous step.
 
@@ -1804,15 +1812,16 @@ fail with an HTTP client error status code.
 
 #### Input Share Decryption {#input-share-decryption}
 
-Each report share has a corresponding task ID, report metadata (report ID and,
-timestamp), public share, and the Aggregator's encrypted input share. Let
-`task_id`, `report_metadata`, `public_share`, and `encrypted_input_share`
-denote these values, respectively. Given these values, an Aggregator decrypts
-the input share as follows. First, it constructs an `InputShareAad` message
-from `task_id`, `report_metadata`, and `public_share`. Let this be denoted by
-`input_share_aad`. Then, the Aggregator looks up the HPKE config and
-corresponding secret key indicated by `encrypted_input_share.config_id` and
-attempts decryption of the payload with the following procedure:
+Each report share has a corresponding task ID, report metadata (report ID,
+timestamp, and public extensions), public share, and the Aggregator's encrypted
+input share. Let `task_id`, `report_metadata`, `public_share`, and
+`encrypted_input_share` denote these values, respectively. Given these values,
+an Aggregator decrypts the input share as follows. First, it constructs an
+`InputShareAad` message from `task_id`, `report_metadata`, and `public_share`.
+Let this be denoted by `input_share_aad`. Then, the Aggregator looks up the HPKE
+config and corresponding secret key indicated by
+`encrypted_input_share.config_id` and attempts decryption of the payload with
+the following procedure:
 
 ~~~ pseudocode
 plaintext_input_share = OpenBase(encrypted_input_share.enc, sk,
@@ -1852,13 +1861,14 @@ following checks:
    `task_start + task_duration`. If so, the Aggregator MUST mark the input
    share as invalid with the error `task_expired`.
 
-1. Check if the PlaintextInputShare contains unrecognized report extensions. If
-   so, the Aggregator MUST mark the input share as invalid with error
-   `invalid_message`.
+1. Check if the public or private report extensions contain any unrecognized
+   report extension types. If so, the Aggregator MUST mark the input share as
+   invalid with error `invalid_message`.
 
-1. Check if the ExtensionType of any two report extensions in
-   PlaintextInputShare are the same. If so, the Aggregator MUST mark the input
-   share as invalid with error `invalid_message`.
+1. Check if any two public or private report extensions have the same extension
+   type. (For the purposes of this check, a private report extension can
+   conflict with a public report extension.) If so, the Aggregator MUST mark the
+   input share as invalid with error `invalid_message`.
 
 1. If the report pertains to a batch that was previously collected, then the
    input share MUST be marked as invalid with error `batch_collected`.
