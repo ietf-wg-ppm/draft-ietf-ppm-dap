@@ -981,10 +981,10 @@ Table of Contents
 
 4.2.  Batch Modes, Batches, and Queries
 
-   An aggregate result is computed from a sets of reports, called a
-   "batch".  The Collector requests the aggregate result for a given
-   batch via a "query".  The Aggregators use this query to select a
-   batch for aggregation.
+   An aggregate result is computed from a set of reports, called a
+   "batch".  The Collector requests the aggregate result by making a
+   "query"; the Aggregators use this query to select a batch for
+   aggregation.
 
    Each measurement task has a preconfigured "batch mode".  The batch
    mode defines both how reports may be partitioned into batches, as
@@ -2760,7 +2760,7 @@ Table of Contents
    Aggregator MUST abort with error of type "batchQueriedMultipleTimes".
 
    Next, the Aggregator checks if the set of batch buckets identified by
-   by the request overlaps with the batch buckets that have already been
+   the request overlaps with the batch buckets that have already been
    collected.  If so, it MUST abort with "batchOverlap".
 
    Finally, the batch mode may define additional batch validation rules.
