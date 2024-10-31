@@ -1246,12 +1246,12 @@ Table of Contents
    struct {
      ReportID report_id;
      Time time;
+     Extension public_extensions<0..2^32-1>;
    } ReportMetadata;
 
    struct {
      ReportMetadata report_metadata;
      opaque public_share<0..2^32-1>;
-     Extension public_extensions<0..2^32-1>;
      HpkeCiphertext leader_encrypted_input_share;
      HpkeCiphertext helper_encrypted_input_share;
    } Report;
@@ -1269,12 +1269,12 @@ Table of Contents
          timestamp cannot be used to link a report back to the Client
          that generated it.
 
+      -  public_extensions is the list of public report extensions; see
+         Section 4.5.3.
+
    *  public_share is the public share output by the VDAF sharding
       algorithm.  Note that the public share might be empty, depending
       on the VDAF.
-
-   *  public_extensions is the list of public report extensions; see
-      Section 4.5.3.
 
    *  leader_encrypted_input_share is the Leader's encrypted input
       share.
@@ -1343,7 +1343,6 @@ Table of Contents
      TaskID task_id;
      ReportMetadata report_metadata;
      opaque public_share<0..2^32-1>;
-     Extension public_extensions<0..2^32-1>;
    } InputShareAad;
 
    The Leader responds to well-formed requests with HTTP status code 201
@@ -1416,15 +1415,15 @@ Table of Contents
 
 4.5.3.  Report Extensions
 
-   Each report contains a list of public extensions, and each
-   PlaintextInputShare contains a list of extensions private to the
-   relevant Aggregator.  Clients use these extensions to convey
-   additional information to the Aggregators.  Some extensions might be
-   intended for both Aggregators; others may only be intended for a
-   specific Aggregator.  (For example, a DAP deployment might use some
-   out-of-band mechanism for an Aggregator to verify that reports come
-   from authenticated Clients.  It will likely be useful to bind the
-   extension to the input share via HPKE encryption.)
+   Each ReportMetadata contains a list of extensions public to both
+   aggregators, and each PlaintextInputShare contains a list of
+   extensions private to the relevant Aggregator.  Clients use these
+   extensions to convey additional information to the Aggregators.  Some
+   extensions might be intended for both Aggregators; others may only be
+   intended for a specific Aggregator.  (For example, a DAP deployment
+   might use some out-of-band mechanism for an Aggregator to verify that
+   reports come from authenticated Clients.  It will likely be useful to
+   bind the extension to the input share via HPKE encryption.)
 
    Each extension is a tag-length encoded value of the following form:
 
@@ -1659,7 +1658,6 @@ Table of Contents
    struct {
      ReportMetadata report_metadata;
      opaque public_share<0..2^32-1>;
-     Extension public_extensions<0..2^32-1>;
      HpkeCiphertext encrypted_input_share;
    } ReportShare;
 
@@ -1673,9 +1671,6 @@ Table of Contents
    *  report_share.report_metadata is the report's metadata.
 
    *  report_share.public_share is the report's public share.
-
-   *  report_share.public_extensions is the report's list of public
-      extensions.
 
    *  report_share.encrypted_input_share is the Helper's encrypted input
       share.
@@ -1999,16 +1994,15 @@ Table of Contents
 4.6.1.3.  Input Share Decryption
 
    Each report share has a corresponding task ID, report metadata
-   (report ID and, timestamp), public share, and the Aggregator's
-   encrypted input share.  Let task_id, report_metadata, public_share,
-   and encrypted_input_share denote these values, respectively.  Given
-   these values, an Aggregator decrypts the input share as follows.
-   First, it constructs an InputShareAad message from task_id,
-   report_metadata, public_share, and public_extensions.  Let this be
-   denoted by input_share_aad.  Then, the Aggregator looks up the HPKE
-   config and corresponding secret key indicated by
-   encrypted_input_share.config_id and attempts decryption of the
-   payload with the following procedure:
+   (report ID, timestamp, and public extensions), public share, and the
+   Aggregator's encrypted input share.  Let task_id, report_metadata,
+   public_share, and encrypted_input_share denote these values,
+   respectively.  Given these values, an Aggregator decrypts the input
+   share as follows.  First, it constructs an InputShareAad message from
+   task_id, report_metadata, and public_share.  Let this be denoted by
+   input_share_aad.  Then, the Aggregator looks up the HPKE config and
+   corresponding secret key indicated by encrypted_input_share.config_id
+   and attempts decryption of the payload with the following procedure:
 
    plaintext_input_share = OpenBase(encrypted_input_share.enc, sk,
      "dap-12 input share" || 0x01 || server_role,
