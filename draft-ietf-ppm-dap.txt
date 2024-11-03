@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 4 May 2025                                           Cloudflare
+Expires: 7 May 2025                                           Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                         31 October 2024
+                                                         3 November 2024
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -63,7 +63,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 4 May 2025.
+   This Internet-Draft will expire on 7 May 2025.
 
 Copyright Notice
 
@@ -186,6 +186,33 @@ Table of Contents
 
    (*) Indicates a change that breaks wire compatibility with the
    previous draft.
+
+   13:
+
+   *  Bump draft-irtf-cfrg-vdaf-12 to 13 [VDAF] and adopt the streaming
+      aggregation interface.  Accordingly, clarify that DAP is only
+      compatible with VDAFs for which aggregation is order insensitive.
+
+   *  Add public extensions to report metadata. (*)
+
+   *  Improve extension points for batch modes. (*)
+
+   *  During the upload interaction, allow the Leader to indicate to the
+      Client which set of report extensions it doesn't support.
+
+   *  Add a start time to task parameters and require rejection of
+      reports outside of the time validity window.  Incidentally,
+      replace the task end time with a task duration parameter.
+
+   *  Clarify underspecified behavior around aggregation skew recovery.
+
+   *  Improve IANA considerations and add guidelines for extending DAP.
+
+   *  Rename "upload extension" to "report extension", and "prepare
+      error" to "report error", to better align the names of these types
+      with their functionality.
+
+   *  Bump version tag from "dap-12" to "dap-13". (*)
 
    12:
 
@@ -1245,7 +1272,7 @@ Table of Contents
    algorithm (Section 5.1 of [VDAF]), using the report ID as the nonce:
 
    (public_share, input_shares) = Vdaf.shard(
-       "dap-12" || task_id,
+       "dap-13" || task_id,
        measurement, /* plaintext measurement */
        report_id,   /* nonce */
        rand,        /* randomness for sharding algorithm */
@@ -1278,7 +1305,7 @@ Table of Contents
    plaintext_input_share as follows:
 
    enc, payload = SealBase(pk,
-     "dap-12 input share" || 0x01 || server_role,
+     "dap-13 input share" || 0x01 || server_role,
      input_share_aad, plaintext_input_share)
 
    where pk is the Aggregator's public key; 0x01 represents the Role of
@@ -1577,7 +1604,7 @@ Table of Contents
 
    (state, outbound) = Vdaf.ping_pong_leader_init(
        vdaf_verify_key,
-       "dap-12" || task_id,
+       "dap-13" || task_id,
        agg_param,
        report_id,
        public_share,
@@ -1704,7 +1731,7 @@ Table of Contents
        computes
 
       (state, outbound) = Vdaf.ping_pong_leader_continued(
-          "dap-12" || task_id,
+          "dap-13" || task_id,
           agg_param,
           prev_state,
           inbound,
@@ -1838,7 +1865,7 @@ Table of Contents
 
    (state, outbound) = Vdaf.ping_pong_helper_init(
        vdaf_verify_key,
-       "dap-12" || task_id,
+       "dap-13" || task_id,
        agg_param,
        report_id,
        public_share,
@@ -1958,7 +1985,7 @@ Table of Contents
    and attempts decryption of the payload with the following procedure:
 
    plaintext_input_share = OpenBase(encrypted_input_share.enc, sk,
-     "dap-12 input share" || 0x01 || server_role,
+     "dap-13 input share" || 0x01 || server_role,
      input_share_aad, encrypted_input_share.payload)
 
    where sk is the HPKE secret key, 0x01 represents the Role of the
@@ -2101,7 +2128,7 @@ Table of Contents
        Continued(prep_state), then the Leader computes
 
       (state, outbound) = Vdaf.ping_pong_leader_continued(
-          "dap-12" || task_id,
+          "dap-13" || task_id,
           agg_param,
           state,
           inbound,
@@ -2184,7 +2211,7 @@ Table of Contents
    the Helper computes the following:
 
    (state, outbound) = Vdaf.ping_pong_helper_continued(
-       "dap-12" || task_id,
+       "dap-13" || task_id,
        agg_param,
        state,
        inbound,
@@ -2691,7 +2718,7 @@ Table of Contents
 
    (enc, payload) = SealBase(
        pk,
-       "dap-12 aggregate share" || server_role || 0x00,
+       "dap-13 aggregate share" || server_role || 0x00,
        agg_share_aad,
        agg_share)
 
@@ -2725,7 +2752,7 @@ Table of Contents
    agg_share = OpenBase(
        enc_share.enc,
        sk,
-       "dap-12 aggregate share" || server_role || 0x00,
+       "dap-13 aggregate share" || server_role || 0x00,
        agg_share_aad,
        enc_share.payload)
 
@@ -4119,9 +4146,9 @@ Table of Contents
 
    [VDAF]     Barnes, R., Cook, D., Patton, C., and P. Schoppmann,
               "Verifiable Distributed Aggregation Functions", Work in
-              Progress, Internet-Draft, draft-irtf-cfrg-vdaf-12, 4
-              October 2024, <https://datatracker.ietf.org/doc/html/
-              draft-irtf-cfrg-vdaf-12>.
+              Progress, Internet-Draft, draft-irtf-cfrg-vdaf-13, 2
+              November 2024, <https://datatracker.ietf.org/doc/html/
+              draft-irtf-cfrg-vdaf-13>.
 
 11.2.  Informative References
 
