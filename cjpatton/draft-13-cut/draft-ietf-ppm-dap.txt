@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 4 May 2025                                           Cloudflare
+Expires: 7 May 2025                                           Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                         31 October 2024
+                                                         3 November 2024
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -63,7 +63,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 4 May 2025.
+   This Internet-Draft will expire on 7 May 2025.
 
 Copyright Notice
 
@@ -96,8 +96,6 @@ Table of Contents
    4.  Protocol Definition
      4.1.  Basic Type Definitions
      4.2.  Batch Modes, Batches, and Queries
-       4.2.1.  Time-interval Batch Mode
-       4.2.2.  Leader-selected Batch Mode
      4.3.  Task Configuration
      4.4.  Resource URIs
      4.5.  Uploading Reports
@@ -113,48 +111,60 @@ Table of Contents
        4.7.3.  Collection Job Finalization
        4.7.4.  Aggregate Share Encryption
        4.7.5.  Batch Validation
-   5.  Operational Considerations
-     5.1.  Protocol Participant Capabilities
-       5.1.1.  Client Capabilities
-       5.1.2.  Aggregator Capabilities
-       5.1.3.  Collector Capabilities
-     5.2.  VDAFs and Compute Requirements
-     5.3.  Aggregation Utility and Soft Batch Deadlines
-     5.4.  Protocol-specific Optimizations
-       5.4.1.  Reducing Storage Requirements
-       5.4.2.  Distributed-systems and Synchronization Concerns
-   6.  Compliance Requirements
-   7.  Security Considerations
-     7.1.  Sybil Attacks
-     7.2.  Batch-selection Attacks
-     7.3.  Client Authentication
-     7.4.  Anonymizing Proxies
-     7.5.  Differential Privacy
-     7.6.  Task Parameters
-       7.6.1.  VDAF Verification Key Requirements
-       7.6.2.  Batch Parameters
-       7.6.3.  Task Configuration Agreement and Consistency
-     7.7.  Infrastructure Diversity
-   8.  IANA Considerations
-     8.1.  Protocol Message Media Types
-       8.1.1.  "application/dap-hpke-config-list" media type
-       8.1.2.  "application/dap-report" media type
-       8.1.3.  "application/dap-aggregation-job-init-req" media type
-       8.1.4.  "application/dap-aggregation-job-resp" media type
-       8.1.5.  "application/dap-aggregation-job-continue-req" media
+   5.  Batch Modes
+     5.1.  Time Interval
+       5.1.1.  Query Configuration
+       5.1.2.  Partial Batch Selector Configuration
+       5.1.3.  Batch Selector Configuration
+       5.1.4.  Batch Buckets
+     5.2.  Leader-selected Batch Mode
+       5.2.1.  Query Configuration
+       5.2.2.  Partial Batch Selector Configuration
+       5.2.3.  Batch Selector Configuration
+       5.2.4.  Batch Buckets
+   6.  Operational Considerations
+     6.1.  Protocol Participant Capabilities
+       6.1.1.  Client Capabilities
+       6.1.2.  Aggregator Capabilities
+       6.1.3.  Collector Capabilities
+     6.2.  VDAFs and Compute Requirements
+     6.3.  Aggregation Utility and Soft Batch Deadlines
+     6.4.  Protocol-specific Optimizations
+       6.4.1.  Reducing Storage Requirements
+       6.4.2.  Distributed-systems and Synchronization Concerns
+   7.  Compliance Requirements
+   8.  Security Considerations
+     8.1.  Sybil Attacks
+     8.2.  Batch-selection Attacks
+     8.3.  Client Authentication
+     8.4.  Anonymizing Proxies
+     8.5.  Differential Privacy
+     8.6.  Task Parameters
+       8.6.1.  VDAF Verification Key Requirements
+       8.6.2.  Batch Parameters
+       8.6.3.  Task Configuration Agreement and Consistency
+     8.7.  Infrastructure Diversity
+   9.  IANA Considerations
+     9.1.  Protocol Message Media Types
+       9.1.1.  "application/dap-hpke-config-list" media type
+       9.1.2.  "application/dap-report" media type
+       9.1.3.  "application/dap-aggregation-job-init-req" media type
+       9.1.4.  "application/dap-aggregation-job-resp" media type
+       9.1.5.  "application/dap-aggregation-job-continue-req" media
                type
-       8.1.6.  "application/dap-aggregate-share-req" media type
-       8.1.7.  "application/dap-aggregate-share" media type
-       8.1.8.  "application/dap-collection-job-req" media type
-       8.1.9.  "application/dap-collection-job-resp" media type
-     8.2.  DAP Type Registries
-       8.2.1.  Batch Modes Registry
-       8.2.2.  Report Extension Registry
-       8.2.3.  Report Error Registry
-     8.3.  URN Sub-namespace for DAP (urn:ietf:params:ppm:dap)
-   9.  References
-     9.1.  Normative References
-     9.2.  Informative References
+       9.1.6.  "application/dap-aggregate-share-req" media type
+       9.1.7.  "application/dap-aggregate-share" media type
+       9.1.8.  "application/dap-collection-job-req" media type
+       9.1.9.  "application/dap-collection-job-resp" media type
+     9.2.  DAP Type Registries
+       9.2.1.  Batch Modes Registry
+       9.2.2.  Report Extension Registry
+       9.2.3.  Report Error Registry
+     9.3.  URN Sub-namespace for DAP (urn:ietf:params:ppm:dap)
+   10. Extending this Document
+   11. References
+     11.1.  Normative References
+     11.2.  Informative References
    Contributors
    Authors' Addresses
 
@@ -187,7 +197,7 @@ Table of Contents
 
    *  Improve extension points for batch modes. (*)
 
-   *  During the upload interact, allow the Leader to indicate to the
+   *  During the upload interaction, allow the Leader to indicate to the
       Client which set of report extensions it doesn't support.
 
    *  Add a start time to task parameters and require rejection of
@@ -197,6 +207,12 @@ Table of Contents
    *  Clarify underspecified behavior around aggregation skew recovery.
 
    *  Improve IANA considerations and add guidelines for extending DAP.
+
+   *  Rename "upload extension" to "report extension", and "prepare
+      error" to "report error", to better align the names of these types
+      with their functionality.
+
+   *  Bump version tag from "dap-12" to "dap-13". (*)
 
    12:
 
@@ -892,7 +908,7 @@ Table of Contents
    This list is not exhaustive.  The server MAY return errors set to a
    URI other than those defined above.  Servers MUST NOT use the DAP URN
    namespace for errors not listed in the appropriate IANA registry (see
-   Section 8.3).  The "detail" member of the Problem Details document
+   Section 9.3).  The "detail" member of the Problem Details document
    includes additional diagnostic information.
 
    When the task ID is known (see Section 4.3), the problem document
@@ -992,117 +1008,43 @@ Table of Contents
 
 4.2.  Batch Modes, Batches, and Queries
 
-   Aggregated results are computed based on sets of reports, called
-   "batches".  The Collector requests the aggregated results for a given
-   batch via a "query".  The Aggregators use this query to carry out the
-   aggregation flow and produce aggregate shares encrypted to the
-   Collector.
+   An aggregate result is computed from a set of reports, called a
+   "batch".  The Collector requests the aggregate result by making a
+   "query"; the Aggregators use this query to select a batch for
+   aggregation.
 
    Each measurement task has a preconfigured "batch mode".  The batch
    mode defines both how reports may be partitioned into batches, as
    well as how these batches are addressed and the semantics of the
    query used for collection.
 
-   This document defines the time-interval and leader-selected batch
-   modes.  Batch modes are identified with a single byte in serialized
-   messages, as follows:
+   This document defines two batch modes:
+
+   *  time-interval (Section 5.1) in which the query specifies a time
+      interval, and the batch consists of all reports with a timestamp
+      in that interval.
+
+   *  leader-selected (Section 5.2) in which the Leader assigns reports
+      to batches itself, and the Collector's query simply requests the
+      aggregate result for the "next" batch of reports.
+
+   Future documents may define additional batch modes for DAP; see
+   Section 10.  Implementations are free to implement only a subset of
+   the available batch modes.
+
+   Batch modes are identified with a single byte in serialized messages,
+   as follows:
 
    enum {
-     reserved(0), /* Reserved for testing purposes */
+     reserved(0),
      (255)
    } BatchMode;
 
-   The time-interval batch mode is described in Section 4.2.1; the
-   leader-selected batch mode is described in Section 4.2.2.  Future
-   specifications may introduce new batch modes as needed (see
-   Section 8.2.1).  Implementations are free to implement only a subset
-   of the available batch modes.
-
-   A query includes parameters used by the Aggregators to select a batch
-   of reports specific to the given batch mode.  A query is defined as
-   follows:
-
-   struct {
-     BatchMode batch_mode;
-     select (Query.batch_mode) {
-       case time_interval: Interval batch_interval;
-       case leader_selected: Empty;
-     }
-   } Query;
-
-   The query is issued in-band as part of the collect interaction
-   (Section 4.7).  Its content is determined by the batch mode, which in
-   turn is determined by the measurement task, which is configured out-
-   of-band.  All batch modes have the following configuration parameters
-   in common:
-
-   *  min_batch_size - The smallest number of reports the batch is
-      allowed to include.  In a sense, this parameter controls the
-      degree of privacy that will be obtained: the larger the minimum
-      batch size, the higher degree of privacy.  However, this
-      ultimately depends on the application and the nature of the
-      measurements and aggregation function.
-
-   *  time_precision - Clients use this value to truncate their report
-      timestamps; see Section 4.5.  Additional semantics may apply,
-      depending on the batch mode.  (See Section 4.7.5 for details.)
-
-   The parameters pertaining to specific batch modes are described in
-   Section 4.2.1 and Section 4.2.2.
-
-4.2.1.  Time-interval Batch Mode
-
-   enum {
-     time_interval(1),
-     (255)
-   } BatchMode;
-
-   The time-interval batch mode is designed to support applications in
-   which reports are collected into batches grouped by an interval of
-   time.  The Collector specifies a "batch interval" that determines the
-   time range for reports included in the batch.  For each report in the
-   batch, the time at which that report was generated (see Section 4.5)
-   MUST fall within the batch interval specified by the Collector.
-
-   Typically the Collector issues queries for which the batch intervals
-   are continuous, monotonically increasing, and have the same duration.
-   For example, the sequence of batch intervals (1659544000, 1000),
-   (1659545000, 1000), (1659546000, 1000), (1659547000, 1000) satisfies
-   these conditions.  (The first element of the pair denotes the start
-   of the batch interval and the second denotes the duration.)  However,
-   this is not a requirement--the Collector may decide to issue queries
-   out-of-order.  In addition, the Collector may need to vary the
-   duration to adjust to changing report upload rates.
-
-4.2.2.  Leader-selected Batch Mode
-
-   enum {
-     leader_selected(2),
-     (255)
-   } BatchMode;
-
-   The leader-selected batch mode is used to support applications in
-   which it is acceptable for reports to be batched in an arbitrary
-   fashion by the Leader.  Each batch of reports is identified by an
-   opaque "batch ID".  Both the reports included in each batch and the
-   ID for each batch are allocated in an arbitrary fashion by the
-   Leader.
-
-   The Collector will not know the set of batch IDs available for
-   collection.  To get the aggregate of a batch, the Collector issues a
-   query, which does not include any information specifying a particular
-   batch (see Section 4.2).  The Leader selects a recent batch to
-   aggregate.  The Leader MUST select a batch that has not yet been
-   associated with a collection job.
-
-   The Aggregators can output batches of any size that is larger than or
-   equal to min_batch_size.  The target batch size, if any, is
-   implementation-specific, and may be equal to or greater than the
-   minimum batch size.  Deciding how soon batches should be output is
-   also implementation-specific.  Exactly sizing batches may be
-   challenging for Leader deployments in which multiple, independent
-   nodes running the aggregate interaction (see Section 4.6) need to be
-   coordinated.
+   The query is issued to the Leader by the Collector during the
+   collection interaction (Section 4.7).  In addition, information used
+   to guide batch selection is conveyed from the Leader to the Helper
+   when initializing aggregation (Section 4.6) and finalizing the
+   aggregate shares.
 
 4.3.  Task Configuration
 
@@ -1136,8 +1078,19 @@ Table of Contents
       the end time, and MAY choose to opt out of the task if
       task_duration is too long.
 
+   *  time_precision: Clients use this value to truncate their report
+      timestamps; see Section 4.5.  Additional semantics may apply,
+      depending on the batch mode.  (See Section 4.7.5 for details.)
+
    *  A unique identifier for the VDAF in use for the task, e.g., one of
       the VDAFs defined in Section 10 of [VDAF].
+
+   *  min_batch_size: The smallest number of reports the batch is
+      allowed to include.  In a sense, this parameter controls the
+      degree of privacy that will be obtained: the larger the minimum
+      batch size, the higher degree of privacy.  However, this
+      ultimately depends on the application and the nature of the
+      measurements and aggregation function.
 
    Note that the leader_aggregator_url and helper_aggregator_url values
    may include arbitrary path components.
@@ -1147,13 +1100,13 @@ Table of Contents
    parameters:
 
    *  collector_hpke_config: The [HPKE] configuration of the Collector
-      (described in Section 4.5.1); see Section 6 for information about
+      (described in Section 4.5.1); see Section 7 for information about
       the HPKE configuration algorithms.
 
    *  vdaf_verify_key: The VDAF verification key shared by the
       Aggregators.  This key is used in the aggregation interaction
       (Section 4.6).  The security requirements are described in
-      Section 7.6.1.
+      Section 8.6.1.
 
    Finally, the Collector is configured with the HPKE secret key
    corresponding to collector_hpke_config.
@@ -1201,7 +1154,7 @@ Table of Contents
 4.5.1.  HPKE Configuration Request
 
    Before the Client can upload its report to the Leader, it must know
-   the HPKE configuration of each Aggregator.  See Section 6 for
+   the HPKE configuration of each Aggregator.  See Section 7 for
    information on HPKE algorithm choices.
 
    Clients retrieve the HPKE configuration from each Aggregator by
@@ -1300,7 +1253,7 @@ Table of Contents
       share.
 
    Aggregators MAY require Clients to authenticate when uploading
-   reports (see Section 7.3).  If it is used, HTTP client authentication
+   reports (see Section 8.3).  If it is used, HTTP client authentication
    MUST use a scheme that meets the requirements in Section 3.1.
 
    The handling of the upload request by the Leader MUST be idempotent
@@ -1558,8 +1511,9 @@ Table of Contents
    and batch mode in use, it is often possible to begin aggregation as
    soon as reports arrive.  For example, Prio3 has just one valid
    aggregation parameter (the empty string), and thus allows for eager
-   aggregation; and both the time-interval and leader-selected batch
-   modes defined in this document allow for eager aggregation.
+   aggregation; and both the time-interval (Section 5.1) and leader-
+   selected (Section 5.2) batch modes defined in this document allow for
+   eager aggregation.
 
    An aggregation job can be thought of as having three phases, which
    are described in the remaining subsections:
@@ -1701,10 +1655,7 @@ Table of Contents
 
    struct {
      BatchMode batch_mode;
-     select (PartialBatchSelector.batch_mode) {
-       case time_interval: Empty;
-       case leader_selected: BatchID batch_id;
-     };
+     opaque config<0..2^16-1>;
    } PartialBatchSelector;
 
    struct {
@@ -1718,11 +1669,15 @@ Table of Contents
    *  agg_param: The VDAF aggregation parameter.
 
    *  part_batch_selector: The "partial batch selector" used by the
-      Aggregators to determine how to aggregate each report:
+      Aggregators to determine how to aggregate each report.  Its
+      contents depends on the indicated batch mode: for time-interval
+      mode, the config field is empty (Section 5.1); for leader-selected
+      tasks, the Leader specifies a "batch ID" that determines the batch
+      to which each report for this aggregation job belongs
+      (Section 5.2).
 
-      -  For leader-selected tasks, the Leader specifies a "batch ID"
-         that determines the batch to which each report for this
-         aggregation job belongs.
+      Documents that define batch modes MUST specify the content this
+      field; see Section 10 for details.
 
       The indicated batch mode MUST match the task's batch mode.
       Otherwise, the Helper MUST abort with error invalidMessage.
@@ -2078,14 +2033,14 @@ Table of Contents
           Queries must satisfy the criteria covered in Section 4.7.5.
           These criteria are meant to restrict queries in a way that
           makes it easy to determine whether a report pertains to a
-          batch that was collected.  See Section 5.4.2 for more
+          batch that was collected.  See Section 6.4.2 for more
           information.
 
    8.  Finally, if an Aggregator cannot determine if an input share is
        valid, it MUST mark the input share as invalid with error
        report_dropped.  For example, if the Aggregator has evicted the
        state required to perform the check from long-term storage.  (See
-       Section 5.4.1 for details.)
+       Section 6.4.1 for details.)
 
    If all of the above checks succeed, the input share is not marked as
    invalid.
@@ -2172,8 +2127,8 @@ Table of Contents
        Rejected(), in which case the Leader rejects the report and
        removes it from the candidate set; or state ==
        Finished(out_share), in which case preparation is complete and
-       and the Leader updates the relevant batch bucket with out_share
-       as described in Section 4.6.2.3.
+       the Leader updates the relevant batch bucket with out_share as
+       described in Section 4.6.2.3.
 
    2.  Else if the type is "finished" and state == Finished(out_share),
        then preparation is complete and the Leader stores the output
@@ -2323,23 +2278,15 @@ Table of Contents
    data stored in a batch bucket is kept for eventual use in the
    Section 4.7.
 
-   Batch buckets are indexed by a batch mode-specific "batch bucket
-   identifier":
+   Batch buckets are indexed by a "batch bucket identifier" as as
+   specified by the task's batch mode:
 
-   *  For the time-interval batch mode, the batch bucket identifier is
-      an interval of time whose beginning is a multiple of the task's
-      time_precision and whose duration is equal to the task's
-      time_precision.  The identifier associated with a given output
-      share is the unique such interval containing the client timestamp
-      of the report the output share was recovered from; for example, if
-      the task's time_precision is 1000 seconds and the report's
-      timestamp is 1729629081, the relevant batch bucket identifier is
-      (1729629000, 1000).  (The first element of the pair denotes the
-      start of the batch interval and the second denotes the duration.)
+   *  For the time-interval batch mode (Section 5.1, the batch bucket
+      identifier is an interval of time and is determined by the
+      report's timestamp.
 
-   *  For the leader-selected batch mode, the batch bucket identifier is
-      a batch ID.  The identifier associated with a given output share
-      is the batch ID of the related aggregation job.
+   *  For the leader-selected batch mode (Section 5.2), the batch bucket
+      identifier is the batch ID and indicated in the aggregation job.
 
    A few different pieces of information are associated with each batch
    bucket:
@@ -2447,15 +2394,29 @@ Table of Contents
    req", and it is structured as follows:
 
    struct {
+     BatchMode batch_mode;
+     opaque config<0..2^16-1>;
+   } Query;
+
+   struct {
      Query query;
      opaque agg_param<0..2^32-1>; /* VDAF aggregation parameter */
    } CollectionJobReq;
 
    The named parameters are:
 
-   *  query, the Collector's query.  The indicated batch mode MUST match
-      the task's batch mode.  Otherwise, the Leader MUST abort with
-      error "invalidMessage".
+   *  query, the Collector's query.  The content of this field depends
+      on the indicated batch mode: for time-interval mode, the config
+      field contains the requested time interval (Section 5.1); for
+      leader-selected mode, the config field is empty, and the Collector
+      gets the aggregate result for the next batch selected by the
+      Leader (Section 5.2).
+
+      Batch modes defined by future documents MUST specify the content
+      of this field; see Section 10 for details.
+
+      The indicated batch mode MUST match the task's batch mode.
+      Otherwise, the Leader MUST abort with error "invalidMessage".
 
    *  agg_param, an aggregation parameter for the VDAF being executed.
       This is the same value as in AggregationJobInitReq (see
@@ -2532,8 +2493,8 @@ Table of Contents
       timestamps of all reports included in the batch, such that the
       interval's start and duration are both multiples of the task's
       time_precision parameter.  Note that in the case of a time-
-      interval query (see Section 4.2), this interval can be smaller
-      than the one in the corresponding CollectionJobReq.query.
+      interval query (Section 5.1), this interval can be smaller than
+      the one in the corresponding CollectionJobReq.query.
 
    *  leader_encrypted_agg_share: The Leader's aggregate share,
       encrypted to the Collector (see Section 4.7.4).
@@ -2599,12 +2560,13 @@ Table of Contents
    associated with this collection job.  The batch buckets to retrieve
    depend on the batch mode of this task:
 
-   *  For time-interval tasks, this is all batch buckets whose batch
-      bucket identifiers are contained within the batch interval
+   *  For time-interval (Section 5.1), this is all batch buckets whose
+      batch bucket identifiers are contained within the batch interval
       specified in the CollectionJobReq's query.
 
-   *  For leader-selected tasks, this is the batch bucket associated
-      with the batch ID the Leader has chosen for this collection job.
+   *  For leader-selected (Section 5.2), this is the batch bucket
+      associated with the batch ID the Leader has chosen for this
+      collection job.
 
    The Leader then combines the values inside the batch bucket as
    follows:
@@ -2625,10 +2587,7 @@ Table of Contents
 
    struct {
      BatchMode batch_mode;
-     select (BatchSelector.batch_mode) {
-       case time_interval: Interval batch_interval;
-       case leader_selected: BatchID batch_id;
-     };
+     opaque config<0..2^16-1>;
    } BatchSelector;
 
    struct {
@@ -2641,14 +2600,14 @@ Table of Contents
    The media type of the request is "application/dap-aggregate-share-
    req".  The message contains the following parameters:
 
-   *  batch_selector: The "batch selector", which encodes parameters
-      used to determine the batch being aggregated.  The value depends
-      on the batch mode for the task:
+   *  batch_selector: The "batch selector", the contents of which
+      depends on the indicated batch mode: for time-interval mode, the
+      config field contains the time interval selected by the Collector
+      (Section 5.1); in leader-selected mode, the field contains the
+      batch ID selected by the Leader (Section 5.2).
 
-      -  For time-interval tasks, the request specifies the batch
-         interval.
-
-      -  For leader-selected tasks, the request specifies the batch ID.
+      Future documents that new batch modes MUST specify the contents of
+      the config field; see Section 10 for details.
 
       The indicated batch mode MUST match the task's batch mode.
       Otherwise, the Helper MUST abort with "invalidMessage".
@@ -2789,64 +2748,130 @@ Table of Contents
    the Collector), and agg_share_aad is an AggregateShareAad message
    constructed from the task ID and the aggregation parameter in the
    collect request, and a batch selector.  The value of the batch
-   selector used in agg_share_aad is computed by the Collector from its
-   query and the response to its query as follows:
+   selector used in agg_share_aad is determined by the batch mode.
 
-   *  For time-interval tasks, the batch selector is the batch interval
-      specified in the query.
+   *  For time-interval (Section 5.1), the batch selector is the batch
+      interval specified in the query.
 
-   *  For leader-selected tasks, the batch selector is the batch ID sent
-      in the response.
+   *  For leader-selected (Section 5.2), the batch selector is the batch
+      ID sent in the response.
 
    The OpenBase() function is as specified in [HPKE], Section 6.1 for
    the ciphersuite indicated by the HPKE configuration.
 
 4.7.5.  Batch Validation
 
-   Before a Leader runs a collection job or a Helper responds to an
-   AggregateShareReq, it must first check that the job or request does
-   not violate the parameters associated with the DAP task.  It does so
-   as described here.  Where we say that an Aggregator MUST abort with
-   some error, then:
+   When the Leader receives a Query in the request from the Collector
+   during collection initialization (Section 4.7.1), it must first check
+   that the batch determined by the query can be collected.  It does so
+   as described here.  The Helper performs the same check when it
+   receives a BatchSelector in the request from the Leader for its
+   aggregate share (Section 4.7.2).
 
-   *  Leaders should respond to subsequent HTTP GET requests to the
-      collection job with the indicated error.
-
-   *  Helpers should respond to the AggregateShareReq with the indicated
-      error.
-
-   First the Aggregator checks that the batch respects any "boundaries"
-   determined by the batch mode.  These are described in the subsections
-   below.  If the boundary check fails, then the Aggregator MUST abort
-   with an error of type "batchInvalid".
+   First, the Aggregator checks if the request (the CollectionJobReq for
+   the Leader and the AggregateShareReq for the Helper) identifies a
+   valid set of batch buckets (Section 4.6.2.3).  If not, it MUST abort
+   the request with "batchInvalid".
 
    Next, the Aggregator checks that batch contains a valid number of
-   reports, as determined by the batch mode.  If the size check fails,
-   then Helpers MUST abort with an error of type "invalidBatchSize".
-   Leaders SHOULD wait for more reports to be validated and try the
-   collection job again later.
+   reports.  The Aggregator checks that len(X) >= min_batch_size, where
+   X is the set of reports successfully aggregated into the batch and
+   min_batch_size is the minimum batch size for the task.  If this check
+   fails, then Helpers MUST abort with an error of type
+   "invalidBatchSize".  Leaders SHOULD wait for more reports to be
+   validated and try the collection job again later.
 
    Next, the Aggregator checks that the batch has not been queried with
    multiple distinct aggregation parameters.  If the batch has been
    queried with more than one distinct aggregation parameter, the
    Aggregator MUST abort with error of type "batchQueriedMultipleTimes".
 
-   Finally, the Aggregator checks that the batch does not contain a
-   report that was included in any previous batch.  If this batch
-   overlap check fails, then the Aggregator MUST abort with error of
-   type "batchOverlap".  For time-interval tasks, it is sufficient (but
-   not necessary) to check that the batch interval does not overlap with
-   the batch interval of any previous query.  If this batch interval
-   check fails, then the Aggregator MAY abort with error of type
-   "batchOverlap".
+   Next, the Aggregator checks if the set of batch buckets identified by
+   the request overlaps with the batch buckets that have already been
+   collected.  If so, it MUST abort with "batchOverlap".
 
-4.7.5.1.  Time-interval Batch Mode
+   Finally, the batch mode may define additional batch validation rules.
 
-4.7.5.1.1.  Boundary Check
+5.  Batch Modes
 
-   The batch boundaries are determined by the time_precision field of
-   the task configuration.  For the batch_interval included with the
-   query, the Aggregator checks that:
+   This section defines an initial set of batch modes for DAP.  New
+   batch modes may be defined by future documents following the
+   guidelines in Section 10.
+
+   Each batch mode specifies the following:
+
+   1.  The value of the config field of Query, PartialBatchSelector, and
+       BatchSelector
+
+   2.  Batch buckets (Section 4.6.2.3): how reports are assigned to
+       batch buckets; how each bucket is identified; and how batch
+       buckets are mapped to batches and how batch buckets
+
+5.1.  Time Interval
+
+   enum {
+     time_interval(1),
+     (255)
+   } BatchMode;
+
+   The time-interval batch mode is designed to support applications in
+   which reports are collected into batches grouped by an interval of
+   time.  The Collector specifies a "batch interval" that determines the
+   time range for reports included in the batch.  For each report in the
+   batch, the time at which that report was generated (see Section 4.5)
+   MUST fall within the batch interval specified by the Collector.
+
+   Typically the Collector issues queries for which the batch intervals
+   are continuous, monotonically increasing, and have the same duration.
+   For example, the sequence of batch intervals (1659544000, 1000),
+   (1659545000, 1000), (1659546000, 1000), (1659547000, 1000) satisfies
+   these conditions.  (The first element of the pair denotes the start
+   of the batch interval and the second denotes the duration.)  However,
+   this is not a requirement--the Collector may decide to issue queries
+   out-of-order.  In addition, the Collector may need to vary the
+   duration to adjust to changing report upload rates.
+
+5.1.1.  Query Configuration
+
+   The payload of Query.config is
+
+   struct {
+     Interval batch_interval;
+   } TimeIntervalQueryConfig;
+
+   where batch_interval is the batch interval requested by the
+   Collector.
+
+5.1.2.  Partial Batch Selector Configuration
+
+   The payload of PartialBatchSelector.config is empty.
+
+5.1.3.  Batch Selector Configuration
+
+   The payload of BatchSelector.config is
+
+   struct {
+     Interval batch_interval;
+   } TimeIntervalBatchSelectorConfig;
+
+   where batch_interval is the batch interval requested by the
+   Collector.
+
+5.1.4.  Batch Buckets
+
+   Each batch bucket is identified by an interval of time whose
+   beginning is a multiple of the task's time_precision and whose
+   duration is equal to the task's time_precision.  The identifier
+   associated with a given report is the unique such interval containing
+   the timestamp of the report; for example, if the task's
+   time_precision is 1000 seconds and the report's timestamp is
+   1729629081, the relevant batch bucket identifier is (1729629000,
+   1000).  The first element of the pair denotes the start of the batch
+   interval and the second denotes the duration.
+
+   The Query received by the Leader determines a valid set of batch
+   bucket identifiers if the following conditions hold (likewise for the
+   BatchSelector received by the Helper):
 
    *  batch_interval.duration >= time_precision (this field determines,
       effectively, the minimum batch duration)
@@ -2854,47 +2879,90 @@ Table of Contents
    *  both batch_interval.start and batch_interval.duration are
       divisible by time_precision
 
-   These measures ensure that Aggregators can efficiently "pre-
-   aggregate" output shares recovered during the aggregation
-   interaction.
+   A batch consists of a sequence of contiguous batch buckets.  That is,
+   the set of batch buckets identifiers for the batch interval is
+   (batch_interval.start, batch_interval.start + time_precision),
+   (batch_interval.start + time_precision, batch_interval.start +
+   2*time_precision), ..., (batch_interval.start +
+   batch_interval.duration - time_precision) + batch_interval.start +
+   batch_interval.duration).
 
-4.7.5.1.2.  Size Check
+5.2.  Leader-selected Batch Mode
 
-   The query configuration specifies the minimum batch size,
-   min_batch_size.  The Aggregator checks that len(X) >= min_batch_size,
-   where X is the set of reports successfully aggregated into the batch.
+   enum {
+     leader_selected(2),
+     (255)
+   } BatchMode;
 
-4.7.5.2.  Leader-selected Batch Mode
+   The leader-selected batch mode is used to support applications in
+   which it is acceptable for reports to be batched in an arbitrary
+   fashion by the Leader.  Each batch of reports is identified by an
+   opaque "batch ID".  Both the reports included in each batch and the
+   ID for each batch are allocated in an arbitrary fashion by the
+   Leader.
 
-4.7.5.2.1.  Boundary Check
+   The Collector will not know the set of batch IDs available for
+   collection.  To get the aggregate of a batch, the Collector issues a
+   query, which does not include any information specifying a particular
+   batch (see Section 4.2).  The Leader selects a recent batch to
+   aggregate.  The Leader MUST select a batch that has not yet been
+   associated with a collection job.
 
-   The batch boundaries are defined by opaque batch IDs.  Thus the
-   Aggregator needs to check that the query is associated with a known
-   batch ID; specifically, for an AggregateShareReq, the Helper checks
-   that the batch ID provided by the Leader corresponds to a batch ID
-   used in a previous AggregationJobInitReq for the task.
+   The Aggregators can output batches of any size that is larger than or
+   equal to min_batch_size.  The target batch size, if any, is
+   implementation-specific, and may be equal to or greater than the
+   minimum batch size.  Deciding how soon batches should be output is
+   also implementation-specific.  Exactly sizing batches may be
+   challenging for Leader deployments in which multiple, independent
+   nodes running the aggregate interaction (see Section 4.6) need to be
+   coordinated.
 
-4.7.5.2.2.  Size Check
+5.2.1.  Query Configuration
 
-   The query configuration specifies the minimum batch size,
-   min_batch_size.  The Aggregator checks that len(X) >= min_batch_size,
-   where X is the set of reports successfully aggregated into the batch.
+   They payload of Query.config is empty; the request merely indicates
+   the Collector would like the next batch selected by the Leader.
 
-5.  Operational Considerations
+5.2.2.  Partial Batch Selector Configuration
+
+   The payload of PartialBatchSelector.config is:
+
+   struct {
+     BatchID batch_id;
+   } LeaderSelectedPartialBatchSelectorConfig;
+
+   where batch_id is the batch ID selected by the Leader.
+
+5.2.3.  Batch Selector Configuration
+
+   The payload of BatchSelector.config is:
+
+   struct {
+     BatchID batch_id;
+   } LeaderSelectedBatchSelectorConfig;
+
+   where batch_id is the batch ID selected by the Leader.
+
+5.2.4.  Batch Buckets
+
+   Each batch consists of a single bucket and is identified by the batch
+   ID selected by the Leader.  A report is assigned to the batch
+   indicated by the PartialBatchSelector during aggregation.
+
+6.  Operational Considerations
 
    The DAP protocol has inherent constraints derived from the tradeoff
    between privacy guarantees and computational complexity.  These
    tradeoffs influence how applications may choose to utilize services
    implementing the specification.
 
-5.1.  Protocol Participant Capabilities
+6.1.  Protocol Participant Capabilities
 
    The design in this document has different assumptions and
    requirements for different protocol participants, including Clients,
    Aggregators, and Collectors.  This section describes these
    capabilities in more detail.
 
-5.1.1.  Client Capabilities
+6.1.1.  Client Capabilities
 
    Clients have limited capabilities and requirements.  Their only
    inputs to the protocol are (1) the parameters configured out of band
@@ -2904,7 +2972,7 @@ Table of Contents
    document is robust against individual Client upload failures since
    the protocol output is an aggregate over all inputs.
 
-5.1.2.  Aggregator Capabilities
+6.1.2.  Aggregator Capabilities
 
    Leaders and Helpers have different operational requirements.  The
    design in this document assumes an operationally competent Leader,
@@ -2945,7 +3013,7 @@ Table of Contents
       timestamp, so that the storage used for anti-replay can be sharded
       efficiently.
 
-5.1.3.  Collector Capabilities
+6.1.3.  Collector Capabilities
 
    Collectors statefully interact with Aggregators to produce an
    aggregate output.  Their input to the protocol is the task
@@ -2958,7 +3026,7 @@ Table of Contents
    which includes key material associated with the HPKE key
    configuration.
 
-5.2.  VDAFs and Compute Requirements
+6.2.  VDAFs and Compute Requirements
 
    The choice of VDAF can impact the computation and storage required
    for a DAP task:
@@ -2996,7 +3064,7 @@ Table of Contents
    producing aggregates over a sample of the data or choosing a
    representation of the data permitting a simpler aggregation scheme.
 
-5.3.  Aggregation Utility and Soft Batch Deadlines
+6.3.  Aggregation Utility and Soft Batch Deadlines
 
    A soft real-time system should produce a response within a deadline
    to be useful.  This constraint may be relevant when the value of an
@@ -3016,13 +3084,13 @@ Table of Contents
    samples can be collected, balanced against the urgency of responding
    to a soft deadline.
 
-5.4.  Protocol-specific Optimizations
+6.4.  Protocol-specific Optimizations
 
    Not all DAP tasks have the same operational requirements, so the
    protocol is designed to allow implementations to reduce operational
    costs in certain cases.
 
-5.4.1.  Reducing Storage Requirements
+6.4.1.  Reducing Storage Requirements
 
    In general, the Aggregators are required to keep state for tasks and
    all valid reports for as long as collection requests can be made for
@@ -3053,7 +3121,7 @@ Table of Contents
    provide for some leeway so the Collector can collect the batch after
    some delay.
 
-5.4.2.  Distributed-systems and Synchronization Concerns
+6.4.2.  Distributed-systems and Synchronization Concerns
 
    Various parts of a DAP implementation will need to synchronize in
    order to ensure correctness during concurrent operation.  This
@@ -3121,7 +3189,7 @@ Table of Contents
       synchronization between the Helper's collection and aggregation
       interactions.
 
-6.  Compliance Requirements
+7.  Compliance Requirements
 
    In the absence of an application or deployment-specific profile
    specifying otherwise, a compliant DAP application MUST implement the
@@ -3133,7 +3201,7 @@ Table of Contents
 
    *  AEAD: AES-128-GCM (see [HPKE], Section 7.3)
 
-7.  Security Considerations
+8.  Security Considerations
 
    DAP aims to achieve the privacy and robustness security goals defined
    in Section 9 of [VDAF], even in the presence of an active attacker.
@@ -3161,7 +3229,7 @@ Table of Contents
        malicious Client can upload an unexpectedly-large number of
        reports, in order to skew aggregate results or to reduce the
        number of measurements from honest Clients in a batch below the
-       minimum batch size.  See Section 7.1 for discussion and potential
+       minimum batch size.  See Section 8.1 for discussion and potential
        mitigations.
 
    Attacks on privacy:
@@ -3186,7 +3254,7 @@ Table of Contents
        on the particulars of the deployment, this may be used to infer
        sensitive information about the Client.  This can be mitigated
        for the Aggregator by deploying an anonymizing proxy (see
-       Section 7.4), or in general by requiring Clients to submit
+       Section 8.4), or in general by requiring Clients to submit
        reports at regular intervals independently of the measurement
        value such that the existence of a report does not imply the
        occurrence of a sensitive event.
@@ -3197,9 +3265,9 @@ Table of Contents
    4.  Some VDAFs could leak information to either Aggregator or the
        Collector beyond what the protocol intended to learn.  It may be
        possible to mitigate such leakages using differential privacy
-       (Section 7.5).
+       (Section 8.5).
 
-7.1.  Sybil Attacks
+8.1.  Sybil Attacks
 
    Several attacks on privacy or robustness involve malicious Clients
    uploading reports that are valid under the chosen VDAF but incorrect.
@@ -3225,17 +3293,17 @@ Table of Contents
    Depending on the deployment and the specific threat being mitigated,
    there are different ways to address Sybil attacks, such as:
 
-   1.  Implementing Client authentication, as described in Section 7.3,
+   1.  Implementing Client authentication, as described in Section 8.3,
        likely paired with rate-limiting uploads from individual Clients.
 
    2.  Removing Client-specific metadata on individual reports, such as
        through the use of anonymizing proxies in the upload flow, as
-       described in Section 7.4.
+       described in Section 8.4.
 
-   3.  Some mechanisms for differential privacy (Section 7.5) can help
+   3.  Some mechanisms for differential privacy (Section 8.5) can help
        mitigate Sybil attacks against privacy to some extent.
 
-7.2.  Batch-selection Attacks
+8.2.  Batch-selection Attacks
 
    Depending on the batch mode, the privacy of an individual Client may
    be infringed upon by selection of the batch.  For example, in the
@@ -3246,17 +3314,17 @@ Table of Contents
    information about that Client.
 
    The mitigations for this attack are similar to those used for Sybil
-   attacks (Section 7.1):
+   attacks (Section 8.1):
 
-   1.  Implementing Client authentication, as described in Section 7.3,
+   1.  Implementing Client authentication, as described in Section 8.3,
        and having each aggregator verify that each batch contains
        reports from a suitable number of distinct clients.
 
    2.  Disassociating each report from the Client which generated it,
-       via the use of anonymizing proxies (Section 7.4) or similar
+       via the use of anonymizing proxies (Section 8.4) or similar
        techniques.
 
-   3.  Differential privacy (Section 7.5) can help mitigate the impact
+   3.  Differential privacy (Section 8.5) can help mitigate the impact
        of this attack.
 
    4.  Deployment-specific mitigations may also be possible: for
@@ -3265,13 +3333,13 @@ Table of Contents
        reports such that the number of aggregatable reports from a given
        Client is small enough to effectively mitigate this attack.
 
-7.3.  Client Authentication
+8.3.  Client Authentication
 
    In settings where it is practical for each Client to have an identity
    provisioned (e.g., a user logged into a backend service or a hardware
    device programmed with an identity), Client authentication can help
    Aggregators (or an authenticating proxy deployed between Clients and
-   the Aggregators; see Section 7.4) ensure that all reports come from
+   the Aggregators; see Section 8.4) ensure that all reports come from
    authentic Clients.  Note that because the Helper never handles
    messages directly from the Clients, reports would need to include an
    extension (Section 4.5.3) to convey authentication information to the
@@ -3286,11 +3354,11 @@ Table of Contents
    require its users to log in to any service has no obvious way to
    authenticate its report uploads.
 
-7.4.  Anonymizing Proxies
+8.4.  Anonymizing Proxies
 
    Client reports can contain auxiliary information such as source IP,
    HTTP user agent, or Client authentication information (in deployments
-   which use it, see Section 7.3).  This metadata can be used by
+   which use it, see Section 8.3).  This metadata can be used by
    Aggregators to identify participating Clients or permit some attacks
    on robustness.  This auxiliary information can be removed by having
    Clients submit reports to an anonymizing proxy server which would
@@ -3298,7 +3366,7 @@ Table of Contents
    Leader.  In this scenario, Client authentication would be performed
    by the proxy rather than any of the participants in the DAP protocol.
 
-7.5.  Differential Privacy
+8.5.  Differential Privacy
 
    DAP deployments can choose to ensure their aggregate results achieve
    differential privacy ([Vad16]).  A simple approach would require the
@@ -3311,7 +3379,7 @@ Table of Contents
    measurement in a batch except for one, that one measurement is still
    formally protected.
 
-7.6.  Task Parameters
+8.6.  Task Parameters
 
    Distribution of DAP task parameters is out of band from DAP itself
    and thus not discussed in this document.  This section examines the
@@ -3320,7 +3388,7 @@ Table of Contents
    can be mitigated by having the Aggregators refuse shared parameters
    that are trivially insecure (e.g., a minimum batch size of 1 report).
 
-7.6.1.  VDAF Verification Key Requirements
+8.6.1.  VDAF Verification Key Requirements
 
    Knowledge of the verification key would allow a Client to forge a
    report with invalid values that will nevertheless pass verification.
@@ -3352,7 +3420,7 @@ Table of Contents
    VDAFs.  In particular, the security proofs for Prio3 require that the
    verification key is chosen independently of the generated reports.
 
-7.6.2.  Batch Parameters
+8.6.2.  Batch Parameters
 
    An important parameter of a DAP deployment is the minimum batch size.
    If a batch includes too few reports, then the aggregate result can
@@ -3361,10 +3429,10 @@ Table of Contents
    implementations SHOULD also opt out of participating in a DAP task if
    the minimum batch size is too small.  This document does not specify
    how to choose an appropriate minimum batch size, but an appropriate
-   value may be determined from the differential privacy (Section 7.5)
+   value may be determined from the differential privacy (Section 8.5)
    parameters in use, if any.
 
-7.6.3.  Task Configuration Agreement and Consistency
+8.6.3.  Task Configuration Agreement and Consistency
 
    In order to execute a DAP task, it is necessary for all parties to
    ensure they agree on the configuration of the task.  However, it is
@@ -3382,7 +3450,7 @@ Table of Contents
    contribute to a task, they should also share a consistent view of the
    task configuration.
 
-7.7.  Infrastructure Diversity
+8.7.  Infrastructure Diversity
 
    DAP deployments should ensure that Aggregators do not have common
    dependencies that would enable a single vendor to reassemble
@@ -3391,16 +3459,16 @@ Table of Contents
    then that cloud vendor would be able to reassemble all the input
    shares and defeat privacy.
 
-8.  IANA Considerations
+9.  IANA Considerations
 
-   This document requests registry of new media types (Section 8.1),
-   creation of new codepoint registries (Section 8.2), and registration
-   of an IETF URN sub-namespace (Section 8.3).
+   This document requests registry of new media types (Section 9.1),
+   creation of new codepoint registries (Section 9.2), and registration
+   of an IETF URN sub-namespace (Section 9.3).
 
    (RFC EDITOR: In the remainder of this section, replace "RFC XXXX"
    with the RFC number assigned to this document.)
 
-8.1.  Protocol Message Media Types
+9.1.  Protocol Message Media Types
 
    This specification defines the following protocol messages, along
    with their corresponding media types types:
@@ -3451,7 +3519,7 @@ Table of Contents
    to include each of these media types.  The information required for
    each media type is listed in the remaining subsections.
 
-8.1.1.  "application/dap-hpke-config-list" media type
+9.1.1.  "application/dap-hpke-config-list" media type
 
    Type name:  application
 
@@ -3494,7 +3562,7 @@ Table of Contents
 
    Change controller:  IESG
 
-8.1.2.  "application/dap-report" media type
+9.1.2.  "application/dap-report" media type
 
    Type name:  application
 
@@ -3537,7 +3605,7 @@ Table of Contents
 
    Change controller:  IESG
 
-8.1.3.  "application/dap-aggregation-job-init-req" media type
+9.1.3.  "application/dap-aggregation-job-init-req" media type
 
    Type name:  application
 
@@ -3580,7 +3648,7 @@ Table of Contents
 
    Change controller:  IESG
 
-8.1.4.  "application/dap-aggregation-job-resp" media type
+9.1.4.  "application/dap-aggregation-job-resp" media type
 
    Type name:  application
 
@@ -3623,7 +3691,7 @@ Table of Contents
 
    Change controller:  IESG
 
-8.1.5.  "application/dap-aggregation-job-continue-req" media type
+9.1.5.  "application/dap-aggregation-job-continue-req" media type
 
    Type name:  application
 
@@ -3666,7 +3734,7 @@ Table of Contents
 
    Change controller:  IESG
 
-8.1.6.  "application/dap-aggregate-share-req" media type
+9.1.6.  "application/dap-aggregate-share-req" media type
 
    Type name:  application
 
@@ -3709,7 +3777,7 @@ Table of Contents
 
    Change controller:  IESG
 
-8.1.7.  "application/dap-aggregate-share" media type
+9.1.7.  "application/dap-aggregate-share" media type
 
    Type name:  application
 
@@ -3752,7 +3820,7 @@ Table of Contents
 
    Change controller:  IESG
 
-8.1.8.  "application/dap-collection-job-req" media type
+9.1.8.  "application/dap-collection-job-req" media type
 
    Type name:  application
 
@@ -3795,7 +3863,7 @@ Table of Contents
 
    Change controller:  IESG
 
-8.1.9.  "application/dap-collection-job-resp" media type
+9.1.9.  "application/dap-collection-job-resp" media type
 
    Type name:  application
 
@@ -3838,14 +3906,14 @@ Table of Contents
 
    Change controller:  IESG
 
-8.2.  DAP Type Registries
+9.2.  DAP Type Registries
 
    This document also requests creation of a new "Distributed
    Aggregation Protocol (DAP)" page.  This page will contain several new
    registries, described in the following sections.  All registries are
    administered under the Specification Required policy [RFC8126].
 
-8.2.1.  Batch Modes Registry
+9.2.1.  Batch Modes Registry
 
    A new registry will be (RFC EDITOR: change "will be" to "has been")
    created called "Batch Mode Identifiers" for DAP batch modes
@@ -3859,20 +3927,20 @@ Table of Contents
 
    The initial contents of this registry listed in Table 2.
 
-          +=======+=================+===========================+
-          | Value | Name            | Reference                 |
-          +=======+=================+===========================+
-          | 0x00  | reserved        | Section 4.2 of RFC XXXX   |
-          +-------+-----------------+---------------------------+
-          | 0x01  | time_interval   | Section 4.2.1 of RFC XXXX |
-          +-------+-----------------+---------------------------+
-          | 0x02  | leader_selected | Section 4.2.2 of RFC XXXX |
-          +-------+-----------------+---------------------------+
+           +=======+=================+=========================+
+           | Value | Name            | Reference               |
+           +=======+=================+=========================+
+           | 0x00  | reserved        | Section 4.2 of RFC XXXX |
+           +-------+-----------------+-------------------------+
+           | 0x01  | time_interval   | Section 5.1 of RFC XXXX |
+           +-------+-----------------+-------------------------+
+           | 0x02  | leader_selected | Section 5.2 of RFC XXXX |
+           +-------+-----------------+-------------------------+
 
                 Table 2: Initial contents of the Batch Mode
                            Identifiers registry.
 
-8.2.2.  Report Extension Registry
+9.2.2.  Report Extension Registry
 
    A new registry will be (RFC EDITOR: change "will be" to "has been")
    created called "Report Extension Identifiers" for extensions to the
@@ -3897,7 +3965,7 @@ Table of Contents
                             the Report Extension
                            Identifiers registry.
 
-8.2.3.  Report Error Registry
+9.2.3.  Report Error Registry
 
    A new registry will be (RFC EDITOR: change "will be" to "has been")
    created called "Report Error Identifiers" for reasons for rejecting
@@ -3940,7 +4008,7 @@ Table of Contents
         Table 4: Initial contents of the Report Error Identifiers
                                 registry.
 
-8.3.  URN Sub-namespace for DAP (urn:ietf:params:ppm:dap)
+9.3.  URN Sub-namespace for DAP (urn:ietf:params:ppm:dap)
 
    The following value will be (RFC EDITOR: change "will be" to "has
    been") registered in the "IETF URN Sub-namespace for Registered
@@ -3958,9 +4026,44 @@ Table of Contents
    The initial contents of this namespace are the types and descriptions
    in Table 1, with the Reference field set to RFC XXXX.
 
-9.  References
+10.  Extending this Document
 
-9.1.  Normative References
+   The behavior of DAP may be extended or modified by future documents
+   defining one or more of the following:
+
+   1.  a new batch mode (Section 4.2)
+
+   2.  a new report extension (Section 4.5.3)
+
+   3.  a new report error (Section 4.6.1.2)
+
+   4.  a new entry in the URN sub-namespace for DAP (Table 1)
+
+   Each of these requires registration of a codepoint or other value;
+   see Section 9.  No other considerations are required except in the
+   following cases:
+
+   *  When a document defines a new batch mode, it MUST include a
+      section titled "DAP Batch Mode Considerations" specifying the
+      following:
+
+      -  The value of the config field of Query, PartialBatchSelector,
+         and BatchSelector
+
+      -  Batch buckets (Section 4.6.2.3): how reports are assigned to
+         batch buckets; how each bucket is identified; and how batch
+         buckets are mapped to batches.
+
+      See Section 5 for examples.
+
+   *  When a document defines a new report extension, it SHOULD include
+      in its "Security Considerations" section some discussion of how
+      the extension impacts the security of DAP with respect to the
+      threat model in Section 8.
+
+11.  References
+
+11.1.  Normative References
 
    [HPKE]     Barnes, R., Bhargavan, K., Lipp, B., and C. Wood, "Hybrid
               Public Key Encryption", RFC 9180, DOI 10.17487/RFC9180,
@@ -4029,11 +4132,11 @@ Table of Contents
 
    [VDAF]     Barnes, R., Cook, D., Patton, C., and P. Schoppmann,
               "Verifiable Distributed Aggregation Functions", Work in
-              Progress, Internet-Draft, draft-irtf-cfrg-vdaf-12, 4
-              October 2024, <https://datatracker.ietf.org/doc/html/
-              draft-irtf-cfrg-vdaf-12>.
+              Progress, Internet-Draft, draft-irtf-cfrg-vdaf-13, 2
+              November 2024, <https://datatracker.ietf.org/doc/html/
+              draft-irtf-cfrg-vdaf-13>.
 
-9.2.  Informative References
+11.2.  Informative References
 
    [Dou02]    Douceur, J. R., "The Sybil Attack", International Workshop
               on Peer-to-Peer Systems (IPTPS), 2002,
