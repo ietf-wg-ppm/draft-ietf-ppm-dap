@@ -1795,6 +1795,7 @@ message is structured as follows:
 enum {
   processing(0),
   ready(1),
+  (255)
 } AggregationJobStatus;
 
 struct {
@@ -2125,8 +2126,8 @@ The Helper constructs an `AggregationJobResp` message (see
 {{aggregation-helper-init}}) with each prep step. The order of the prep steps
 MUST match the Leader's `AggregationJobContinueReq`.
 
-The Helper responds to the Leader with HTTP status 200 OK, a body consisting
-of the `AggregationJobResp`, and the media type
+The Helper responds to the Leader with HTTP status 202 Accepted, a body
+consisting of the `AggregationJobResp`, and the media type
 "application/dap-aggregation-job-resp".
 
 Depending on the task parameters, processing an aggregation job may take some
@@ -2321,6 +2322,7 @@ structured as follows:
 enum {
   processing(0),
   ready(1),
+  (255)
 } CollectionJobStatus;
 
 struct {
