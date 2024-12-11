@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 7 May 2025                                           Cloudflare
+Expires: 14 June 2025                                         Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                         3 November 2024
+                                                        11 December 2024
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -63,7 +63,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 7 May 2025.
+   This Internet-Draft will expire on 14 June 2025.
 
 Copyright Notice
 
@@ -1927,6 +1927,7 @@ Table of Contents
    enum {
      processing(0),
      ready(1),
+     (255)
    } AggregationJobStatus;
 
    struct {
@@ -2263,8 +2264,8 @@ Table of Contents
    Section 4.6.1.2) with each prep step.  The order of the prep steps
    MUST match the Leader's AggregationJobContinueReq.
 
-   The Helper responds to the Leader with HTTP status 200 OK, a body
-   consisting of the AggregationJobResp, and the media type
+   The Helper responds to the Leader with HTTP status 202 Accepted, a
+   body consisting of the AggregationJobResp, and the media type
    "application/dap-aggregation-job-resp".
 
    Depending on the task parameters, processing an aggregation job may
@@ -2475,6 +2476,7 @@ Table of Contents
    enum {
      processing(0),
      ready(1),
+     (255)
    } CollectionJobStatus;
 
    struct {
