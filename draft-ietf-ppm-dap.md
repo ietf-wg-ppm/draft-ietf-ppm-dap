@@ -1876,10 +1876,10 @@ following checks:
 1. Check that the input share can be decoded as specified by the VDAF. If not,
    the input share MUST be marked as invalid with the error `invalid_message`.
 
-1. Check if the report is too far into the future. Implementors can provide for
-   some small leeway, usually no more than a few minutes, to account for clock
-   skew. If a report is rejected for this reason, the Aggregator SHOULD mark the
-   input share as invalid with the error `report_too_early`.
+1. Check if the report's timestamp is too far in the future. If the report's
+   timestamp is more than a few minutes ahead of the current time, then the
+   Aggregator SHOULD mark the input share as invalid with error
+   `report_too_early`.
 
 1. Check if the report's timestamp is before the task's `task_start` time. If
    so, the Aggregator MUST mark the input share as invalid with the error
