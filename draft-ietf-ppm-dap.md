@@ -1912,10 +1912,10 @@ following checks:
       {{distributed-systems}} for more information.
 
 1. Finally, if an Aggregator cannot determine if an input share is valid, it
-   MUST mark the input share as invalid with error `report_dropped`. For
-   example, if the Aggregator has evicted the state required to perform the
-   check from long-term storage. (See {{reducing-storage-requirements}} for
-   details.)
+   MUST mark the input share as invalid with error `report_dropped`.
+   For example, the report timestamp may be so far in the past that the state
+   required to perform the check has been evicted from the Aggregator's
+   long-term storage. See {{reducing-storage-requirements}} for details.
 
 If all of the above checks succeed, the input share is not marked as invalid.
 
