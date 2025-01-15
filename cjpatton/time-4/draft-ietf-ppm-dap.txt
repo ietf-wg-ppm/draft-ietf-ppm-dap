@@ -1365,10 +1365,9 @@ Table of Contents
    report if the Leader responds with HTTP status code 201 Created.
 
    If the Leader does not recognize the task ID, then it MUST abort with
-   error unrecognizedTask.  If the task has expired, i.e., task_start +
-   task_duration is greater than the current time, then it SHOULD abort
-   with error unrecognizedTask.  It may choose to provide leeway for
-   Clients with skewed clocks.
+   error unrecognizedTask.  Note that indicating an unrecognized task
+   might indicate that the Client is misconfigured or the task has
+   expired.
 
    The Leader responds to requests whose Leader encrypted input share
    uses an out-of-date or unknown HpkeConfig.id value, indicated by

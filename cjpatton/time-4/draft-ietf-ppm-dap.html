@@ -2929,10 +2929,8 @@ Created. Malformed requests are handled as described in <a href="#errors" class=
 Clients <span class="bcp14">SHOULD NOT</span> upload the same measurement value in more than one report if
 the Leader responds with HTTP status code 201 Created.<a href="#section-4.6.2-17" class="pilcrow">¶</a></p>
 <p id="section-4.6.2-18">If the Leader does not recognize the task ID, then it <span class="bcp14">MUST</span> abort with error
-<code>unrecognizedTask</code>. If the task has expired, i.e., <code>task_start + task_duration</code>
-is greater than the current time, then it <span class="bcp14">SHOULD</span> abort with error
-<code>unrecognizedTask</code>. It may choose to provide leeway for Clients with skewed
-clocks.<a href="#section-4.6.2-18" class="pilcrow">¶</a></p>
+<code>unrecognizedTask</code>. Note that indicating an unrecognized task might indicate
+that the Client is misconfigured or the task has expired.<a href="#section-4.6.2-18" class="pilcrow">¶</a></p>
 <p id="section-4.6.2-19">The Leader responds to requests whose Leader encrypted input share uses an
 out-of-date or unknown <code>HpkeConfig.id</code> value, indicated by
 <code>HpkeCiphertext.config_id</code>, with error of type 'outdatedConfig'. When the Client
