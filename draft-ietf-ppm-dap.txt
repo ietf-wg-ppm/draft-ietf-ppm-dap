@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 14 June 2025                                         Cloudflare
+Expires: 19 July 2025                                         Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                        11 December 2024
+                                                         15 January 2025
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -63,11 +63,11 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 14 June 2025.
+   This Internet-Draft will expire on 19 July 2025.
 
 Copyright Notice
 
-   Copyright (c) 2024 IETF Trust and the persons identified as the
+   Copyright (c) 2025 IETF Trust and the persons identified as the
    document authors.  All rights reserved.
 
    This document is subject to BCP 78 and the IETF Trust's Legal
@@ -4148,9 +4148,9 @@ Table of Contents
 
    [VDAF]     Barnes, R., Cook, D., Patton, C., and P. Schoppmann,
               "Verifiable Distributed Aggregation Functions", Work in
-              Progress, Internet-Draft, draft-irtf-cfrg-vdaf-13, 2
-              November 2024, <https://datatracker.ietf.org/doc/html/
-              draft-irtf-cfrg-vdaf-13>.
+              Progress, Internet-Draft, draft-irtf-cfrg-vdaf-14, 10
+              January 2025, <https://datatracker.ietf.org/doc/html/
+              draft-irtf-cfrg-vdaf-14>.
 
 11.2.  Informative References
 
