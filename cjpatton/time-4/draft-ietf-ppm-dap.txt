@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 18 July 2025                                         Cloudflare
+Expires: 19 July 2025                                         Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                         14 January 2025
+                                                         15 January 2025
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -63,7 +63,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 18 July 2025.
+   This Internet-Draft will expire on 19 July 2025.
 
 Copyright Notice
 
@@ -2021,15 +2021,14 @@ Table of Contents
    2.  Check if the report's timestamp is too far in the future.  If the
        report's timestamp is more than a few minutes ahead of the
        current time, then the Aggregator SHOULD mark the input share as
-       invalid with error report_too_early.  Implementations may provide
-       for some small leeway to account for clock skew.
+       invalid with error report_too_early.
 
    3.  Check if the report's timestamp is before the task's start time.
-       If the timestamp is less than task_start - (task_start %
-       time_precision), the Aggregator MUST mark the input share as
-       invalid with the error task_not_started.  Note that the task
-       start time is rounded down since the Client may have rounded down
-       its timestamp as well.
+       If the timestamp is less than task_start rounded down to the
+       nearest multiple of time_precision, the Aggregator MUST mark the
+       input share as invalid with the error task_not_started.  Note
+       that the task start time is rounded down since the Client may
+       have rounded down its timestamp as well.
 
    4.  Check if the report's timestamp is past the task's end time,
        given by task_start + task_duration.  If so, the Aggregator MUST
@@ -2064,9 +2063,9 @@ Table of Contents
    8.  Finally, if an Aggregator cannot determine if an input share is
        valid, it MUST mark the input share as invalid with error
        report_dropped.  For example, the report timestamp may be so far
-       in the past that the Aggregator has evicted the state required to
-       perform the check from long-term storage.  (See Section 6.4.1 for
-       details.)
+       in the past that the state required to perform the check has been
+       evicted from the Aggregator's long-term storage.  See
+       Section 6.4.1 for details.
 
    If all of the above checks succeed, the input share is not marked as
    invalid.
@@ -4159,9 +4158,9 @@ Table of Contents
 
    [VDAF]     Barnes, R., Cook, D., Patton, C., and P. Schoppmann,
               "Verifiable Distributed Aggregation Functions", Work in
-              Progress, Internet-Draft, draft-irtf-cfrg-vdaf-13, 2
-              November 2024, <https://datatracker.ietf.org/doc/html/
-              draft-irtf-cfrg-vdaf-13>.
+              Progress, Internet-Draft, draft-irtf-cfrg-vdaf-14, 10
+              January 2025, <https://datatracker.ietf.org/doc/html/
+              draft-irtf-cfrg-vdaf-14>.
 
 11.2.  Informative References
 
