@@ -2016,12 +2016,9 @@ Table of Contents
        current time, then the Aggregator SHOULD mark the input share as
        invalid with error report_too_early.
 
-   3.  Check if the report's timestamp is before the task's start time.
-       If the timestamp is less than task_start rounded down to the
-       nearest multiple of time_precision, the Aggregator MUST mark the
-       input share as invalid with the error task_not_started.  Note
-       that the task start time is rounded down since the Client may
-       have rounded down its timestamp as well.
+   3.  Check if the report's timestamp is before the task's task_start
+       time.  If so, the Aggregator MUST mark the input share as invalid
+       with the error task_not_started.
 
    4.  Check if the report's timestamp is past the task's end time,
        given by task_start + task_duration.  If so, the Aggregator MUST
