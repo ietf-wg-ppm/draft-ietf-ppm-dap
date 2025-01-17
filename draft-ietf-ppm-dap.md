@@ -2372,7 +2372,7 @@ header field to suggest a polling interval to the Collector.
 After receiving the response to its `CollectionJobReq`, the Collector
 periodically makes HTTP GET requests
 `/tasks/{task-id}/collection_jobs/{collection-job-id}` to check on the status
-of the collect job and eventually obtain the result. The Leader responds to GET
+of the collection job and eventually obtain the result. The Leader responds to GET
 requests with HTTP status 200 and the `status` field reflecting the current
 state of the job. When the collection job is `processing`, the response SHOULD
 include a Retry-After header field to suggest a polling interval to the
