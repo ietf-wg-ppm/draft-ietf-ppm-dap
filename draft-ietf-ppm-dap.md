@@ -3300,7 +3300,7 @@ component is using. This MAY be used as a hint by the receiver of the request
 to do compatibility checks between client and server.
 For example, A report submission to leader from a client that supports
 draft-ietf-ppm-dap-09 could have the header
-`Media-Type: application/dap-report;version=09`.
+`Content-Type: application/dap-report;version=09`.
 
 The "Media Types" registry at https://www.iana.org/assignments/media-types will
 be (RFC EDITOR: replace "will be" with "has been") updated to include each of
