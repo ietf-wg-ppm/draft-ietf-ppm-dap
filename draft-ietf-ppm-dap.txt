@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 19 July 2025                                         Cloudflare
+Expires: 21 July 2025                                         Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                         15 January 2025
+                                                         17 January 2025
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -63,7 +63,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 19 July 2025.
+   This Internet-Draft will expire on 21 July 2025.
 
 Copyright Notice
 
@@ -2527,10 +2527,10 @@ Table of Contents
    After receiving the response to its CollectionJobReq, the Collector
    periodically makes HTTP GET requests /tasks/{task-
    id}/collection_jobs/{collection-job-id} to check on the status of the
-   collect job and eventually obtain the result.  The Leader responds to
-   GET requests with HTTP status 200 and the status field reflecting the
-   current state of the job.  When the collection job is processing, the
-   response SHOULD include a Retry-After header field to suggest a
+   collection job and eventually obtain the result.  The Leader responds
+   to GET requests with HTTP status 200 and the status field reflecting
+   the current state of the job.  When the collection job is processing,
+   the response SHOULD include a Retry-After header field to suggest a
    polling interval to the Collector.
 
    The Leader then begins working with the Helper to aggregate the
