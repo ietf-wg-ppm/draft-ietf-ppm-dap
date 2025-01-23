@@ -4193,7 +4193,7 @@ header field to suggest a polling interval to the Collector.<a href="#section-4.
 <p id="section-4.8.1-18">After receiving the response to its <code>CollectionJobReq</code>, the Collector
 periodically makes HTTP GET requests
 <code>/tasks/{task-id}/collection_jobs/{collection-job-id}</code> to check on the status
-of the collect job and eventually obtain the result. The Leader responds to GET
+of the collection job and eventually obtain the result. The Leader responds to GET
 requests with HTTP status 200 and the <code>status</code> field reflecting the current
 state of the job. When the collection job is <code>processing</code>, the response <span class="bcp14">SHOULD</span>
 include a Retry-After header field to suggest a polling interval to the
@@ -5368,7 +5368,7 @@ component is using. This <span class="bcp14">MAY</span> be used as a hint by the
 to do compatibility checks between client and server.
 For example, A report submission to leader from a client that supports
 draft-ietf-ppm-dap-09 could have the header
-<code>Media-Type: application/dap-report;version=09</code>.<a href="#section-9.1-4" class="pilcrow">¶</a></p>
+<code>Content-Type: application/dap-report;version=09</code>.<a href="#section-9.1-4" class="pilcrow">¶</a></p>
 <p id="section-9.1-5">The "Media Types" registry at https://www.iana.org/assignments/media-types will
 be (RFC EDITOR: replace "will be" with "has been") updated to include each of
 these media types. The information required for each media type is listed in
