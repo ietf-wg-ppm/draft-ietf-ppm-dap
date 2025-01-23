@@ -1930,10 +1930,9 @@ following checks:
    report extension types. If so, the Aggregator MUST mark the input share as
    invalid with error `invalid_message`.
 
-1. Check if any two public or private report extensions have the same extension
-   type. (For the purposes of this check, a private report extension can
-   conflict with a public report extension.) If so, the Aggregator MUST mark the
-   input share as invalid with error `invalid_message`.
+1. Check if any two extensions have the same extension type across public and
+   private extension fields. If so, the Aggregator MUST mark the input share as
+   invalid with error `invalid_message`.
 
 1. If the report pertains to a batch that was previously collected, then the
    input share MUST be marked as invalid with error `batch_collected`.
