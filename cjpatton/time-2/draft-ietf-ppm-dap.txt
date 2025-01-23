@@ -1168,8 +1168,8 @@ Table of Contents
 
    A timestamp has type Time and its value is the number of seconds
    since the UNIX epoch.  In addition, every timestamp MUST be rounded
-   to the nearest multiple of time_precision (Section 4.3).  That is,
-   the value is computed as
+   down to the nearest multiple of time_precision (Section 4.3).  That
+   is, the value is computed as
 
    sent_timestamp = timestamp - (timestamp % time_precision)
 
