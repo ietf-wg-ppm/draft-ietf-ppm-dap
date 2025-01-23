@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 19 July 2025                                         Cloudflare
+Expires: 27 July 2025                                         Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                         15 January 2025
+                                                         23 January 2025
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -63,7 +63,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 19 July 2025.
+   This Internet-Draft will expire on 27 July 2025.
 
 Copyright Notice
 
@@ -1075,7 +1075,8 @@ Table of Contents
 
    *  task_start: The time from which the Clients will start uploading
       reports to a task.  Aggregators MUST reject reports with
-      timestamps earlier than task_start.
+      timestamps earlier than task_start as described in
+      Section 4.7.1.4.
 
    *  task_duration: The duration of a task.  The task is considered
       completed after the end time task_start + task_duration.
@@ -1364,7 +1365,9 @@ Table of Contents
    report if the Leader responds with HTTP status code 201 Created.
 
    If the Leader does not recognize the task ID, then it MUST abort with
-   error unrecognizedTask.
+   error unrecognizedTask.  Note that indicating an unrecognized task
+   might indicate that the Client is misconfigured or the task has
+   expired.
 
    The Leader responds to requests whose Leader encrypted input share
    uses an out-of-date or unknown HpkeConfig.id value, indicated by
