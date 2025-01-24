@@ -3320,7 +3320,7 @@ number assigned to this document.)
 ## Protocol Message Media Types {#iana-media-types}
 
 This specification defines the following protocol messages, along with their
-corresponding media types types:
+corresponding media types:
 
 - HpkeConfigList {{hpke-config}}: "application/dap-hpke-config-list"
 - Report {{upload-request}}: "application/dap-report"
