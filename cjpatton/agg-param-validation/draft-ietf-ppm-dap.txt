@@ -1743,7 +1743,7 @@ Table of Contents
 
    This message consists of:
 
-   *  agg_param: The VDAF aggregation parameter chosne by the Collector.
+   *  agg_param: The VDAF aggregation parameter chosen by the Collector.
       Before initializing an aggregation job, the Leader MUST validate
       the parameter as described in Section 4.6.
 
