@@ -806,22 +806,22 @@ error (the 4xx or 5xx classes, respectively, from {{Section 15 of !RFC9110}}).
 To facilitate automatic response to errors, this document defines the following
 standard tokens for use in the "type" field:
 
-| Type                       | Description                                                                                  |
-|:---------------------------|:---------------------------------------------------------------------------------------------|
-| invalidMessage             | A message received by a protocol participant could not be parsed or otherwise was invalid. |
-| unrecognizedTask           | A server received a message with an unknown task ID. |
-| unrecognizedAggregationJob | A server received a message with an unknown aggregation job ID. |
-| outdatedConfig             | The message was generated using an outdated configuration. |
-| reportRejected             | Report could not be processed for an unspecified reason. |
-| reportTooEarly             | Report could not be processed because its timestamp is too far in the future. |
-| batchInvalid               | The batch boundary check for Collector's query failed. |
-| invalidBatchSize           | There are an invalid number of reports in the batch. |
-| batchQueriedMultipleTimes  | A batch was queried with multiple distinct aggregation parameters. |
-| batchMismatch              | Aggregators disagree on the report shares that were aggregated in a batch. |
-| unauthorizedRequest        | Authentication of an HTTP request failed (see {{request-authentication}}). |
-| stepMismatch               | The Aggregators disagree on the current step of the DAP aggregation protocol. |
-| batchOverlap               | A request's query includes reports that were previously collected in a different batch. |
-| unsupportedExtension       | An upload request's extensions list includes an unknown extension. |
+| Type                        | Description                                                                                  |
+|:----------------------------|:---------------------------------------------------------------------------------------------|
+| invalidMessage              | A message received by a protocol participant could not be parsed or otherwise was invalid. |
+| unrecognizedTask            | A server received a message with an unknown task ID. |
+| unrecognizedAggregationJob  | A server received a message with an unknown aggregation job ID. |
+| outdatedConfig              | The message was generated using an outdated configuration. |
+| reportRejected              | Report could not be processed for an unspecified reason. |
+| reportTooEarly              | Report could not be processed because its timestamp is too far in the future. |
+| batchInvalid                | The batch boundary check for Collector's query failed. |
+| invalidBatchSize            | There are an invalid number of reports in the batch. |
+| invalidAggregationParameter | The aggregation parameter assigned to a batch is invalid. |
+| batchMismatch               | Aggregators disagree on the report shares that were aggregated in a batch. |
+| unauthorizedRequest         | Authentication of an HTTP request failed (see {{request-authentication}}). |
+| stepMismatch                | The Aggregators disagree on the current step of the DAP aggregation protocol. |
+| batchOverlap                | A request's query includes reports that were previously collected in a different batch. |
+| unsupportedExtension        | An upload request's extensions list includes an unknown extension. |
 {: #urn-space-errors = "DAP errors. All are scoped to the errors sub-namespace of the DAP URN, e.g., urn:ietf:params:ppm:dap:error:invalidMessage."}
 
 This list is not exhaustive. The server MAY return errors set to a URI other
@@ -857,7 +857,7 @@ DAP has three major interactions which need to be defined:
 Each of these interactions is defined in terms of "resources". In this section
 we define these resources and the messages used to act on them.
 
-## Basic Type Definitions
+## Basic Type Definitions {#basic-definitions}
 
 The following are some basic type definitions used in other messages:
 
@@ -1072,6 +1072,29 @@ Truncating timestamps has multiple purposes. Clients truncate their report
 timestamp in order to avoid reducing the size of the anonymity set; see
 {{anon-proxy}}. It also helps Aggregators manage resources; see
 {{sharding-storage}}.
+
+## Aggregation Parameter Validation {#agg-param-validation}
+
+For each batch it collects, the Collector assigns an aggregation parameter used
+to refine the measurements before aggregating them. The aggregation parameter
+is subject to a validation procedure specified by the VDAF.
+
+Before accepting a collection job from the Collector ({{collect-init}}), the
+Leader checks that the indicated aggregation parameter, `agg_param`, is valid
+according to the following procedure. The Helper does the same before accepting
+an aggregation job from the Leader ({{aggregation-helper-init}}).
+
+1. Decode the byte string `agg_param` into an `AggParam` as specified by the
+   VDAF. (VDAFs compatible with this specification MUST specify an encoding of
+   the aggregation parameter as a byte string; see {{basic-definitions}}.)
+   If decoding fails, then the aggregation parameter is invalid.
+
+1. Run `vdaf.is_valid(decoded_agg_param, [])`, where `decoded_agg_param` is the
+   decoded `AggParam` and `is_valid()` is as defined in {{Section 5.3 of
+   !VDAF}}. If the output is not `True`, then the aggregation parameter is
+   invalid.
+
+If both steps succeed, then the aggregation parameter is deemed to be valid.
 
 ## Uploading Reports {#upload-flow}
 
@@ -1584,7 +1607,9 @@ struct {
 
 This message consists of:
 
-* `agg_param`: The VDAF aggregation parameter.
+* `agg_param`: The VDAF aggregation parameter chosen by the Collector. Before
+  initializing an aggregation job, the Leader MUST validate the parameter as
+  described in {{agg-param-validation}}.
 
 * `part_batch_selector`: The "partial batch selector" used by the Aggregators
   to determine how to aggregate each report. Its contents depends on the
@@ -1686,6 +1711,10 @@ that the Leader will use to continue preparing the report.
 
 Upon receipt of an `AggregationJobInitReq`, the Helper checks if it recognizes
 the task ID. If not, then it MUST abort with error `unrecognizedTask`.
+
+Next, the Helper checks that the aggregation parameter is valid as described in
+{{agg-param-validation}}. If the aggregation parameter is invalid, then the
+Helper MUST abort with error `invalidAggregationParameter`.
 
 Next, the Helper checks that the report IDs in
 `AggregationJobInitReq.prepare_inits` are all distinct. If two preparation
@@ -2317,8 +2346,9 @@ The named parameters are:
   The indicated batch mode MUST match the task's batch mode. Otherwise, the
   Leader MUST abort with error "invalidMessage".
 
-* `agg_param`, an aggregation parameter for the VDAF being executed. This is the
-  same value as in `AggregationJobInitReq` (see {{leader-init}}).
+* `agg_param`, an aggregation parameter for the VDAF being executed. This is
+  the same value as in `AggregationJobInitReq` (see {{leader-init}}). The
+  aggregation parameter MUST be valid as defined in {{agg-param-validation}}.
 
 Collectors MUST authenticate their requests to Leaders using a scheme that meets
 the requirements in {{request-authentication}}.
@@ -2339,6 +2369,10 @@ matches the aggregation parameter used in aggregations.
 Upon receipt of a `CollectionJobReq`, the Leader begins by checking that it
 recognizes the task ID in the request path. If not, it MUST abort with error
 `unrecognizedTask`.
+
+Next, the Leader checks that the aggregation parameter is valid as described in
+{{agg-param-validation}}. If the aggregation parameter is invalid, then the
+Leader MUST abort with error `invalidAggregationParameter`.
 
 The Leader MAY further validate the request according to the requirements in
 {{batch-validation}} and abort with the indicated error, though some conditions
@@ -2668,11 +2702,6 @@ reports successfully aggregated into the batch and `min_batch_size` is the
 minimum batch size for the task. If this check fails, then Helpers MUST abort
 with an error of type "invalidBatchSize". Leaders SHOULD wait for more reports
 to be validated and try the collection job again later.
-
-Next, the Aggregator checks that the batch has not been queried with multiple
-distinct aggregation parameters. If the batch has been queried with more than
-one distinct aggregation parameter, the Aggregator MUST abort with error of type
-"batchQueriedMultipleTimes".
 
 Next, the Aggregator checks if the set of batch buckets identified by the
 request overlaps with the batch buckets that have already been collected. If
