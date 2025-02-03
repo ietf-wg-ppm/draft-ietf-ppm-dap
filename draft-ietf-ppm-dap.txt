@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 2 August 2025                                        Cloudflare
+Expires: 7 August 2025                                        Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                         29 January 2025
+                                                         3 February 2025
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -63,7 +63,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 2 August 2025.
+   This Internet-Draft will expire on 7 August 2025.
 
 Copyright Notice
 
@@ -188,6 +188,27 @@ Table of Contents
 
    (*) Indicates a change that breaks wire compatibility with the
    previous draft.
+
+   14:
+
+   *  Enforce VDAF aggregation parameter validity.  This is not relevant
+      for Prio3, which requires only that reports be aggregated at most
+      once.  It is relevant for VDAFs for which validity depends on how
+      many times a report might be aggregated (at most once in DAP). (*)
+
+   *  Require all timestamps to be truncated by time_precision. (*)
+
+   *  Bump draft-irtf-cfrg-vdaf-13 to 14 [VDAF].  There are no
+      functional or breaking changes in this draft.
+
+   *  Clarify conditions for rejecting reports based on the report
+      metadata, including the timestamp and public and private
+      extensions.
+
+   *  Clarify that the Helper responds with 202 Accepted to an
+      aggregation continuation request.
+
+   *  Bump version tag from "dap-13" to "dap-14". (*)
 
    13:
 
@@ -1335,7 +1356,7 @@ Table of Contents
    algorithm (Section 5.1 of [VDAF]), using the report ID as the nonce:
 
    (public_share, input_shares) = Vdaf.shard(
-       "dap-13" || task_id,
+       "dap-14" || task_id,
        measurement, /* plaintext measurement */
        report_id,   /* nonce */
        rand,        /* randomness for sharding algorithm */
@@ -1368,7 +1389,7 @@ Table of Contents
    plaintext_input_share as follows:
 
    enc, payload = SealBase(pk,
-     "dap-13 input share" || 0x01 || server_role,
+     "dap-14 input share" || 0x01 || server_role,
      input_share_aad, plaintext_input_share)
 
    where pk is the Aggregator's public key; 0x01 represents the Role of
@@ -1669,7 +1690,7 @@ Table of Contents
 
    (state, outbound) = Vdaf.ping_pong_leader_init(
        vdaf_verify_key,
-       "dap-13" || task_id,
+       "dap-14" || task_id,
        agg_param,
        report_id,
        public_share,
@@ -1798,7 +1819,7 @@ Table of Contents
        computes
 
       (state, outbound) = Vdaf.ping_pong_leader_continued(
-          "dap-13" || task_id,
+          "dap-14" || task_id,
           agg_param,
           prev_state,
           inbound,
@@ -1936,7 +1957,7 @@ Table of Contents
 
    (state, outbound) = Vdaf.ping_pong_helper_init(
        vdaf_verify_key,
-       "dap-13" || task_id,
+       "dap-14" || task_id,
        agg_param,
        report_id,
        public_share,
@@ -2057,7 +2078,7 @@ Table of Contents
    and attempts decryption of the payload with the following procedure:
 
    plaintext_input_share = OpenBase(encrypted_input_share.enc, sk,
-     "dap-13 input share" || 0x01 || server_role,
+     "dap-14 input share" || 0x01 || server_role,
      input_share_aad, encrypted_input_share.payload)
 
    where sk is the HPKE secret key, 0x01 represents the Role of the
@@ -2202,7 +2223,7 @@ Table of Contents
        Continued(prep_state), then the Leader computes
 
       (state, outbound) = Vdaf.ping_pong_leader_continued(
-          "dap-13" || task_id,
+          "dap-14" || task_id,
           agg_param,
           state,
           inbound,
@@ -2285,7 +2306,7 @@ Table of Contents
    the Helper computes the following:
 
    (state, outbound) = Vdaf.ping_pong_helper_continued(
-       "dap-13" || task_id,
+       "dap-14" || task_id,
        agg_param,
        state,
        inbound,
@@ -2796,7 +2817,7 @@ Table of Contents
 
    (enc, payload) = SealBase(
        pk,
-       "dap-13 aggregate share" || server_role || 0x00,
+       "dap-14 aggregate share" || server_role || 0x00,
        agg_share_aad,
        agg_share)
 
@@ -2830,7 +2851,7 @@ Table of Contents
    agg_share = OpenBase(
        enc_share.enc,
        sk,
-       "dap-13 aggregate share" || server_role || 0x00,
+       "dap-14 aggregate share" || server_role || 0x00,
        agg_share_aad,
        enc_share.payload)
 
