@@ -154,6 +154,26 @@ aggregator.
 
 (\*) Indicates a change that breaks wire compatibility with the previous draft.
 
+14:
+
+- Enforce VDAF aggregation parameter validity. This is not relevant for Prio3,
+  which requires only that reports be aggregated at most once. It is relevant
+  for VDAFs for which validity depends on how many times a report might be
+  aggregated (at most once in DAP). (\*)
+
+- Require all timestamps to be truncated by `time_precision`. (\*)
+
+- Bump draft-irtf-cfrg-vdaf-13 to 14 {{!VDAF}}. There are no functional or
+  breaking changes in this draft.
+
+- Clarify conditions for rejecting reports based on the report metadata,
+  including the timestamp and public and private extensions.
+
+- Clarify that the Helper responds with 202 Accepted to an aggregation
+  continuation request.
+
+- Bump version tag from "dap-13" to "dap-14". (\*)
+
 13:
 
 - Bump draft-irtf-cfrg-vdaf-12 to 13 {{!VDAF}} and adopt the streaming
@@ -1216,7 +1236,7 @@ of !VDAF}}), using the report ID as the nonce:
 
 ~~~ pseudocode
 (public_share, input_shares) = Vdaf.shard(
-    "dap-13" || task_id,
+    "dap-14" || task_id,
     measurement, /* plaintext measurement */
     report_id,   /* nonce */
     rand,        /* randomness for sharding algorithm */
@@ -1251,7 +1271,7 @@ follows:
 
 ~~~ pseudocode
 enc, payload = SealBase(pk,
-  "dap-13 input share" || 0x01 || server_role,
+  "dap-14 input share" || 0x01 || server_role,
   input_share_aad, plaintext_input_share)
 ~~~
 
@@ -1535,7 +1555,7 @@ Next, for each report the Leader executes the following procedure:
 ~~~ pseudocode
 (state, outbound) = Vdaf.ping_pong_leader_init(
     vdaf_verify_key,
-    "dap-13" || task_id,
+    "dap-14" || task_id,
     agg_param,
     report_id,
     public_share,
@@ -1658,7 +1678,7 @@ Otherwise, the Leader proceeds as follows with each report:
 
    ~~~ pseudocode
    (state, outbound) = Vdaf.ping_pong_leader_continued(
-       "dap-13" || task_id,
+       "dap-14" || task_id,
        agg_param,
        prev_state,
        inbound,
@@ -1793,7 +1813,7 @@ For all other reports it initializes the VDAF prep state as follows (let
 ~~~ pseudocode
 (state, outbound) = Vdaf.ping_pong_helper_init(
     vdaf_verify_key,
-    "dap-13" || task_id,
+    "dap-14" || task_id,
     agg_param,
     report_id,
     public_share,
@@ -1915,7 +1935,7 @@ the following procedure:
 
 ~~~ pseudocode
 plaintext_input_share = OpenBase(encrypted_input_share.enc, sk,
-  "dap-13 input share" || 0x01 || server_role,
+  "dap-14 input share" || 0x01 || server_role,
   input_share_aad, encrypted_input_share.payload)
 ~~~
 
@@ -2052,7 +2072,7 @@ Otherwise, the Leader proceeds as follows with each report:
 
    ~~~ pseudocode
    (state, outbound) = Vdaf.ping_pong_leader_continued(
-       "dap-13" || task_id,
+       "dap-14" || task_id,
        agg_param,
        state,
        inbound,
@@ -2131,7 +2151,7 @@ computes the following:
 
 ~~~ pseudocode
 (state, outbound) = Vdaf.ping_pong_helper_continued(
-    "dap-13" || task_id,
+    "dap-14" || task_id,
     agg_param,
     state,
     inbound,
@@ -2628,7 +2648,7 @@ done as follows:
 ~~~ pseudocode
 (enc, payload) = SealBase(
     pk,
-    "dap-13 aggregate share" || server_role || 0x00,
+    "dap-14 aggregate share" || server_role || 0x00,
     agg_share_aad,
     agg_share)
 ~~~
@@ -2662,7 +2682,7 @@ batch selector, decryption works as follows:
 agg_share = OpenBase(
     enc_share.enc,
     sk,
-    "dap-13 aggregate share" || server_role || 0x00,
+    "dap-14 aggregate share" || server_role || 0x00,
     agg_share_aad,
     enc_share.payload)
 ~~~
