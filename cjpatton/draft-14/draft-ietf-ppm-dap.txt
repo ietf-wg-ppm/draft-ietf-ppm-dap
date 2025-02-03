@@ -208,7 +208,7 @@ Table of Contents
    *  Clarify that the Helper responds with 202 Accepted to an
       aggregation continuation request.
 
-   *  Bump version tag from "dap-12" to "dap-13". (*)
+   *  Bump version tag from "dap-13" to "dap-14". (*)
 
    13:
 
