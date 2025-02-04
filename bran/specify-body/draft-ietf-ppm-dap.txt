@@ -2045,10 +2045,11 @@ Table of Contents
    /tasks/{task-id}/aggregation_jobs/{aggregation-job-id}?step=0.  The
    Leader then polls the Helper by making HTTP GET requests to the
    aforementioned Location.  The Helper responds to GET requests with
-   HTTP status 200, and a body consisting of an AggregationJobResp with
-   the status field reflecting the current state of the job.  When the
-   aggregation job is processing, the response SHOULD include a Retry-
-   After header field to suggest a polling interval to the Leader.
+   HTTP status 200, a media type of "application/dap-aggregation-job-
+   resp", and a body consisting of an AggregationJobResp with the status
+   field reflecting the current state of the job.  When the aggregation
+   job is processing, the response SHOULD include a Retry-After header
+   field to suggest a polling interval to the Leader.
 
    Changing an aggregation job's parameters is illegal, so further HTTP
    PUT requests to /tasks/{task-id}/aggregation_jobs/{aggregation-job-
@@ -2370,10 +2371,11 @@ Table of Contents
    the step indicated in the AggregationJobContinueReq.  If so, the
    Leader polls the Helper by making HTTP GET requests to the
    aforementioned Location.  The Helper responds to GET requests with
-   HTTP status 200, and a body consisting of an AggregationJobResp with
-   the status field reflecting the current state of the job.  When the
-   aggregation job is processing, the response SHOULD include a Retry-
-   After header field to suggest a polling interval to the Leader.
+   HTTP status 200, a media type of "application/dap-aggregation-job-
+   resp", and a body consisting of an AggregationJobResp with the status
+   field reflecting the current state of the job.  When the aggregation
+   job is processing, the response SHOULD include a Retry-After header
+   field to suggest a polling interval to the Leader.
 
    If for whatever reason the Leader must abandon the aggregation job,
    it SHOULD send an HTTP DELETE request to {helper}/tasks/{task-

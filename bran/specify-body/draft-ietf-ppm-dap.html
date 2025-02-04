@@ -3636,9 +3636,10 @@ responding with the field <code>status</code> set to <code>processing</code> and
 field set to the relative reference
 <code>/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}?step=0</code>. The Leader then
 polls the Helper by making HTTP GET requests to the aforementioned Location. The
-Helper responds to GET requests with HTTP status 200, and a body consisting of
-an <code>AggregationJobResp</code> with the <code>status</code> field reflecting the current state of
-the job. When the aggregation job is <code>processing</code>, the response <span class="bcp14">SHOULD</span> include a
+Helper responds to GET requests with HTTP status 200, a media type of
+"application/dap-aggregation-job-resp", and a body consisting of an
+<code>AggregationJobResp</code> with the <code>status</code> field reflecting the current state of the
+job. When the aggregation job is <code>processing</code>, the response <span class="bcp14">SHOULD</span> include a
 Retry-After header field to suggest a polling interval to the Leader.<a href="#section-4.8.1.2-28" class="pilcrow">¶</a></p>
 <p id="section-4.8.1.2-29">Changing an aggregation job's parameters is illegal, so further HTTP PUT
 requests to <code>/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}</code> for the
@@ -3980,11 +3981,11 @@ relative reference
 <code>/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}?step={step}</code>, where
 <code>step</code> is the step indicated in the <code>AggregationJobContinueReq</code>. If so, the
 Leader polls the Helper by making HTTP GET requests to the aforementioned
-Location. The Helper responds to GET requests with HTTP status 200, and a body
-consisting of an <code>AggregationJobResp</code> with the <code>status</code> field reflecting the
-current state of the job. When the aggregation job is <code>processing</code>, the response
-<span class="bcp14">SHOULD</span> include a Retry-After header field to suggest a polling interval to the
-Leader.<a href="#section-4.8.2.2-23" class="pilcrow">¶</a></p>
+Location. The Helper responds to GET requests with HTTP status 200, a media type
+of "application/dap-aggregation-job-resp", and a body consisting of an
+<code>AggregationJobResp</code> with the <code>status</code> field reflecting the current state of the
+job. When the aggregation job is <code>processing</code>, the response <span class="bcp14">SHOULD</span> include a
+Retry-After header field to suggest a polling interval to the Leader.<a href="#section-4.8.2.2-23" class="pilcrow">¶</a></p>
 <p id="section-4.8.2.2-24">If for whatever reason the Leader must abandon the aggregation job, it <span class="bcp14">SHOULD</span>
 send an HTTP DELETE request to
 <code>{helper}/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}</code> so that the
