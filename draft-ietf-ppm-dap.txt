@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 7 August 2025                                        Cloudflare
+Expires: 10 August 2025                                       Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                         3 February 2025
+                                                         6 February 2025
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -63,7 +63,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 7 August 2025.
+   This Internet-Draft will expire on 10 August 2025.
 
 Copyright Notice
 
@@ -2045,10 +2045,11 @@ Table of Contents
    /tasks/{task-id}/aggregation_jobs/{aggregation-job-id}?step=0.  The
    Leader then polls the Helper by making HTTP GET requests to the
    aforementioned Location.  The Helper responds to GET requests with
-   HTTP status 200 and the status field reflecting the current state of
-   the job.  When the aggregation job is processing, the response SHOULD
-   include a Retry-After header field to suggest a polling interval to
-   the Leader.
+   HTTP status 200, a media type of "application/dap-aggregation-job-
+   resp", and a body consisting of an AggregationJobResp with the status
+   field reflecting the current state of the job.  When the aggregation
+   job is processing, the response SHOULD include a Retry-After header
+   field to suggest a polling interval to the Leader.
 
    Changing an aggregation job's parameters is illegal, so further HTTP
    PUT requests to /tasks/{task-id}/aggregation_jobs/{aggregation-job-
@@ -2370,10 +2371,11 @@ Table of Contents
    the step indicated in the AggregationJobContinueReq.  If so, the
    Leader polls the Helper by making HTTP GET requests to the
    aforementioned Location.  The Helper responds to GET requests with
-   HTTP status 200 and the status field reflecting the current state of
-   the job.  When the aggregation job is processing, the response SHOULD
-   include a Retry-After header field to suggest a polling interval to
-   the Leader.
+   HTTP status 200, a media type of "application/dap-aggregation-job-
+   resp", and a body consisting of an AggregationJobResp with the status
+   field reflecting the current state of the job.  When the aggregation
+   job is processing, the response SHOULD include a Retry-After header
+   field to suggest a polling interval to the Leader.
 
    If for whatever reason the Leader must abandon the aggregation job,
    it SHOULD send an HTTP DELETE request to {helper}/tasks/{task-
