@@ -732,12 +732,11 @@ begin.
 ## Validating Measurements {#validating-inputs}
 
 An essential task of any data collection pipeline is ensuring that the data
-being aggregated is "valid". For example, if each measurement is expected to be
-an number between `0` and `10`, then the aggregator should reject measurements
-larger than `10` or smaller than `0`. In DAP, input validation is complicated
-by the fact that none of the entities other than the Client ever sees that
-Client's plaintext measurement. To an Aggregator, a secret share of a valid
-measurement is indistinguishable from a secret share of an invalid measurement.
+being aggregated is "valid". For example, each measurement might be expected to
+be a number between `0` and `10`. In DAP, input validation is complicated by the
+fact that none of the entities other than the Client ever sees that Client's
+plaintext measurement. To an Aggregator, a secret share of a valid measurement
+is indistinguishable from a secret share of an invalid measurement.
 
 In DAP, input validation is accomplished by an interactive computation between
 the Leader and Helper. At the beginning of this computation, each Aggregator is
