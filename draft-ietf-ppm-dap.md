@@ -634,7 +634,7 @@ Aggregators. This scheme has two important properties:
 Note that some VDAFs allow measurements to be aggregated multiple times, each
 time with a different aggregation parameter; however, DAP only allows each
 measurement to be aggregated once. Similarly, some VDAFs produce aggregate
-values which depend on the order in which the measurementas are aggregated;
+values which depend on the order in which the measurementss are aggregated;
 however, DAP only supports VDAFs whose aggregation results are independent of
 the order in which measurements are aggregated (see {{Section 4.4.1 of !VDAF}}).
 
@@ -3086,7 +3086,7 @@ tradeoffs.
   implementing replay protection. This must be done while processing the
   aggregation job, though which steps the checks are performed at is up to the
   implementation. The checks and storage require synchronization, so that if two
-  aggregation jobs contianing the same report are processed, at most one
+  aggregation jobs containing the same report are processed, at most one
   instance of the report will be aggregated. However, the interaction with the
   used-report storage does not necessarily have to be synchronized with the
   processing and storage for the remainder of the aggregation process. For
