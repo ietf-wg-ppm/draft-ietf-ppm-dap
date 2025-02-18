@@ -803,13 +803,16 @@ In other cases, DAP requires HTTP client authentication as well as server
 authentication. Any authentication scheme that is composable with HTTP is
 allowed. For example:
 
-* {{!OAuth2=RFC6749}} credentials are presented in an Authorization HTTP header,
+* {{?OAuth2=RFC6749}} credentials are presented in an Authorization HTTP header,
   which can be added to any DAP protocol message.
 
 * TLS client certificates can be used to authenticate the underlying transport.
 
 * The `DAP-Auth-Token` HTTP header described in
   {{?I-D.draft-dcook-ppm-dap-interop-test-design-04}}.
+
+* {{?RFC9421}} HTTP message signatures authenticate messages without
+  transmitting a secret.
 
 This flexibility allows organizations deploying DAP to use existing well-known
 HTTP authentication mechanisms that they already support. Discovering what
