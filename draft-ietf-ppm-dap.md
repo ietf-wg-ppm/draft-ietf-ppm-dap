@@ -663,7 +663,7 @@ The overall system architecture is shown in {{dap-topology}}.
                     |            |
                     +------------+
 ~~~
-{: #dap-topology title="DAP architecture (who sends requests to whom)."}
+{: #dap-topology title="DAP architecture"}
 
 The main participants in the protocol are as follows:
 
@@ -689,6 +689,12 @@ Helper:
   operational burden borne by the Leader.
 
 {:br}
+
+{{dap-topology}} illustrates which participants exchange HTTP messages. Arrows
+go from HTTP clients to HTTP servers. Note that some DAP participants may be
+clients sometimes but servers at other times. It is even possible for a single
+entity to embody multiple participants. For example, the Collector could also
+be one of the Aggregators.
 
 The basic unit of DAP is the "task" which represents a single measurement
 process (though potentially aggregating multiple, non-overlapping batches of
