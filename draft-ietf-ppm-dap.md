@@ -879,11 +879,11 @@ implies HTTP status code 400 Bad Request unless explicitly specified otherwise.
 
 DAP has three major interactions which need to be defined:
 
-* Uploading reports from the Client to the Aggregators, specified in
-  {{upload-flow}}
-* Computing the results for a given measurement task, specified in
+* Clients upload reports to the Aggregators, specified in {{upload-flow}}
+* Aggregators jointly prepare reports and aggregate them together, specified in
   {{aggregate-flow}}
-* Collecting aggregated results, specified in {{collect-flow}}
+* The Collector collects aggregated results from the Aggregators, specified in
+  {{collect-flow}}
 
 Each of these interactions is defined in terms of "resources". In this section
 we define these resources and the messages used to act on them.
