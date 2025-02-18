@@ -850,7 +850,10 @@ standard tokens for use in the "type" field:
 | stepMismatch                | The Aggregators disagree on the current step of the DAP aggregation protocol. |
 | batchOverlap                | A request's query includes reports that were previously collected in a different batch. |
 | unsupportedExtension        | An upload request's extensions list includes an unknown extension. |
-{: #urn-space-errors = "DAP errors. All are scoped to the errors sub-namespace of the DAP URN, e.g., urn:ietf:params:ppm:dap:error:invalidMessage."}
+{: #urn-space-errors title = "DAP errors"}
+
+These types are coped to the errors sub-namespace of the DAP URN, e.g.,
+urn:ietf:params:ppm:dap:error:invalidMessage.
 
 This list is not exhaustive. The server MAY return errors set to a URI other
 than those defined above. Servers MUST NOT use the DAP URN namespace for errors
