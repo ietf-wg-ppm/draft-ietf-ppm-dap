@@ -706,6 +706,100 @@ last two weeks of the current time) and reject reports that fall outside of the
 replay window. This allows implementation to save resources by forgetting old
 report IDs.
 
+## Lifecycle of Protocol Objects
+
+            measurement taken by client 1
+                        |
+                        v
+                   measurement
+                        |
+                sharded by client
+                        |
+                        v
+      /-----------------|-------------------------\
+public share   leader input share         helper input share
+      |                 |                         |
+      |      HPKE encrypted to leader    HPKE encrypted to helper
+      |            by client                   by client
+      |                 |                         |
+      |                 v                         v
+      |        leader report share        helper report share
+      |                 |                         |
+      \---------------->|<------------------------/
+                        |
+                        |           measurement taken  ...  measurement taken
+                        |              by client 2             by client i
+                        |                  |                        |
+                        |          construct report         construct report
+                        |                  |                        |
+                        v                  v                        v
+                client 1 report     client 2 report          client i report
+                        |                  |                        |
+              uploaded to leader    upload to leader         upload to leader
+                  by client 1         by client 2              by client i
+                        |                  |                        |
+                        |<-----------------/                        |
+                        |<------------------------------------------/
+                        |
+                        |<------------ aggregation parameter
+                        |               chosen by collector
+              leader assigns reports
+                to aggregation jobs
+                        |
+        /---------------+----------- ... ------\
+        |                                      |
+aggregation job 1                      aggregation job j
+        |                                      \-------------------------\
+        |                                                                |
+  /-----+-----------------\----------------------- ... ----\             |
+aggregation            report 1                         report k         |
+parameter       /---------|-------------\                  |             |
+  |      public share 1  leader       helper               |             |
+  |             |     report share 1  report share 1       |             |
+  |             |         |             |                  |             |
+  |             |      decrypted by  decrypted by          |             |
+  |             |       leader         helper              |             |
+  |             |         |             |                 ...            |
+  |             |         v             v                  |             |
+  |             |    leader input   helper input           |             |
+  |             |       share 1       share 1              |            ...
+  |             |         |             |                  |             |
+  |------------>\-------->|------------>/                  |             |
+                      prepared      prepared               |             |
+                       by leader      by helper            |             |
+                          |             |             /----+----\        |
+                    leader output   helper output    leader   helper     |
+                        share 1       share 1        output   output     |
+                          |             |            share k  share k    |
+                    accumulated     accumulated       |          |       |
+                     by leader       by helper        |          |       |
+                          |<------------|-------------/          |       |
+                          |             |<-----------------------/       |
+                       leader        helper             /----------------/
+                    batch bucket 1 batch bucket 1  leader batch   helper batch
+                          |             |            bucket j       bucket j
+                          |             |              |               |
+                          |<------------|--------------/               |
+                          |             |<-----------------------------/
+   query chosen  -------->|------------>|
+   by collector           |             |
+                      merged by      merged by
+                      leader          helper
+                          |             |
+                  /-------/             |
+                  |                     |
+                  v                     v
+          leader aggregate       helper aggregate
+                share                 share
+                  |                     |
+                  \-----------+---------/
+                              |
+                        unsharded by
+                         collector
+                              |
+                              v
+                        aggregate result
+
 # Message Transport {#message-transport}
 
 Communications between DAP participants are carried over HTTP {{!RFC9110}}. Use
