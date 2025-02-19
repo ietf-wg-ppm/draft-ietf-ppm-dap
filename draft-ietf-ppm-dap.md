@@ -634,7 +634,7 @@ Aggregators. This scheme has two important properties:
 Note that some VDAFs allow measurements to be aggregated multiple times, each
 time with a different aggregation parameter; however, DAP only allows each
 measurement to be aggregated once. Similarly, some VDAFs produce aggregate
-values which depend on the order in which the measurementss are aggregated;
+values which depend on the order in which the measurements are aggregated;
 however, DAP only supports VDAFs whose aggregation results are independent of
 the order in which measurements are aggregated (see {{Section 4.4.1 of !VDAF}}).
 
