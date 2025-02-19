@@ -524,84 +524,6 @@ Report share:
 
 {:br}
 
-## Representation Language
-
-With some exceptions, we use the presentation language defined in {{!RFC8446,
-Section 3}} to define messages in the DAP protocol. Encoding and decoding of
-these messages as byte strings also follows {{RFC8446}}. We enumerate the
-exceptions below.
-
-{{Section 3.7 of !RFC8446}} defines a syntax for structure fields whose values
-are constants. In this document, we do not use that notation, but use something
-similar to describe specific variants of structures containing enumerated types,
-described in {{!RFC8446, Section 3.8}}.
-
-For example, suppose we have an enumeration and a structure defined as follows:
-
-~~~ tls-presentation
-enum {
-  number(0),
-  string(1),
-  (255)
-} ExampleEnum;
-
-struct {
-  uint32 always_present;
-  ExampleEnum type;
-  select (ExampleStruct.type) {
-    case number: uint32 a_number;
-    case string: opaque a_string<0..10>;
-  };
-} ExampleStruct;
-~~~
-
-Then we describe the specific variant of `ExampleStruct` where `type == number`
-with a `variant` block as follows:
-
-~~~ tls-presentation
-variant {
-  /* Field exists regardless of variant */
-  uint32 always_present;
-  ExampleEnum type = number;
-  /* Only fields included in the `type == number`
-     variant is described */
-  uint32 a_number;
-} ExampleStruct;
-~~~
-
-The protocol text accompanying this would explain how implementations should
-handle the `always_present` and `a_number` fields, but not the `type` field.
-This does not mean that the `type` field of `ExampleStruct` can only ever have
-value `number`; it means only that it has this type in this instance.
-
-This notation can also be used in structures where the enum field does not
-affect what fields are or are not present in the structure. For example:
-
-~~~ tls-presentation
-enum {
-  something(0),
-  something_else(1),
-  (255)
-} FailureReason;
-
-struct {
-  FailureReason failure_reason;
-  opaque another_field<0..256>;
-} FailedOperation;
-~~~
-
-The protocol text might include a description like:
-
-~~~ tls-presentation
-variant {
-  FailureReason failure_reason = something;
-  opaque another_field<0..256>;
-} FailedOperation;
-~~~
-
-Finally, by convention we do not specify the lower length limit of
-variable-length vectors. Rather, the lower limit is always set to `0`.
-
 # Overview {#overview}
 
 The protocol is executed by a large set of Clients and a pair of servers
@@ -788,6 +710,84 @@ report IDs.
 
 Communications between DAP participants are carried over HTTP {{!RFC9110}}. Use
 of HTTPS is REQUIRED to provide server authentication and confidentiality.
+
+## Representation Language
+
+With some exceptions, we use the presentation language defined in {{!RFC8446,
+Section 3}} to define messages in the DAP protocol. Encoding and decoding of
+these messages as byte strings also follows {{RFC8446}}. We enumerate the
+exceptions below.
+
+{{Section 3.7 of !RFC8446}} defines a syntax for structure fields whose values
+are constants. In this document, we do not use that notation, but use something
+similar to describe specific variants of structures containing enumerated types,
+described in {{!RFC8446, Section 3.8}}.
+
+For example, suppose we have an enumeration and a structure defined as follows:
+
+~~~ tls-presentation
+enum {
+  number(0),
+  string(1),
+  (255)
+} ExampleEnum;
+
+struct {
+  uint32 always_present;
+  ExampleEnum type;
+  select (ExampleStruct.type) {
+    case number: uint32 a_number;
+    case string: opaque a_string<0..10>;
+  };
+} ExampleStruct;
+~~~
+
+Then we describe the specific variant of `ExampleStruct` where `type == number`
+with a `variant` block as follows:
+
+~~~ tls-presentation
+variant {
+  /* Field exists regardless of variant */
+  uint32 always_present;
+  ExampleEnum type = number;
+  /* Only fields included in the `type == number`
+     variant is described */
+  uint32 a_number;
+} ExampleStruct;
+~~~
+
+The protocol text accompanying this would explain how implementations should
+handle the `always_present` and `a_number` fields, but not the `type` field.
+This does not mean that the `type` field of `ExampleStruct` can only ever have
+value `number`; it means only that it has this type in this instance.
+
+This notation can also be used in structures where the enum field does not
+affect what fields are or are not present in the structure. For example:
+
+~~~ tls-presentation
+enum {
+  something(0),
+  something_else(1),
+  (255)
+} FailureReason;
+
+struct {
+  FailureReason failure_reason;
+  opaque another_field<0..256>;
+} FailedOperation;
+~~~
+
+The protocol text might include a description like:
+
+~~~ tls-presentation
+variant {
+  FailureReason failure_reason = something;
+  opaque another_field<0..256>;
+} FailedOperation;
+~~~
+
+Finally, by convention we do not specify the lower length limit of
+variable-length vectors. Rather, the lower limit is always set to `0`.
 
 ## HTTPS Request Authentication {#request-authentication}
 
