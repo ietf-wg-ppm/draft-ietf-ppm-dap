@@ -12,5 +12,7 @@
 archive.json
 draft-ietf-ppm-dap.xml
 lib
+/node_modules/
+package-lock.json
 report.xml
 venv/
