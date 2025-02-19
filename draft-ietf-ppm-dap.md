@@ -715,101 +715,95 @@ report IDs.
 The following diagram illustrates how the various objects in the protocol are
 constructed or transformed into other protocol objects. Note that this does not
 necessarily illustrate how participants communicate. In particular, the
-processing of Leader and Helper reports or aggregate shares happens across
-distinct, non-colluding parties.
+processing of aggregation jobs happens in distinct, non-colluding parties.
 
 ~~~ ascii-art
-            measurement taken by client 1
-                        |
-                        v
                    measurement
                         |
-                sharded by client
+                     sharded
                         |
                         v
       /-----------------|-------------------------\
-public share   leader input share         helper input share
+public share   Leader input share         Helper input share
       |                 |                         |
-      |      HPKE encrypted to leader  HPKE encrypted to helper
-      |            by client                 by client
+      |        encrypted to Leader       encrypted to Helper
       |                 |                         |
       |                 v                         v
-      |        leader report share        helper report share
-      |                 |                         |
+      |        Leader report share       Helper report share
       \---------------->|<------------------------/
                         |
-                        |           measurement taken  ...  measurement taken
-                        |              by client 2             by client i
+                        v
+                 Client 1 report    Client 2 report    ...   Client i report
                         |                  |                        |
-                        |          construct report         construct report
-                        |                  |                        |
-                        v                  v                        v
-                client 1 report     client 2 report          client i report
-                        |                  |                        |
-              uploaded to leader    upload to leader         upload to leader
-                  by client 1         by client 2              by client i
+                    uploaded           uploaded                 uploaded
                         |                  |                        |
                         |<-----------------/                        |
+                       ...                                          |
                         |<------------------------------------------/
-                        |
                         |<------------ aggregation parameter
-                        |               chosen by collector
-              leader assigns reports
+                        |               chosen by Collector
+                 reports assigned
                 to aggregation jobs
                         |
-        /---------------+----------- ... ------\
-        |                                      |
-aggregation job 1                      aggregation job j
-        |                                      \-------------------------\
-        |                                                                |
-  /-----+-----------------\----------------------- ... ----\             |
-aggregation            report 1                         report k         |
-parameter       /---------|-------------\                  |             |
-  |      public share 1  leader       helper               |             |
-  |             |     report share 1  report share 1       |             |
-  |             |         |             |                  |             |
-  |             |      decrypted by  decrypted by          |             |
-  |             |       leader         helper              |             |
-  |             |         |             |                 ...            |
-  |             |         v             v                  |             |
-  |             |    leader input   helper input           |             |
-  |             |       share 1       share 1              |            ...
-  |             |         |             |                  |             |
-  |------------>\-------->|------------>/                  |             |
-                      prepared      prepared               |             |
-                       by leader      by helper            |             |
-                          |             |             /----+----\        |
-                    leader output   helper output    leader   helper     |
-                        share 1       share 1        output   output     |
-                          |             |            share k  share k    |
-                    accumulated     accumulated       |          |       |
-                     by leader       by helper        |          |       |
-                          |<------------|-------------/          |       |
-                          |             |<-----------------------/       |
-                       leader        helper             /----------------/
-                    batch bucket 1 batch bucket 1  leader batch   helper batch
-                          |             |            bucket j       bucket j
-                          |             |              |               |
-                          |<------------|--------------/               |
-                          |             |<-----------------------------/
-   query chosen  -------->|------------>|
-   by collector           |             |
-                      merged by      merged by
-                      leader          helper
-                          |             |
-                  /-------/             |
-                  |                     |
-                  v                     v
-          leader aggregate       helper aggregate
-                share                 share
-                  |                     |
-                  \-----------+---------/
-                              |
-                        unsharded by
-                         collector
-                              |
-                              v
-                        aggregate result
+                        v
+        /---------------+------------------\---------------- ... --------\
+aggregation job 1                   aggregation job 2          aggregation job j
+        |                                  |                             |
+        |                                  \---------------------\       |
+  /-----+-----------------\-------------------\-- ... --\        |       |
+aggregation            report 1            report 2   report k   |       |
+parameter    /------------|-------------\     |         |        |       |
+  |       Leader     Helper report    public  |         |        |       |
+  |     report share 1  share 1      share 1  |         |        |       |
+  |          |            |             |     |         |        |       |
+  |      decrypted    decrypted         |     |         |        |       |
+  |          |            |             |  reports prepared      |       |
+  |          v            v             |     |         |        |       |
+  |    Leader input   Helper input      |     |         |        |       |
+  |       share 1      share 1          |     |         |   aggregation jobs run
+  \--------->|----------->|             |     |         |        |       |
+             |<-----------|<------------/     |         |        |       |
+             |            |                   v         |        |       |
+          input shares prepared          /----+--\      |        |       |
+             |            |              |       |      |        |       |
+             v            v           Leader   Helper   |        |       |
+       Leader output  Helper output   output   output   |        |       |
+          share 1      share 1       share 2   share 2  |        |       |
+             |            |             |        |      |        |       |
+             |<-----------|-------------/        |      v        |       |
+             |            |<---------------------/ /----+--\     |       |
+            ...          ...                       |       |     |       |
+             |            |                     Leader   Helper  |       |
+             |            |                     output   output  |       |
+             |            |                    share k   share k |       |
+             |<-----------|------------------------/       |     |       |
+             |            |<-------------------------------/     |       |
+       output shares accumulated                    /------------/       |
+             |            |                         |                    |
+             v            v                         v                    |
+           Leader       Helper             /--------+------\             |
+      batch bucket 1  batch bucket 1  Leader batch   Helper batch        |
+             |            |            bucket 2        bucket 2    /-----/
+             |<-----------|----------------/               |       |
+             |            |<-------------------------------/       v
+            ...          ...                                /------+-----\
+             |            |                           Leader batch  Helper batch
+             |            |                             bucket j      bucket j
+             |<-----------|---------------------------------/            |
+             |            |<---------------------------------------------/
+             |<-----------|<----- query chosen
+             |            |       by Collector
+          batch buckets merged
+             |            |
+             v            v
+   Leader aggregate  Helper aggregate
+          share         share
+             \------+------/
+                    |
+                unsharded
+                    |
+                    v
+             aggregate result
 ~~~
 {: #object-lifecycle title="Lifecycles of protocol objects" }
 
