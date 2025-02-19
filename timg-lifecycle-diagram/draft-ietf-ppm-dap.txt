@@ -775,36 +775,33 @@ Table of Contents
                         sharded
                            │
                            v
-         ┌─────────────────│─────────────────────────┐
+         ┌─────────────────┼─────────────────────────┐
    public share   Leader input share         Helper input share
          │                 │                         │
          │        encrypted to Leader       encrypted to Helper
          │                 │                         │
          │                 v                         v
          │        Leader report share       Helper report share
-         └────────────────>│<────────────────────────┘
+         └────────────────>┬<────────────────────────┘
                            │
                            v
                     Client 1 report    Client 2 report    ...   Client i report
                            │                  │                        │
                        uploaded           uploaded                 uploaded
-                           │                  │                        │
-                           │<─────────────────┘                        │
+                           ├<─────────────────┘                        │
                           ...                                          │
-                           │<──────────────────────────────────────────┘
-                           │<──────────── aggregation parameter
-                           │               chosen by Collector
-                    reports assigned
+                           ├<──────────────────────────────────────────┘
+                           ├<──────────── aggregation parameter
+                    reports assigned      chosen by Collector
                    to aggregation jobs
                            │
                            v
            ┌───────────────┴──────────────────┬──────────────── ... ────────┐
    aggregation job 1                   aggregation job 2          aggregation job j
-           │                                  │                             │
            │                                  └─────────────────────┐       │
      ┌─────┴─────────────────┬───────────────────┬── ... ──┐        │       │
    aggregation            report 1            report 2   report k   │       │
-   parameter    ┌────────────│─────────────┐     │         │        │       │
+   parameter    ┌────────────┼─────────────┐     │         │        │       │
      │       Leader     Helper report    public  │         │        │       │
      │     report share 1  share 1      share 1  │         │        │       │
      │          │            │             │     │         │        │       │
@@ -813,45 +810,42 @@ Table of Contents
      │          v            v             │     │         │        │       │
      │    Leader input   Helper input      │     │         │        │       │
      │       share 1      share 1          │     │         │   aggregation jobs run
-     └─────────>│───────────>│             │     │         │        │       │
-                │<───────────│<────────────┘     │         │        │       │
+     └─────────>┼───────────>┤             │     │         │        │       │
+                ├<───────────┼<────────────┘     │         │        │       │
                 │            │                   v         │        │       │
              input shares prepared          ┌────┴──┐      │        │       │
                 │            │              │       │      │        │       │
                 v            v           Leader   Helper   │        │       │
           Leader output  Helper output   output   output   │        │       │
              share 1      share 1       share 2   share 2  │        │       │
-                │            │             │        │      │        │       │
-                │<───────────│─────────────┘        │      v        │       │
-                │            │<─────────────────────┘ ┌────┴──┐     │       │
-               ...          ...                       │       │     │       │
-                │            │                     Leader   Helper  │       │
+                ├<───────────│─────────────┘        │      v        │       │
+                │            ├<─────────────────────┘ ┌────┴──┐     │       │
+               ...          ...                    Leader   Helper  │       │
                 │            │                     output   output  │       │
                 │            │                    share k   share k │       │
-                │<───────────│────────────────────────┘       │     │       │
-                │            │<───────────────────────────────┘     │       │
+                ├<───────────│────────────────────────┘       │     │       │
+                │            ├<───────────────────────────────┘     │       │
           output shares accumulated                    ┌────────────┘       │
                 │            │                         │                    │
                 v            v                         v                    │
               Leader       Helper             ┌────────┴──────┐             │
          batch bucket 1  batch bucket 1  Leader batch   Helper batch        │
                 │            │            bucket 2        bucket 2    ┌─────┘
-                │<───────────│────────────────┘               │       │
-                │            │<───────────────────────────────┘       v
+                ├<───────────│────────────────┘               │       │
+                │            ├<───────────────────────────────┘       v
                ...          ...                                ┌──────┴─────┐
                 │            │                           Leader batch  Helper batch
                 │            │                             bucket j      bucket j
-                │<───────────│─────────────────────────────────┘            │
-                │            │<─────────────────────────────────────────────┘
-                │<───────────│<───── query chosen
+                ├<───────────│─────────────────────────────────┘            │
+                │            ├<─────────────────────────────────────────────┘
+                ├<───────────┼<───── query chosen
                 │            │       by Collector
              batch buckets merged
                 │            │
                 v            v
       Leader aggregate  Helper aggregate
              share         share
-                └──────┬──────┘
-                       │
+                └──────┬─────┘
                    unsharded
                        │
                        v
