@@ -711,17 +711,25 @@ report IDs.
 Communications between DAP participants are carried over HTTP {{!RFC9110}}. Use
 of HTTPS is REQUIRED to provide server authentication and confidentiality.
 
-## Representation Language
+## Presentation Language
 
 With some exceptions, we use the presentation language defined in {{!RFC8446,
 Section 3}} to define messages in the DAP protocol. Encoding and decoding of
 these messages as byte strings also follows {{RFC8446}}. We enumerate the
 exceptions below.
 
+### Variable-Length Vectors
+
+{{Section 3.4 of !RFC8446}} describes a syntax for variable-length vectors where
+a range of permitted lengths is provided. By convention, DAP always specifies
+the lower length limit of variable-length vectors to be `0`.
+
+### Structure Variants
+
 {{Section 3.7 of !RFC8446}} defines a syntax for structure fields whose values
 are constants. In this document, we do not use that notation, but use something
-similar to describe specific variants of structures containing enumerated types,
-described in {{!RFC8446, Section 3.8}}.
+similar to describe specific variants of structures that use an enumerated type
+as a discriminator, described in {{!RFC8446, Section 3.8}}.
 
 For example, suppose we have an enumeration and a structure defined as follows:
 
@@ -751,7 +759,7 @@ variant {
   uint32 always_present;
   ExampleEnum type = number;
   /* Only fields included in the `type == number`
-     variant is described */
+     variant are described */
   uint32 a_number;
 } ExampleStruct;
 ~~~
@@ -761,8 +769,9 @@ handle the `always_present` and `a_number` fields, but not the `type` field.
 This does not mean that the `type` field of `ExampleStruct` can only ever have
 value `number`; it means only that it has this type in this instance.
 
-This notation can also be used in structures where the enum field does not
-affect what fields are or are not present in the structure. For example:
+This notation can also be used in structures where the enum field is not used as
+a discriminant. For example, given the following structure containing an
+enumerator:
 
 ~~~ tls-presentation
 enum {
@@ -785,9 +794,6 @@ variant {
   opaque another_field<0..256>;
 } FailedOperation;
 ~~~
-
-Finally, by convention we do not specify the lower length limit of
-variable-length vectors. Rather, the lower limit is always set to `0`.
 
 ## HTTPS Request Authentication {#request-authentication}
 
