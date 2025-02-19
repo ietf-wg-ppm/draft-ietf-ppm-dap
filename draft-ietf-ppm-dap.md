@@ -852,7 +852,7 @@ standard tokens for use in the "type" field:
 | unsupportedExtension        | An upload request's extensions list includes an unknown extension. |
 {: #urn-space-errors title = "DAP errors"}
 
-These types are coped to the errors sub-namespace of the DAP URN, e.g.,
+These types are scoped to the errors sub-namespace of the DAP URN, e.g.,
 urn:ietf:params:ppm:dap:error:invalidMessage.
 
 This list is not exhaustive. The server MAY return errors set to a URI other
