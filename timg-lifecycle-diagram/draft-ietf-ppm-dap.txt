@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 23 August 2025                                       Cloudflare
+Expires: 24 August 2025                                       Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                        19 February 2025
+                                                        20 February 2025
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -64,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 23 August 2025.
+   This Internet-Draft will expire on 24 August 2025.
 
 Copyright Notice
 
@@ -766,92 +766,128 @@ Table of Contents
 
    The following diagram illustrates how the various objects in the
    protocol are constructed or transformed into other protocol objects.
-   Note that this does not necessarily illustrate how participants
-   communicate.  In particular, the processing of aggregation jobs
-   happens in distinct, non-colluding parties.
+   Nodes enclosed in an oval are verbs or actions which process,
+   transform or combine one or more objects into one or more other
+   objects.  Note that this does not necessarily illustrate how
+   participants communicate.  In particular, the processing of
+   aggregation jobs happens in distinct, non-colluding parties.
 
-                      measurement
-                           │
-                        sharded
-                           │
-                           v
-         ┌─────────────────┼─────────────────────────┐
-   public share   Leader input share         Helper input share
-         │                 │                         │
-         │        encrypted to Leader       encrypted to Helper
-         │                 │                         │
-         │                 v                         v
-         │        Leader report share       Helper report share
-         └────────────────>┬<────────────────────────┘
-                           │
-                           v
-                    Client 1 report    Client 2 report    ...   Client i report
-                           │                  │                        │
-                       uploaded           uploaded                 uploaded
-                           ├<─────────────────┘                        │
-                          ...                                          │
-                           ├<──────────────────────────────────────────┘
-                           ├<──────────── aggregation parameter
-                    reports assigned      chosen by Collector
-                   to aggregation jobs
-                           │
-                           v
-           ┌───────────────┴──────────────────┬──────────────── ... ────────┐
-   aggregation job 1                   aggregation job 2          aggregation job j
-           │                                  └─────────────────────┐       │
-     ┌─────┴─────────────────┬───────────────────┬── ... ──┐        │       │
-   aggregation            report 1            report 2   report k   │       │
-   parameter    ┌────────────┼─────────────┐     │         │        │       │
-     │       Leader     Helper report    public  │         │        │       │
-     │     report share 1  share 1      share 1  │         │        │       │
-     │          │            │             │     │         │        │       │
-     │      decrypted    decrypted         │     │         │        │       │
-     │          │            │             │  reports prepared      │       │
-     │          v            v             │     │         │        │       │
-     │    Leader input   Helper input      │     │         │        │       │
-     │       share 1      share 1          │     │         │   aggregation jobs run
-     └─────────>┼───────────>┤             │     │         │        │       │
-                ├<───────────┼<────────────┘     │         │        │       │
-                │            │                   v         │        │       │
-             input shares prepared          ┌────┴──┐      │        │       │
-                │            │              │       │      │        │       │
-                v            v           Leader   Helper   │        │       │
-          Leader output  Helper output   output   output   │        │       │
-             share 1      share 1       share 2   share 2  │        │       │
-                ├<───────────│─────────────┘        │      v        │       │
-                │            ├<─────────────────────┘ ┌────┴──┐     │       │
-               ...          ...                    Leader   Helper  │       │
-                │            │                     output   output  │       │
-                │            │                    share k   share k │       │
-                ├<───────────│────────────────────────┘       │     │       │
-                │            ├<───────────────────────────────┘     │       │
-          output shares accumulated                    ┌────────────┘       │
-                │            │                         │                    │
-                v            v                         v                    │
-              Leader       Helper             ┌────────┴──────┐             │
-         batch bucket 1  batch bucket 1  Leader batch   Helper batch        │
-                │            │            bucket 2        bucket 2    ┌─────┘
-                ├<───────────│────────────────┘               │       │
-                │            ├<───────────────────────────────┘       v
-               ...          ...                                ┌──────┴─────┐
-                │            │                           Leader batch  Helper batch
-                │            │                             bucket j      bucket j
-                ├<───────────│─────────────────────────────────┘            │
-                │            ├<─────────────────────────────────────────────┘
-                ├<───────────┼<───── query chosen
-                │            │       by Collector
-             batch buckets merged
-                │            │
-                v            v
-      Leader aggregate  Helper aggregate
-             share         share
-                └──────┬─────┘
-                   unsharded
-                       │
-                       v
-                aggregate result
+                   measurement
+                        |
+                    .---+---.
+                   | sharded |
+                    '---+---'
+                        |
+                        v
+      .-----------------+-------------------------.
+      |                                           |
+public share   Leader input share         Helper input share
+      |                 |                         |
+      |       .---------+---------.     .---------+---------.
+      |      | encrypted to Leader |   | encrypted to Helper |
+      |       '-------------------'     '-------------------'
+      |                 |                         |
+      |                 v                         v
+      |        Leader report share       Helper report share
+      |                 |                         |
+      '---------------->+<------------------------'
+                        |
+                        v
+                 Client 1 report    Client 2 report    ...   Client i report
+                        |                  |                        |
+                   .----+---.         .----+---.               .----+---.
+                  | uploaded |       | uploaded |             | uploaded |
+                   '----+---'         '----+---'               '----+---'
+                        |                  |                        |
+                        |<-----------------'                        |
+                                                                    |
+                       ...                                          |
+                                                                    |
+                        |<------------------------------------------'
+                        |<------------ aggregation parameter
+                        |               chosen by Collector
+               .--------+----------.
+              |  reports assigned   |
+              | to aggregation jobs |
+               '--------+----------'
+                        |
+                        v
+        .---------------+------------------+---------------- ... --------.
+        |                                  |                             |
+aggregation job 1                   aggregation job 2          aggregation job j
+        |                                  |                             |
+        |                                  '---------------------.       |
+  .-----+-----------------+-------------------+-- ... --.        |       |
+  |                       |                   |         |        |       |
+aggregation            report 1            report 2   report k   |       |
+parameter    .------------+-------------.     |         |        |       |
+  |          |            |             |     |         |        |       |
+  |       Leader     Helper report    public  |         |        |       |
+  |     report share 1  share 1      share 1  |         |        |       |
+  |          |            |             |     |         |        |       |
+  |     .----+----.  .----+----.        |     |         |        |       |
+  |    | decrypted || decrypted |       |     |         |        |       |
+  |     '----+----'  '----+----'        |  .--+---------+---.    |       |
+  |          |            |             | | reports prepared |   |       |
+  |          v            v             |  '--+---------+---'    |       |
+  |    Leader input   Helper input      |     |         |   .----+-------+---.
+  |       share 1      share 1          |     |         |  | aggregation jobs |
+  |          |            |             |     |         |  |       run        |
+  '--------->+----------->|             |     |         |   '----+-------+---'
+             |<-----------+<------------'     |         |        |       |
+             |            |                   |         |        |       |
+         .---+------------+----.              |         |        |       |
+        | input shares prepared |             v         |        |       |
+         '---+------------+----'         .----+--.      |        |       |
+             |            |              |       |      |        |       |
+             v            v           Leader   Helper   |        |       |
+       Leader output  Helper output   output   output   |        |       |
+          share 1      share 1       share 2   share 2  |        |       |
+             |            |             |        |      v        |       |
+             |<-----------|-------------'        | .----+--.     |       |
+             |            |<---------------------' |       |     |       |
+                                                Leader   Helper  |       |
+            ...          ...                    output   output  |       |
+                                               share k   share k |       |
+             |            |                        |       |     |       |
+             |<-----------|------------------------'       |     |       |
+             |            |<-------------------------------'     |       |
+      .------+------------+-----.                  .-------------'       |
+     | output shares accumulated |                 |                     |
+      '------+------------+-----'                  v                     |
+             |            |                .-------+-------.             |
+             v            v                |               |             |
+           Leader       Helper       Leader batch   Helper batch         |
+      batch bucket 1  batch bucket 1   bucket 2        bucket 2    .-----'
+             |            |                |               |       |
+             |<-----------|----------------'               |       v
+             |            |<-------------------------------' .-----+-----.
+                                                             |           |
+            ...          ...                          Leader batch  Helper batch
+                                                        bucket j      bucket j
+             |            |                                  |           |
+             |<-----------|----------------------------------'           |
+             |            |<---------------------------------------------'
+             |<-----------+<----- query chosen
+             |            |       by Collector
+         .---+------------+---.
+        | batch buckets merged |
+         '---+------------+---'
+             |            |
+             v            v
+   Leader aggregate  Helper aggregate
+          share         share
+             |            |
+             '------+-----'
+                    |
+               .----+----.
+              | unsharded |
+               '----+----'
+                    |
+                    v
+             aggregate result
 
-                  Figure 2: Lifecycles of protocol objects
+               Figure 2: Lifecycles of protocol objects
 
 2.4.1.  Arity of Protocol Objects
 
@@ -955,7 +991,8 @@ Table of Contents
      /* Field exists regardless of variant */
      uint32 always_present;
      ExampleEnum type = number;
-     /* Only fields included in the `type == number` variant are described */
+     /* Only fields included in the `type == number`
+        variant are described */
      uint32 a_number;
    } ExampleStruct;
 
@@ -1090,8 +1127,8 @@ Table of Contents
 
                                  Table 1
 
-   These types are scoped to the errors sub-namespace of the DAP URN,
-   e.g., urn:ietf:params:ppm:dap:error:invalidMessage.
+   These types are scoped to the errors sub-namespace of the DAP URN
+   namespace, e.g., urn:ietf:params:ppm:dap:error:invalidMessage.
 
    This list is not exhaustive.  The server MAY return errors set to a
    URI other than those defined above.  Servers MUST NOT use the DAP URN
