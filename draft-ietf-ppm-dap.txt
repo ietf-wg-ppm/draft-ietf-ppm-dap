@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 10 August 2025                                       Cloudflare
+Expires: 24 August 2025                                       Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                         6 February 2025
+                                                        20 February 2025
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -25,11 +25,12 @@ Abstract
    cases, the entity taking the measurement is usually not interested in
    people's individual responses but rather in aggregated data.
    Conventional methods require collecting individual responses and then
-   aggregating them, thus representing a threat to user privacy and
-   rendering many such measurements difficult and impractical.  This
-   document describes a multi-party distributed aggregation protocol
-   (DAP) for privacy preserving measurement (PPM) which can be used to
-   collect aggregate data without revealing any individual user's data.
+   aggregating them on some server, thus representing a threat to user
+   privacy and rendering many such measurements difficult and
+   impractical.  This document describes a multi-party distributed
+   aggregation protocol (DAP) for privacy preserving measurement (PPM)
+   which can be used to collect aggregate data without revealing any
+   individual contributor's data.
 
 About This Document
 
@@ -63,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 10 August 2025.
+   This Internet-Draft will expire on 24 August 2025.
 
 Copyright Notice
 
@@ -674,7 +675,7 @@ Table of Contents
    times, each time with a different aggregation parameter; however, DAP
    only allows each measurement to be aggregated once.  Similarly, some
    VDAFs produce aggregate values which depend on the order in which the
-   measurementas are aggregated; however, DAP only supports VDAFs whose
+   measurements are aggregated; however, DAP only supports VDAFs whose
    aggregation results are independent of the order in which
    measurements are aggregated (see Section 4.4.1 of [VDAF]).
 
@@ -702,7 +703,7 @@ Table of Contents
                        |            |
                        +------------+
 
-          Figure 1: DAP architecture (who sends requests to whom).
+                         Figure 1: DAP architecture
 
    The main participants in the protocol are as follows:
 
@@ -723,6 +724,12 @@ Table of Contents
       The protocol is designed so that the Helper is relatively
       lightweight, with most of the operational burden borne by the
       Leader.
+
+   Figure 1 illustrates which participants exchange HTTP messages.
+   Arrows go from HTTP clients to HTTP servers.  Note that some DAP
+   participants may be clients sometimes but servers at other times.  It
+   is even possible for a single entity to embody multiple participants.
+   For example, the Collector could also be one of the Aggregators.
 
    The basic unit of DAP is the "task" which represents a single
    measurement process (though potentially aggregating multiple, non-
@@ -767,13 +774,12 @@ Table of Contents
 2.2.  Validating Measurements
 
    An essential task of any data collection pipeline is ensuring that
-   the data being aggregated is "valid".  For example, if each
-   measurement is expected to be an number between 0 and 10, then the
-   aggregator should reject measurements larger than 10 or smaller than
-   0.  In DAP, input validation is complicated by the fact that none of
-   the entities other than the Client ever sees that Client's plaintext
-   measurement.  To an Aggregator, a secret share of a valid measurement
-   is indistinguishable from a secret share of an invalid measurement.
+   the data being aggregated is "valid".  For example, each measurement
+   might be expected to be a number between 0 and 10.  In DAP, input
+   validation is complicated by the fact that none of the entities other
+   than the Client ever sees that Client's plaintext measurement.  To an
+   Aggregator, a secret share of a valid measurement is
+   indistinguishable from a secret share of an invalid measurement.
 
    In DAP, input validation is accomplished by an interactive
    computation between the Leader and Helper.  At the beginning of this
@@ -854,6 +860,9 @@ Table of Contents
    *  The DAP-Auth-Token HTTP header described in
       [I-D.draft-dcook-ppm-dap-interop-test-design-04].
 
+   *  [RFC9421] HTTP message signatures authenticate messages without
+      transmitting a secret.
+
    This flexibility allows organizations deploying DAP to use existing
    well-known HTTP authentication mechanisms that they already support.
    Discovering what authentication mechanisms are supported by a DAP
@@ -931,6 +940,9 @@ Table of Contents
 
                                  Table 1
 
+   These types are scoped to the errors sub-namespace of the DAP URN
+   namespace, e.g., urn:ietf:params:ppm:dap:error:invalidMessage.
+
    This list is not exhaustive.  The server MAY return errors set to a
    URI other than those defined above.  Servers MUST NOT use the DAP URN
    namespace for errors not listed in the appropriate IANA registry (see
@@ -957,13 +969,14 @@ Table of Contents
 
    DAP has three major interactions which need to be defined:
 
-   *  Uploading reports from the Client to the Aggregators, specified in
+   *  Clients upload reports to the Aggregators, specified in
       Section 4.7
 
-   *  Computing the results for a given measurement task, specified in
-      Section 4.8
+   *  Aggregators jointly prepare reports and aggregate them together,
+      specified in Section 4.8
 
-   *  Collecting aggregated results, specified in Section 4.9
+   *  The Collector collects aggregated results from the Aggregators,
+      specified in Section 4.9
 
    Each of these interactions is defined in terms of "resources".  In
    this section we define these resources and the messages used to act
@@ -3275,7 +3288,7 @@ Table of Contents
       processing the aggregation job, though which steps the checks are
       performed at is up to the implementation.  The checks and storage
       require synchronization, so that if two aggregation jobs
-      contianing the same report are processed, at most one instance of
+      containing the same report are processed, at most one instance of
       the report will be aggregated.  However, the interaction with the
       used-report storage does not necessarily have to be synchronized
       with the processing and storage for the remainder of the
@@ -4191,10 +4204,6 @@ Table of Contents
               Public Key Encryption", RFC 9180, DOI 10.17487/RFC9180,
               February 2022, <https://www.rfc-editor.org/rfc/rfc9180>.
 
-   [OAuth2]   Hardt, D., Ed., "The OAuth 2.0 Authorization Framework",
-              RFC 6749, DOI 10.17487/RFC6749, October 2012,
-              <https://www.rfc-editor.org/rfc/rfc6749>.
-
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
               Requirement Levels", BCP 14, RFC 2119,
               DOI 10.17487/RFC2119, March 1997,
@@ -4278,10 +4287,18 @@ Table of Contents
               <https://datatracker.ietf.org/doc/html/draft-ietf-
               privacypass-architecture-16>.
 
+   [OAuth2]   Hardt, D., Ed., "The OAuth 2.0 Authorization Framework",
+              RFC 6749, DOI 10.17487/RFC6749, October 2012,
+              <https://www.rfc-editor.org/rfc/rfc6749>.
+
    [RFC5869]  Krawczyk, H. and P. Eronen, "HMAC-based Extract-and-Expand
               Key Derivation Function (HKDF)", RFC 5869,
               DOI 10.17487/RFC5869, May 2010,
               <https://www.rfc-editor.org/rfc/rfc5869>.
+
+   [RFC9421]  Backman, A., Ed., Richer, J., Ed., and M. Sporny, "HTTP
+              Message Signatures", RFC 9421, DOI 10.17487/RFC9421,
+              February 2024, <https://www.rfc-editor.org/rfc/rfc9421>.
 
    [Vad16]    Vadhan, S., "The Complexity of Differential Privacy",
               2016,
