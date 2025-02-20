@@ -1194,9 +1194,6 @@ without revealing any individual contributor's data.<a href="#section-abstract-1
 </li>
                 </ul>
 </li>
-              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.1.2.3">
-                <p id="section-toc.1-1.1.2.3.1"><a href="#section-1.3" class="auto internal xref">1.3</a>.  <a href="#name-representation-language" class="internal xref">Representation Language</a></p>
-</li>
             </ul>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.2">
@@ -1217,10 +1214,21 @@ without revealing any individual contributor's data.<a href="#section-abstract-1
             <p id="section-toc.1-1.3.1"><a href="#section-3" class="auto internal xref">3</a>.  <a href="#name-message-transport" class="internal xref">Message Transport</a></p>
 <ul class="compact toc ulBare ulEmpty">
 <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.1">
-                <p id="section-toc.1-1.3.2.1.1"><a href="#section-3.1" class="auto internal xref">3.1</a>.  <a href="#name-https-request-authenticatio" class="internal xref">HTTPS Request Authentication</a></p>
+                <p id="section-toc.1-1.3.2.1.1"><a href="#section-3.1" class="auto internal xref">3.1</a>.  <a href="#name-presentation-language" class="internal xref">Presentation Language</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.1.2.1">
+                    <p id="section-toc.1-1.3.2.1.2.1.1"><a href="#section-3.1.1" class="auto internal xref">3.1.1</a>.  <a href="#name-variable-length-vectors" class="internal xref">Variable-Length Vectors</a></p>
+</li>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.1.2.2">
+                    <p id="section-toc.1-1.3.2.1.2.2.1"><a href="#section-3.1.2" class="auto internal xref">3.1.2</a>.  <a href="#name-structure-variants" class="internal xref">Structure Variants</a></p>
+</li>
+                </ul>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.2">
-                <p id="section-toc.1-1.3.2.2.1"><a href="#section-3.2" class="auto internal xref">3.2</a>.  <a href="#name-errors" class="internal xref">Errors</a></p>
+                <p id="section-toc.1-1.3.2.2.1"><a href="#section-3.2" class="auto internal xref">3.2</a>.  <a href="#name-https-request-authenticatio" class="internal xref">HTTPS Request Authentication</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.3">
+                <p id="section-toc.1-1.3.2.3.1"><a href="#section-3.3" class="auto internal xref">3.3</a>.  <a href="#name-errors" class="internal xref">Errors</a></p>
 </li>
             </ul>
 </li>
@@ -2034,84 +2042,6 @@ report.<a href="#section-1.2.1-1.40.1" class="pilcrow">¶</a></p>
 </div>
 </section>
 </div>
-<div id="representation-language">
-<section id="section-1.3">
-        <h3 id="name-representation-language">
-<a href="#section-1.3" class="section-number selfRef">1.3. </a><a href="#name-representation-language" class="section-name selfRef">Representation Language</a>
-        </h3>
-<p id="section-1.3-1">With some exceptions, we use the presentation language defined in <span>[<a href="#RFC8446" class="cite xref">RFC8446</a>], <a href="https://rfc-editor.org/rfc/rfc8446#section-3" class="relref">Section 3</a></span> to define messages in the DAP protocol. Encoding and decoding of
-these messages as byte strings also follows <span>[<a href="#RFC8446" class="cite xref">RFC8446</a>]</span>. We enumerate the
-exceptions below.<a href="#section-1.3-1" class="pilcrow">¶</a></p>
-<p id="section-1.3-2"><span><a href="https://rfc-editor.org/rfc/rfc8446#section-3.7" class="relref">Section 3.7</a> of [<a href="#RFC8446" class="cite xref">RFC8446</a>]</span> defines a syntax for structure fields whose values
-are constants. In this document, we do not use that notation, but use something
-similar to describe specific variants of structures containing enumerated types,
-described in <span>[<a href="#RFC8446" class="cite xref">RFC8446</a>], <a href="https://rfc-editor.org/rfc/rfc8446#section-3.8" class="relref">Section 3.8</a></span>.<a href="#section-1.3-2" class="pilcrow">¶</a></p>
-<p id="section-1.3-3">For example, suppose we have an enumeration and a structure defined as follows:<a href="#section-1.3-3" class="pilcrow">¶</a></p>
-<div class="lang-tls-presentation sourcecode" id="section-1.3-4">
-<pre>
-enum {
-  number(0),
-  string(1),
-  (255)
-} ExampleEnum;
-
-struct {
-  uint32 always_present;
-  ExampleEnum type;
-  select (ExampleStruct.type) {
-    case number: uint32 a_number;
-    case string: opaque a_string&lt;0..10&gt;;
-  };
-} ExampleStruct;
-</pre><a href="#section-1.3-4" class="pilcrow">¶</a>
-</div>
-<p id="section-1.3-5">Then we describe the specific variant of <code>ExampleStruct</code> where <code>type == number</code>
-with a <code>variant</code> block as follows:<a href="#section-1.3-5" class="pilcrow">¶</a></p>
-<div class="lang-tls-presentation sourcecode" id="section-1.3-6">
-<pre>
-variant {
-  /* Field exists regardless of variant */
-  uint32 always_present;
-  ExampleEnum type = number;
-  /* Only fields included in the `type == number`
-     variant is described */
-  uint32 a_number;
-} ExampleStruct;
-</pre><a href="#section-1.3-6" class="pilcrow">¶</a>
-</div>
-<p id="section-1.3-7">The protocol text accompanying this would explain how implementations should
-handle the <code>always_present</code> and <code>a_number</code> fields, but not the <code>type</code> field.
-This does not mean that the <code>type</code> field of <code>ExampleStruct</code> can only ever have
-value <code>number</code>; it means only that it has this type in this instance.<a href="#section-1.3-7" class="pilcrow">¶</a></p>
-<p id="section-1.3-8">This notation can also be used in structures where the enum field does not
-affect what fields are or are not present in the structure. For example:<a href="#section-1.3-8" class="pilcrow">¶</a></p>
-<div class="lang-tls-presentation sourcecode" id="section-1.3-9">
-<pre>
-enum {
-  something(0),
-  something_else(1),
-  (255)
-} FailureReason;
-
-struct {
-  FailureReason failure_reason;
-  opaque another_field&lt;0..256&gt;;
-} FailedOperation;
-</pre><a href="#section-1.3-9" class="pilcrow">¶</a>
-</div>
-<p id="section-1.3-10">The protocol text might include a description like:<a href="#section-1.3-10" class="pilcrow">¶</a></p>
-<div class="lang-tls-presentation sourcecode" id="section-1.3-11">
-<pre>
-variant {
-  FailureReason failure_reason = something;
-  opaque another_field&lt;0..256&gt;;
-} FailedOperation;
-</pre><a href="#section-1.3-11" class="pilcrow">¶</a>
-</div>
-<p id="section-1.3-12">Finally, by convention we do not specify the lower length limit of
-variable-length vectors. Rather, the lower limit is always set to <code>0</code>.<a href="#section-1.3-12" class="pilcrow">¶</a></p>
-</section>
-</div>
 </section>
 </div>
 <div id="overview">
@@ -2331,58 +2261,152 @@ report IDs.<a href="#section-2.3-3" class="pilcrow">¶</a></p>
       </h2>
 <p id="section-3-1">Communications between DAP participants are carried over HTTP <span>[<a href="#RFC9110" class="cite xref">RFC9110</a>]</span>. Use
 of HTTPS is <span class="bcp14">REQUIRED</span> to provide server authentication and confidentiality.<a href="#section-3-1" class="pilcrow">¶</a></p>
-<div id="request-authentication">
+<div id="presentation-language">
 <section id="section-3.1">
-        <h3 id="name-https-request-authenticatio">
-<a href="#section-3.1" class="section-number selfRef">3.1. </a><a href="#name-https-request-authenticatio" class="section-name selfRef">HTTPS Request Authentication</a>
+        <h3 id="name-presentation-language">
+<a href="#section-3.1" class="section-number selfRef">3.1. </a><a href="#name-presentation-language" class="section-name selfRef">Presentation Language</a>
         </h3>
-<p id="section-3.1-1">DAP is made up of several interactions in which different subsets of the
-protocol's participants interact with each other.<a href="#section-3.1-1" class="pilcrow">¶</a></p>
-<p id="section-3.1-2">In those cases where a channel between two participants is tunneled through
+<p id="section-3.1-1">With some exceptions, we use the presentation language defined in <span>[<a href="#RFC8446" class="cite xref">RFC8446</a>], <a href="https://rfc-editor.org/rfc/rfc8446#section-3" class="relref">Section 3</a></span> to define messages in the DAP protocol. Encoding and decoding of
+these messages as byte strings also follows <span>[<a href="#RFC8446" class="cite xref">RFC8446</a>]</span>. We enumerate the
+exceptions below.<a href="#section-3.1-1" class="pilcrow">¶</a></p>
+<div id="variable-length-vectors">
+<section id="section-3.1.1">
+          <h4 id="name-variable-length-vectors">
+<a href="#section-3.1.1" class="section-number selfRef">3.1.1. </a><a href="#name-variable-length-vectors" class="section-name selfRef">Variable-Length Vectors</a>
+          </h4>
+<p id="section-3.1.1-1"><span><a href="https://rfc-editor.org/rfc/rfc8446#section-3.4" class="relref">Section 3.4</a> of [<a href="#RFC8446" class="cite xref">RFC8446</a>]</span> describes a syntax for variable-length vectors where
+a range of permitted lengths is provided. By convention, DAP always specifies
+the lower length limit of variable-length vectors to be <code>0</code>.<a href="#section-3.1.1-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="structure-variants">
+<section id="section-3.1.2">
+          <h4 id="name-structure-variants">
+<a href="#section-3.1.2" class="section-number selfRef">3.1.2. </a><a href="#name-structure-variants" class="section-name selfRef">Structure Variants</a>
+          </h4>
+<p id="section-3.1.2-1"><span><a href="https://rfc-editor.org/rfc/rfc8446#section-3.7" class="relref">Section 3.7</a> of [<a href="#RFC8446" class="cite xref">RFC8446</a>]</span> defines a syntax for structure fields whose values
+are constants. In this document, we do not use that notation, but use something
+similar to describe specific variants of structures that use an enumerated type
+as a discriminator, described in <span>[<a href="#RFC8446" class="cite xref">RFC8446</a>], <a href="https://rfc-editor.org/rfc/rfc8446#section-3.8" class="relref">Section 3.8</a></span>.<a href="#section-3.1.2-1" class="pilcrow">¶</a></p>
+<p id="section-3.1.2-2">For example, suppose we have an enumeration and a structure defined as follows:<a href="#section-3.1.2-2" class="pilcrow">¶</a></p>
+<div class="lang-tls-presentation sourcecode" id="section-3.1.2-3">
+<pre>
+enum {
+  number(0),
+  string(1),
+  (255)
+} ExampleEnum;
+
+struct {
+  uint32 always_present;
+  ExampleEnum type;
+  select (ExampleStruct.type) {
+    case number: uint32 a_number;
+    case string: opaque a_string&lt;0..10&gt;;
+  };
+} ExampleStruct;
+</pre><a href="#section-3.1.2-3" class="pilcrow">¶</a>
+</div>
+<p id="section-3.1.2-4">Then we describe the specific variant of <code>ExampleStruct</code> where <code>type == number</code>
+with a <code>variant</code> block as follows:<a href="#section-3.1.2-4" class="pilcrow">¶</a></p>
+<div class="lang-tls-presentation sourcecode" id="section-3.1.2-5">
+<pre>
+variant {
+  /* Field exists regardless of variant */
+  uint32 always_present;
+  ExampleEnum type = number;
+  /* Only fields included in the `type == number`
+     variant are described */
+  uint32 a_number;
+} ExampleStruct;
+</pre><a href="#section-3.1.2-5" class="pilcrow">¶</a>
+</div>
+<p id="section-3.1.2-6">The protocol text accompanying this would explain how implementations should
+handle the <code>always_present</code> and <code>a_number</code> fields, but not the <code>type</code> field.
+This does not mean that the <code>type</code> field of <code>ExampleStruct</code> can only ever have
+value <code>number</code>; it means only that it has this type in this instance.<a href="#section-3.1.2-6" class="pilcrow">¶</a></p>
+<p id="section-3.1.2-7">This notation can also be used in structures where the enum field is not used as
+a discriminant. For example, given the following structure containing an
+enumerator:<a href="#section-3.1.2-7" class="pilcrow">¶</a></p>
+<div class="lang-tls-presentation sourcecode" id="section-3.1.2-8">
+<pre>
+enum {
+  something(0),
+  something_else(1),
+  (255)
+} FailureReason;
+
+struct {
+  FailureReason failure_reason;
+  opaque another_field&lt;0..256&gt;;
+} FailedOperation;
+</pre><a href="#section-3.1.2-8" class="pilcrow">¶</a>
+</div>
+<p id="section-3.1.2-9">The protocol text might include a description like:<a href="#section-3.1.2-9" class="pilcrow">¶</a></p>
+<div class="lang-tls-presentation sourcecode" id="section-3.1.2-10">
+<pre>
+variant {
+  FailureReason failure_reason = something;
+  opaque another_field&lt;0..256&gt;;
+} FailedOperation;
+</pre><a href="#section-3.1.2-10" class="pilcrow">¶</a>
+</div>
+</section>
+</div>
+</section>
+</div>
+<div id="request-authentication">
+<section id="section-3.2">
+        <h3 id="name-https-request-authenticatio">
+<a href="#section-3.2" class="section-number selfRef">3.2. </a><a href="#name-https-request-authenticatio" class="section-name selfRef">HTTPS Request Authentication</a>
+        </h3>
+<p id="section-3.2-1">DAP is made up of several interactions in which different subsets of the
+protocol's participants interact with each other.<a href="#section-3.2-1" class="pilcrow">¶</a></p>
+<p id="section-3.2-2">In those cases where a channel between two participants is tunneled through
 another protocol participant, DAP mandates the use of public-key encryption
 using <span>[<a href="#HPKE" class="cite xref">HPKE</a>]</span> to ensure that only the intended recipient can see a
-message in the clear.<a href="#section-3.1-2" class="pilcrow">¶</a></p>
-<p id="section-3.1-3">In other cases, DAP requires HTTP client authentication as well as server
+message in the clear.<a href="#section-3.2-2" class="pilcrow">¶</a></p>
+<p id="section-3.2-3">In other cases, DAP requires HTTP client authentication as well as server
 authentication. Any authentication scheme that is composable with HTTP is
-allowed. For example:<a href="#section-3.1-3" class="pilcrow">¶</a></p>
+allowed. For example:<a href="#section-3.2-3" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-3.1-4.1">
-            <p id="section-3.1-4.1.1"><span>[<a href="#OAuth2" class="cite xref">OAuth2</a>]</span> credentials are presented in an Authorization HTTP header,
-which can be added to any DAP protocol message.<a href="#section-3.1-4.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="section-3.2-4.1">
+            <p id="section-3.2-4.1.1"><span>[<a href="#OAuth2" class="cite xref">OAuth2</a>]</span> credentials are presented in an Authorization HTTP header,
+which can be added to any DAP protocol message.<a href="#section-3.2-4.1.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-3.1-4.2">
-            <p id="section-3.1-4.2.1">TLS client certificates can be used to authenticate the underlying transport.<a href="#section-3.1-4.2.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-3.2-4.2">
+            <p id="section-3.2-4.2.1">TLS client certificates can be used to authenticate the underlying transport.<a href="#section-3.2-4.2.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-3.1-4.3">
-            <p id="section-3.1-4.3.1">The <code>DAP-Auth-Token</code> HTTP header described in
-<span>[<a href="#I-D.draft-dcook-ppm-dap-interop-test-design-04" class="cite xref">I-D.draft-dcook-ppm-dap-interop-test-design-04</a>]</span>.<a href="#section-3.1-4.3.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-3.2-4.3">
+            <p id="section-3.2-4.3.1">The <code>DAP-Auth-Token</code> HTTP header described in
+<span>[<a href="#I-D.draft-dcook-ppm-dap-interop-test-design-04" class="cite xref">I-D.draft-dcook-ppm-dap-interop-test-design-04</a>]</span>.<a href="#section-3.2-4.3.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-3.1-4.4">
-            <p id="section-3.1-4.4.1"><span>[<a href="#RFC9421" class="cite xref">RFC9421</a>]</span> HTTP message signatures authenticate messages without
-transmitting a secret.<a href="#section-3.1-4.4.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-3.2-4.4">
+            <p id="section-3.2-4.4.1"><span>[<a href="#RFC9421" class="cite xref">RFC9421</a>]</span> HTTP message signatures authenticate messages without
+transmitting a secret.<a href="#section-3.2-4.4.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
-<p id="section-3.1-5">This flexibility allows organizations deploying DAP to use existing well-known
+<p id="section-3.2-5">This flexibility allows organizations deploying DAP to use existing well-known
 HTTP authentication mechanisms that they already support. Discovering what
 authentication mechanisms are supported by a DAP participant is outside of this
-document's scope.<a href="#section-3.1-5" class="pilcrow">¶</a></p>
+document's scope.<a href="#section-3.2-5" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="errors">
-<section id="section-3.2">
+<section id="section-3.3">
         <h3 id="name-errors">
-<a href="#section-3.2" class="section-number selfRef">3.2. </a><a href="#name-errors" class="section-name selfRef">Errors</a>
+<a href="#section-3.3" class="section-number selfRef">3.3. </a><a href="#name-errors" class="section-name selfRef">Errors</a>
         </h3>
-<p id="section-3.2-1">Errors can be reported in DAP both as HTTP status codes and as problem detail
+<p id="section-3.3-1">Errors can be reported in DAP both as HTTP status codes and as problem detail
 objects <span>[<a href="#RFC9457" class="cite xref">RFC9457</a>]</span> in the response body. For example, if the HTTP client sends
 a request using a method not allowed in this document, then the server <span class="bcp14">MAY</span>
-return HTTP status 405 Method Not Allowed.<a href="#section-3.2-1" class="pilcrow">¶</a></p>
-<p id="section-3.2-2">When the server responds with an error status code, it <span class="bcp14">SHOULD</span> provide additional
+return HTTP status 405 Method Not Allowed.<a href="#section-3.3-1" class="pilcrow">¶</a></p>
+<p id="section-3.3-2">When the server responds with an error status code, it <span class="bcp14">SHOULD</span> provide additional
 information using a problem detail object. If the response body does consist of
 a problem detail object, the HTTP status code <span class="bcp14">MUST</span> indicate a client or server
-error (the 4xx or 5xx classes, respectively, from <span><a href="https://rfc-editor.org/rfc/rfc9110#section-15" class="relref">Section 15</a> of [<a href="#RFC9110" class="cite xref">RFC9110</a>]</span>).<a href="#section-3.2-2" class="pilcrow">¶</a></p>
-<p id="section-3.2-3">To facilitate automatic response to errors, this document defines the following
-standard tokens for use in the "type" field:<a href="#section-3.2-3" class="pilcrow">¶</a></p>
+error (the 4xx or 5xx classes, respectively, from <span><a href="https://rfc-editor.org/rfc/rfc9110#section-15" class="relref">Section 15</a> of [<a href="#RFC9110" class="cite xref">RFC9110</a>]</span>).<a href="#section-3.3-2" class="pilcrow">¶</a></p>
+<p id="section-3.3-3">To facilitate automatic response to errors, this document defines the following
+standard tokens for use in the "type" field:<a href="#section-3.3-3" class="pilcrow">¶</a></p>
 <div id="urn-space-errors">
 <table class="center" id="table-1">
           <caption><a href="#table-1" class="selfRef">Table 1</a></caption>
@@ -2435,7 +2459,7 @@ standard tokens for use in the "type" field:<a href="#section-3.2-3" class="pilc
             </tr>
             <tr>
               <td class="text-left" rowspan="1" colspan="1">unauthorizedRequest</td>
-              <td class="text-left" rowspan="1" colspan="1">Authentication of an HTTP request failed (see <a href="#request-authentication" class="auto internal xref">Section 3.1</a>).</td>
+              <td class="text-left" rowspan="1" colspan="1">Authentication of an HTTP request failed (see <a href="#request-authentication" class="auto internal xref">Section 3.2</a>).</td>
             </tr>
             <tr>
               <td class="text-left" rowspan="1" colspan="1">stepMismatch</td>
@@ -2452,24 +2476,24 @@ standard tokens for use in the "type" field:<a href="#section-3.2-3" class="pilc
           </tbody>
         </table>
 </div>
-<p id="section-3.2-5">These types are scoped to the errors sub-namespace of the DAP URN namespace,
-e.g., urn:ietf:params:ppm:dap:error:invalidMessage.<a href="#section-3.2-5" class="pilcrow">¶</a></p>
-<p id="section-3.2-6">This list is not exhaustive. The server <span class="bcp14">MAY</span> return errors set to a URI other
+<p id="section-3.3-5">These types are scoped to the errors sub-namespace of the DAP URN namespace,
+e.g., urn:ietf:params:ppm:dap:error:invalidMessage.<a href="#section-3.3-5" class="pilcrow">¶</a></p>
+<p id="section-3.3-6">This list is not exhaustive. The server <span class="bcp14">MAY</span> return errors set to a URI other
 than those defined above. Servers <span class="bcp14">MUST NOT</span> use the DAP URN namespace for errors
 not listed in the appropriate IANA registry (see <a href="#urn-space" class="auto internal xref">Section 9.3</a>). The "detail"
 member of the Problem Details document includes additional diagnostic
-information.<a href="#section-3.2-6" class="pilcrow">¶</a></p>
-<p id="section-3.2-7">When the task ID is known (see <a href="#task-configuration" class="auto internal xref">Section 4.3</a>), the problem document
+information.<a href="#section-3.3-6" class="pilcrow">¶</a></p>
+<p id="section-3.3-7">When the task ID is known (see <a href="#task-configuration" class="auto internal xref">Section 4.3</a>), the problem document
 <span class="bcp14">SHOULD</span> include an additional "taskid" member containing the ID encoded in Base
 64 using the URL and filename safe alphabet with no padding defined in
-Sections <a href="https://rfc-editor.org/rfc/rfc4648#section-5" class="relref">5</a> and <a href="https://rfc-editor.org/rfc/rfc4648#section-3.2" class="relref">3.2</a> of <span>[<a href="#RFC4648" class="cite xref">RFC4648</a>]</span>.<a href="#section-3.2-7" class="pilcrow">¶</a></p>
-<p id="section-3.2-8">In the remainder of this document, the tokens in the table above are used to
+Sections <a href="https://rfc-editor.org/rfc/rfc4648#section-5" class="relref">5</a> and <a href="https://rfc-editor.org/rfc/rfc4648#section-3.2" class="relref">3.2</a> of <span>[<a href="#RFC4648" class="cite xref">RFC4648</a>]</span>.<a href="#section-3.3-7" class="pilcrow">¶</a></p>
+<p id="section-3.3-8">In the remainder of this document, the tokens in the table above are used to
 refer to error types, rather than the full URNs. For example, an "error of type
 'invalidMessage'" refers to an error document with "type" value
-"urn:ietf:params:ppm:dap:error:invalidMessage".<a href="#section-3.2-8" class="pilcrow">¶</a></p>
-<p id="section-3.2-9">This document uses the verbs "abort" and "alert with [some error message]" to
+"urn:ietf:params:ppm:dap:error:invalidMessage".<a href="#section-3.3-8" class="pilcrow">¶</a></p>
+<p id="section-3.3-9">This document uses the verbs "abort" and "alert with [some error message]" to
 describe how protocol participants react to various error conditions. This
-implies HTTP status code 400 Bad Request unless explicitly specified otherwise.<a href="#section-3.2-9" class="pilcrow">¶</a></p>
+implies HTTP status code 400 Bad Request unless explicitly specified otherwise.<a href="#section-3.3-9" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -2931,7 +2955,7 @@ that the public share might be empty, depending on the VDAF.<a href="#section-4.
           </ul>
 <p id="section-4.7.2-4">Aggregators <span class="bcp14">MAY</span> require Clients to authenticate when uploading reports (see
 <a href="#client-auth" class="auto internal xref">Section 8.3</a>). If it is used, HTTP client authentication <span class="bcp14">MUST</span> use a scheme
-that meets the requirements in <a href="#request-authentication" class="auto internal xref">Section 3.1</a>.<a href="#section-4.7.2-4" class="pilcrow">¶</a></p>
+that meets the requirements in <a href="#request-authentication" class="auto internal xref">Section 3.2</a>.<a href="#section-4.7.2-4" class="pilcrow">¶</a></p>
 <p id="section-4.7.2-5">The handling of the upload request by the Leader <span class="bcp14">MUST</span> be idempotent as discussed
 in <span><a href="https://rfc-editor.org/rfc/rfc9110#section-9.2.2" class="relref">Section 9.2.2</a> of [<a href="#RFC9110" class="cite xref">RFC9110</a>]</span>.<a href="#section-4.7.2-5" class="pilcrow">¶</a></p>
 <p id="section-4.7.2-6">To generate a report, the Client begins by sharding its measurement into input
@@ -2993,7 +3017,7 @@ struct {
 </pre><a href="#section-4.7.2-16" class="pilcrow">¶</a>
 </div>
 <p id="section-4.7.2-17">The Leader responds to well-formed requests with HTTP status code 201
-Created. Malformed requests are handled as described in <a href="#errors" class="auto internal xref">Section 3.2</a>.
+Created. Malformed requests are handled as described in <a href="#errors" class="auto internal xref">Section 3.3</a>.
 Clients <span class="bcp14">SHOULD NOT</span> upload the same measurement value in more than one report if
 the Leader responds with HTTP status code 201 Created.<a href="#section-4.7.2-17" class="pilcrow">¶</a></p>
 <p id="section-4.7.2-18">If the Leader does not recognize the task ID, then it <span class="bcp14">MUST</span> abort with error
@@ -3386,7 +3410,7 @@ previous step.<a href="#section-4.8.1.1-17.3.1" class="pilcrow">¶</a></p>
 type of "application/dap-aggregation-job-init-req" and a body containing the
 <code>AggregationJobInitReq</code>.<a href="#section-4.8.1.1-18" class="pilcrow">¶</a></p>
 <p id="section-4.8.1.1-19">The Leader <span class="bcp14">MUST</span> authenticate its requests to the Helper using a scheme that
-meets the requirements in <a href="#request-authentication" class="auto internal xref">Section 3.1</a>.<a href="#section-4.8.1.1-19" class="pilcrow">¶</a></p>
+meets the requirements in <a href="#request-authentication" class="auto internal xref">Section 3.2</a>.<a href="#section-4.8.1.1-19" class="pilcrow">¶</a></p>
 <p id="section-4.8.1.1-20">The Helper responds with HTTP status 201 Created with a body containing an
 <code>AggregationJobResp</code> (see <a href="#aggregation-helper-init" class="auto internal xref">Section 4.8.1.2</a>). If the <code>status</code> field
 is <code>ready</code>, the Leader proceeds onward. Otherwise, if the <code>status</code> field is
@@ -3818,7 +3842,7 @@ wants the Helper to advance to. The <code>prepare_continues</code> field is the 
 preparation continuation messages constructed in the previous step. The
 <code>PrepareContinue</code>s <span class="bcp14">MUST</span> be in the same order as the previous aggregate request.<a href="#section-4.8.2.1-7" class="pilcrow">¶</a></p>
 <p id="section-4.8.2.1-8">The Leader <span class="bcp14">MUST</span> authenticate its requests to the Helper using a scheme that
-meets the requirements in <a href="#request-authentication" class="auto internal xref">Section 3.1</a>.<a href="#section-4.8.2.1-8" class="pilcrow">¶</a></p>
+meets the requirements in <a href="#request-authentication" class="auto internal xref">Section 3.2</a>.<a href="#section-4.8.2.1-8" class="pilcrow">¶</a></p>
 <p id="section-4.8.2.1-9">The Helper responds with HTTP status 202 Accepted with a body containing an
 <code>AggregationJobResp</code> (see <a href="#aggregation-helper-init" class="auto internal xref">Section 4.8.1.2</a>). If the <code>status</code> field
 is <code>ready</code>, the Leader proceeds onward. Otherwise, if the <code>status</code> field is
@@ -4182,7 +4206,7 @@ aggregation parameter <span class="bcp14">MUST</span> be valid as defined in <a 
 </li>
           </ul>
 <p id="section-4.9.1-8">Collectors <span class="bcp14">MUST</span> authenticate their requests to Leaders using a scheme that meets
-the requirements in <a href="#request-authentication" class="auto internal xref">Section 3.1</a>.<a href="#section-4.9.1-8" class="pilcrow">¶</a></p>
+the requirements in <a href="#request-authentication" class="auto internal xref">Section 3.2</a>.<a href="#section-4.9.1-8" class="pilcrow">¶</a></p>
 <p id="section-4.9.1-9">Depending on the VDAF scheme and how the Leader is configured, the Leader and
 Helper may already have prepared a sufficient number of reports satisfying the
 query and be ready to return the aggregate shares right away. However, this is
@@ -4296,7 +4320,7 @@ subsequent HTTP GET requests with the <code>status</code> field set to <code>rea
 stops polling once receiving this final request.<a href="#section-4.9.1-22" class="pilcrow">¶</a></p>
 <p id="section-4.9.1-23">If obtaining aggregate shares fails, then the Leader responds to subsequent HTTP
 GET requests to the collection job with an HTTP error status and a problem
-document as described in <a href="#errors" class="auto internal xref">Section 3.2</a>.<a href="#section-4.9.1-23" class="pilcrow">¶</a></p>
+document as described in <a href="#errors" class="auto internal xref">Section 3.3</a>.<a href="#section-4.9.1-23" class="pilcrow">¶</a></p>
 <p id="section-4.9.1-24">The Leader <span class="bcp14">MAY</span> respond with HTTP status 204 No Content to requests to a
 collection job if the results have been deleted.<a href="#section-4.9.1-24" class="pilcrow">¶</a></p>
 <p id="section-4.9.1-25">The Collector can send an HTTP DELETE request to the collection job, which
@@ -4391,7 +4415,7 @@ computed above.<a href="#section-4.9.2-9.3.1" class="pilcrow">¶</a></p>
 </li>
           </ul>
 <p id="section-4.9.2-10">Leaders <span class="bcp14">MUST</span> authenticate their requests to Helpers using a scheme that meets
-the requirements in <a href="#request-authentication" class="auto internal xref">Section 3.1</a>.<a href="#section-4.9.2-10" class="pilcrow">¶</a></p>
+the requirements in <a href="#request-authentication" class="auto internal xref">Section 3.2</a>.<a href="#section-4.9.2-10" class="pilcrow">¶</a></p>
 <p id="section-4.9.2-11">To handle the Leader's request, the Helper first ensures that it recognizes the
 task ID in the request path. If not, it <span class="bcp14">MUST</span> abort with error
 <code>unrecognizedTask</code>. The Helper then verifies that the request meets the
