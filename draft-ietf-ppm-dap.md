@@ -564,26 +564,26 @@ the order in which measurements are aggregated (see {{Section 4.4.1 of !VDAF}}).
 
 The overall system architecture is shown in {{dap-topology}}.
 
-~~~
-+--------+
+~~~ aasvg
+.--------.
 |        |
-| Client +----+
+| Client +----.
 |        |    |
-+--------+    |
-              |
-+--------+    |     +------------+         +-----------+
-|        |    +----->            |         |           |
-| Client +---------->   Leader   <---------| Collector |
-|        |    +----->            |         |           |
-+--------+    |     +------------+         +-----------+
-              |           |
-+--------+    |           |
-|        |    |           |
-| Client +----+     +-----V------+
+'--------'    |
+              |     .------------.
+.--------.    '---->|            |         .-----------.
+|        |          |            |         |           |
+| Client +--------->|   Leader   |<--------+ Collector |
+|        |     ...  |            |         |           |
+'--------'    .---->|            |         '-----------'
+              |     '------------'
+   ...        |           |
+              |           v
+.--------.    |     .------------.
+|        |    |     |            |
+| Client +----'     |   Helper   |
 |        |          |            |
-+--------+          |   Helper   |
-                    |            |
-                    +------------+
+'--------'          '------------'
 ~~~
 {: #dap-topology title="DAP architecture"}
 
@@ -1613,13 +1613,13 @@ initialization step for preparation. The Helper's response, along with each
 subsequent request and response, carries the remaining messages exchanged during
 preparation.
 
-~~~
+~~~ aasvg
   report, agg_param
    |
    v
-+--------+                                         +--------+
+.--------.                                         .--------.
 | Leader |                                         | Helper |
-+--------+                                         +--------+
+'--+-----'                                         '-----+--'
    | AggregationJobInitReq:                              |
    |   agg_param, prep_init                              |
    |---------------------------------------------------->|
@@ -1633,7 +1633,9 @@ preparation.
    |                               prep_resp(continue)   |
    |<----------------------------------------------------|
    |                                                     |
+
   ...                                                   ...
+
    |                                                     |
    | AggregationJobContinueReq:                          |
    |   prep_continue                                     |
