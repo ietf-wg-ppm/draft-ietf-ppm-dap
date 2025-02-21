@@ -1145,47 +1145,6 @@ VDAF types:
 * PrepShare
 * PrepMessage
 
-## Batch Modes, Batches, and Queries {#batch-mode}
-
-An aggregate result is computed from a set of reports, called a "batch". The
-Collector requests the aggregate result by making a "query"; the Aggregators
-use this query to select a batch for aggregation.
-
-Each measurement task has a preconfigured "batch mode". The batch mode defines
-both how reports may be partitioned into batches, as well as how these batches
-are addressed and the semantics of the query used for collection.
-
-This document defines two batch modes:
-
-* time-interval ({{time-interval-batch-mode}}) in which the query specifies a
-  time interval, and the batch consists of all reports with a timestamp in that
-  interval.
-
-* leader-selected ({{leader-selected-batch-mode}}) in which the Leader assigns
-  reports to batches itself, and the Collector's query simply requests the
-  aggregate result for the "next" batch of reports.
-
-Future documents may define additional batch modes for DAP; see
-{{extending-this-doc}}. Implementations are free to implement only a subset of
-the available batch modes.
-
-Batch modes are identified with a single byte in serialized messages, as
-follows:
-
-~~~ tls-presentation
-enum {
-  reserved(0),
-  time_interval(1),
-  leader_selected(2),
-  (255)
-} BatchMode;
-~~~
-
-The query is issued to the Leader by the Collector during the collection
-interaction ({{collect-flow}}). In addition, information used to guide batch
-selection is conveyed from the Leader to the Helper when initializing
-aggregation ({{aggregate-flow}}) and finalizing the aggregate shares.
-
 ## Task Configuration {#task-configuration}
 
 A task represents a single measurement process, though potentially aggregating
@@ -1237,6 +1196,47 @@ Finally, the Collector is configured with the HPKE secret key corresponding to
 A task's parameters are immutable for the lifetime of that task. The only way to
 change parameters or to rotate secret values like collector HPKE configuration
 or the VDAF verification key is to configure a new task.
+
+### Batch Modes, Batches, and Queries {#batch-mode}
+
+An aggregate result is computed from a set of reports, called a "batch". The
+Collector requests the aggregate result by making a "query"; the Aggregators
+use this query to select a batch for aggregation.
+
+Each measurement task has a preconfigured "batch mode". The batch mode defines
+both how reports are assigned into batches, as well as how these batches are
+addressed and the semantics of the query used for collection.
+
+This document defines two batch modes:
+
+* time-interval ({{time-interval-batch-mode}}) in which the query specifies a
+  time interval, and the batch consists of all reports with a timestamp in that
+  interval.
+
+* leader-selected ({{leader-selected-batch-mode}}) in which the Leader assigns
+  reports to batches itself, and the Collector's query simply requests the
+  aggregate result for the "next" batch of reports.
+
+Future documents may define additional batch modes for DAP; see
+{{extending-this-doc}}. Implementations are free to implement only a subset of
+the available batch modes.
+
+Batch modes are identified with a single byte in serialized messages, as
+follows:
+
+~~~ tls-presentation
+enum {
+  reserved(0),
+  time_interval(1),
+  leader_selected(2),
+  (255)
+} BatchMode;
+~~~
+
+The query is issued to the Leader by the Collector during the collection
+interaction ({{collect-flow}}). In addition, information used to guide batch
+selection is conveyed from the Leader to the Helper when initializing
+aggregation ({{aggregate-flow}}) and finalizing the aggregate shares.
 
 ## Resource URLs
 
