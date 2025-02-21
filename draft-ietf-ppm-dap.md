@@ -954,6 +954,42 @@ VDAF types:
 * PrepShare
 * PrepMessage
 
+### Timestamps and Time Intervals {#timestamps}
+
+DAP uses timestamps in various places:
+
+* The task configuration includes a validity interval ({{task-configuration}}).
+  The interval includes a timestamp indicating when the interval begins.
+* The Client's report includes a timestamp indicating when the report was
+  generated ({{upload-flow}}).
+* The Collector's query may specify a time interval for reports it wants to
+  aggregate ({{time-interval-batch-mode}}).
+* The result of a collection job indicates the range of timestamps of reports
+  included in the aggregate result ({{collect-flow}}).
+
+A timestamp has type `Time` and its value is the number of seconds since the
+UNIX epoch. In addition, every timestamp MUST be rounded down to the nearest
+multiple of `time_precision` ({{task-configuration}}). That is, the value is
+computed as
+
+~~~
+sent_timestamp = timestamp - (timestamp % time_precision)
+~~~
+
+A received timestamp is considered to be malformed if `received_timestamp %
+time_precision > 0`.
+
+A time interval has type `Interval` and consists of a timestamp indicating the
+start of the interval and a duration. The duration has type `Duration` and its
+value is a number of seconds. The duration MUST be a multiple of
+`time_precision`: if `duration % time_precision > 0`, then the interval is
+considered to be malformed.
+
+Truncating timestamps has multiple purposes. Clients truncate their report
+timestamp in order to avoid reducing the size of the anonymity set; see
+{{anon-proxy}}. It also helps Aggregators manage resources; see
+{{sharding-storage}}.
+
 ## Batch Modes, Batches, and Queries {#batch-mode}
 
 An aggregate result is computed from a set of reports, called a "batch". The
@@ -1073,42 +1109,6 @@ For example, given a helper URL "https://example.com/api/dap", task ID "f0 16 34
 `{helper}/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}` would be
 expanded into
 `https://example.com/api/dap/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA`.
-
-## Timestamps and Time Intervals {#timestamps}
-
-DAP uses timestamps in various places:
-
-* The task configuration includes a validity interval ({{task-configuration}}).
-  The interval includes a timestamp indicating when the interval begins.
-* The Client's report includes a timestamp indicating when the report was
-  generated ({{upload-flow}}).
-* The Collector's query may specify a time interval for reports it wants to
-  aggregate ({{time-interval-batch-mode}}).
-* The result of a collection job indicates the range of timestamps of reports
-  included in the aggregate result ({{collect-flow}}).
-
-A timestamp has type `Time` and its value is the number of seconds since the
-UNIX epoch. In addition, every timestamp MUST be rounded down to the nearest
-multiple of `time_precision` ({{task-configuration}}). That is, the value is
-computed as
-
-~~~
-sent_timestamp = timestamp - (timestamp % time_precision)
-~~~
-
-A received timestamp is considered to be malformed if `received_timestamp %
-time_precision > 0`.
-
-A time interval has type `Interval` and consists of a timestamp indicating the
-start of the interval and a duration. The duration has type `Duration` and its
-value is a number of seconds. The duration MUST be a multiple of
-`time_precision`: if `duration % time_precision > 0`, then the interval is
-considered to be malformed.
-
-Truncating timestamps has multiple purposes. Clients truncate their report
-timestamp in order to avoid reducing the size of the anonymity set; see
-{{anon-proxy}}. It also helps Aggregators manage resources; see
-{{sharding-storage}}.
 
 ## Aggregation Parameter Validation {#agg-param-validation}
 
