@@ -106,6 +106,10 @@ contributor:
        org: Apple
        email: shan_wang@apple.com
 
+normative:
+
+  POSIX: DOI.10.1109/IEEESTD.2018.8277153
+
 informative:
 
   Dou02:
@@ -904,15 +908,6 @@ opaque Url<0..2^16-1>;
 
 uint64 Duration; /* Number of seconds elapsed between two instants */
 
-uint64 Time; /* seconds elapsed since start of UNIX epoch */
-
-/* An interval of time of length duration, where start is included
-  and (start + duration) is excluded. */
-struct {
-  Time start;
-  Duration duration;
-} Interval;
-
 /* An ID used to uniquely identify a report in the context of a
    DAP task. */
 opaque ReportID[16];
@@ -954,41 +949,45 @@ VDAF types:
 * PrepShare
 * PrepMessage
 
-### Timestamps and Time Intervals {#timestamps}
+### Times, Durations and Intervals {#timestamps}
 
-DAP uses timestamps in various places:
-
-* The task configuration includes a validity interval ({{task-configuration}}).
-  The interval includes a timestamp indicating when the interval begins.
-* The Client's report includes a timestamp indicating when the report was
-  generated ({{upload-flow}}).
-* The Collector's query may specify a time interval for reports it wants to
-  aggregate ({{time-interval-batch-mode}}).
-* The result of a collection job indicates the range of timestamps of reports
-  included in the aggregate result ({{collect-flow}}).
-
-A timestamp has type `Time` and its value is the number of seconds since the
-UNIX epoch. In addition, every timestamp MUST be rounded down to the nearest
-multiple of `time_precision` ({{task-configuration}}). That is, the value is
-computed as
-
-~~~
-sent_timestamp = timestamp - (timestamp % time_precision)
+~~~ tls-presentation
+uint64 Time;
 ~~~
 
-A received timestamp is considered to be malformed if `received_timestamp %
-time_precision > 0`.
+Times are represented by POSIX timestamps, defined to be integers containing a
+number of seconds since the Epoch, defined in section 4.16 of {{POSIX}}. That
+is, the number of seconds after 1970-01-01 00:00:00 UTC, excluding leap seconds.
+One POSIX timestamp is said to be before (respectively, after) another POSIX
+timestamp if it is less than (respectively, greater than) the other value.
 
-A time interval has type `Interval` and consists of a timestamp indicating the
-start of the interval and a duration. The duration has type `Duration` and its
-value is a number of seconds. The duration MUST be a multiple of
-`time_precision`: if `duration % time_precision > 0`, then the interval is
-considered to be malformed.
+Every timestamp MUST be rounded down to the nearest multiple of the task's
+`time_precision` ({{task-configuration}}). That is, the value is computed as:
 
-Truncating timestamps has multiple purposes. Clients truncate their report
-timestamp in order to avoid reducing the size of the anonymity set; see
-{{anon-proxy}}. It also helps Aggregators manage resources; see
-{{sharding-storage}}.
+~~~
+rounded_timestamp = timestamp - (timestamp % time_precision)
+~~~
+
+A timestamp is malformed if `received_timestamp % time_precision > 0`.
+
+~~~ tls-presentation
+uint64 Duration;
+~~~
+
+Durations of time are integers, representing a number of seconds not including
+leap seconds. They can be added to POSIX timestamps to produce other POSIX
+timestamps. The duration MUST be a multiple of `time_precision`. If `duration %
+time_precision > 0`, then the interval is malformed.
+
+~~~ tls-presentation
+struct {
+  Time start;
+  Duration duration;
+} Interval;
+~~~
+
+Intervals of time consist of a start time and a duration. Intervals are
+half-open; that is, `start` is included and `(start + duration)` is excluded.
 
 ## Batch Modes, Batches, and Queries {#batch-mode}
 
