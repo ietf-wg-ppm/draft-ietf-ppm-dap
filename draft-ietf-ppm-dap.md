@@ -900,19 +900,17 @@ we define these resources and the messages used to act on them.
 
 ## Basic Type Definitions {#basic-definitions}
 
-The following are some basic type definitions used in other messages:
+The following are some basic type definitions used in other messages.
+
+A `ReportID` is used to uniquely identify a report in the context of a DAP task.
 
 ~~~ tls-presentation
-/* ASCII encoded URL. e.g., "https://example.com" */
-opaque Url<0..2^16-1>;
-
-uint64 Duration; /* Number of seconds elapsed between two instants */
-
-/* An ID used to uniquely identify a report in the context of a
-   DAP task. */
 opaque ReportID[16];
+~~~
 
-/* The various roles in the DAP protocol. */
+`Role` enumerates the roles assumed by protocol participants.
+
+~~~ tls-presentation
 enum {
   collector(0),
   client(1),
@@ -920,34 +918,32 @@ enum {
   helper(3),
   (255)
 } Role;
-
-/* Identifier for a server's HPKE configuration */
-uint8 HpkeConfigId;
-
-/* An HPKE ciphertext. */
-struct {
-  HpkeConfigId config_id;    /* config ID */
-  opaque enc<0..2^16-1>;     /* encapsulated HPKE key */
-  opaque payload<0..2^32-1>; /* ciphertext */
-} HpkeCiphertext;
-
-/* Represent a zero-length byte string. */
-struct {} Empty;
 ~~~
 
-DAP uses the 16-byte `ReportID` as the nonce parameter for the VDAF `shard` and
-`prep_init` methods (see {{!VDAF, Section 5}}). Additionally, DAP includes
-messages defined in the VDAF specification encoded as opaque byte strings within
-various DAP messages. Thus, for a VDAF to be compatible with DAP, it MUST
-specify a `NONCE_SIZE` of 16 bytes, and MUST specify encodings for the following
-VDAF types:
+`HpkeCiphertext` is a message encrypted using {{!HPKE=RFC9180}} and metadata
+needed to decrypt it. `HpkeConfigId` identifies a server's HPKE configuration
+(see {{hpke-config}}).
 
-* PublicShare
-* InputShare
-* AggParam
-* AggShare
-* PrepShare
-* PrepMessage
+~~~ tls-presentation
+uint8 HpkeConfigId;
+
+struct {
+  HpkeConfigId config_id;
+  opaque enc<0..2^16-1>;
+  opaque payload<0..2^32-1>;
+} HpkeCiphertext;
+~~~
+
+`config_id` identifies the HPKE configuration to which the message was
+encrypted. `enc` and `payload` correspond to the values returned by the
+{{!HPKE}} `SealBase()` function. Later sections describe how to use `SealBase()`
+in different situations.
+
+`Empty` is a zero-length byte string.
+
+~~~ tls-presentation
+struct {} Empty;
+~~~
 
 ### Times, Durations and Intervals {#timestamps}
 
@@ -989,6 +985,22 @@ struct {
 Intervals of time consist of a start time and a duration. Intervals are
 half-open; that is, `start` is included and `(start + duration)` is excluded.
 
+### VDAF Types
+
+The 16-byte `ReportID` is used as the nonce parameter for the VDAF `shard` and
+`prep_init` methods (see {{!VDAF, Section 5}}). Additionally, DAP includes
+messages defined in the VDAF specification encoded as opaque byte strings within
+various DAP messages. Thus, for a VDAF to be compatible with DAP, it MUST
+specify a `NONCE_SIZE` of 16 bytes, and MUST specify encodings for the following
+VDAF types:
+
+* PublicShare
+* InputShare
+* AggParam
+* AggShare
+* PrepShare
+* PrepMessage
+
 ## Batch Modes, Batches, and Queries {#batch-mode}
 
 An aggregate result is computed from a set of reports, called a "batch". The
@@ -1019,6 +1031,8 @@ follows:
 ~~~ tls-presentation
 enum {
   reserved(0),
+  time_interval(1),
+  leader_selected(2),
   (255)
 } BatchMode;
 ~~~
@@ -2764,13 +2778,6 @@ Each batch mode specifies the following:
 
 ## Time Interval {#time-interval-batch-mode}
 
-~~~ tls-presentation
-enum {
-  time_interval(1),
-  (255)
-} BatchMode;
-~~~
-
 The time-interval batch mode is designed to support applications in which
 reports are collected into batches grouped by an interval of time. The Collector
 specifies a "batch interval" that determines the time range for reports included
@@ -2848,13 +2855,6 @@ batch buckets identifiers for the batch interval is
   batch_interval.start + batch_interval.duration)`.
 
 ## Leader-selected Batch Mode {#leader-selected-batch-mode}
-
-~~~ tls-presentation
-enum {
-  leader_selected(2),
-  (255)
-} BatchMode;
-~~~
 
 The leader-selected batch mode is used to support applications in which it is
 acceptable for reports to be batched in an arbitrary fashion by the Leader. Each
