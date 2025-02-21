@@ -537,20 +537,19 @@ Task:
 
 # Overview {#overview}
 
-The protocol is executed by a large set of Clients and a pair of servers
-referred to as "Aggregators". Each Client's input to the protocol is its
-measurement (or set of measurements, e.g., counts of some user behavior). Given
-the input set of measurements `meas_1, ..., meas_N` held by the Clients, and an
-"aggregation parameter" `agg_param` shared by the Aggregators, the goal of DAP
-is to compute `agg_result = F(agg_param, meas_1, ..., meas_N)` for some
-function `F` while revealing nothing else about the measurements. We call `F`
-the "aggregation function" and `agg_result` the "aggregate result".
+The protocol is executed by a large set of Clients and a pair of Aggregators.
+Each Client's input to the protocol is its measurement (or set of measurements,
+e.g., counts of some user behavior). Given a set of measurements
+`meas_1, ..., meas_N` held by the Clients, and an "aggregation parameter"
+`agg_param` shared by the Aggregators, the goal of DAP is to compute
+`agg_result = F(agg_param, meas_1, ..., meas_N)` for some function `F` while
+revealing nothing else about the measurements. We call `F` the "aggregation
+function" and `agg_result` the "aggregate result".
 
 DAP is extensible in that it allows for the addition of new cryptographic
-schemes that compute different aggregation functions. In particular, the
-aggregation function is determined by the Verifiable Distributed Aggregation
-Function, or VDAF {{!VDAF=I-D.draft-irtf-cfrg-vdaf-14}}, used to securely
-compute it.
+schemes that compute different aggregation functions, determined by the
+Verifiable Distributed Aggregation Function, or
+{{!VDAF=I-D.draft-irtf-cfrg-vdaf-14}}, used to compute it.
 
 VDAFs rely on secret sharing to protect the privacy of the measurements. Rather
 than sending its measurement in the clear, each Client shards its measurement
@@ -561,19 +560,18 @@ Aggregators. This scheme has two important properties:
   measurement from which it was generated.
 
 * Aggregators can compute secret shares of the aggregate result by aggregating
-  their shares locally into "aggregate shares", which may later be combined
-  into the aggregate result.
+  their shares locally into "aggregate shares", which may later be merged into
+  the aggregate result.
 
-Note that some VDAFs allow measurements to be aggregated multiple times, each
-time with a different aggregation parameter; however, DAP only allows each
-measurement to be aggregated once. Similarly, some VDAFs produce aggregate
-values which depend on the order in which the measurements are aggregated;
-however, DAP only supports VDAFs whose aggregation results are independent of
-the order in which measurements are aggregated (see {{Section 4.4.1 of !VDAF}}).
+DAP is not compatible with all VDAFs. DAP only supports VDAFs whose aggregation
+results are independent of the order in which measurements are aggregated (see
+{{Section 4.4.1 of !VDAF}}). Some VDAFs may involve three or more Aggregators,
+but DAP requires exactly two Aggregators. Some VDAFs allow measurements to be
+aggregated multiple times with a different aggregation parameter. DAP may be
+compatible with such VDAFs, but only allows each measurement to be aggregated
+once.
 
 ## System Architecture {#system-architecture}
-
-The overall system architecture is shown in {{dap-topology}}.
 
 ~~~ aasvg
 .--------.
@@ -624,87 +622,77 @@ Helper:
 
 {{dap-topology}} illustrates which participants exchange HTTP messages. Arrows
 go from HTTP clients to HTTP servers. Note that some DAP participants may be
-clients sometimes but servers at other times. It is even possible for a single
-entity to embody multiple participants. For example, the Collector could also
-be one of the Aggregators.
+HTTP clients sometimes but HTTP servers at other times. It is even possible for
+a single entity to perform multiple DAP roles. For example, the Collector could
+also be one of the Aggregators.
 
 In the course of a measurement task ({{task-configuration}}), each Client
-records its own measurement value(s), packages them up into a report, and sends
-them to the Leader. Each share is encrypted to only one of the two Aggregators
-so that even though they pass through the Leader, the Leader is unable to see or
-modify the Helper's share. Depending on the task, the Client may only send one
-report or may send many reports over time.
+records its own measurement, packages it up into a report, and sends it to the
+Leader. Each share is encrypted to only one of the two Aggregators so that even
+though both pass through the Leader, the Leader is unable to see or modify the
+Helper's share. Depending on the task, the Client may only send one report or
+may send many reports over time.
 
 The Leader distributes the shares to the Helper and orchestrates the process of
-verifying them (see {{validating-inputs}}) and assembling them into an aggregate
-result for the Collector. Depending on the VDAF, it may be possible to
-incrementally process each report as it is uploaded, or it may be necessary to
-wait until the Collector transmits a collection request before processing can
-begin.
+verifying them and assembling them into a aggregate shares for the Collector.
+Depending on the VDAF, it may be possible to process each report as it is
+uploaded, or it may be necessary to wait until the Collector initializes a
+collection job before processing can begin.
 
 ## Validating Measurements {#validating-inputs}
 
-An essential task of any data collection pipeline is ensuring that the data
+An essential goal of any data collection pipeline is ensuring that the data
 being aggregated is "valid". For example, each measurement might be expected to
-be a number between `0` and `10`. In DAP, input validation is complicated by the
+be a number between 0 and 10. In DAP, input validation is complicated by the
 fact that none of the entities other than the Client ever sees that Client's
 plaintext measurement. To an Aggregator, a secret share of a valid measurement
 is indistinguishable from a secret share of an invalid measurement.
 
-In DAP, input validation is accomplished by an interactive computation between
-the Leader and Helper. At the beginning of this computation, each Aggregator is
-in possession of an input share uploaded by the Client. At the end of the
-computation, each Aggregator is in possession of either an "output share" that
-is ready to be aggregated or an indication that the underlying data is invalid,
-in which case the report is rejected.
+DAP validates inputs using an interactive computation between the Leader and
+Helper. At the beginning of this computation, each Aggregator holds an input
+share uploaded by the Client. At the end of the computation, each Aggregator
+either obtains an output share that is ready to be aggregated or rejects the
+report as invalid.
 
 This process is known as "preparation" and is specified by the VDAF itself
 ({{Section 5.2 of !VDAF}}). To facilitate preparation, the report generated by
-the Client include information used by the Aggregators. For example, Prio3
+the Client includes information used by the Aggregators. For example, Prio3
 ({{Section 7 of !VDAF}}) includes a zero-knowledge proof of the measurement's
-validity ({{Section 7.1 of !VDAF}}); the process of verifying this proof
-reveals nothing about the underlying measurement beyond its validity.
+validity ({{Section 7.1 of !VDAF}}). Verifying this proof reveals nothing about
+the underlying measurement but its validity.
 
-The specific properties attested to by the proof vary depending on the
-measurement being taken. For instance, to measure the time the user took
-performing a given task the proof might demonstrate that the value reported was
-within a certain range (e.g., between `0` and `60` seconds). By contrast, to
-report which of a set of `N` options the user select, the report might contain
-`N` integers and the proof would demonstrate that `N-1` were `0` and the other
-was `1`.
+The specific properties attested to by the proof depend on the measurement being
+taken. For instance, if the task is measuring the latency of some operation, the
+proof might demonstrate that the value reported was between 0 and 60 seconds.
+But to report which of `N` options a user selected, the report might contain `N`
+integers and the proof would demonstrate that `N-1` of them were `0` and the
+other was `1`.
 
-It is important to recognize that "validity" is distinct from "correctness".
-For instance, the user might have spent `30` seconds on a task but the Client
-might report `60` seconds. This is a problem with any measurement system and
-DAP does not attempt to address it; it merely ensures that the data is within
-acceptable limits, so the Client could not report `10^6`  or `-20` seconds.
+"Validity" is distinct from "correctness". For instance, the user might have
+spent `30` seconds on a task but might report `60` seconds. This is a problem
+with any measurement system and DAP does not attempt to address it. DAP merely
+ensures that the data is within the chosen limits, so the Client could not
+report `10^6`  or `-20` seconds.
 
 ## Replay Protection {#replay-protection}
 
 Another goal of DAP is to mitigate replay attacks in which a report is
-aggregated multiple times within a batch or across multiple batches. This would
+aggregated in multiple batches or multiple times in a single batch. This would
 allow the attacker to learn more information about the underlying measurement
 than it would otherwise.
 
 When a Client generates a report, it also generates a random nonce, called the
 "report ID". Each Aggregator is responsible for storing the IDs of reports it
-has aggregated for a given task. To check whether a report has been replayed,
-it checks whether the report's ID is in the set of stored IDs.
-
-Note that IDs do not need to be stored indefinitely. The protocol allows
-Aggregators to enforce replay only for a sliding time window (e.g., within the
-last two weeks of the current time) and reject reports that fall outside of the
-replay window. This allows implementation to save resources by forgetting old
-report IDs.
+has aggregated and rejecting replayed reports.
 
 ## Lifecycle of Protocol Objects
 
 The following diagram illustrates how the various objects in the protocol are
-constructed or transformed into other protocol objects. Nodes enclosed in an
-oval are verbs or actions which process, transform or combine one or more
-objects into one or more other objects. Note that this does not necessarily
-illustrate how participants communicate. In particular, the processing of
-aggregation jobs happens in distinct, non-colluding parties.
+constructed or transformed into other protocol objects. Oval nodes are verbs or
+actions which process, transform or combine one or more objects into one or more
+other objects. This diagram does not necessarily illustrate how participants
+communicate. In particular, the processing of aggregation jobs happens in
+distinct, non-colluding parties.
 
 ~~~ aasvg
                    measurement
@@ -822,7 +810,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
 ### Arity of Protocol Objects
 
-DAP reports are 1 to 1 to with measurements. In this illustration, `i` distinct
+Reports are 1 to 1 to with measurements. In this illustration, `i` distinct
 Clients upload a distinct report, but a single Client could upload multiple
 reports to a task (see {{sybil}} for some implications of this). The process of
 sharding measurements, constructing reports and uploading them is specified in
@@ -853,12 +841,12 @@ with aggregate shares.
 
 The Leader and Helper's aggregate shares are finally delivered to the Collector
 to be unsharded into the aggregate result. Since there are always exactly two
-Aggregators in DAP, aggregate shares are 2 to 1 with aggregate results. The
-collection interaction is specified in {{collect-flow}}.
+Aggregators, aggregate shares are 2 to 1 with aggregate results. The collection
+interaction is specified in {{collect-flow}}.
 
 There can be many aggregate results for a single task. The Collection process
 may occur multiple times for each task, with the Collector obtaining multiple
-aggregate results. For example, imagine a task where the Collector obtains
+aggregate results. For example, imagine tasks where the Collector obtains
 aggregate results once an hour, or every time 10,000,000 reports are uploaded.
 
 # Message Transport {#message-transport}
