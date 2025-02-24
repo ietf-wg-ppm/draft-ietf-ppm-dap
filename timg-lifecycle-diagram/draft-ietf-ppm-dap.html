@@ -2728,9 +2728,7 @@ relationship. In this example, we show one batch bucket for each aggregation
 job, but aggregation jobs and batch buckets are not necessarily 1 to 1. Multiple
 aggregation jobs could contribute to the same batch bucket, and a single
 aggregation job could contribute to multiple batch buckets. The assignation of
-output shares to batch buckets is an implementation detail of each Aggregator.
-Any strategy that does not preclude satisfying the Collector's query (see
-<a href="#batch-mode" class="auto internal xref">Section 4.2</a> and <a href="#collect-flow" class="auto internal xref">Section 4.8</a>) is permitted.<a href="#section-2.4.1-4" class="pilcrow">¶</a></p>
+output shares to batch buckets is specified in <a href="#batch-buckets" class="auto internal xref">Section 4.7.2.3</a>.<a href="#section-2.4.1-4" class="pilcrow">¶</a></p>
 <p id="section-2.4.1-5">Using the Collector's query, each Aggregator will merge one or more batch
 buckets together into its aggregate share, meaning batch buckets are many to 1
 with aggregate shares.<a href="#section-2.4.1-5" class="pilcrow">¶</a></p>

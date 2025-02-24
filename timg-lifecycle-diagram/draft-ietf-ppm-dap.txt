@@ -917,9 +917,7 @@ parameter    .------------+-------------.     |         |        |       |
    necessarily 1 to 1.  Multiple aggregation jobs could contribute to
    the same batch bucket, and a single aggregation job could contribute
    to multiple batch buckets.  The assignation of output shares to batch
-   buckets is an implementation detail of each Aggregator.  Any strategy
-   that does not preclude satisfying the Collector's query (see
-   Section 4.2 and Section 4.8) is permitted.
+   buckets is specified in Section 4.7.2.3.
 
    Using the Collector's query, each Aggregator will merge one or more
    batch buckets together into its aggregate share, meaning batch
