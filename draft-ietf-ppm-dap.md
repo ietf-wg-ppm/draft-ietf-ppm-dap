@@ -722,18 +722,18 @@ aggregation jobs happens in distinct, non-colluding parties.
 ~~~ aasvg
                    measurement
                         |
-                    .---+---.
-                   | sharded |
-                    '---+---'
+                     .--+--.
+                    | shard |
+                     '--+--'
                         |
                         v
       .-----------------+-------------------------.
       |                                           |
 public share   Leader input share         Helper input share
       |                 |                         |
-      |       .---------+---------.     .---------+---------.
-      |      | encrypted to Leader |   | encrypted to Helper |
-      |       '-------------------'     '-------------------'
+      |        .--------+--------.       .--------+--------.
+      |       | encrypt to Leader |     | encrypt to Helper |
+      |        '--------+--------'       '--------+--------'
       |                 |                         |
       |                 v                         v
       |        Leader report share       Helper report share
@@ -743,9 +743,9 @@ public share   Leader input share         Helper input share
                         v
                  Client 1 report    Client 2 report    ...   Client i report
                         |                  |                        |
-                   .----+---.         .----+---.               .----+---.
-                  | uploaded |       | uploaded |             | uploaded |
-                   '----+---'         '----+---'               '----+---'
+                    .---+--.           .---+--.                 .---+--.
+                   | upload |         | upload |               | upload |
+                    '---+--'           '---+--'                 '---+--'
                         |                  |                        |
                         |<-----------------'                        |
                                                                     |
@@ -755,7 +755,7 @@ public share   Leader input share         Helper input share
                         |<------------ aggregation parameter
                         |               chosen by Collector
                .--------+----------.
-              |  reports assigned   |
+              |    assign reports   |
               | to aggregation jobs |
                '--------+----------'
                         |
@@ -773,20 +773,20 @@ parameter    .------------+-------------.     |         |        |       |
   |       Leader     Helper report    public  |         |        |       |
   |     report share 1  share 1      share 1  |         |        |       |
   |          |            |             |     |         |        |       |
-  |     .----+----.  .----+----.        |     |         |        |       |
-  |    | decrypted || decrypted |       |     |         |        |       |
-  |     '----+----'  '----+----'        |  .--+---------+---.    |       |
-  |          |            |             | | reports prepared |   |       |
-  |          v            v             |  '--+---------+---'    |       |
+  |      .---+---.    .---+---.         |     |         |        |       |
+  |     | decrypt |  | decrypt |        |     |         |        |       |
+  |      '---+---'    '---+---'         |  .--+---------+--.     |       |
+  |          |            |             | | prepare reports |    |       |
+  |          v            v             |  '--+---------+--'     |       |
   |    Leader input   Helper input      |     |         |   .----+-------+---.
-  |       share 1      share 1          |     |         |  | aggregation jobs |
-  |          |            |             |     |         |  |       run        |
+  |       share 1      share 1          |     |         |  |        run       |
+  |          |            |             |     |         |  | aggregation jobs |
   '--------->+----------->|             |     |         |   '----+-------+---'
              |<-----------+<------------'     |         |        |       |
              |            |                   |         |        |       |
-         .---+------------+----.              |         |        |       |
-        | input shares prepared |             v         |        |       |
-         '---+------------+----'         .----+--.      |        |       |
+         .---+------------+---.               |         |        |       |
+        | prepare input shares |              v         |        |       |
+         '---+------------+---'          .----+--.      |        |       |
              |            |              |       |      |        |       |
              v            v           Leader   Helper   |        |       |
        Leader output  Helper output   output   output   |        |       |
@@ -800,9 +800,9 @@ parameter    .------------+-------------.     |         |        |       |
              |            |                        |       |     |       |
              |<-----------|------------------------'       |     |       |
              |            |<-------------------------------'     |       |
-      .------+------------+-----.                  .-------------'       |
-     | output shares accumulated |                 |                     |
-      '------+------------+-----'                  v                     |
+       .-----+------------+-----.                  .-------------'       |
+      | accumulate output shares |                 |                     |
+       '-----+------------+-----'                  v                     |
              |            |                .-------+-------.             |
              v            v                |               |             |
            Leader       Helper       Leader batch   Helper batch         |
@@ -818,9 +818,9 @@ parameter    .------------+-------------.     |         |        |       |
              |            |<---------------------------------------------'
              |<-----------+<----- query chosen
              |            |       by Collector
-         .---+------------+---.
-        | batch buckets merged |
-         '---+------------+---'
+         .---+------------+--.
+        | merge batch buckets |
+         '---+------------+--'
              |            |
              v            v
    Leader aggregate  Helper aggregate
@@ -828,9 +828,9 @@ parameter    .------------+-------------.     |         |        |       |
              |            |
              '------+-----'
                     |
-               .----+----.
-              | unsharded |
-               '----+----'
+                .---+---.
+               | unshard |
+                '---+---'
                     |
                     v
              aggregate result
