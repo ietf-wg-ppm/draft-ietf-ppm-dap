@@ -615,25 +615,25 @@ Table of Contents
 
    The overall system architecture is shown in Figure 1.
 
-   +--------+
+   .--------.
    |        |
-   | Client +----+
+   | Client +----.
    |        |    |
-   +--------+    |
-                 |
-   +--------+    |     +------------+         +-----------+
-   |        |    +----->            |         |           |
-   | Client +---------->   Leader   <---------| Collector |
-   |        |    +----->            |         |           |
-   +--------+    |     +------------+         +-----------+
-                 |           |
-   +--------+    |           |
-   |        |    |           |
-   | Client +----+     +-----V------+
+   '--------'    |
+                 |     .------------.
+   .--------.    '---->|            |         .-----------.
+   |        |          |            |         |           |
+   | Client +--------->|   Leader   |<--------+ Collector |
+   |        |     ...  |            |         |           |
+   '--------'    .---->|            |         '-----------'
+                 |     '------------'
+      ...        |           |
+                 |           v
+   .--------.    |     .------------.
+   |        |    |     |            |
+   | Client +----'     |   Helper   |
    |        |          |            |
-   +--------+          |   Helper   |
-                       |            |
-                       +------------+
+   '--------'          '------------'
 
                          Figure 1: DAP architecture
 
@@ -1747,9 +1747,9 @@ aggregation job 1                   aggregation job 2          aggregation job j
      report, agg_param
       |
       v
-   +--------+                                         +--------+
+   .--------.                                         .--------.
    | Leader |                                         | Helper |
-   +--------+                                         +--------+
+   '--+-----'                                         '-----+--'
       | AggregationJobInitReq:                              |
       |   agg_param, prep_init                              |
       |---------------------------------------------------->|
@@ -1763,7 +1763,9 @@ aggregation job 1                   aggregation job 2          aggregation job j
       |                               prep_resp(continue)   |
       |<----------------------------------------------------|
       |                                                     |
+
      ...                                                   ...
+
       |                                                     |
       | AggregationJobContinueReq:                          |
       |   prep_continue                                     |
