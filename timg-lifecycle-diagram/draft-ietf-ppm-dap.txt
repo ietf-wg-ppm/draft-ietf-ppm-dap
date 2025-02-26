@@ -806,7 +806,7 @@ public share   Leader input share         Helper input share
                .--------+-+-----+--.
               |    assign reports   |
               | to aggregation jobs |<--- aggregation parameter
-               '--------+----------'      chosen by collector
+               '--------+----------'      chosen by Collector
                         |
                         v
         .---------------+------------------+---------------------- ... -------.
@@ -830,43 +830,50 @@ aggregation job 1                   aggregation job 2          aggregation job j
 ║  ║   share 1      share 1     .--'   ║   ║       ║       |       ║   ║       ║
 ║  ║      |            |        |      ║   ║       ║       |       ║   ║       ║
 ║  ║      v            v        v      ║   ║       ║       |       ║   ║       ║
-║  ║  .-+-+------------+-+------+.     ║   ║       ║       |       ║   ║       ║
-║  ║ |    prepare input shares    |<---║---║-------║-------|       ║   ║       ║
-║  ║  '---+-------------+--------'     ║   ║       ║       |       ║   ║       ║
-║  ║      |             |              ║   ║       ║       |       ║   ║       ║
-║  ║      v             v              ║   ║<------║-------|       ║   ║       ║
+║  ║  .---+------------+--------+.     ║   ║       ║       |       ║   ║       ║
+║  ║ |    prepare input shares    |<---║---║-------║-------+       ║   ║       ║
+║  ║  '----+---------------+-----'     ║   ║       ║       |       ║   ║       ║
+║  ║       |               |           ║   ║       ║       |       ║   ║       ║
+║  ║       v               v           ║   ║<------║-------+       ║   ║       ║
 ║  ║  Leader output   Helper output    ║   ║       ║       |       ║   ║       ║
-║  ║    share 1         share 1        ║   ║       ║      ...      ║   ║       ║
-║  +=======|===============|===========+   ║       ║               ║   ║       ║
+║  ║    share 1         share 1        ║   ║       ║               ║   ║       ║
+║  ║       |               |           ║   ║       ║      ...      ║   ║       ║
+║  +=======+===============+===========+   ║       ║               ║   ║       ║
 ║    ║     | Leader output | Helper output ║       ║       |       ║   ║       ║
 ║    ║     | share 2       | share 2       ║       ║<------'       ║   ║       ║
-║    +=====|=|=============|=|=============+       ║               ║   ║       ║
+║    ║     | |             | |             ║       ║               ║   ║       ║
+║    +=====+=+=============+=+=============+       ║               ║   ║       ║
 ║      ... | |  Leader     | | Helper              ║               ║   ║       ║
 ║          | |  output     | | output              ║               ║   ║       ║
 ║       ║  | |  share k    | | share k             ║               ║   ║       ║
-║       +==|=|=====|=======|=|=====|===============+               ║   ║       ║
+║       ║  | |     |       | |     |               ║               ║   ║       ║
+║       +==+=+=====+=======+=+=====+===============+               ║   ║       ║
 ║          v v ... v       v v ... v                               ║   ║       ║
 ║  .-------+-+-----+-.   .-+-+-----+-------.                       ║   ║       ║
-║ | accumulate leader | | accumulate helper |                      ║   ║       ║
+║ | accumulate Leader | | accumulate Helper |                      ║   ║       ║
 ║ |   output shares   | |   output shares   |                      ║   ║       ║
-║  '----+------------'   '-------------+---'                       ║   ║       ║
-║       |                              |                           ║   ║       ║
-║       v                              v                           ║   ║       ║
-║  Leader batch                    Helper batch                    ║   ║       ║
-║    bucket 1                        bucket 1                      ║   ║       ║
-+=======|===============================|==========================+   ║       ║
-  ║     | Leader batch                  | Helper batch                 ║       ║
-  ║     |   bucket 2                    |  bucket 2                    ║       ║
-  +=====|========|======================|=====|========================+       ║
+║  '----+------------'   '--------------+--'                       ║   ║       ║
+║       |                               |                          ║   ║       ║
+║       v                               v                          ║   ║       ║
+║  Leader batch bucket 1          Helper batch bucket 2            ║   ║       ║
+║       |                               |                          ║   ║       ║
++=======+===============================+==========================+   ║       ║
+  ║     | Leader batch bucket 2         | Helper batch bucket 2        ║       ║
+  ║     |        |                      |     |                        ║       ║
+  +=====+========+======================+=====+========================+       ║
    ...  | .------'                      | .---'                                ║
-        | |  Leader batch               | |  Helper batch                      ║
-    ║   | |    bucket j                 | |    bucket j                        ║
-    +===|=|=====|=======================|=|=====|==============================+
+        | |  Leader batch bucket j      | |  Helper batch bucket j             ║
+    ║   | |     |                       | |     |                              ║
+    +===+=+=====+=======================+=+=====+==============================+
         v v ... v      query chosen     v v ... v
-     .--+-+-----+--.   by collector  .--+-+-----+--.
-    |  merge leader |       |       | merge helper  |
+     .--+-+-----+--.   by Collector  .--+-+-----+--.
+    |  merge Leader |       |       | merge Helper  |
     | batch buckets |<------+------>| batch buckets |
      '------+------'                 '------+------'
+            |                               |
+            v                               v
+         Leader                          Helper
+    aggregate share                  aggregate share
             |                               |
             '---------------+---------------'
                             |
