@@ -843,9 +843,9 @@ aggregation job 1                   aggregation job 2          aggregation job j
 ║    ║     | share 2       | share 2       ║       ║<------'       ║   ║       ║
 ║    ║     | |             | |             ║       ║               ║   ║       ║
 ║    +=====+=+=============+=+=============+       ║               ║   ║       ║
-║      ... | |  Leader     | | Helper              ║               ║   ║       ║
-║          | |  output     | | output              ║               ║   ║       ║
-║       ║  | |  share k    | | share k             ║               ║   ║       ║
+║      ... | |  Leader     | |   Helper            ║               ║   ║       ║
+║          | |  output     | |   output            ║               ║   ║       ║
+║       ║  | |  share k    | |   share k           ║               ║   ║       ║
 ║       ║  | |     |       | |     |               ║               ║   ║       ║
 ║       +==+=+=====+=======+=+=====+===============+               ║   ║       ║
 ║          v v ... v       v v ... v                               ║   ║       ║
@@ -855,10 +855,10 @@ aggregation job 1                   aggregation job 2          aggregation job j
 ║  '----+------------'   '--------------+--'                       ║   ║       ║
 ║       |                               |                          ║   ║       ║
 ║       v                               v                          ║   ║       ║
-║  Leader batch bucket 1          Helper batch bucket 2            ║   ║       ║
+║  Leader batch bucket 1          Helper batch bucket 1            ║   ║       ║
 ║       |                               |                          ║   ║       ║
 +=======+===============================+==========================+   ║       ║
-  ║     | Leader batch bucket 2         | Helper batch bucket 2        ║       ║
+  ║     |  Leader batch bucket 2        |  Helper batch bucket 2       ║       ║
   ║     |        |                      |     |                        ║       ║
   +=====+========+======================+=====+========================+       ║
    ...  | .------'                      | .---'                                ║
