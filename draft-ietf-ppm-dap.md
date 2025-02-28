@@ -1834,8 +1834,8 @@ This message consists of:
   specifies a "batch ID" that determines the batch to which each report for
   this aggregation job belongs ({{leader-selected-batch-mode}}).
 
-  Documents that define batch modes MUST specify the content this field; see
-  {{extending-this-doc}} for details.
+  Documents that define batch modes MUST specify the content of this field;
+  see {{extending-this-doc}} for details.
 
   The indicated batch mode MUST match the task's batch mode. Otherwise, the
   Helper MUST abort with error `invalidMessage`.
