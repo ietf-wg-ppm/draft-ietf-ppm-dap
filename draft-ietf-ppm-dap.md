@@ -1707,7 +1707,7 @@ whether the corresponding report ID is in the set of stored IDs.
 
 The Leader begins an aggregation job by choosing a set of candidate reports that
 pertain to the same DAP task and a job ID which MUST be unique within the scope
-of the task. The job ID is a 16-byte value, structured as follows:
+of the DAP task. The job ID is a 16-byte value, structured as follows:
 
 ~~~ tls-presentation
 opaque AggregationJobID[16];
