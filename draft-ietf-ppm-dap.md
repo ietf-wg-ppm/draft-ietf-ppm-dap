@@ -1874,7 +1874,7 @@ The `AggregationJobResp.prepare_resps` field must include exactly the same
 report IDs in the same order as the Leader's `AggregationJobInitReq`. Otherwise,
 the Leader MUST abort the aggregation job.
 
-Otherwise, the Leader proceeds as follows with each report:
+Continuing, the Leader proceeds as follows with each report:
 
 1. If the inbound prep response has type "continue", then the Leader computes
 
