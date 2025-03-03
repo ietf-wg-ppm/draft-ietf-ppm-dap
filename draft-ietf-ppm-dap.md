@@ -2463,7 +2463,7 @@ update the batch buckets:
 * Update the aggregate share `agg_share` to `Vdaf.agg_update(agg_param,
   agg_share, out_share)`.
 * Increment the count by 1.
-* Update the checksum value to the bitwise-XOR of the checksum value with the
+* Update the checksum value to the bitwise XOR of the checksum value with the
   SHA256 {{!SHS=DOI.10.6028/NIST.FIPS.180-4}} hash of the report ID associated
   with the output share.
 
