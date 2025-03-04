@@ -3022,7 +3022,8 @@ batch buckets identifiers for the batch interval is
 `(batch_interval.start,
   batch_interval.start + time_precision)`,
 `(batch_interval.start + time_precision,
-  batch_interval.start + 2*time_precision)`, ...,
+  batch_interval.start + 2*time_precision)`,
+  ...,
 `(batch_interval.start + batch_interval.duration - time_precision) +
   batch_interval.start + batch_interval.duration)`.
 
