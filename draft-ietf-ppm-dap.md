@@ -1382,7 +1382,7 @@ Note: Long cache lifetimes may result in Clients using stale HPKE
 configurations; Aggregators SHOULD continue to accept reports with old keys for
 at least twice the cache lifetime in order to avoid rejecting reports.
 
-### Upload Request
+### Upload Request  {#upload-request}
 
 Clients upload reports by using an HTTP POST to
 `{leader}/tasks/{task-id}/reports`. The payload is a `Report`, with media type
@@ -1551,6 +1551,37 @@ abort the upload request with error "invalidMessage".
 the Leader to decrypt its input share. The Leader also cannot validate the
 Helper's extensions because it cannot decrypt the Helper's input share.
 Mandatory validation of extensions will occur during aggregation.)
+
+### Bulk upload
+
+Clients or intermediates with multiple reports in hand can use bulk upload endpoint
+and send an HTTP POST to `{leader}/tasks/{task-id}/reports/bulk` with media type
+"application/dap-bulk-report". A bulk request is equivalent to multiple separate
+submissions and is strictly a performance optimization.
+
+The "application/dap-bulk-report" format contains a prologue that encodes extensions that are
+common to all reports. The header is followed by any number of reports, from which those
+shared fields are removed.
+
+~~~ tls-presentation
+struct {
+Extension common_extensions<0..2^16-1>;
+Report report[REPORT_COUNT];
+} BulkReport;
+~~~
+{: #syn-bulk-report title="Bulk Report Format"}
+
+The use of `REPORT_COUNT` in {{syn-bulk-report}} is a small abuse of the TLS syntax
+to signify that any number of reports are included. This "value" could be any
+positive integer. Unlike a variable-length field, as denoted with `&lt;` and `>`,
+this format does not require that the size of all included reports
+be known before constructing a request.
+
+The `common_extensions` field contains common extensions that are added to the set of
+public report extensions in each report that follows. Reports that include values for
+any common extension override the value in the common extension.
+
+Each individual report from the bulk upload request will be processed as described in {{upload-request}}.
 
 ### Report Extensions {#report-extensions}
 
