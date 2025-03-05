@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 30 August 2025                                       Cloudflare
+Expires: 6 September 2025                                     Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                        26 February 2025
+                                                            5 March 2025
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -64,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 30 August 2025.
+   This Internet-Draft will expire on 6 September 2025.
 
 Copyright Notice
 
@@ -104,7 +104,7 @@ Table of Contents
        4.1.2.  VDAF Types
      4.2.  Batch Modes, Batches, and Queries
      4.3.  Task Configuration
-     4.4.  Resource URIs
+     4.4.  Resource URLs
      4.5.  Aggregation Parameter Validation
      4.6.  Uploading Reports
        4.6.1.  HPKE Configuration Request
@@ -1124,7 +1124,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    namespace, e.g., urn:ietf:params:ppm:dap:error:invalidMessage.
 
    This list is not exhaustive.  The server MAY return errors set to a
-   URI other than those defined above.  Servers MUST NOT use the DAP URN
+   URN other than those defined above.  Servers MUST NOT use the DAP URN
    namespace for errors not listed in the appropriate IANA registry (see
    Section 9.3).  The "detail" member of the Problem Details document
    includes additional diagnostic information.
@@ -1371,17 +1371,17 @@ aggregation job 1                   aggregation job 2          aggregation job j
    collector HPKE configuration or the VDAF verification key is to
    configure a new task.
 
-4.4.  Resource URIs
+4.4.  Resource URLs
 
    DAP is defined in terms of "resources", such as reports
    (Section 4.6), aggregation jobs (Section 4.7), and collection jobs
-   (Section 4.8).  Each resource has an associated URI.  Resource URIs
+   (Section 4.8).  Each resource has an associated URL.  Resource URLs
    are specified by a sequence of string literals and variables.
    Variables are expanded into strings according to the following rules:
 
-   *  Variables {leader} and {helper} are replaced with the base URL of
-      the Leader and Helper respectively (the base URL is defined in
-      Section 4.3).
+   *  Variables {leader} and {helper} are replaced with the base API URL
+      of the Leader and Helper respectively (the base URLs are defined
+      in Section 4.3).
 
    *  Variables {task-id}, {aggregation-job-id}, and {collection-job-id}
       are replaced with the task ID (Section 4.3), aggregation job ID
@@ -1394,7 +1394,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    ID "f0 16 34 47 36 4c cf 1b c0 e3 af fc ca 68 73 c9 c3 81 f6 4a cd f9
    02 06 62 f8 3f 46 c0 72 19 e7" and an aggregation job ID "95 ce da 51
    e1 a9 75 23 68 b0 d9 61 f9 46 61 28" (32 and 16 byte octet strings,
-   represented in hexadecimal), resource URI {helper}/tasks/{task-
+   represented in hexadecimal), resource URL {helper}/tasks/{task-
    id}/aggregation_jobs/{aggregation-job-id} would be expanded into
    https://example.com/api/dap/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-
    QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA.
@@ -1996,7 +1996,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    containing an AggregationJobResp (see Section 4.7.1.2).  If the
    status field is ready, the Leader proceeds onward.  Otherwise, if the
    status field is processing, the Leader polls the aggregation job by
-   sending GET requests to the URI indicated in the Location header
+   sending GET requests to the URL indicated in the Location header
    field, until the status is ready.  The Helper's response when
    processing SHOULD include a Retry-After header to suggest a polling
    interval to the Leader.
@@ -2402,7 +2402,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    containing an AggregationJobResp (see Section 4.7.1.2).  If the
    status field is ready, the Leader proceeds onward.  Otherwise, if the
    status field is processing, the Leader polls the aggregation job by
-   sending GET requests to the URI indicated in the Location header
+   sending GET requests to the URL indicated in the Location header
    field, until the status is ready.  The Helper's response when
    processing SHOULD include a Retry-After header to suggest a polling
    interval to the Leader.
