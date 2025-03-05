@@ -574,8 +574,8 @@ Table of Contents
       an Aggregator [HPKE].  The report share also includes some
       associated data used for processing the report.
 
-   Task:  A measurement task in which measurements of an understood type
-      will be reported by the Clients, aggregated by the Aggregators and
+   Task:  A task in which measurements of an understood type will be
+      reported by the Clients, aggregated by the Aggregators and
       received by the Collector.  Many collections can be performed in
       the course of a single task.
 
