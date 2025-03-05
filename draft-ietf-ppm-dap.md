@@ -1029,7 +1029,7 @@ standard tokens for use in the "type" field:
 These types are scoped to the errors sub-namespace of the DAP URN namespace,
 e.g., urn:ietf:params:ppm:dap:error:invalidMessage.
 
-This list is not exhaustive. The server MAY return errors set to a URI other
+This list is not exhaustive. The server MAY return errors set to a URN other
 than those defined above. Servers MUST NOT use the DAP URN namespace for errors
 not listed in the appropriate IANA registry (see {{urn-space}}). The "detail"
 member of the Problem Details document includes additional diagnostic
@@ -1262,16 +1262,16 @@ A task's parameters are immutable for the lifetime of that task. The only way to
 change parameters or to rotate secret values like collector HPKE configuration
 or the VDAF verification key is to configure a new task.
 
-## Resource URIs
+## Resource URLs
 
 DAP is defined in terms of "resources", such as reports ({{upload-flow}}),
 aggregation jobs ({{aggregate-flow}}), and collection jobs ({{collect-flow}}).
-Each resource has an associated URI. Resource URIs are specified by a sequence
+Each resource has an associated URL. Resource URLs are specified by a sequence
 of string literals and variables. Variables are expanded into strings according
 to the following rules:
 
-* Variables `{leader}` and `{helper}` are replaced with the base URL of the
-  Leader and Helper respectively (the base URL is defined in
+* Variables `{leader}` and `{helper}` are replaced with the base API URL of the
+  Leader and Helper respectively (the base URLs are defined in
   {{task-configuration}}).
 * Variables `{task-id}`, `{aggregation-job-id}`, and `{collection-job-id}` are
   replaced with the task ID ({{task-configuration}}), aggregation job ID
@@ -1282,7 +1282,7 @@ to the following rules:
 For example, given a helper URL "https://example.com/api/dap", task ID "f0 16 34
 47 36 4c cf 1b c0 e3 af fc ca 68 73 c9 c3 81 f6 4a cd f9 02 06 62 f8 3f 46 c0 72
 19 e7" and an aggregation job ID "95 ce da 51 e1 a9 75 23 68 b0 d9 61 f9 46 61
-28" (32 and 16 byte octet strings, represented in hexadecimal), resource URI
+28" (32 and 16 byte octet strings, represented in hexadecimal), resource URL
 `{helper}/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}` would be
 expanded into
 `https://example.com/api/dap/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA`.
@@ -1860,7 +1860,7 @@ The Helper responds with HTTP status 201 Created with a body containing an
 `AggregationJobResp` (see {{aggregation-helper-init}}). If the `status` field
 is `ready`, the Leader proceeds onward. Otherwise, if the `status` field is
 `processing`, the Leader polls the aggregation job by sending GET requests to
-the URI indicated in the Location header field, until the `status` is `ready`.
+the URL indicated in the Location header field, until the `status` is `ready`.
 The Helper's response when processing SHOULD include a Retry-After header to
 suggest a polling interval to the Leader.
 
@@ -2254,7 +2254,7 @@ The Helper responds with HTTP status 202 Accepted with a body containing an
 `AggregationJobResp` (see {{aggregation-helper-init}}). If the `status` field
 is `ready`, the Leader proceeds onward. Otherwise, if the `status` field is
 `processing`, the Leader polls the aggregation job by sending GET requests to
-the URI indicated in the Location header field, until the `status` is
+the URL indicated in the Location header field, until the `status` is
 `ready`. The Helper's response when processing SHOULD include a Retry-After
 header to suggest a polling interval to the Leader.
 
