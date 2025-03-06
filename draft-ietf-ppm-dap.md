@@ -1166,8 +1166,8 @@ following parameters associated with it:
   in a `Prio3Histogram`).
 * A URL relative to which the Leader's API resources can be found.
 * A URL relative to which the Helper's API resources can be found.
-* The batch mode for this task (see {{batch-mode}}), which determines how reports
-  are grouped into batches.
+* The batch mode for this task (see {{batch-modes-overview}}), which determines
+  how reports are grouped into batches.
 * `task_interval` (`Interval`): Reports whose timestamp is outside of this
   interval will be rejected by the Aggregators.
 * `time_precision` (`Duration`): Used to compute timestamps in DAP. See
@@ -1197,46 +1197,23 @@ A task's parameters are immutable for the lifetime of that task. The only way to
 change parameters or to rotate secret values like collector HPKE configuration
 or the VDAF verification key is to configure a new task.
 
-### Batch Modes, Batches, and Queries {#batch-mode}
+### Batch Modes, Batches, and Queries {#batch-modes-overview}
 
 An aggregate result is computed from a set of reports, called a "batch". The
-Collector requests the aggregate result by making a "query"; the Aggregators
+Collector requests the aggregate result by making a "query" and the Aggregators
 use this query to select a batch for aggregation.
 
-Each measurement task has a preconfigured "batch mode". The batch mode defines
-both how reports are assigned into batches, as well as how these batches are
-addressed and the semantics of the query used for collection.
+The task's batch mode defines both how reports are assigned into batches, how
+these batches are addressed and the semantics of the query used for collection.
+Regardless of batch mode, each report can only ever be part of a single batch.
 
-This document defines two batch modes:
-
-* time-interval ({{time-interval-batch-mode}}) in which the query specifies a
-  time interval, and the batch consists of all reports with a timestamp in that
-  interval.
-
-* leader-selected ({{leader-selected-batch-mode}}) in which the Leader assigns
-  reports to batches itself, and the Collector's query simply requests the
-  aggregate result for the "next" batch of reports.
-
-Future documents may define additional batch modes for DAP; see
-{{extending-this-doc}}. Implementations are free to implement only a subset of
-the available batch modes.
-
-Batch modes are identified with a single byte in serialized messages, as
-follows:
-
-~~~ tls-presentation
-enum {
-  reserved(0),
-  time_interval(1),
-  leader_selected(2),
-  (255)
-} BatchMode;
-~~~
+{{batch-modes}} defines the `time-interval` and `leader-selected` batch modes
+and discusses how new batch modes may be defined by future documents.
 
 The query is issued to the Leader by the Collector during the collection
-interaction ({{collect-flow}}). In addition, information used to guide batch
-selection is conveyed from the Leader to the Helper when initializing
-aggregation ({{aggregate-flow}}) and finalizing the aggregate shares.
+interaction ({{collect-flow}}). Information used to guide batch selection is
+conveyed from the Leader to the Helper when initializing aggregation jobs
+({{aggregate-flow}}) and finalizing the aggregate shares.
 
 ## Resource URLs
 
@@ -1817,7 +1794,7 @@ This message consists of:
   This field is called the "partial" batch selector because, depending on the
   batch mode, it may not determine a batch. In particular, if the batch mode is
   `time_interval`, the batch is not determined until the Collector's query is
-  issued (see {{batch-mode}}).
+  issued (see {{batch-modes}}).
 
 * `prepare_inits`: the sequence of `PrepareInit` messages constructed in the
   previous step.
@@ -2161,7 +2138,7 @@ following checks:
       has completed a collection job for a CollectionJobReq message from the
       Collector; the Helper considers a batch to be collected once it has
       responded to an `AggregateShareReq` message from the Leader. A batch is
-      determined by query ({{batch-mode}}) conveyed in these messages. Queries
+      determined by query ({{batch-modes}}) conveyed in these messages. Queries
       must satisfy the criteria covered in {{batch-validation}}. These criteria
       are meant to restrict queries in a way that makes it easy to determine
       whether a report pertains to a batch that was collected. See
@@ -2480,7 +2457,7 @@ any).
 
 In this phase, the Collector requests aggregate shares from each Aggregator and
 then locally combines them to yield a single aggregate result. In particular,
-the Collector issues a query to the Leader ({{batch-mode}}), which the
+the Collector issues a query to the Leader ({{batch-modes}}), which the
 Aggregators use to select a batch of reports to aggregate. Each Aggregator emits
 an aggregate share encrypted to the Collector so that it can decrypt and combine
 them to yield the aggregate result. This entire process is composed of two
@@ -2901,11 +2878,22 @@ so, it MUST abort with "batchOverlap".
 
 Finally, the batch mode may define additional batch validation rules.
 
-# Batch Modes
+# Batch Modes {#batch-modes}
 
 This section defines an initial set of batch modes for DAP. New batch modes may
 be defined by future documents following the guidelines in
 {{extending-this-doc}}.
+
+In protocol messages, batch modes are identified with a `BatchMode` value:
+
+~~~ tls-presentation
+enum {
+  reserved(0),
+  time_interval(1),
+  leader_selected(2),
+  (255)
+} BatchMode;
+~~~
 
 Each batch mode specifies the following:
 
@@ -3005,7 +2993,7 @@ fashion by the Leader.
 
 The Collector will not know the set of batch IDs available for collection. To
 get the aggregate of a batch, the Collector issues a query, which does not
-include any information specifying a particular batch (see {{batch-mode}}). The
+include any information specifying a particular batch (see {{batch-modes}}). The
 Leader selects a recent batch to aggregate. The Leader MUST select a batch that
 has not yet been associated with a collection job.
 
@@ -4210,7 +4198,7 @@ Required policy {{!RFC8126}}.
 ### Batch Modes Registry {#batch-mode-reg}
 
 A new registry will be (RFC EDITOR: change "will be" to "has been") created
-called "Batch Mode Identifiers" for DAP batch modes ({{batch-mode}}). This
+called "Batch Mode Identifiers" for DAP batch modes ({{batch-modes}}). This
 registry should contain the following columns:
 
 Value:
@@ -4226,7 +4214,7 @@ The initial contents of this registry listed in {{batch-mode-id}}.
 
 | Value  | Name              | Reference                                  |
 |:-------|:------------------|:-------------------------------------------|
-| `0x00` | `reserved`        | {{batch-mode}} of RFC XXXX                 |
+| `0x00` | `reserved`        | {{batch-modes}} of RFC XXXX                |
 | `0x01` | `time_interval`   | {{time-interval-batch-mode}} of RFC XXXX   |
 | `0x02` | `leader_selected` | {{leader-selected-batch-mode}} of RFC XXXX |
 {: #batch-mode-id title="Initial contents of the Batch Mode Identifiers registry."}
@@ -4309,7 +4297,7 @@ The initial contents of this namespace are the types and descriptions in
 The behavior of DAP may be extended or modified by future documents defining
 one or more of the following:
 
-1. a new batch mode ({{batch-mode}})
+1. a new batch mode ({{batch-modes}})
 1. a new report extension ({{report-extensions}})
 1. a new report error ({{aggregation-helper-init}})
 1. a new entry in the URN sub-namespace for DAP ({{urn-space-errors}})
