@@ -3633,6 +3633,7 @@ corresponding media types:
 
 - HpkeConfigList {{hpke-config}}: "application/dap-hpke-config-list"
 - Report {{upload-request}}: "application/dap-report"
+- BulkReport {{bulk-upload}}: "application/dap-bulk-report"
 - AggregationJobInitReq {{leader-init}}: "application/dap-aggregation-job-init-req"
 - AggregationJobResp {{aggregation-helper-init}}: "application/dap-aggregation-job-resp"
 - AggregationJobContinueReq {{aggregation-leader-continuation}}: "application/dap-aggregation-job-continue-req"
@@ -3777,6 +3778,76 @@ Fragment identifier considerations:
 
 Additional information:
 
+: <dl>
+  <dt>Magic number(s):</dt><dd>N/A</dd>
+  <dt>Deprecated alias names for this type:</dt><dd>N/A</dd>
+  <dt>File extension(s):</dt><dd>N/A</dd>
+  <dt>Macintosh file type code(s):</dt><dd>N/A</dd>
+  </dl>
+
+Person and email address to contact for further information:
+
+: see Authors' Addresses section of the published specification
+
+Intended usage:
+
+: COMMON
+
+Restrictions on usage:
+
+: N/A
+
+Author:
+
+: see Authors' Addresses section of the published specification
+
+Change controller:
+
+: IESG
+
+### "application/dap-bulk-report" media type
+
+Type name:
+
+: application
+
+Subtype name:
+
+: dap-bulk-report
+
+Required parameters:
+
+: N/A
+
+Optional parameters:
+
+: None
+
+Encoding considerations:
+
+: only "8bit" or "binary" is permitted
+
+Security considerations:
+
+: see {{bulk-upload}} of the published specification
+
+Interoperability considerations:
+
+: N/A
+
+Published specification:
+
+: RFC XXXX
+
+Applications that use this media type:
+
+: N/A
+
+Fragment identifier considerations:
+
+: N/A
+
+Additional information:
 : <dl>
   <dt>Magic number(s):</dt><dd>N/A</dd>
   <dt>Deprecated alias names for this type:</dt><dd>N/A</dd>
