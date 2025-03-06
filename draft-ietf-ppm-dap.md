@@ -628,35 +628,16 @@ clients sometimes but servers at other times. It is even possible for a single
 entity to embody multiple participants. For example, the Collector could also
 be one of the Aggregators.
 
-The basic unit of DAP is the "task" which represents a single measurement
-process (though potentially aggregating multiple, non-overlapping batches of
-measurements). The definition of a task includes the following parameters:
-
-* The VDAF which determines the type of measurements and the aggregation
-  function (e.g., mean, standard deviation, etc.).
-* The identities of the Leader and Helper. These are URLs that implement the
-  APIs for uploading, aggregation, and collection specified in {{protocol}}.
-* Cryptographic assets involved in the computation (i.e., key material).
-* Various parameters used to determine how reports are partitioned into batches
-  and the size of each batch.
-
-These parameters are distributed to the Clients, Aggregators, and Collector
-before the task begins. (Note that not all parameters are distributed to all
-parties.) This document does not specify a distribution mechanism, but it is
-important that all protocol participants agree on the task's configuration.
-Each task is identified by a unique 32-byte ID which is used to refer to it in
-protocol messages.
-
-During the lifetime of a task, each Client records its own measurement
-value(s), packages them up into a report, and sends them to the Leader. Each
-share is separately encrypted for each Aggregator so that even though they pass
-through the Leader, the Leader is unable to see or modify them. Depending on
-the task, the Client may only send one report or may send many reports over
-time.
+In the course of a measurement task ({{task-configuration}}), each Client
+records its own measurement value(s), packages them up into a report, and sends
+them to the Leader. Each share is encrypted one of the two Aggregators so that
+even though they pass through the Leader, the Leader is unable to see or modify
+the Helper's share. Depending on the task, the Client may only send one report
+or may send many reports over time.
 
 The Leader distributes the shares to the Helper and orchestrates the process of
-verifying them (see {{validating-inputs}}) and assembling them into a final
-aggregate result for the Collector. Depending on the VDAF, it may be possible to
+verifying them (see {{validating-inputs}}) and assembling them into an aggregate
+result for the Collector. Depending on the VDAF, it may be possible to
 incrementally process each report as it is uploaded, or it may be necessary to
 wait until the Collector transmits a collection request before processing can
 begin.
@@ -1153,7 +1134,12 @@ struct {
 ~~~
 
 Intervals of time consist of a start time and a duration. Intervals are
-half-open; that is, `start` is included and `(start + duration)` is excluded.
+half-open; that is, `start` is included and `(start + duration)` is excluded. A
+time that is before an `Interval`'s `start` is said to be before that interval.
+A time that is equal to or after `Interval.start + Interval.duration` is said to
+be after the interval. A time that is either before or after an interval is said
+to be outside the interval. A time that is neither before nor after an interval
+is said to be inside or fall within the interval.
 
 ### VDAF Types
 
@@ -1214,52 +1200,48 @@ aggregation ({{aggregate-flow}}) and finalizing the aggregate shares.
 
 ## Task Configuration {#task-configuration}
 
-Prior to the start of execution of the protocol, each participant must agree on
-the configuration for each task. A task is uniquely identified by its task ID:
+A task represents a single measurement process, though potentially aggregating
+multiple, non-overlapping batches of measurements. Each participant in a task
+must agree on its configuration prior to its execution. This document does not
+specify a mechanism for distributing task parameters among participants.
+
+A task is uniquely identified by its task ID:
 
 ~~~ tls-presentation
 opaque TaskID[32];
 ~~~
 
-The task ID value MUST be a globally unique sequence of bytes. Each task has
-the following parameters associated with it:
+The task ID MUST be a globally unique sequence of bytes. Each task has the
+following parameters associated with it:
 
-* `leader_aggregator_url`: A URL relative to which the Leader's API resources
-   can be found.
-* `helper_aggregator_url`: A URL relative to which the Helper's API resources
-  can be found.
-* The batch mode for this task (see {{batch-mode}}). This determines how reports
-  are grouped into batches and the properties that all batches for this task
-  must have. The party MUST NOT configure the task if it does not recognize the
-  batch mode.
-* `task_start`: The time from which the Clients will start uploading reports to
-  a task. Aggregators MUST reject reports with timestamps earlier than
-  `task_start` as described in {{input-share-validation}}.
-* `task_duration`: The duration of a task. The task is considered completed
-  after the end time `task_start + task_duration`. Aggregators MUST reject
-  reports that have timestamps later than the end time, and MAY choose to opt
-  out of the task if `task_duration` is too long.
-* `time_precision`: Used to compute timestamps in DAP. See {{timestamps}}.
-* A unique identifier for the VDAF in use for the task, e.g., one of the VDAFs
-  defined in {{Section 10 of !VDAF}}.
-* `min_batch_size`: The smallest number of reports the batch is allowed to
-  include. In a sense, this parameter controls the degree of privacy that will
-  be obtained: the larger the minimum batch size, the higher degree of privacy.
-  However, this ultimately depends on the application and the nature of the
-  measurements and aggregation function.
+* The VDAF which determines the type of measurements and the aggregation
+  function. The VDAF itself may have further parameters (e.g., number of buckets
+  in a `Prio3Histogram`).
+* A URL relative to which the Leader's API resources can be found.
+* A URL relative to which the Helper's API resources can be found.
+* The batch mode for this task (see {{batch-mode}}), which determines how reports
+  are grouped into batches.
+* `task_interval` (`Interval`): Reports whose timestamp is outside of this
+  interval will be rejected by the Aggregators.
+* `time_precision` (`Duration`): Used to compute timestamps in DAP. See
+  {{timestamps}}.
 
-Note that the `leader_aggregator_url` and `helper_aggregator_url` values may
-include arbitrary path components.
+The Leader and Helper API URLs MAY include arbitrary path components.
 
-In addition, in order to facilitate the aggregation and collection
-interactions, each of the Aggregators is configured with following parameters:
+In addition, in order to facilitate the aggregation and collection interactions,
+each of the Aggregators is configured with the following parameters:
 
-* `collector_hpke_config`: The {{!HPKE=RFC9180}} configuration of the Collector
-  (described in {{hpke-config}}); see {{compliance}} for information about the
-  HPKE configuration algorithms.
-* `vdaf_verify_key`: The VDAF verification key shared by the Aggregators. This
-  key is used in the aggregation interaction ({{aggregate-flow}}). The security
-  requirements are described in {{verification-key}}.
+* `min_batch_size` (`uint64`): The smallest number of reports the batch is
+  allowed to include. A larger minimum batch size will yield a higher degree of
+  privacy. However, this ultimately depends on the application and the nature of
+  the measurements and aggregation function.
+* `collector_hpke_config` (`HpkeConfig`): The {{!HPKE=RFC9180}} configuration of
+  the Collector (described in {{hpke-config}}); see {{compliance}} for
+  information about the HPKE configuration algorithms.
+* `vdaf_verify_key` (opaque byte string): The VDAF verification key shared by
+  the Aggregators. This key is used in the aggregation interaction
+  ({{aggregate-flow}}). The security requirements are described in
+  {{verification-key}}.
 
 Finally, the Collector is configured with the HPKE secret key corresponding to
 `collector_hpke_config`.
@@ -1518,11 +1500,9 @@ violation. Note that this is also enforced by the Helper during the aggregation
 interaction. The Leader MAY also abort the upload interaction and alert the
 Client with error `reportRejected`.
 
-The Leader MUST ignore any report whose timestamp is before the task's
-`task_start`, or is past the end time `task_start + task_duration`. When it does
-so, it SHOULD also abort the upload interaction and alert the Client with error
-`reportRejected`. Clients MUST NOT upload a report if its timestamp would be
-earlier than `task_start` or later than `task_start + task_duration`.
+The Leader MUST ignore any report whose timestamp is outside of the task's
+`time_interval`. When it does so, it SHOULD also abort the upload interaction
+and alert the Client with error `reportRejected`.
 
 The Leader may need to buffer reports while waiting to aggregate them (e.g.,
 while waiting for an aggregation parameter from the Collector; see
@@ -2170,13 +2150,13 @@ following checks:
    Aggregator SHOULD mark the input share as invalid with error
    `report_too_early`.
 
-1. Check if the report's timestamp is before the task's `task_start` time. If
-   so, the Aggregator MUST mark the input share as invalid with the error
+1. Check if the report's timestamp is before the task's `task_interval`. If so,
+   the Aggregator MUST mark the input share as invalid with the error
    `task_not_started`.
 
-1. Check if the report's timestamp is past the task's end time, given by
-   `task_start + task_duration`. If so, the Aggregator MUST mark the input
-   share as invalid with the error `task_expired`.
+1. Check if the report's timestamp is after the task's `task_interval`. If so,
+   the Aggregator MUST mark the input share as invalid with the error
+   `task_expired`.
 
 1. Check if the public or private report extensions contain any unrecognized
    report extension types. If so, the Aggregator MUST mark the input share as
@@ -3232,10 +3212,10 @@ Aggregators SHOULD take steps to mitigate the risk of dropping reports (e.g., by
 evicting the oldest data first).
 
 Furthermore, the Aggregators must store data related to a task as long as the
-current time has not passed this task's end time `task_start + task_duration`.
-Aggregator MAY delete the task and all data pertaining to this task after the
-end time. Implementors SHOULD provide for some leeway so the Collector can
-collect the batch after some delay.
+current time is not after this task's `task_interval`. Aggregators MAY delete
+the task and all data pertaining to this task after the `task_interval`.
+Implementors SHOULD provide for some leeway so the Collector can collect the
+batch after some delay.
 
 ### Distributed-systems and Synchronization Concerns {#distributed-systems}
 
