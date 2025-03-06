@@ -1035,7 +1035,7 @@ standard tokens for use in the "type" field:
 These types are scoped to the errors sub-namespace of the DAP URN namespace,
 e.g., urn:ietf:params:ppm:dap:error:invalidMessage.
 
-This list is not exhaustive. The server MAY return errors set to a URN other
+This list is not exhaustive. The server MAY return errors set to a URI other
 than those defined above. Servers MUST NOT use the DAP URN namespace for errors
 not listed in the appropriate IANA registry (see {{urn-space}}). The "detail"
 member of the Problem Details document includes additional diagnostic
