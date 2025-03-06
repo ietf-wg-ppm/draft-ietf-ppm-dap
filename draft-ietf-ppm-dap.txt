@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 6 September 2025                                     Cloudflare
+Expires: 7 September 2025                                     Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                            5 March 2025
+                                                            6 March 2025
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -64,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 6 September 2025.
+   This Internet-Draft will expire on 7 September 2025.
 
 Copyright Notice
 
@@ -1845,8 +1845,8 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    The Leader begins an aggregation job by choosing a set of candidate
    reports that pertain to the same DAP task and a job ID which MUST be
-   unique within the scope of the task.  The job ID is a 16-byte value,
-   structured as follows:
+   unique within the scope of the DAP task.  The job ID is a 16-byte
+   value, structured as follows:
 
    opaque AggregationJobID[16];
 
@@ -1977,7 +1977,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
       to which each report for this aggregation job belongs
       (Section 5.2).
 
-      Documents that define batch modes MUST specify the content this
+      Documents that define batch modes MUST specify the content of this
       field; see Section 10 for details.
 
       The indicated batch mode MUST match the task's batch mode.
@@ -2014,7 +2014,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    AggregationJobInitReq.  Otherwise, the Leader MUST abort the
    aggregation job.
 
-   Otherwise, the Leader proceeds as follows with each report:
+   Continuing, the Leader proceeds as follows with each report:
 
    1.  If the inbound prep response has type "continue", then the Leader
        computes
@@ -2627,7 +2627,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    *  Increment the count by 1.
 
-   *  Update the checksum value to the bitwise-XOR of the checksum value
+   *  Update the checksum value to the bitwise XOR of the checksum value
       with the SHA256 [SHS] hash of the report ID associated with the
       output share.
 
