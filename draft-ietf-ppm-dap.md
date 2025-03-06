@@ -621,10 +621,10 @@ Helper:
 {:br}
 
 {{dap-topology}} illustrates which participants exchange HTTP messages. Arrows
-go from HTTP clients to HTTP servers. Note that some DAP participants may be
-HTTP clients sometimes but HTTP servers at other times. It is even possible for
-a single entity to perform multiple DAP roles. For example, the Collector could
-also be one of the Aggregators.
+go from HTTP clients to HTTP servers. Some DAP participants may be HTTP clients
+sometimes but HTTP servers at other times. It is even possible for a single
+entity to perform multiple DAP roles. For example, the Collector could also be
+one of the Aggregators.
 
 In the course of a measurement task ({{task-configuration}}), each Client
 records its own measurement, packages it up into a report, and sends it to the
@@ -851,21 +851,29 @@ aggregate results once an hour, or every time 10,000,000 reports are uploaded.
 
 # Message Transport {#message-transport}
 
-Communications between DAP participants are carried over HTTP {{!RFC9110}}. Use
-of HTTPS is REQUIRED to provide server authentication and confidentiality.
+Communications between participants are carried over HTTP {{!RFC9110}}. Use of
+HTTPS is REQUIRED to provide server authentication and confidentiality. TLS
+certificates are to be checked according to {{!RFC9110, Section 4.3.4}}.
+
+## HTTP Status Codes
+
+HTTP servers participating in DAP MAY use any status code from the applicable
+class when constructing HTTP responses, but HTTP clients MAY treat any status
+code as the most general code of that class. For example, 202 may be handled as
+200, or 499 as 400.
 
 ## Presentation Language
 
 With some exceptions, we use the presentation language defined in {{!RFC8446,
-Section 3}} to define messages in the DAP protocol. Encoding and decoding of
-these messages as byte strings also follows {{RFC8446}}. We enumerate the
-exceptions below.
+Section 3}} to define messages in the protocol. Encoding and decoding of these
+messages as byte strings also follows {{RFC8446}}. We enumerate the exceptions
+below.
 
 ### Variable-Length Vectors
 
 {{Section 3.4 of !RFC8446}} describes a syntax for variable-length vectors where
-a range of permitted lengths is provided. By convention, DAP always specifies
-the lower length limit of variable-length vectors to be `0`.
+a range of permitted lengths is provided. This document always specifies the
+lower length limit of variable-length vectors to be `0`.
 
 ### Structure Variants
 
@@ -940,20 +948,19 @@ variant {
 
 ## HTTPS Request Authentication {#request-authentication}
 
-DAP is made up of several interactions in which different subsets of the
-protocol's participants interact with each other.
+The protocol is made up of several interactions in which different subsets of
+participants interact with each other.
 
 In those cases where a channel between two participants is tunneled through
-another protocol participant, DAP mandates the use of public-key encryption
-using {{!HPKE=RFC9180}} to ensure that only the intended recipient can see a
-message in the clear.
+another protocol participant, Hybrid Public-Key Encryption ({{!HPKE=RFC9180}})
+ensures that only the intended recipient can see a message in the clear.
 
-In other cases, DAP requires HTTP client authentication as well as server
+In other cases, HTTP client authentication is required as well as server
 authentication. Any authentication scheme that is composable with HTTP is
 allowed. For example:
 
 * {{?OAuth2=RFC6749}} credentials are presented in an Authorization HTTP header,
-  which can be added to any DAP protocol message.
+  which can be added to any protocol message.
 
 * TLS client certificates can be used to authenticate the underlying transport.
 
@@ -963,22 +970,20 @@ allowed. For example:
 * {{?RFC9421}} HTTP message signatures authenticate messages without
   transmitting a secret.
 
-This flexibility allows organizations deploying DAP to use existing well-known
-HTTP authentication mechanisms that they already support. Discovering what
-authentication mechanisms are supported by a DAP participant is outside of this
-document's scope.
+This flexibility allows organizations deploying DAP to use authentication
+mechanisms that they already support. Discovering what authentication mechanisms
+are supported by a participant is outside of this document's scope.
 
 ## Errors
 
-Errors can be reported in DAP both as HTTP status codes and as problem detail
-objects {{!RFC9457}} in the response body. For example, if the HTTP client sends
-a request using a method not allowed in this document, then the server MAY
-return HTTP status 405 Method Not Allowed.
+Errors are reported as HTTP status codes. Any of the standard client or server
+errors (the 4xx or 5xx classes, respectively, from {{Section 15 of !RFC9110}})
+are permitted.
 
 When the server responds with an error status code, it SHOULD provide additional
-information using a problem detail object. If the response body does consist of
-a problem detail object, the HTTP status code MUST indicate a client or server
-error (the 4xx or 5xx classes, respectively, from {{Section 15 of !RFC9110}}).
+information using a problem detail object {{!RFC9457}} in the response body. If
+the response body does consist of a problem detail object, the status code MUST
+indicate a client or server error.
 
 To facilitate automatic response to errors, this document defines the following
 standard tokens for use in the "type" field:
@@ -995,7 +1000,7 @@ standard tokens for use in the "type" field:
 | invalidBatchSize            | There are an invalid number of reports in the batch. |
 | invalidAggregationParameter | The aggregation parameter assigned to a batch is invalid. |
 | batchMismatch               | Aggregators disagree on the report shares that were aggregated in a batch. |
-| unauthorizedRequest         | Authentication of an HTTP request failed (see {{request-authentication}}). |
+| unauthorizedRequest         | Authentication of a request failed (see {{request-authentication}}). |
 | stepMismatch                | The Aggregators disagree on the current step of the DAP aggregation protocol. |
 | batchOverlap                | A request's query includes reports that were previously collected in a different batch. |
 | unsupportedExtension        | An upload request's extensions list includes an unknown extension. |
@@ -1022,7 +1027,8 @@ refer to error types, rather than the full URNs. For example, an "error of type
 
 This document uses the verbs "abort" and "alert with \[some error message\]" to
 describe how protocol participants react to various error conditions. This
-implies HTTP status code 400 Bad Request unless explicitly specified otherwise.
+implies that the response's status code will indicate a client error unless
+specified otherwise.
 
 # Protocol Definition {#protocol}
 
@@ -1175,8 +1181,8 @@ following parameters associated with it:
 
 The Leader and Helper API URLs MAY include arbitrary path components.
 
-In addition, in order to facilitate the aggregation and collection interactions,
-each of the Aggregators is configured with the following parameters:
+In order to facilitate the aggregation and collection interactions, each of the
+Aggregators is configured with the following parameters:
 
 * `min_batch_size` (`uint64`): The smallest number of reports the batch is
   allowed to include. A larger minimum batch size will yield a higher degree of
@@ -1224,8 +1230,7 @@ of string literals and variables. Variables are expanded into strings according
 to the following rules:
 
 * Variables `{leader}` and `{helper}` are replaced with the base API URL of the
-  Leader and Helper respectively (the base URLs are defined in
-  {{task-configuration}}).
+  Leader and Helper respectively.
 * Variables `{task-id}`, `{aggregation-job-id}`, and `{collection-job-id}` are
   replaced with the task ID ({{task-configuration}}), aggregation job ID
   ({{agg-init}}), and collection job ID ({{collect-init}}) respectively. The
@@ -1242,26 +1247,20 @@ expanded into
 
 ## Aggregation Parameter Validation {#agg-param-validation}
 
-For each batch it collects, the Collector assigns an aggregation parameter used
-to refine the measurements before aggregating them. The aggregation parameter
-is subject to a validation procedure specified by the VDAF.
-
-Before accepting a collection job from the Collector ({{collect-init}}), the
-Leader checks that the indicated aggregation parameter, `agg_param`, is valid
-according to the following procedure. The Helper does the same before accepting
-an aggregation job from the Leader ({{aggregation-helper-init}}).
+For each batch it collects, the Collector chooses an aggregation parameter used
+to prepare the measurements before aggregating them. Before accepting a
+collection job from the Collector ({{collect-init}}), the Leader checks that the
+indicated aggregation parameter is valid according to the following procedure.
 
 1. Decode the byte string `agg_param` into an `AggParam` as specified by the
-   VDAF. (VDAFs compatible with this specification MUST specify an encoding of
-   the aggregation parameter as a byte string; see {{basic-definitions}}.)
-   If decoding fails, then the aggregation parameter is invalid.
+   VDAF. If decoding fails, then the aggregation parameter is invalid.
 
 1. Run `vdaf.is_valid(decoded_agg_param, [])`, where `decoded_agg_param` is the
    decoded `AggParam` and `is_valid()` is as defined in {{Section 5.3 of
    !VDAF}}. If the output is not `True`, then the aggregation parameter is
    invalid.
 
-If both steps succeed, then the aggregation parameter is deemed to be valid.
+If both steps succeed, then the aggregation parameter is valid.
 
 ## Uploading Reports {#upload-flow}
 
@@ -1276,14 +1275,14 @@ Before the Client can upload its report to the Leader, it must know the HPKE
 configuration of each Aggregator. See {{compliance}} for information on HPKE
 algorithm choices.
 
-Clients retrieve the HPKE configuration from each Aggregator by sending an HTTP
-GET request to `{aggregator}/hpke_config`.
+Clients retrieve the HPKE configuration from each Aggregator by sending a GET
+request to `{aggregator}/hpke_config`.
 
-An Aggregator responds to well-formed requests with HTTP status code 200 OK and
-an `HpkeConfigList` value, with media type "application/dap-hpke-config-list".
-The `HpkeConfigList` structure contains one or more `HpkeConfig` structures in
-decreasing order of preference. This allows an Aggregator to support multiple
-HPKE configurations simultaneously.
+An Aggregator responds with an `HpkeConfigList` value, with media type
+"application/dap-hpke-config-list". The `HpkeConfigList` structure contains one
+or more `HpkeConfig` structures in decreasing order of preference. This allows
+an Aggregator to support multiple HPKE configurations and multiple sets of
+algorithms simultaneously.
 
 ~~~ tls-presentation
 HpkeConfig HpkeConfigList<0..2^16-1>;
@@ -1297,43 +1296,54 @@ struct {
 } HpkeConfig;
 
 opaque HpkePublicKey<0..2^16-1>;
-uint16 HpkeAeadId; /* Defined in [HPKE] */
-uint16 HpkeKemId;  /* Defined in [HPKE] */
-uint16 HpkeKdfId;  /* Defined in [HPKE] */
+uint16 HpkeAeadId;
+uint16 HpkeKemId;
+uint16 HpkeKdfId;
 ~~~
 
-Aggregators MUST allocate distinct id values for each `HpkeConfig` in an
+The values for `HpkeAeadId`, `HpkeKemId` and `HpkeKdfId` are as defined in
+{{!HPKE, Section 7}}.
+
+Aggregators MUST allocate distinct `id` values for each `HpkeConfig` in an
 `HpkeConfigList`.
 
-The Client MUST abort if any of the following happen for any HPKE config
-request:
+The Client MUST abort if:
 
 * the GET request did not return a valid HPKE config list;
 * the HPKE config list is empty; or
 * no HPKE config advertised by the Aggregator specifies a supported a KEM, KDF,
-  or AEAD algorithm triple.
+  and AEAD algorithm triple.
 
-Aggregators SHOULD use HTTP caching to permit client-side caching of this
-resource {{!RFC5861}}. Aggregators SHOULD favor long cache lifetimes to avoid
-frequent cache revalidation, e.g., on the order of days. Aggregators can control
-this cached lifetime with the Cache-Control header, as in this example:
+Aggregators SHOULD use caching to permit client-side caching of this resource
+{{!RFC5861}}. Aggregators SHOULD favor long cache lifetimes to avoid frequent
+cache revalidation, e.g., on the order of days. Aggregators can control this
+cached lifetime with the Cache-Control header.
 
-~~~ http-message
-  Cache-Control: max-age=86400
+Servers should choose a Cache-Control value appropriate to the lifetime of their
+keys. Clients SHOULD follow the usual caching semantics {{!RFC9111}} for HPKE
+configurations.
+
+Long cache lifetimes may result in Clients using stale HPKE configurations.
+Aggregators SHOULD continue to accept reports with old keys for at least twice
+the cache lifetime in order to avoid rejecting reports.
+
+#### Example
+
+~~~ http
+GET /leader/hpke_config
+Host: example.com
+
+HTTP/1.1 200
+Content-Type: application/dap-hpke-config-list
+Cache-Control: max-age=86400
+
+encoded(HpkeConfigList)
 ~~~
-
-Servers should choose a `max-age` value appropriate to the lifetime of their
-keys. Clients SHOULD follow the usual HTTP caching {{!RFC9111}} semantics for
-HPKE configurations.
-
-Note: Long cache lifetimes may result in Clients using stale HPKE
-configurations; Aggregators SHOULD continue to accept reports with old keys for
-at least twice the cache lifetime in order to avoid rejecting reports.
 
 ### Upload Request
 
-Clients upload reports by using an HTTP POST to
-`{leader}/tasks/{task-id}/reports`. The payload is a `Report`, with media type
+Clients upload reports by sending a POST request to
+`{leader}/tasks/{task-id}/reports`. The body is a `Report`, with media type
 "application/dap-report", structured as follows:
 
 ~~~ tls-presentation
@@ -1353,26 +1363,26 @@ struct {
 
 * `report_metadata` is public metadata describing the report.
 
-   * `report_id` is used by the Aggregators to ensure the report is not
-      replayed ({{agg-flow}}). The Client MUST generate this by generating 16
-      random bytes using a cryptographically secure random number generator.
+   * `report_id` uniquely identifies the report. The Client MUST generate this
+      by generating 16 random bytes using a cryptographically secure random
+      number generator.
 
-    * `time` is the time at which the report was generated. The Client MUST
-      truncate their timestamp as described in {{timestamps}}.
+    * `time` is the truncated (see {{timestamps}}) time at which the report was
+      generated.
 
     * `public_extensions` is the list of public report extensions; see
       {{report-extensions}}.
 
-* `public_share` is the public share output by the VDAF sharding algorithm. Note
-  that the public share might be empty, depending on the VDAF.
+* `public_share` is the public share output by the VDAF sharding algorithm. The
+  public share might be empty, depending on the VDAF.
 
 * `leader_encrypted_input_share` is the Leader's encrypted input share.
 
 * `helper_encrypted_input_share` is the Helper's encrypted input share.
 
 Aggregators MAY require Clients to authenticate when uploading reports (see
-{{client-auth}}). If it is used, HTTP client authentication MUST use a scheme
-that meets the requirements in {{request-authentication}}.
+{{client-auth}}). If it is used, client authentication MUST use a scheme that
+meets the requirements in {{request-authentication}}.
 
 The handling of the upload request by the Leader MUST be idempotent as discussed
 in {{Section 9.2.2 of !RFC9110}}.
@@ -1384,16 +1394,23 @@ of !VDAF}}), using the report ID as the nonce:
 ~~~ pseudocode
 (public_share, input_shares) = Vdaf.shard(
     "dap-14" || task_id,
-    measurement, /* plaintext measurement */
-    report_id,   /* nonce */
-    rand,        /* randomness for sharding algorithm */
+    measurement,
+    report_id,
+    rand,
 )
 ~~~
 
-where `task_id` is the task ID. The last input comprises the randomness
-consumed by the sharding algorithm. The sharding randomness is a random byte
-string of length specified by the VDAF. The Client MUST generate this using a
-cryptographically secure random number generator.
+* `task_id` is the task ID.
+
+* `measurement` is the plaintext measurement, represented as the VDAF's
+  `Measurement` associated type.
+
+* `report_id` is the corresponding value from `ReportMetadata`, used as the
+  nonce.
+
+* `rand` is a random byte string of length specified by the VDAF. Each report's
+  `rand` value MUST be independently sampled from a cryptographically secure
+  random number generator.
 
 The sharding algorithm will return two input shares. The first input share
 returned from the sharding algorithm is considered to be the Leader's input
@@ -1408,13 +1425,12 @@ struct {
 } PlaintextInputShare;
 ~~~
 
-Field `private_extensions` is set to the list of private report extensions
-intended to be consumed by the given Aggregator. (See {{report-extensions}}.)
-Field `payload` is set to the Aggregator's input share output by the VDAF
-sharding algorithm.
+* `private_extensions` is the list of private report extensions for the given
+   Aggregator (see {{report-extensions}}).
 
-Next, the Client encrypts each PlaintextInputShare `plaintext_input_share` as
-follows:
+* `payload` is the Aggregator's input share.
+
+Next, the Client encrypts each `PlaintextInputShare` as follows:
 
 ~~~ pseudocode
 enc, payload = SealBase(pk,
@@ -1422,14 +1438,16 @@ enc, payload = SealBase(pk,
   input_share_aad, plaintext_input_share)
 ~~~
 
-where `pk` is the Aggregator's public key; `0x01` represents the Role of the
-sender (always the Client); `server_role` is the Role of the intended recipient
-(`0x02` for the Leader and `0x03` for the Helper), `plaintext_input_share` is
-the Aggregator's PlaintextInputShare, and `input_share_aad` is an encoded
-message of type InputShareAad defined below, constructed from the same values as
-the corresponding fields in the report. The `SealBase()` function is as
-specified in {{!HPKE, Section 6.1}} for the ciphersuite indicated by the HPKE
-configuration.
+* `pk` is the Aggregator's public key.
+* `0x01` represents the `Role` of the sender (always the Client).
+* `server_role` is the `Role` of the intended recipient (`0x02` for the Leader
+   and `0x03` for the Helper).
+* `plaintext_input_share` is the Aggregator's `PlaintextInputShare`.
+* `input_share_aad` is an `InputShareAad` defined below, constructed from the
+   corresponding fields in the report.
+
+The `SealBase()` function is as specified in {{!HPKE, Section 6.1}} for the
+ciphersuite indicated by the Aggregator's HPKE configuration.
 
 ~~~ tls-presentation
 struct {
@@ -1439,21 +1457,16 @@ struct {
 } InputShareAad;
 ~~~
 
-The Leader responds to well-formed requests with HTTP status code 201
-Created. Malformed requests are handled as described in {{errors}}.
-Clients SHOULD NOT upload the same measurement value in more than one report if
-the Leader responds with HTTP status code 201 Created.
+If the request is malformed, the Leader aborts with error `invalidMessage`.
 
-If the Leader does not recognize the task ID, then it MUST abort with error
-`unrecognizedTask`. Note that indicating an unrecognized task might indicate
-that the Client is misconfigured or the task has expired.
+If the Leader does not recognize the task ID, then it aborts with error
+`unrecognizedTask`.
 
-The Leader responds to requests whose Leader encrypted input share uses an
-out-of-date or unknown `HpkeConfig.id` value, indicated by
-`HpkeCiphertext.config_id`, with error of type 'outdatedConfig'. When the Client
-receives an 'outdatedConfig' error, it SHOULD invalidate any cached
-HpkeConfigList and retry with a freshly generated Report. If this retried upload
-does not succeed, the Client SHOULD abort and discontinue retrying.
+If the Leader does not recognize the `config_id` in the encrypted input share,
+it aborts with an error of type `outdatedConfig`. When the Client receives an
+`outdatedConfig` error, it SHOULD invalidate any cached `HpkeConfigList` and
+retry with a freshly generated Report. If this retried upload does not succeed,
+the Client SHOULD abort and discontinue retrying.
 
 If a report's ID matches that of a previously uploaded report, the Leader MUST
 ignore it. In addition, it MAY alert the Client with error `reportRejected`.
@@ -1461,9 +1474,8 @@ ignore it. In addition, it MAY alert the Client with error `reportRejected`.
 The Leader MUST ignore any report pertaining to a batch that has already been
 collected (see {{input-share-validation}} for details). Otherwise, comparing
 the aggregate result to the previous aggregate result may result in a privacy
-violation. Note that this is also enforced by the Helper during the aggregation
-interaction. The Leader MAY also abort the upload interaction and alert the
-Client with error `reportRejected`.
+violation. The Leader MAY also abort the upload interaction and alert the Client
+with error `reportRejected`.
 
 The Leader MUST ignore any report whose timestamp is outside of the task's
 `time_interval`. When it does so, it SHOULD also abort the upload interaction
@@ -1480,36 +1492,47 @@ the report later on.
 
 If the report contains an unrecognized public report extension, or if the
 Leader's input share contains an unrecognized private report extension, then the
-Leader MAY abort the upload request with error "unsupportedExtension." If the
-Leader does abort for this reason, it MAY indicate the unsupported extensions in
-the resulting problem document via an extension member ({{Section 3.2 of
-!RFC9457}}) "unsupported_extensions" on the problem document; this member MUST
-contain an array of numeric values indicating the extension code points which
-were not recognized. For example, if the report upload contained two unsupported
-extensions with code points `23` and `42`, the "unsupported_extensions" member
-would contain the value `[23, 42]`.
+Leader MUST ignore the report and MAY abort the upload request with error
+`unsupportedExtension`. If the Leader does abort for this reason, it SHOULD
+indicate the unsupported extensions in the resulting problem document via an
+extension member ({{Section 3.2 of !RFC9457}}) `unsupported_extensions` on the
+problem document. This member MUST contain an array of numbers indicating the
+extension code points which were not recognized. For example, if the report
+upload contained two unsupported extensions with code points `23` and `42`, the
+"unsupported_extensions" member would contain the JSON value `[23, 42]`.
 
 If the same extension type appears more than once among the public extensions
-and the private extensions in the Leader's input share, then the Leader MAY
-abort the upload request with error "invalidMessage".
+and the private extensions in the Leader's input share, then the Leader MUST
+ignore the report and MAY abort the upload request with error `invalidMessage`.
 
-(Note that validation of extensions is not mandatory here because it requires
-the Leader to decrypt its input share. The Leader also cannot validate the
-Helper's extensions because it cannot decrypt the Helper's input share.
-Mandatory validation of extensions will occur during aggregation.)
+Validation of anti-replay and extensions is not mandatory during the handling of
+upload requests to avoid blocking on expensive storage transactions or
+decryption of input shares. The Leader also cannot validate the Helper's
+extensions because it cannot decrypt the Helper's input share. Validation of
+report IDs and extensions will occur before aggregation.
+
+#### Example
+
+~~~ http
+POST /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/reports
+Host: example.com
+Content-Type: application/dap-report
+
+encoded(struct {...} Report)
+
+HTTP/1.1 200
+~~~
 
 ### Report Extensions {#report-extensions}
 
-Each `ReportMetadata` contains a list of extensions public to both aggregators,
-and each `PlaintextInputShare` contains a list of extensions private to the
-relevant Aggregator. Clients use these extensions to convey additional
-information to the Aggregators. Some extensions might be intended for both
-Aggregators; others may only be intended for a specific Aggregator. (For
-example, a DAP deployment might use some out-of-band mechanism for an Aggregator
-to verify that reports come from authenticated Clients. It will likely be useful
-to bind the extension to the input share via HPKE encryption.)
+Clients use report extensions to convey additional information to the
+Aggregators. Each `ReportMetadata` contains a list of extensions public to both
+aggregators, and each `PlaintextInputShare` contains a list of extensions
+private to the relevant Aggregator. For example, Clients may need to
+authenticate to the Helper by presenting a secret that must not be revealed to
+the Leader.
 
-Each extension is a tag-length encoded value of the following form:
+Each extension is a tag-length encoded value of the form:
 
 ~~~ tls-presentation
 struct {
@@ -1523,25 +1546,20 @@ enum {
 } ExtensionType;
 ~~~
 
-Field "extension_type" indicates the type of extension, and "extension_data"
-contains information specific to the extension.
-
-Extensions are mandatory-to-implement: If an Aggregator receives a report
-containing an extension it does not recognize, then it MUST reject the report.
-(See {{input-share-validation}} for details.)
+Field `extension_type` indicates the type of extension, and `extension_data`
+contains the opaque encoding of the extension.
 
 ## Verifying and Aggregating Reports {#aggregate-flow}
 
-Once a set of Clients have uploaded their reports to the Leader, the Leader can
+Once some Clients have uploaded their reports to the Leader, the Leader can
 begin the process of validating and aggregating them with the Helper. To enable
-the system to handle large batches of reports, this process can be parallelized
-across many "aggregation jobs" in which small subsets of the reports are
-processed independently. Each aggregation job is associated with exactly one DAP
-task, but a task can have many aggregation jobs.
+the system to handle large batches of reports, this process is parallelized
+across many "aggregation jobs" in which subsets of the reports are processed
+independently. Each aggregation job is associated with a single task, but a task
+can have many aggregation jobs.
 
-The primary objective of an aggregation job is to run the VDAF preparation
-process described in {{!VDAF, Section 5.2}} for each report in the job.
-Preparation has two purposes:
+An aggregation job runs the VDAF preparation process described in {{!VDAF,
+Section 5.2}} for each report in the job. Preparation has two purposes:
 
 1. To "refine" the input shares into "output shares" that have the desired
    aggregatable form. For some VDAFs, like Prio3, the mapping from input to
@@ -1549,13 +1567,13 @@ Preparation has two purposes:
    general the mapping involves an aggregation parameter chosen by the
    Collector.
 
-1. To verify that the output shares, when combined, correspond to a valid,
-   refined measurement, where validity is determined by the VDAF itself. For
-   example, the Prio3Sum variant of Prio3 ({{Section 7.4.2 of !VDAF}}) requires
-   that the output shares sum up to an integer in a specific range, while the
-   Prio3Histogram variant ({{Section 7.4.4 of !VDAF}}) proves that output shares
-   sum up to a one-hot vector representing a contribution to a single bucket of
-   the histogram.
+1. To verify that each pair of output shares, when combined, corresponds to a
+   valid, refined measurement, where validity is determined by the VDAF itself.
+   For example, the Prio3Sum variant of Prio3 ({{Section 7.4.2 of !VDAF}})
+   proves that the output shares sum up to an integer in a specific range, while
+   the Prio3Histogram variant ({{Section 7.4.4 of !VDAF}}) proves that output
+   shares sum up to a one-hot vector representing a contribution to a single
+   bucket of the histogram.
 
 In general, refinement and verification are not distinct computations, since for
 some VDAFs, verification may only be achieved implicitly as a result of the
@@ -1563,13 +1581,20 @@ refinement process. We instead think of these as properties of the output shares
 themselves: if preparation succeeds, then the resulting output shares are
 guaranteed to combine into a valid, refined measurement.
 
-VDAF preparation is mapped onto an aggregation job as illustrated in
-{{agg-flow}}. The protocol is comprised of a sequence of HTTP requests from the
-Leader to the Helper, the first of which includes the aggregation parameter, the
-Helper's report share for each report in the job, and for each report the
-initialization step for preparation. The Helper's response, along with each
-subsequent request and response, carries the remaining messages exchanged during
-preparation.
+Aggregation jobs are identified by 16-byte job ID:
+
+~~~ tls-presentation
+opaque AggregationJobID[16];
+~~~
+
+An aggregation job is an HTTP resource served by the Helper at the
+URL `{helper}/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}`. VDAF
+preparation is mapped onto an aggregation job as illustrated in {{agg-flow}}.
+The first request from the Leader to the Helper includes the aggregation
+parameter, theHelper's report share for each report in the job, and for each
+report the initialization step for preparation. The Helper's response, along
+with each subsequent request and response, carries the remaining messages
+exchanged during preparation.
 
 ~~~ aasvg
   report, agg_param
@@ -1611,29 +1636,22 @@ The number of steps, and the type of the responses, depends on the VDAF. The
 message structures and processing rules are specified in the following
 subsections.
 
-Normally, the Helper processes each step synchronously, meaning it computes
+The Helper can either process each step synchronously, meaning it computes
 each step of the computation before producing a response to the Leader's HTTP
-request. The Helper can optionally instead process each step asynchronously,
-meaning the Helper responds to requests immediately, while deferring processing
-to a background worker. To continue, the Leader polls the Helper until it
-responds with the next step. This choice allows a Helper implementation
-flexibility in choosing a request model that best supports its architecture
-and use case. For instance, resource-intensive use cases, such as replay checks
-across vast numbers of reports and preparation of large histograms, may be
-better suited for the asynchronous model. For use cases where datastore
-performance is a concern, the synchronous model may be better suited.
+request. It can also process steps asynchronously, meaning it responds
+immediately and defers processing to a background worker. To continue, the
+Leader polls the Helper until it responds with the next step.
 
 In general, aggregation cannot begin until the Collector specifies a query and
 an aggregation parameter. However, depending on the VDAF and batch mode in use,
 it is often possible to begin aggregation as soon as reports arrive. For
 example, Prio3 has just one valid aggregation parameter (the empty string), and
-thus allows for eager aggregation; and both the time-interval
+thus allows for eager aggregation. Both the time-interval
 ({{time-interval-batch-mode}}) and leader-selected
 ({{leader-selected-batch-mode}}) batch modes defined in this document allow for
 eager aggregation.
 
-An aggregation job can be thought of as having three phases, which are
-described in the remaining subsections:
+An aggregation job can be thought of as having three phases:
 
 - Initialization: Begin the aggregation flow by disseminating report shares and
   initializing the VDAF prep state for each report.
@@ -1645,57 +1663,36 @@ described in the remaining subsections:
 
 After an aggregation job is completed, each Aggregator updates running-total
 aggregate shares and other values for each "batch bucket" associated with a
-recovered output share, as described in {{batch-buckets}}. These values are
+prepared output share, as described in {{batch-buckets}}. These values are
 stored until the batch is collected as described in {{collect-flow}}.
 
-Apart from VDAF preparation, another important task of the aggregation
-interaction is to provide replay protection ({{replay-protection}}). Along with
-the output shares, each Aggregator records the IDs of all reports it is has
-aggregated for a given task: before committing to an output share, it checks
-whether the corresponding report ID is in the set of stored IDs.
+The aggregation interaction provides replay protection ({{replay-protection}}).
+Before committing to an output share, Aggregators check whether the
+corresponding report ID has already been aggregated.
 
 ### Aggregate Initialization {#agg-init}
 
-The Leader begins an aggregation job by choosing a set of candidate reports that
-pertain to the same DAP task and a job ID which MUST be unique within the scope
-of the DAP task. The job ID is a 16-byte value, structured as follows:
+Aggregation initialization accomplishes two tasks:
 
-~~~ tls-presentation
-opaque AggregationJobID[16];
-~~~
-
-The Leader can run this process for many sets of candidate reports in parallel
-as needed. After choosing a set of candidates, the Leader begins aggregation by
-splitting each report into report shares, one for each Aggregator. The Leader
-and Helper then run the aggregate initialization flow to accomplish two tasks:
-
-1. Recover and determine which input report shares are valid.
-1. For each valid report share, initialize the VDAF preparation process (see
-   {{Section 5.2 of !VDAF}}).
+1. Determine which input shares are valid.
+1. For each valid input share, initialize VDAF preparation (see {{Section 5.2 of
+   !VDAF}}).
 
 The Leader and Helper initialization behavior is detailed below.
 
-Implementation note: the Leader will generally want to associate each report
-with a single aggregation job, as otherwise the duplicated reports will
-eventually be discarded as a replay. However, it is likely not appropriate to
-directly use the used-ID storage used for replay protection to determine which
-reports can be added to an aggregation job: certain errors (e.g.
-`report_too_early`) allow the report to be added to another aggregation job in
-the future; but storage into the used-ID storage is permanent.
-
 #### Leader Initialization {#leader-init}
 
-The Leader begins the aggregate initialization by sampling a fresh
-AggregationJobID.
+The Leader begins an aggregation job by choosing a set of candidate reports that
+belong to the same DAP task and a job ID which MUST be unique within the task.
 
 Next, for each report in the candidate set, it checks if the report ID
-corresponds to a report ID it has previously stored for this task. If so, it
+corresponds to a report ID it has previously aggregated for this task. If so, it
 marks the report as invalid and removes it from the candidate set.
 
 Next, the Leader decrypts each of its report shares as described in
 {{input-share-decryption}}, then checks input share validity as described in
-{{input-share-validation}}. If either step invalidates the report, the Leader
-rejects the report and removes it from the set of candidate reports.
+{{input-share-validation}}. If either step fails, the Leader rejects the report
+and removes it from the set of candidate reports.
 
 Next, for each report the Leader executes the following procedure:
 
@@ -1719,11 +1716,11 @@ where:
 * `public_share` is the report's public share
 * `plaintext_input_share` is the Leader's `PlaintextInputShare`
 
-The methods are defined in {{Section 5.8 of !VDAF}}. This process determines
-the initial per-report `state`, as well as the initial `outbound` message to
-send to the Helper. If `state` is of type `Rejected`, then the report is
+`ping_pong_leader_init` is defined in {{Section 5.7.1 of !VDAF}}. This process
+determines the initial per-report `state`, as well as the initial `outbound`
+message to the Helper. If `state` is of type `Rejected`, then the report is
 rejected and removed from the set of candidate reports, and no message is sent
-to the Helper.
+to the Helper for this report.
 
 If `state` is of type `Continued`, then the Leader constructs a `PrepareInit`
 message structured as follows:
@@ -1737,7 +1734,7 @@ struct {
 
 struct {
   ReportShare report_share;
-  opaque payload<0..2^32-1>;
+  opaque outbound<0..2^32-1>;
 } PrepareInit;
 ~~~
 
@@ -1749,7 +1746,7 @@ Each of these messages is constructed as follows:
 
   * `report_share.encrypted_input_share` is the Helper's encrypted input share.
 
-  * `payload` is set to the `outbound` message computed by the previous step.
+  * `outbound` is set to the `outbound` message computed by the previous step.
 
 It is not possible for `state` to be of type `Finished` during Leader
 initialization.
@@ -1758,8 +1755,6 @@ Once all the report shares have been initialized, the Leader creates an
 `AggregationJobInitReq` message structured as follows:
 
 ~~~ tls-presentation
-opaque BatchID[32];
-
 struct {
   BatchMode batch_mode;
   opaque config<0..2^16-1>;
@@ -1780,18 +1775,9 @@ This message consists of:
 
 * `part_batch_selector`: The "partial batch selector" used by the Aggregators
   to determine how to aggregate each report. Its contents depends on the
-  indicated batch mode: for time-interval mode, the `config` field is empty
-  ({{time-interval-batch-mode}}); for leader-selected tasks, the Leader
-  specifies a "batch ID" that determines the batch to which each report for
-  this aggregation job belongs ({{leader-selected-batch-mode}}).
+  indicated batch mode. See {{batch-modes}}.
 
-  Documents that define batch modes MUST specify the content of this field;
-  see {{extending-this-doc}} for details.
-
-  The indicated batch mode MUST match the task's batch mode. Otherwise, the
-  Helper MUST abort with error `invalidMessage`.
-
-  This field is called the "partial" batch selector because, depending on the
+  This field is called the "partial" batch selector because depending on the
   batch mode, it may not determine a batch. In particular, if the batch mode is
   `time_interval`, the batch is not determined until the Collector's query is
   issued (see {{batch-modes}}).
@@ -1799,21 +1785,19 @@ This message consists of:
 * `prepare_inits`: the sequence of `PrepareInit` messages constructed in the
   previous step.
 
-Finally, the Leader sends an HTTP PUT request to
-`{helper}/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}` with a media
-type of "application/dap-aggregation-job-init-req" and a body containing the
-`AggregationJobInitReq`.
+The Leader sends the `AggregationJobInitReq` in the body of a PUT request to the
+aggregation job's URL with a media type of
+"application/dap-aggregation-job-init-req".
 
 The Leader MUST authenticate its requests to the Helper using a scheme that
 meets the requirements in {{request-authentication}}.
 
-The Helper responds with HTTP status 201 Created with a body containing an
-`AggregationJobResp` (see {{aggregation-helper-init}}). If the `status` field
-is `ready`, the Leader proceeds onward. Otherwise, if the `status` field is
-`processing`, the Leader polls the aggregation job by sending GET requests to
-the URL indicated in the Location header field, until the `status` is `ready`.
-The Helper's response when processing SHOULD include a Retry-After header to
-suggest a polling interval to the Leader.
+If the Helper responds with an `AggregationJobResp` (see
+{{aggregation-helper-init}}), then the Leader proceeds onward. If the request
+succeeds but the response body is empty, the Leader polls the aggregation job by
+resolving the Location header field against the `{helper}` URL and sending GET
+requests to that URL until it receives an `AggregationJobResp`. The Leader
+SHOULD use the response's Retry-After header field to decide when to try again.
 
 The `AggregationJobResp.prepare_resps` field must include exactly the same
 report IDs in the same order as the Leader's `AggregationJobInitReq`. Otherwise,
@@ -1844,24 +1828,20 @@ Continuing, the Leader proceeds as follows with each report:
    If `outbound != None`, then the Leader stores `state` and `outbound` and
    proceeds to {{aggregation-leader-continuation}}. If `outbound == None`, then
    the preparation process is complete: either `state == Rejected()`, in which
-   case the Leader rejects the report and removes it from the candidate set; or
+   case the Leader rejects the report and removes it from the candidate set or
    `state == Finished(out_share)`, in which case preparation is complete and the
    Leader updates the relevant batch bucket with `out_share` as described in
    {{batch-buckets}}.
 
 1. Else if the type is "reject", then the Leader rejects the report and removes
    it from the candidate set. The Leader MUST NOT include the report in a
-   subsequent aggregation job, unless the error is `report_too_early`, in which
-   case the Leader MAY include the report in a subsequent aggregation job.
+   subsequent aggregation job, unless the error is `report_too_early`.
 
 1. Else the type is invalid, in which case the Leader MUST abort the
    aggregation job.
 
-When the Leader updates a batch bucket based on `out_share`, it MUST also store
-the report ID for replay protection.
-
-(Note: Since VDAF preparation completes in a constant number of rounds, it will
-never be the case that some reports are completed and others are not.)
+Since VDAF preparation completes in a constant number of rounds, it will never
+be the case that some reports are completed and others are not.
 
 If the Leader fails to process the response from the Helper, for example because
 of a transient failure such as a network connection failure or process crash,
@@ -1878,6 +1858,10 @@ that the Leader will use to continue preparing the report.
 
 Upon receipt of an `AggregationJobInitReq`, the Helper checks if it recognizes
 the task ID. If not, then it MUST abort with error `unrecognizedTask`.
+
+Next, it checks that the batch mode indicated by
+`part_batch_selector.batch_mode` matches the task's batch mode. If not, the
+Helper MUST abort with error `invalidMessage`.
 
 Next, the Helper checks that the aggregation parameter is valid as described in
 {{agg-param-validation}}. If the aggregation parameter is invalid, then the
@@ -2003,8 +1987,8 @@ If `state == Continued(prep_state)`, then the Helper stores `state` to
 prepare for the next continuation step ({{aggregation-helper-continuation}}).
 
 If `state == Finished(out_share)`, the Helper MUST resolve replay of the
-report. It does so by checking if the report ID was previously stored for this
-task. If so, it responds with
+report. It does so by checking if the report ID was previously aggregated for
+this task. If so, it responds with
 
 ~~~ tls-presentation
 variant {
@@ -2014,59 +1998,45 @@ variant {
 } PrepareResp;
 ~~~
 
-Otherwise it stores the report ID for replay protection and updates the relevant
-batch bucket with `out_share` as described in {{batch-buckets}}.
+Otherwise it updates the relevant batch bucket with `out_share` as described in
+{{batch-buckets}}.
 
 Finally, the Helper creates an `AggregationJobResp` to send to the Leader. This
 message is structured as follows:
 
 ~~~ tls-presentation
-enum {
-  processing(0),
-  ready(1),
-  (255)
-} AggregationJobStatus;
-
 struct {
-  AggregationJobStatus status;
-  select (AggregationJobResp.status) {
-    case processing: Empty;
-    case ready:      PrepareResp prepare_resps<0..2^32-1>;
-  };
+  PrepareResp prepare_resps<0..2^32-1>;
 } AggregationJobResp;
 ~~~
 
 where `prepare_resps` are the outbound prep steps computed in the previous step.
-The order MUST match `AggregationJobInitReq.prepare_inits`.
+The order MUST match `AggregationJobInitReq.prepare_inits`. The media type for
+`AggregationJobResp` is "application/dap-aggregation-job-resp".
 
-The Helper responds to the Leader with HTTP status 201 Created, a body
-consisting of the `AggregationJobResp`, and the media type
-"application/dap-aggregation-job-resp".
+The Helper MAY defer handling the initialization request. In this case, it
+indicates that the response is not yet ready by immediately sending an empty
+response body and sets a Location header field set to the relative reference
+`/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}?step=0`. The response
+SHOULD include a Retry-After header field to suggest a polling interval to the
+Leader. The Leader then polls the state of the job by sending GET requests to the
+resolved URL. The Helper responds the same way until the job is ready, at which
+point it responds with the encoded `AggregationJobResp`.
 
-Depending on the task parameters, processing an aggregation job may take some
-time, so the Helper MAY defer computation to a background process. It does so by
-responding with the field `status` set to `processing` and a Location header
-field set to the relative reference
-`/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}?step=0`. The Leader then
-polls the Helper by making HTTP GET requests to the aforementioned Location. The
-Helper responds to GET requests with HTTP status 200, a media type of
-"application/dap-aggregation-job-resp", and a body consisting of an
-`AggregationJobResp` with the `status` field reflecting the current state of the
-job. When the aggregation job is `processing`, the response SHOULD include a
-Retry-After header field to suggest a polling interval to the Leader.
+The Helper MAY also block responding to the Leader's PUT until the aggregation
+job initialization is ready. In this case, it responds with the encoded
+`AggregationJobResp`.
 
-Changing an aggregation job's parameters is illegal, so further HTTP PUT
-requests to `/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}` for the
-same `aggregation-job-id` but with a different `AggregationJobInitReq` in the
-body MUST fail with an HTTP client error status code. For further requests with
-the same `AggregationJobInitReq` in the body, the Helper SHOULD respond as it
-did for the original `AggregationJobInitReq`, or otherwise fail with an HTTP
-client error status code.
+Changing an aggregation job's parameters is illegal, so further PUT requests to
+the aggregation job's URL with a different `AggregationJobInitReq` in the body
+MUST fail with a client error status code. For further requests with the same
+`AggregationJobInitReq` in the body, the Helper SHOULD respond as it did for the
+original `AggregationJobInitReq`.
 
-Additionally, it is not possible to rewind or reset the state of an aggregation
-job. Once an aggregation job has been continued at least once (see
-{{agg-continue-flow}}), further requests to initialize that aggregation job MUST
-fail with an HTTP client error status code.
+It is not possible to rewind or reset the state of an aggregation job. Once an
+aggregation job has been continued at least once (see {{agg-continue-flow}}),
+further requests to initialize that aggregation job MUST fail with a client
+error status code.
 
 #### Input Share Decryption {#input-share-decryption}
 
@@ -2097,11 +2067,8 @@ the resulting PlaintextInputShare `plaintext_input_share`.
 
 #### Input Share Validation {#input-share-validation}
 
-Validating an input share will either succeed or fail. In the case of failure,
-the input share is marked as invalid with a corresponding report error.
-
 Before beginning the preparation step, Aggregators are required to perform the
-following checks:
+following checks for each input share in the job:
 
 1. Check that the input share can be decoded as specified by the VDAF. If not,
    the input share MUST be marked as invalid with the error `invalid_message`.
@@ -2110,10 +2077,9 @@ following checks:
    {{timestamps}}. If not, the Aggregator MUST mark the input share as invalid
    with error `invalid_message`.
 
-1. Check if the report's timestamp is too far in the future. If the report's
-   timestamp is more than a few minutes ahead of the current time, then the
-   Aggregator SHOULD mark the input share as invalid with error
-   `report_too_early`.
+1. Check if the report's timestamp is more than a few minutes ahead of the
+   current time. If so, then the Aggregator SHOULD mark the input share as
+   invalid with error `report_too_early`.
 
 1. Check if the report's timestamp is before the task's `task_interval`. If so,
    the Aggregator MUST mark the input share as invalid with the error
@@ -2134,16 +2100,6 @@ following checks:
 1. If the report pertains to a batch that was previously collected, then the
    input share MUST be marked as invalid with error `batch_collected`.
 
-    * Implementation note: The Leader considers a batch to be collected once it
-      has completed a collection job for a CollectionJobReq message from the
-      Collector; the Helper considers a batch to be collected once it has
-      responded to an `AggregateShareReq` message from the Leader. A batch is
-      determined by query ({{batch-modes}}) conveyed in these messages. Queries
-      must satisfy the criteria covered in {{batch-validation}}. These criteria
-      are meant to restrict queries in a way that makes it easy to determine
-      whether a report pertains to a batch that was collected. See
-      {{distributed-systems}} for more information.
-
 1. Finally, if an Aggregator cannot determine if an input share is valid, it
    MUST mark the input share as invalid with error `report_dropped`.
    For example, the report timestamp may be so far in the past that the state
@@ -2152,15 +2108,64 @@ following checks:
 
 If all of the above checks succeed, the input share is not marked as invalid.
 
+#### Example
+
+The Helper handles the aggregation job initialization synchronously:
+
+~~~ http
+PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
+Host: example.com
+Content-Type: application/dap-aggregation-job-init-req
+Authorization: Bearer auth-token
+
+encoded(struct { ... } AggregationJobInitReq)
+
+HTTP/1.1 200
+Content-Type: application/dap-aggregation-job-resp
+
+encoded(struct { ... } AggregationJobResp)
+~~~
+
+Or asynchronously:
+
+~~~ http
+PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
+Host: example.com
+Content-Type: application/dap-aggregation-job-init-req
+Authorization: Bearer auth-token
+
+encoded(struct { ... } AggregationJobInitReq)
+
+HTTP/1.1 200
+Location: /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA?step=0
+Retry-After: 300
+
+GET /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA?step=0
+Host: example.com
+Authorization: Bearer auth-token
+
+HTTP/1.1 200
+Location: /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA?step=0
+Retry-After: 300
+
+GET /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA?step=0
+Host: example.com
+Authorization: Bearer auth-token
+
+HTTP/1.1 200
+Content-Type: application/dap-aggregation-job-resp
+
+encoded(struct { ... } AggregationJobResp)
+~~~
+
 ### Aggregate Continuation {#agg-continue-flow}
 
 In the continuation phase, the Leader drives the VDAF preparation of each report
 in the candidate report set until the underlying VDAF moves into a terminal
 state, yielding an output share for both Aggregators or a rejection.
 
-Whether this phase is reached depends on the VDAF: for 1-round VDAFs, like
-Prio3, processing has already completed. Continuation is required for VDAFs
-that require more than one round.
+Continuation is only required for VDAFs that require more than one round. Single
+round VDAFs like Prio3 will never reach this phase.
 
 #### Leader Continuation {#aggregation-leader-continuation}
 
@@ -2182,8 +2187,7 @@ struct {
 where `report_id` is the report ID associated with `state` and `outbound`, and
 `payload` is set to the `outbound` message.
 
-Next, the Leader sends a POST request to
-`{helper}/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}` with media
+Next, the Leader sends a POST to the aggregation job URL with media
 type "application/dap-aggregation-job-continue-req" and body structured as:
 
 ~~~ tls-presentation
@@ -2196,18 +2200,18 @@ struct {
 The `step` field is the step of DAP aggregation that the Leader just reached and
 wants the Helper to advance to. The `prepare_continues` field is the sequence of
 preparation continuation messages constructed in the previous step. The
-`PrepareContinue`s MUST be in the same order as the previous aggregate request.
+`PrepareContinue`s MUST be in the same order as the previous request to the
+aggregation job, omitting any reports that were rejected.
 
 The Leader MUST authenticate its requests to the Helper using a scheme that
 meets the requirements in {{request-authentication}}.
 
-The Helper responds with HTTP status 202 Accepted with a body containing an
-`AggregationJobResp` (see {{aggregation-helper-init}}). If the `status` field
-is `ready`, the Leader proceeds onward. Otherwise, if the `status` field is
-`processing`, the Leader polls the aggregation job by sending GET requests to
-the URL indicated in the Location header field, until the `status` is
-`ready`. The Helper's response when processing SHOULD include a Retry-After
-header to suggest a polling interval to the Leader.
+If the Helper responds with an `AggregationJobResp` (see
+{{aggregation-helper-init}}), then the Leader proceeds onward. If the request
+succeeds but the response body is empty, the Leader polls the aggregation job by
+resolving the Location header field against the `{helper}` URL and sending GET
+requests to that URL until it receives an `AggregationJobResp`. The Leader
+SHOULD use the response's Retry-After header field to decide when to try again.
 
 The response's `prepare_resps` MUST include exactly the same report IDs in the
 same order as the Leader's `AggregationJobContinueReq`. Otherwise, the Leader
@@ -2258,11 +2262,7 @@ recovery (see {{aggregation-step-skew-recovery}}).
 
 The Helper begins each step of continuation with a sequence of `state` objects,
 which will be `Continued(prep_state)`, one for each report in the candidate set.
-
-The Helper awaits an HTTP POST request to
-`{helper}/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}` from the
-Leader, the body of which is an `AggregationJobContinueReq` as specified in
-{{aggregation-leader-continuation}}.
+The Helper then waits for the Leader to send an `AggregationJobContinueReq`.
 
 Next, it checks that it recognizes the task ID. If not, then it MUST abort with
 error `unrecognizedTask`.
@@ -2279,20 +2279,22 @@ Next, the Helper checks that:
 If any of these checks fail, then the Helper MUST abort with error
 `invalidMessage`. Additionally, if any prep step appears out of order relative
 to the previous request, then the Helper MAY abort with error `invalidMessage`.
-(Note that a report may be missing, in which case the Helper should assume the
-Leader rejected it.)
+A report may be missing, in which case the Helper should assume the Leader
+rejected it.
 
-Next, the Helper checks if the continuation step indicated by the request is
-correct. (For the first `AggregationJobContinueReq` the value should be `1`; for
-the second the value should be `2`; and so on.) If the Leader is one step behind
-(e.g., the Leader has resent the previous HTTP request), then the Helper MAY
-attempt to recover by sending the same response as it did for the previous
-`AggregationJobContinueReq`, without performing any additional work on the
-aggregation job. In this case it SHOULD verify that the contents of the
-`AggregationJobContinueReq` are identical to the previous message (see
-{{aggregation-step-skew-recovery}}). Otherwise, if the step is incorrect or if
-the Helper does not wish to attempt recovery, the Helper MUST abort with error
-`stepMismatch`.
+Next, the Helper checks the continuation step indicated by the request. If the
+`step` value is one greater than the job's current step, then the Helper
+proceeds.
+
+If it is equal to the current step (e.g., the Leader has resent the previous
+request), then the Helper MAY attempt to recover by sending the same response as
+it did for the previous `AggregationJobContinueReq`, without performing any
+additional work on the aggregation job. In this case it SHOULD verify that the
+contents of the `AggregationJobContinueReq` are identical to the previous
+message (see {{aggregation-step-skew-recovery}}).
+
+If the Helper does not wish to attempt recovery, or if the step has some other
+value, the Helper MUST abort with error `stepMismatch`.
 
 Let `inbound` denote the payload of the prep step. For each report, the Helper
 computes the following:
@@ -2359,31 +2361,23 @@ The Helper constructs an `AggregationJobResp` message (see
 {{aggregation-helper-init}}) with each prep step. The order of the prep steps
 MUST match the Leader's `AggregationJobContinueReq`.
 
-The Helper responds to the Leader with HTTP status 202 Accepted, a body
-consisting of the `AggregationJobResp`, and the media type
-"application/dap-aggregation-job-resp".
-
-Depending on the task parameters, processing an aggregation job may take some
-time, so the Helper MAY defer computation to a background process by responding
-with the field `status` set to `processing` and Location header field set to the
-relative reference
+The Helper MAY defer handling the continuation request. In this case, it
+indicates that the response is not yet ready by immediately sending an empty
+response body and sets the Location header field to the relative reference
 `/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}?step={step}`, where
-`step` is the step indicated in the `AggregationJobContinueReq`. If so, the
-Leader polls the Helper by making HTTP GET requests to the aforementioned
-Location. The Helper responds to GET requests with HTTP status 200, a media type
-of "application/dap-aggregation-job-resp", and a body consisting of an
-`AggregationJobResp` with the `status` field reflecting the current state of the
-job. When the aggregation job is `processing`, the response SHOULD include a
-Retry-After header field to suggest a polling interval to the Leader.
+`step` is set to `AggregationJobContinueReq.step`. The response SHOULD include a
+Retry-After header field to suggest a polling interval to the Leader. The Leader
+then polls the state of the job by sending GET requests to the resolved URL. The
+Helper responds the same way until the job is ready, at which point it responds
+with the encoded `AggregationJobResp`.
 
-If for whatever reason the Leader must abandon the aggregation job, it SHOULD
-send an HTTP DELETE request to
-`{helper}/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}` so that the
-Helper knows it can clean up its state.
+The Helper MAY also block responding to the Leader's POST until the aggregation
+job continuation is ready. In this case, it responds with the encoded
+`AggregationJobResp`.
 
 #### Batch Buckets {#batch-buckets}
 
-When aggregation recovers an output share, it must be stored into an appropriate
+When aggregation refines an output share, it must be stored into an appropriate
 "batch bucket", which is defined in this section. The data stored in a batch
 bucket is kept for eventual use in the {{collect-flow}}.
 
@@ -2453,6 +2447,78 @@ request, indexed by aggregation job ID and step, and refuse to service a request
 for a given aggregation step unless it matches the previously seen request (if
 any).
 
+#### Example
+
+The Helper handles the aggregation job continuation synchronously:
+
+~~~ http
+POST /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
+Host: example.com
+Content-Type: application/dap-aggregation-job-continue-req
+Authorization: Bearer auth-token
+
+encoded(struct {
+  step = 1,
+  prepare_continues,
+} AggregationJobContinueReq)
+
+HTTP/1.1 200
+Content-Type: application/dap-aggregation-job-resp
+
+encoded(struct { ... } AggregationJobResp)
+~~~
+
+Or asynchronously:
+
+~~~ http
+POST /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
+Host: example.com
+Content-Type: application/dap-aggregation-job-continue-req
+Authorization: Bearer auth-token
+
+encoded(struct {
+  step = 1,
+  prepare_continues,
+} AggregationJobContinueReq)
+
+HTTP/1.1 200
+Location: /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA?step=1
+Retry-After: 300
+
+GET /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA?step=1
+Host: example.com
+Authorization: Bearer auth-token
+
+HTTP/1.1 200
+Location: /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA?step=1
+Retry-After: 300
+
+GET /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA?step=1
+Host: example.com
+Authorization: Bearer auth-token
+
+HTTP/1.1 200
+Content-Type: application/dap-aggregation-job-resp
+
+encoded(struct { ... } AggregationJobResp)
+~~~
+
+### Aggregation Job Deletion
+
+If for whatever reason, the Leader must abandon an aggregation job, it SHOULD
+let the Helper know it can clean up its state by sending a DELETE request to the
+job.
+
+#### Example
+
+~~~ http
+DELETE /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
+Host: example.com
+Authorization: Bearer auth-token
+
+HTTP/1.1 200
+~~~
+
 ## Collecting Results {#collect-flow}
 
 In this phase, the Collector requests aggregate shares from each Aggregator and
@@ -2460,7 +2526,7 @@ then locally combines them to yield a single aggregate result. In particular,
 the Collector issues a query to the Leader ({{batch-modes}}), which the
 Aggregators use to select a batch of reports to aggregate. Each Aggregator emits
 an aggregate share encrypted to the Collector so that it can decrypt and combine
-them to yield the aggregate result. This entire process is composed of two
+them to yield the aggregate result. This process is composed of two
 interactions:
 
 1. Collect request and response between the Collector and Leader, specified in
@@ -2471,22 +2537,24 @@ interactions:
 Once complete, the Collector computes the final aggregate result as specified in
 {{collect-finalization}}.
 
-This overall process is referred to as a "collection job".
-
-### Collection Job Initialization {#collect-init}
-
-First, the Collector chooses a collection job ID:
+This overall process is referred to as a "collection job". Collection jobs are
+identified by a 16-byte job ID:
 
 ~~~ tls-presentation
 opaque CollectionJobID[16];
 ~~~
 
-This ID value MUST be unique within the scope of the corresponding DAP task.
+A collection job is an HTTP resource served by the Leader at the URL
+`{leader}/tasks/{task-id}/collection_jobs/{collection-job-id}`.
 
-To initiate the collection job, the collector issues a PUT request to
-`{leader}/tasks/{task-id}/collection_jobs/{collection-job-id}`. The body of the
-request has media type "application/dap-collection-job-req", and it is structured
-as follows:
+### Collection Job Initialization {#collect-init}
+
+First, the Collector chooses a collection job ID, which MUST be unique within
+the scope of the corresponding DAP task.
+
+To initiate the collection job, the Collector issues a PUT request to the
+collection job's URL with media type "application/dap-collection-job-req", and a
+body structured as follows:
 
 ~~~ tls-presentation
 struct {
@@ -2549,21 +2617,14 @@ such as the number of valid reports may not be verifiable while handling the
 `CollectionJobReq` message, and the batch will have to be re-validated later on
 regardless.
 
-Changing a collection job's parameters is illegal, so further requests to
-`PUT /tasks/{task-id}/collection_jobs/{collection-job-id}` for the same
-`collection-job-id` but with a different `CollectionJobReq` in the body MUST
-fail with an HTTP client error status code.
+Changing a collection job's parameters is illegal, so further PUT requests to
+the collection job URL with a different `CollectionJobReq` in the body MUST fail
+with a client error status code.
 
-The Leader responds to `CollectionJobReq`s with a `CollectionJobResp`, which is
+The Leader responds to `CollectionJobReq`s with a `Collection`, which is
 structured as follows:
 
 ~~~ tls-presentation
-enum {
-  processing(0),
-  ready(1),
-  (255)
-} CollectionJobStatus;
-
 struct {
   PartialBatchSelector part_batch_selector;
   uint64 report_count;
@@ -2571,18 +2632,10 @@ struct {
   HpkeCiphertext leader_encrypted_agg_share;
   HpkeCiphertext helper_encrypted_agg_share;
 } Collection;
-
-struct {
-  CollectionJobStatus status;
-  select (CollectionJob.status) {
-    case processing: Empty;
-    case ready:      Collection;
-  }
-} CollectionJobResp;
 ~~~
 
-The body's media type is "application/dap-collection-job-resp". The `Collection`
-structure includes the following:
+A `Collection`'s media type is "application/dap-collection". The structure
+includes the following:
 
 * `part_batch_selector`: Information used to bind the aggregate result to the
   query. For leader-selected tasks, this includes the batch ID assigned to the
@@ -2592,7 +2645,7 @@ structure includes the following:
 * `report_count`: The number of reports included in the batch.
 
 * `interval`: The smallest interval of time that contains the timestamps of all
-  reports included in the batch. Note that in the case of a time-interval query
+  reports included in the batch. In the case of a time-interval query
   ({{time-interval-batch-mode}}), this interval can be smaller than the one in
   the corresponding `CollectionJobReq.query`.
 
@@ -2602,23 +2655,9 @@ structure includes the following:
 * `helper_encrypted_agg_share`: The Helper's aggregate share, encrypted to the
   Collector (see {{aggregate-share-encrypt}}).
 
-If the Leader finds the `CollectionJobReq` to be valid, it immediately responds
-with HTTP status 201 Created with a body containing a `CollectionJobResp` with
-the `status` field set to `processing`. The Leader SHOULD include a Retry-After
-header field to suggest a polling interval to the Collector.
-
-After receiving the response to its `CollectionJobReq`, the Collector
-periodically makes HTTP GET requests
-`/tasks/{task-id}/collection_jobs/{collection-job-id}` to check on the status
-of the collection job and eventually obtain the result. The Leader responds to GET
-requests with HTTP status 200 and the `status` field reflecting the current
-state of the job. When the collection job is `processing`, the response SHOULD
-include a Retry-After header field to suggest a polling interval to the
-Collector.
-
-The Leader then begins working with the Helper to aggregate the reports
-satisfying the query (or continues this process, depending on the VDAF) as
-described in {{aggregate-flow}}.
+After receiving the `CollectionJobReq`, the Leader begins working with the
+Helper to aggregate the reports satisfying the query (or continues this process,
+depending on the VDAF) as described in {{aggregate-flow}}.
 
 The Leader first checks whether it can construct a batch for the
 collection job by applying the requirements in {{batch-validation}}. If so, then
@@ -2632,21 +2671,88 @@ requesting an aggregate share from the Helper. This avoids a race condition
 between aggregation and collection jobs that can yield trivial batch mismatch
 errors.
 
-Once both aggregate shares are successfully obtained, the Leader responds to
-subsequent HTTP GET requests with the `status` field set to `ready` and the
-`Collection` field populated with the encrypted aggregate shares. The Collector
-stops polling once receiving this final request.
+The Leader MAY defer handling the collection request. In this case, it indicates
+that the response is not yet ready by immediately sending an empty response
+body. The Leader SHOULD include a Retry-After header field to suggest a polling
+interval to the Collector. The Collector then polls the state of the job by
+sending GET requests to the collection job URL. The Leader responds the same way
+until the job is ready, at which point it responds with the encoded
+`Collection`.
+
+The Leader MAY also block responding to the Collector's PUT until the collection
+job is ready. In this case, it responds with the encoded `Collection`.
+
+Once the `Leader` has delivered a `Collection` to the Collector, the Leader
+considers the batch to be collected, and it is an error for further aggregation
+jobs to add reports to the batch (see {{input-share-validation}}).
 
 If obtaining aggregate shares fails, then the Leader responds to subsequent HTTP
 GET requests to the collection job with an HTTP error status and a problem
 document as described in {{errors}}.
 
-The Leader MAY respond with HTTP status 204 No Content to requests to a
-collection job if the results have been deleted.
+#### Example
+
+The Leader handles the collection job request synchronously:
+
+~~~ http
+PUT /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/collection_jobs/lc7aUeGpdSNosNlh-UZhKA
+Host: example.com
+Content-Type: application/dap-collection-job-req
+Authorization: Bearer auth-token
+
+encoded(struct { ... } CollectionJobReq)
+
+HTTP/1.1 200
+Content-Type: application/dap-collection
+
+encoded(struct { ... } Collection)
+~~~
+
+Or asynchronously:
+
+~~~ http
+PUT /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/collection_jobs/lc7aUeGpdSNosNlh-UZhKA
+Host: example.com
+Content-Type: application/dap-collection-job-req
+Authorization: Bearer auth-token
+
+encoded(struct { ... } CollectionJobReq)
+
+HTTP/1.1 200
+Retry-After: 300
+
+GET /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/collection_jobs/lc7aUeGpdSNosNlh-UZhKA
+Host: example.com
+Authorization: Bearer auth-token
+
+HTTP/1.1 200
+Retry-After: 300
+
+GET /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/collection_jobs/lc7aUeGpdSNosNlh-UZhKA
+Host: example.com
+Authorization: Bearer auth-token
+
+HTTP/1.1 200
+Content-Type: application/dap-collection
+
+encoded(struct { ... } Collection)
+~~~
+
+### Collection Job Deletion
 
 The Collector can send an HTTP DELETE request to the collection job, which
 indicates to the Leader that it can abandon the collection job and discard all
 state related to it.
+
+#### Example
+
+~~~ http
+DELETE /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/collection_jobs/lc7aUeGpdSNosNlh-UZhKA
+Host: example.com
+Authorization: Bearer auth-token
+
+HTTP/1.1 200
+~~~
 
 ### Obtaining Aggregate Shares {#collect-aggregate}
 
@@ -2669,13 +2775,24 @@ The Leader then combines the values inside the batch bucket as follows:
 * Aggregate shares are combined via `Vdaf.merge(agg_param, agg_shares)` ((see
   {{!VDAF, Section 4.4}})), where `agg_param` is the aggregation parameter
   provided in the `CollectionJobReq`, and `agg_shares` are the (partial)
-  aggregate shares in the batch buckets. The result is the final aggregate share
+  aggregate shares in the batch buckets. The result is the leader aggregate share
   for this collection job.
 * Report counts are combined via summing.
 * Checksums are combined via bitwise XOR.
 
-Then the Leader sends a POST request to
-`{helper}/tasks/{task-id}/aggregate_shares` with the following message:
+A Helper aggregate share is identified by a 16-byte ID:
+
+~~~ tls-presentation
+opaque AggregateShareID[16];
+~~~
+
+The Helper's aggregate share is an HTTP resource served by the Helper at the URL
+`{helper}/tasks/{task-id}/aggregate_shares/{aggregate-share-id}`. To obtain it,
+the Leader first chooses an aggregate share ID, which MUST be unique within the
+scope of the corresponding DAP task.
+
+Then the Leader sends a PUT request to the aggregate share's URL with the
+following message:
 
 ~~~ tls-presentation
 struct {
@@ -2692,7 +2809,7 @@ struct {
 ~~~
 
 The media type of the request is "application/dap-aggregate-share-req". The
-message contains the following parameters:
+structure contains the following parameters:
 
 * `batch_selector`: The "batch selector", the contents of which depends on the
   indicated batch mode: for time-interval mode, the `config` field contains the
@@ -2740,8 +2857,7 @@ described in {{aggregate-share-encrypt}}, yielding `encrypted_agg_share`.
 Encryption prevents the Leader from learning the actual result, as it only has
 its own aggregate share and cannot compute the Helper's.
 
-The Helper responds to the Leader with HTTP status code 200 OK and a body
-consisting of an `AggregateShare`, with media type
+The Helper's response consists of an `AggregateShare`, with media type
 "application/dap-aggregate-share":
 
 ~~~ tls-presentation
@@ -2754,6 +2870,17 @@ struct {
 `encrypted_aggregate_share.enc` is set to the encapsulated HPKE context `enc`
 computed above and `encrypted_aggregate_share.ciphertext` is the ciphertext
 `encrypted_agg_share` computed above.
+
+The Helper MAY defer handling the aggregate share request. In this case, it
+indicates that the response is not yet ready by immediately sending an empty
+response body. The Helper SHOULD include a Retry-After header field to suggest
+a polling interval to the Leader. The Leader then polls the state of the job by
+sending GET requests to the aggregate share URL. The Helper responds the same
+way until the job is ready, at which point it responds with the encoded
+`AggregateShare`.
+
+The Helper MAY also block responding to the Leader's PUT until the aggregate
+share is ready. In this case, it responds with the encoded `AggregateShare`.
 
 The Helper's handling of this request MUST be idempotent. That is, if multiple
 identical, valid `AggregateShareReq`s are received, they should all yield the
@@ -2770,6 +2897,70 @@ Helper as described in {{input-share-validation}}.
 Before completing the collection job, the Leader encrypts its aggregate share
 under the Collector's HPKE public key as described in
 {{aggregate-share-encrypt}}.
+
+#### Example
+
+The Helper handles the aggregate share request synchronously:
+
+~~~ http
+PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregate_shares/lc7aUeGpdSNosNlh-UZhKA
+Host: example.com
+Content-Type: application/dap-aggregate-share-req
+Authorization: Bearer auth-token
+
+encoded(struct { ... } AggregateShareReq)
+
+HTTP/1.1 200
+Content-Type: application/dap-aggregate-share
+
+encoded(struct { ... } AggregateShare)
+~~~
+
+Or asynchronously:
+
+~~~ http
+PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregate_shares/lc7aUeGpdSNosNlh-UZhKA
+Host: example.com
+Content-Type: application/dap-aggregate-share-req
+Authorization: Bearer auth-token
+
+encoded(struct { ... } AggregateShareReq)
+
+HTTP/1.1 200
+Retry-After: 300
+
+GET /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregate_shares/lc7aUeGpdSNosNlh-UZhKA
+Host: example.com
+Authorization: Bearer auth-token
+
+HTTP/1.1 200
+Retry-After: 300
+
+GET /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregate_shares/lc7aUeGpdSNosNlh-UZhKA
+Host: example.com
+Authorization: Bearer auth-token
+
+HTTP/1.1 200
+Content-Type: application/dap-aggregate-share
+
+encoded(struct { ... } AggregateShare)
+~~~
+
+### Aggregate Share Deletion
+
+The Leader can send a DELETE request to the aggregate share, which indicates to
+the Leader that it can abandon the aggregate share and discard all state related
+to it.
+
+#### Example
+
+~~~ http
+DELETE /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregate_shares/lc7aUeGpdSNosNlh-UZhKA
+Host: example.com
+Authorization: Bearer auth-token
+
+HTTP/1.1 200
+~~~
 
 ### Collection Job Finalization {#collect-finalization}
 
@@ -3015,6 +3206,8 @@ Collector would like the next batch selected by the Leader.
 The payload of `PartialBatchSelector.config` is:
 
 ~~~ tls-presentation
+opaque BatchID[32];
+
 struct {
   BatchID batch_id;
 } LeaderSelectedPartialBatchSelectorConfig;
@@ -3074,9 +3267,6 @@ Helpers are generally required to:
   reports; and
 - Publish and manage an HPKE configuration that can be used for the upload
   interaction.
-
-In addition, for each DAP task, the Helper is required to:
-
 - Implement some form of batch-to-report index, as well as inter- and
   intra-batch replay mitigation storage, which includes some way of tracking
   batch report size. Some of this state may be used for replay attack
@@ -3089,9 +3279,6 @@ required to:
 - Support the upload interaction and store reports; and
 - Track batch report size during each collect flow and request encrypted output
   shares from Helpers.
-
-In addition, for each DAP task, the Leader is required to:
-
 - Implement and store state for the form of inter- and intra-batch replay
   mitigation in {{agg-flow}}. This requires storing the report IDs of all
   reports processed for a given task. Implementations may find it helpful to
@@ -3526,7 +3713,7 @@ corresponding media types:
 - AggregateShareReq {{collect-aggregate}}: "application/dap-aggregate-share-req"
 - AggregateShare {{collect-aggregate}}: "application/dap-aggregate-share"
 - CollectionJobReq {{collect-init}}: "application/dap-collection-job-req"
-- CollectionJobResp {{collect-init}}: "application/dap-collection-job-resp"
+- Collection {{collect-init}}: "application/dap-collection"
 
 Protocol message format evolution is supported through the definition of new
 formats that are identified by new media types. The messages above are specific
@@ -4117,7 +4304,7 @@ Change controller:
 
 : IESG
 
-### "application/dap-collection-job-resp" media type
+### "application/dap-collection" media type
 
 Type name:
 
@@ -4125,7 +4312,7 @@ Type name:
 
 Subtype name:
 
-: dap-collection-job-resp
+: dap-collection
 
 Required parameters:
 
