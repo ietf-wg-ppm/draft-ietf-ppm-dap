@@ -630,10 +630,10 @@ be one of the Aggregators.
 
 In the course of a measurement task ({{task-configuration}}), each Client
 records its own measurement value(s), packages them up into a report, and sends
-them to the Leader. Each share is encrypted one of the two Aggregators so that
-even though they pass through the Leader, the Leader is unable to see or modify
-the Helper's share. Depending on the task, the Client may only send one report
-or may send many reports over time.
+them to the Leader. Each share is encrypted to only one of the two Aggregators
+so that even though they pass through the Leader, the Leader is unable to see or
+modify the Helper's share. Depending on the task, the Client may only send one
+report or may send many reports over time.
 
 The Leader distributes the shares to the Helper and orchestrates the process of
 verifying them (see {{validating-inputs}}) and assembling them into an aggregate
@@ -1135,11 +1135,11 @@ struct {
 
 Intervals of time consist of a start time and a duration. Intervals are
 half-open; that is, `start` is included and `(start + duration)` is excluded. A
-time that is before an `Interval`'s `start` is said to be before that interval.
-A time that is equal to or after `Interval.start + Interval.duration` is said to
-be after the interval. A time that is either before or after an interval is said
-to be outside the interval. A time that is neither before nor after an interval
-is said to be inside or fall within the interval.
+time that is before the `start` of an `Interval` is said to be before that
+interval. A time that is equal to or after `Interval.start + Interval.duration`
+is said to be after the interval. A time that is either before or after an
+interval is said to be outside the interval. A time that is neither before nor
+after an interval is said to be inside or fall within the interval.
 
 ### VDAF Types
 
