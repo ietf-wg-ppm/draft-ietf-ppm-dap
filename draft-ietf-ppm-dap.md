@@ -1552,7 +1552,7 @@ the Leader to decrypt its input share. The Leader also cannot validate the
 Helper's extensions because it cannot decrypt the Helper's input share.
 Mandatory validation of extensions will occur during aggregation.)
 
-### Bulk upload
+### Bulk upload {#bulk-upload}
 
 Clients or intermediates with multiple reports in hand can use bulk upload endpoint
 and send an HTTP POST to `{leader}/tasks/{task-id}/reports/bulk` with media type
@@ -1582,6 +1582,35 @@ public report extensions in each report that follows. Reports that include value
 any common extension override the value in the common extension.
 
 Each individual report from the bulk upload request will be processed as described in {{upload-request}}.
+
+### Partial failures
+
+Bulk uploads take longer time to complete and have higher chance to fail, leaving clients
+uncertain about the status of their uploads. Replaying the entire request again
+wastes both server and client resources and network bandwidth.
+
+To provide  more robust failure handling, reports in the upload MUST be implicitly
+enumerated by the Server using 0-based indexing. Monotonically increasing report index
+is used to communicate the upload status to the Client.
+
+Any report in the upload may be rejected for reasons listed in ({{upload-request}}).
+
+Leader SHOULD provide a means to Clients to obtain status of the upload.
+
+~~~ tls-presentation
+struct {
+/* The index of the latest report processed so far by the server */
+uint32 latest_index,
+/* The list of indices of reports rejected on the server side */
+uint32 rejected<..>,
+} BulkReportStatus;
+~~~
+
+Server MAY compress large sequences of rejected reports into ranges, to avoid payload blowout.
+
+If bulk upload request fails for any reason, Client MAY choose to submit bulk upload request again.
+Client SHOULD only include reports not confirmed by the Leader. Clients MUST handle
+`reportRejected` errors ({{upload-request}}) during this upload.
 
 ### Report Extensions {#report-extensions}
 
