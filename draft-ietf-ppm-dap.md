@@ -3598,6 +3598,17 @@ report extensions {{report-extensions}} used by the task. Since meaningful
 privacy requires that multiple Clients contribute to a task, they should also
 share a consistent view of the task configuration.
 
+## Bulk uploads
+
+The potential for a single client to generate large amounts of work using
+{{bulk-upload}} for a DAP service is a serious threat to service availability.
+The Leader SHOULD implement measures to defend against resource exhaustion attacks
+through this interface. This might include strong authentication of the requester
+{{client-auth}}.
+
+The logical entity to make this request is a collector, which is likely to be known
+to the leader.
+
 ## Infrastructure Diversity
 
 DAP deployments should ensure that Aggregators do not have common dependencies
