@@ -1096,7 +1096,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    namespace, e.g., urn:ietf:params:ppm:dap:error:invalidMessage.
 
    This list is not exhaustive.  The server MAY return errors set to a
-   URN other than those defined above.  Servers MUST NOT use the DAP URN
+   URI other than those defined above.  Servers MUST NOT use the DAP URN
    namespace for errors not listed in the appropriate IANA registry (see
    Section 9.3).  The "detail" member of the Problem Details document
    includes additional diagnostic information.
@@ -1802,8 +1802,8 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    The Leader begins an aggregation job by choosing a set of candidate
    reports that pertain to the same DAP task and a job ID which MUST be
-   unique within the scope of the task.  The job ID is a 16-byte value,
-   structured as follows:
+   unique within the scope of the DAP task.  The job ID is a 16-byte
+   value, structured as follows:
 
    opaque AggregationJobID[16];
 
@@ -1934,7 +1934,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
       to which each report for this aggregation job belongs
       (Section 5.2).
 
-      Documents that define batch modes MUST specify the content this
+      Documents that define batch modes MUST specify the content of this
       field; see Section 10 for details.
 
       The indicated batch mode MUST match the task's batch mode.
@@ -1971,7 +1971,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    AggregationJobInitReq.  Otherwise, the Leader MUST abort the
    aggregation job.
 
-   Otherwise, the Leader proceeds as follows with each report:
+   Continuing, the Leader proceeds as follows with each report:
 
    1.  If the inbound prep response has type "continue", then the Leader
        computes
@@ -2584,7 +2584,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    *  Increment the count by 1.
 
-   *  Update the checksum value to the bitwise-XOR of the checksum value
+   *  Update the checksum value to the bitwise XOR of the checksum value
       with the SHA256 [SHS] hash of the report ID associated with the
       output share.
 
