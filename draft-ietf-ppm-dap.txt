@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 7 September 2025                                     Cloudflare
+Expires: 8 September 2025                                     Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                            6 March 2025
+                                                            7 March 2025
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -64,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 7 September 2025.
+   This Internet-Draft will expire on 8 September 2025.
 
 Copyright Notice
 
@@ -1132,7 +1132,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    namespace, e.g., urn:ietf:params:ppm:dap:error:invalidMessage.
 
    This list is not exhaustive.  The server MAY return errors set to a
-   URN other than those defined above.  Servers MUST NOT use the DAP URN
+   URI other than those defined above.  Servers MUST NOT use the DAP URN
    namespace for errors not listed in the appropriate IANA registry (see
    Section 9.3).  The "detail" member of the Problem Details document
    includes additional diagnostic information.
