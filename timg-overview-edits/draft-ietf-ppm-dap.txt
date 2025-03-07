@@ -609,15 +609,15 @@ Table of Contents
       aggregating their shares locally into "aggregate shares", which
       may later be merged into the aggregate result.
 
-   DAP is not compatible with all VDAFs.  Some VDAFs allow measurements
-   to be aggregated multiple times with a different aggregation
-   parameter.  DAP only allows each measurement to be aggregated once.
-   Some VDAFs produce aggregate values which depend on the order in
-   which the measurements are aggregated.  DAP only supports VDAFs whose
-   aggregation results are independent of the order in which
-   measurements are aggregated (see Section 4.4.1 of [VDAF]).  Some
-   VDAFs may involve three or more Aggregators, but DAP requires exactly
-   two Aggregators.
+   DAP is not compatible with all VDAFs.  Some VDAFs produce aggregate
+   values which depend on the order in which the measurements are
+   aggregated.  DAP only supports VDAFs whose aggregation results are
+   independent of the order in which measurements are aggregated (see
+   Section 4.4.1 of [VDAF]).  Some VDAFs may involve three or more
+   Aggregators, but DAP requires exactly two Aggregators.  Some VDAFs
+   allow measurements to be aggregated multiple times with a different
+   aggregation parameter.  DAP may be compatible with such VDAFs, but
+   only allows each measurement to be aggregated once.
 
 2.1.  System Architecture
 
@@ -674,7 +674,7 @@ Table of Contents
    In the course of a measurement task (Section 4.3), each Client
    records its own measurement, packages it up into a report, and sends
    it to the Leader.  Each share is encrypted to only one of the two
-   Aggregators so that even though they pass through the Leader, the
+   Aggregators so that even though both pass through the Leader, the
    Leader is unable to see or modify the Helper's share.  Depending on
    the task, the Client may only send one report or may send many
    reports over time.
@@ -683,7 +683,7 @@ Table of Contents
    process of verifying them and assembling them into a aggregate shares
    for the Collector.  Depending on the VDAF, it may be possible to
    process each report as it is uploaded, or it may be necessary to wait
-   until the Collector transmits a collection request before processing
+   until the Collector initializes a collection job before processing
    can begin.
 
 2.2.  Validating Measurements

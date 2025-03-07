@@ -2098,13 +2098,14 @@ their shares locally into "aggregate shares", which may later be merged into
 the aggregate result.<a href="#section-2-4.2.1" class="pilcrow">¶</a></p>
 </li>
       </ul>
-<p id="section-2-5">DAP is not compatible with all VDAFs. Some VDAFs allow measurements to be
-aggregated multiple times with a different aggregation parameter. DAP only
-allows each measurement to be aggregated once. Some VDAFs produce aggregate
+<p id="section-2-5">DAP is not compatible with all VDAFs. Some VDAFs produce aggregate
 values which depend on the order in which the measurements are aggregated. DAP
 only supports VDAFs whose aggregation results are independent of the order in
 which measurements are aggregated (see <span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-14#section-4.4.1" class="relref">Section 4.4.1</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>). Some VDAFs
-may involve three or more Aggregators, but DAP requires exactly two Aggregators.<a href="#section-2-5" class="pilcrow">¶</a></p>
+may involve three or more Aggregators, but DAP requires exactly two Aggregators.
+Some VDAFs allow measurements to be aggregated multiple times with a different
+aggregation parameter. DAP may be compatible with such VDAFs, but only allows
+each measurement to be aggregated once.<a href="#section-2-5" class="pilcrow">¶</a></p>
 <div id="system-architecture">
 <section id="section-2.1">
         <h3 id="name-system-architecture">
@@ -2209,14 +2210,14 @@ also be one of the Aggregators.<a href="#section-2.1-4" class="pilcrow">¶</a></
 <p id="section-2.1-5">In the course of a measurement task (<a href="#task-configuration" class="auto internal xref">Section 4.3</a>), each Client
 records its own measurement, packages it up into a report, and sends it to the
 Leader. Each share is encrypted to only one of the two Aggregators so that even
-though they pass through the Leader, the Leader is unable to see or modify the
+though both pass through the Leader, the Leader is unable to see or modify the
 Helper's share. Depending on the task, the Client may only send one report or
 may send many reports over time.<a href="#section-2.1-5" class="pilcrow">¶</a></p>
 <p id="section-2.1-6">The Leader distributes the shares to the Helper and orchestrates the process of
 verifying them and assembling them into a aggregate shares for the Collector.
 Depending on the VDAF, it may be possible to process each report as it is
-uploaded, or it may be necessary to wait until the Collector transmits a
-collection request before processing can begin.<a href="#section-2.1-6" class="pilcrow">¶</a></p>
+uploaded, or it may be necessary to wait until the Collector initializes a
+collection job before processing can begin.<a href="#section-2.1-6" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="validating-inputs">
