@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 7 September 2025                                     Cloudflare
+Expires: 8 September 2025                                     Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                            6 March 2025
+                                                            7 March 2025
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -64,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 7 September 2025.
+   This Internet-Draft will expire on 8 September 2025.
 
 Copyright Notice
 
@@ -673,7 +673,7 @@ Table of Contents
 
    In the course of a measurement task (Section 4.3), each Client
    records its own measurement, packages it up into a report, and sends
-   it to the the Leader.  Each share is encrypted to only one of the two
+   it to the Leader.  Each share is encrypted to only one of the two
    Aggregators so that even though they pass through the Leader, the
    Leader is unable to see or modify the Helper's share.  Depending on
    the task, the Client may only send one report or may send many
@@ -699,8 +699,8 @@ Table of Contents
    DAP validates inputs using an interactive computation between the
    Leader and Helper.  At the beginning of this computation, each
    Aggregator holds an input share uploaded by the Client.  At the end
-   of the computation, each Aggregator either holds an output share that
-   is ready to be aggregated or rejects the report as invalid.
+   of the computation, each Aggregator either obtains an output share
+   that is ready to be aggregated or rejects the report as invalid.
 
    This process is known as "preparation" and is specified by the VDAF
    itself (Section 5.2 of [VDAF]).  To facilitate preparation, the
