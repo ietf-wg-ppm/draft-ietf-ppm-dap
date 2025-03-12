@@ -1301,12 +1301,13 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    An aggregate result is computed from a set of reports, called a
    "batch".  The Collector requests the aggregate result by making a
-   "query" and the Aggregators use this query to construct a batch for
+   "query" and the Aggregators use this query to select a batch for
    aggregation.
 
    The task's batch mode defines both how reports are assigned into
    batches, how these batches are addressed and the semantics of the
-   query used for collection.
+   query used for collection.  Regardless of batch mode, each report can
+   only ever be part of a single batch.
 
    Section 5 defines the time-interval and leader-selected batch modes
    and discusses how new batch modes may be defined by future documents.
