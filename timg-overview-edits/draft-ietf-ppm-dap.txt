@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 8 September 2025                                     Cloudflare
+Expires: 13 September 2025                                    Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                            7 March 2025
+                                                           12 March 2025
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -64,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 8 September 2025.
+   This Internet-Draft will expire on 13 September 2025.
 
 Copyright Notice
 
@@ -609,15 +609,14 @@ Table of Contents
       aggregating their shares locally into "aggregate shares", which
       may later be merged into the aggregate result.
 
-   DAP is not compatible with all VDAFs.  Some VDAFs produce aggregate
-   values which depend on the order in which the measurements are
-   aggregated.  DAP only supports VDAFs whose aggregation results are
-   independent of the order in which measurements are aggregated (see
-   Section 4.4.1 of [VDAF]).  Some VDAFs may involve three or more
-   Aggregators, but DAP requires exactly two Aggregators.  Some VDAFs
-   allow measurements to be aggregated multiple times with a different
-   aggregation parameter.  DAP may be compatible with such VDAFs, but
-   only allows each measurement to be aggregated once.
+   DAP is not compatible with all VDAFs.  DAP only supports VDAFs whose
+   aggregation results are independent of the order in which
+   measurements are aggregated (see Section 4.4.1 of [VDAF]).  Some
+   VDAFs may involve three or more Aggregators, but DAP requires exactly
+   two Aggregators.  Some VDAFs allow measurements to be aggregated
+   multiple times with a different aggregation parameter.  DAP may be
+   compatible with such VDAFs, but only allows each measurement to be
+   aggregated once.
 
 2.1.  System Architecture
 
