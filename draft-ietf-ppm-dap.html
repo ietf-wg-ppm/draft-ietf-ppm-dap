@@ -1059,7 +1059,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
 </tr></thead>
 <tfoot><tr>
 <td class="left">Geoghegan, et al.</td>
-<td class="center">Expires 8 September 2025</td>
+<td class="center">Expires 13 September 2025</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1072,12 +1072,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-ietf-ppm-dap-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2025-03-07" class="published">7 March 2025</time>
+<time datetime="2025-03-12" class="published">12 March 2025</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Standards Track</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2025-09-08">8 September 2025</time></dd>
+<dd class="expires"><time datetime="2025-09-13">13 September 2025</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -1151,7 +1151,7 @@ without revealing any individual contributor's data.<a href="#section-abstract-1
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 8 September 2025.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 13 September 2025.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -2071,19 +2071,18 @@ collections can be performed in the course of a single task.<a href="#section-1.
       <h2 id="name-overview">
 <a href="#section-2" class="section-number selfRef">2. </a><a href="#name-overview" class="section-name selfRef">Overview</a>
       </h2>
-<p id="section-2-1">The protocol is executed by a large set of Clients and a pair of servers
-referred to as "Aggregators". Each Client's input to the protocol is its
-measurement (or set of measurements, e.g., counts of some user behavior). Given
-the input set of measurements <code>meas_1, ..., meas_N</code> held by the Clients, and an
-"aggregation parameter" <code>agg_param</code> shared by the Aggregators, the goal of DAP
-is to compute <code>agg_result = F(agg_param, meas_1, ..., meas_N)</code> for some
-function <code>F</code> while revealing nothing else about the measurements. We call <code>F</code>
-the "aggregation function" and <code>agg_result</code> the "aggregate result".<a href="#section-2-1" class="pilcrow">¶</a></p>
+<p id="section-2-1">The protocol is executed by a large set of Clients and a pair of Aggregators.
+Each Client's input to the protocol is its measurement (or set of measurements,
+e.g., counts of some user behavior). Given a set of measurements
+<code>meas_1, ..., meas_N</code> held by the Clients, and an "aggregation parameter"
+<code>agg_param</code> shared by the Aggregators, the goal of DAP is to compute
+<code>agg_result = F(agg_param, meas_1, ..., meas_N)</code> for some function <code>F</code> while
+revealing nothing else about the measurements. We call <code>F</code> the "aggregation
+function" and <code>agg_result</code> the "aggregate result".<a href="#section-2-1" class="pilcrow">¶</a></p>
 <p id="section-2-2">DAP is extensible in that it allows for the addition of new cryptographic
-schemes that compute different aggregation functions. In particular, the
-aggregation function is determined by the Verifiable Distributed Aggregation
-Function, or VDAF <span>[<a href="#VDAF" class="cite xref">VDAF</a>]</span>, used to securely
-compute it.<a href="#section-2-2" class="pilcrow">¶</a></p>
+schemes that compute different aggregation functions, determined by the
+Verifiable Distributed Aggregation Function, or
+<span>[<a href="#VDAF" class="cite xref">VDAF</a>]</span>, used to compute it.<a href="#section-2-2" class="pilcrow">¶</a></p>
 <p id="section-2-3">VDAFs rely on secret sharing to protect the privacy of the measurements. Rather
 than sending its measurement in the clear, each Client shards its measurement
 into a pair of "input shares" and sends an input share to each of the
@@ -2095,26 +2094,26 @@ measurement from which it was generated.<a href="#section-2-4.1.1" class="pilcro
 </li>
         <li class="normal" id="section-2-4.2">
           <p id="section-2-4.2.1">Aggregators can compute secret shares of the aggregate result by aggregating
-their shares locally into "aggregate shares", which may later be combined
-into the aggregate result.<a href="#section-2-4.2.1" class="pilcrow">¶</a></p>
+their shares locally into "aggregate shares", which may later be merged into
+the aggregate result.<a href="#section-2-4.2.1" class="pilcrow">¶</a></p>
 </li>
       </ul>
-<p id="section-2-5">Note that some VDAFs allow measurements to be aggregated multiple times, each
-time with a different aggregation parameter; however, DAP only allows each
-measurement to be aggregated once. Similarly, some VDAFs produce aggregate
-values which depend on the order in which the measurements are aggregated;
-however, DAP only supports VDAFs whose aggregation results are independent of
-the order in which measurements are aggregated (see <span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-14#section-4.4.1" class="relref">Section 4.4.1</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>).<a href="#section-2-5" class="pilcrow">¶</a></p>
+<p id="section-2-5">DAP is not compatible with all VDAFs. DAP only supports VDAFs whose aggregation
+results are independent of the order in which measurements are aggregated (see
+<span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-14#section-4.4.1" class="relref">Section 4.4.1</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>). Some VDAFs may involve three or more Aggregators,
+but DAP requires exactly two Aggregators. Some VDAFs allow measurements to be
+aggregated multiple times with a different aggregation parameter. DAP may be
+compatible with such VDAFs, but only allows each measurement to be aggregated
+once.<a href="#section-2-5" class="pilcrow">¶</a></p>
 <div id="system-architecture">
 <section id="section-2.1">
         <h3 id="name-system-architecture">
 <a href="#section-2.1" class="section-number selfRef">2.1. </a><a href="#name-system-architecture" class="section-name selfRef">System Architecture</a>
         </h3>
-<p id="section-2.1-1">The overall system architecture is shown in <a href="#dap-topology" class="auto internal xref">Figure 1</a>.<a href="#section-2.1-1" class="pilcrow">¶</a></p>
 <span id="name-dap-architecture"></span><div id="dap-topology">
 <figure id="figure-1">
-          <div id="section-2.1-2.1">
-            <div class="alignLeft art-svg artwork" id="section-2.1-2.1.1">
+          <div id="section-2.1-1.1">
+            <div class="alignLeft art-svg artwork" id="section-2.1-1.1.1">
 <svg xmlns="http://www.w3.org/2000/svg" version="1.1" height="336" width="456" viewBox="0 0 456 336" class="diagram" text-anchor="middle" font-family="monospace" font-size="13px" stroke-linecap="round">
                 <path d="M 8,32 L 8,96" fill="none" stroke="black"></path>
                 <path d="M 8,128 L 8,192" fill="none" stroke="black"></path>
@@ -2164,61 +2163,60 @@ the order in which measurements are aggregated (see <span><a href="https://datat
                   <text x="44" y="292">Client</text>
                   <text x="220" y="292">Helper</text>
                 </g>
-              </svg><a href="#section-2.1-2.1.1" class="pilcrow">¶</a>
+              </svg><a href="#section-2.1-1.1.1" class="pilcrow">¶</a>
 </div>
 </div>
 <figcaption><a href="#figure-1" class="selfRef">Figure 1</a>:
 <a href="#name-dap-architecture" class="selfRef">DAP architecture</a>
           </figcaption></figure>
 </div>
-<p id="section-2.1-3">The main participants in the protocol are as follows:<a href="#section-2.1-3" class="pilcrow">¶</a></p>
-<span class="break"></span><dl class="dlParallel" id="section-2.1-4">
-          <dt id="section-2.1-4.1">Collector:</dt>
-          <dd style="margin-left: 1.5em" id="section-2.1-4.2">
-            <p id="section-2.1-4.2.1">The party which wants to obtain the aggregate result over the measurements
-generated by the Clients. A task will have a single Collector.<a href="#section-2.1-4.2.1" class="pilcrow">¶</a></p>
+<p id="section-2.1-2">The main participants in the protocol are as follows:<a href="#section-2.1-2" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlParallel" id="section-2.1-3">
+          <dt id="section-2.1-3.1">Collector:</dt>
+          <dd style="margin-left: 1.5em" id="section-2.1-3.2">
+            <p id="section-2.1-3.2.1">The party which wants to obtain the aggregate result over the measurements
+generated by the Clients. A task will have a single Collector.<a href="#section-2.1-3.2.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
-<dt id="section-2.1-4.3">Clients:</dt>
-          <dd style="margin-left: 1.5em" id="section-2.1-4.4">
-            <p id="section-2.1-4.4.1">The parties which take the measurements and report them to the Aggregators.
+<dt id="section-2.1-3.3">Clients:</dt>
+          <dd style="margin-left: 1.5em" id="section-2.1-3.4">
+            <p id="section-2.1-3.4.1">The parties which take the measurements and report them to the Aggregators.
 In order to provide reasonable levels of privacy, there must be a large number
-of Clients.<a href="#section-2.1-4.4.1" class="pilcrow">¶</a></p>
+of Clients.<a href="#section-2.1-3.4.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
-<dt id="section-2.1-4.5">Leader:</dt>
-          <dd style="margin-left: 1.5em" id="section-2.1-4.6">
-            <p id="section-2.1-4.6.1">The Aggregator responsible for coordinating the protocol. It receives the
+<dt id="section-2.1-3.5">Leader:</dt>
+          <dd style="margin-left: 1.5em" id="section-2.1-3.6">
+            <p id="section-2.1-3.6.1">The Aggregator responsible for coordinating the protocol. It receives the
 reports from Clients, aggregates them with the assistance of the Helper, and
 it orchestrates the process of computing the aggregate result as requested by
-the Collector. Each task has a single Leader.<a href="#section-2.1-4.6.1" class="pilcrow">¶</a></p>
+the Collector. Each task has a single Leader.<a href="#section-2.1-3.6.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
-<dt id="section-2.1-4.7">Helper:</dt>
-          <dd style="margin-left: 1.5em" id="section-2.1-4.8">
-            <p id="section-2.1-4.8.1">The Aggregator assisting the Leader with the computation. The protocol is
+<dt id="section-2.1-3.7">Helper:</dt>
+          <dd style="margin-left: 1.5em" id="section-2.1-3.8">
+            <p id="section-2.1-3.8.1">The Aggregator assisting the Leader with the computation. The protocol is
 designed so that the Helper is relatively lightweight, with most of the
-operational burden borne by the Leader. Each task has a single Helper.<a href="#section-2.1-4.8.1" class="pilcrow">¶</a></p>
+operational burden borne by the Leader. Each task has a single Helper.<a href="#section-2.1-3.8.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
 </dl>
-<p id="section-2.1-5"><a href="#dap-topology" class="auto internal xref">Figure 1</a> illustrates which participants exchange HTTP messages. Arrows
+<p id="section-2.1-4"><a href="#dap-topology" class="auto internal xref">Figure 1</a> illustrates which participants exchange HTTP messages. Arrows
 go from HTTP clients to HTTP servers. Note that some DAP participants may be
-clients sometimes but servers at other times. It is even possible for a single
-entity to embody multiple participants. For example, the Collector could also
-be one of the Aggregators.<a href="#section-2.1-5" class="pilcrow">¶</a></p>
-<p id="section-2.1-6">In the course of a measurement task (<a href="#task-configuration" class="auto internal xref">Section 4.3</a>), each Client
-records its own measurement value(s), packages them up into a report, and sends
-them to the Leader. Each share is encrypted to only one of the two Aggregators
-so that even though they pass through the Leader, the Leader is unable to see or
-modify the Helper's share. Depending on the task, the Client may only send one
-report or may send many reports over time.<a href="#section-2.1-6" class="pilcrow">¶</a></p>
-<p id="section-2.1-7">The Leader distributes the shares to the Helper and orchestrates the process of
-verifying them (see <a href="#validating-inputs" class="auto internal xref">Section 2.2</a>) and assembling them into an aggregate
-result for the Collector. Depending on the VDAF, it may be possible to
-incrementally process each report as it is uploaded, or it may be necessary to
-wait until the Collector transmits a collection request before processing can
-begin.<a href="#section-2.1-7" class="pilcrow">¶</a></p>
+HTTP clients sometimes but HTTP servers at other times. It is even possible for
+a single entity to perform multiple DAP roles. For example, the Collector could
+also be one of the Aggregators.<a href="#section-2.1-4" class="pilcrow">¶</a></p>
+<p id="section-2.1-5">In the course of a measurement task (<a href="#task-configuration" class="auto internal xref">Section 4.3</a>), each Client
+records its own measurement, packages it up into a report, and sends it to the
+Leader. Each share is encrypted to only one of the two Aggregators so that even
+though both pass through the Leader, the Leader is unable to see or modify the
+Helper's share. Depending on the task, the Client may only send one report or
+may send many reports over time.<a href="#section-2.1-5" class="pilcrow">¶</a></p>
+<p id="section-2.1-6">The Leader distributes the shares to the Helper and orchestrates the process of
+verifying them and assembling them into a aggregate shares for the Collector.
+Depending on the VDAF, it may be possible to process each report as it is
+uploaded, or it may be necessary to wait until the Collector initializes a
+collection job before processing can begin.<a href="#section-2.1-6" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="validating-inputs">
@@ -2226,36 +2224,34 @@ begin.<a href="#section-2.1-7" class="pilcrow">¶</a></p>
         <h3 id="name-validating-measurements">
 <a href="#section-2.2" class="section-number selfRef">2.2. </a><a href="#name-validating-measurements" class="section-name selfRef">Validating Measurements</a>
         </h3>
-<p id="section-2.2-1">An essential task of any data collection pipeline is ensuring that the data
+<p id="section-2.2-1">An essential goal of any data collection pipeline is ensuring that the data
 being aggregated is "valid". For example, each measurement might be expected to
-be a number between <code>0</code> and <code>10</code>. In DAP, input validation is complicated by the
+be a number between 0 and 10. In DAP, input validation is complicated by the
 fact that none of the entities other than the Client ever sees that Client's
 plaintext measurement. To an Aggregator, a secret share of a valid measurement
 is indistinguishable from a secret share of an invalid measurement.<a href="#section-2.2-1" class="pilcrow">¶</a></p>
-<p id="section-2.2-2">In DAP, input validation is accomplished by an interactive computation between
-the Leader and Helper. At the beginning of this computation, each Aggregator is
-in possession of an input share uploaded by the Client. At the end of the
-computation, each Aggregator is in possession of either an "output share" that
-is ready to be aggregated or an indication that the underlying data is invalid,
-in which case the report is rejected.<a href="#section-2.2-2" class="pilcrow">¶</a></p>
+<p id="section-2.2-2">DAP validates inputs using an interactive computation between the Leader and
+Helper. At the beginning of this computation, each Aggregator holds an input
+share uploaded by the Client. At the end of the computation, each Aggregator
+either obtains an output share that is ready to be aggregated or rejects the
+report as invalid.<a href="#section-2.2-2" class="pilcrow">¶</a></p>
 <p id="section-2.2-3">This process is known as "preparation" and is specified by the VDAF itself
 (<span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-14#section-5.2" class="relref">Section 5.2</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>). To facilitate preparation, the report generated by
-the Client include information used by the Aggregators. For example, Prio3
+the Client includes information used by the Aggregators. For example, Prio3
 (<span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-14#section-7" class="relref">Section 7</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>) includes a zero-knowledge proof of the measurement's
-validity (<span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-14#section-7.1" class="relref">Section 7.1</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>); the process of verifying this proof
-reveals nothing about the underlying measurement beyond its validity.<a href="#section-2.2-3" class="pilcrow">¶</a></p>
-<p id="section-2.2-4">The specific properties attested to by the proof vary depending on the
-measurement being taken. For instance, to measure the time the user took
-performing a given task the proof might demonstrate that the value reported was
-within a certain range (e.g., between <code>0</code> and <code>60</code> seconds). By contrast, to
-report which of a set of <code>N</code> options the user select, the report might contain
-<code>N</code> integers and the proof would demonstrate that <code>N-1</code> were <code>0</code> and the other
-was <code>1</code>.<a href="#section-2.2-4" class="pilcrow">¶</a></p>
-<p id="section-2.2-5">It is important to recognize that "validity" is distinct from "correctness".
-For instance, the user might have spent <code>30</code> seconds on a task but the Client
-might report <code>60</code> seconds. This is a problem with any measurement system and
-DAP does not attempt to address it; it merely ensures that the data is within
-acceptable limits, so the Client could not report <code>10^6</code>  or <code>-20</code> seconds.<a href="#section-2.2-5" class="pilcrow">¶</a></p>
+validity (<span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-14#section-7.1" class="relref">Section 7.1</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>). Verifying this proof reveals nothing about
+the underlying measurement but its validity.<a href="#section-2.2-3" class="pilcrow">¶</a></p>
+<p id="section-2.2-4">The specific properties attested to by the proof depend on the measurement being
+taken. For instance, if the task is measuring the latency of some operation, the
+proof might demonstrate that the value reported was between 0 and 60 seconds.
+But to report which of <code>N</code> options a user selected, the report might contain <code>N</code>
+integers and the proof would demonstrate that <code>N-1</code> of them were <code>0</code> and the
+other was <code>1</code>.<a href="#section-2.2-4" class="pilcrow">¶</a></p>
+<p id="section-2.2-5">"Validity" is distinct from "correctness". For instance, the user might have
+spent <code>30</code> seconds on a task but might report <code>60</code> seconds. This is a problem
+with any measurement system and DAP does not attempt to address it. DAP merely
+ensures that the data is within the chosen limits, so the Client could not
+report <code>10^6</code>  or <code>-20</code> seconds.<a href="#section-2.2-5" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="replay-protection">
@@ -2264,18 +2260,12 @@ acceptable limits, so the Client could not report <code>10^6</code>  or <code>-2
 <a href="#section-2.3" class="section-number selfRef">2.3. </a><a href="#name-replay-protection" class="section-name selfRef">Replay Protection</a>
         </h3>
 <p id="section-2.3-1">Another goal of DAP is to mitigate replay attacks in which a report is
-aggregated multiple times within a batch or across multiple batches. This would
+aggregated in multiple batches or multiple times in a single batch. This would
 allow the attacker to learn more information about the underlying measurement
 than it would otherwise.<a href="#section-2.3-1" class="pilcrow">¶</a></p>
 <p id="section-2.3-2">When a Client generates a report, it also generates a random nonce, called the
 "report ID". Each Aggregator is responsible for storing the IDs of reports it
-has aggregated for a given task. To check whether a report has been replayed,
-it checks whether the report's ID is in the set of stored IDs.<a href="#section-2.3-2" class="pilcrow">¶</a></p>
-<p id="section-2.3-3">Note that IDs do not need to be stored indefinitely. The protocol allows
-Aggregators to enforce replay only for a sliding time window (e.g., within the
-last two weeks of the current time) and reject reports that fall outside of the
-replay window. This allows implementation to save resources by forgetting old
-report IDs.<a href="#section-2.3-3" class="pilcrow">¶</a></p>
+has aggregated and rejecting replayed reports.<a href="#section-2.3-2" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="lifecycle-of-protocol-objects">
@@ -2284,11 +2274,11 @@ report IDs.<a href="#section-2.3-3" class="pilcrow">¶</a></p>
 <a href="#section-2.4" class="section-number selfRef">2.4. </a><a href="#name-lifecycle-of-protocol-objec" class="section-name selfRef">Lifecycle of Protocol Objects</a>
         </h3>
 <p id="section-2.4-1">The following diagram illustrates how the various objects in the protocol are
-constructed or transformed into other protocol objects. Nodes enclosed in an
-oval are verbs or actions which process, transform or combine one or more
-objects into one or more other objects. Note that this does not necessarily
-illustrate how participants communicate. In particular, the processing of
-aggregation jobs happens in distinct, non-colluding parties.<a href="#section-2.4-1" class="pilcrow">¶</a></p>
+constructed or transformed into other protocol objects. Oval nodes are verbs or
+actions which process, transform or combine one or more objects into one or more
+other objects. This diagram does not necessarily illustrate how participants
+communicate. In particular, the processing of aggregation jobs happens in
+distinct, non-colluding parties.<a href="#section-2.4-1" class="pilcrow">¶</a></p>
 <span id="name-lifecycles-of-protocol-obje"></span><div id="object-lifecycle">
 <figure id="figure-2">
           <div id="section-2.4-2.1">
@@ -2757,7 +2747,7 @@ aggregation jobs happens in distinct, non-colluding parties.<a href="#section-2.
           <h4 id="name-arity-of-protocol-objects">
 <a href="#section-2.4.1" class="section-number selfRef">2.4.1. </a><a href="#name-arity-of-protocol-objects" class="section-name selfRef">Arity of Protocol Objects</a>
           </h4>
-<p id="section-2.4.1-1">DAP reports are 1 to 1 to with measurements. In this illustration, <code>i</code> distinct
+<p id="section-2.4.1-1">Reports are 1 to 1 to with measurements. In this illustration, <code>i</code> distinct
 Clients upload a distinct report, but a single Client could upload multiple
 reports to a task (see <a href="#sybil" class="auto internal xref">Section 8.1</a> for some implications of this). The process of
 sharding measurements, constructing reports and uploading them is specified in
@@ -2783,11 +2773,11 @@ buckets together into its aggregate share, meaning batch buckets are many to 1
 with aggregate shares.<a href="#section-2.4.1-5" class="pilcrow">¶</a></p>
 <p id="section-2.4.1-6">The Leader and Helper's aggregate shares are finally delivered to the Collector
 to be unsharded into the aggregate result. Since there are always exactly two
-Aggregators in DAP, aggregate shares are 2 to 1 with aggregate results. The
-collection interaction is specified in <a href="#collect-flow" class="auto internal xref">Section 4.8</a>.<a href="#section-2.4.1-6" class="pilcrow">¶</a></p>
+Aggregators, aggregate shares are 2 to 1 with aggregate results. The collection
+interaction is specified in <a href="#collect-flow" class="auto internal xref">Section 4.8</a>.<a href="#section-2.4.1-6" class="pilcrow">¶</a></p>
 <p id="section-2.4.1-7">There can be many aggregate results for a single task. The Collection process
 may occur multiple times for each task, with the Collector obtaining multiple
-aggregate results. For example, imagine a task where the Collector obtains
+aggregate results. For example, imagine tasks where the Collector obtains
 aggregate results once an hour, or every time 10,000,000 reports are uploaded.<a href="#section-2.4.1-7" class="pilcrow">¶</a></p>
 </section>
 </div>
