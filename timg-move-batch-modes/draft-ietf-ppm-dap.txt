@@ -609,15 +609,14 @@ Table of Contents
       aggregating their shares locally into "aggregate shares", which
       may later be merged into the aggregate result.
 
-   DAP is not compatible with all VDAFs.  Some VDAFs produce aggregate
-   values which depend on the order in which the measurements are
-   aggregated.  DAP only supports VDAFs whose aggregation results are
-   independent of the order in which measurements are aggregated (see
-   Section 4.4.1 of [VDAF]).  Some VDAFs may involve three or more
-   Aggregators, but DAP requires exactly two Aggregators.  Some VDAFs
-   allow measurements to be aggregated multiple times with a different
-   aggregation parameter.  DAP may be compatible with such VDAFs, but
-   only allows each measurement to be aggregated once.
+   DAP is not compatible with all VDAFs.  DAP only supports VDAFs whose
+   aggregation results are independent of the order in which
+   measurements are aggregated (see Section 4.4.1 of [VDAF]).  Some
+   VDAFs may involve three or more Aggregators, but DAP requires exactly
+   two Aggregators.  Some VDAFs allow measurements to be aggregated
+   multiple times with a different aggregation parameter.  DAP may be
+   compatible with such VDAFs, but only allows each measurement to be
+   aggregated once.
 
 2.1.  System Architecture
 
