@@ -81,7 +81,10 @@ contributor:
        name: Charlie Harrison
        org: Google
        email: csharrison@chromium.org
-
+ -
+       name: Alex Koshelev
+       org: Meta
+       email: koshelev@meta.com
  -
        name: Peter Saint-Andre
        email: stpeter@gmail.com
@@ -1330,7 +1333,7 @@ Note: Long cache lifetimes may result in Clients using stale HPKE
 configurations; Aggregators SHOULD continue to accept reports with old keys for
 at least twice the cache lifetime in order to avoid rejecting reports.
 
-### Upload Request
+### Upload Request {#upload-request}
 
 Clients upload reports by using an HTTP POST to
 `{leader}/tasks/{task-id}/reports`. The payload is a `Report`, with media type
@@ -1497,6 +1500,72 @@ abort the upload request with error "invalidMessage".
 the Leader to decrypt its input share. The Leader also cannot validate the
 Helper's extensions because it cannot decrypt the Helper's input share.
 Mandatory validation of extensions will occur during aggregation.)
+
+### Bulk upload {#bulk-upload}
+
+Clients or intermediates with multiple reports in hand can use bulk upload
+endpoint and send an HTTP POST to `{leader}/tasks/{task-id}/reports/bulk` with
+media type "application/dap-bulk-report". A bulk request is equivalent to
+multiple separate submissions and is strictly a performance optimization.
+
+The "application/dap-bulk-report" format contains a prologue that encodes
+extensions that are common to all reports. The prologue is followed by any
+number of reports, from which those shared fields are removed.
+
+~~~ tls-presentation
+struct {
+Extension common_extensions<0..2^16-1>;
+Report report[REPORT_COUNT];
+} BulkReport;
+~~~
+{: #syn-bulk-report title="Bulk Report Format"}
+
+The use of `REPORT_COUNT` in {{syn-bulk-report}} is a small abuse of the TLS
+syntax to signify that any number of reports are included. This "value" could be
+any positive integer. Unlike a variable-length field, as denoted with `&lt;` and
+`>`, this format does not require that the size of all included reports be known
+before constructing a request.
+
+The `common_extensions` field contains common extensions that are added to the
+set of public report extensions in each report that follows. Reports that
+include values for any common extension override the value in the common
+extension.
+
+Each individual report from the bulk upload request will be processed as
+described in {{upload-request}}.
+
+### Partial failures
+
+Bulk uploads take longer time to complete and have higher chance to fail,
+leaving clients uncertain about the status of their uploads. Replaying the
+entire request again wastes both server and client resources and network
+bandwidth.
+
+To provide  more robust failure handling, reports in the upload MUST be
+implicitly enumerated by the Server using 0-based indexing. Monotonically
+increasing report index is used to communicate the upload status to the Client.
+
+Any report in the upload may be rejected for reasons listed in
+({{upload-request}}).
+
+Leader SHOULD provide a means to Clients to obtain status of the upload.
+
+~~~ tls-presentation
+struct {
+/* The index of the latest report processed so far by the server */
+uint32 latest_index,
+/* The list of indices of reports rejected on the server side */
+uint32 rejected<..>,
+} BulkReportStatus;
+~~~
+
+Server MAY compress large sequences of rejected reports into ranges, to avoid
+payload blowout.
+
+If bulk upload request fails for any reason, Client MAY choose to submit bulk
+upload request again. Client SHOULD only include reports not confirmed by the
+Leader. Clients MUST handle `reportRejected` errors ({{upload-request}}) during
+this upload.
 
 ### Report Extensions {#report-extensions}
 
@@ -3496,6 +3565,17 @@ report extensions {{report-extensions}} used by the task. Since meaningful
 privacy requires that multiple Clients contribute to a task, they should also
 share a consistent view of the task configuration.
 
+## Bulk uploads
+
+The potential for a single client to generate large amounts of work using
+{{bulk-upload}} for a DAP service is a serious threat to service availability.
+The Leader SHOULD implement measures to defend against resource exhaustion
+attacks through this interface. This might include strong authentication of the
+requester {{client-auth}}.
+
+The logical entity to make this request is a collector, which is likely to be
+known to the leader.
+
 ## Infrastructure Diversity
 
 DAP deployments should ensure that Aggregators do not have common dependencies
@@ -3520,6 +3600,7 @@ corresponding media types:
 
 - HpkeConfigList {{hpke-config}}: "application/dap-hpke-config-list"
 - Report {{upload-request}}: "application/dap-report"
+- BulkReport {{bulk-upload}}: "application/dap-bulk-report"
 - AggregationJobInitReq {{leader-init}}: "application/dap-aggregation-job-init-req"
 - AggregationJobResp {{aggregation-helper-init}}: "application/dap-aggregation-job-resp"
 - AggregationJobContinueReq {{aggregation-leader-continuation}}: "application/dap-aggregation-job-continue-req"
@@ -3664,6 +3745,76 @@ Fragment identifier considerations:
 
 Additional information:
 
+: <dl>
+  <dt>Magic number(s):</dt><dd>N/A</dd>
+  <dt>Deprecated alias names for this type:</dt><dd>N/A</dd>
+  <dt>File extension(s):</dt><dd>N/A</dd>
+  <dt>Macintosh file type code(s):</dt><dd>N/A</dd>
+  </dl>
+
+Person and email address to contact for further information:
+
+: see Authors' Addresses section of the published specification
+
+Intended usage:
+
+: COMMON
+
+Restrictions on usage:
+
+: N/A
+
+Author:
+
+: see Authors' Addresses section of the published specification
+
+Change controller:
+
+: IESG
+
+### "application/dap-bulk-report" media type
+
+Type name:
+
+: application
+
+Subtype name:
+
+: dap-bulk-report
+
+Required parameters:
+
+: N/A
+
+Optional parameters:
+
+: None
+
+Encoding considerations:
+
+: only "8bit" or "binary" is permitted
+
+Security considerations:
+
+: see {{bulk-upload}} of the published specification
+
+Interoperability considerations:
+
+: N/A
+
+Published specification:
+
+: RFC XXXX
+
+Applications that use this media type:
+
+: N/A
+
+Fragment identifier considerations:
+
+: N/A
+
+Additional information:
 : <dl>
   <dt>Magic number(s):</dt><dd>N/A</dd>
   <dt>Deprecated alias names for this type:</dt><dd>N/A</dd>
