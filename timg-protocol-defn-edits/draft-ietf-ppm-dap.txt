@@ -28,8 +28,8 @@ Abstract
    aggregating them on some server, thus representing a threat to user
    privacy and rendering many such measurements difficult and
    impractical.  This document describes a multi-party distributed
-   aggregation protocol (DAP) for privacy preserving measurement (PPM)
-   which can be used to collect aggregate data without revealing any
+   aggregation protocol (DAP) for privacy preserving measurement which
+   can be used to collect aggregate data without revealing any
    individual contributor's data.
 
 About This Document
@@ -198,6 +198,15 @@ Table of Contents
 
    (*) Indicates a change that breaks wire compatibility with the
    previous draft.
+
+   15:
+
+   *  Reorganize text for clarity and flow.
+
+   *  Define consistent semantics for long-running interactions:
+      aggregation jobs, collection jobs and aggregate shares. (*)
+
+   *  Bump version tag from "dap-14" to "dap-15". (*)
 
    14:
 
@@ -527,9 +536,6 @@ Table of Contents
       batch mode, there may be many batch buckets tracking the state of
       a single batch.
 
-   Batch duration:  The time difference between the oldest and newest
-      report in a batch.
-
    Batch interval:  A parameter of a query issued by the Collector that
       specifies the time range of the reports in the batch.
 
@@ -564,15 +570,12 @@ Table of Contents
       applied.  Depending on the VDAF in use, multiple values may be
       grouped into a single measurement.  As defined in [VDAF].
 
-   Minimum batch size:  The minimum number of reports that must be
-      aggregated before a batch can be collected.
-
-   Public share:  The output of the VDAF sharding algorithm transmitted
+   Public share:  An output of the VDAF sharding algorithm transmitted
       to each of the Aggregators.  As defined in [VDAF].
 
    Report:  A cryptographically protected measurement uploaded to the
-      Leader by a Client.  Includes a pair of report shares, one for
-      each Aggregator.
+      Leader by a Client.  Includes a public share and a pair of report
+      shares, one for each Aggregator.
 
    Report share:  An input share encrypted under the HPKE public key of
       an Aggregator [HPKE].  The report share also includes some
@@ -909,7 +912,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    Communications between participants are carried over HTTP [RFC9110].
    Use of HTTPS is REQUIRED to provide server authentication and
-   confidentiality.  TLS certificates are to be checked according to
+   confidentiality.  TLS certificates MUST be checked according to
    [RFC9110], Section 4.3.4.
 
 3.1.  HTTP Status Codes
@@ -1334,9 +1337,10 @@ aggregation job 1                   aggregation job 2          aggregation job j
    *  Variables {leader} and {helper} are replaced with the base API URL
       of the Leader and Helper respectively.
 
-   *  Variables {task-id}, {aggregation-job-id}, and {collection-job-id}
-      are replaced with the task ID (Section 4.2), aggregation job ID
-      (Section 4.6.1), and collection job ID (Section 4.7.1)
+   *  Variables {task-id}, {aggregation-job-id}, {aggregate-share-id},
+      and {collection-job-id} are replaced with the task ID
+      (Section 4.2), aggregation job ID (Section 4.6.1), aggregate share
+      ID (Section 4.7.3) and collection job ID (Section 4.7.1)
       respectively.  The value MUST be encoded in its URL-safe, unpadded
       Base 64 representation as specified in Sections 5 and 3.2 of
       [RFC4648].
@@ -1383,7 +1387,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    information on HPKE algorithm choices.
 
    Clients retrieve the HPKE configuration from each Aggregator by
-   sending a GET request to {aggregator}/hpke_config.
+   sending a GET to {aggregator}/hpke_config.
 
    An Aggregator responds with an HpkeConfigList value, with media type
    "application/dap-hpke-config-list".  The HpkeConfigList structure
@@ -1445,13 +1449,28 @@ aggregation job 1                   aggregation job 2          aggregation job j
    Content-Type: application/dap-hpke-config-list
    Cache-Control: max-age=86400
 
-   encoded(HpkeConfigList)
+   encoded([
+     struct {
+       id = 0,
+       kem_id = 0x0010,
+       kdf_id = 0x0001,
+       aead_id = 0x0001,
+       public_key = [0x01, 0x02, 0x03, 0x04, ...],
+     } HpkeConfig,
+     struct {
+       id = 1,
+       kem_id = 0x0020,
+       kdf_id = 0x0001,
+       aead_id = 0x0003,
+       public_key = [0x04, 0x03, 0x02, 0x01, ...],
+     } HpkeConfig,
+   ])
 
 4.5.2.  Upload Request
 
-   Clients upload reports by sending a POST request to
-   {leader}/tasks/{task-id}/reports.  The body is a Report, with media
-   type "application/dap-report", structured as follows:
+   Clients upload reports by sending a POST to {leader}/tasks/{task-
+   id}/reports.  The body is a Report, with media type "application/dap-
+   report", structured as follows:
 
    struct {
      ReportID report_id;
@@ -1469,7 +1488,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    *  report_metadata is public metadata describing the report.
 
       -  report_id uniquely identifies the report.  The Client MUST
-         generate this by generating 16 random bytes using a
+         generate this by sampling 16 random bytes from a
          cryptographically secure random number generator.
 
       -  time is the truncated (see Section 4.1.1) time at which the
@@ -1518,10 +1537,8 @@ aggregation job 1                   aggregation job 2          aggregation job j
       Each report's rand value MUST be independently sampled from a
       cryptographically secure random number generator.
 
-   The sharding algorithm will return two input shares.  The first input
-   share returned from the sharding algorithm is considered to be the
-   Leader's input share, and the second input share is considered to be
-   the Helper's input share.
+   The sharding algorithm will return two input shares.  The is the
+   Leader's input share, and the second is the Helper's.
 
    The Client then wraps each input share in the following structure:
 
@@ -1541,17 +1558,17 @@ aggregation job 1                   aggregation job 2          aggregation job j
      "dap-14 input share" || 0x01 || server_role,
      input_share_aad, plaintext_input_share)
 
-   *  pk is the Aggregator's public key.
+   *  pk is the public key from the Aggregator's HPKE configuration.
 
    *  0x01 represents the Role of the sender (always the Client).
 
-   *  server_role is the Role of the intended recipient (0x02 for the
-      Leader and 0x03 for the Helper).
+   *  server_role is the Role of the recipient (0x02 for the Leader and
+      0x03 for the Helper).
 
    *  plaintext_input_share is the Aggregator's PlaintextInputShare.
 
-   *  input_share_aad is an InputShareAad defined below, constructed
-      from the corresponding fields in the report.
+   *  input_share_aad is an encoded InputShareAad, constructed from the
+      corresponding fields in the report per the definition below.
 
    The SealBase() function is as specified in [HPKE], Section 6.1 for
    the ciphersuite indicated by the Aggregator's HPKE configuration.
@@ -1562,7 +1579,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
      opaque public_share<0..2^32-1>;
    } InputShareAad;
 
-   If the request is malformed, the Leader aborts with error
+   If the upload request is malformed, the Leader aborts with error
    invalidMessage.
 
    If the Leader does not recognize the task ID, then it aborts with
@@ -1582,12 +1599,12 @@ aggregation job 1                   aggregation job 2          aggregation job j
    The Leader MUST ignore any report pertaining to a batch that has
    already been collected (see Section 4.6.1.4 for details).  Otherwise,
    comparing the aggregate result to the previous aggregate result may
-   result in a privacy violation.  The Leader MAY also abort the upload
-   interaction and alert the Client with error reportRejected.
+   result in a privacy violation.  The Leader MAY also abort with error
+   reportRejected.
 
    The Leader MUST ignore any report whose timestamp is outside of the
-   task's time_interval.  When it does so, it SHOULD also abort the
-   upload interaction and alert the Client with error reportRejected.
+   task's time_interval.  When it does so, it SHOULD also abort with
+   error reportRejected.
 
    The Leader may need to buffer reports while waiting to aggregate them
    (e.g., while waiting for an aggregation parameter from the Collector;
@@ -1595,27 +1612,26 @@ aggregation job 1                   aggregation job 2          aggregation job j
    timestamps are too far in the future.  Implementors MAY provide for
    some small leeway, usually no more than a few minutes, to account for
    clock skew.  If the Leader rejects a report for this reason, it
-   SHOULD abort the upload interaction and alert the Client with error
-   reportTooEarly.  In this situation, the Client MAY re-upload the
-   report later on.
+   SHOULD abort with error reportTooEarly.  In this situation, the
+   Client MAY re-upload the report later on.
 
    If the report contains an unrecognized public report extension, or if
    the Leader's input share contains an unrecognized private report
-   extension, then the Leader MUST ignore the report and MAY abort the
-   upload request with error unsupportedExtension.  If the Leader does
-   abort for this reason, it SHOULD indicate the unsupported extensions
-   in the resulting problem document via an extension member
-   (Section 3.2 of [RFC9457]) unsupported_extensions on the problem
-   document.  This member MUST contain an array of numbers indicating
-   the extension code points which were not recognized.  For example, if
-   the report upload contained two unsupported extensions with code
-   points 23 and 42, the "unsupported_extensions" member would contain
-   the JSON value [23, 42].
+   extension, then the Leader MUST ignore the report and MAY abort with
+   error unsupportedExtension.  If the Leader does abort for this
+   reason, it SHOULD indicate the unsupported extensions in the
+   resulting problem document via an extension member (Section 3.2 of
+   [RFC9457]) unsupported_extensions on the problem document.  This
+   member MUST contain an array of numbers indicating the extension code
+   points which were not recognized.  For example, if the report upload
+   contained two unsupported extensions with code points 23 and 42, the
+   "unsupported_extensions" member would contain the JSON value [23,
+   42].
 
    If the same extension type appears more than once among the public
    extensions and the private extensions in the Leader's input share,
-   then the Leader MUST ignore the report and MAY abort the upload
-   request with error invalidMessage.
+   then the Leader MUST ignore the report and MAY abort with error
+   invalidMessage.
 
    Validation of anti-replay and extensions is not mandatory during the
    handling of upload requests to avoid blocking on expensive storage
@@ -1630,7 +1646,24 @@ aggregation job 1                   aggregation job 2          aggregation job j
    Host: example.com
    Content-Type: application/dap-report
 
-   encoded(struct {...} Report)
+   encoded(struct {
+     report_metadata = struct {
+       report_id = [0x0a, 0x0b, 0x0c, 0x0d, ...],
+       time = 1741986088,
+       public_extensions = [0x00, 0x00],
+     } ReportMetadata,
+     public_share = [0x0a, 0x0b, ...],
+     leader_encrypted_input-share = struct {
+       config_id = 1,
+       enc = [0x0f, 0x0e, 0x0d, 0x0c, ...],
+       payload = [0x0b, 0x0a, 0x09, 0x08, ...],
+     } HpkeCiphertext,
+     helper_encrypted_input-share = struct {
+       config_id = 2,
+       enc = [0x0c, 0x0d, 0x0e, 0x0f, ...],
+       payload = [0x08, 0x00, 0x0a, 0x0b, ...],
+     } HpkeCiphertext,
+   } Report)
 
    HTTP/1.1 200
 
@@ -1749,21 +1782,20 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    The Helper can either process each step synchronously, meaning it
    computes each step of the computation before producing a response to
-   the Leader's HTTP request.  It can also process steps asynchronously,
-   meaning it responds immediately and defers processing to a background
-   worker.  To continue, the Leader polls the Helper until it responds
-   with the next step.
+   the Leader's HTTP request, or asynchronously, meaning it responds
+   immediately and defers processing to a background worker.  To
+   continue, the Leader polls the Helper until it responds with the next
+   step.
 
    In general, aggregation cannot begin until the Collector specifies a
    query and an aggregation parameter.  However, depending on the VDAF
    and batch mode in use, it is often possible to begin aggregation as
    soon as reports arrive.  For example, Prio3 has just one valid
    aggregation parameter (the empty string), and thus allows for eager
-   aggregation.  Both the time-interval (Section 5.1) and leader-
-   selected (Section 5.2) batch modes defined in this document allow for
-   eager aggregation.
+   aggregation.  Both the time-interval and leader-selected batch modes
+   defined in this document (Section 5) allow for eager aggregation.
 
-   An aggregation job can be thought of as having three phases:
+   An aggregation job has three phases:
 
    *  Initialization: Begin the aggregation flow by disseminating report
       shares and initializing the VDAF prep state for each report.
@@ -1773,8 +1805,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
       occurs.
 
    *  Completion: Finish the aggregation flow, yielding an output share
-      corresponding to each report share in the aggregation job, and
-      update the appropriate aggregate shares with these output shares.
+      for each report share in the aggregation job.
 
    After an aggregation job is completed, each Aggregator updates
    running-total aggregate shares and other values for each "batch
@@ -3286,8 +3317,8 @@ aggregation job 1                   aggregation job 2          aggregation job j
    bucket identifiers if the following conditions hold (likewise for the
    BatchSelector received by the Helper):
 
-   *  batch_interval.duration >= time_precision (this field determines,
-      effectively, the minimum batch duration)
+   *  batch_interval.duration >= time_precision (time_precision
+      determines the minimum batch duration)
 
    *  both batch_interval.start and batch_interval.duration are
       divisible by time_precision
