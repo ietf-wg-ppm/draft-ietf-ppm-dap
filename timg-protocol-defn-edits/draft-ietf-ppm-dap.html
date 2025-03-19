@@ -29,7 +29,7 @@ without revealing any individual contributor's data.
     ConfigArgParse 1.7
     google-i18n-address 3.1.1
     intervaltree 3.1.0
-    Jinja2 3.1.5
+    Jinja2 3.1.6
     lxml 5.3.0
     platformdirs 4.3.6
     pycountry 24.6.1
@@ -1059,7 +1059,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
 </tr></thead>
 <tfoot><tr>
 <td class="left">Geoghegan, et al.</td>
-<td class="center">Expires 13 September 2025</td>
+<td class="center">Expires 20 September 2025</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1072,12 +1072,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-ietf-ppm-dap-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2025-03-12" class="published">12 March 2025</time>
+<time datetime="2025-03-19" class="published">19 March 2025</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Standards Track</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2025-09-13">13 September 2025</time></dd>
+<dd class="expires"><time datetime="2025-09-20">20 September 2025</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -1151,7 +1151,7 @@ without revealing any individual contributor's data.<a href="#section-abstract-1
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 13 September 2025.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 20 September 2025.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -2216,10 +2216,10 @@ operational burden borne by the Leader. Each task has a single Helper.<a href="#
         <dd class="break"></dd>
 </dl>
 <p id="section-2.1-4"><a href="#dap-topology" class="auto internal xref">Figure 1</a> illustrates which participants exchange HTTP messages. Arrows
-go from HTTP clients to HTTP servers. Note that some DAP participants may be
-HTTP clients sometimes but HTTP servers at other times. It is even possible for
-a single entity to perform multiple DAP roles. For example, the Collector could
-also be one of the Aggregators.<a href="#section-2.1-4" class="pilcrow">¶</a></p>
+go from HTTP clients to HTTP servers. Some DAP participants may be HTTP clients
+sometimes but HTTP servers at other times. It is even possible for a single
+entity to perform multiple DAP roles. For example, the Collector could also be
+one of the Aggregators.<a href="#section-2.1-4" class="pilcrow">¶</a></p>
 <p id="section-2.1-5">In the course of a measurement task (<a href="#task-configuration" class="auto internal xref">Section 4.2</a>), each Client
 records its own measurement, packages it up into a report, and sends it to the
 Leader. Each share is encrypted to only one of the two Aggregators so that even
@@ -2942,10 +2942,9 @@ which can be added to any protocol message.<a href="#section-3.3-4.1.1" class="p
 transmitting a secret.<a href="#section-3.3-4.4.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
-<p id="section-3.3-5">This flexibility allows organizations deploying DAP to use existing well-known
-HTTP authentication mechanisms that they already support. Discovering what
-authentication mechanisms are supported by a participant is outside of this
-document's scope.<a href="#section-3.3-5" class="pilcrow">¶</a></p>
+<p id="section-3.3-5">This flexibility allows organizations deploying DAP to use authentication
+mechanisms that they already support. Discovering what authentication mechanisms
+are supported by a participant is outside of this document's scope.<a href="#section-3.3-5" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="errors">
@@ -2953,12 +2952,13 @@ document's scope.<a href="#section-3.3-5" class="pilcrow">¶</a></p>
         <h3 id="name-errors">
 <a href="#section-3.4" class="section-number selfRef">3.4. </a><a href="#name-errors" class="section-name selfRef">Errors</a>
         </h3>
-<p id="section-3.4-1">Errors are reported as HTTP status codes. Any of the standard HTTP client or
-server errors (the 4xx or 5xx classes, respectively, from <span><a href="https://rfc-editor.org/rfc/rfc9110#section-15" class="relref">Section 15</a> of [<a href="#RFC9110" class="cite xref">RFC9110</a>]</span>) are permitted.<a href="#section-3.4-1" class="pilcrow">¶</a></p>
+<p id="section-3.4-1">Errors are reported as HTTP status codes. Any of the standard client or server
+errors (the 4xx or 5xx classes, respectively, from <span><a href="https://rfc-editor.org/rfc/rfc9110#section-15" class="relref">Section 15</a> of [<a href="#RFC9110" class="cite xref">RFC9110</a>]</span>)
+are permitted.<a href="#section-3.4-1" class="pilcrow">¶</a></p>
 <p id="section-3.4-2">When the server responds with an error status code, it <span class="bcp14">SHOULD</span> provide additional
 information using a problem detail object <span>[<a href="#RFC9457" class="cite xref">RFC9457</a>]</span> in the response body. If
-the response body does consist of a problem detail object, the HTTP status code
-<span class="bcp14">MUST</span> indicate a client or server error.<a href="#section-3.4-2" class="pilcrow">¶</a></p>
+the response body does consist of a problem detail object, the status code <span class="bcp14">MUST</span>
+indicate a client or server error.<a href="#section-3.4-2" class="pilcrow">¶</a></p>
 <p id="section-3.4-3">To facilitate automatic response to errors, this document defines the following
 standard tokens for use in the "type" field:<a href="#section-3.4-3" class="pilcrow">¶</a></p>
 <div id="urn-space-errors">
@@ -3013,7 +3013,7 @@ standard tokens for use in the "type" field:<a href="#section-3.4-3" class="pilc
             </tr>
             <tr>
               <td class="text-left" rowspan="1" colspan="1">unauthorizedRequest</td>
-              <td class="text-left" rowspan="1" colspan="1">Authentication of an HTTP request failed (see <a href="#request-authentication" class="auto internal xref">Section 3.3</a>).</td>
+              <td class="text-left" rowspan="1" colspan="1">Authentication of a request failed (see <a href="#request-authentication" class="auto internal xref">Section 3.3</a>).</td>
             </tr>
             <tr>
               <td class="text-left" rowspan="1" colspan="1">stepMismatch</td>
@@ -3249,8 +3249,8 @@ interval will be rejected by the Aggregators.<a href="#section-4.2-5.5.1" class=
 </li>
         </ul>
 <p id="section-4.2-6">The Leader and Helper API URLs <span class="bcp14">MAY</span> include arbitrary path components.<a href="#section-4.2-6" class="pilcrow">¶</a></p>
-<p id="section-4.2-7">In addition, in order to facilitate the aggregation and collection interactions,
-each of the Aggregators is configured with the following parameters:<a href="#section-4.2-7" class="pilcrow">¶</a></p>
+<p id="section-4.2-7">In order to facilitate the aggregation and collection interactions, each of the
+Aggregators is configured with the following parameters:<a href="#section-4.2-7" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-4.2-8.1">
             <p id="section-4.2-8.1.1"><code>min_batch_size</code> (<code>uint64</code>): The smallest number of reports the batch is
@@ -3333,25 +3333,22 @@ expanded into
         <h3 id="name-aggregation-parameter-valid">
 <a href="#section-4.4" class="section-number selfRef">4.4. </a><a href="#name-aggregation-parameter-valid" class="section-name selfRef">Aggregation Parameter Validation</a>
         </h3>
-<p id="section-4.4-1">For each batch it collects, the Collector assigns an aggregation parameter used
-to refine the measurements before aggregating them. The aggregation parameter
-is subject to a validation procedure specified by the VDAF.<a href="#section-4.4-1" class="pilcrow">¶</a></p>
-<p id="section-4.4-2">Before accepting a collection job from the Collector (<a href="#collect-init" class="auto internal xref">Section 4.7.1</a>), the
-Leader checks that the indicated aggregation parameter, <code>agg_param</code>, is valid
-according to the following procedure. The Helper does the same before accepting
-an aggregation job from the Leader (<a href="#aggregation-helper-init" class="auto internal xref">Section 4.6.1.2</a>).<a href="#section-4.4-2" class="pilcrow">¶</a></p>
-<ol start="1" type="1" class="normal type-1" id="section-4.4-3">
-<li id="section-4.4-3.1">
-            <p id="section-4.4-3.1.1">Decode the byte string <code>agg_param</code> into an <code>AggParam</code> as specified by the
-VDAF. If decoding fails, then the aggregation parameter is invalid.<a href="#section-4.4-3.1.1" class="pilcrow">¶</a></p>
+<p id="section-4.4-1">For each batch it collects, the Collector chooses an aggregation parameter used
+to prepare the measurements before aggregating them. Before accepting a
+collection job from the Collector (<a href="#collect-init" class="auto internal xref">Section 4.7.1</a>), the Leader checks that the
+indicated aggregation parameter is valid according to the following procedure.<a href="#section-4.4-1" class="pilcrow">¶</a></p>
+<ol start="1" type="1" class="normal type-1" id="section-4.4-2">
+<li id="section-4.4-2.1">
+            <p id="section-4.4-2.1.1">Decode the byte string <code>agg_param</code> into an <code>AggParam</code> as specified by the
+VDAF. If decoding fails, then the aggregation parameter is invalid.<a href="#section-4.4-2.1.1" class="pilcrow">¶</a></p>
 </li>
-          <li id="section-4.4-3.2">
-            <p id="section-4.4-3.2.1">Run <code>vdaf.is_valid(decoded_agg_param, [])</code>, where <code>decoded_agg_param</code> is the
+          <li id="section-4.4-2.2">
+            <p id="section-4.4-2.2.1">Run <code>vdaf.is_valid(decoded_agg_param, [])</code>, where <code>decoded_agg_param</code> is the
 decoded <code>AggParam</code> and <code>is_valid()</code> is as defined in <span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-14#section-5.3" class="relref">Section 5.3</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>. If the output is not <code>True</code>, then the aggregation parameter is
-invalid.<a href="#section-4.4-3.2.1" class="pilcrow">¶</a></p>
+invalid.<a href="#section-4.4-2.2.1" class="pilcrow">¶</a></p>
 </li>
         </ol>
-<p id="section-4.4-4">If both steps succeed, then the aggregation parameter is deemed to be valid.<a href="#section-4.4-4" class="pilcrow">¶</a></p>
+<p id="section-4.4-3">If both steps succeed, then the aggregation parameter is valid.<a href="#section-4.4-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="upload-flow">
@@ -3413,13 +3410,13 @@ uint16 HpkeKdfId;
 and AEAD algorithm triple.<a href="#section-4.5.1-8.3.1" class="pilcrow">¶</a></p>
 </li>
           </ul>
-<p id="section-4.5.1-9">Aggregators <span class="bcp14">SHOULD</span> use HTTP caching to permit client-side caching of this
-resource <span>[<a href="#RFC5861" class="cite xref">RFC5861</a>]</span>. Aggregators <span class="bcp14">SHOULD</span> favor long cache lifetimes to avoid
-frequent cache revalidation, e.g., on the order of days. Aggregators can control
-this cached lifetime with the Cache-Control header.<a href="#section-4.5.1-9" class="pilcrow">¶</a></p>
+<p id="section-4.5.1-9">Aggregators <span class="bcp14">SHOULD</span> use caching to permit client-side caching of this resource
+<span>[<a href="#RFC5861" class="cite xref">RFC5861</a>]</span>. Aggregators <span class="bcp14">SHOULD</span> favor long cache lifetimes to avoid frequent
+cache revalidation, e.g., on the order of days. Aggregators can control this
+cached lifetime with the Cache-Control header.<a href="#section-4.5.1-9" class="pilcrow">¶</a></p>
 <p id="section-4.5.1-10">Servers should choose a Cache-Control value appropriate to the lifetime of their
-keys. Clients <span class="bcp14">SHOULD</span> follow the usual HTTP caching <span>[<a href="#RFC9111" class="cite xref">RFC9111</a>]</span> semantics for
-HPKE configurations.<a href="#section-4.5.1-10" class="pilcrow">¶</a></p>
+keys. Clients <span class="bcp14">SHOULD</span> follow the usual caching semantics <span>[<a href="#RFC9111" class="cite xref">RFC9111</a>]</span> for HPKE
+configurations.<a href="#section-4.5.1-10" class="pilcrow">¶</a></p>
 <p id="section-4.5.1-11">Long cache lifetimes may result in Clients using stale HPKE configurations.
 Aggregators <span class="bcp14">SHOULD</span> continue to accept reports with old keys for at least twice
 the cache lifetime in order to avoid rejecting reports.<a href="#section-4.5.1-11" class="pilcrow">¶</a></p>
@@ -3488,8 +3485,8 @@ generated.<a href="#section-4.5.2-3.1.2.2.1" class="pilcrow">¶</a></p>
               </ul>
 </li>
             <li class="normal" id="section-4.5.2-3.2">
-              <p id="section-4.5.2-3.2.1"><code>public_share</code> is the public share output by the VDAF sharding algorithm. Note
-that the public share might be empty, depending on the VDAF.<a href="#section-4.5.2-3.2.1" class="pilcrow">¶</a></p>
+              <p id="section-4.5.2-3.2.1"><code>public_share</code> is the public share output by the VDAF sharding algorithm. The
+public share might be empty, depending on the VDAF.<a href="#section-4.5.2-3.2.1" class="pilcrow">¶</a></p>
 </li>
             <li class="normal" id="section-4.5.2-3.3">
               <p id="section-4.5.2-3.3.1"><code>leader_encrypted_input_share</code> is the Leader's encrypted input share.<a href="#section-4.5.2-3.3.1" class="pilcrow">¶</a></p>
@@ -3499,8 +3496,8 @@ that the public share might be empty, depending on the VDAF.<a href="#section-4.
 </li>
           </ul>
 <p id="section-4.5.2-4">Aggregators <span class="bcp14">MAY</span> require Clients to authenticate when uploading reports (see
-<a href="#client-auth" class="auto internal xref">Section 8.3</a>). If it is used, HTTP client authentication <span class="bcp14">MUST</span> use a scheme
-that meets the requirements in <a href="#request-authentication" class="auto internal xref">Section 3.3</a>.<a href="#section-4.5.2-4" class="pilcrow">¶</a></p>
+<a href="#client-auth" class="auto internal xref">Section 8.3</a>). If it is used, client authentication <span class="bcp14">MUST</span> use a scheme that
+meets the requirements in <a href="#request-authentication" class="auto internal xref">Section 3.3</a>.<a href="#section-4.5.2-4" class="pilcrow">¶</a></p>
 <p id="section-4.5.2-5">The handling of the upload request by the Leader <span class="bcp14">MUST</span> be idempotent as discussed
 in <span><a href="https://rfc-editor.org/rfc/rfc9110#section-9.2.2" class="relref">Section 9.2.2</a> of [<a href="#RFC9110" class="cite xref">RFC9110</a>]</span>.<a href="#section-4.5.2-5" class="pilcrow">¶</a></p>
 <p id="section-4.5.2-6">To generate a report, the Client begins by sharding its measurement into input
@@ -3849,8 +3846,7 @@ corresponding report ID has already been aggregated.<a href="#section-4.6-15" cl
               <p id="section-4.6.1-2.1.1">Determine which input shares are valid.<a href="#section-4.6.1-2.1.1" class="pilcrow">¶</a></p>
 </li>
             <li id="section-4.6.1-2.2">
-              <p id="section-4.6.1-2.2.1">For each valid input share, initialize the VDAF preparation process (see
-<span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-14#section-5.2" class="relref">Section 5.2</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>).<a href="#section-4.6.1-2.2.1" class="pilcrow">¶</a></p>
+              <p id="section-4.6.1-2.2.1">For each valid input share, initialize VDAF preparation (see <span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-14#section-5.2" class="relref">Section 5.2</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>).<a href="#section-4.6.1-2.2.1" class="pilcrow">¶</a></p>
 </li>
           </ol>
 <p id="section-4.6.1-3">The Leader and Helper initialization behavior is detailed below.<a href="#section-4.6.1-3" class="pilcrow">¶</a></p>
@@ -4521,8 +4517,8 @@ error <code>unrecognizedTask</code>.<a href="#section-4.6.2.2-2" class="pilcrow"
 <p id="section-4.6.2.2-6">If any of these checks fail, then the Helper <span class="bcp14">MUST</span> abort with error
 <code>invalidMessage</code>. Additionally, if any prep step appears out of order relative
 to the previous request, then the Helper <span class="bcp14">MAY</span> abort with error <code>invalidMessage</code>.
-(Note that a report may be missing, in which case the Helper should assume the
-Leader rejected it.)<a href="#section-4.6.2.2-6" class="pilcrow">¶</a></p>
+A report may be missing, in which case the Helper should assume the Leader
+rejected it.<a href="#section-4.6.2.2-6" class="pilcrow">¶</a></p>
 <p id="section-4.6.2.2-7">Next, the Helper checks the continuation step indicated by the request. If the
 <code>step</code> value is one greater than the job's current step, then the Helper
 proceeds.<a href="#section-4.6.2.2-7" class="pilcrow">¶</a></p>
@@ -4615,7 +4611,7 @@ job continuation is ready. In this case, it responds with the encoded
             <h5 id="name-batch-buckets">
 <a href="#section-4.6.2.3" class="section-number selfRef">4.6.2.3. </a><a href="#name-batch-buckets" class="section-name selfRef">Batch Buckets</a>
             </h5>
-<p id="section-4.6.2.3-1">When aggregation recovers an output share, it must be stored into an appropriate
+<p id="section-4.6.2.3-1">When aggregation refines an output share, it must be stored into an appropriate
 "batch bucket", which is defined in this section. The data stored in a batch
 bucket is kept for eventual use in the <a href="#collect-flow" class="auto internal xref">Section 4.7</a>.<a href="#section-4.6.2.3-1" class="pilcrow">¶</a></p>
 <p id="section-4.6.2.3-2">Batch buckets are indexed by a "batch bucket identifier" as as specified by the
@@ -4810,7 +4806,7 @@ then locally combines them to yield a single aggregate result. In particular,
 the Collector issues a query to the Leader (<a href="#batch-modes" class="auto internal xref">Section 5</a>), which the
 Aggregators use to select a batch of reports to aggregate. Each Aggregator emits
 an aggregate share encrypted to the Collector so that it can decrypt and combine
-them to yield the aggregate result. This entire process is composed of two
+them to yield the aggregate result. This process is composed of two
 interactions:<a href="#section-4.7-1" class="pilcrow">¶</a></p>
 <ol start="1" type="1" class="normal type-1" id="section-4.7-2">
 <li id="section-4.7-2.1">
@@ -4933,7 +4929,7 @@ mode.<a href="#section-4.7.1-15.1.1" class="pilcrow">¶</a></p>
 </li>
             <li class="normal" id="section-4.7.1-15.3">
               <p id="section-4.7.1-15.3.1"><code>interval</code>: The smallest interval of time that contains the timestamps of all
-reports included in the batch. Note that in the case of a time-interval query
+reports included in the batch. In the case of a time-interval query
 (<a href="#time-interval-batch-mode" class="auto internal xref">Section 5.1</a>), this interval can be smaller than the one in
 the corresponding <code>CollectionJobReq.query</code>.<a href="#section-4.7.1-15.3.1" class="pilcrow">¶</a></p>
 </li>
@@ -5675,36 +5671,30 @@ reports; and<a href="#section-6.1.2-2.1.1" class="pilcrow">¶</a></p>
               <p id="section-6.1.2-2.2.1">Publish and manage an HPKE configuration that can be used for the upload
 interaction.<a href="#section-6.1.2-2.2.1" class="pilcrow">¶</a></p>
 </li>
-          </ul>
-<p id="section-6.1.2-3">In addition, for each DAP task, the Helper is required to:<a href="#section-6.1.2-3" class="pilcrow">¶</a></p>
-<ul class="normal">
-<li class="normal" id="section-6.1.2-4.1">
-              <p id="section-6.1.2-4.1.1">Implement some form of batch-to-report index, as well as inter- and
+            <li class="normal" id="section-6.1.2-2.3">
+              <p id="section-6.1.2-2.3.1">Implement some form of batch-to-report index, as well as inter- and
 intra-batch replay mitigation storage, which includes some way of tracking
 batch report size. Some of this state may be used for replay attack
 mitigation. The replay mitigation strategy is described in
-<a href="#input-share-validation" class="auto internal xref">Section 4.6.1.4</a>.<a href="#section-6.1.2-4.1.1" class="pilcrow">¶</a></p>
+<a href="#input-share-validation" class="auto internal xref">Section 4.6.1.4</a>.<a href="#section-6.1.2-2.3.1" class="pilcrow">¶</a></p>
 </li>
           </ul>
-<p id="section-6.1.2-5">Beyond the minimal capabilities required of Helpers, Leaders are generally
-required to:<a href="#section-6.1.2-5" class="pilcrow">¶</a></p>
+<p id="section-6.1.2-3">Beyond the minimal capabilities required of Helpers, Leaders are generally
+required to:<a href="#section-6.1.2-3" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-6.1.2-6.1">
-              <p id="section-6.1.2-6.1.1">Support the upload interaction and store reports; and<a href="#section-6.1.2-6.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="section-6.1.2-4.1">
+              <p id="section-6.1.2-4.1.1">Support the upload interaction and store reports; and<a href="#section-6.1.2-4.1.1" class="pilcrow">¶</a></p>
 </li>
-            <li class="normal" id="section-6.1.2-6.2">
-              <p id="section-6.1.2-6.2.1">Track batch report size during each collect flow and request encrypted output
-shares from Helpers.<a href="#section-6.1.2-6.2.1" class="pilcrow">¶</a></p>
+            <li class="normal" id="section-6.1.2-4.2">
+              <p id="section-6.1.2-4.2.1">Track batch report size during each collect flow and request encrypted output
+shares from Helpers.<a href="#section-6.1.2-4.2.1" class="pilcrow">¶</a></p>
 </li>
-          </ul>
-<p id="section-6.1.2-7">In addition, for each DAP task, the Leader is required to:<a href="#section-6.1.2-7" class="pilcrow">¶</a></p>
-<ul class="normal">
-<li class="normal" id="section-6.1.2-8.1">
-              <p id="section-6.1.2-8.1.1">Implement and store state for the form of inter- and intra-batch replay
+            <li class="normal" id="section-6.1.2-4.3">
+              <p id="section-6.1.2-4.3.1">Implement and store state for the form of inter- and intra-batch replay
 mitigation in <a href="#agg-flow" class="auto internal xref">Figure 3</a>. This requires storing the report IDs of all
 reports processed for a given task. Implementations may find it helpful to
 track additional information, like the timestamp, so that the storage used
-for anti-replay can be sharded efficiently.<a href="#section-6.1.2-8.1.1" class="pilcrow">¶</a></p>
+for anti-replay can be sharded efficiently.<a href="#section-6.1.2-4.3.1" class="pilcrow">¶</a></p>
 </li>
           </ul>
 </section>
