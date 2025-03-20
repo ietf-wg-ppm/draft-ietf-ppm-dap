@@ -1671,7 +1671,7 @@ asynchronously, meaning it responds immediately and defers processing to a
 background worker. To continue, the Leader polls the Helper until it responds
 with the next step. This choice allows a Helper implementation to choose a
 model that best fits its architecture and use case. For instance replay checks
-across vast numbers of reports and preparation of large histograms, may be    
+across vast numbers of reports and preparation of large histograms, may be
 better suited for the asynchronous model.
 
 In general, aggregation cannot begin until the Collector specifies a query and
