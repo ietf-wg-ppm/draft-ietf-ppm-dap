@@ -2458,21 +2458,28 @@ aggregation job 1                   aggregation job 2          aggregation job j
    Section 4.6.1.2) with each prep step.  The order of the prep steps
    MUST match the Leader's AggregationJobContinueReq.
 
-   The Helper MAY defer handling the continuation request.  In this
-   case, it indicates that the response is not yet ready by immediately
-   sending an empty response body and sets the Location header field to
-   the relative reference /tasks/{task-
-   id}/aggregation_jobs/{aggregation-job-id}?step={step}, where step is
-   set to AggregationJobContinueReq.step.  The response SHOULD include a
-   Retry-After header field to suggest a polling interval to the Leader.
-   The Leader then polls the state of the job by sending GET requests to
-   the resolved URL.  The Helper responds the same way until the job is
-   ready, at which point it responds with the encoded
-   AggregationJobResp.
+   The Helper responds to the Leader with HTTP status 202 Accepted, a
+   body consisting of the AggregationJobResp, and the media type
+   "application/dap-aggregation-job-resp".
 
-   The Helper MAY also block responding to the Leader's POST until the
-   aggregation job continuation is ready.  In this case, it responds
-   with the encoded AggregationJobResp.
+   Depending on the task parameters, processing an aggregation job may
+   take some time, so the Helper MAY defer computation to a background
+   process by responding with the field status set to processing and
+   Location header field set to the relative reference /tasks/{task-
+   id}/aggregation_jobs/{aggregation-job-id}?step={step}, where step is
+   the step indicated in the AggregationJobContinueReq.  If so, the
+   Leader polls the Helper by making HTTP GET requests to the
+   aforementioned Location.  The Helper responds to GET requests with
+   HTTP status 200, a media type of "application/dap-aggregation-job-
+   resp", and a body consisting of an AggregationJobResp with the status
+   field reflecting the current state of the job.  When the aggregation
+   job is processing, the response SHOULD include a Retry-After header
+   field to suggest a polling interval to the Leader.
+
+   If for whatever reason the Leader must abandon the aggregation job,
+   it SHOULD send an HTTP DELETE request to {helper}/tasks/{task-
+   id}/aggregation_jobs/{aggregation-job-id} so that the Helper knows it
+   can clean up its state.
 
 4.6.2.3.  Batch Buckets
 

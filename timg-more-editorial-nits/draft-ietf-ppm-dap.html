@@ -4528,18 +4528,25 @@ variant {
 <p id="section-4.6.2.2-23">The Helper constructs an <code>AggregationJobResp</code> message (see
 <a href="#aggregation-helper-init" class="auto internal xref">Section 4.6.1.2</a>) with each prep step. The order of the prep steps
 <span class="bcp14">MUST</span> match the Leader's <code>AggregationJobContinueReq</code>.<a href="#section-4.6.2.2-23" class="pilcrow">¶</a></p>
-<p id="section-4.6.2.2-24">The Helper <span class="bcp14">MAY</span> defer handling the continuation request. In this case, it
-indicates that the response is not yet ready by immediately sending an empty
-response body and sets the Location header field to the relative reference
+<p id="section-4.6.2.2-24">The Helper responds to the Leader with HTTP status 202 Accepted, a body
+consisting of the <code>AggregationJobResp</code>, and the media type
+"application/dap-aggregation-job-resp".<a href="#section-4.6.2.2-24" class="pilcrow">¶</a></p>
+<p id="section-4.6.2.2-25">Depending on the task parameters, processing an aggregation job may take some
+time, so the Helper <span class="bcp14">MAY</span> defer computation to a background process by responding
+with the field <code>status</code> set to <code>processing</code> and Location header field set to the
+relative reference
 <code>/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}?step={step}</code>, where
-<code>step</code> is set to <code>AggregationJobContinueReq.step</code>. The response <span class="bcp14">SHOULD</span> include a
-Retry-After header field to suggest a polling interval to the Leader. The Leader
-then polls the state of the job by sending GET requests to the resolved URL. The
-Helper responds the same way until the job is ready, at which point it responds
-with the encoded <code>AggregationJobResp</code>.<a href="#section-4.6.2.2-24" class="pilcrow">¶</a></p>
-<p id="section-4.6.2.2-25">The Helper <span class="bcp14">MAY</span> also block responding to the Leader's POST until the aggregation
-job continuation is ready. In this case, it responds with the encoded
-<code>AggregationJobResp</code>.<a href="#section-4.6.2.2-25" class="pilcrow">¶</a></p>
+<code>step</code> is the step indicated in the <code>AggregationJobContinueReq</code>. If so, the
+Leader polls the Helper by making HTTP GET requests to the aforementioned
+Location. The Helper responds to GET requests with HTTP status 200, a media type
+of "application/dap-aggregation-job-resp", and a body consisting of an
+<code>AggregationJobResp</code> with the <code>status</code> field reflecting the current state of the
+job. When the aggregation job is <code>processing</code>, the response <span class="bcp14">SHOULD</span> include a
+Retry-After header field to suggest a polling interval to the Leader.<a href="#section-4.6.2.2-25" class="pilcrow">¶</a></p>
+<p id="section-4.6.2.2-26">If for whatever reason the Leader must abandon the aggregation job, it <span class="bcp14">SHOULD</span>
+send an HTTP DELETE request to
+<code>{helper}/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}</code> so that the
+Helper knows it can clean up its state.<a href="#section-4.6.2.2-26" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="batch-buckets">
