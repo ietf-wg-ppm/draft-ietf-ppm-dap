@@ -857,8 +857,16 @@ aggregate results once an hour, or every time 10,000,000 reports are uploaded.
 
 # Message Transport {#message-transport}
 
-Communications between DAP participants are carried over HTTP {{!RFC9110}}. Use
-of HTTPS is REQUIRED to provide server authentication and confidentiality.
+Communications between participants are carried over HTTP {{!RFC9110}}. Use of
+HTTPS is REQUIRED to provide server authentication and confidentiality. TLS
+certificates MUST be checked according to {{!RFC9110, Section 4.3.4}}.
+
+## HTTP Status Codes
+
+HTTP servers participating in DAP MAY use any status code from the applicable
+class when constructing HTTP responses, but HTTP clients MAY treat any status
+code as the most general code of that class. For example, 202 may be handled as
+200, or 499 as 400.
 
 ## Presentation Language
 
@@ -974,15 +982,14 @@ are supported by a participant is outside of this document's scope.
 
 ## Errors
 
-Errors can be reported in DAP both as HTTP status codes and as problem detail
-objects {{!RFC9457}} in the response body. For example, if the HTTP client sends
-a request using a method not allowed in this document, then the server MAY
-return HTTP status 405 Method Not Allowed.
+Errors are reported as HTTP status codes. Any of the standard client or server
+errors (the 4xx or 5xx classes, respectively, from {{Section 15 of !RFC9110}})
+are permitted.
 
 When the server responds with an error status code, it SHOULD provide additional
-information using a problem detail object. If the response body does consist of
-a problem detail object, the HTTP status code MUST indicate a client or server
-error (the 4xx or 5xx classes, respectively, from {{Section 15 of !RFC9110}}).
+information using a problem detail object {{!RFC9457}} in the response body. If
+the response body does consist of a problem detail object, the status code MUST
+indicate a client or server error.
 
 To facilitate automatic response to errors, this document defines the following
 standard tokens for use in the "type" field:
@@ -999,7 +1006,6 @@ standard tokens for use in the "type" field:
 | invalidBatchSize            | There are an invalid number of reports in the batch. |
 | invalidAggregationParameter | The aggregation parameter assigned to a batch is invalid. |
 | batchMismatch               | Aggregators disagree on the report shares that were aggregated in a batch. |
-| unauthorizedRequest         | Authentication of an HTTP request failed (see {{request-authentication}}). |
 | stepMismatch                | The Aggregators disagree on the current step of the DAP aggregation protocol. |
 | batchOverlap                | A request's query includes reports that were previously collected in a different batch. |
 | unsupportedExtension        | An upload request's extensions list includes an unknown extension. |
@@ -1026,7 +1032,8 @@ refer to error types, rather than the full URNs. For example, an "error of type
 
 This document uses the verbs "abort" and "alert with \[some error message\]" to
 describe how protocol participants react to various error conditions. This
-implies HTTP status code 400 Bad Request unless explicitly specified otherwise.
+implies that the response's status code will indicate a client error unless
+specified otherwise.
 
 # Protocol Definition {#protocol}
 
@@ -1038,12 +1045,10 @@ DAP has three major interactions which need to be defined:
 * The Collector collects aggregated results from the Aggregators, specified in
   {{collect-flow}}
 
-Each of these interactions is defined in terms of "resources". In this section
-we define these resources and the messages used to act on them.
+Each of these interactions is defined in terms of HTTP resources. In this
+section we define these resources and the messages used to act on them.
 
 ## Basic Type Definitions {#basic-definitions}
-
-The following are some basic type definitions used in other messages.
 
 A `ReportID` is used to uniquely identify a report in the context of a DAP task.
 
@@ -1221,15 +1226,14 @@ conveyed from the Leader to the Helper when initializing aggregation jobs
 
 ## Resource URLs
 
-DAP is defined in terms of "resources", such as reports ({{upload-flow}}),
+DAP is defined in terms of HTTP resources, such as reports ({{upload-flow}}),
 aggregation jobs ({{aggregate-flow}}), and collection jobs ({{collect-flow}}).
-Each resource has an associated URL. Resource URLs are specified by a sequence
-of string literals and variables. Variables are expanded into strings according
-to the following rules:
+Each resource has a URL. Resource URLs are specified as string literals
+containing variables. Variables are expanded into strings according to the
+following rules:
 
 * Variables `{leader}` and `{helper}` are replaced with the base API URL of the
-  Leader and Helper respectively (the base URLs are defined in
-  {{task-configuration}}).
+  Leader and Helper respectively.
 * Variables `{task-id}`, `{aggregation-job-id}`, and `{collection-job-id}` are
   replaced with the task ID ({{task-configuration}}), aggregation job ID
   ({{agg-init}}), and collection job ID ({{collect-init}}) respectively. The
@@ -1274,14 +1278,14 @@ Before the Client can upload its report to the Leader, it must know the HPKE
 configuration of each Aggregator. See {{compliance}} for information on HPKE
 algorithm choices.
 
-Clients retrieve the HPKE configuration from each Aggregator by sending an HTTP
-GET request to `{aggregator}/hpke_config`.
+Clients retrieve the HPKE configuration from each Aggregator by sending a GET to
+`{aggregator}/hpke_config`.
 
-An Aggregator responds to well-formed requests with HTTP status code 200 OK and
-an `HpkeConfigList` value, with media type "application/dap-hpke-config-list".
-The `HpkeConfigList` structure contains one or more `HpkeConfig` structures in
-decreasing order of preference. This allows an Aggregator to support multiple
-HPKE configurations simultaneously.
+An Aggregator responds with an `HpkeConfigList`, with media type
+"application/dap-hpke-config-list". The `HpkeConfigList` contains one or more
+`HpkeConfig`s in decreasing order of preference. This allows an Aggregator to
+support multiple HPKE configurations and multiple sets of algorithms
+simultaneously.
 
 ~~~ tls-presentation
 HpkeConfig HpkeConfigList<0..2^16-1>;
@@ -1295,44 +1299,66 @@ struct {
 } HpkeConfig;
 
 opaque HpkePublicKey<0..2^16-1>;
-uint16 HpkeAeadId; /* Defined in [HPKE] */
-uint16 HpkeKemId;  /* Defined in [HPKE] */
-uint16 HpkeKdfId;  /* Defined in [HPKE] */
+uint16 HpkeAeadId;
+uint16 HpkeKemId;
+uint16 HpkeKdfId;
 ~~~
 
-Aggregators MUST allocate distinct id values for each `HpkeConfig` in an
+The possible values for `HpkeAeadId`, `HpkeKemId` and `HpkeKdfId` are as defined
+in {{!HPKE, Section 7}}.
+
+Aggregators MUST allocate distinct `id` values for each `HpkeConfig` in an
 `HpkeConfigList`.
 
-The Client MUST abort if any of the following happen for any HPKE config
-request:
+The Client MUST abort if:
 
-* the GET request did not return a valid HPKE config list;
-* the HPKE config list is empty; or
-* no HPKE config advertised by the Aggregator specifies a supported a KEM, KDF,
-  or AEAD algorithm triple.
+* the response is not a valid `HpkeConfigList`;
+* the `HpkeConfigList` is empty; or
+* no HPKE config advertised by the Aggregator specifies a supported KEM, KDF and
+  AEAD algorithm triple.
 
-Aggregators SHOULD use HTTP caching to permit client-side caching of this
-resource {{!RFC5861}}. Aggregators SHOULD favor long cache lifetimes to avoid
-frequent cache revalidation, e.g., on the order of days. Aggregators can control
-this cached lifetime with the Cache-Control header, as in this example:
+Aggregators SHOULD use caching to permit client-side caching of this resource
+{{!RFC9111}}. Aggregators can control cache lifetime with the Cache-Control
+header, using a value appropriate to the lifetime of their keys. Aggregators
+SHOULD favor long cache lifetimes to avoid frequent cache revalidation, e.g., on
+the order of days.
 
-~~~ http-message
-  Cache-Control: max-age=86400
+Aggregators SHOULD continue to accept reports with old keys for at least twice
+the cache lifetime in order to avoid rejecting reports.
+
+#### Example
+
+~~~ http
+GET /leader/hpke_config
+Host: example.com
+
+HTTP/1.1 200
+Content-Type: application/dap-hpke-config-list
+Cache-Control: max-age=86400
+
+encoded([
+  struct {
+    id = 194,
+    kem_id = 0x0010,
+    kdf_id = 0x0001,
+    aead_id = 0x0001,
+    public_key = [0x01, 0x02, 0x03, 0x04, ...],
+  } HpkeConfig,
+  struct {
+    id = 17,
+    kem_id = 0x0020,
+    kdf_id = 0x0001,
+    aead_id = 0x0003,
+    public_key = [0x04, 0x03, 0x02, 0x01, ...],
+  } HpkeConfig,
+])
 ~~~
-
-Servers should choose a `max-age` value appropriate to the lifetime of their
-keys. Clients SHOULD follow the usual HTTP caching {{!RFC9111}} semantics for
-HPKE configurations.
-
-Note: Long cache lifetimes may result in Clients using stale HPKE
-configurations; Aggregators SHOULD continue to accept reports with old keys for
-at least twice the cache lifetime in order to avoid rejecting reports.
 
 ### Upload Request
 
-Clients upload reports by using an HTTP POST to
-`{leader}/tasks/{task-id}/reports`. The payload is a `Report`, with media type
-"application/dap-report", structured as follows:
+Clients upload reports by sending a POST to `{leader}/tasks/{task-id}/reports`.
+The body is a `Report`, with media type "application/dap-report", structured as
+follows:
 
 ~~~ tls-presentation
 struct {
@@ -1397,8 +1423,8 @@ of !VDAF}}), using the report ID as the nonce:
   nonce.
 
 * `rand` is a random byte string of length specified by the VDAF. Each report's
-  `rand` value MUST be independently sampled from a cryptographically secure
-  random number generator.
+  `rand` MUST be independently sampled from a cryptographically secure random
+  number generator.
 
 The sharding algorithm will return two input shares. The first is the Leader's
 input share, and the second is the Helper's.
@@ -1444,21 +1470,17 @@ struct {
 } InputShareAad;
 ~~~
 
-The Leader responds to well-formed requests with HTTP status code 201
-Created. Malformed requests are handled as described in {{errors}}.
-Clients SHOULD NOT upload the same measurement value in more than one report if
-the Leader responds with HTTP status code 201 Created.
+If the upload request is malformed, the Leader aborts with error
+`invalidMessage`.
 
-If the Leader does not recognize the task ID, then it MUST abort with error
-`unrecognizedTask`. Note that indicating an unrecognized task might indicate
-that the Client is misconfigured or the task has expired.
+If the Leader does not recognize the task ID, then it aborts with error
+`unrecognizedTask`.
 
-The Leader responds to requests whose Leader encrypted input share uses an
-out-of-date or unknown `HpkeConfig.id` value, indicated by
-`HpkeCiphertext.config_id`, with error of type 'outdatedConfig'. When the Client
-receives an 'outdatedConfig' error, it SHOULD invalidate any cached
-HpkeConfigList and retry with a freshly generated Report. If this retried upload
-does not succeed, the Client SHOULD abort and discontinue retrying.
+If the Leader does not recognize the `config_id` in the encrypted input share,
+it aborts with an error of type `outdatedConfig`. When the Client receives an
+`outdatedConfig` error, it SHOULD invalidate any cached `HpkeConfigList` and
+retry with a freshly generated `Report`. If this retried upload does not
+succeed, the Client SHOULD abort and discontinue retrying.
 
 If a report's ID matches that of a previously uploaded report, the Leader MUST
 ignore it. In addition, it MAY alert the Client with error `reportRejected`.
@@ -1492,13 +1514,43 @@ extensions with code points `23` and `42`, the "unsupported_extensions" member
 would contain the JSON value `[23, 42]`.
 
 If the same extension type appears more than once among the public extensions
-and the private extensions in the Leader's input share, then the Leader MAY
-abort the upload request with error "invalidMessage".
+and the private extensions in the Leader's input share, then the Leader MUST
+ignore the report and MAY abort with error `invalidMessage`.
 
-(Note that validation of extensions is not mandatory here because it requires
-the Leader to decrypt its input share. The Leader also cannot validate the
-Helper's extensions because it cannot decrypt the Helper's input share.
-Mandatory validation of extensions will occur during aggregation.)
+Validation of anti-replay and extensions is not mandatory during the handling of
+upload requests to avoid blocking on storage transactions or decryption of input
+shares. The Leader also cannot validate the Helper's extensions because it
+cannot decrypt the Helper's input share. Validation of report IDs and extensions
+will occur before aggregation.
+
+#### Example
+
+~~~ http
+POST /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/reports
+Host: example.com
+Content-Type: application/dap-report
+
+encoded(struct {
+  report_metadata = struct {
+    report_id = [0x0a, 0x0b, 0x0c, 0x0d, ...],
+    time = 1741986088,
+    public_extensions = [0x00, 0x00],
+  } ReportMetadata,
+  public_share = [0x0a, 0x0b, ...],
+  leader_encrypted_input-share = struct {
+    config_id = 1,
+    enc = [0x0f, 0x0e, 0x0d, 0x0c, ...],
+    payload = [0x0b, 0x0a, 0x09, 0x08, ...],
+  } HpkeCiphertext,
+  helper_encrypted_input-share = struct {
+    config_id = 2,
+    enc = [0x0c, 0x0d, 0x0e, 0x0f, ...],
+    payload = [0x08, 0x00, 0x0a, 0x0b, ...],
+  } HpkeCiphertext,
+} Report)
+
+HTTP/1.1 200
+~~~
 
 ### Report Extensions {#report-extensions}
 
