@@ -1234,11 +1234,12 @@ following rules:
 
 * Variables `{leader}` and `{helper}` are replaced with the base API URL of the
   Leader and Helper respectively.
-* Variables `{task-id}`, `{aggregation-job-id}`, and `{collection-job-id}` are
-  replaced with the task ID ({{task-configuration}}), aggregation job ID
-  ({{agg-init}}), and collection job ID ({{collect-init}}) respectively. The
-  value MUST be encoded in its URL-safe, unpadded Base 64 representation as
-  specified in {{Sections 5 and 3.2 of !RFC4648}}.
+* Variables `{task-id}`, `{aggregation-job-id}`, `{aggregate-share-id}`, and
+  `{collection-job-id}` are replaced with the task ID ({{task-configuration}}),
+  aggregation job ID ({{agg-init}}), aggregate share ID ({{collect-aggregate}})
+  and collection job ID ({{collect-init}}) respectively. The value MUST be
+  encoded in its URL-safe, unpadded Base 64 representation as specified in
+  {{Sections 5 and 3.2 of !RFC4648}}.
 
 For example, given a helper URL "https://example.com/api/dap", task ID "f0 16 34
 47 36 4c cf 1b c0 e3 af fc ca 68 73 c9 c3 81 f6 4a cd f9 02 06 62 f8 3f 46 c0 72
@@ -1787,8 +1788,6 @@ Once all the report shares have been initialized, the Leader creates an
 `AggregationJobInitReq` message.
 
 ~~~ tls-presentation
-opaque BatchID[32];
-
 struct {
   BatchMode batch_mode;
   opaque config<0..2^16-1>;
@@ -2048,22 +2047,22 @@ response body and sets a Location header field set to the relative reference
 `/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}?step=0`. The response
 SHOULD include a Retry-After header field to suggest a polling interval to the
 Leader. The Leader then polls the state of the job by sending GET requests to the
-resolved URL. The Helper responds the same way until the job is ready, at which
-point it responds with the encoded `AggregationJobResp`.
+resolved URL. The Helper responds the same way until the job is ready, from
+which point it responds with the encoded `AggregationJobResp`.
 
 The Helper MAY also wait to respond to the Leader's PUT until the aggregation
 job initialization is ready. In this case, it responds with the encoded
 `AggregationJobResp`.
 
-Changing an aggregation job's parameters is illegal, so further PUT requests to
-the aggregation job with a different `AggregationJobInitReq` in the body MUST
-fail with a client error status code. For further requests with the same
-`AggregationJobInitReq` in the body, the Helper SHOULD respond as it did for the
-original `AggregationJobInitReq`.
+Changing an aggregation job's parameters is illegal. If the Helper receives
+further PUT requests to the aggregation job with a different
+`AggregationJobInitReq` in the body, it MUST abort with a client error. For
+further requests with the same `AggregationJobInitReq` in the body, the Helper
+SHOULD respond as it did for the original `AggregationJobInitReq`.
 
-It is illegal to rewind or reset the state of an aggregation job. Once an
-aggregation job has been continued at least once (see {{agg-continue-flow}}),
-further requests to initialize that aggregation job MUST fail.
+It is illegal to rewind or reset the state of an aggregation job. If the Helper
+receives requests to initialize an aggregation job once it has been continued at
+least once (see {{agg-continue-flow}}), it MUST abort with a client error.
 
 #### Input Share Decryption {#input-share-decryption}
 
@@ -2167,7 +2166,7 @@ encoded(struct {
     config = encoded(struct {
       batch_id = [0x1f, 0x1e, ..., 0x00],
     } LeaderSelectedPartialBatchSelectorConfig),
-  },
+  } PartialBatchSelector,
   prepare_inits,
 } AggregationJobInitReq)
 
@@ -2427,8 +2426,8 @@ response body and sets the Location header field to the relative reference
 `step` is set to `AggregationJobContinueReq.step`. The response SHOULD include a
 Retry-After header field to suggest a polling interval to the Leader. The Leader
 then polls the state of the job by sending GET requests to the resolved URL. The
-Helper responds the same way until the job is ready, at which point it responds
-with the encoded `AggregationJobResp`.
+Helper responds the same way until the job is ready, from which point it
+responds with the encoded `AggregationJobResp`.
 
 The Helper MAY also wait to respond to the Leader's POST until the aggregation
 job continuation is ready. In this case, it responds with the encoded
@@ -2578,13 +2577,11 @@ HTTP/1.1 200
 
 ## Collecting Results {#collect-flow}
 
-In this phase, the Collector requests aggregate shares from each Aggregator and
-then locally combines them to yield a single aggregate result. In particular,
-the Collector issues a query to the Leader ({{batch-modes}}), which the
-Aggregators use to select a batch of reports to aggregate. Each Aggregator emits
-an aggregate share encrypted to the Collector so that it can decrypt and combine
-them to yield the aggregate result. This process is composed of two
-interactions:
+The Collector initiates this phase with a query to the Leader ({{batch-modes}}),
+which the Aggregators use to select a batch of reports to aggregate. Each
+Aggregator emits an aggregate share encrypted to the Collector so that it can
+decrypt and combine them to yield the aggregate result. This process is referred
+to as a "collection job" and is composed of two interactions:
 
 1. Collect request and response between the Collector and Leader, specified in
    {{collect-init}}
@@ -2594,22 +2591,23 @@ interactions:
 Once complete, the Collector computes the final aggregate result as specified in
 {{collect-finalization}}.
 
-This overall process is referred to as a "collection job".
-
-### Collection Job Initialization {#collect-init}
-
-First, the Collector chooses a collection job ID:
+Collection jobs are identified by a 16-byte job ID:
 
 ~~~ tls-presentation
 opaque CollectionJobID[16];
 ~~~
 
-This ID value MUST be unique within the scope of the corresponding DAP task.
+A collection job is an HTTP resource served by the Leader at the URL
+`{leader}/tasks/{task-id}/collection_jobs/{collection-job-id}`.
 
-To initiate the collection job, the collector issues a PUT request to
-`{leader}/tasks/{task-id}/collection_jobs/{collection-job-id}`. The body of the
-request has media type "application/dap-collection-job-req", and it is structured
-as follows:
+### Collection Job Initialization {#collect-init}
+
+First, the Collector chooses a collection job ID, which MUST be unique within
+the scope of the corresponding DAP task.
+
+To initiate the collection job, the Collector issues a PUT request to the
+collection job with media type "application/dap-collection-job-req", and a body
+structured as follows:
 
 ~~~ tls-presentation
 struct {
@@ -2623,24 +2621,11 @@ struct {
 } CollectionJobReq;
 ~~~
 
-The named parameters are:
-
 * `query`, the Collector's query. The content of this field depends on the
-  indicated batch mode: for time-interval mode, the `config` field contains the
-  requested time interval ({{time-interval-batch-mode}}); for leader-selected
-  mode, the `config` field is empty, and the Collector gets the aggregate
-  result for the next batch selected by the Leader
-  ({{leader-selected-batch-mode}}).
-
-  Batch modes defined by future documents MUST specify the content of this field;
-  see {{extending-this-doc}} for details.
-
-  The indicated batch mode MUST match the task's batch mode. Otherwise, the
-  Leader MUST abort with error "invalidMessage".
+  indicated batch mode ({{batch-modes}}).
 
 * `agg_param`, an aggregation parameter for the VDAF being executed. This is
-  the same value as in `AggregationJobInitReq` (see {{leader-init}}). The
-  aggregation parameter MUST be valid as defined in {{agg-param-validation}}.
+  the same value as in `AggregationJobInitReq` (see {{leader-init}}).
 
 Collectors MUST authenticate their requests to Leaders using a scheme that meets
 the requirements in {{request-authentication}}.
@@ -2653,58 +2638,75 @@ running aggregation jobs ({{aggregate-flow}}) until the Collector initiates a
 collection job. This is because, in general, the aggregation parameter is not
 known until this point. In certain situations it is possible to predict the
 aggregation parameter in advance. For example, for Prio3 the only valid
-aggregation parameter is the empty string. For these reasons, the collection job
-is handled asynchronously. If aggregation is performed eagerly, the Leader MUST
-validate that the aggregation parameter received in the `CollectionJobReq`
-matches the aggregation parameter used in aggregations.
+aggregation parameter is the empty string.
 
-Upon receipt of a `CollectionJobReq`, the Leader begins by checking that it
-recognizes the task ID in the request path. If not, it MUST abort with error
+The Leader MAY defer handling the collection request. In this case, it indicates
+that the collection job is not yet ready by immediately sending an empty
+response body. The Leader SHOULD include a Retry-After header field to suggest a
+polling interval to the Collector. The Collector then polls the state of the job
+by sending GET requests to the collection job. The Collector SHOULD use each
+response's Retry-After header field to decide when to try again. The Leader
+responds the same way until either the job is ready, from which point it
+responds with a `CollectionJobResp` (defined below), or the job fails, from
+which point the Leader MUST abort with the error that caused the failure.
+
+The Leader MAY instead handle the request immediately. It waits to respond to
+the Collector's PUT until the collection job is ready, in which case it responds
+with the `CollectionJobResp`, or the job fails, in which case the Leader MUST
+abort with the error that caused the failure.
+
+The Leader begins handling a `CollectionJobReq` by checking that it recognizes
+the task ID. If not, it MUST fail the collection job with error
 `unrecognizedTask`.
 
+Next, the Leader checks that the indicated batch mode matches the task's batch
+mode. If not, it MUST fail the job with error `invalidMessage`.
+
 Next, the Leader checks that the aggregation parameter is valid as described in
-{{agg-param-validation}}. If the aggregation parameter is invalid, then the
-Leader MUST abort with error `invalidAggregationParameter`.
+{{agg-param-validation}}. If not, it MUST fail the job with error
+`invalidAggregationParameter`.
 
-The Leader MAY further validate the request according to the requirements in
-{{batch-validation}} and abort with the indicated error, though some conditions
-such as the number of valid reports may not be verifiable while handling the
-`CollectionJobReq` message, and the batch will have to be re-validated later on
-regardless.
+If aggregation is performed eagerly, then the Leader checks that the aggregation
+parameter received in the `CollectionJobReq` matches the aggregation parameter
+used in each aggregation job pertaining to the batch. If not, the Leader MUST
+fail the job with error `invalidMessage`.
 
-Changing a collection job's parameters is illegal, so further requests to
-`PUT /tasks/{task-id}/collection_jobs/{collection-job-id}` for the same
-`collection-job-id` but with a different `CollectionJobReq` in the body MUST
-fail with an HTTP client error status code.
+Having validated the `CollectionJobReq`, the Leader begins working with the
+Helper to aggregate the reports satisfying the query (or continues this process,
+depending on whether the Leader is aggregating eagerly) as described in
+{{aggregate-flow}}.
 
-The Leader responds to `CollectionJobReq`s with a `CollectionJobResp`, which is
-structured as follows:
+If the Leader has a pending aggregation job that overlaps with the batch for the
+collection job, the Leader MUST first complete the aggregation job before
+proceeding and requesting an aggregate share from the Helper. This avoids a race
+condition between aggregation and collection jobs that can yield batch mismatch
+errors.
+
+The Leader then checks whether it can construct a valid batch for the collection
+job by applying the requirements in {{batch-validation}}. If so, then the Leader
+obtains the Helper's aggregate share following the aggregate-share request flow
+described in {{collect-aggregate}}. If not, it either fails the collection job
+with error `invalidBatch` or tries again later, depending on which requirement
+in {{batch-validation}} was not met.
+
+If obtaining the aggregate share fails, then the Leader MUST fail the collection
+job with the error that caused the failure.
+
+Once the Leader has the Helper's aggregate share and has computed its own, the
+collection job is ready. Its results are represented by a `CollectionJobResp`,
+which is structured as follows:
 
 ~~~ tls-presentation
-enum {
-  processing(0),
-  ready(1),
-  (255)
-} CollectionJobStatus;
-
 struct {
   PartialBatchSelector part_batch_selector;
   uint64 report_count;
   Interval interval;
   HpkeCiphertext leader_encrypted_agg_share;
   HpkeCiphertext helper_encrypted_agg_share;
-} Collection;
-
-struct {
-  CollectionJobStatus status;
-  select (CollectionJob.status) {
-    case processing: Empty;
-    case ready:      Collection;
-  }
 } CollectionJobResp;
 ~~~
 
-The body's media type is "application/dap-collection-job-resp". The `Collection`
+A `CollectionJobResp`'s media type is "application/dap-collection-job-resp". The
 structure includes the following:
 
 * `part_batch_selector`: Information used to bind the aggregate result to the
@@ -2725,56 +2727,133 @@ structure includes the following:
 * `helper_encrypted_agg_share`: The Helper's aggregate share, encrypted to the
   Collector (see {{aggregate-share-encrypt}}).
 
-If the Leader finds the `CollectionJobReq` to be valid, it immediately responds
-with HTTP status 201 Created with a body containing a `CollectionJobResp` with
-the `status` field set to `processing`. The Leader SHOULD include a Retry-After
-header field to suggest a polling interval to the Collector.
+Once the `Leader` has constructed a `CollectionJobResp` for the Collector, the
+Leader considers the batch to be collected, and further aggregation jobs MAY NOT
+add reports to the batch (see {{input-share-validation}}).
 
-After receiving the response to its `CollectionJobReq`, the Collector
-periodically makes HTTP GET requests
-`/tasks/{task-id}/collection_jobs/{collection-job-id}` to check on the status
-of the collection job and eventually obtain the result. The Leader responds to GET
-requests with HTTP status 200 and the `status` field reflecting the current
-state of the job. When the collection job is `processing`, the response SHOULD
-include a Retry-After header field to suggest a polling interval to the
-Collector.
+Changing a collection job's parameters is illegal, so if there are further PUT
+requests to the collection job with a different `CollectionJobReq`, the Leader
+MUST abort with error `invalidMessage`.
 
-The Leader then begins working with the Helper to aggregate the reports
-satisfying the query (or continues this process, depending on the VDAF) as
-described in {{aggregate-flow}}.
+#### Example
 
-The Leader first checks whether it can construct a batch for the
-collection job by applying the requirements in {{batch-validation}}. If so, then
-the Leader obtains the Helper's aggregate share following the aggregate-share
-request flow described in {{collect-aggregate}}. If not, it either aborts the
-collection job or tries again later, depending on which requirement in
-{{batch-validation}} was not met. If the Leader has a pending aggregation job
-that overlaps with the batch and aggregation parameter for the collection job,
-the Leader MUST first complete the aggregation job before proceeding and
-requesting an aggregate share from the Helper. This avoids a race condition
-between aggregation and collection jobs that can yield trivial batch mismatch
-errors.
+The Leader handles the collection job request synchronously:
 
-Once both aggregate shares are successfully obtained, the Leader responds to
-subsequent HTTP GET requests with the `status` field set to `ready` and the
-`Collection` field populated with the encrypted aggregate shares. The Collector
-stops polling once receiving this final request.
+~~~ http
+PUT /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/collection_jobs/lc7aUeGpdSNosNlh-UZhKA
+Host: example.com
+Content-Type: application/dap-collection-job-req
+Authorization: Bearer auth-token
 
-If obtaining aggregate shares fails, then the Leader responds to subsequent HTTP
-GET requests to the collection job with an HTTP error status and a problem
-document as described in {{errors}}.
+encoded(struct {
+  query = struct {
+    batch_mode = BatchMode.leader_selected,
+    query = encoded(Empty),
+  } Query,
+  agg_param = [0x00, 0x01, ...],
+} CollectionJobReq)
 
-The Leader MAY respond with HTTP status 204 No Content to requests to a
-collection job if the results have been deleted.
+HTTP/1.1 200
+Content-Type: application/dap-collection
 
-The Collector can send an HTTP DELETE request to the collection job, which
-indicates to the Leader that it can abandon the collection job and discard all
-state related to it.
+encoded(struct {
+  part_batch_selector = struct {
+    batch_mode = BatchMode.leader_selected,
+    config = encoded(struct {
+      batch_id = [0x1f, 0x1e, ..., 0x00],
+    } LeaderSelectedPartialBatchSelectorConfig),
+  } PartialBatchSelector,
+  report_count = 1000,
+  interval = struct {
+    start = 1659544000,
+    duration = 1000,
+  } Interval,
+  leader_encrypted_agg_share = struct { ... } HpkeCiphertext,
+  helper_encrypted_agg_share = struct { ... } HpkeCiphertext,
+} CollectionJobResp)
+~~~
+
+Or asynchronously:
+
+~~~ http
+PUT /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/collection_jobs/lc7aUeGpdSNosNlh-UZhKA
+Host: example.com
+Content-Type: application/dap-collection-job-req
+Authorization: Bearer auth-token
+
+encoded(struct {
+  query = struct {
+    batch_mode = BatchMode.time_interval,
+    query = encoded(struct {
+      batch_interval = struct {
+        start = 1659544000,
+        duration = 10000,
+      } Interval,
+    } TimeIntervalQueryConfig),
+  },
+  agg_param = encoded(Empty),
+} CollectionJobReq)
+
+HTTP/1.1 200
+Retry-After: 300
+
+GET /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/collection_jobs/lc7aUeGpdSNosNlh-UZhKA
+Host: example.com
+Authorization: Bearer auth-token
+
+HTTP/1.1 200
+Retry-After: 300
+
+GET /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/collection_jobs/lc7aUeGpdSNosNlh-UZhKA
+Host: example.com
+Authorization: Bearer auth-token
+
+HTTP/1.1 200
+Content-Type: application/dap-collection
+
+encoded(struct {
+  part_batch_selector = struct {
+    batch_mode = BatchMode.time_interval,
+    config = encoded(struct {
+      interval = struct {
+        start = 1659544000,
+        duration = 10000,
+      } Interval,
+    } TimeIntervalBatchSelectorConfig)
+  },
+  report_count = 4000,
+  interval = struct {
+    start = 1659547000,
+    duration = 1000,
+  } Interval,
+  leader_encrypted_agg_share = struct { ... } HpkeCiphertext,
+  helper_encrypted_agg_share = struct { ... } HpkeCiphertext,
+} CollectionJobResp)
+~~~
+
+### Collection Job Deletion
+
+The Collector can send a DELETE request to the collection job, which indicates
+to the Leader that it can abandon the collection job and discard all state
+related to it.
+
+Collectors MUST authenticate their requests to Leaders using a scheme that meets
+the requirements in {{request-authentication}}.
+
+#### Example
+
+~~~ http
+DELETE /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/collection_jobs/lc7aUeGpdSNosNlh-UZhKA
+Host: example.com
+Authorization: Bearer auth-token
+
+HTTP/1.1 200
+~~~
 
 ### Obtaining Aggregate Shares {#collect-aggregate}
 
-The Leader must compute its own aggregate share, as well as obtaining the
-Helper's encrypted aggregate share, before it can complete a collection job.
+The Leader must compute its own aggregate share and obtain the Helper's
+encrypted aggregate share before it can complete a collection job.
 
 First, the Leader retrieves all batch buckets ({{batch-buckets}}) associated
 with this collection job. The batch buckets to retrieve depend on the batch mode
@@ -2789,16 +2868,26 @@ of this task:
 
 The Leader then combines the values inside the batch bucket as follows:
 
-* Aggregate shares are combined via `Vdaf.merge(agg_param, agg_shares)` ((see
-  {{!VDAF, Section 4.4}})), where `agg_param` is the aggregation parameter
+* Aggregate shares are combined via `Vdaf.merge(agg_param, agg_shares)` (see
+  {{!VDAF, Section 4.4}}), where `agg_param` is the aggregation parameter
   provided in the `CollectionJobReq`, and `agg_shares` are the (partial)
   aggregate shares in the batch buckets. The result is the Leader aggregate
   share for this collection job.
 * Report counts are combined via summing.
 * Checksums are combined via bitwise XOR.
 
-Then the Leader sends a POST request to
-`{helper}/tasks/{task-id}/aggregate_shares` with the following message:
+A Helper aggregate share is identified by a 16-byte ID:
+
+~~~ tls-presentation
+opaque AggregateShareID[16];
+~~~
+
+The Helper's aggregate share is an HTTP resource served by the Helper at the URL
+`{helper}/tasks/{task-id}/aggregate_shares/{aggregate-share-id}`. To obtain it,
+the Leader first chooses an aggregate share ID, which MUST be unique within the
+scope of the corresponding DAP task.
+
+Then the Leader sends a PUT request to the aggregate share with the body:
 
 ~~~ tls-presentation
 struct {
@@ -2814,26 +2903,13 @@ struct {
 } AggregateShareReq;
 ~~~
 
-The media type of the request is "application/dap-aggregate-share-req". The
-structure contains the following parameters:
+The media type of `AggregateShareReq` is "application/dap-aggregate-share-req".
+The structure contains the following parameters:
 
 * `batch_selector`: The "batch selector", the contents of which depends on the
-  indicated batch mode: for time-interval mode, the `config` field contains the
-  time interval selected by the Collector ({{time-interval-batch-mode}}); in
-  leader-selected mode, the field contains the batch ID selected by the Leader
-  ({{leader-selected-batch-mode}}).
+  indicated batch mode (see {{batch-modes}}.
 
-  Future documents that new batch modes MUST specify the contents of the
-  `config` field; see {{extending-this-doc}} for details.
-
-  The indicated batch mode MUST match the task's batch mode. Otherwise, the
-  Helper MUST abort with "invalidMessage".
-
-* `agg_param`: The opaque aggregation parameter for the VDAF being executed.
-  This value MUST match the `AggregationJobInitReq` message for each aggregation
-  job used to compute the aggregate shares (see {{leader-init}}) and the
-  aggregation parameter indicated by the Collector in the CollectionJobReq
-  message (see {{collect-init}}).
+* `agg_param`: The encoded aggregation parameter for the VDAF being executed.
 
 * `report_count`: The number number of reports included in the batch, as
   computed above.
@@ -2843,28 +2919,48 @@ structure contains the following parameters:
 Leaders MUST authenticate their requests to Helpers using a scheme that meets
 the requirements in {{request-authentication}}.
 
-To handle the Leader's request, the Helper first ensures that it recognizes the
-task ID in the request path. If not, it MUST abort with error
-`unrecognizedTask`. The Helper then verifies that the request meets the
-requirements for batch parameters following the procedure in
-{{batch-validation}}. The Helper MUST validate that the aggregation parameter
-matches the aggregation parameter used during aggregation of this batch;
-otherwise, it aborts with "invalidMessage".
+The Helper MAY defer handling the aggregate share request. In this case, it
+indicates that the aggregate share is not yet ready by immediately sending an
+empty response body. The Helper SHOULD include a Retry-After header field to
+suggest a polling interval to the Leader. The Leader then polls the state of the
+job by sending GET requests to the aggregate share. The Leader SHOULD use each
+response's Retry-After header field to decide when to try again. The Helper
+responds the same way until either the share is ready, from which point it
+responds with the `AggregateShare` (defined below), or the job fails, from which
+point it MUST abort with the error that caused the failure.
+
+The Helper MAY instead handle the request immediately. It waits to respond to
+the Leader's PUT until the aggregate share is ready, in which case, it responds
+with the `AggregateShare` (defined below), or the job fails, in which case it
+MUST abort with the error that caused the failure.
+
+The Helper first ensures that it recognizes the task ID. If not, it MUST fail
+the job with error `unrecognizedTask`.
+
+The indicated batch mode MUST match the task's batch mode. If not, the Helper
+MUST fail the job with `invalidMessage`.
+
+The Helper then verifies that the request meets the requirements in
+{{batch-validation}}. If not, it MUST fail the job with the indicated error.
+
+The aggregation parameter MUST match the aggregation parameter used in
+aggregation jobs pertaining to this batch. If not, the Helper MUST fail the job
+with error `invalidMessage`.
 
 Next, the Helper retrieves and combines the batch buckets associated with the
-request using the same process used by the Leader (as described at the beginning
-of this section {{collect-aggregate}}), arriving at its final aggregate share,
-report count, and checksum values. If the Helper's computed report count and
-checksum values do not match the values provided in the `AggregateShareReq`, it
-MUST abort with an error of type "batchMismatch".
+request using the same process used by the Leader (described at the beginning of
+this section), arriving at its aggregate share, report count, and checksum
+values. If the Helper's computed report count and checksum values do not match
+the values provided in the `AggregateShareReq`, it MUST fail the job with error
+`batchMismatch`.
 
 The Helper then encrypts `agg_share` under the Collector's HPKE public key as
 described in {{aggregate-share-encrypt}}, yielding `encrypted_agg_share`.
 Encryption prevents the Leader from learning the actual result, as it only has
 its own aggregate share and cannot compute the Helper's.
 
-The Helper responds to the Leader with HTTP status code 200 OK and a body
-consisting of an `AggregateShare`, with media type
+Once the Helper has encrypted its aggregate share, the aggregate share job is
+ready. Its results are represented by an `AggregateShare`, with media type
 "application/dap-aggregate-share":
 
 ~~~ tls-presentation
@@ -2878,21 +2974,119 @@ struct {
 computed above and `encrypted_aggregate_share.ciphertext` is the ciphertext
 `encrypted_agg_share` computed above.
 
-The Helper's handling of this request MUST be idempotent. That is, if multiple
-identical, valid `AggregateShareReq`s are received, they should all yield the
-same response.
-
-After receiving the Helper's response, the Leader uses the HpkeCiphertext to
-finalize a collection job (see {{collect-finalization}}).
+After receiving the Helper's response, the Leader includes the HpkeCiphertext in
+its response to the Collector (see {{collect-finalization}}).
 
 Once an `AggregateShareReq` has been issued for the batch determined by a given
-query, it is an error for the Leader to issue any more aggregation jobs for
-additional reports that satisfy the query. These reports will be rejected by the
-Helper as described in {{input-share-validation}}.
+query, the Helper considers the batch to be collected. It is an error for the
+Leader to issue any more aggregation jobs for additional reports that satisfy
+the query. These reports will be rejected by the Helper as described in
+{{input-share-validation}}.
+
+Changing an aggregate share's parameters is illegal, so if there are further PUT
+requests to the aggregate share with a different `AggregateShareReq`, the Helper
+MUST abort with error `invalidMessage`.
 
 Before completing the collection job, the Leader encrypts its aggregate share
 under the Collector's HPKE public key as described in
 {{aggregate-share-encrypt}}.
+
+#### Example
+
+The Helper handles the aggregate share request synchronously:
+
+~~~ http
+PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregate_shares/lc7aUeGpdSNosNlh-UZhKA
+Host: example.com
+Content-Type: application/dap-aggregate-share-req
+Authorization: Bearer auth-token
+
+encoded(struct {
+  batch_selector = struct {
+    batch_mode = BatchMode.time_interval,
+    config = encoded(struct {
+      batch_interval = struct {
+        start = 1659544000,
+        duration = 10000,
+      } Interval,
+    } TimeIntervalBatchSelectorConfig),
+  } BatchSelector,
+  agg_param = [0x00, 0x01, ...],
+  report_count = 1000,
+  checksum = [0x0a, 0x0b, ..., 0x0f],
+} AggregateShareReq)
+
+HTTP/1.1 200
+Content-Type: application/dap-aggregate-share
+
+encoded(struct {
+  encrypted_aggregate_share = struct { ... } HpkeCiphertext,
+} AggregateShare)
+~~~
+
+Or asynchronously:
+
+~~~ http
+PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregate_shares/lc7aUeGpdSNosNlh-UZhKA
+Host: example.com
+Content-Type: application/dap-aggregate-share-req
+Authorization: Bearer auth-token
+
+encoded(struct {
+  batch_selector = struct {
+    batch_mode = BatchMode.time_interval,
+    config = encoded(struct {
+      batch_interval = struct {
+        start = 1659544000,
+        duration = 10000,
+      } Interval,
+    } TimeIntervalBatchSelectorConfig),
+  } BatchSelector,
+  agg_param = [0x00, 0x01, ...],
+  report_count = 1000,
+  checksum = [0x0a, 0x0b, ..., 0x0f],
+} AggregateShareReq)
+
+HTTP/1.1 200
+Retry-After: 300
+
+GET /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregate_shares/lc7aUeGpdSNosNlh-UZhKA
+Host: example.com
+Authorization: Bearer auth-token
+
+HTTP/1.1 200
+Retry-After: 300
+
+GET /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregate_shares/lc7aUeGpdSNosNlh-UZhKA
+Host: example.com
+Authorization: Bearer auth-token
+
+HTTP/1.1 200
+Content-Type: application/dap-aggregate-share
+
+encoded(struct {
+  encrypted_aggregate_share = struct { ... } HpkeCiphertext,
+} AggregateShare)
+~~~
+
+### Aggregate Share Deletion
+
+The Leader can send a DELETE request to the aggregate share, which indicates to
+the Helper that it can abandon the aggregate share and discard all state related
+to it.
+
+Leaders MUST authenticate their requests to Helpers using a scheme that meets
+the requirements in {{request-authentication}}.
+
+#### Example
+
+~~~ http
+DELETE /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregate_shares/lc7aUeGpdSNosNlh-UZhKA
+Host: example.com
+Authorization: Bearer auth-token
+
+HTTP/1.1 200
+~~~
 
 ### Collection Job Finalization {#collect-finalization}
 
@@ -2900,11 +3094,12 @@ Once the Collector has received a collection job from the Leader, it can decrypt
 the aggregate shares and produce an aggregate result. The Collector decrypts
 each aggregate share as described in {{aggregate-share-encrypt}}. Once the
 Collector successfully decrypts all aggregate shares, it unshards the aggregate
-shares into an aggregate result using the VDAF's `unshard` algorithm. In
-particular, let `leader_agg_share` denote the Leader's aggregate share,
-`helper_agg_share` denote the Helper's aggregate share, let `report_count`
-denote the report count sent by the Leader, and let `agg_param` be the opaque
-aggregation parameter. The final aggregate result is computed as follows:
+shares into an aggregate result using the VDAF's `unshard` algorithm.
+
+Let `leader_agg_share` denote the Leader's aggregate share, `helper_agg_share`
+denote the Helper's aggregate share, `report_count` denote the report count sent
+by the Leader, and `agg_param` denote the opaque aggregation parameter. The
+final aggregate result is computed as follows:
 
 ~~~ pseudocode
 agg_result = Vdaf.unshard(agg_param,
@@ -2925,11 +3120,13 @@ done as follows:
     agg_share)
 ~~~
 
-where `pk` is the HPKE public key encoded by the Collector's HPKE key,
-`server_role` is the Role of the encrypting server (`0x02` for the Leader and
-`0x03` for a Helper), `0x00` represents the Role of the recipient (always the
-Collector), and `agg_share_aad` is a value of type `AggregateShareAad`. The
-`SealBase()` function is as specified in {{!HPKE, Section 6.1}} for the
+* `pk` is the Collector's HPKE public key
+* `server_role` is the Role of the encrypting server (`0x02` for the Leader and
+  `0x03` for a Helper)
+* `0x00` represents the Role of the recipient (always the Collector)
+* `agg_share_aad` is an `AggregateShareAad` (defined below).
+
+The `SealBase()` function is as specified in {{!HPKE, Section 6.1}} for the
 ciphersuite indicated by the HPKE configuration.
 
 ~~~ tls-presentation
@@ -2959,18 +3156,20 @@ agg_share = OpenBase(
     enc_share.payload)
 ~~~
 
-where `sk` is the HPKE secret key, `server_role` is the Role of the server that
-sent the aggregate share (`0x02` for the Leader and `0x03` for the Helper),
-`0x00` represents the Role of the recipient (always the Collector), and
-`agg_share_aad` is an `AggregateShareAad` message constructed from the task ID
-and the aggregation parameter in the collect request, and a batch selector. The
-value of the batch selector used in `agg_share_aad` is determined by the batch mode.
+* `sk` is the HPKE secret key
+* `server_role` is the Role of the server that sent the aggregate share (`0x02`
+  for the Leader and `0x03` for the Helper)
+* `0x00` represents the Role of the recipient (always the Collector)
+* `agg_share_aad` is an `AggregateShareAad` message constructed from the task ID
+  and the aggregation parameter in the collect request, and a batch selector.
+  The value of the batch selector used in `agg_share_aad` is determined by the
+  batch mode:
 
-* For time-interval ({{time-interval-batch-mode}}), the batch selector is the
-  batch interval specified in the query.
+  * For time-interval ({{time-interval-batch-mode}}), the batch selector is the
+    batch interval specified in the query.
 
-* For leader-selected ({{leader-selected-batch-mode}}), the batch selector is
-  the batch ID sent in the response.
+  * For leader-selected ({{leader-selected-batch-mode}}), the batch selector is
+    the batch ID sent in the response.
 
 The `OpenBase()` function is as specified in {{!HPKE, Section 6.1}} for the
 ciphersuite indicated by the HPKE configuration.
@@ -2979,25 +3178,22 @@ ciphersuite indicated by the HPKE configuration.
 
 When the Leader receives a `Query` in the request from the Collector during
 collection initialization ({{collect-init}}), it must first check that the
-batch determined by the query can be collected. It does so as described here.
-The Helper performs the same check when it receives a `BatchSelector` in the
-request from the Leader for its aggregate share ({{collect-aggregate}}).
+batch determined by the query can be collected. The Helper performs the same
+check when it receives a `BatchSelector` in the request from the Leader for its
+aggregate share ({{collect-aggregate}}).
 
 First, the Aggregator checks if the request (the `CollectionJobReq` for the
 Leader and the `AggregateShareReq` for the Helper) identifies a valid set of
 batch buckets ({{batch-buckets}}). If not, it MUST abort the request with
-"batchInvalid".
+`batchInvalid`.
 
-Next, the Aggregator checks that batch contains a valid number of reports. The
-Aggregator checks that `len(X) >= min_batch_size`, where `X` is the set of
-reports successfully aggregated into the batch and `min_batch_size` is the
-minimum batch size for the task. If this check fails, then Helpers MUST abort
-with an error of type "invalidBatchSize". Leaders SHOULD wait for more reports
-to be validated and try the collection job again later.
+Next, the Aggregator checks that the number of reports in the batch is equal to
+or greater than the task's minimum batch size. If not, then the Helper MUST
+abort with error `invalidBatchSize`. The Leader SHOULD wait for more reports to
+be validated and try the collection job again later.
 
-Next, the Aggregator checks if the set of batch buckets identified by the
-request overlaps with the batch buckets that have already been collected. If
-so, it MUST abort with "batchOverlap".
+Next, the Aggregator checks if any of the batch buckets identified by the
+request have already been collected. If so, it MUST abort with "batchOverlap".
 
 Finally, the batch mode may define additional batch validation rules.
 
@@ -3025,25 +3221,42 @@ Each batch mode specifies the following:
 
 1. Batch buckets ({{batch-buckets}}): how reports are assigned to batch
    buckets; how each bucket is identified; and how batch buckets are mapped to
-   batches and how batch buckets
+   batches
 
 ## Time Interval {#time-interval-batch-mode}
 
 The time-interval batch mode is designed to support applications in which
-reports are collected into batches grouped by an interval of time. The Collector
-specifies a "batch interval" that determines the time range for reports included
-in the batch. For each report in the batch, the time at which that report was
-generated (see {{upload-flow}}) MUST fall within the batch interval specified by
-the Collector.
+reports are grouped by an interval of time. The Collector specifies a "batch
+interval" into which report timestamps must fall.
 
-Typically the Collector issues queries for which the batch intervals are
-continuous, monotonically increasing, and have the same duration. For example,
-the sequence of batch intervals `(1659544000, 1000)`, `(1659545000, 1000)`,
-`(1659546000, 1000)`, `(1659547000, 1000)` satisfies these conditions. (The
-first element of the pair denotes the start of the batch interval and the second
-denotes the duration.) However, this is not a requirement--the Collector may
-decide to issue queries out-of-order. In addition, the Collector may need to
-vary the duration to adjust to changing report upload rates.
+The Collector can issue queries whose batch intervals are continuous,
+monotonically increasing, and have the same duration. For example, the following
+sequence of batch intervals satisfies these conditions:
+
+~~~ tls-presentation
+[
+  struct {
+    start = 1659544000,
+    duration = 1000,
+  } Interval,
+  struct {
+    start = 1659545000,
+    duration = 1000,
+  } Interval,
+  struct {
+    start = 1659546000,
+    duration = 1000,
+  } Interval,
+  struct {
+    start = 1659547000,
+    duration = 1000,
+  } Interval,
+]
+~~~
+
+However, this is not a requirement: the Collector may decide to issue queries
+out-of-order. In addition, the Collector may need to vary the duration to adjust
+to changing report upload rates.
 
 ### Query Configuration
 
@@ -3077,60 +3290,70 @@ where `batch_interval` is the batch interval requested by the Collector.
 
 ### Batch Buckets {#time-interval-batch-buckets}
 
-Each batch bucket is identified by an interval of time whose beginning is a
-multiple of the task's `time_precision` and whose duration is equal to the
+Each batch bucket is identified by an `Interval` whose duration is equal to the
 task's `time_precision`. The identifier associated with a given report is the
-unique such interval containing the timestamp of the report; for example, if
+unique such interval containing the timestamp of the report. For example, if
 the task's `time_precision` is 1000 seconds and the report's timestamp is
-1729629081, the relevant batch bucket identifier is `(1729629000, 1000)`. The
-first element of the pair denotes the start of the batch interval and the
-second denotes the duration.
+1729629081, the relevant batch bucket identifier is
 
-The `Query` received by the Leader determines a valid set of batch bucket
-identifiers if the following conditions hold (likewise for the `BatchSelector`
-received by the Helper):
+~~~ tls-presentation
+struct {
+  start = 1729629000,
+  duration = 1000,
+} Interval
+~~~
 
-* `batch_interval.duration >= time_precision` (`time_precision` determines the
-  minimum batch duration)
-
-* both `batch_interval.start` and `batch_interval.duration` are divisible by
-  `time_precision`
+The `Query` received by the Leader or `BatchSelector` received by the Helper
+determines a valid set of batch bucket identifiers if the batch interval's
+duration is greater than or equal to the task's `time_precision`.
 
 A batch consists of a sequence of contiguous batch buckets. That is, the set of
-batch buckets identifiers for the batch interval is
-`(batch_interval.start,
-  batch_interval.start + time_precision)`,
-`(batch_interval.start + time_precision,
-  batch_interval.start + 2*time_precision)`,
-  ...,
-`(batch_interval.start + batch_interval.duration - time_precision) +
-  batch_interval.start + batch_interval.duration)`.
+batch bucket identifiers for the batch interval is
+
+~~~ tls-presentation
+[
+  struct {
+    start = batch_interval.start,
+    duration = time_precision,
+  } Interval,
+  struct {
+    start = batch_interval.start + time_precision,
+    duration = time_precision,
+  } Interval,
+  ...
+  struct {
+    start = batch_interval.start + batch_interval.duration - time_precision,
+    duration = time_precision,
+  } Interval,
+]
+~~~
 
 ## Leader-selected Batch Mode {#leader-selected-batch-mode}
 
-The leader-selected batch mode is used to support applications in which it is
-acceptable for reports to be batched in an arbitrary fashion by the Leader. Each
-batch of reports is identified by an opaque "batch ID". Both the reports
-included in each batch and the ID for each batch are allocated in an arbitrary
-fashion by the Leader.
+The leader-selected batch mode is used when it is acceptable for the Leader to
+arbitrarily batch reports. Each batch is identified by an opaque "batch ID"
+chosen by the Leader, which MUST be unique in the scope of the task.
+
+~~~ tls-presentation
+opaque BatchID[32];
+~~~
 
 The Collector will not know the set of batch IDs available for collection. To
-get the aggregate of a batch, the Collector issues a query, which does not
-include any information specifying a particular batch (see {{batch-modes}}). The
-Leader selects a recent batch to aggregate. The Leader MUST select a batch that
-has not yet been associated with a collection job.
+get the aggregate of a batch, the Collector issues a query for the next
+available batch. The Leader selects a recent batch to aggregate which MUST NOT
+yet have been associated with a collection job.
 
 The Aggregators can output batches of any size that is larger than or equal to
-`min_batch_size`. The target batch size, if any, is implementation-specific, and
-may be equal to or greater than the minimum batch size. Deciding how soon
-batches should be output is also implementation-specific. Exactly sizing batches
-may be challenging for Leader deployments in which multiple, independent nodes
-running the aggregate interaction (see {{aggregate-flow}}) need to be
-coordinated.
+the task's minimum batch size. The target batch size, if any, is
+implementation-specific, and may be equal to or greater than the minimum batch
+size. Deciding how soon batches should be output is also
+implementation-specific. Exactly sizing batches may be challenging for Leader
+deployments in which multiple, independent nodes running the aggregate
+interaction (see {{aggregate-flow}}) need to be coordinated.
 
 ### Query Configuration
 
-They payload of `Query.config` is empty; the request merely indicates the
+They payload of `Query.config` is empty. The request merely indicates the
 Collector would like the next batch selected by the Leader.
 
 ### Partial Batch Selector Configuration
@@ -3159,9 +3382,9 @@ where `batch_id` is the batch ID selected by the Leader.
 
 ### Batch Buckets {#leader-selected-batch-buckets}
 
-Each batch consists of a single bucket and is identified by the batch ID
-selected by the Leader. A report is assigned to the batch indicated by the
-`PartialBatchSelector` during aggregation.
+Each batch consists of a single bucket and is identified by the batch ID. A
+report is assigned to the batch indicated by the `PartialBatchSelector` during
+aggregation.
 
 # Operational Considerations {#operational-capabilities}
 
