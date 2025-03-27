@@ -1522,6 +1522,9 @@ enum {
 Field `extension_type` indicates the type of extension, and `extension_data`
 contains the opaque encoding of the extension.
 
+Extensions are mandatory to implement. Unrecognized extensions are handled as
+specified in {{input-share-validation}}.
+
 ## Verifying and Aggregating Reports {#aggregate-flow}
 
 Once some Clients have uploaded their reports to the Leader, the Leader can
@@ -1715,7 +1718,7 @@ struct {
 
 struct {
   ReportShare report_share;
-  opaque outbound<0..2^32-1>;
+  opaque payload<0..2^32-1>;
 } PrepareInit;
 ~~~
 
@@ -1727,7 +1730,7 @@ Each of these messages is constructed as follows:
 
   * `report_share.encrypted_input_share` is the Helper's encrypted input share.
 
-  * `outbound` is set to the `outbound` message computed by the previous step.
+  * `payload` is set to the `outbound` message computed by the previous step.
 
 It is not possible for `state` to be of type `Finished` during Leader
 initialization.
@@ -1813,14 +1816,15 @@ Continuing, the Leader proceeds as follows with each report:
    If `outbound != None`, then the Leader stores `state` and `outbound` and
    proceeds to {{aggregation-leader-continuation}}. If `outbound == None`, then
    the preparation process is complete: either `state == Rejected()`, in which
-   case the Leader rejects the report and removes it from the candidate set or
+   case the Leader rejects the report and removes it from the candidate set; or
    `state == Finished(out_share)`, in which case preparation is complete and the
    Leader updates the relevant batch bucket with `out_share` as described in
    {{batch-buckets}}.
 
 1. Else if the type is "reject", then the Leader rejects the report and removes
    it from the candidate set. The Leader MUST NOT include the report in a
-   subsequent aggregation job, unless the error is `report_too_early`.
+   subsequent aggregation job, unless the error is `report_too_early`, in which
+   case the Leader MAY include the report in a subsequent aggregation job.
 
 1. Else the type is invalid, in which case the Leader MUST abort the
    aggregation job.
@@ -2636,8 +2640,8 @@ The Leader then combines the values inside the batch bucket as follows:
 * Aggregate shares are combined via `Vdaf.merge(agg_param, agg_shares)` ((see
   {{!VDAF, Section 4.4}})), where `agg_param` is the aggregation parameter
   provided in the `CollectionJobReq`, and `agg_shares` are the (partial)
-  aggregate shares in the batch buckets. The result is the leader aggregate share
-  for this collection job.
+  aggregate shares in the batch buckets. The result is the Leader aggregate
+  share for this collection job.
 * Report counts are combined via summing.
 * Checksums are combined via bitwise XOR.
 
