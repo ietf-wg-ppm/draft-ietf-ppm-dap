@@ -1396,8 +1396,8 @@ of !VDAF}}), using the report ID as the nonce:
   `rand` value MUST be independently sampled from a cryptographically secure
   random number generator.
 
-The sharding algorithm will return two input shares. The is the Leader's input
-share, and the second is the Helper's.
+The sharding algorithm will return two input shares. The first is the Leader's
+input share, and the second is the Helper's.
 
 The Client then wraps each input share in the following structure:
 
