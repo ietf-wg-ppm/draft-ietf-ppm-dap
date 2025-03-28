@@ -1059,7 +1059,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
 </tr></thead>
 <tfoot><tr>
 <td class="left">Geoghegan, et al.</td>
-<td class="center">Expires 28 September 2025</td>
+<td class="center">Expires 29 September 2025</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1072,12 +1072,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-ietf-ppm-dap-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2025-03-27" class="published">27 March 2025</time>
+<time datetime="2025-03-28" class="published">28 March 2025</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Standards Track</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2025-09-28">28 September 2025</time></dd>
+<dd class="expires"><time datetime="2025-09-29">29 September 2025</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -1151,7 +1151,7 @@ without revealing any individual contributor's data.<a href="#section-abstract-1
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 28 September 2025.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 29 September 2025.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -2037,30 +2037,36 @@ use, multiple values may be grouped into a single measurement. As defined in
 <span>[<a href="#VDAF" class="cite xref">VDAF</a>]</span>.<a href="#section-1.2.1-1.30.1" class="pilcrow">¶</a></p>
 </dd>
             <dd class="break"></dd>
-<dt id="section-1.2.1-1.31">Public share:</dt>
+<dt id="section-1.2.1-1.31">Minimum batch size:</dt>
             <dd style="margin-left: 1.5em" id="section-1.2.1-1.32">
-              <p id="section-1.2.1-1.32.1">An output of the VDAF sharding algorithm transmitted to each of the
-Aggregators. As defined in <span>[<a href="#VDAF" class="cite xref">VDAF</a>]</span>.<a href="#section-1.2.1-1.32.1" class="pilcrow">¶</a></p>
+              <p id="section-1.2.1-1.32.1">The minimum number of reports that must be aggregated before a batch can be
+collected.<a href="#section-1.2.1-1.32.1" class="pilcrow">¶</a></p>
 </dd>
             <dd class="break"></dd>
-<dt id="section-1.2.1-1.33">Report:</dt>
+<dt id="section-1.2.1-1.33">Public share:</dt>
             <dd style="margin-left: 1.5em" id="section-1.2.1-1.34">
-              <p id="section-1.2.1-1.34.1">A cryptographically protected measurement uploaded to the Leader by a Client.
-Includes a public share and a pair of report shares, one for each Aggregator.<a href="#section-1.2.1-1.34.1" class="pilcrow">¶</a></p>
+              <p id="section-1.2.1-1.34.1">An output of the VDAF sharding algorithm transmitted to each of the
+Aggregators. As defined in <span>[<a href="#VDAF" class="cite xref">VDAF</a>]</span>.<a href="#section-1.2.1-1.34.1" class="pilcrow">¶</a></p>
 </dd>
             <dd class="break"></dd>
-<dt id="section-1.2.1-1.35">Report share:</dt>
+<dt id="section-1.2.1-1.35">Report:</dt>
             <dd style="margin-left: 1.5em" id="section-1.2.1-1.36">
-              <p id="section-1.2.1-1.36.1">An input share encrypted under the HPKE public key of an Aggregator <span>[<a href="#HPKE" class="cite xref">HPKE</a>]</span>.
-The report share also includes some associated data used for processing the
-report.<a href="#section-1.2.1-1.36.1" class="pilcrow">¶</a></p>
+              <p id="section-1.2.1-1.36.1">A cryptographically protected measurement uploaded to the Leader by a Client.
+Includes a public share and a pair of report shares, one for each Aggregator.<a href="#section-1.2.1-1.36.1" class="pilcrow">¶</a></p>
 </dd>
             <dd class="break"></dd>
-<dt id="section-1.2.1-1.37">Task:</dt>
+<dt id="section-1.2.1-1.37">Report share:</dt>
             <dd style="margin-left: 1.5em" id="section-1.2.1-1.38">
-              <p id="section-1.2.1-1.38.1">A task in which measurements of an understood type will be reported by the
+              <p id="section-1.2.1-1.38.1">An input share encrypted under the HPKE public key of an Aggregator <span>[<a href="#HPKE" class="cite xref">HPKE</a>]</span>.
+The report share also includes some associated data used for processing the
+report.<a href="#section-1.2.1-1.38.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-1.2.1-1.39">Task:</dt>
+            <dd style="margin-left: 1.5em" id="section-1.2.1-1.40">
+              <p id="section-1.2.1-1.40.1">A task in which measurements of an understood type will be reported by the
 Clients, aggregated by the Aggregators and received by the Collector. Many
-collections can be performed in the course of a single task.<a href="#section-1.2.1-1.38.1" class="pilcrow">¶</a></p>
+collections can be performed in the course of a single task.<a href="#section-1.2.1-1.40.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
 </dl>
@@ -3988,7 +3994,8 @@ the preparation process is complete: either <code>state == Rejected()</code>, in
 case the Leader rejects the report and removes it from the candidate set; or
 <code>state == Finished(out_share)</code>, in which case preparation is complete and the
 Leader updates the relevant batch bucket with <code>out_share</code> as described in
-<a href="#batch-buckets" class="auto internal xref">Section 4.6.2.3</a>.<a href="#section-4.6.1.1-23.1.5" class="pilcrow">¶</a></p>
+<a href="#batch-buckets" class="auto internal xref">Section 4.6.2.3</a>. The Leader stores the report ID corresponding to the
+<code>out_share</code> for replay protection.<a href="#section-4.6.1.1-23.1.5" class="pilcrow">¶</a></p>
 </li>
               <li id="section-4.6.1.1-23.2">
                 <p id="section-4.6.1.1-23.2.1">Else if the type is "reject", then the Leader rejects the report and removes
@@ -4167,8 +4174,8 @@ variant {
 } PrepareResp;
 </pre><a href="#section-4.6.1.2-23" class="pilcrow">¶</a>
 </div>
-<p id="section-4.6.1.2-24">Otherwise it updates the relevant batch bucket with <code>out_share</code> as described in
-<a href="#batch-buckets" class="auto internal xref">Section 4.6.2.3</a>.<a href="#section-4.6.1.2-24" class="pilcrow">¶</a></p>
+<p id="section-4.6.1.2-24">Otherwise it stores the report ID for replay protection and updates the relevant
+batch bucket with <code>out_share</code> as described in <a href="#batch-buckets" class="auto internal xref">Section 4.6.2.3</a>.<a href="#section-4.6.1.2-24" class="pilcrow">¶</a></p>
 <p id="section-4.6.1.2-25">Finally, the Helper creates an <code>AggregationJobResp</code> to send to the Leader. This
 message is structured as follows:<a href="#section-4.6.1.2-25" class="pilcrow">¶</a></p>
 <div class="lang-tls-presentation sourcecode" id="section-4.6.1.2-26">
