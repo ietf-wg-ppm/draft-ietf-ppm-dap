@@ -517,6 +517,10 @@ Measurement:
   use, multiple values may be grouped into a single measurement. As defined in
   {{!VDAF}}.
 
+Minimum batch size:
+: The minimum number of reports that must be aggregated before a batch can be
+  collected.
+
 Public share:
 : An output of the VDAF sharding algorithm transmitted to each of the
   Aggregators. As defined in {{!VDAF}}.
@@ -1819,7 +1823,8 @@ Continuing, the Leader proceeds as follows with each report:
    case the Leader rejects the report and removes it from the candidate set; or
    `state == Finished(out_share)`, in which case preparation is complete and the
    Leader updates the relevant batch bucket with `out_share` as described in
-   {{batch-buckets}}.
+   {{batch-buckets}}. The Leader stores the report ID corresponding to the
+   `out_share` for replay protection.
 
 1. Else if the type is "reject", then the Leader rejects the report and removes
    it from the candidate set. The Leader MUST NOT include the report in a
@@ -1987,8 +1992,8 @@ variant {
 } PrepareResp;
 ~~~
 
-Otherwise it updates the relevant batch bucket with `out_share` as described in
-{{batch-buckets}}.
+Otherwise it stores the report ID for replay protection and updates the relevant
+batch bucket with `out_share` as described in {{batch-buckets}}.
 
 Finally, the Helper creates an `AggregationJobResp` to send to the Leader. This
 message is structured as follows:
