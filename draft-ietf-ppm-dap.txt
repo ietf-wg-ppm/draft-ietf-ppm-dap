@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 13 September 2025                                    Cloudflare
+Expires: 30 September 2025                                    Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                           12 March 2025
+                                                           29 March 2025
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -28,8 +28,8 @@ Abstract
    aggregating them on some server, thus representing a threat to user
    privacy and rendering many such measurements difficult and
    impractical.  This document describes a multi-party distributed
-   aggregation protocol (DAP) for privacy preserving measurement (PPM)
-   which can be used to collect aggregate data without revealing any
+   aggregation protocol (DAP) for privacy preserving measurement which
+   can be used to collect aggregate data without revealing any
    individual contributor's data.
 
 About This Document
@@ -64,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 13 September 2025.
+   This Internet-Draft will expire on 30 September 2025.
 
 Copyright Notice
 
@@ -194,6 +194,15 @@ Table of Contents
 
    (*) Indicates a change that breaks wire compatibility with the
    previous draft.
+
+   15:
+
+   *  Reorganize text for clarity and flow.
+
+   *  Define consistent semantics for long-running interactions:
+      aggregation jobs, collection jobs and aggregate shares. (*)
+
+   *  Bump version tag from "dap-14" to "dap-15". (*)
 
    14:
 
@@ -523,9 +532,6 @@ Table of Contents
       batch mode, there may be many batch buckets tracking the state of
       a single batch.
 
-   Batch duration:  The time difference between the oldest and newest
-      report in a batch.
-
    Batch interval:  A parameter of a query issued by the Collector that
       specifies the time range of the reports in the batch.
 
@@ -563,12 +569,12 @@ Table of Contents
    Minimum batch size:  The minimum number of reports that must be
       aggregated before a batch can be collected.
 
-   Public share:  The output of the VDAF sharding algorithm transmitted
+   Public share:  An output of the VDAF sharding algorithm transmitted
       to each of the Aggregators.  As defined in [VDAF].
 
    Report:  A cryptographically protected measurement uploaded to the
-      Leader by a Client.  Includes a pair of report shares, one for
-      each Aggregator.
+      Leader by a Client.  Includes a public share and a pair of report
+      shares, one for each Aggregator.
 
    Report share:  An input share encrypted under the HPKE public key of
       an Aggregator [HPKE].  The report share also includes some
@@ -664,11 +670,10 @@ Table of Contents
       Leader.  Each task has a single Helper.
 
    Figure 1 illustrates which participants exchange HTTP messages.
-   Arrows go from HTTP clients to HTTP servers.  Note that some DAP
-   participants may be HTTP clients sometimes but HTTP servers at other
-   times.  It is even possible for a single entity to perform multiple
-   DAP roles.  For example, the Collector could also be one of the
-   Aggregators.
+   Arrows go from HTTP clients to HTTP servers.  Some DAP participants
+   may be HTTP clients sometimes but HTTP servers at other times.  It is
+   even possible for a single entity to perform multiple DAP roles.  For
+   example, the Collector could also be one of the Aggregators.
 
    In the course of a measurement task (Section 4.2), each Client
    records its own measurement, packages it up into a report, and sends
@@ -911,16 +916,16 @@ aggregation job 1                   aggregation job 2          aggregation job j
 3.1.  Presentation Language
 
    With some exceptions, we use the presentation language defined in
-   [RFC8446], Section 3 to define messages in the DAP protocol.
-   Encoding and decoding of these messages as byte strings also follows
+   [RFC8446], Section 3 to define messages in the protocol.  Encoding
+   and decoding of these messages as byte strings also follows
    [RFC8446].  We enumerate the exceptions below.
 
 3.1.1.  Variable-Length Vectors
 
    Section 3.4 of [RFC8446] describes a syntax for variable-length
-   vectors where a range of permitted lengths is provided.  By
-   convention, DAP always specifies the lower length limit of variable-
-   length vectors to be 0.
+   vectors where a range of permitted lengths is provided.  This
+   document always specifies the lower length limit of variable-length
+   vectors to be 0.
 
 3.1.2.  Structure Variants
 
@@ -990,20 +995,20 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
 3.2.  HTTPS Request Authentication
 
-   DAP is made up of several interactions in which different subsets of
-   the protocol's participants interact with each other.
+   The protocol is made up of several interactions in which different
+   subsets of participants interact with each other.
 
    In those cases where a channel between two participants is tunneled
-   through another protocol participant, DAP mandates the use of public-
-   key encryption using [HPKE] to ensure that only the intended
-   recipient can see a message in the clear.
+   through another protocol participant, Hybrid Public-Key Encryption
+   ([HPKE]) ensures that only the intended recipient can see a message
+   in the clear.
 
-   In other cases, DAP requires HTTP client authentication as well as
+   In other cases, HTTP client authentication is required as well as
    server authentication.  Any authentication scheme that is composable
    with HTTP is allowed.  For example:
 
    *  [OAuth2] credentials are presented in an Authorization HTTP
-      header, which can be added to any DAP protocol message.
+      header, which can be added to any protocol message.
 
    *  TLS client certificates can be used to authenticate the underlying
       transport.
@@ -1014,10 +1019,10 @@ aggregation job 1                   aggregation job 2          aggregation job j
    *  [RFC9421] HTTP message signatures authenticate messages without
       transmitting a secret.
 
-   This flexibility allows organizations deploying DAP to use existing
-   well-known HTTP authentication mechanisms that they already support.
-   Discovering what authentication mechanisms are supported by a DAP
-   participant is outside of this document's scope.
+   This flexibility allows organizations deploying DAP to use
+   authentication mechanisms that they already support.  Discovering
+   what authentication mechanisms are supported by a participant is
+   outside of this document's scope.
 
 3.3.  Errors
 
@@ -1269,9 +1274,8 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    The Leader and Helper API URLs MAY include arbitrary path components.
 
-   In addition, in order to facilitate the aggregation and collection
-   interactions, each of the Aggregators is configured with the
-   following parameters:
+   In order to facilitate the aggregation and collection interactions,
+   each of the Aggregators is configured with the following parameters:
 
    *  min_batch_size (uint64): The smallest number of reports the batch
       is allowed to include.  A larger minimum batch size will yield a
@@ -1347,30 +1351,22 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
 4.4.  Aggregation Parameter Validation
 
-   For each batch it collects, the Collector assigns an aggregation
-   parameter used to refine the measurements before aggregating them.
-   The aggregation parameter is subject to a validation procedure
-   specified by the VDAF.
-
+   For each batch it collects, the Collector chooses an aggregation
+   parameter used to prepare the measurements before aggregating them.
    Before accepting a collection job from the Collector (Section 4.7.1),
-   the Leader checks that the indicated aggregation parameter,
-   agg_param, is valid according to the following procedure.  The Helper
-   does the same before accepting an aggregation job from the Leader
-   (Section 4.6.1.2).
+   the Leader checks that the indicated aggregation parameter is valid
+   according to the following procedure.
 
    1.  Decode the byte string agg_param into an AggParam as specified by
-       the VDAF.  (VDAFs compatible with this specification MUST specify
-       an encoding of the aggregation parameter as a byte string; see
-       Section 4.1.)  If decoding fails, then the aggregation parameter
-       is invalid.
+       the VDAF.  If decoding fails, then the aggregation parameter is
+       invalid.
 
    2.  Run vdaf.is_valid(decoded_agg_param, []), where decoded_agg_param
        is the decoded AggParam and is_valid() is as defined in
        Section 5.3 of [VDAF].  If the output is not True, then the
        aggregation parameter is invalid.
 
-   If both steps succeed, then the aggregation parameter is deemed to be
-   valid.
+   If both steps succeed, then the aggregation parameter is valid.
 
 4.5.  Uploading Reports
 
@@ -1460,20 +1456,19 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    *  report_metadata is public metadata describing the report.
 
-      -  report_id is used by the Aggregators to ensure the report is
-         not replayed (Figure 3).  The Client MUST generate this by
-         generating 16 random bytes using a cryptographically secure
-         random number generator.
+      -  report_id uniquely identifies the report.  The Client MUST
+         generate this by sampling 16 random bytes from a
+         cryptographically secure random number generator.
 
-      -  time is the time at which the report was generated.  The Client
-         MUST truncate their timestamp as described in Section 4.1.1.
+      -  time is the truncated (see Section 4.1.1) time at which the
+         report was generated.
 
       -  public_extensions is the list of public report extensions; see
          Section 4.5.3.
 
    *  public_share is the public share output by the VDAF sharding
-      algorithm.  Note that the public share might be empty, depending
-      on the VDAF.
+      algorithm.  The public share might be empty, depending on the
+      VDAF.
 
    *  leader_encrypted_input_share is the Leader's encrypted input
       share.
@@ -1482,8 +1477,8 @@ aggregation job 1                   aggregation job 2          aggregation job j
       share.
 
    Aggregators MAY require Clients to authenticate when uploading
-   reports (see Section 8.3).  If it is used, HTTP client authentication
-   MUST use a scheme that meets the requirements in Section 3.2.
+   reports (see Section 8.3).  If it is used, client authentication MUST
+   use a scheme that meets the requirements in Section 3.2.
 
    The handling of the upload request by the Leader MUST be idempotent
    as discussed in Section 9.2.2 of [RFC9110].
@@ -1494,21 +1489,25 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    (public_share, input_shares) = Vdaf.shard(
        "dap-14" || task_id,
-       measurement, /* plaintext measurement */
-       report_id,   /* nonce */
-       rand,        /* randomness for sharding algorithm */
+       measurement,
+       report_id,
+       rand,
    )
 
-   where task_id is the task ID.  The last input comprises the
-   randomness consumed by the sharding algorithm.  The sharding
-   randomness is a random byte string of length specified by the VDAF.
-   The Client MUST generate this using a cryptographically secure random
-   number generator.
+   *  task_id is the task ID.
 
-   The sharding algorithm will return two input shares.  The first input
-   share returned from the sharding algorithm is considered to be the
-   Leader's input share, and the second input share is considered to be
-   the Helper's input share.
+   *  measurement is the plaintext measurement, represented as the
+      VDAF's Measurement associated type.
+
+   *  report_id is the corresponding value from ReportMetadata, used as
+      the nonce.
+
+   *  rand is a random byte string of length specified by the VDAF.
+      Each report's rand value MUST be independently sampled from a
+      cryptographically secure random number generator.
+
+   The sharding algorithm will return two input shares.  The first is
+   the Leader's input share, and the second is the Helper's.
 
    The Client then wraps each input share in the following structure:
 
@@ -1517,26 +1516,31 @@ aggregation job 1                   aggregation job 2          aggregation job j
      opaque payload<0..2^32-1>;
    } PlaintextInputShare;
 
-   Field private_extensions is set to the list of private report
-   extensions intended to be consumed by the given Aggregator.  (See
-   Section 4.5.3.)  Field payload is set to the Aggregator's input share
-   output by the VDAF sharding algorithm.
+   *  private_extensions is the list of private report extensions for
+      the given Aggregator (see Section 4.5.3).
 
-   Next, the Client encrypts each PlaintextInputShare
-   plaintext_input_share as follows:
+   *  payload is the Aggregator's input share.
+
+   Next, the Client encrypts each PlaintextInputShare as follows:
 
    enc, payload = SealBase(pk,
      "dap-14 input share" || 0x01 || server_role,
      input_share_aad, plaintext_input_share)
 
-   where pk is the Aggregator's public key; 0x01 represents the Role of
-   the sender (always the Client); server_role is the Role of the
-   intended recipient (0x02 for the Leader and 0x03 for the Helper),
-   plaintext_input_share is the Aggregator's PlaintextInputShare, and
-   input_share_aad is an encoded message of type InputShareAad defined
-   below, constructed from the same values as the corresponding fields
-   in the report.  The SealBase() function is as specified in [HPKE],
-   Section 6.1 for the ciphersuite indicated by the HPKE configuration.
+   *  pk is the public key from the Aggregator's HPKE configuration.
+
+   *  0x01 represents the Role of the sender (always the Client).
+
+   *  server_role is the Role of the recipient (0x02 for the Leader and
+      0x03 for the Helper).
+
+   *  plaintext_input_share is the Aggregator's PlaintextInputShare.
+
+   *  input_share_aad is an encoded InputShareAad, constructed from the
+      corresponding fields in the report per the definition below.
+
+   The SealBase() function is as specified in [HPKE], Section 6.1 for
+   the ciphersuite indicated by the Aggregator's HPKE configuration.
 
    struct {
      TaskID task_id;
@@ -1569,14 +1573,12 @@ aggregation job 1                   aggregation job 2          aggregation job j
    The Leader MUST ignore any report pertaining to a batch that has
    already been collected (see Section 4.6.1.4 for details).  Otherwise,
    comparing the aggregate result to the previous aggregate result may
-   result in a privacy violation.  Note that this is also enforced by
-   the Helper during the aggregation interaction.  The Leader MAY also
-   abort the upload interaction and alert the Client with error
+   result in a privacy violation.  The Leader MAY also abort with error
    reportRejected.
 
    The Leader MUST ignore any report whose timestamp is outside of the
-   task's time_interval.  When it does so, it SHOULD also abort the
-   upload interaction and alert the Client with error reportRejected.
+   task's time_interval.  When it does so, it SHOULD also abort with
+   error reportRejected.
 
    The Leader may need to buffer reports while waiting to aggregate them
    (e.g., while waiting for an aggregation parameter from the Collector;
@@ -1584,21 +1586,21 @@ aggregation job 1                   aggregation job 2          aggregation job j
    timestamps are too far in the future.  Implementors MAY provide for
    some small leeway, usually no more than a few minutes, to account for
    clock skew.  If the Leader rejects a report for this reason, it
-   SHOULD abort the upload interaction and alert the Client with error
-   reportTooEarly.  In this situation, the Client MAY re-upload the
-   report later on.
+   SHOULD abort with error reportTooEarly.  In this situation, the
+   Client MAY re-upload the report later on.
 
    If the report contains an unrecognized public report extension, or if
    the Leader's input share contains an unrecognized private report
-   extension, then the Leader MAY abort the upload request with error
-   "unsupportedExtension."  If the Leader does abort for this reason, it
-   MAY indicate the unsupported extensions in the resulting problem
-   document via an extension member (Section 3.2 of [RFC9457])
-   "unsupported_extensions" on the problem document; this member MUST
-   contain an array of numeric values indicating the extension code
+   extension, then the Leader MUST ignore the report and MAY abort with
+   error unsupportedExtension.  If the Leader does abort for this
+   reason, it SHOULD indicate the unsupported extensions in the
+   resulting problem document via an extension member (Section 3.2 of
+   [RFC9457]) unsupported_extensions on the problem document.  This
+   member MUST contain an array of numbers indicating the extension code
    points which were not recognized.  For example, if the report upload
    contained two unsupported extensions with code points 23 and 42, the
-   "unsupported_extensions" member would contain the value [23, 42].
+   "unsupported_extensions" member would contain the JSON value [23,
+   42].
 
    If the same extension type appears more than once among the public
    extensions and the private extensions in the Leader's input share,
@@ -1613,17 +1615,14 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
 4.5.3.  Report Extensions
 
-   Each ReportMetadata contains a list of extensions public to both
-   aggregators, and each PlaintextInputShare contains a list of
-   extensions private to the relevant Aggregator.  Clients use these
-   extensions to convey additional information to the Aggregators.  Some
-   extensions might be intended for both Aggregators; others may only be
-   intended for a specific Aggregator.  (For example, a DAP deployment
-   might use some out-of-band mechanism for an Aggregator to verify that
-   reports come from authenticated Clients.  It will likely be useful to
-   bind the extension to the input share via HPKE encryption.)
+   Clients use report extensions to convey additional information to the
+   Aggregators.  Each ReportMetadata contains a list of extensions
+   public to both aggregators, and each PlaintextInputShare contains a
+   list of extensions private to the relevant Aggregator.  For example,
+   Clients may need to authenticate to the Helper by presenting a secret
+   that must not be revealed to the Leader.
 
-   Each extension is a tag-length encoded value of the following form:
+   Each extension is a tag-length encoded value of the form:
 
    struct {
      ExtensionType extension_type;
@@ -1635,26 +1634,25 @@ aggregation job 1                   aggregation job 2          aggregation job j
      (65535)
    } ExtensionType;
 
-   Field "extension_type" indicates the type of extension, and
-   "extension_data" contains information specific to the extension.
+   Field extension_type indicates the type of extension, and
+   extension_data contains the opaque encoding of the extension.
 
-   Extensions are mandatory-to-implement: If an Aggregator receives a
-   report containing an extension it does not recognize, then it MUST
-   reject the report.  (See Section 4.6.1.4 for details.)
+   Extensions are mandatory to implement.  Unrecognized extensions are
+   handled as specified in Section 4.6.1.4.
 
 4.6.  Verifying and Aggregating Reports
 
-   Once a set of Clients have uploaded their reports to the Leader, the
+   Once some Clients have uploaded their reports to the Leader, the
    Leader can begin the process of validating and aggregating them with
    the Helper.  To enable the system to handle large batches of reports,
-   this process can be parallelized across many "aggregation jobs" in
-   which small subsets of the reports are processed independently.  Each
-   aggregation job is associated with exactly one DAP task, but a task
-   can have many aggregation jobs.
+   this process is parallelized across many "aggregation jobs" in which
+   subsets of the reports are processed independently.  Each aggregation
+   job is associated with a single task, but a task can have many
+   aggregation jobs.
 
-   The primary objective of an aggregation job is to run the VDAF
-   preparation process described in [VDAF], Section 5.2 for each report
-   in the job.  Preparation has two purposes:
+   An aggregation job runs the VDAF preparation process described in
+   [VDAF], Section 5.2 for each report in the job.  Preparation has two
+   purposes:
 
    1.  To "refine" the input shares into "output shares" that have the
        desired aggregatable form.  For some VDAFs, like Prio3, the
@@ -1662,14 +1660,14 @@ aggregation job 1                   aggregation job 2          aggregation job j
        depending only on the input share, but in general the mapping
        involves an aggregation parameter chosen by the Collector.
 
-   2.  To verify that the output shares, when combined, correspond to a
-       valid, refined measurement, where validity is determined by the
-       VDAF itself.  For example, the Prio3Sum variant of Prio3
-       (Section 7.4.2 of [VDAF]) requires that the output shares sum up
-       to an integer in a specific range, while the Prio3Histogram
-       variant (Section 7.4.4 of [VDAF]) proves that output shares sum
-       up to a one-hot vector representing a contribution to a single
-       bucket of the histogram.
+   2.  To verify that each pair of output shares, when combined,
+       corresponds to a valid, refined measurement, where validity is
+       determined by the VDAF itself.  For example, the Prio3Sum variant
+       of Prio3 (Section 7.4.2 of [VDAF]) proves that the output shares
+       sum up to an integer in a specific range, while the
+       Prio3Histogram variant (Section 7.4.4 of [VDAF]) proves that
+       output shares sum up to a one-hot vector representing a
+       contribution to a single bucket of the histogram.
 
    In general, refinement and verification are not distinct
    computations, since for some VDAFs, verification may only be achieved
@@ -1745,12 +1743,10 @@ aggregation job 1                   aggregation job 2          aggregation job j
    and batch mode in use, it is often possible to begin aggregation as
    soon as reports arrive.  For example, Prio3 has just one valid
    aggregation parameter (the empty string), and thus allows for eager
-   aggregation; and both the time-interval (Section 5.1) and leader-
-   selected (Section 5.2) batch modes defined in this document allow for
-   eager aggregation.
+   aggregation.  Both the time-interval and leader-selected batch modes
+   defined in this document (Section 5) allow for eager aggregation.
 
-   An aggregation job can be thought of as having three phases, which
-   are described in the remaining subsections:
+   An aggregation job has three phases:
 
    *  Initialization: Begin the aggregation flow by disseminating report
       shares and initializing the VDAF prep state for each report.
@@ -1760,21 +1756,17 @@ aggregation job 1                   aggregation job 2          aggregation job j
       occurs.
 
    *  Completion: Finish the aggregation flow, yielding an output share
-      corresponding to each report share in the aggregation job, and
-      update the appropriate aggregate shares with these output shares.
+      for each report share in the aggregation job.
 
    After an aggregation job is completed, each Aggregator updates
    running-total aggregate shares and other values for each "batch
-   bucket" associated with a recovered output share, as described in
+   bucket" associated with a prepared output share, as described in
    Section 4.6.2.3.  These values are stored until the batch is
    collected as described in Section 4.7.
 
-   Apart from VDAF preparation, another important task of the
-   aggregation interaction is to provide replay protection
-   (Section 2.3).  Along with the output shares, each Aggregator records
-   the IDs of all reports it is has aggregated for a given task: before
-   committing to an output share, it checks whether the corresponding
-   report ID is in the set of stored IDs.
+   The aggregation interaction provides replay protection (Section 2.3).
+   Before committing to an output share, Aggregators check whether the
+   corresponding report ID has already been aggregated.
 
 4.6.1.  Aggregate Initialization
 
@@ -1798,29 +1790,20 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    The Leader and Helper initialization behavior is detailed below.
 
-   Implementation note: the Leader will generally want to associate each
-   report with a single aggregation job, as otherwise the duplicated
-   reports will eventually be discarded as a replay.  However, it is
-   likely not appropriate to directly use the used-ID storage used for
-   replay protection to determine which reports can be added to an
-   aggregation job: certain errors (e.g. report_too_early) allow the
-   report to be added to another aggregation job in the future; but
-   storage into the used-ID storage is permanent.
-
 4.6.1.1.  Leader Initialization
 
    The Leader begins the aggregate initialization by sampling a fresh
    AggregationJobID.
 
    Next, for each report in the candidate set, it checks if the report
-   ID corresponds to a report ID it has previously stored for this task.
-   If so, it marks the report as invalid and removes it from the
+   ID corresponds to a report ID it has previously aggregated for this
+   task.  If so, it marks the report as invalid and removes it from the
    candidate set.
 
    Next, the Leader decrypts each of its report shares as described in
    Section 4.6.1.3, then checks input share validity as described in
-   Section 4.6.1.4.  If either step invalidates the report, the Leader
-   rejects the report and removes it from the set of candidate reports.
+   Section 4.6.1.4.  If either step fails, the Leader rejects the report
+   and removes it from the set of candidate reports.
 
    Next, for each report the Leader executes the following procedure:
 
@@ -1847,11 +1830,12 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    *  plaintext_input_share is the Leader's PlaintextInputShare
 
-   The methods are defined in Section 5.8 of [VDAF].  This process
-   determines the initial per-report state, as well as the initial
-   outbound message to send to the Helper.  If state is of type
+   ping_pong_leader_init is defined in Section 5.7.1 of [VDAF].  This
+   process determines the initial per-report state, as well as the
+   initial outbound message to the Helper.  If state is of type
    Rejected, then the report is rejected and removed from the set of
-   candidate reports, and no message is sent to the Helper.
+   candidate reports, and no message is sent to the Helper for this
+   report.
 
    If state is of type Continued, then the Leader constructs a
    PrepareInit message structured as follows:
@@ -1906,19 +1890,9 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    *  part_batch_selector: The "partial batch selector" used by the
       Aggregators to determine how to aggregate each report.  Its
-      contents depends on the indicated batch mode: for time-interval
-      mode, the config field is empty (Section 5.1); for leader-selected
-      tasks, the Leader specifies a "batch ID" that determines the batch
-      to which each report for this aggregation job belongs
-      (Section 5.2).
+      contents depends on the indicated batch mode.  See Section 5.
 
-      Documents that define batch modes MUST specify the content of this
-      field; see Section 10 for details.
-
-      The indicated batch mode MUST match the task's batch mode.
-      Otherwise, the Helper MUST abort with error invalidMessage.
-
-      This field is called the "partial" batch selector because,
+      This field is called the "partial" batch selector because
       depending on the batch mode, it may not determine a batch.  In
       particular, if the batch mode is time_interval, the batch is not
       determined until the Collector's query is issued (see Section 5).
@@ -1978,7 +1952,9 @@ aggregation job 1                   aggregation job 2          aggregation job j
        which case the Leader rejects the report and removes it from the
        candidate set; or state == Finished(out_share), in which case
        preparation is complete and the Leader updates the relevant batch
-       bucket with out_share as described in Section 4.6.2.3.
+       bucket with out_share as described in Section 4.6.2.3.  The
+       Leader stores the report ID corresponding to the out_share for
+       replay protection.
 
    2.  Else if the type is "reject", then the Leader rejects the report
        and removes it from the candidate set.  The Leader MUST NOT
@@ -1989,12 +1965,9 @@ aggregation job 1                   aggregation job 2          aggregation job j
    3.  Else the type is invalid, in which case the Leader MUST abort the
        aggregation job.
 
-   When the Leader updates a batch bucket based on out_share, it MUST
-   also store the report ID for replay protection.
-
-   (Note: Since VDAF preparation completes in a constant number of
-   rounds, it will never be the case that some reports are completed and
-   others are not.)
+   Since VDAF preparation completes in a constant number of rounds, it
+   will never be the case that some reports are completed and others are
+   not.
 
    If the Leader fails to process the response from the Helper, for
    example because of a transient failure such as a network connection
@@ -2014,6 +1987,10 @@ aggregation job 1                   aggregation job 2          aggregation job j
    Upon receipt of an AggregationJobInitReq, the Helper checks if it
    recognizes the task ID.  If not, then it MUST abort with error
    unrecognizedTask.
+
+   Next, it checks that the batch mode indicated by
+   part_batch_selector.batch_mode matches the task's batch mode.  If
+   not, the Helper MUST abort with error invalidMessage.
 
    Next, the Helper checks that the aggregation parameter is valid as
    described in Section 4.4.  If the aggregation parameter is invalid,
@@ -2136,7 +2113,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    If state == Finished(out_share), the Helper MUST resolve replay of
    the report.  It does so by checking if the report ID was previously
-   stored for this task.  If so, it responds with
+   aggregated for this task.  If so, it responds with
 
    variant {
      ReportID report_id;
@@ -2228,12 +2205,8 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
 4.6.1.4.  Input Share Validation
 
-   Validating an input share will either succeed or fail.  In the case
-   of failure, the input share is marked as invalid with a corresponding
-   report error.
-
    Before beginning the preparation step, Aggregators are required to
-   perform the following checks:
+   perform the following checks for each input share in the job:
 
    1.  Check that the input share can be decoded as specified by the
        VDAF.  If not, the input share MUST be marked as invalid with the
@@ -2243,10 +2216,9 @@ aggregation job 1                   aggregation job 2          aggregation job j
        Section 4.1.1.  If not, the Aggregator MUST mark the input share
        as invalid with error invalid_message.
 
-   3.  Check if the report's timestamp is too far in the future.  If the
-       report's timestamp is more than a few minutes ahead of the
-       current time, then the Aggregator SHOULD mark the input share as
-       invalid with error report_too_early.
+   3.  Check if the report's timestamp is more than a few minutes ahead
+       of the current time.  If so, then the Aggregator SHOULD mark the
+       input share as invalid with error report_too_early.
 
    4.  Check if the report's timestamp is before the task's
        task_interval.  If so, the Aggregator MUST mark the input share
@@ -2297,9 +2269,8 @@ aggregation job 1                   aggregation job 2          aggregation job j
    moves into a terminal state, yielding an output share for both
    Aggregators or a rejection.
 
-   Whether this phase is reached depends on the VDAF: for 1-round VDAFs,
-   like Prio3, processing has already completed.  Continuation is
-   required for VDAFs that require more than one round.
+   Continuation is only required for VDAFs that require more than one
+   round.  Single round VDAFs like Prio3 will never reach this phase.
 
 4.6.2.1.  Leader Continuation
 
@@ -2335,7 +2306,8 @@ aggregation job 1                   aggregation job 2          aggregation job j
    reached and wants the Helper to advance to.  The prepare_continues
    field is the sequence of preparation continuation messages
    constructed in the previous step.  The PrepareContinues MUST be in
-   the same order as the previous aggregate request.
+   the same order as the previous request to the aggregation job,
+   omitting any reports that were rejected.
 
    The Leader MUST authenticate its requests to the Helper using a
    scheme that meets the requirements in Section 3.2.
@@ -2422,21 +2394,23 @@ aggregation job 1                   aggregation job 2          aggregation job j
    If any of these checks fail, then the Helper MUST abort with error
    invalidMessage.  Additionally, if any prep step appears out of order
    relative to the previous request, then the Helper MAY abort with
-   error invalidMessage.  (Note that a report may be missing, in which
-   case the Helper should assume the Leader rejected it.)
+   error invalidMessage.  A report may be missing, in which case the
+   Helper should assume the Leader rejected it.
 
-   Next, the Helper checks if the continuation step indicated by the
-   request is correct.  (For the first AggregationJobContinueReq the
-   value should be 1; for the second the value should be 2; and so on.)
-   If the Leader is one step behind (e.g., the Leader has resent the
-   previous HTTP request), then the Helper MAY attempt to recover by
-   sending the same response as it did for the previous
+   Next, the Helper checks the continuation step indicated by the
+   request.  If the step value is one greater than the job's current
+   step, then the Helper proceeds.
+
+   If it is equal to the current step (e.g., the Leader has resent the
+   previous request), then the Helper MAY attempt to recover by sending
+   the same response as it did for the previous
    AggregationJobContinueReq, without performing any additional work on
    the aggregation job.  In this case it SHOULD verify that the contents
    of the AggregationJobContinueReq are identical to the previous
-   message (see Section 4.6.2.4).  Otherwise, if the step is incorrect
-   or if the Helper does not wish to attempt recovery, the Helper MUST
-   abort with error stepMismatch.
+   message (see Section 4.6.2.4).
+
+   If the Helper does not wish to attempt recovery, or if the step has
+   some other value, the Helper MUST abort with error stepMismatch.
 
    Let inbound denote the payload of the prep step.  For each report,
    the Helper computes the following:
@@ -2519,7 +2493,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
 4.6.2.3.  Batch Buckets
 
-   When aggregation recovers an output share, it must be stored into an
+   When aggregation refines an output share, it must be stored into an
    appropriate "batch bucket", which is defined in this section.  The
    data stored in a batch bucket is kept for eventual use in the
    Section 4.7.
@@ -2611,8 +2585,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    (Section 5), which the Aggregators use to select a batch of reports
    to aggregate.  Each Aggregator emits an aggregate share encrypted to
    the Collector so that it can decrypt and combine them to yield the
-   aggregate result.  This entire process is composed of two
-   interactions:
+   aggregate result.  This process is composed of two interactions:
 
    1.  Collect request and response between the Collector and Leader,
        specified in Section 4.7.1
@@ -2742,9 +2715,9 @@ aggregation job 1                   aggregation job 2          aggregation job j
    *  report_count: The number of reports included in the batch.
 
    *  interval: The smallest interval of time that contains the
-      timestamps of all reports included in the batch.  Note that in the
-      case of a time-interval query (Section 5.1), this interval can be
-      smaller than the one in the corresponding CollectionJobReq.query.
+      timestamps of all reports included in the batch.  In the case of a
+      time-interval query (Section 5.1), this interval can be smaller
+      than the one in the corresponding CollectionJobReq.query.
 
    *  leader_encrypted_agg_share: The Leader's aggregate share,
       encrypted to the Collector (see Section 4.7.4).
@@ -2825,7 +2798,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
       agg_shares) ((see [VDAF], Section 4.4)), where agg_param is the
       aggregation parameter provided in the CollectionJobReq, and
       agg_shares are the (partial) aggregate shares in the batch
-      buckets.  The result is the final aggregate share for this
+      buckets.  The result is the Leader aggregate share for this
       collection job.
 
    *  Report counts are combined via summing.
@@ -2848,7 +2821,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    } AggregateShareReq;
 
    The media type of the request is "application/dap-aggregate-share-
-   req".  The message contains the following parameters:
+   req".  The structure contains the following parameters:
 
    *  batch_selector: The "batch selector", the contents of which
       depends on the indicated batch mode: for time-interval mode, the
@@ -3125,8 +3098,8 @@ aggregation job 1                   aggregation job 2          aggregation job j
    bucket identifiers if the following conditions hold (likewise for the
    BatchSelector received by the Helper):
 
-   *  batch_interval.duration >= time_precision (this field determines,
-      effectively, the minimum batch duration)
+   *  batch_interval.duration >= time_precision (time_precision
+      determines the minimum batch duration)
 
    *  both batch_interval.start and batch_interval.duration are
       divisible by time_precision
@@ -3235,8 +3208,6 @@ aggregation job 1                   aggregation job 2          aggregation job j
    *  Publish and manage an HPKE configuration that can be used for the
       upload interaction.
 
-   In addition, for each DAP task, the Helper is required to:
-
    *  Implement some form of batch-to-report index, as well as inter-
       and intra-batch replay mitigation storage, which includes some way
       of tracking batch report size.  Some of this state may be used for
@@ -3250,8 +3221,6 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    *  Track batch report size during each collect flow and request
       encrypted output shares from Helpers.
-
-   In addition, for each DAP task, the Leader is required to:
 
    *  Implement and store state for the form of inter- and intra-batch
       replay mitigation in Figure 3.  This requires storing the report
