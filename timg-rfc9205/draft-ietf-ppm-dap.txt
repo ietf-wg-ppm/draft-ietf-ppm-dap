@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 30 September 2025                                    Cloudflare
+Expires: 3 October 2025                                       Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                           29 March 2025
+                                                            1 April 2025
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -64,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 30 September 2025.
+   This Internet-Draft will expire on 3 October 2025.
 
 Copyright Notice
 
@@ -1412,22 +1412,19 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    The Client MUST abort if:
 
-   *  the response is not a valid HPKE config list;
+   *  the response is not a valid HpkeConfigList;
 
-   *  the HPKE config list is empty; or
+   *  the HpkeConfigList is empty; or
 
    *  no HPKE config advertised by the Aggregator specifies a supported
       KEM, KDF and AEAD algorithm triple.
 
    Aggregators SHOULD use caching to permit client-side caching of this
-   resource [RFC9111].  Aggregators SHOULD favor long cache lifetimes to
-   avoid frequent cache revalidation, e.g., on the order of days.
-   Aggregators can control this cached lifetime with the Cache-Control
-   header.
-
-   Servers should choose a Cache-Control value appropriate to the
-   lifetime of their keys.  Clients SHOULD follow the usual caching
-   semantics [RFC9111] for HPKE configurations.
+   resource [RFC9111].  Aggregators can control cache lifetime with the
+   Cache-Control header, choosing a Cache-Control value appropriate to
+   the lifetime of their keys.  Aggregators SHOULD favor long cache
+   lifetimes to avoid frequent cache revalidation, e.g., on the order of
+   days.
 
    Long cache lifetimes may result in Clients using stale HPKE
    configurations.  Aggregators SHOULD continue to accept reports with
