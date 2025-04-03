@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 30 September 2025                                    Cloudflare
+Expires: 5 October 2025                                       Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                           29 March 2025
+                                                            3 April 2025
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -64,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 30 September 2025.
+   This Internet-Draft will expire on 5 October 2025.
 
 Copyright Notice
 
@@ -93,11 +93,12 @@ Table of Contents
      2.4.  Lifecycle of Protocol Objects
        2.4.1.  Arity of Protocol Objects
    3.  Message Transport
-     3.1.  Presentation Language
-       3.1.1.  Variable-Length Vectors
-       3.1.2.  Structure Variants
-     3.2.  HTTPS Request Authentication
-     3.3.  Errors
+     3.1.  HTTP Status Codes
+     3.2.  Presentation Language
+       3.2.1.  Variable-Length Vectors
+       3.2.2.  Structure Variants
+     3.3.  HTTPS Request Authentication
+     3.4.  Errors
    4.  Protocol Definition
      4.1.  Basic Type Definitions
        4.1.1.  Times, Durations and Intervals
@@ -909,25 +910,33 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
 3.  Message Transport
 
-   Communications between DAP participants are carried over HTTP
-   [RFC9110].  Use of HTTPS is REQUIRED to provide server authentication
-   and confidentiality.
+   Communications between participants are carried over HTTP [RFC9110].
+   Use of HTTPS is REQUIRED to provide server authentication and
+   confidentiality.  TLS certificates MUST be checked according to
+   [RFC9110], Section 4.3.4.
 
-3.1.  Presentation Language
+3.1.  HTTP Status Codes
+
+   HTTP servers participating in DAP MAY use any status code from the
+   applicable class when constructing HTTP responses, but HTTP clients
+   MAY treat any status code as the most general code of that class.
+   For example, 202 may be handled as 200, or 499 as 400.
+
+3.2.  Presentation Language
 
    With some exceptions, we use the presentation language defined in
    [RFC8446], Section 3 to define messages in the protocol.  Encoding
    and decoding of these messages as byte strings also follows
    [RFC8446].  We enumerate the exceptions below.
 
-3.1.1.  Variable-Length Vectors
+3.2.1.  Variable-Length Vectors
 
    Section 3.4 of [RFC8446] describes a syntax for variable-length
    vectors where a range of permitted lengths is provided.  This
    document always specifies the lower length limit of variable-length
    vectors to be 0.
 
-3.1.2.  Structure Variants
+3.2.2.  Structure Variants
 
    Section 3.7 of [RFC8446] defines a syntax for structure fields whose
    values are constants.  In this document, we do not use that notation,
@@ -993,7 +1002,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
      opaque another_field<0..256>;
    } FailedOperation;
 
-3.2.  HTTPS Request Authentication
+3.3.  HTTPS Request Authentication
 
    The protocol is made up of several interactions in which different
    subsets of participants interact with each other.
@@ -1024,19 +1033,16 @@ aggregation job 1                   aggregation job 2          aggregation job j
    what authentication mechanisms are supported by a participant is
    outside of this document's scope.
 
-3.3.  Errors
+3.4.  Errors
 
-   Errors can be reported in DAP both as HTTP status codes and as
-   problem detail objects [RFC9457] in the response body.  For example,
-   if the HTTP client sends a request using a method not allowed in this
-   document, then the server MAY return HTTP status 405 Method Not
-   Allowed.
+   Errors are reported as HTTP status codes.  Any of the standard client
+   or server errors (the 4xx or 5xx classes, respectively, from
+   Section 15 of [RFC9110]) are permitted.
 
    When the server responds with an error status code, it SHOULD provide
-   additional information using a problem detail object.  If the
-   response body does consist of a problem detail object, the HTTP
-   status code MUST indicate a client or server error (the 4xx or 5xx
-   classes, respectively, from Section 15 of [RFC9110]).
+   additional information using a problem detail object [RFC9457] in the
+   response body.  If the response body does consist of a problem detail
+   object, the status code MUST indicate a client or server error.
 
    To facilitate automatic response to errors, this document defines the
    following standard tokens for use in the "type" field:
@@ -1077,10 +1083,6 @@ aggregation job 1                   aggregation job 2          aggregation job j
     |                             | report shares that were          |
     |                             | aggregated in a batch.           |
     +-----------------------------+----------------------------------+
-    | unauthorizedRequest         | Authentication of an HTTP        |
-    |                             | request failed (see              |
-    |                             | Section 3.2).                    |
-    +-----------------------------+----------------------------------+
     | stepMismatch                | The Aggregators disagree on the  |
     |                             | current step of the DAP          |
     |                             | aggregation protocol.            |
@@ -1118,8 +1120,8 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    This document uses the verbs "abort" and "alert with [some error
    message]" to describe how protocol participants react to various
-   error conditions.  This implies HTTP status code 400 Bad Request
-   unless explicitly specified otherwise.
+   error conditions.  This implies that the response's status code will
+   indicate a client error unless specified otherwise.
 
 4.  Protocol Definition
 
@@ -1134,13 +1136,11 @@ aggregation job 1                   aggregation job 2          aggregation job j
    *  The Collector collects aggregated results from the Aggregators,
       specified in Section 4.7
 
-   Each of these interactions is defined in terms of "resources".  In
+   Each of these interactions is defined in terms of HTTP resources.  In
    this section we define these resources and the messages used to act
    on them.
 
 4.1.  Basic Type Definitions
-
-   The following are some basic type definitions used in other messages.
 
    A ReportID is used to uniquely identify a report in the context of a
    DAP task.
@@ -1323,15 +1323,14 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
 4.3.  Resource URLs
 
-   DAP is defined in terms of "resources", such as reports
+   DAP is defined in terms of HTTP resources, such as reports
    (Section 4.5), aggregation jobs (Section 4.6), and collection jobs
-   (Section 4.7).  Each resource has an associated URL.  Resource URLs
-   are specified by a sequence of string literals and variables.
-   Variables are expanded into strings according to the following rules:
+   (Section 4.7).  Each resource has a URL.  Resource URLs are specified
+   as string literals containing variables.  Variables are expanded into
+   strings according to the following rules:
 
    *  Variables {leader} and {helper} are replaced with the base API URL
-      of the Leader and Helper respectively (the base URLs are defined
-      in Section 4.2).
+      of the Leader and Helper respectively.
 
    *  Variables {task-id}, {aggregation-job-id}, and {collection-job-id}
       are replaced with the task ID (Section 4.2), aggregation job ID
@@ -1382,13 +1381,13 @@ aggregation job 1                   aggregation job 2          aggregation job j
    information on HPKE algorithm choices.
 
    Clients retrieve the HPKE configuration from each Aggregator by
-   sending an HTTP GET request to {aggregator}/hpke_config.
+   sending a GET to {aggregator}/hpke_config.
 
-   An Aggregator responds to well-formed requests with HTTP status code
-   200 OK and an HpkeConfigList value, with media type "application/dap-
-   hpke-config-list".  The HpkeConfigList structure contains one or more
-   HpkeConfig structures in decreasing order of preference.  This allows
-   an Aggregator to support multiple HPKE configurations simultaneously.
+   An Aggregator responds with an HpkeConfigList, with media type
+   "application/dap-hpke-config-list".  The HpkeConfigList contains one
+   or more HpkeConfigs in decreasing order of preference.  This allows
+   an Aggregator to support multiple HPKE configurations and multiple
+   sets of algorithms simultaneously.
 
    HpkeConfig HpkeConfigList<0..2^16-1>;
 
@@ -1401,45 +1400,65 @@ aggregation job 1                   aggregation job 2          aggregation job j
    } HpkeConfig;
 
    opaque HpkePublicKey<0..2^16-1>;
-   uint16 HpkeAeadId; /* Defined in [HPKE] */
-   uint16 HpkeKemId;  /* Defined in [HPKE] */
-   uint16 HpkeKdfId;  /* Defined in [HPKE] */
+   uint16 HpkeAeadId;
+   uint16 HpkeKemId;
+   uint16 HpkeKdfId;
+
+   The possible values for HpkeAeadId, HpkeKemId and HpkeKdfId are as
+   defined in [HPKE], Section 7.
 
    Aggregators MUST allocate distinct id values for each HpkeConfig in
    an HpkeConfigList.
 
-   The Client MUST abort if any of the following happen for any HPKE
-   config request:
+   The Client MUST abort if:
 
-   *  the GET request did not return a valid HPKE config list;
+   *  the response is not a valid HpkeConfigList;
 
-   *  the HPKE config list is empty; or
+   *  the HpkeConfigList is empty; or
 
    *  no HPKE config advertised by the Aggregator specifies a supported
-      a KEM, KDF, or AEAD algorithm triple.
+      KEM, KDF and AEAD algorithm triple.
 
-   Aggregators SHOULD use HTTP caching to permit client-side caching of
-   this resource [RFC5861].  Aggregators SHOULD favor long cache
-   lifetimes to avoid frequent cache revalidation, e.g., on the order of
-   days.  Aggregators can control this cached lifetime with the Cache-
-   Control header, as in this example:
+   Aggregators SHOULD use caching to permit client-side caching of this
+   resource [RFC9111].  Aggregators can control cache lifetime with the
+   Cache-Control header, using a value appropriate to the lifetime of
+   their keys.  Aggregators SHOULD favor long cache lifetimes to avoid
+   frequent cache revalidation, e.g., on the order of days.
 
-     Cache-Control: max-age=86400
+   Aggregators SHOULD continue to accept reports with old keys for at
+   least twice the cache lifetime in order to avoid rejecting reports.
 
-   Servers should choose a max-age value appropriate to the lifetime of
-   their keys.  Clients SHOULD follow the usual HTTP caching [RFC9111]
-   semantics for HPKE configurations.
+4.5.1.1.  Example
 
-   Note: Long cache lifetimes may result in Clients using stale HPKE
-   configurations; Aggregators SHOULD continue to accept reports with
-   old keys for at least twice the cache lifetime in order to avoid
-   rejecting reports.
+   GET /leader/hpke_config
+   Host: example.com
+
+   HTTP/1.1 200
+   Content-Type: application/dap-hpke-config-list
+   Cache-Control: max-age=86400
+
+   encoded([
+     struct {
+       id = 194,
+       kem_id = 0x0010,
+       kdf_id = 0x0001,
+       aead_id = 0x0001,
+       public_key = [0x01, 0x02, 0x03, 0x04, ...],
+     } HpkeConfig,
+     struct {
+       id = 17,
+       kem_id = 0x0020,
+       kdf_id = 0x0001,
+       aead_id = 0x0003,
+       public_key = [0x04, 0x03, 0x02, 0x01, ...],
+     } HpkeConfig,
+   ])
 
 4.5.2.  Upload Request
 
-   Clients upload reports by using an HTTP POST to {leader}/tasks/{task-
-   id}/reports.  The payload is a Report, with media type "application/
-   dap-report", structured as follows:
+   Clients upload reports by sending a POST to {leader}/tasks/{task-
+   id}/reports.  The body is a Report, with media type "application/dap-
+   report", structured as follows:
 
    struct {
      ReportID report_id;
@@ -1478,7 +1497,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    Aggregators MAY require Clients to authenticate when uploading
    reports (see Section 8.3).  If it is used, client authentication MUST
-   use a scheme that meets the requirements in Section 3.2.
+   use a scheme that meets the requirements in Section 3.3.
 
    The handling of the upload request by the Leader MUST be idempotent
    as discussed in Section 9.2.2 of [RFC9110].
@@ -1503,7 +1522,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
       the nonce.
 
    *  rand is a random byte string of length specified by the VDAF.
-      Each report's rand value MUST be independently sampled from a
+      Each report's rand MUST be independently sampled from a
       cryptographically secure random number generator.
 
    The sharding algorithm will return two input shares.  The first is
@@ -1548,22 +1567,17 @@ aggregation job 1                   aggregation job 2          aggregation job j
      opaque public_share<0..2^32-1>;
    } InputShareAad;
 
-   The Leader responds to well-formed requests with HTTP status code 201
-   Created.  Malformed requests are handled as described in Section 3.3.
-   Clients SHOULD NOT upload the same measurement value in more than one
-   report if the Leader responds with HTTP status code 201 Created.
+   If the upload request is malformed, the Leader aborts with error
+   invalidMessage.
 
-   If the Leader does not recognize the task ID, then it MUST abort with
-   error unrecognizedTask.  Note that indicating an unrecognized task
-   might indicate that the Client is misconfigured or the task has
-   expired.
+   If the Leader does not recognize the task ID, then it aborts with
+   error unrecognizedTask.
 
-   The Leader responds to requests whose Leader encrypted input share
-   uses an out-of-date or unknown HpkeConfig.id value, indicated by
-   HpkeCiphertext.config_id, with error of type 'outdatedConfig'.  When
-   the Client receives an 'outdatedConfig' error, it SHOULD invalidate
-   any cached HpkeConfigList and retry with a freshly generated Report.
-   If this retried upload does not succeed, the Client SHOULD abort and
+   If the Leader does not recognize the config_id in the encrypted input
+   share, it aborts with an error of type outdatedConfig.  When the
+   Client receives an outdatedConfig error, it SHOULD invalidate any
+   cached HpkeConfigList and retry with a freshly generated Report.  If
+   this retried upload does not succeed, the Client SHOULD abort and
    discontinue retrying.
 
    If a report's ID matches that of a previously uploaded report, the
@@ -1604,14 +1618,42 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    If the same extension type appears more than once among the public
    extensions and the private extensions in the Leader's input share,
-   then the Leader MAY abort the upload request with error
-   "invalidMessage".
+   then the Leader MUST ignore the report and MAY abort with error
+   invalidMessage.
 
-   (Note that validation of extensions is not mandatory here because it
-   requires the Leader to decrypt its input share.  The Leader also
-   cannot validate the Helper's extensions because it cannot decrypt the
-   Helper's input share.  Mandatory validation of extensions will occur
-   during aggregation.)
+   Validation of anti-replay and extensions is not mandatory during the
+   handling of upload requests to avoid blocking on storage transactions
+   or decryption of input shares.  The Leader also cannot validate the
+   Helper's extensions because it cannot decrypt the Helper's input
+   share.  Validation of report IDs and extensions will occur before
+   aggregation.
+
+4.5.2.1.  Example
+
+   POST /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/reports
+   Host: example.com
+   Content-Type: application/dap-report
+
+   encoded(struct {
+     report_metadata = struct {
+       report_id = [0x0a, 0x0b, 0x0c, 0x0d, ...],
+       time = 1741986088,
+       public_extensions = [0x00, 0x00],
+     } ReportMetadata,
+     public_share = [0x0a, 0x0b, ...],
+     leader_encrypted_input-share = struct {
+       config_id = 1,
+       enc = [0x0f, 0x0e, 0x0d, 0x0c, ...],
+       payload = [0x0b, 0x0a, 0x09, 0x08, ...],
+     } HpkeCiphertext,
+     helper_encrypted_input-share = struct {
+       config_id = 2,
+       enc = [0x0c, 0x0d, 0x0e, 0x0f, ...],
+       payload = [0x08, 0x00, 0x0a, 0x0b, ...],
+     } HpkeCiphertext,
+   } Report)
+
+   HTTP/1.1 200
 
 4.5.3.  Report Extensions
 
@@ -1906,7 +1948,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    containing the AggregationJobInitReq.
 
    The Leader MUST authenticate its requests to the Helper using a
-   scheme that meets the requirements in Section 3.2.
+   scheme that meets the requirements in Section 3.3.
 
    The Helper responds with HTTP status 201 Created with a body
    containing an AggregationJobResp (see Section 4.6.1.2).  If the
@@ -2310,7 +2352,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    omitting any reports that were rejected.
 
    The Leader MUST authenticate its requests to the Helper using a
-   scheme that meets the requirements in Section 3.2.
+   scheme that meets the requirements in Section 3.3.
 
    The Helper responds with HTTP status 202 Accepted with a body
    containing an AggregationJobResp (see Section 4.6.1.2).  If the
@@ -2643,7 +2685,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
       defined in Section 4.4.
 
    Collectors MUST authenticate their requests to Leaders using a scheme
-   that meets the requirements in Section 3.2.
+   that meets the requirements in Section 3.3.
 
    Depending on the VDAF scheme and how the Leader is configured, the
    Leader and Helper may already have prepared a sufficient number of
@@ -2764,7 +2806,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    If obtaining aggregate shares fails, then the Leader responds to
    subsequent HTTP GET requests to the collection job with an HTTP error
-   status and a problem document as described in Section 3.3.
+   status and a problem document as described in Section 3.4.
 
    The Leader MAY respond with HTTP status 204 No Content to requests to
    a collection job if the results have been deleted.
@@ -2847,7 +2889,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    *  checksum: The batch checksum, as computed above.
 
    Leaders MUST authenticate their requests to Helpers using a scheme
-   that meets the requirements in Section 3.2.
+   that meets the requirements in Section 3.3.
 
    To handle the Leader's request, the Helper first ensures that it
    recognizes the task ID in the request path.  If not, it MUST abort
@@ -4314,10 +4356,6 @@ aggregation job 1                   aggregation job 2          aggregation job j
    [RFC4648]  Josefsson, S., "The Base16, Base32, and Base64 Data
               Encodings", RFC 4648, DOI 10.17487/RFC4648, October 2006,
               <https://www.rfc-editor.org/rfc/rfc4648>.
-
-   [RFC5861]  Nottingham, M., "HTTP Cache-Control Extensions for Stale
-              Content", RFC 5861, DOI 10.17487/RFC5861, May 2010,
-              <https://www.rfc-editor.org/rfc/rfc5861>.
 
    [RFC7807]  Nottingham, M. and E. Wilde, "Problem Details for HTTP
               APIs", RFC 7807, DOI 10.17487/RFC7807, March 2016,
