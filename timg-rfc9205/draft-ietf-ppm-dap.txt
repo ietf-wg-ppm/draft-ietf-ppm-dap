@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 3 October 2025                                       Cloudflare
+Expires: 5 October 2025                                       Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                            1 April 2025
+                                                            3 April 2025
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -64,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 3 October 2025.
+   This Internet-Draft will expire on 5 October 2025.
 
 Copyright Notice
 
@@ -1421,15 +1421,12 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    Aggregators SHOULD use caching to permit client-side caching of this
    resource [RFC9111].  Aggregators can control cache lifetime with the
-   Cache-Control header, choosing a Cache-Control value appropriate to
-   the lifetime of their keys.  Aggregators SHOULD favor long cache
-   lifetimes to avoid frequent cache revalidation, e.g., on the order of
-   days.
+   Cache-Control header, using a value appropriate to the lifetime of
+   their keys.  Aggregators SHOULD favor long cache lifetimes to avoid
+   frequent cache revalidation, e.g., on the order of days.
 
-   Long cache lifetimes may result in Clients using stale HPKE
-   configurations.  Aggregators SHOULD continue to accept reports with
-   old keys for at least twice the cache lifetime in order to avoid
-   rejecting reports.
+   Aggregators SHOULD continue to accept reports with old keys for at
+   least twice the cache lifetime in order to avoid rejecting reports.
 
 4.5.1.1.  Example
 
