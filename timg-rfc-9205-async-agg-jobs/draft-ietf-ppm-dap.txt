@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 21 September 2025                                    Cloudflare
+Expires: 5 October 2025                                       Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                           20 March 2025
+                                                            3 April 2025
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -64,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 21 September 2025.
+   This Internet-Draft will expire on 5 October 2025.
 
 Copyright Notice
 
@@ -567,6 +567,9 @@ Table of Contents
       summand, or string), before any encryption or secret sharing is
       applied.  Depending on the VDAF in use, multiple values may be
       grouped into a single measurement.  As defined in [VDAF].
+
+   Minimum batch size:  The minimum number of reports that must be
+      aggregated before a batch can be collected.
 
    Public share:  An output of the VDAF sharding algorithm transmitted
       to each of the Aggregators.  As defined in [VDAF].
@@ -1410,27 +1413,21 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    The Client MUST abort if:
 
-   *  the response is not a valid HPKE config list;
+   *  the response is not a valid HpkeConfigList;
 
-   *  the HPKE config list is empty; or
+   *  the HpkeConfigList is empty; or
 
    *  no HPKE config advertised by the Aggregator specifies a supported
       KEM, KDF and AEAD algorithm triple.
 
    Aggregators SHOULD use caching to permit client-side caching of this
-   resource [RFC9111].  Aggregators SHOULD favor long cache lifetimes to
-   avoid frequent cache revalidation, e.g., on the order of days.
-   Aggregators can control this cached lifetime with the Cache-Control
-   header.
+   resource [RFC9111].  Aggregators can control cache lifetime with the
+   Cache-Control header, using a value appropriate to the lifetime of
+   their keys.  Aggregators SHOULD favor long cache lifetimes to avoid
+   frequent cache revalidation, e.g., on the order of days.
 
-   Servers should choose a Cache-Control value appropriate to the
-   lifetime of their keys.  Clients SHOULD follow the usual caching
-   semantics [RFC9111] for HPKE configurations.
-
-   Long cache lifetimes may result in Clients using stale HPKE
-   configurations.  Aggregators SHOULD continue to accept reports with
-   old keys for at least twice the cache lifetime in order to avoid
-   rejecting reports.
+   Aggregators SHOULD continue to accept reports with old keys for at
+   least twice the cache lifetime in order to avoid rejecting reports.
 
 4.5.1.1.  Example
 
@@ -1529,8 +1526,8 @@ aggregation job 1                   aggregation job 2          aggregation job j
       Each report's rand MUST be independently sampled from a
       cryptographically secure random number generator.
 
-   The sharding algorithm will return two input shares.  The is the
-   Leader's input share, and the second is the Helper's.
+   The sharding algorithm will return two input shares.  The first is
+   the Leader's input share, and the second is the Helper's.
 
    The Client then wraps each input share in the following structure:
 
@@ -1682,6 +1679,9 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    Field extension_type indicates the type of extension, and
    extension_data contains the opaque encoding of the extension.
+
+   Extensions are mandatory to implement.  Unrecognized extensions are
+   handled as specified in Section 4.6.1.4.
 
 4.6.  Verifying and Aggregating Reports
 
@@ -1879,7 +1879,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    struct {
      ReportShare report_share;
-     opaque outbound<0..2^32-1>;
+     opaque payload<0..2^32-1>;
    } PrepareInit;
 
    Each of these messages is constructed as follows:
@@ -1891,7 +1891,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    *  report_share.encrypted_input_share is the Helper's encrypted input
       share.
 
-   *  outbound is set to the outbound message computed by the previous
+   *  payload is set to the outbound message computed by the previous
       step.
 
    It is not possible for state to be of type Finished during Leader
@@ -1974,14 +1974,17 @@ aggregation job 1                   aggregation job 2          aggregation job j
        and proceeds to Section 4.6.2.1.  If outbound == None, then the
        preparation process is complete: either state == Rejected(), in
        which case the Leader rejects the report and removes it from the
-       candidate set or state == Finished(out_share), in which case
+       candidate set; or state == Finished(out_share), in which case
        preparation is complete and the Leader updates the relevant batch
-       bucket with out_share as described in Section 4.6.2.3.
+       bucket with out_share as described in Section 4.6.2.3.  The
+       Leader stores the report ID corresponding to the out_share for
+       replay protection.
 
    2.  Else if the type is "reject", then the Leader rejects the report
        and removes it from the candidate set.  The Leader MUST NOT
        include the report in a subsequent aggregation job, unless the
-       error is report_too_early.
+       error is report_too_early, in which case the Leader MAY include
+       the report in a subsequent aggregation job.
 
    3.  Else the type is invalid, in which case the Leader MUST abort the
        aggregation job.
@@ -2138,8 +2141,9 @@ aggregation job 1                   aggregation job 2          aggregation job j
      Reporterror report_error = report_replayed;
    } PrepareResp;
 
-   Otherwise it updates the relevant batch bucket with out_share as
-   described in Section 4.6.2.3.
+   Otherwise it stores the report ID for replay protection and updates
+   the relevant batch bucket with out_share as described in
+   Section 4.6.2.3.
 
    Finally, the Helper creates an AggregationJobResp to send to the
    Leader.  This message is structured as follows:
@@ -2918,7 +2922,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
       agg_shares) ((see [VDAF], Section 4.4)), where agg_param is the
       aggregation parameter provided in the CollectionJobReq, and
       agg_shares are the (partial) aggregate shares in the batch
-      buckets.  The result is the leader aggregate share for this
+      buckets.  The result is the Leader aggregate share for this
       collection job.
 
    *  Report counts are combined via summing.
