@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 5 October 2025                                       Cloudflare
+Expires: 9 October 2025                                       Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                            3 April 2025
+                                                            7 April 2025
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -64,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 5 October 2025.
+   This Internet-Draft will expire on 9 October 2025.
 
 Copyright Notice
 
@@ -1760,7 +1760,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
       |   prep_continue                                     |
       |---------------------------------------------------->|
       |                                 AggregationJobResp: |
-      |                               prep_resp(finished)   |
+      |                      prep_resp(continue|finished)   |
       |<----------------------------------------------------|
       |                                                     |
       v                                                     v
@@ -1815,9 +1815,9 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    Aggregation initialization accomplishes two tasks:
 
-   1.  Determine which input shares are valid.
+   1.  Determine which report shares are valid.
 
-   2.  For each valid input share, initialize VDAF preparation (see
+   2.  For each valid report share, initialize VDAF preparation (see
        Section 5.2 of [VDAF]).
 
    The Leader and Helper initialization behavior is detailed below.
@@ -1900,6 +1900,8 @@ aggregation job 1                   aggregation job 2          aggregation job j
    Once all the report shares have been initialized, the Leader creates
    an AggregationJobInitReq message.
 
+   opaque BatchID[32];
+
    struct {
      BatchMode batch_mode;
      opaque config<0..2^16-1>;
@@ -1921,7 +1923,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
       Aggregators to determine how to aggregate each report.  Its
       contents depends on the indicated batch mode.  This field is
       called the "partial" batch selector because depending on the batch
-      mode, it may not determine a batch.  See Section 5.
+      mode, it may only partially determine a batch.  See Section 5.
 
    *  prepare_inits: the sequence of PrepareInit messages constructed in
       the previous step.
@@ -2179,8 +2181,8 @@ aggregation job 1                   aggregation job 2          aggregation job j
    AggregationJobInitReq in the body, the Helper SHOULD respond as it
    did for the original AggregationJobInitReq.
 
-   It is not possible to rewind or reset the state of an aggregation
-   job.  Once an aggregation job has been continued at least once (see
+   It is illegal to rewind or reset the state of an aggregation job.
+   Once an aggregation job has been continued at least once (see
    Section 4.6.2), further requests to initialize that aggregation job
    MUST fail.
 
@@ -2211,9 +2213,10 @@ aggregation job 1                   aggregation job 2          aggregation job j
    The OpenBase() function is as specified in [HPKE], Section 6.1 for
    the ciphersuite indicated by the HPKE configuration.
 
-   If decryption fails, the Aggregator marks the report share as invalid
-   with the error hpke_decrypt_error.  Otherwise, the Aggregator outputs
-   the resulting PlaintextInputShare plaintext_input_share.
+   If the HPKE configuration ID is unrecognized or decryption fails, the
+   Aggregator marks the report share as invalid with the error
+   hpke_decrypt_error.  Otherwise, the Aggregator outputs the resulting
+   PlaintextInputShare plaintext_input_share.
 
 4.6.1.4.  Input Share Validation
 
