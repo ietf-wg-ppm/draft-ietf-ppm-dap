@@ -3972,8 +3972,6 @@ initialization.<a href="#section-4.6.1.1-13" class="pilcrow">¶</a></p>
 <code>AggregationJobInitReq</code> message.<a href="#section-4.6.1.1-14" class="pilcrow">¶</a></p>
 <div class="lang-tls-presentation sourcecode" id="section-4.6.1.1-15">
 <pre>
-opaque BatchID[32];
-
 struct {
   BatchMode batch_mode;
   opaque config&lt;0..2^16-1&gt;;
@@ -4254,8 +4252,8 @@ response body and sets a Location header field set to the relative reference
 <code>/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}?step=0</code>. The response
 <span class="bcp14">SHOULD</span> include a Retry-After header field to suggest a polling interval to the
 Leader. The Leader then polls the state of the job by sending GET requests to the
-resolved URL. The Helper responds the same way until the job is ready, at which
-point it responds with the encoded <code>AggregationJobResp</code>.<a href="#section-4.6.1.2-27" class="pilcrow">¶</a></p>
+resolved URL. The Helper responds the same way until the job is ready, from
+which point it responds with the encoded <code>AggregationJobResp</code>.<a href="#section-4.6.1.2-27" class="pilcrow">¶</a></p>
 <p id="section-4.6.1.2-28">The Helper <span class="bcp14">MAY</span> also wait to respond to the Leader's PUT until the aggregation
 job initialization is ready. In this case, it responds with the encoded
 <code>AggregationJobResp</code>.<a href="#section-4.6.1.2-28" class="pilcrow">¶</a></p>
@@ -4668,8 +4666,8 @@ response body and sets the Location header field to the relative reference
 <code>step</code> is set to <code>AggregationJobContinueReq.step</code>. The response <span class="bcp14">SHOULD</span> include a
 Retry-After header field to suggest a polling interval to the Leader. The Leader
 then polls the state of the job by sending GET requests to the resolved URL. The
-Helper responds the same way until the job is ready, at which point it responds
-with the encoded <code>AggregationJobResp</code>.<a href="#section-4.6.2.2-23" class="pilcrow">¶</a></p>
+Helper responds the same way until the job is ready, from which point it
+responds with the encoded <code>AggregationJobResp</code>.<a href="#section-4.6.2.2-23" class="pilcrow">¶</a></p>
 <p id="section-4.6.2.2-24">The Helper <span class="bcp14">MAY</span> also wait to respond to the Leader's POST until the aggregation
 job continuation is ready. In this case, it responds with the encoded
 <code>AggregationJobResp</code>.<a href="#section-4.6.2.2-24" class="pilcrow">¶</a></p>
@@ -4956,14 +4954,15 @@ collection job by applying the requirements in <a href="#batch-validation" class
 the Leader obtains the Helper's aggregate share following the aggregate-share
 request flow described in <a href="#collect-aggregate" class="auto internal xref">Section 4.7.3</a>. If not, it either aborts the
 collection job or tries again later, depending on which requirement in
-<a href="#batch-validation" class="auto internal xref">Section 4.7.7</a> was not met. If the Leader has a pending aggregation job
-that overlaps with the batch and aggregation parameter for the collection job,
-the Leader <span class="bcp14">MUST</span> first complete the aggregation job before proceeding and
-requesting an aggregate share from the Helper. This avoids a race condition
-between aggregation and collection jobs that can yield batch mismatch errors.<a href="#section-4.7.1-13" class="pilcrow">¶</a></p>
-<p id="section-4.7.1-14">A collection job's results are represented by a <code>Collection</code>, which is
-structured as follows:<a href="#section-4.7.1-14" class="pilcrow">¶</a></p>
-<div class="lang-tls-presentation sourcecode" id="section-4.7.1-15">
+<a href="#batch-validation" class="auto internal xref">Section 4.7.7</a> was not met.<a href="#section-4.7.1-13" class="pilcrow">¶</a></p>
+<p id="section-4.7.1-14">If the Leader has a pending aggregation job that overlaps with the batch and
+aggregation parameter for the collection job, the Leader <span class="bcp14">MUST</span> first complete the
+aggregation job before proceeding and requesting an aggregate share from the
+Helper. This avoids a race condition between aggregation and collection jobs
+that can yield batch mismatch errors.<a href="#section-4.7.1-14" class="pilcrow">¶</a></p>
+<p id="section-4.7.1-15">A collection job's results are represented by a <code>Collection</code>, which is
+structured as follows:<a href="#section-4.7.1-15" class="pilcrow">¶</a></p>
+<div class="lang-tls-presentation sourcecode" id="section-4.7.1-16">
 <pre>
 struct {
   PartialBatchSelector part_batch_selector;
@@ -4972,50 +4971,50 @@ struct {
   HpkeCiphertext leader_encrypted_agg_share;
   HpkeCiphertext helper_encrypted_agg_share;
 } Collection;
-</pre><a href="#section-4.7.1-15" class="pilcrow">¶</a>
+</pre><a href="#section-4.7.1-16" class="pilcrow">¶</a>
 </div>
-<p id="section-4.7.1-16">A <code>Collection</code>'s media type is "application/dap-collection". The structure
-includes the following:<a href="#section-4.7.1-16" class="pilcrow">¶</a></p>
+<p id="section-4.7.1-17">A <code>Collection</code>'s media type is "application/dap-collection". The structure
+includes the following:<a href="#section-4.7.1-17" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-4.7.1-17.1">
-              <p id="section-4.7.1-17.1.1"><code>part_batch_selector</code>: Information used to bind the aggregate result to the
+<li class="normal" id="section-4.7.1-18.1">
+              <p id="section-4.7.1-18.1.1"><code>part_batch_selector</code>: Information used to bind the aggregate result to the
 query. For leader-selected tasks, this includes the batch ID assigned to the
 batch by the Leader. The indicated batch mode <span class="bcp14">MUST</span> match the task's batch
-mode.<a href="#section-4.7.1-17.1.1" class="pilcrow">¶</a></p>
+mode.<a href="#section-4.7.1-18.1.1" class="pilcrow">¶</a></p>
 </li>
-            <li class="normal" id="section-4.7.1-17.2">
-              <p id="section-4.7.1-17.2.1"><code>report_count</code>: The number of reports included in the batch.<a href="#section-4.7.1-17.2.1" class="pilcrow">¶</a></p>
+            <li class="normal" id="section-4.7.1-18.2">
+              <p id="section-4.7.1-18.2.1"><code>report_count</code>: The number of reports included in the batch.<a href="#section-4.7.1-18.2.1" class="pilcrow">¶</a></p>
 </li>
-            <li class="normal" id="section-4.7.1-17.3">
-              <p id="section-4.7.1-17.3.1"><code>interval</code>: The smallest interval of time that contains the timestamps of all
+            <li class="normal" id="section-4.7.1-18.3">
+              <p id="section-4.7.1-18.3.1"><code>interval</code>: The smallest interval of time that contains the timestamps of all
 reports included in the batch. In the case of a time-interval query
 (<a href="#time-interval-batch-mode" class="auto internal xref">Section 5.1</a>), this interval can be smaller than the one in
-the corresponding <code>CollectionJobReq.query</code>.<a href="#section-4.7.1-17.3.1" class="pilcrow">¶</a></p>
+the corresponding <code>CollectionJobReq.query</code>.<a href="#section-4.7.1-18.3.1" class="pilcrow">¶</a></p>
 </li>
-            <li class="normal" id="section-4.7.1-17.4">
-              <p id="section-4.7.1-17.4.1"><code>leader_encrypted_agg_share</code>: The Leader's aggregate share, encrypted to the
-Collector (see <a href="#aggregate-share-encrypt" class="auto internal xref">Section 4.7.6</a>).<a href="#section-4.7.1-17.4.1" class="pilcrow">¶</a></p>
+            <li class="normal" id="section-4.7.1-18.4">
+              <p id="section-4.7.1-18.4.1"><code>leader_encrypted_agg_share</code>: The Leader's aggregate share, encrypted to the
+Collector (see <a href="#aggregate-share-encrypt" class="auto internal xref">Section 4.7.6</a>).<a href="#section-4.7.1-18.4.1" class="pilcrow">¶</a></p>
 </li>
-            <li class="normal" id="section-4.7.1-17.5">
-              <p id="section-4.7.1-17.5.1"><code>helper_encrypted_agg_share</code>: The Helper's aggregate share, encrypted to the
-Collector (see <a href="#aggregate-share-encrypt" class="auto internal xref">Section 4.7.6</a>).<a href="#section-4.7.1-17.5.1" class="pilcrow">¶</a></p>
+            <li class="normal" id="section-4.7.1-18.5">
+              <p id="section-4.7.1-18.5.1"><code>helper_encrypted_agg_share</code>: The Helper's aggregate share, encrypted to the
+Collector (see <a href="#aggregate-share-encrypt" class="auto internal xref">Section 4.7.6</a>).<a href="#section-4.7.1-18.5.1" class="pilcrow">¶</a></p>
 </li>
           </ul>
-<p id="section-4.7.1-18">The Leader <span class="bcp14">MAY</span> defer handling the collection request. In this case, it indicates
+<p id="section-4.7.1-19">The Leader <span class="bcp14">MAY</span> defer handling the collection request. In this case, it indicates
 that the response is not yet ready by immediately sending an empty response
 body. The Leader <span class="bcp14">SHOULD</span> include a Retry-After header field to suggest a polling
 interval to the Collector. The Collector then polls the state of the job by
 sending GET requests to the collection job. The Leader responds the same way
-until the job is ready, at which point it responds with the encoded
+until the job is ready, from which point it responds with the encoded
 <code>Collection</code>. The Collector <span class="bcp14">SHOULD</span> use each response's Retry-After header field
-to decide when to try again.<a href="#section-4.7.1-18" class="pilcrow">¶</a></p>
-<p id="section-4.7.1-19">The Leader <span class="bcp14">MAY</span> also block responding to the Collector's PUT until the collection
-job is ready. In this case, it responds with the <code>Collection</code>.<a href="#section-4.7.1-19" class="pilcrow">¶</a></p>
-<p id="section-4.7.1-20">Once the <code>Leader</code> has delivered a <code>Collection</code> to the Collector, the Leader
+to decide when to try again.<a href="#section-4.7.1-19" class="pilcrow">¶</a></p>
+<p id="section-4.7.1-20">The Leader <span class="bcp14">MAY</span> also wait to respond to the Collector's PUT until the collection
+job is ready. In this case, it responds with the <code>Collection</code>.<a href="#section-4.7.1-20" class="pilcrow">¶</a></p>
+<p id="section-4.7.1-21">Once the <code>Leader</code> has delivered a <code>Collection</code> to the Collector, the Leader
 considers the batch to be collected, and further aggregation jobs <span class="bcp14">MAY</span> NOT add
-reports to the batch (see <a href="#input-share-validation" class="auto internal xref">Section 4.6.1.4</a>).<a href="#section-4.7.1-20" class="pilcrow">¶</a></p>
-<p id="section-4.7.1-21">If obtaining aggregate shares fails, then the Leader responds to subsequent GET
-requests to the collection job with an error status code.<a href="#section-4.7.1-21" class="pilcrow">¶</a></p>
+reports to the batch (see <a href="#input-share-validation" class="auto internal xref">Section 4.6.1.4</a>).<a href="#section-4.7.1-21" class="pilcrow">¶</a></p>
+<p id="section-4.7.1-22">If obtaining aggregate shares fails, then the Leader responds to subsequent GET
+requests to the collection job with an error status code.<a href="#section-4.7.1-22" class="pilcrow">¶</a></p>
 <div id="example-5">
 <section id="section-4.7.1.1">
             <h5 id="name-example-6">
@@ -5266,7 +5265,7 @@ indicates that the response is not yet ready by immediately sending an empty
 response body. The Helper <span class="bcp14">SHOULD</span> include a Retry-After header field to suggest
 a polling interval to the Leader. The Leader then polls the state of the job by
 sending GET requests to the aggregate share. The Helper responds the same way
-until the job is ready, at which point it responds with the encoded
+until the job is ready, from which point it responds with the encoded
 <code>AggregateShare</code>. The Leader <span class="bcp14">SHOULD</span> use each response's Retry-After header field
 to decide when to try again.<a href="#section-4.7.3-23" class="pilcrow">¶</a></p>
 <p id="section-4.7.3-24">The Helper <span class="bcp14">MAY</span> also block responding to the Leader's PUT until the aggregate
@@ -5404,9 +5403,10 @@ the aggregate shares and produce an aggregate result. The Collector decrypts
 each aggregate share as described in <a href="#aggregate-share-encrypt" class="auto internal xref">Section 4.7.6</a>. Once the
 Collector successfully decrypts all aggregate shares, it unshards the aggregate
 shares into an aggregate result using the VDAF's <code>unshard</code> algorithm.<a href="#section-4.7.5-1" class="pilcrow">¶</a></p>
-<p id="section-4.7.5-2">Let <code>leader_agg_share</code> denote the Leader's aggregate share, <code>helper_agg_share</code> denote the Helper's aggregate share, <code>report_count</code> denote the report count sent by the Leader, and
-<code>agg_param</code> denote the opaque aggregation parameter. The final aggregate result
-is computed as follows:<a href="#section-4.7.5-2" class="pilcrow">¶</a></p>
+<p id="section-4.7.5-2">Let <code>leader_agg_share</code> denote the Leader's aggregate share, <code>helper_agg_share</code>
+denote the Helper's aggregate share, <code>report_count</code> denote the report count sent
+by the Leader, and <code>agg_param</code> denote the opaque aggregation parameter. The
+final aggregate result is computed as follows:<a href="#section-4.7.5-2" class="pilcrow">¶</a></p>
 <div class="lang-pseudocode sourcecode" id="section-4.7.5-3">
 <pre>
 agg_result = Vdaf.unshard(agg_param,
@@ -5531,9 +5531,9 @@ Leader and the <code>AggregateShareReq</code> for the Helper) identifies a valid
 batch buckets (<a href="#batch-buckets" class="auto internal xref">Section 4.6.2.3</a>). If not, it <span class="bcp14">MUST</span> abort the request with
 <code>batchInvalid</code>.<a href="#section-4.7.7-2" class="pilcrow">¶</a></p>
 <p id="section-4.7.7-3">Next, the Aggregator checks that the number of reports in the batch is equal to
-or greater than the task's minimum batch size. If not, then Helpers <span class="bcp14">MUST</span> abort
-with error <code>invalidBatchSize</code>. Leaders <span class="bcp14">SHOULD</span> wait for more reports to be
-validated and try the collection job again later.<a href="#section-4.7.7-3" class="pilcrow">¶</a></p>
+or greater than the task's minimum batch size. If not, then the Helper <span class="bcp14">MUST</span>
+abort with error <code>invalidBatchSize</code>. The Leader <span class="bcp14">SHOULD</span> wait for more reports to
+be validated and try the collection job again later.<a href="#section-4.7.7-3" class="pilcrow">¶</a></p>
 <p id="section-4.7.7-4">Next, the Aggregator checks if any of the batch buckets identified by the
 request have already been collected. If so, it <span class="bcp14">MUST</span> abort with "batchOverlap".<a href="#section-4.7.7-4" class="pilcrow">¶</a></p>
 <p id="section-4.7.7-5">Finally, the batch mode may define additional batch validation rules.<a href="#section-4.7.7-5" class="pilcrow">¶</a></p>

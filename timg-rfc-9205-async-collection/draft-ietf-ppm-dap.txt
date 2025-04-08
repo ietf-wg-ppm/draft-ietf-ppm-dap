@@ -1903,8 +1903,6 @@ aggregation job 1                   aggregation job 2          aggregation job j
    Once all the report shares have been initialized, the Leader creates
    an AggregationJobInitReq message.
 
-   opaque BatchID[32];
-
    struct {
      BatchMode batch_mode;
      opaque config<0..2^16-1>;
@@ -2170,8 +2168,8 @@ aggregation job 1                   aggregation job 2          aggregation job j
    SHOULD include a Retry-After header field to suggest a polling
    interval to the Leader.  The Leader then polls the state of the job
    by sending GET requests to the resolved URL.  The Helper responds the
-   same way until the job is ready, at which point it responds with the
-   encoded AggregationJobResp.
+   same way until the job is ready, from which point it responds with
+   the encoded AggregationJobResp.
 
    The Helper MAY also wait to respond to the Leader's PUT until the
    aggregation job initialization is ready.  In this case, it responds
@@ -2551,7 +2549,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    Retry-After header field to suggest a polling interval to the Leader.
    The Leader then polls the state of the job by sending GET requests to
    the resolved URL.  The Helper responds the same way until the job is
-   ready, at which point it responds with the encoded
+   ready, from which point it responds with the encoded
    AggregationJobResp.
 
    The Helper MAY also wait to respond to the Leader's POST until the
@@ -2802,13 +2800,14 @@ aggregation job 1                   aggregation job 2          aggregation job j
    so, then the Leader obtains the Helper's aggregate share following
    the aggregate-share request flow described in Section 4.7.3.  If not,
    it either aborts the collection job or tries again later, depending
-   on which requirement in Section 4.7.7 was not met.  If the Leader has
-   a pending aggregation job that overlaps with the batch and
-   aggregation parameter for the collection job, the Leader MUST first
-   complete the aggregation job before proceeding and requesting an
-   aggregate share from the Helper.  This avoids a race condition
-   between aggregation and collection jobs that can yield batch mismatch
-   errors.
+   on which requirement in Section 4.7.7 was not met.
+
+   If the Leader has a pending aggregation job that overlaps with the
+   batch and aggregation parameter for the collection job, the Leader
+   MUST first complete the aggregation job before proceeding and
+   requesting an aggregate share from the Helper.  This avoids a race
+   condition between aggregation and collection jobs that can yield
+   batch mismatch errors.
 
    A collection job's results are represented by a Collection, which is
    structured as follows:
@@ -2848,11 +2847,11 @@ aggregation job 1                   aggregation job 2          aggregation job j
    After header field to suggest a polling interval to the Collector.
    The Collector then polls the state of the job by sending GET requests
    to the collection job.  The Leader responds the same way until the
-   job is ready, at which point it responds with the encoded Collection.
-   The Collector SHOULD use each response's Retry-After header field to
-   decide when to try again.
+   job is ready, from which point it responds with the encoded
+   Collection.  The Collector SHOULD use each response's Retry-After
+   header field to decide when to try again.
 
-   The Leader MAY also block responding to the Collector's PUT until the
+   The Leader MAY also wait to respond to the Collector's PUT until the
    collection job is ready.  In this case, it responds with the
    Collection.
 
@@ -3089,7 +3088,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    After header field to suggest a polling interval to the Leader.  The
    Leader then polls the state of the job by sending GET requests to the
    aggregate share.  The Helper responds the same way until the job is
-   ready, at which point it responds with the encoded AggregateShare.
+   ready, from which point it responds with the encoded AggregateShare.
    The Leader SHOULD use each response's Retry-After header field to
    decide when to try again.
 
@@ -3305,9 +3304,9 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    Next, the Aggregator checks that the number of reports in the batch
    is equal to or greater than the task's minimum batch size.  If not,
-   then Helpers MUST abort with error invalidBatchSize.  Leaders SHOULD
-   wait for more reports to be validated and try the collection job
-   again later.
+   then the Helper MUST abort with error invalidBatchSize.  The Leader
+   SHOULD wait for more reports to be validated and try the collection
+   job again later.
 
    Next, the Aggregator checks if any of the batch buckets identified by
    the request have already been collected.  If so, it MUST abort with
