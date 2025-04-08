@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 9 October 2025                                       Cloudflare
+Expires: 10 October 2025                                      Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                            7 April 2025
+                                                            8 April 2025
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -64,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 9 October 2025.
+   This Internet-Draft will expire on 10 October 2025.
 
 Copyright Notice
 
@@ -2170,7 +2170,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    same way until the job is ready, at which point it responds with the
    encoded AggregationJobResp.
 
-   The Helper MAY also block responding to the Leader's PUT until the
+   The Helper MAY also wait to respond to the Leader's PUT until the
    aggregation job initialization is ready.  In this case, it responds
    with the encoded AggregationJobResp.
 
@@ -2551,7 +2551,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    ready, at which point it responds with the encoded
    AggregationJobResp.
 
-   The Helper MAY also block responding to the Leader's POST until the
+   The Helper MAY also wait to respond to the Leader's POST until the
    aggregation job continuation is ready.  In this case, it responds
    with the encoded AggregationJobResp.
 
