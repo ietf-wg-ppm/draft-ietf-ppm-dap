@@ -2054,15 +2054,15 @@ The Helper MAY also wait to respond to the Leader's PUT until the aggregation
 job initialization is ready. In this case, it responds with the encoded
 `AggregationJobResp`.
 
-Changing an aggregation job's parameters is illegal, so further PUT requests to
-the aggregation job with a different `AggregationJobInitReq` in the body MUST
-fail with a client error status code. For further requests with the same
-`AggregationJobInitReq` in the body, the Helper SHOULD respond as it did for the
-original `AggregationJobInitReq`.
+Changing an aggregation job's parameters is illegal. If the Helper receives
+further PUT requests to the aggregation job with a different
+`AggregationJobInitReq` in the body, it MUST abort with a client error. For
+further requests with the same `AggregationJobInitReq` in the body, the Helper
+SHOULD respond as it did for the original `AggregationJobInitReq`.
 
-It is illegal to rewind or reset the state of an aggregation job. Once an
-aggregation job has been continued at least once (see {{agg-continue-flow}}),
-further requests to initialize that aggregation job MUST fail.
+It is illegal to rewind or reset the state of an aggregation job. If the Helper
+receives requests to initialize an aggregation job once it has been continued at
+least once (see {{agg-continue-flow}}), it MUST abort with a client error.
 
 #### Input Share Decryption {#input-share-decryption}
 
@@ -2654,27 +2654,31 @@ If aggregation is performed eagerly, the Leader MUST validate that the
 aggregation parameter received in the `CollectionJobReq` matches the aggregation
 parameter used in aggregations.
 
-Changing a collection job's parameters is illegal, so further PUT requests to
-the collection job with a different `CollectionJobReq` MUST fail.
+Changing a collection job's parameters is illegal, so if there are further PUT
+requests to the collection job with a different `CollectionJobReq`, the Leader
+MUST abort with a client error.
 
 After receiving the `CollectionJobReq`, the Leader begins working with the
 Helper to aggregate the reports satisfying the query (or continues this process,
-depending on the VDAF) as described in {{aggregate-flow}}.
+depending on whether the Leader is aggregating eagerly) as described in
+{{aggregate-flow}}.
 
 The Leader first checks whether it can construct a valid batch for the
 collection job by applying the requirements in {{batch-validation}}. If so, then
 the Leader obtains the Helper's aggregate share following the aggregate-share
-request flow described in {{collect-aggregate}}. If not, it either aborts the
+request flow described in {{collect-aggregate}}. If not, it either fails the
 collection job or tries again later, depending on which requirement in
-{{batch-validation}} was not met.
+{{batch-validation}} was not met. If the collection job fails, then the Leader
+responds to subsequent GET requests to the collection job with an error status
+code.
 
-If the Leader has a pending aggregation job that overlaps with the batch and
-aggregation parameter for the collection job, the Leader MUST first complete the
-aggregation job before proceeding and requesting an aggregate share from the
-Helper. This avoids a race condition between aggregation and collection jobs
-that can yield batch mismatch errors.
+If the Leader has a pending aggregation job that overlaps with the batch for the
+collection job, the Leader MUST first complete the aggregation job before
+proceeding and requesting an aggregate share from the Helper. This avoids a race
+condition between aggregation and collection jobs that can yield batch mismatch
+errors.
 
-A collection job's results are represented by a `Collection`, which is
+A collection job's results are represented by a `CollectionJobResp`, which is
 structured as follows:
 
 ~~~ tls-presentation
@@ -2684,11 +2688,11 @@ struct {
   Interval interval;
   HpkeCiphertext leader_encrypted_agg_share;
   HpkeCiphertext helper_encrypted_agg_share;
-} Collection;
+} CollectionJobResp;
 ~~~
 
-A `Collection`'s media type is "application/dap-collection". The structure
-includes the following:
+A `CollectionJobResp`'s media type is "application/dap-collection-job-resp". The
+structure includes the following:
 
 * `part_batch_selector`: Information used to bind the aggregate result to the
   query. For leader-selected tasks, this includes the batch ID assigned to the
@@ -2714,15 +2718,15 @@ body. The Leader SHOULD include a Retry-After header field to suggest a polling
 interval to the Collector. The Collector then polls the state of the job by
 sending GET requests to the collection job. The Leader responds the same way
 until the job is ready, from which point it responds with the encoded
-`Collection`. The Collector SHOULD use each response's Retry-After header field
-to decide when to try again.
+`CollectionJobResp`. The Collector SHOULD use each response's Retry-After header
+field to decide when to try again.
 
 The Leader MAY also wait to respond to the Collector's PUT until the collection
-job is ready. In this case, it responds with the `Collection`.
+job is ready. In this case, it responds with the `CollectionJobResp`.
 
-Once the `Leader` has delivered a `Collection` to the Collector, the Leader
-considers the batch to be collected, and further aggregation jobs MAY NOT add
-reports to the batch (see {{input-share-validation}}).
+Once the `Leader` has delivered a `CollectionJobResp` to the Collector, the
+Leader considers the batch to be collected, and further aggregation jobs MAY NOT
+add reports to the batch (see {{input-share-validation}}).
 
 If obtaining aggregate shares fails, then the Leader responds to subsequent GET
 requests to the collection job with an error status code.
@@ -2762,7 +2766,7 @@ encoded(struct {
   } Interval,
   leader_encrypted_agg_share = struct { ... } HpkeCiphertext,
   helper_encrypted_agg_share = struct { ... } HpkeCiphertext,
-} Collection)
+} CollectionJobResp)
 ~~~
 
 Or asynchronously:
@@ -2820,7 +2824,7 @@ encoded(struct {
   } Interval,
   leader_encrypted_agg_share = struct { ... } HpkeCiphertext,
   helper_encrypted_agg_share = struct { ... } HpkeCiphertext,
-} Collection)
+} CollectionJobResp)
 ~~~
 
 ### Collection Job Deletion
@@ -3844,7 +3848,7 @@ corresponding media types:
 - AggregateShareReq {{collect-aggregate}}: "application/dap-aggregate-share-req"
 - AggregateShare {{collect-aggregate}}: "application/dap-aggregate-share"
 - CollectionJobReq {{collect-init}}: "application/dap-collection-job-req"
-- Collection {{collect-init}}: "application/dap-collection"
+- CollectionJobResp {{collect-init}}: "application/dap-collection-job-resp"
 
 Protocol message format evolution is supported through the definition of new
 formats that are identified by new media types. The messages above are specific
@@ -4435,7 +4439,7 @@ Change controller:
 
 : IESG
 
-### "application/dap-collection" media type
+### "application/dap-collection-job-resp" media type
 
 Type name:
 
@@ -4443,7 +4447,7 @@ Type name:
 
 Subtype name:
 
-: dap-collection
+: dap-collection-job-resp
 
 Required parameters:
 
