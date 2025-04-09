@@ -3203,7 +3203,7 @@ Each batch mode specifies the following:
 
 1. Batch buckets ({{batch-buckets}}): how reports are assigned to batch
    buckets; how each bucket is identified; and how batch buckets are mapped to
-   batches and how batch buckets
+   batches
 
 ## Time Interval {#time-interval-batch-mode}
 
