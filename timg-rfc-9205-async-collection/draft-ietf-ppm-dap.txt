@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 10 October 2025                                      Cloudflare
+Expires: 11 October 2025                                      Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                            8 April 2025
+                                                            9 April 2025
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -64,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 10 October 2025.
+   This Internet-Draft will expire on 11 October 2025.
 
 Copyright Notice
 
@@ -3337,7 +3337,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    2.  Batch buckets (Section 4.6.2.3): how reports are assigned to
        batch buckets; how each bucket is identified; and how batch
-       buckets are mapped to batches and how batch buckets
+       buckets are mapped to batches
 
 5.1.  Time Interval
 
