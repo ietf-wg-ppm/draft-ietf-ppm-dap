@@ -2640,43 +2640,57 @@ known until this point. In certain situations it is possible to predict the
 aggregation parameter in advance. For example, for Prio3 the only valid
 aggregation parameter is the empty string.
 
-Upon receipt of a `CollectionJobReq`, the Leader begins by checking that it
-recognizes the task ID. If not, it MUST abort with error `unrecognizedTask`.
+The Leader MAY defer handling the collection request. In this case, it indicates
+that the collection job is not yet ready by immediately sending an empty
+response body. The Leader SHOULD include a Retry-After header field to suggest a
+polling interval to the Collector. The Collector then polls the state of the job
+by sending GET requests to the collection job. The Collector SHOULD use each
+response's Retry-After header field to decide when to try again. The Leader
+responds the same way until either the job is ready, from which point it
+responds with a `CollectionJobResp` (defined below), or the job fails, from
+which point the Leader MUST abort with the error that caused the failure.
+
+The Leader MAY also wait to respond to the Collector's PUT until the collection
+job is ready, in which case it responds with the `CollectionJobResp`, or the job
+fails, in which case the Leader MUST abort with the error that caused the
+failure.
+
+The Leader begins handling a `CollectionJobReq` by checking that it recognizes
+the task ID. If not, it MUST fail the collection job with error
+`unrecognizedTask`.
 
 Next, the Leader checks that the indicated batch mode matches the task's batch
-mode. If not, then the Leader MUST abort with error `invalidMessage`.
+mode. If not, it MUST fail the job with error `invalidMessage`.
 
 Next, the Leader checks that the aggregation parameter is valid as described in
-{{agg-param-validation}}. If not, then the Leader MUST abort with error
+{{agg-param-validation}}. If not, it MUST fail the job with error
 `invalidAggregationParameter`.
 
-If aggregation is performed eagerly, the Leader MUST validate that the
-aggregation parameter received in the `CollectionJobReq` matches the aggregation
-parameter used in aggregations.
+If aggregation is performed eagerly, then the Leader checks that the aggregation
+parameter received in the `CollectionJobReq` matches the aggregation parameter
+used in each aggregation job pertaining to the batch. If not, the Leader MUST
+fail the job with error `invalidMessage`.
 
-Changing a collection job's parameters is illegal, so if there are further PUT
-requests to the collection job with a different `CollectionJobReq`, the Leader
-MUST abort with a client error.
-
-After receiving the `CollectionJobReq`, the Leader begins working with the
+Having validated the `CollectionJobReq`, the Leader begins working with the
 Helper to aggregate the reports satisfying the query (or continues this process,
 depending on whether the Leader is aggregating eagerly) as described in
 {{aggregate-flow}}.
-
-The Leader first checks whether it can construct a valid batch for the
-collection job by applying the requirements in {{batch-validation}}. If so, then
-the Leader obtains the Helper's aggregate share following the aggregate-share
-request flow described in {{collect-aggregate}}. If not, it either fails the
-collection job or tries again later, depending on which requirement in
-{{batch-validation}} was not met. If the collection job fails, then the Leader
-responds to subsequent GET requests to the collection job with an error status
-code.
 
 If the Leader has a pending aggregation job that overlaps with the batch for the
 collection job, the Leader MUST first complete the aggregation job before
 proceeding and requesting an aggregate share from the Helper. This avoids a race
 condition between aggregation and collection jobs that can yield batch mismatch
 errors.
+
+The Leader then checks whether it can construct a valid batch for the collection
+job by applying the requirements in {{batch-validation}}. If so, then the Leader
+obtains the Helper's aggregate share following the aggregate-share request flow
+described in {{collect-aggregate}}. If not, it either fails the collection job
+with error `invalidBatch` or tries again later, depending on which requirement
+in {{batch-validation}} was not met.
+
+If obtaining the aggregate share fails, then the Leader MUST fail the collection
+job with the error that caused the failure.
 
 A collection job's results are represented by a `CollectionJobResp`, which is
 structured as follows:
@@ -2712,24 +2726,13 @@ structure includes the following:
 * `helper_encrypted_agg_share`: The Helper's aggregate share, encrypted to the
   Collector (see {{aggregate-share-encrypt}}).
 
-The Leader MAY defer handling the collection request. In this case, it indicates
-that the response is not yet ready by immediately sending an empty response
-body. The Leader SHOULD include a Retry-After header field to suggest a polling
-interval to the Collector. The Collector then polls the state of the job by
-sending GET requests to the collection job. The Leader responds the same way
-until the job is ready, from which point it responds with the encoded
-`CollectionJobResp`. The Collector SHOULD use each response's Retry-After header
-field to decide when to try again.
-
-The Leader MAY also wait to respond to the Collector's PUT until the collection
-job is ready. In this case, it responds with the `CollectionJobResp`.
-
-Once the `Leader` has delivered a `CollectionJobResp` to the Collector, the
+Once the `Leader` has constructed a `CollectionJobResp` for the Collector, the
 Leader considers the batch to be collected, and further aggregation jobs MAY NOT
 add reports to the batch (see {{input-share-validation}}).
 
-If obtaining aggregate shares fails, then the Leader responds to subsequent GET
-requests to the collection job with an error status code.
+Changing a collection job's parameters is illegal, so if there are further PUT
+requests to the collection job with a different `CollectionJobReq`, the Leader
+MUST abort with error `invalidMessage`.
 
 #### Example
 
@@ -2915,25 +2918,39 @@ The structure contains the following parameters:
 Leaders MUST authenticate their requests to Helpers using a scheme that meets
 the requirements in {{request-authentication}}.
 
-The Helper first ensures that it recognizes the task ID. If not, it MUST abort
-with error `unrecognizedTask`.
+The Helper MAY defer handling the aggregate share request. In this case, it
+indicates that the aggregate share is not yet ready by immediately sending an
+empty response body. The Helper SHOULD include a Retry-After header field to
+suggest a polling interval to the Leader. The Leader then polls the state of the
+job by sending GET requests to the aggregate share. The Leader SHOULD use each
+response's Retry-After header field to decide when to try again. The Helper
+responds the same way until either the share is ready, from which point it
+responds with the `AggregateShare` (defined below), or the job fails, from which
+point it MUST abort with the error that caused the failure.
+
+The Helper MAY also wait to respond to the Leader's PUT until the aggregate
+share is ready, in which case, it responds with the `AggregateShare`, or the job
+fails, in which case it MUST abort with the error that caused the failure.
+
+The Helper first ensures that it recognizes the task ID. If not, it MUST fail
+the job with error `unrecognizedTask`.
 
 The indicated batch mode MUST match the task's batch mode. If not, the Helper
-MUST abort with `invalidMessage`.
+MUST fail the job with `invalidMessage`.
 
 The Helper then verifies that the request meets the requirements in
-{{batch-validation}}. If not, it aborts with the indicated error.
+{{batch-validation}}. If not, it MUST fail the job with the indicated error.
 
 The aggregation parameter MUST match the aggregation parameter used in
-aggregation jobs pertaining to this batch. If not, the Helper aborts with
-`invalidMessage`.
+aggregation jobs pertaining to this batch. If not, the Helper MUST fail the job
+with error `invalidMessage`.
 
 Next, the Helper retrieves and combines the batch buckets associated with the
 request using the same process used by the Leader (described at the beginning of
 this section), arriving at its aggregate share, report count, and checksum
 values. If the Helper's computed report count and checksum values do not match
-the values provided in the `AggregateShareReq`, it MUST abort with an error of
-type `batchMismatch`.
+the values provided in the `AggregateShareReq`, it MUST fail the job with error
+`batchMismatch`.
 
 The Helper then encrypts `agg_share` under the Collector's HPKE public key as
 described in {{aggregate-share-encrypt}}, yielding `encrypted_agg_share`.
@@ -2952,18 +2969,6 @@ struct {
 computed above and `encrypted_aggregate_share.ciphertext` is the ciphertext
 `encrypted_agg_share` computed above.
 
-The Helper MAY defer handling the aggregate share request. In this case, it
-indicates that the response is not yet ready by immediately sending an empty
-response body. The Helper SHOULD include a Retry-After header field to suggest
-a polling interval to the Leader. The Leader then polls the state of the job by
-sending GET requests to the aggregate share. The Helper responds the same way
-until the job is ready, from which point it responds with the encoded
-`AggregateShare`. The Leader SHOULD use each response's Retry-After header field
-to decide when to try again.
-
-The Helper MAY also block responding to the Leader's PUT until the aggregate
-share is ready. In this case, it responds with the `AggregateShare`.
-
 After receiving the Helper's response, the Leader includes the HpkeCiphertext in
 its response to the Collector (see {{collect-finalization}}).
 
@@ -2972,6 +2977,10 @@ query, the Helper considers the batch to be collected. It is an error for the
 Leader to issue any more aggregation jobs for additional reports that satisfy
 the query. These reports will be rejected by the Helper as described in
 {{input-share-validation}}.
+
+Changing an aggregate share's parameters is illegal, so if there are further PUT
+requests to the aggregate share with a different `AggregateShareReq`, the Helper
+MUST abort with error `invalidMessage`.
 
 Before completing the collection job, the Leader encrypts its aggregate share
 under the Collector's HPKE public key as described in
