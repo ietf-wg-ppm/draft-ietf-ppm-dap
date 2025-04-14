@@ -2138,10 +2138,10 @@ for each input share in the job:
       has completed a collection job for a CollectionJobReq message from the
       Collector; the Helper considers a batch to be collected once it has
       responded to an `AggregateShareReq` message from the Leader. A batch is
-      determined by query ({{batch-modes}}) conveyed in these messages. Queries
-      must satisfy the criteria covered in {{batch-validation}}. These criteria
-      are meant to restrict queries in a way that makes it easy to determine
-      whether a report pertains to a batch that was collected. See
+      determined by query conveyed in these messages. Queries must satisfy the
+      criteria defined by their batch mode ({{batch-modes}}). These criteria are
+      meant to restrict queries in a way that makes it easy to determine whether
+      a report pertains to a batch that was collected. See
       {{distributed-systems}} for more information.
 
 1. If an Aggregator cannot determine if an input share is valid, it MUST mark
@@ -3206,29 +3206,6 @@ agg_share = OpenBase(
 The `OpenBase()` function is as specified in {{!HPKE, Section 6.1}} for the
 ciphersuite indicated by the HPKE configuration.
 
-### Batch Validation {#batch-validation}
-
-When the Leader receives a `Query` in the request from the Collector during
-collection initialization ({{collect-init}}), it must first check that the
-batch determined by the query can be collected. The Helper performs the same
-check when it receives a `BatchSelector` in the request from the Leader for its
-aggregate share ({{collect-aggregate}}).
-
-First, the Aggregator checks if the request (the `CollectionJobReq` for the
-Leader and the `AggregateShareReq` for the Helper) identifies a valid set of
-batch buckets ({{batch-buckets}}). If not, it MUST abort the request with
-`batchInvalid`.
-
-Next, the Aggregator checks that the number of reports in the batch is equal to
-or greater than the task's minimum batch size. If not, then the Helper MUST
-abort with error `invalidBatchSize`. The Leader SHOULD wait for more reports to
-be validated and try the collection job again later.
-
-Next, the Aggregator checks if any of the batch buckets identified by the
-request have already been collected. If so, it MUST abort with "batchOverlap".
-
-Finally, the batch mode may define additional batch validation rules.
-
 # Batch Modes {#batch-modes}
 
 This section defines an initial set of batch modes for DAP. New batch modes may
@@ -3547,7 +3524,7 @@ not necessary to store the complete reports. Each Aggregator only needs to
 store an aggregate share for each possible batch bucket i.e., the batch
 interval for time-interval or batch ID for leader-selected, along with a flag
 indicating whether the aggregate share has been collected. This is due to the
-requirement for queries to respect bucket boundaries. See {{batch-validation}}.
+requirement for queries to respect bucket boundaries. See {{batch-modes}}.
 
 However, Aggregators are also required to implement several per-report checks
 that require retaining a number of data artifacts. For example, to detect replay
