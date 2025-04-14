@@ -2662,6 +2662,10 @@ the Collector's PUT until the collection job is ready, in which case it responds
 with the `CollectionJobResp`, or the job fails, in which case the Leader MUST
 abort with the error that caused the failure.
 
+If the job fails with `invalidBatchSize`, then the Collector MAY retry it later,
+once it believes enough new reports have been uploaded and aggregated to allow
+the collection job to succeed.
+
 The Leader begins handling a `CollectionJobReq` by checking that it recognizes
 the task ID. If not, it MUST fail the collection job with error
 `unrecognizedTask`.
@@ -2672,6 +2676,14 @@ mode. If not, it MUST fail the job with error `invalidMessage`.
 Next, the Leader checks that the aggregation parameter is valid as described in
 {{agg-param-validation}}. If not, it MUST fail the job with error
 `invalidAggregationParameter`.
+
+The Leader then checks whether the `Query` in the Collector's request determines
+a batch that can be collected. If the query does not identify a valid set of
+batch buckets according to the criteria defined by the batch mode in use
+({{batch-modes}}), then the Leader MUST fail the job with error `batchInvalid`.
+
+If any of the batch buckets identified by the query have already been collected,
+then the Leader MUST fail the job with error `batchOverlap`.
 
 If aggregation is performed eagerly, then the Leader checks that the aggregation
 parameter received in the `CollectionJobReq` matches the aggregation parameter
@@ -2689,13 +2701,16 @@ proceeding and requesting an aggregate share from the Helper. This avoids a race
 condition between aggregation and collection jobs that can yield batch mismatch
 errors.
 
-The Leader then checks whether it can construct a valid batch for the collection
-job by applying the requirements in {{batch-validation}}. If so, then the Leader
-obtains the Helper's aggregate share following the aggregate-share request flow
-described in {{collect-aggregate}}. If not, it either fails the collection job
-with error `invalidBatch` or tries again later, depending on which requirement
-in {{batch-validation}} was not met.
+If the number of validated reports in the batch is not equal to or greater than
+the task's minimum batch size, then the Leader SHOULD wait for more reports to
+be uploaded and aggregated and try the collection job again later. The Leader
+MAY give up on the collection job (for example, if it decides that no new
+reports satisfying the query are likely to ever arrive), in which case it MUST
+fail the job with error `invalidBatchSize`.
 
+Once the Leader has validated the collection job and run to completion all the
+aggregation jobs that pertain to it, it obtains the Helper's aggregate share
+following the aggregate-share request flow described in {{collect-aggregate}}.
 If obtaining the aggregate share fails, then the Leader MUST fail the collection
 job with the error that caused the failure.
 
