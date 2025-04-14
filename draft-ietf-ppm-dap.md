@@ -2962,8 +2962,18 @@ the job with error `unrecognizedTask`.
 The indicated batch mode MUST match the task's batch mode. If not, the Helper
 MUST fail the job with `invalidMessage`.
 
-The Helper then verifies that the request meets the requirements in
-{{batch-validation}}. If not, it MUST fail the job with the indicated error.
+The Helper then verifies that the `BatchSelector` in the Leader's request
+determines a batch that can be collected. If the selector does not identify a
+valid set of batch buckets according to the criteria defined by the batch mode
+in use ({{batch-modes}}), then the Helper MUST fail the job with error
+`batchInvalid`.
+
+If any of the batch buckets identified by the selector have already been
+collected, then the Helper MUST fail the job with error `batchOverlap`.
+
+If the number of validated reports in the batch is not equal to or greater than
+the task's minimum batch size, then the Helper MUST abort with
+`invalidBatchSize`.
 
 The aggregation parameter MUST match the aggregation parameter used in
 aggregation jobs pertaining to this batch. If not, the Helper MUST fail the job
