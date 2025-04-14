@@ -1887,20 +1887,36 @@ attempts to initialize VDAF preparation (see {{Section 5.1 of !VDAF}}) just as
 the Leader does. If successful, it includes the result in its response for the
 Leader to use to continue preparing the report.
 
+The Helper MAY defer handling the initialization request. In this case, it
+indicates that the job is not yet ready by immediately sending an empty response
+body and sets a Location header field set to the relative reference
+`/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}?step=0`. The response
+SHOULD include a Retry-After header field to suggest a polling interval to the
+Leader. The Leader then polls the state of the job by sending GET requests to the
+resolved URL. The Helper responds the same way until either the job is ready,
+from which point it responds with the `AggregationJobResp` (defined below), or
+the job fails, from which point it MUST abort with the error that caused the
+failure.
+
+The Helper MAY instead handle the request immediately. It waits to respond to
+the Leader's PUT until the aggregation job initialization is ready, in which
+case it responds with the`AggregationJobResp`, or the job fails, in which case
+the Helper MUST abort with the error that caused the failure.
+
 Upon receipt of an `AggregationJobInitReq`, the Helper checks if it recognizes
-the task ID. If not, then it MUST abort with error `unrecognizedTask`.
+the task ID. If not, then it MUST fail the job with error `unrecognizedTask`.
 
 Next, it checks that the batch mode indicated by
 `part_batch_selector.batch_mode` matches the task's batch mode. If not, the
-Helper MUST abort with error `invalidMessage`.
+Helper MUST fail the job with error `invalidMessage`.
 
 Next, the Helper checks that the aggregation parameter is valid as described in
 {{agg-param-validation}}. If the aggregation parameter is invalid, then the
-Helper MUST abort with error `invalidAggregationParameter`.
+Helper MUST fail the job with error `invalidAggregationParameter`.
 
 Next, the Helper checks that the report IDs in
 `AggregationJobInitReq.prepare_inits` are all distinct. If not, then the Helper
-MUST abort with error `invalidMessage`.
+MUST fail the job with error `invalidMessage`.
 
 To process the aggregation job, the Helper computes an outbound prepare step
 for each report share. This includes the following structures:
@@ -2028,8 +2044,9 @@ variant {
 Otherwise it stores the report ID for replay protection and updates the relevant
 batch bucket with `out_share` as described in {{batch-buckets}}.
 
-Finally, the Helper creates an `AggregationJobResp` to send to the Leader. This
-message is structured as follows:
+Once the Helper has constructed a `PrepareResp` for each report, the aggregation
+job response is ready. Its results are represented by an `AggregationJobResp`,
+which is structured as follows:
 
 ~~~ tls-presentation
 struct {
@@ -2040,19 +2057,6 @@ struct {
 where `prepare_resps` are the outbound prep steps computed in the previous step.
 The order MUST match `AggregationJobInitReq.prepare_inits`. The media type for
 `AggregationJobResp` is "application/dap-aggregation-job-resp".
-
-The Helper MAY defer handling the initialization request. In this case, it
-indicates that the response is not yet ready by immediately sending an empty
-response body and sets a Location header field set to the relative reference
-`/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}?step=0`. The response
-SHOULD include a Retry-After header field to suggest a polling interval to the
-Leader. The Leader then polls the state of the job by sending GET requests to the
-resolved URL. The Helper responds the same way until the job is ready, from
-which point it responds with the encoded `AggregationJobResp`.
-
-The Helper MAY also wait to respond to the Leader's PUT until the aggregation
-job initialization is ready. In this case, it responds with the encoded
-`AggregationJobResp`.
 
 Changing an aggregation job's parameters is illegal. If the Helper receives
 further PUT requests to the aggregation job with a different
@@ -2322,11 +2326,27 @@ candidate set, which will all be of type `Continued(prep_state)`. The Helper
 then waits for the Leader to POST an `AggregationJobContinueReq` to an
 aggregation job.
 
-Next, it checks that it recognizes the task ID. If not, then it MUST abort with
-error `unrecognizedTask`.
+The Helper MAY defer handling the continuation request. In this case, it
+indicates that the job continuation is not yet ready by immediately sending an
+empty response body and sets the Location header field to the relative reference
+`/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}?step={step}`, where
+`step` is set to `AggregationJobContinueReq.step`. The response SHOULD include a
+Retry-After header field to suggest a polling interval to the Leader. The Leader
+then polls the state of the job by sending GET requests to the resolved URL. The
+Helper responds the same way until either the job is ready, from which point it
+responds with the `AggregationJobResp`, or the job fails, from which point it
+MUST abort with the error that caused the failure.
+
+The Helper MAY instead handle the request immediately. It waits to respond to
+the Leader's POST until the aggregation job continuation is ready, in which
+case it responds with the `AggregationJobResp`, or the job fails, in which case
+it MUST abort with the error that caused the failure.
+
+Next, it checks that it recognizes the task ID. If not, then it MUST fail the
+job with error `unrecognizedTask`.
 
 Next, it checks if it recognizes the indicated aggregation job ID. If not, it
-MUST abort with error `unrecognizedAggregationJob`.
+MUST fail the job with error `unrecognizedAggregationJob`.
 
 Next, the Helper checks that:
 
@@ -2334,11 +2354,11 @@ Next, the Helper checks that:
 1. the report IDs are all distinct
 1. each report ID corresponds to one of the `state` objects
 
-If any of these checks fail, then the Helper MUST abort with error
+If any of these checks fail, then the Helper MUST fail the job with error
 `invalidMessage`. Additionally, if any prep step appears out of order relative
-to the previous request, then the Helper MAY abort with error `invalidMessage`.
-A report may be missing, in which case the Helper assumes the Leader rejected
-it and removes it from the candidate set.
+to the previous request, then the Helper MAY fail the job with error
+`invalidMessage`. A report may be missing, in which case the Helper assumes the
+Leader rejected it and removes it from the candidate set.
 
 Next, the Helper checks the continuation step indicated by the request. If the
 `step` value is one greater than the job's current step, then the Helper
@@ -2352,7 +2372,7 @@ contents of the `AggregationJobContinueReq` are identical to the previous
 message (see {{aggregation-step-skew-recovery}}).
 
 If the Helper does not wish to attempt recovery, or if the step has some other
-value, the Helper MUST abort with error `stepMismatch`.
+value, the Helper MUST fail the job with error `stepMismatch`.
 
 Let `inbound` denote the payload of the prep step. For each report, the Helper
 computes the following:
@@ -2415,23 +2435,10 @@ variant {
 } PrepareResp;
 ~~~
 
-The Helper constructs an `AggregationJobResp` message (see
+Once the Helper has computed a `PrepareResp` for every report, the aggregation
+job response is ready. It is represented by an `AggregationJobResp` message (see
 {{aggregation-helper-init}}) with each prep step. The order of the prep steps
 MUST match the Leader's `AggregationJobContinueReq`.
-
-The Helper MAY defer handling the continuation request. In this case, it
-indicates that the response is not yet ready by immediately sending an empty
-response body and sets the Location header field to the relative reference
-`/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}?step={step}`, where
-`step` is set to `AggregationJobContinueReq.step`. The response SHOULD include a
-Retry-After header field to suggest a polling interval to the Leader. The Leader
-then polls the state of the job by sending GET requests to the resolved URL. The
-Helper responds the same way until the job is ready, from which point it
-responds with the encoded `AggregationJobResp`.
-
-The Helper MAY also wait to respond to the Leader's POST until the aggregation
-job continuation is ready. In this case, it responds with the encoded
-`AggregationJobResp`.
 
 #### Batch Buckets {#batch-buckets}
 
