@@ -3784,6 +3784,23 @@ involving crafted DAP task parameters can be mitigated by having the Aggregators
 refuse shared parameters that are trivially insecure (e.g., a minimum batch size
 of 1 report).
 
+### Predictable or Enumerable Task IDs
+
+This specification imposes no requirements on task IDs except that they be
+globally unique. One way to achieve this is to use random task IDs, but
+deployments can also use schemes like {{?I-D.draft-ietf-ppm-dap-taskprov-01}}
+where task IDs are deterministically generated from some set of task parameters.
+
+In such settings, deployments should consider whether an Aggregator
+acknowledging the existence of a task (by accepting report uploads or
+aggregation jobs, for example) could unintentionally leak information such as a
+label describing the task, the identities of participating Aggregators or the
+fact that some measurement is being taken at all.
+
+Such enumeration attacks can be mitigated by incorporating unpredictable values
+into the task ID derivation. They do not, however, affect the protocol goals of
+privacy or robustness.
+
 ### VDAF Verification Key Requirements {#verification-key}
 
 Knowledge of the verification key would allow a Client to forge a report with
