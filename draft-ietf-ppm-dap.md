@@ -680,7 +680,7 @@ with any measurement system and DAP does not attempt to address it. DAP merely
 ensures that the data is within the chosen limits, so the Client could not
 report `10^6`  or `-20` seconds.
 
-## Replay Protection {#replay-protection}
+## Replay Protection and Double Collection {#replay-protection}
 
 Another goal of DAP is to mitigate replay attacks in which a report is
 aggregated in multiple batches or multiple times in a single batch. This would
@@ -690,6 +690,14 @@ than it would otherwise.
 When a Client generates a report, it also generates a random nonce, called the
 "report ID". Each Aggregator is responsible for storing the IDs of reports it
 has aggregated and rejecting replayed reports.
+
+DAP must also ensure that any batch is only collected once, even if new reports
+arrive that would fall into that batch. Otherwise, comparing the new aggregate
+result to the previous aggregate result can violate the privacy of the added
+reports.
+
+Aggregators are responsible for refusing new reports if the batch they fall into
+has been collected ({{collect-flow}}).
 
 ## Lifecycle of Protocol Objects
 
@@ -1487,9 +1495,8 @@ If a report's ID matches that of a previously uploaded report, the Leader MUST
 ignore it. In addition, it MAY alert the Client with error `reportRejected`.
 
 The Leader MUST ignore any report pertaining to a batch that has already been
-collected (see {{input-share-validation}} for details). Otherwise, comparing
-the aggregate result to the previous aggregate result may result in a privacy
-violation. The Leader MAY also abort with error `reportRejected`.
+collected (see {{replay-protection}} for details). The Leader MAY also abort
+with error `reportRejected`.
 
 The Leader MUST ignore any report whose timestamp is outside of the task's
 `time_interval`. When it does so, it SHOULD also abort with error
@@ -1692,16 +1699,20 @@ An aggregation job has three phases:
   for each report.
 - Continuation: Exchange prep shares and messages until preparation completes or
   an error occurs.
-- Completion: Yield an output share for each report share in the aggregation job.
+- Completion: Yield an output share for each report share in the aggregation
+  job.
 
-After an aggregation job is completed, each Aggregator updates running-total
-aggregate shares and other values for each "batch bucket" associated with a
-prepared output share, as described in {{batch-buckets}}. These values are
-stored until the batch is collected as described in {{collect-flow}}.
+After an aggregation job is completed, each Aggregator commits to the output
+shares by updating running-total aggregate shares and other values for each
+batch bucket associated with a prepared output share, as described in
+{{batch-buckets}}. These values are stored until a batch that includes the batch
+bucket is collected as described in {{collect-flow}}.
 
-The aggregation interaction provides replay protection ({{replay-protection}}).
-Before committing to an output share, the Aggregators check whether its report
-ID has already been aggregated.
+The aggregation interaction provides protection against including reports in
+more than one batch and against adding reports to already collected batches,
+both of which can violate privacy ({{replay-protection}}). Before committing to
+an output share, the Aggregators check whether its report ID has already been
+aggregated and whether the batch bucket being updated has been collected.
 
 ### Aggregate Initialization {#agg-init}
 
@@ -1717,10 +1728,6 @@ The Leader and Helper initialization behavior is detailed below.
 
 The Leader begins an aggregation job by choosing a set of candidate reports that
 belong to the same task and a job ID which MUST be unique within the task.
-
-For each report in the candidate set, it checks if the report ID has already
-been aggregated for this task. If so, it rejects the report and removes it from
-the candidate set.
 
 Next, the Leader decrypts each of its report shares as described in
 {{input-share-decryption}}, then checks input share validity as described in
@@ -1859,9 +1866,9 @@ The Leader proceeds as follows with each report:
    the preparation process is complete: either `state == Rejected()`, in which
    case the Leader rejects the report and removes it from the candidate set; or
    `state == Finished(out_share)`, in which case preparation is complete and the
-   Leader updates the relevant batch bucket with `out_share` as described in
-   {{batch-buckets}}. The Leader stores the report ID corresponding to the
-   `out_share` for replay protection.
+   Leader commits `out_share` as described in {{batch-buckets}}. If commitment
+   fails, then the Leader rejects the report and removes it from the candidate
+   set.
 
 1. Else if the type is "reject", then the Leader rejects the report and removes
    it from the candidate set. The Leader MUST NOT include the report in a
@@ -1955,21 +1962,6 @@ struct {
 } PrepareResp;
 ~~~
 
-First, for each report in the request, the Helper MAY check if the report ID
-corresponds to a report ID it has previously stored for this task. If so, it
-rejects the report by setting the outbound preparation response to
-
-~~~ tls-presentation
-variant {
-  ReportID report_id;
-  PrepareRespState prepare_resp_state = reject;
-  ReportError report_error = report_replayed;
-} PrepareResp;
-~~~
-
-where `report_id` is the report ID. Note that the Helper must perform this
-check before completing the aggregation job.
-
 Next the Helper decrypts each of its remaining report shares as described in
 {{input-share-decryption}}, then checks input share validity as described in
 {{input-share-validation}}. For any report that was rejected, the Helper sets
@@ -2029,20 +2021,18 @@ variant {
 If `state == Continued(prep_state)`, then the Helper stores `state` to
 prepare for the next continuation step ({{aggregation-helper-continuation}}).
 
-If `state == Finished(out_share)`, the Helper MUST resolve replay of the
-report. It does so by checking if the report ID was previously aggregated for
-this task. If so, it responds with
+If `state == Finished(out_share)`, then the Helper commits to `out_share` as
+described in {{batch-buckets}}. If commitment fails with some `ReportError`
+(e.g., the report was replayed or its batch bucket was collected), then instead
+of the `continue` response above, the Helper responds with
 
 ~~~ tls-presentation
 variant {
   ReportID report_id;
   PrepareRespState prepare_resp_state = reject;
-  Reporterror report_error = report_replayed;
+  ReportError report_error = commit_error;
 } PrepareResp;
 ~~~
-
-Otherwise it stores the report ID for replay protection and updates the relevant
-batch bucket with `out_share` as described in {{batch-buckets}}.
 
 Once the Helper has constructed a `PrepareResp` for each report, the aggregation
 job response is ready. Its results are represented by an `AggregationJobResp`,
@@ -2130,19 +2120,6 @@ for each input share in the job:
 1. Check if any two extensions have the same extension type across public and
    private extension fields. If so, the Aggregator MUST mark the input share as
    invalid with error `invalid_message`.
-
-1. If the report pertains to a batch that was previously collected, then the
-   input share MUST be marked as invalid with error `batch_collected`.
-
-    * Implementation note: The Leader considers a batch to be collected once it
-      has completed a collection job for a CollectionJobReq message from the
-      Collector; the Helper considers a batch to be collected once it has
-      responded to an `AggregateShareReq` message from the Leader. A batch is
-      determined by query conveyed in these messages. Queries must satisfy the
-      criteria defined by their batch mode ({{batch-modes}}). These criteria are
-      meant to restrict queries in a way that makes it easy to determine whether
-      a report pertains to a batch that was collected. See
-      {{distributed-systems}} for more information.
 
 1. If an Aggregator cannot determine if an input share is valid, it MUST mark
    the input share as invalid with error `report_dropped`.
@@ -2297,9 +2274,9 @@ Otherwise, the Leader proceeds as follows with each report:
    proceeds to another continuation step. If `outbound == None`, then the
    preparation process is complete: either `state == Rejected()`, in which case
    the Leader rejects the report and removes it from the candidate set or
-   `state == Finished(out_share)`, in which case preparation is complete and
-   the Leader updates the relevant batch bucket with `out_share` as described in
-   {{batch-buckets}}.
+   `state == Finished(out_share)`, in which case the Leader commits to
+   `out_share` as described in {{batch-buckets}}. If commitment fails, then the
+   Leader rejects the report and removes it from the candidate set.
 
 1. Else if the type is "finished" and `state == Finished(out_share)`, then
    preparation is complete and the Leader stores the output share for use in
@@ -2310,9 +2287,6 @@ Otherwise, the Leader proceeds as follows with each report:
 
 1. Else the type is invalid, in which case the Leader MUST abort the
    aggregation job.
-
-When the Leader stores the `out_share`, it MUST also store the report ID for
-replay protection.
 
 If the Leader fails to process the response from the Helper, for example because
 of a transient failure such as a network connection failure or process crash,
@@ -2400,23 +2374,21 @@ variant {
 If `state == Continued(prep_state)`, then the Helper stores `state` to
 prepare for the next continuation step ({{aggregation-helper-continuation}}).
 
-If `state == Finished(out_share)`, the Helper MUST resolve replay of the
-report. It does so by checking if the report ID was previously stored for this
-task. If so, it responds with
+If `state == Finished(out_share)`, the Helper commits `out_share` as described
+in {{batch-buckets}}. If commitment fails with some `ReportError` (e.g., the
+report was replayed or its batch bucket was collected), then the Helper responds
+with
 
 ~~~ tls-presentation
 variant {
   ReportID report_id;
   PrepareRespState prepare_resp_state = reject;
-  ReportError report_error = report_replayed;
+  ReportError report_error = commit_error;
 } PrepareResp;
 ~~~
 
-Otherwise it stores the report ID for replay protection and updates the relevant
-batch bucket with `out_share` as described in {{batch-buckets}}.
-
-The Helper's response depends on the value of `outbound`. If `outbound !=
-None`, then the Helper's response is
+If commitment succeeds, the Helper's response depends on the value of
+`outbound`. If `outbound != None`, then the Helper's response is
 
 ~~~ tls-presentation
 variant {
@@ -2443,8 +2415,10 @@ MUST match the Leader's `AggregationJobContinueReq`.
 #### Batch Buckets {#batch-buckets}
 
 When aggregation refines an output share, it must be stored into an appropriate
-"batch bucket", which is defined in this section. The data stored in a batch
-bucket is kept for eventual use in the {{collect-flow}}.
+"batch bucket", which is defined in this section. An output share cannot be
+removed from a batch bucket once stored, so we say that the Aggregator _commits_
+the output share. The data stored in a batch bucket is kept for eventual use in
+the {{collect-flow}}.
 
 Batch buckets are indexed by a "batch bucket identifier" as as specified by the
 task's batch mode:
@@ -2461,8 +2435,19 @@ A few different pieces of information are associated with each batch bucket:
 * The number of reports included in the batch bucket.
 * A 32-byte checksum value, as defined below.
 
-When processing an output share `out_share`, the following procedure is used to
-update the batch buckets:
+Aggregators MUST check the following conditions before committing an output
+share:
+
+* If the batch bucket has been collected, the Aggregator MUST mark the report
+  invalid with error `batch_collected`.
+* If the report ID associated with `out_share` has been aggregated in the task,
+  the Aggregator MUST mark the report invalid with error `report_replayed`.
+
+Aggregators may perform these checks at any time before commitment (i.e., during
+either aggregation initialization or continuation).
+
+The following procedure is used to commit an output share `out_share` to a batch
+bucket:
 
 * Look up the existing batch bucket for the batch bucket identifier
   associated with the aggregation job and output share.
@@ -2477,6 +2462,7 @@ update the batch buckets:
 * Update the checksum value to the bitwise XOR of the checksum value with the
   SHA256 {{!SHS=DOI.10.6028/NIST.FIPS.180-4}} hash of the report ID associated
   with the output share.
+* Store `out_share`'s report ID for future replay checks.
 
 This section describes a single set of values associated with each batch bucket.
 However, implementations are free to shard batch buckets, combining them back
@@ -2484,6 +2470,15 @@ into a single set of values when reading the batch bucket. The aggregate shares
 are combined using `Vdaf.merge(agg_param, agg_shares)` (see {{!VDAF, Section
 4.4}}), the count values are combined by summing, and the checksum values are
 combined by bitwise XOR.
+
+Implementation note: The Leader considers a batch to be collected once it has
+completed a collection job for a CollectionJobReq message from the Collector;
+the Helper considers a batch to be collected once it has responded to an
+`AggregateShareReq` message from the Leader. A batch is determined by query
+conveyed in these messages. Queries must satisfy the criteria defined by their
+batch mode ({{batch-modes}}). These criteria are meant to restrict queries in a
+way that makes it easy to determine whether a report pertains to a batch that
+was collected. See {{distributed-systems}} for more information.
 
 #### Recovering from Aggregation Step Skew {#aggregation-step-skew-recovery}
 
@@ -2750,8 +2745,8 @@ structure includes the following:
   Collector (see {{aggregate-share-encrypt}}).
 
 Once the `Leader` has constructed a `CollectionJobResp` for the Collector, the
-Leader considers the batch to be collected, and further aggregation jobs MAY NOT
-add reports to the batch (see {{input-share-validation}}).
+Leader considers the batch to be collected, and further aggregation jobs MUST
+NOT commit more reports to the batch (see {{batch-buckets}}).
 
 Changing a collection job's parameters is illegal, so if there are further PUT
 requests to the collection job with a different `CollectionJobReq`, the Leader
@@ -3009,11 +3004,11 @@ computed above and `encrypted_aggregate_share.ciphertext` is the ciphertext
 After receiving the Helper's response, the Leader includes the HpkeCiphertext in
 its response to the Collector (see {{collect-finalization}}).
 
-Once an `AggregateShareReq` has been issued for the batch determined by a given
-query, the Helper considers the batch to be collected. It is an error for the
-Leader to issue any more aggregation jobs for additional reports that satisfy
-the query. These reports will be rejected by the Helper as described in
-{{input-share-validation}}.
+Once an `AggregateShareReq` has been constructed for the batch determined by a
+given query, the Helper considers the batch to be collected. The Helper MUST NOT
+commit any more output shares to the batch. It is an error for the Leader to
+issue any more aggregation jobs for additional reports that satisfy the query.
+These reports MUST be rejected by the Helper as described in {{batch-buckets}}.
 
 Changing an aggregate share's parameters is illegal, so if there are further PUT
 requests to the aggregate share with a different `AggregateShareReq`, the Helper
