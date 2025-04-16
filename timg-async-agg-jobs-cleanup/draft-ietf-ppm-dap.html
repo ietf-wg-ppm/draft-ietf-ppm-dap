@@ -1059,7 +1059,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
 </tr></thead>
 <tfoot><tr>
 <td class="left">Geoghegan, et al.</td>
-<td class="center">Expires 16 October 2025</td>
+<td class="center">Expires 18 October 2025</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1072,12 +1072,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-ietf-ppm-dap-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2025-04-14" class="published">14 April 2025</time>
+<time datetime="2025-04-16" class="published">16 April 2025</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Standards Track</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2025-10-16">16 October 2025</time></dd>
+<dd class="expires"><time datetime="2025-10-18">18 October 2025</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -1151,7 +1151,7 @@ without revealing any individual contributor's data.<a href="#section-abstract-1
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 16 October 2025.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 18 October 2025.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -4097,10 +4097,10 @@ resolved URL. The Helper responds the same way until either the job is ready,
 from which point it responds with the <code>AggregationJobResp</code> (defined below), or
 the job fails, from which point it <span class="bcp14">MUST</span> abort with the error that caused the
 failure.<a href="#section-4.6.1.2-2" class="pilcrow">¶</a></p>
-<p id="section-4.6.1.2-3">The Helper <span class="bcp14">MAY</span> also wait to respond to the Leader's PUT until the aggregation
-job initialization is ready, in which case, it responds with the
-<code>AggregationJobResp</code>, or the job fails, in which case the Helper <span class="bcp14">MUST</span> abort with
-the error that caused the failure.<a href="#section-4.6.1.2-3" class="pilcrow">¶</a></p>
+<p id="section-4.6.1.2-3">The Helper <span class="bcp14">MAY</span> instead handle the request immediately. It waits to respond to
+the Leader's PUT until the aggregation job initialization is ready, in which
+case it responds with the<code>AggregationJobResp</code>, or the job fails, in which case
+the Helper <span class="bcp14">MUST</span> abort with the error that caused the failure.<a href="#section-4.6.1.2-3" class="pilcrow">¶</a></p>
 <p id="section-4.6.1.2-4">Upon receipt of an <code>AggregationJobInitReq</code>, the Helper checks if it recognizes
 the task ID. If not, then it <span class="bcp14">MUST</span> fail the job with error <code>unrecognizedTask</code>.<a href="#section-4.6.1.2-4" class="pilcrow">¶</a></p>
 <p id="section-4.6.1.2-5">Next, it checks that the batch mode indicated by
@@ -4248,8 +4248,9 @@ variant {
 </div>
 <p id="section-4.6.1.2-25">Otherwise it stores the report ID for replay protection and updates the relevant
 batch bucket with <code>out_share</code> as described in <a href="#batch-buckets" class="auto internal xref">Section 4.6.2.3</a>.<a href="#section-4.6.1.2-25" class="pilcrow">¶</a></p>
-<p id="section-4.6.1.2-26">Finally, the Helper creates an <code>AggregationJobResp</code> to send to the Leader. This
-message is structured as follows:<a href="#section-4.6.1.2-26" class="pilcrow">¶</a></p>
+<p id="section-4.6.1.2-26">Once the Helper has constructed a <code>PrepareResp</code> for each report, the aggregation
+job response is ready. Its results are represented by an <code>AggregationJobResp</code>,
+which is structured as follows:<a href="#section-4.6.1.2-26" class="pilcrow">¶</a></p>
 <div class="lang-tls-presentation sourcecode" id="section-4.6.1.2-27">
 <pre>
 struct {
@@ -4578,10 +4579,10 @@ then polls the state of the job by sending GET requests to the resolved URL. The
 Helper responds the same way until either the job is ready, from which point it
 responds with the <code>AggregationJobResp</code>, or the job fails, from which point it
 <span class="bcp14">MUST</span> abort with the error that caused the failure.<a href="#section-4.6.2.2-2" class="pilcrow">¶</a></p>
-<p id="section-4.6.2.2-3">The Helper <span class="bcp14">MAY</span> also wait to respond to the Leader's POST until the aggregation
-job continuation is ready, in which case, it responds with the
-<code>AggregationJobResp</code>, or the job fails, in which case it <span class="bcp14">MUST</span> abort with the
-error that caused the failure.<a href="#section-4.6.2.2-3" class="pilcrow">¶</a></p>
+<p id="section-4.6.2.2-3">The Helper <span class="bcp14">MAY</span> instead handle the request immediately. It waits to respond to
+the Leader's POST until the aggregation job continuation is ready, in which
+case it responds with the <code>AggregationJobResp</code>, or the job fails, in which case
+it <span class="bcp14">MUST</span> abort with the error that caused the failure.<a href="#section-4.6.2.2-3" class="pilcrow">¶</a></p>
 <p id="section-4.6.2.2-4">Next, it checks that it recognizes the task ID. If not, then it <span class="bcp14">MUST</span> fail the
 job with error <code>unrecognizedTask</code>.<a href="#section-4.6.2.2-4" class="pilcrow">¶</a></p>
 <p id="section-4.6.2.2-5">Next, it checks if it recognizes the indicated aggregation job ID. If not, it
@@ -4673,7 +4674,8 @@ variant {
 } PrepareResp;
 </pre><a href="#section-4.6.2.2-23" class="pilcrow">¶</a>
 </div>
-<p id="section-4.6.2.2-24">The Helper constructs an <code>AggregationJobResp</code> message (see
+<p id="section-4.6.2.2-24">Once the Helper has computed a <code>PrepareResp</code> for every report, the aggregation
+job response is ready. It is represented by an <code>AggregationJobResp</code> message (see
 <a href="#aggregation-helper-init" class="auto internal xref">Section 4.6.1.2</a>) with each prep step. The order of the prep steps
 <span class="bcp14">MUST</span> match the Leader's <code>AggregationJobContinueReq</code>.<a href="#section-4.6.2.2-24" class="pilcrow">¶</a></p>
 </section>
@@ -4948,10 +4950,10 @@ response's Retry-After header field to decide when to try again. The Leader
 responds the same way until either the job is ready, from which point it
 responds with a <code>CollectionJobResp</code> (defined below), or the job fails, from
 which point the Leader <span class="bcp14">MUST</span> abort with the error that caused the failure.<a href="#section-4.7.1-7" class="pilcrow">¶</a></p>
-<p id="section-4.7.1-8">The Leader <span class="bcp14">MAY</span> also wait to respond to the Collector's PUT until the collection
-job is ready, in which case it responds with the <code>CollectionJobResp</code>, or the job
-fails, in which case the Leader <span class="bcp14">MUST</span> abort with the error that caused the
-failure.<a href="#section-4.7.1-8" class="pilcrow">¶</a></p>
+<p id="section-4.7.1-8">The Leader <span class="bcp14">MAY</span> instead handle the request immediately. It waits to respond to
+the Collector's PUT until the collection job is ready, in which case it responds
+with the <code>CollectionJobResp</code>, or the job fails, in which case the Leader <span class="bcp14">MUST</span>
+abort with the error that caused the failure.<a href="#section-4.7.1-8" class="pilcrow">¶</a></p>
 <p id="section-4.7.1-9">The Leader begins handling a <code>CollectionJobReq</code> by checking that it recognizes
 the task ID. If not, it <span class="bcp14">MUST</span> fail the collection job with error
 <code>unrecognizedTask</code>.<a href="#section-4.7.1-9" class="pilcrow">¶</a></p>
@@ -4981,8 +4983,9 @@ with error <code>invalidBatch</code> or tries again later, depending on which re
 in <a href="#batch-validation" class="auto internal xref">Section 4.7.7</a> was not met.<a href="#section-4.7.1-15" class="pilcrow">¶</a></p>
 <p id="section-4.7.1-16">If obtaining the aggregate share fails, then the Leader <span class="bcp14">MUST</span> fail the collection
 job with the error that caused the failure.<a href="#section-4.7.1-16" class="pilcrow">¶</a></p>
-<p id="section-4.7.1-17">A collection job's results are represented by a <code>CollectionJobResp</code>, which is
-structured as follows:<a href="#section-4.7.1-17" class="pilcrow">¶</a></p>
+<p id="section-4.7.1-17">Once the Leader has the Helper's aggregate share and has computed its own, the
+collection job is ready. Its results are represented by a <code>CollectionJobResp</code>,
+which is structured as follows:<a href="#section-4.7.1-17" class="pilcrow">¶</a></p>
 <div class="lang-tls-presentation sourcecode" id="section-4.7.1-18">
 <pre>
 struct {
@@ -5251,9 +5254,10 @@ response's Retry-After header field to decide when to try again. The Helper
 responds the same way until either the share is ready, from which point it
 responds with the <code>AggregateShare</code> (defined below), or the job fails, from which
 point it <span class="bcp14">MUST</span> abort with the error that caused the failure.<a href="#section-4.7.3-14" class="pilcrow">¶</a></p>
-<p id="section-4.7.3-15">The Helper <span class="bcp14">MAY</span> also wait to respond to the Leader's PUT until the aggregate
-share is ready, in which case, it responds with the <code>AggregateShare</code>, or the job
-fails, in which case it <span class="bcp14">MUST</span> abort with the error that caused the failure.<a href="#section-4.7.3-15" class="pilcrow">¶</a></p>
+<p id="section-4.7.3-15">The Helper <span class="bcp14">MAY</span> instead handle the request immediately. It waits to respond to
+the Leader's PUT until the aggregate share is ready, in which case, it responds
+with the <code>AggregateShare</code> (defined below), or the job fails, in which case it
+<span class="bcp14">MUST</span> abort with the error that caused the failure.<a href="#section-4.7.3-15" class="pilcrow">¶</a></p>
 <p id="section-4.7.3-16">The Helper first ensures that it recognizes the task ID. If not, it <span class="bcp14">MUST</span> fail
 the job with error <code>unrecognizedTask</code>.<a href="#section-4.7.3-16" class="pilcrow">¶</a></p>
 <p id="section-4.7.3-17">The indicated batch mode <span class="bcp14">MUST</span> match the task's batch mode. If not, the Helper
@@ -5270,8 +5274,11 @@ values. If the Helper's computed report count and checksum values do not match
 the values provided in the <code>AggregateShareReq</code>, it <span class="bcp14">MUST</span> fail the job with error
 <code>batchMismatch</code>.<a href="#section-4.7.3-20" class="pilcrow">¶</a></p>
 <p id="section-4.7.3-21">The Helper then encrypts <code>agg_share</code> under the Collector's HPKE public key as
-described in <a href="#aggregate-share-encrypt" class="auto internal xref">Section 4.7.6</a>, yielding <code>encrypted_agg_share</code>.<a href="#section-4.7.3-21" class="pilcrow">¶</a></p>
-<p id="section-4.7.3-22">The Helper's response consists of an <code>AggregateShare</code>, with media type
+described in <a href="#aggregate-share-encrypt" class="auto internal xref">Section 4.7.6</a>, yielding <code>encrypted_agg_share</code>.
+Encryption prevents the Leader from learning the actual result, as it only has
+its own aggregate share and cannot compute the Helper's.<a href="#section-4.7.3-21" class="pilcrow">¶</a></p>
+<p id="section-4.7.3-22">Once the Helper has encrypted its aggregate share, the aggregate share job is
+ready. Its results are represented by an <code>AggregateShare</code>, with media type
 "application/dap-aggregate-share":<a href="#section-4.7.3-22" class="pilcrow">¶</a></p>
 <div class="lang-tls-presentation sourcecode" id="section-4.7.3-23">
 <pre>
@@ -5600,7 +5607,8 @@ batches<a href="#section-5-5.2.1" class="pilcrow">¶</a></p>
 reports are grouped by an interval of time. The Collector specifies a "batch
 interval" into which report timestamps must fall.<a href="#section-5.1-1" class="pilcrow">¶</a></p>
 <p id="section-5.1-2">The Collector can issue queries whose batch intervals are continuous,
-monotonically increasing, and have the same duration. For example:<a href="#section-5.1-2" class="pilcrow">¶</a></p>
+monotonically increasing, and have the same duration. For example, the following
+sequence of batch intervals satisfies these conditions:<a href="#section-5.1-2" class="pilcrow">¶</a></p>
 <div class="lang-tls-presentation sourcecode" id="section-5.1-3">
 <pre>
 [
@@ -5619,7 +5627,7 @@ monotonically increasing, and have the same duration. For example:<a href="#sect
   struct {
     start = 1659547000,
     duration = 1000,
-  } Interval
+  } Interval,
 ]
 </pre><a href="#section-5.1-3" class="pilcrow">¶</a>
 </div>
@@ -5687,8 +5695,8 @@ struct {
 </pre><a href="#section-5.1.4-2" class="pilcrow">¶</a>
 </div>
 <p id="section-5.1.4-3">The <code>Query</code> received by the Leader or <code>BatchSelector</code> received by the Helper
-determines a valid set of batch bucket identifiers if
-<code>batch_interval.duration &gt;= time_precision</code>.<a href="#section-5.1.4-3" class="pilcrow">¶</a></p>
+determines a valid set of batch bucket identifiers if the batch interval's
+duration is greater than or equal to the task's <code>time_precision</code>.<a href="#section-5.1.4-3" class="pilcrow">¶</a></p>
 <p id="section-5.1.4-4">A batch consists of a sequence of contiguous batch buckets. That is, the set of
 batch bucket identifiers for the batch interval is<a href="#section-5.1.4-4" class="pilcrow">¶</a></p>
 <div class="lang-tls-presentation sourcecode" id="section-5.1.4-5">
@@ -5706,7 +5714,7 @@ batch bucket identifiers for the batch interval is<a href="#section-5.1.4-4" cla
   struct {
     start = batch_interval.start + batch_interval.duration - time_precision,
     duration = time_precision,
-  } Interval
+  } Interval,
 ]
 </pre><a href="#section-5.1.4-5" class="pilcrow">¶</a>
 </div>
@@ -5729,12 +5737,15 @@ opaque BatchID[32];
 </div>
 <p id="section-5.2-3">The Collector will not know the set of batch IDs available for collection. To
 get the aggregate of a batch, the Collector issues a query for the next
-available batch. The Leader selects a recent batch to aggregate which <span class="bcp14">MUST</span> not
+available batch. The Leader selects a recent batch to aggregate which <span class="bcp14">MUST NOT</span>
 yet have been associated with a collection job.<a href="#section-5.2-3" class="pilcrow">¶</a></p>
 <p id="section-5.2-4">The Aggregators can output batches of any size that is larger than or equal to
-the task's minimum batch size. The target batch size is implementation-specific,
-and may be equal to or greater than the minimum batch size. Deciding how soon
-batches should be output is also implementation-specific.<a href="#section-5.2-4" class="pilcrow">¶</a></p>
+the task's minimum batch size. The target batch size, if any, is
+implementation-specific, and may be equal to or greater than the minimum batch
+size. Deciding how soon batches should be output is also
+implementation-specific. Exactly sizing batches may be challenging for Leader
+deployments in which multiple, independent nodes running the aggregate
+interaction (see <a href="#aggregate-flow" class="auto internal xref">Section 4.6</a>) need to be coordinated.<a href="#section-5.2-4" class="pilcrow">¶</a></p>
 <div id="query-configuration-1">
 <section id="section-5.2.1">
           <h4 id="name-query-configuration-2">

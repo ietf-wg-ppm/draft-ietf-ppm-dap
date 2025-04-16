@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 16 October 2025                                      Cloudflare
+Expires: 18 October 2025                                      Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                           14 April 2025
+                                                           16 April 2025
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -64,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 16 October 2025.
+   This Internet-Draft will expire on 18 October 2025.
 
 Copyright Notice
 
@@ -2023,10 +2023,11 @@ aggregation job 1                   aggregation job 2          aggregation job j
    with the AggregationJobResp (defined below), or the job fails, from
    which point it MUST abort with the error that caused the failure.
 
-   The Helper MAY also wait to respond to the Leader's PUT until the
-   aggregation job initialization is ready, in which case, it responds
-   with the AggregationJobResp, or the job fails, in which case the
-   Helper MUST abort with the error that caused the failure.
+   The Helper MAY instead handle the request immediately.  It waits to
+   respond to the Leader's PUT until the aggregation job initialization
+   is ready, in which case it responds with theAggregationJobResp, or
+   the job fails, in which case the Helper MUST abort with the error
+   that caused the failure.
 
    Upon receipt of an AggregationJobInitReq, the Helper checks if it
    recognizes the task ID.  If not, then it MUST fail the job with error
@@ -2166,8 +2167,9 @@ aggregation job 1                   aggregation job 2          aggregation job j
    the relevant batch bucket with out_share as described in
    Section 4.6.2.3.
 
-   Finally, the Helper creates an AggregationJobResp to send to the
-   Leader.  This message is structured as follows:
+   Once the Helper has constructed a PrepareResp for each report, the
+   aggregation job response is ready.  Its results are represented by an
+   AggregationJobResp, which is structured as follows:
 
    struct {
      PrepareResp prepare_resps<0..2^32-1>;
@@ -2464,10 +2466,11 @@ aggregation job 1                   aggregation job 2          aggregation job j
    AggregationJobResp, or the job fails, from which point it MUST abort
    with the error that caused the failure.
 
-   The Helper MAY also wait to respond to the Leader's POST until the
-   aggregation job continuation is ready, in which case, it responds
-   with the AggregationJobResp, or the job fails, in which case it MUST
-   abort with the error that caused the failure.
+   The Helper MAY instead handle the request immediately.  It waits to
+   respond to the Leader's POST until the aggregation job continuation
+   is ready, in which case it responds with the AggregationJobResp, or
+   the job fails, in which case it MUST abort with the error that caused
+   the failure.
 
    Next, it checks that it recognizes the task ID.  If not, then it MUST
    fail the job with error unrecognizedTask.
@@ -2558,9 +2561,11 @@ aggregation job 1                   aggregation job 2          aggregation job j
      PrepareRespState prepare_resp_state = finished;
    } PrepareResp;
 
-   The Helper constructs an AggregationJobResp message (see
-   Section 4.6.1.2) with each prep step.  The order of the prep steps
-   MUST match the Leader's AggregationJobContinueReq.
+   Once the Helper has computed a PrepareResp for every report, the
+   aggregation job response is ready.  It is represented by an
+   AggregationJobResp message (see Section 4.6.1.2) with each prep step.
+   The order of the prep steps MUST match the Leader's
+   AggregationJobContinueReq.
 
 4.6.2.3.  Batch Buckets
 
@@ -2788,10 +2793,11 @@ aggregation job 1                   aggregation job 2          aggregation job j
    fails, from which point the Leader MUST abort with the error that
    caused the failure.
 
-   The Leader MAY also wait to respond to the Collector's PUT until the
-   collection job is ready, in which case it responds with the
-   CollectionJobResp, or the job fails, in which case the Leader MUST
-   abort with the error that caused the failure.
+   The Leader MAY instead handle the request immediately.  It waits to
+   respond to the Collector's PUT until the collection job is ready, in
+   which case it responds with the CollectionJobResp, or the job fails,
+   in which case the Leader MUST abort with the error that caused the
+   failure.
 
    The Leader begins handling a CollectionJobReq by checking that it
    recognizes the task ID.  If not, it MUST fail the collection job with
@@ -2833,8 +2839,9 @@ aggregation job 1                   aggregation job 2          aggregation job j
    If obtaining the aggregate share fails, then the Leader MUST fail the
    collection job with the error that caused the failure.
 
-   A collection job's results are represented by a CollectionJobResp,
-   which is structured as follows:
+   Once the Leader has the Helper's aggregate share and has computed its
+   own, the collection job is ready.  Its results are represented by a
+   CollectionJobResp, which is structured as follows:
 
    struct {
      PartialBatchSelector part_batch_selector;
@@ -3069,10 +3076,11 @@ aggregation job 1                   aggregation job 2          aggregation job j
    the job fails, from which point it MUST abort with the error that
    caused the failure.
 
-   The Helper MAY also wait to respond to the Leader's PUT until the
-   aggregate share is ready, in which case, it responds with the
-   AggregateShare, or the job fails, in which case it MUST abort with
-   the error that caused the failure.
+   The Helper MAY instead handle the request immediately.  It waits to
+   respond to the Leader's PUT until the aggregate share is ready, in
+   which case, it responds with the AggregateShare (defined below), or
+   the job fails, in which case it MUST abort with the error that caused
+   the failure.
 
    The Helper first ensures that it recognizes the task ID.  If not, it
    MUST fail the job with error unrecognizedTask.
@@ -3097,9 +3105,12 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    The Helper then encrypts agg_share under the Collector's HPKE public
    key as described in Section 4.7.6, yielding encrypted_agg_share.
+   Encryption prevents the Leader from learning the actual result, as it
+   only has its own aggregate share and cannot compute the Helper's.
 
-   The Helper's response consists of an AggregateShare, with media type
-   "application/dap-aggregate-share":
+   Once the Helper has encrypted its aggregate share, the aggregate
+   share job is ready.  Its results are represented by an
+   AggregateShare, with media type "application/dap-aggregate-share":
 
    struct {
      HpkeCiphertext encrypted_aggregate_share;
@@ -3365,7 +3376,8 @@ aggregation job 1                   aggregation job 2          aggregation job j
    specifies a "batch interval" into which report timestamps must fall.
 
    The Collector can issue queries whose batch intervals are continuous,
-   monotonically increasing, and have the same duration.  For example:
+   monotonically increasing, and have the same duration.  For example,
+   the following sequence of batch intervals satisfies these conditions:
 
    [
      struct {
@@ -3383,7 +3395,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
      struct {
        start = 1659547000,
        duration = 1000,
-     } Interval
+     } Interval,
    ]
 
    However, this is not a requirement: the Collector may decide to issue
@@ -3433,8 +3445,9 @@ aggregation job 1                   aggregation job 2          aggregation job j
    } Interval
 
    The Query received by the Leader or BatchSelector received by the
-   Helper determines a valid set of batch bucket identifiers if
-   batch_interval.duration >= time_precision.
+   Helper determines a valid set of batch bucket identifiers if the
+   batch interval's duration is greater than or equal to the task's
+   time_precision.
 
    A batch consists of a sequence of contiguous batch buckets.  That is,
    the set of batch bucket identifiers for the batch interval is
@@ -3452,7 +3465,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
      struct {
        start = batch_interval.start + batch_interval.duration - time_precision,
        duration = time_precision,
-     } Interval
+     } Interval,
    ]
 
 5.2.  Leader-selected Batch Mode
@@ -3467,14 +3480,17 @@ aggregation job 1                   aggregation job 2          aggregation job j
    The Collector will not know the set of batch IDs available for
    collection.  To get the aggregate of a batch, the Collector issues a
    query for the next available batch.  The Leader selects a recent
-   batch to aggregate which MUST not yet have been associated with a
+   batch to aggregate which MUST NOT yet have been associated with a
    collection job.
 
    The Aggregators can output batches of any size that is larger than or
-   equal to the task's minimum batch size.  The target batch size is
-   implementation-specific, and may be equal to or greater than the
-   minimum batch size.  Deciding how soon batches should be output is
-   also implementation-specific.
+   equal to the task's minimum batch size.  The target batch size, if
+   any, is implementation-specific, and may be equal to or greater than
+   the minimum batch size.  Deciding how soon batches should be output
+   is also implementation-specific.  Exactly sizing batches may be
+   challenging for Leader deployments in which multiple, independent
+   nodes running the aggregate interaction (see Section 4.6) need to be
+   coordinated.
 
 5.2.1.  Query Configuration
 
