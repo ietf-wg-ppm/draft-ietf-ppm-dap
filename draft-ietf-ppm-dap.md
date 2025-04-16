@@ -1685,13 +1685,9 @@ model that best fits its architecture and use case. For instance replay checks
 across vast numbers of reports and preparation of large histograms, may be
 better suited for the asynchronous model.
 
-In general, aggregation cannot begin until the Collector specifies a query and
-an aggregation parameter. However, depending on the VDAF and batch mode in use,
-it is often possible to begin aggregation as soon as reports arrive. For
-example, Prio3 has just one valid aggregation parameter (the empty string), and
-thus allows for eager aggregation. Both the time-interval and leader-selected
-batch modes defined in this document ({{batch-modes}}) allow for eager
-aggregation.
+Aggregation cannot begin until the Collector specifies a query and an
+aggregation parameter, except where eager aggregation ({{eager-aggregation}}) is
+possible.
 
 An aggregation job has three phases:
 
@@ -1713,6 +1709,29 @@ more than one batch and against adding reports to already collected batches,
 both of which can violate privacy ({{replay-protection}}). Before committing to
 an output share, the Aggregators check whether its report ID has already been
 aggregated and whether the batch bucket being updated has been collected.
+
+### Eager Aggregation {#eager-aggregation}
+
+In general, aggregation cannot begin until the Collector specifies a query and
+an aggregation parameter. However, depending on the VDAF and batch mode in use,
+it is often possible to begin aggregation as soon as reports arrive.
+
+For example, Prio3 has just one valid aggregation parameter (the empty string),
+and so allows for eager aggregation. Both the time-interval and leader-selected
+batch modes defined in this document ({{batch-modes}}) allow for eager
+aggregation, but future batch modes might preclude it.
+
+Even when the VDAF uses a non-empty aggregation parameter, there still might be
+some applications in which the Aggregators can anticipate the parameter the
+Collector will choose and begin aggregation.
+
+For example, when using Poplar1 ({{Section 8 of !VDAF}}), the Collector and
+Aggregators might agree ahead of time on the set of candidate prefixes to use.
+In such cases, it is important that Aggregators ensure that the parameter
+eventually chosen by the Collector matches what they used. Depending on the
+VDAF, aggregating reports with multiple aggregation parameters may impact
+privacy. Aggregators must therefore ensure they only ever use the aggregation
+parameter chosen by the Collector.
 
 ### Aggregate Initialization {#agg-init}
 
@@ -2686,15 +2705,15 @@ batch buckets according to the criteria defined by the batch mode in use
 If any of the batch buckets identified by the query have already been collected,
 then the Leader MUST fail the job with error `batchOverlap`.
 
-If aggregation is performed eagerly, then the Leader checks that the aggregation
-parameter received in the `CollectionJobReq` matches the aggregation parameter
-used in each aggregation job pertaining to the batch. If not, the Leader MUST
-fail the job with error `invalidMessage`.
+If aggregation is performed eagerly ({{eager-aggregation}}), then the Leader
+checks that the aggregation parameter received in the `CollectionJobReq` matches
+the aggregation parameter used in each aggregation job pertaining to the batch.
+If not, the Leader MUST fail the job with error `invalidMessage`.
 
 Having validated the `CollectionJobReq`, the Leader begins working with the
 Helper to aggregate the reports satisfying the query (or continues this process,
-depending on whether the Leader is aggregating eagerly) as described in
-{{aggregate-flow}}.
+depending on whether the Leader is aggregating eagerly; {{eager-aggregation}})
+as described in {{aggregate-flow}}.
 
 If the Leader has a pending aggregation job that overlaps with the batch for the
 collection job, the Leader MUST first complete the aggregation job before
