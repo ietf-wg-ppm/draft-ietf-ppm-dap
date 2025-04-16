@@ -3473,7 +3473,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    collection job.
 
    The Aggregators can output batches of any size that is larger than or
-   equal to the task's minimum batch sie.  The target batch size, if
+   equal to the task's minimum batch size.  The target batch size, if
    any, is implementation-specific, and may be equal to or greater than
    the minimum batch size.  Deciding how soon batches should be output
    is also implementation-specific.  Exactly sizing batches may be

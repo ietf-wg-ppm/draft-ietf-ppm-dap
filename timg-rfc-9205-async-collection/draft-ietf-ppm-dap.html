@@ -5733,7 +5733,7 @@ get the aggregate of a batch, the Collector issues a query for the next
 available batch. The Leader selects a recent batch to aggregate which <span class="bcp14">MUST NOT</span>
 yet have been associated with a collection job.<a href="#section-5.2-3" class="pilcrow">¶</a></p>
 <p id="section-5.2-4">The Aggregators can output batches of any size that is larger than or equal to
-the task's minimum batch sie. The target batch size, if any, is
+the task's minimum batch size. The target batch size, if any, is
 implementation-specific, and may be equal to or greater than the minimum batch
 size. Deciding how soon batches should be output is also
 implementation-specific. Exactly sizing batches may be challenging for Leader
