@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 20 October 2025                                      Cloudflare
+Expires: 21 October 2025                                      Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                           18 April 2025
+                                                           19 April 2025
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -64,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 20 October 2025.
+   This Internet-Draft will expire on 21 October 2025.
 
 Copyright Notice
 
@@ -122,7 +122,6 @@ Table of Contents
        4.7.4.  Aggregate Share Deletion
        4.7.5.  Collection Job Finalization
        4.7.6.  Aggregate Share Encryption
-       4.7.7.  Batch Validation
    5.  Batch Modes
      5.1.  Time Interval
        5.1.1.  Query Configuration
@@ -2266,8 +2265,8 @@ aggregation job 1                   aggregation job 2          aggregation job j
           CollectionJobReq message from the Collector; the Helper
           considers a batch to be collected once it has responded to an
           AggregateShareReq message from the Leader.  A batch is
-          determined by query (Section 5) conveyed in these messages.
-          Queries must satisfy the criteria covered in Section 4.7.7.
+          determined by query conveyed in these messages.  Queries must
+          satisfy the criteria defined by their batch mode (Section 5).
           These criteria are meant to restrict queries in a way that
           makes it easy to determine whether a report pertains to a
           batch that was collected.  See Section 6.4.2 for more
@@ -2799,6 +2798,10 @@ aggregation job 1                   aggregation job 2          aggregation job j
    in which case the Leader MUST abort with the error that caused the
    failure.
 
+   If the job fails with invalidBatchSize, then the Collector MAY retry
+   it later, once it believes enough new reports have been uploaded and
+   aggregated to allow the collection job to succeed.
+
    The Leader begins handling a CollectionJobReq by checking that it
    recognizes the task ID.  If not, it MUST fail the collection job with
    error unrecognizedTask.
@@ -2810,6 +2813,15 @@ aggregation job 1                   aggregation job 2          aggregation job j
    Next, the Leader checks that the aggregation parameter is valid as
    described in Section 4.4.  If not, it MUST fail the job with error
    invalidAggregationParameter.
+
+   The Leader then checks whether the Query in the Collector's request
+   determines a batch that can be collected.  If the query does not
+   identify a valid set of batch buckets according to the criteria
+   defined by the batch mode in use (Section 5), then the Leader MUST
+   fail the job with error batchInvalid.
+
+   If any of the batch buckets identified by the query have already been
+   collected, then the Leader MUST fail the job with error batchOverlap.
 
    If aggregation is performed eagerly, then the Leader checks that the
    aggregation parameter received in the CollectionJobReq matches the
@@ -2828,16 +2840,20 @@ aggregation job 1                   aggregation job 2          aggregation job j
    from the Helper.  This avoids a race condition between aggregation
    and collection jobs that can yield batch mismatch errors.
 
-   The Leader then checks whether it can construct a valid batch for the
-   collection job by applying the requirements in Section 4.7.7.  If so,
-   then the Leader obtains the Helper's aggregate share following the
-   aggregate-share request flow described in Section 4.7.3.  If not, it
-   either fails the collection job with error invalidBatch or tries
-   again later, depending on which requirement in Section 4.7.7 was not
-   met.
+   If the number of validated reports in the batch is not equal to or
+   greater than the task's minimum batch size, then the Leader SHOULD
+   wait for more reports to be uploaded and aggregated and try the
+   collection job again later.  The Leader MAY give up on the collection
+   job (for example, if it decides that no new reports satisfying the
+   query are likely to ever arrive), in which case it MUST fail the job
+   with error invalidBatchSize.
 
-   If obtaining the aggregate share fails, then the Leader MUST fail the
-   collection job with the error that caused the failure.
+   Once the Leader has validated the collection job and run to
+   completion all the aggregation jobs that pertain to it, it obtains
+   the Helper's aggregate share following the aggregate-share request
+   flow described in Section 4.7.3.  If obtaining the aggregate share
+   fails, then the Leader MUST fail the collection job with the error
+   that caused the failure.
 
    Once the Leader has the Helper's aggregate share and has computed its
    own, the collection job is ready.  Its results are represented by a
@@ -3088,9 +3104,19 @@ aggregation job 1                   aggregation job 2          aggregation job j
    The indicated batch mode MUST match the task's batch mode.  If not,
    the Helper MUST fail the job with invalidMessage.
 
-   The Helper then verifies that the request meets the requirements in
-   Section 4.7.7.  If not, it MUST fail the job with the indicated
-   error.
+   The Helper then verifies that the BatchSelector in the Leader's
+   request determines a batch that can be collected.  If the selector
+   does not identify a valid set of batch buckets according to the
+   criteria defined by the batch mode in use (Section 5), then the
+   Helper MUST fail the job with error batchInvalid.
+
+   If any of the batch buckets identified by the selector have already
+   been collected, then the Helper MUST fail the job with error
+   batchOverlap.
+
+   If the number of validated reports in the batch is not equal to or
+   greater than the task's minimum batch size, then the Helper MUST
+   abort with invalidBatchSize.
 
    The aggregation parameter MUST match the aggregation parameter used
    in aggregation jobs pertaining to this batch.  If not, the Helper
@@ -3318,31 +3344,6 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    The OpenBase() function is as specified in [HPKE], Section 6.1 for
    the ciphersuite indicated by the HPKE configuration.
-
-4.7.7.  Batch Validation
-
-   When the Leader receives a Query in the request from the Collector
-   during collection initialization (Section 4.7.1), it must first check
-   that the batch determined by the query can be collected.  The Helper
-   performs the same check when it receives a BatchSelector in the
-   request from the Leader for its aggregate share (Section 4.7.3).
-
-   First, the Aggregator checks if the request (the CollectionJobReq for
-   the Leader and the AggregateShareReq for the Helper) identifies a
-   valid set of batch buckets (Section 4.6.2.3).  If not, it MUST abort
-   the request with batchInvalid.
-
-   Next, the Aggregator checks that the number of reports in the batch
-   is equal to or greater than the task's minimum batch size.  If not,
-   then the Helper MUST abort with error invalidBatchSize.  The Leader
-   SHOULD wait for more reports to be validated and try the collection
-   job again later.
-
-   Next, the Aggregator checks if any of the batch buckets identified by
-   the request have already been collected.  If so, it MUST abort with
-   "batchOverlap".
-
-   Finally, the batch mode may define additional batch validation rules.
 
 5.  Batch Modes
 
@@ -3670,8 +3671,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    possible batch bucket i.e., the batch interval for time-interval or
    batch ID for leader-selected, along with a flag indicating whether
    the aggregate share has been collected.  This is due to the
-   requirement for queries to respect bucket boundaries.  See
-   Section 4.7.7.
+   requirement for queries to respect bucket boundaries.  See Section 5.
 
    However, Aggregators are also required to implement several per-
    report checks that require retaining a number of data artifacts.  For
