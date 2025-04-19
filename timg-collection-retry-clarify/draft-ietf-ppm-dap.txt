@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 20 October 2025                                      Cloudflare
+Expires: 21 October 2025                                      Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                           18 April 2025
+                                                           19 April 2025
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -64,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 20 October 2025.
+   This Internet-Draft will expire on 21 October 2025.
 
 Copyright Notice
 
@@ -2265,8 +2265,8 @@ aggregation job 1                   aggregation job 2          aggregation job j
           CollectionJobReq message from the Collector; the Helper
           considers a batch to be collected once it has responded to an
           AggregateShareReq message from the Leader.  A batch is
-          determined by query (Section 5) conveyed in these messages.
-          Queries must satisfy the criteria defined by their batch mode.
+          determined by query conveyed in these messages.  Queries must
+          satisfy the criteria defined by their batch mode (Section 5).
           These criteria are meant to restrict queries in a way that
           makes it easy to determine whether a report pertains to a
           batch that was collected.  See Section 6.4.2 for more
