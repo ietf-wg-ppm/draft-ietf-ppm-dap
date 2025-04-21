@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 21 October 2025                                      Cloudflare
+Expires: 23 October 2025                                      Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                           19 April 2025
+                                                           21 April 2025
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -64,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 21 October 2025.
+   This Internet-Draft will expire on 23 October 2025.
 
 Copyright Notice
 
@@ -151,9 +151,10 @@ Table of Contents
      8.4.  Anonymizing Proxies
      8.5.  Differential Privacy
      8.6.  Task Parameters
-       8.6.1.  VDAF Verification Key Requirements
-       8.6.2.  Batch Parameters
-       8.6.3.  Task Configuration Agreement and Consistency
+       8.6.1.  Predictable or Enumerable Task IDs
+       8.6.2.  VDAF Verification Key Requirements
+       8.6.3.  Batch Parameters
+       8.6.4.  Task Configuration Agreement and Consistency
      8.7.  Infrastructure Diversity
    9.  IANA Considerations
      9.1.  Protocol Message Media Types
@@ -1292,7 +1293,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    *  vdaf_verify_key (opaque byte string): The VDAF verification key
       shared by the Aggregators.  This key is used in the aggregation
       interaction (Section 4.6).  The security requirements are
-      described in Section 8.6.1.
+      described in Section 8.6.2.
 
    Finally, the Collector is configured with the HPKE secret key
    corresponding to collector_hpke_config.
@@ -3968,7 +3969,25 @@ aggregation job 1                   aggregation job 2          aggregation job j
    can be mitigated by having the Aggregators refuse shared parameters
    that are trivially insecure (e.g., a minimum batch size of 1 report).
 
-8.6.1.  VDAF Verification Key Requirements
+8.6.1.  Predictable or Enumerable Task IDs
+
+   This specification imposes no requirements on task IDs except that
+   they be globally unique.  One way to achieve this is to use random
+   task IDs, but deployments can also use schemes like
+   [I-D.draft-ietf-ppm-dap-taskprov-01] where task IDs are
+   deterministically generated from some set of task parameters.
+
+   In such settings, deployments should consider whether an Aggregator
+   acknowledging the existence of a task (by accepting report uploads or
+   aggregation jobs, for example) could unintentionally leak information
+   such as a label describing the task, the identities of participating
+   Aggregators or the fact that some measurement is being taken at all.
+
+   Such enumeration attacks can be mitigated by incorporating
+   unpredictable values into the task ID derivation.  They do not,
+   however, affect the protocol goals of privacy or robustness.
+
+8.6.2.  VDAF Verification Key Requirements
 
    Knowledge of the verification key would allow a Client to forge a
    report with invalid values that will nevertheless pass verification.
@@ -4000,7 +4019,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    VDAFs.  In particular, the security proofs for Prio3 require that the
    verification key is chosen independently of the generated reports.
 
-8.6.2.  Batch Parameters
+8.6.3.  Batch Parameters
 
    An important parameter of a DAP deployment is the minimum batch size.
    If a batch includes too few reports, then the aggregate result can
@@ -4012,7 +4031,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    value may be determined from the differential privacy (Section 8.5)
    parameters in use, if any.
 
-8.6.3.  Task Configuration Agreement and Consistency
+8.6.4.  Task Configuration Agreement and Consistency
 
    In order to execute a DAP task, it is necessary for all parties to
    ensure they agree on the configuration of the task.  However, it is
@@ -4727,6 +4746,13 @@ aggregation job 1                   aggregation job 2          aggregation job j
               test-design-04, 14 June 2023,
               <https://datatracker.ietf.org/doc/html/draft-dcook-ppm-
               dap-interop-test-design-04>.
+
+   [I-D.draft-ietf-ppm-dap-taskprov-01]
+              Wang, S. and C. Patton, "Task Binding and In-Band
+              Provisioning for DAP", Work in Progress, Internet-Draft,
+              draft-ietf-ppm-dap-taskprov-01, 2 November 2024,
+              <https://datatracker.ietf.org/doc/html/draft-ietf-ppm-dap-
+              taskprov-01>.
 
    [I-D.draft-ietf-privacypass-architecture-16]
               Davidson, A., Iyengar, J., and C. A. Wood, "The Privacy
