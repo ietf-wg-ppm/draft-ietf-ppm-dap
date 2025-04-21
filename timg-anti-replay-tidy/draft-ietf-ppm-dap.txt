@@ -89,7 +89,7 @@ Table of Contents
    2.  Overview
      2.1.  System Architecture
      2.2.  Validating Measurements
-     2.3.  Replay Protection
+     2.3.  Replay Protection and Double Collection
      2.4.  Lifecycle of Protocol Objects
        2.4.1.  Arity of Protocol Objects
    3.  Message Transport
@@ -732,7 +732,7 @@ Table of Contents
    the chosen limits, so the Client could not report 10^6 or -20
    seconds.
 
-2.3.  Replay Protection
+2.3.  Replay Protection and Double Collection
 
    Another goal of DAP is to mitigate replay attacks in which a report
    is aggregated in multiple batches or multiple times in a single
@@ -742,6 +742,14 @@ Table of Contents
    When a Client generates a report, it also generates a random nonce,
    called the "report ID".  Each Aggregator is responsible for storing
    the IDs of reports it has aggregated and rejecting replayed reports.
+
+   DAP must also ensure that any batch is only collected once, even if
+   new reports arrive that would fall into that batch.  Otherwise,
+   comparing the new aggregate result to the previous aggregate result
+   can violate the privacy of the added reports.
+
+   Aggregators are responsible for refusing new reports if the batch
+   they fall into has been collected (Section 4.7).
 
 2.4.  Lifecycle of Protocol Objects
 
@@ -1589,10 +1597,8 @@ aggregation job 1                   aggregation job 2          aggregation job j
    error reportRejected.
 
    The Leader MUST ignore any report pertaining to a batch that has
-   already been collected (see Section 4.6.1.4 for details).  Otherwise,
-   comparing the aggregate result to the previous aggregate result may
-   result in a privacy violation.  The Leader MAY also abort with error
-   reportRejected.
+   already been collected (see Section 2.3 for details).  The Leader MAY
+   also abort with error reportRejected.
 
    The Leader MUST ignore any report whose timestamp is outside of the
    task's time_interval.  When it does so, it SHOULD also abort with
@@ -1806,16 +1812,17 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    After an aggregation job is completed, each Aggregator commits to the
    output shares by updating running-total aggregate shares and other
-   values for each "batch bucket" associated with a prepared output
-   share, as described in Section 4.6.2.3.  These values are stored
-   until the batch is collected as described in Section 4.7.
+   values for each batch bucket associated with a prepared output share,
+   as described in Section 4.6.2.3.  These values are stored until a
+   batch that includes the batch bucket is collected as described in
+   Section 4.7.
 
    The aggregation interaction provides protection against including
-   reports in more than one batch (Section 2.3) and against adding
-   reports to already collected batches, both of which can violate
-   privacy.  Before committing to an output share, the Aggregators check
-   whether its report ID has already been aggregated and whether the
-   batch bucket being updated has been collected.
+   reports in more than one batch and against adding reports to already
+   collected batches, both of which can violate privacy (Section 2.3).
+   Before committing to an output share, the Aggregators check whether
+   its report ID has already been aggregated and whether the batch
+   bucket being updated has been collected.
 
 4.6.1.  Aggregate Initialization
 
@@ -2138,14 +2145,14 @@ aggregation job 1                   aggregation job 2          aggregation job j
    prepare for the next continuation step (Section 4.6.2.2).
 
    If state == Finished(out_share), then the Helper commits to out_share
-   as described in Section 4.6.2.3.  If commitment fails with error
-   commit_error, then instead of the continue response above, the Helper
-   responds with
+   as described in Section 4.6.2.3.  If commitment fails with some
+   ReportError value commit_error, then instead of the continue response
+   above, the Helper responds with
 
    variant {
      ReportID report_id;
-     PrepareRespstate prepare_resp_state = reject;
-     ReportError = commit_error;
+     PrepareRespState prepare_resp_state = reject;
+     ReportError report_error = commit_error;
    } PrepareResp;
 
    Once the Helper has constructed a PrepareResp for each report, the
@@ -2496,12 +2503,12 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    If state == Finished(out_share), the Helper commits out_share as
    described in Section 4.6.2.3.  If commitment fails with some some
-   error commit_error, then the Helper responds with
+   ReportError value commit_error, then the Helper responds with
 
    variant {
      ReportID report_id;
-     PrepareRespstate prepare_resp_state = reject;
-     ReportError = commit_error;
+     PrepareRespState prepare_resp_state = reject;
+     ReportError report_error = commit_error;
    } PrepareResp;
 
    If commitment succeeds, the Helper's response depends on the value of
@@ -2876,7 +2883,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    Once the Leader has constructed a CollectionJobResp for the
    Collector, the Leader considers the batch to be collected, and
-   further aggregation jobs MAY NOT commit more reports to the batch
+   further aggregation jobs MUST NOT commit more reports to the batch
    (see Section 4.6.2.3).
 
    Changing a collection job's parameters is illegal, so if there are
@@ -3140,9 +3147,9 @@ aggregation job 1                   aggregation job 2          aggregation job j
    Once an AggregateShareReq has been constructed for the batch
    determined by a given query, the Helper considers the batch to be
    collected.  The Helper MUST NOT commit any more output shares to the
-   batch and it is an error for the Leader to issue any more aggregation
+   batch.  It is an error for the Leader to issue any more aggregation
    jobs for additional reports that satisfy the query.  These reports
-   will be rejected by the Helper as described in Section 4.6.2.3.
+   MUST be rejected by the Helper as described in Section 4.6.2.3.
 
    Changing an aggregate share's parameters is illegal, so if there are
    further PUT requests to the aggregate share with a different

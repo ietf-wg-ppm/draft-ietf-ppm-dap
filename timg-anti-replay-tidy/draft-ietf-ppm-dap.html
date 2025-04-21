@@ -1206,7 +1206,7 @@ without revealing any individual contributor's data.<a href="#section-abstract-1
                 <p id="section-toc.1-1.2.2.2.1"><a href="#section-2.2" class="auto internal xref">2.2</a>.  <a href="#name-validating-measurements" class="internal xref">Validating Measurements</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.2.2.3">
-                <p id="section-toc.1-1.2.2.3.1"><a href="#section-2.3" class="auto internal xref">2.3</a>.  <a href="#name-replay-protection" class="internal xref">Replay Protection</a></p>
+                <p id="section-toc.1-1.2.2.3.1"><a href="#section-2.3" class="auto internal xref">2.3</a>.  <a href="#name-replay-protection-and-doubl" class="internal xref">Replay Protection and Double Collection</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.2.2.4">
                 <p id="section-toc.1-1.2.2.4.1"><a href="#section-2.4" class="auto internal xref">2.4</a>.  <a href="#name-lifecycle-of-protocol-objec" class="internal xref">Lifecycle of Protocol Objects</a></p>
@@ -2278,8 +2278,8 @@ report <code>10^6</code>  or <code>-20</code> seconds.<a href="#section-2.2-5" c
 </div>
 <div id="replay-protection">
 <section id="section-2.3">
-        <h3 id="name-replay-protection">
-<a href="#section-2.3" class="section-number selfRef">2.3. </a><a href="#name-replay-protection" class="section-name selfRef">Replay Protection</a>
+        <h3 id="name-replay-protection-and-doubl">
+<a href="#section-2.3" class="section-number selfRef">2.3. </a><a href="#name-replay-protection-and-doubl" class="section-name selfRef">Replay Protection and Double Collection</a>
         </h3>
 <p id="section-2.3-1">Another goal of DAP is to mitigate replay attacks in which a report is
 aggregated in multiple batches or multiple times in a single batch. This would
@@ -2288,6 +2288,12 @@ than it would otherwise.<a href="#section-2.3-1" class="pilcrow">¶</a></p>
 <p id="section-2.3-2">When a Client generates a report, it also generates a random nonce, called the
 "report ID". Each Aggregator is responsible for storing the IDs of reports it
 has aggregated and rejecting replayed reports.<a href="#section-2.3-2" class="pilcrow">¶</a></p>
+<p id="section-2.3-3">DAP must also ensure that any batch is only collected once, even if new reports
+arrive that would fall into that batch. Otherwise, comparing the new aggregate
+result to the previous aggregate result can violate the privacy of the added
+reports.<a href="#section-2.3-3" class="pilcrow">¶</a></p>
+<p id="section-2.3-4">Aggregators are responsible for refusing new reports if the batch they fall into
+has been collected (<a href="#collect-flow" class="auto internal xref">Section 4.7</a>).<a href="#section-2.3-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="lifecycle-of-protocol-objects">
@@ -3616,9 +3622,8 @@ succeed, the Client <span class="bcp14">SHOULD</span> abort and discontinue retr
 <p id="section-4.5.2-21">If a report's ID matches that of a previously uploaded report, the Leader <span class="bcp14">MUST</span>
 ignore it. In addition, it <span class="bcp14">MAY</span> alert the Client with error <code>reportRejected</code>.<a href="#section-4.5.2-21" class="pilcrow">¶</a></p>
 <p id="section-4.5.2-22">The Leader <span class="bcp14">MUST</span> ignore any report pertaining to a batch that has already been
-collected (see <a href="#input-share-validation" class="auto internal xref">Section 4.6.1.4</a> for details). Otherwise, comparing
-the aggregate result to the previous aggregate result may result in a privacy
-violation. The Leader <span class="bcp14">MAY</span> also abort with error <code>reportRejected</code>.<a href="#section-4.5.2-22" class="pilcrow">¶</a></p>
+collected (see <a href="#replay-protection" class="auto internal xref">Section 2.3</a> for details). The Leader <span class="bcp14">MAY</span> also abort
+with error <code>reportRejected</code>.<a href="#section-4.5.2-22" class="pilcrow">¶</a></p>
 <p id="section-4.5.2-23">The Leader <span class="bcp14">MUST</span> ignore any report whose timestamp is outside of the task's
 <code>time_interval</code>. When it does so, it <span class="bcp14">SHOULD</span> also abort with error
 <code>reportRejected</code>.<a href="#section-4.5.2-23" class="pilcrow">¶</a></p>
@@ -3863,13 +3868,13 @@ job.<a href="#section-4.6-13.3.1" class="pilcrow">¶</a></p>
         </ul>
 <p id="section-4.6-14">After an aggregation job is completed, each Aggregator commits to the output
 shares by updating running-total aggregate shares and other values for each
-"batch bucket" associated with a prepared output share, as described in
-<a href="#batch-buckets" class="auto internal xref">Section 4.6.2.3</a>. These values are stored until the batch is collected as
-described in <a href="#collect-flow" class="auto internal xref">Section 4.7</a>.<a href="#section-4.6-14" class="pilcrow">¶</a></p>
+batch bucket associated with a prepared output share, as described in
+<a href="#batch-buckets" class="auto internal xref">Section 4.6.2.3</a>. These values are stored until a batch that includes the batch
+bucket is collected as described in <a href="#collect-flow" class="auto internal xref">Section 4.7</a>.<a href="#section-4.6-14" class="pilcrow">¶</a></p>
 <p id="section-4.6-15">The aggregation interaction provides protection against including reports in
-more than one batch (<a href="#replay-protection" class="auto internal xref">Section 2.3</a>) and against adding reports to
-already collected batches, both of which can violate privacy. Before committing
-to an output share, the Aggregators check whether its report ID has already been
+more than one batch and against adding reports to already collected batches,
+both of which can violate privacy (<a href="#replay-protection" class="auto internal xref">Section 2.3</a>). Before committing to
+an output share, the Aggregators check whether its report ID has already been
 aggregated and whether the batch bucket being updated has been collected.<a href="#section-4.6-15" class="pilcrow">¶</a></p>
 <div id="agg-init">
 <section id="section-4.6.1">
@@ -4222,14 +4227,15 @@ variant {
 <p id="section-4.6.1.2-19">If <code>state == Continued(prep_state)</code>, then the Helper stores <code>state</code> to
 prepare for the next continuation step (<a href="#aggregation-helper-continuation" class="auto internal xref">Section 4.6.2.2</a>).<a href="#section-4.6.1.2-19" class="pilcrow">¶</a></p>
 <p id="section-4.6.1.2-20">If <code>state == Finished(out_share)</code>, then the Helper commits to <code>out_share</code> as
-described in <a href="#batch-buckets" class="auto internal xref">Section 4.6.2.3</a>. If commitment fails with error <code>commit_error</code>,
-then instead of the <code>continue</code> response above, the Helper responds with<a href="#section-4.6.1.2-20" class="pilcrow">¶</a></p>
+described in <a href="#batch-buckets" class="auto internal xref">Section 4.6.2.3</a>. If commitment fails with some <code>ReportError</code>
+value <code>commit_error</code>, then instead of the <code>continue</code> response above, the Helper
+responds with<a href="#section-4.6.1.2-20" class="pilcrow">¶</a></p>
 <div class="lang-tls-presentation sourcecode" id="section-4.6.1.2-21">
 <pre>
 variant {
   ReportID report_id;
-  PrepareRespstate prepare_resp_state = reject;
-  ReportError = commit_error;
+  PrepareRespState prepare_resp_state = reject;
+  ReportError report_error = commit_error;
 } PrepareResp;
 </pre><a href="#section-4.6.1.2-21" class="pilcrow">¶</a>
 </div>
@@ -4607,14 +4613,14 @@ variant {
 <p id="section-4.6.2.2-16">If <code>state == Continued(prep_state)</code>, then the Helper stores <code>state</code> to
 prepare for the next continuation step (<a href="#aggregation-helper-continuation" class="auto internal xref">Section 4.6.2.2</a>).<a href="#section-4.6.2.2-16" class="pilcrow">¶</a></p>
 <p id="section-4.6.2.2-17">If <code>state == Finished(out_share)</code>, the Helper commits <code>out_share</code> as described
-in <a href="#batch-buckets" class="auto internal xref">Section 4.6.2.3</a>. If commitment fails with some some error <code>commit_error</code>,
-then the Helper responds with<a href="#section-4.6.2.2-17" class="pilcrow">¶</a></p>
+in <a href="#batch-buckets" class="auto internal xref">Section 4.6.2.3</a>. If commitment fails with some some <code>ReportError</code> value
+<code>commit_error</code>, then the Helper responds with<a href="#section-4.6.2.2-17" class="pilcrow">¶</a></p>
 <div class="lang-tls-presentation sourcecode" id="section-4.6.2.2-18">
 <pre>
 variant {
   ReportID report_id;
-  PrepareRespstate prepare_resp_state = reject;
-  ReportError = commit_error;
+  PrepareRespState prepare_resp_state = reject;
+  ReportError report_error = commit_error;
 } PrepareResp;
 </pre><a href="#section-4.6.2.2-18" class="pilcrow">¶</a>
 </div>
@@ -5028,8 +5034,7 @@ Collector (see <a href="#aggregate-share-encrypt" class="auto internal xref">Sec
 </li>
           </ul>
 <p id="section-4.7.1-24">Once the <code>Leader</code> has constructed a <code>CollectionJobResp</code> for the Collector, the
-Leader considers the batch to be collected, and further aggregation jobs <span class="bcp14">MAY</span> NOT
-commit more reports to the batch (see <a href="#batch-buckets" class="auto internal xref">Section 4.6.2.3</a>).<a href="#section-4.7.1-24" class="pilcrow">¶</a></p>
+Leader considers the batch to be collected, and further aggregation jobs <span class="bcp14">MUST NOT</span> commit more reports to the batch (see <a href="#batch-buckets" class="auto internal xref">Section 4.6.2.3</a>).<a href="#section-4.7.1-24" class="pilcrow">¶</a></p>
 <p id="section-4.7.1-25">Changing a collection job's parameters is illegal, so if there are further PUT
 requests to the collection job with a different <code>CollectionJobReq</code>, the Leader
 <span class="bcp14">MUST</span> abort with error <code>invalidMessage</code>.<a href="#section-4.7.1-25" class="pilcrow">¶</a></p>
@@ -5306,9 +5311,9 @@ computed above and <code>encrypted_aggregate_share.ciphertext</code> is the ciph
 its response to the Collector (see <a href="#collect-finalization" class="auto internal xref">Section 4.7.5</a>).<a href="#section-4.7.3-27" class="pilcrow">¶</a></p>
 <p id="section-4.7.3-28">Once an <code>AggregateShareReq</code> has been constructed for the batch determined by a
 given query, the Helper considers the batch to be collected. The Helper <span class="bcp14">MUST NOT</span>
-commit any more output shares to the batch and it is an error for the Leader to
+commit any more output shares to the batch. It is an error for the Leader to
 issue any more aggregation jobs for additional reports that satisfy the query.
-These reports will be rejected by the Helper as described in <a href="#batch-buckets" class="auto internal xref">Section 4.6.2.3</a>.<a href="#section-4.7.3-28" class="pilcrow">¶</a></p>
+These reports <span class="bcp14">MUST</span> be rejected by the Helper as described in <a href="#batch-buckets" class="auto internal xref">Section 4.6.2.3</a>.<a href="#section-4.7.3-28" class="pilcrow">¶</a></p>
 <p id="section-4.7.3-29">Changing an aggregate share's parameters is illegal, so if there are further PUT
 requests to the aggregate share with a different <code>AggregateShareReq</code>, the Helper
 <span class="bcp14">MUST</span> abort with error <code>invalidMessage</code>.<a href="#section-4.7.3-29" class="pilcrow">¶</a></p>
