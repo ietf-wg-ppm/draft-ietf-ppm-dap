@@ -4228,8 +4228,8 @@ variant {
 prepare for the next continuation step (<a href="#aggregation-helper-continuation" class="auto internal xref">Section 4.6.2.2</a>).<a href="#section-4.6.1.2-19" class="pilcrow">¶</a></p>
 <p id="section-4.6.1.2-20">If <code>state == Finished(out_share)</code>, then the Helper commits to <code>out_share</code> as
 described in <a href="#batch-buckets" class="auto internal xref">Section 4.6.2.3</a>. If commitment fails with some <code>ReportError</code>
-value <code>commit_error</code>, then instead of the <code>continue</code> response above, the Helper
-responds with<a href="#section-4.6.1.2-20" class="pilcrow">¶</a></p>
+(e.g., the report was replayed or its batch bucket was collected), then instead
+of the <code>continue</code> response above, the Helper responds with<a href="#section-4.6.1.2-20" class="pilcrow">¶</a></p>
 <div class="lang-tls-presentation sourcecode" id="section-4.6.1.2-21">
 <pre>
 variant {
@@ -4613,8 +4613,9 @@ variant {
 <p id="section-4.6.2.2-16">If <code>state == Continued(prep_state)</code>, then the Helper stores <code>state</code> to
 prepare for the next continuation step (<a href="#aggregation-helper-continuation" class="auto internal xref">Section 4.6.2.2</a>).<a href="#section-4.6.2.2-16" class="pilcrow">¶</a></p>
 <p id="section-4.6.2.2-17">If <code>state == Finished(out_share)</code>, the Helper commits <code>out_share</code> as described
-in <a href="#batch-buckets" class="auto internal xref">Section 4.6.2.3</a>. If commitment fails with some some <code>ReportError</code> value
-<code>commit_error</code>, then the Helper responds with<a href="#section-4.6.2.2-17" class="pilcrow">¶</a></p>
+in <a href="#batch-buckets" class="auto internal xref">Section 4.6.2.3</a>. If commitment fails with some <code>ReportError</code> (e.g., the
+report was replayed or its batch bucket was collected), then the Helper responds
+with<a href="#section-4.6.2.2-17" class="pilcrow">¶</a></p>
 <div class="lang-tls-presentation sourcecode" id="section-4.6.2.2-18">
 <pre>
 variant {

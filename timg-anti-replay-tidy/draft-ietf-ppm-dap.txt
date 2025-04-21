@@ -2146,8 +2146,9 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    If state == Finished(out_share), then the Helper commits to out_share
    as described in Section 4.6.2.3.  If commitment fails with some
-   ReportError value commit_error, then instead of the continue response
-   above, the Helper responds with
+   ReportError (e.g., the report was replayed or its batch bucket was
+   collected), then instead of the continue response above, the Helper
+   responds with
 
    variant {
      ReportID report_id;
@@ -2502,8 +2503,9 @@ aggregation job 1                   aggregation job 2          aggregation job j
    prepare for the next continuation step (Section 4.6.2.2).
 
    If state == Finished(out_share), the Helper commits out_share as
-   described in Section 4.6.2.3.  If commitment fails with some some
-   ReportError value commit_error, then the Helper responds with
+   described in Section 4.6.2.3.  If commitment fails with some
+   ReportError (e.g., the report was replayed or its batch bucket was
+   collected), then the Helper responds with
 
    variant {
      ReportID report_id;
