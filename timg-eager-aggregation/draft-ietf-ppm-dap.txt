@@ -1836,17 +1836,18 @@ aggregation job 1                   aggregation job 2          aggregation job j
    preclude it.
 
    Even when the VDAF uses a non-empty aggregation parameter, there
-   still might be some applications inw which the Aggregators can
+   still might be some applications in which the Aggregators can
    anticipate the parameter the Collector will choose and begin
-   aggregation.  For example, when using Poplar1 (Section 8 of [VDAF]),
-   the Collector and Aggregators might agree ahead of time on the set of
-   candidate prefixes to use.
+   aggregation.
 
-   In such cases, it's important that Aggregators ensure that the
-   parameter eventually chosen by the Collector matches what they used.
-   Depending on the VDAF, aggregating reports with multiple aggregation
-   parameters may impact privacy.  Aggregators must therefore ensure
-   they only ever use the aggregation parameter chosen by the Collector.
+   For example, when using Poplar1 (Section 8 of [VDAF]), the Collector
+   and Aggregators might agree ahead of time on the set of candidate
+   prefixes to use.  In such cases, it is important that Aggregators
+   ensure that the parameter eventually chosen by the Collector matches
+   what they used.  Depending on the VDAF, aggregating reports with
+   multiple aggregation parameters may impact privacy.  Aggregators must
+   therefore ensure they only ever use the aggregation parameter chosen
+   by the Collector.
 
 4.6.2.  Aggregate Initialization
 
