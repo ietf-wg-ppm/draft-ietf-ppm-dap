@@ -1832,7 +1832,8 @@ aggregation job 1                   aggregation job 2          aggregation job j
    For example, Prio3 has just one valid aggregation parameter (the
    empty string), and so allows for eager aggregation.  Both the time-
    interval and leader-selected batch modes defined in this document
-   (Section 5) allow for eager aggregation.
+   (Section 5) allow for eager aggregation, but future batch modes might
+   preclude it.
 
    If the VDAF in use does have a non-trivial aggregation parameter,
    there might be some way the Aggregators can anticipate the parameter
