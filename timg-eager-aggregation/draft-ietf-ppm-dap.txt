@@ -1793,6 +1793,10 @@ aggregation job 1                   aggregation job 2          aggregation job j
    checks across vast numbers of reports and preparation of large
    histograms, may be better suited for the asynchronous model.
 
+   Aggregation cannot begin until the Collector specifies a query and an
+   aggregation parameter, except where eager aggregation (Section 4.6.1)
+   is possible.
+
    An aggregation job has three phases:
 
    *  Initialization: Disseminate report shares and initialize the VDAF
@@ -1823,18 +1827,24 @@ aggregation job 1                   aggregation job 2          aggregation job j
    In general, aggregation cannot begin until the Collector specifies a
    query and an aggregation parameter.  However, depending on the VDAF
    and batch mode in use, it is often possible to begin aggregation as
-   soon as reports arrive.  For example, Prio3 has just one valid
-   aggregation parameter (the empty string), and thus allows for eager
-   aggregation.  Both the time-interval and leader-selected batch modes
-   defined in this document (Section 5) allow for eager aggregation.  Or
-   if the VDAF in use does have a non-trivial aggregation parameter,
+   soon as reports arrive.
+
+   For example, Prio3 has just one valid aggregation parameter (the
+   empty string), and so allows for eager aggregation.  Both the time-
+   interval and leader-selected batch modes defined in this document
+   (Section 5) allow for eager aggregation.
+
+   If the VDAF in use does have a non-trivial aggregation parameter,
    there might be some way the Aggregators can anticipate the parameter
-   the Collector will choose and begin aggregation.  In such cases, it's
-   important that Aggregators ensure that the parameter eventually
-   chosen by the Collector matches what they used.  Re-preparing the
-   reports with a new aggregation parameter can violate privacy, so
-   Aggregators must take care.  If they guess the wrong parameter, the
-   reports can never be aggregated.
+   the Collector will choose and begin aggregation.  For example, when
+   using Poplar1 (Section 8 of [VDAF]), the Collector and Aggregators
+   might agree ahead of time on the set of candidate prefixes to use.
+
+   In such cases, it's important that Aggregators ensure that the
+   parameter eventually chosen by the Collector matches what they used.
+   Depending on the VDAF, aggregating reports with multiple aggregation
+   parameters may impact privacy.  Aggregators must therefore ensure
+   they only ever use the aggregation parameter chosen by the Collector.
 
 4.6.2.  Aggregate Initialization
 

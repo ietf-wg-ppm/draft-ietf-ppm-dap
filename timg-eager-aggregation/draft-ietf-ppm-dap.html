@@ -3847,31 +3847,34 @@ with the next step. This choice allows a Helper implementation to choose a
 model that best fits its architecture and use case. For instance replay checks
 across vast numbers of reports and preparation of large histograms, may be
 better suited for the asynchronous model.<a href="#section-4.6-10" class="pilcrow">¶</a></p>
-<p id="section-4.6-11">An aggregation job has three phases:<a href="#section-4.6-11" class="pilcrow">¶</a></p>
+<p id="section-4.6-11">Aggregation cannot begin until the Collector specifies a query and an
+aggregation parameter, except where eager aggregation (<a href="#eager-aggregation" class="auto internal xref">Section 4.6.1</a>) is
+possible.<a href="#section-4.6-11" class="pilcrow">¶</a></p>
+<p id="section-4.6-12">An aggregation job has three phases:<a href="#section-4.6-12" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-4.6-12.1">
-            <p id="section-4.6-12.1.1">Initialization: Disseminate report shares and initialize the VDAF prep state
-for each report.<a href="#section-4.6-12.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="section-4.6-13.1">
+            <p id="section-4.6-13.1.1">Initialization: Disseminate report shares and initialize the VDAF prep state
+for each report.<a href="#section-4.6-13.1.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-4.6-12.2">
-            <p id="section-4.6-12.2.1">Continuation: Exchange prep shares and messages until preparation completes or
-an error occurs.<a href="#section-4.6-12.2.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-4.6-13.2">
+            <p id="section-4.6-13.2.1">Continuation: Exchange prep shares and messages until preparation completes or
+an error occurs.<a href="#section-4.6-13.2.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-4.6-12.3">
-            <p id="section-4.6-12.3.1">Completion: Yield an output share for each report share in the aggregation
-job.<a href="#section-4.6-12.3.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-4.6-13.3">
+            <p id="section-4.6-13.3.1">Completion: Yield an output share for each report share in the aggregation
+job.<a href="#section-4.6-13.3.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
-<p id="section-4.6-13">After an aggregation job is completed, each Aggregator commits to the output
+<p id="section-4.6-14">After an aggregation job is completed, each Aggregator commits to the output
 shares by updating running-total aggregate shares and other values for each
 batch bucket associated with a prepared output share, as described in
 <a href="#batch-buckets" class="auto internal xref">Section 4.6.3.3</a>. These values are stored until a batch that includes the batch
-bucket is collected as described in <a href="#collect-flow" class="auto internal xref">Section 4.7</a>.<a href="#section-4.6-13" class="pilcrow">¶</a></p>
-<p id="section-4.6-14">The aggregation interaction provides protection against including reports in
+bucket is collected as described in <a href="#collect-flow" class="auto internal xref">Section 4.7</a>.<a href="#section-4.6-14" class="pilcrow">¶</a></p>
+<p id="section-4.6-15">The aggregation interaction provides protection against including reports in
 more than one batch and against adding reports to already collected batches,
 both of which can violate privacy (<a href="#replay-protection" class="auto internal xref">Section 2.3</a>). Before committing to
 an output share, the Aggregators check whether its report ID has already been
-aggregated and whether the batch bucket being updated has been collected.<a href="#section-4.6-14" class="pilcrow">¶</a></p>
+aggregated and whether the batch bucket being updated has been collected.<a href="#section-4.6-15" class="pilcrow">¶</a></p>
 <div id="eager-aggregation">
 <section id="section-4.6.1">
           <h4 id="name-eager-aggregation">
@@ -3879,17 +3882,21 @@ aggregated and whether the batch bucket being updated has been collected.<a href
           </h4>
 <p id="section-4.6.1-1">In general, aggregation cannot begin until the Collector specifies a query and
 an aggregation parameter. However, depending on the VDAF and batch mode in use,
-it is often possible to begin aggregation as soon as reports arrive. For
-example, Prio3 has just one valid aggregation parameter (the empty string), and
-thus allows for eager aggregation. Both the time-interval and leader-selected
+it is often possible to begin aggregation as soon as reports arrive.<a href="#section-4.6.1-1" class="pilcrow">¶</a></p>
+<p id="section-4.6.1-2">For example, Prio3 has just one valid aggregation parameter (the empty string),
+and so allows for eager aggregation. Both the time-interval and leader-selected
 batch modes defined in this document (<a href="#batch-modes" class="auto internal xref">Section 5</a>) allow for eager
-aggregation. Or if the VDAF in use does have a non-trivial aggregation
-parameter, there might be some way the Aggregators can anticipate the parameter
-the Collector will choose and begin aggregation. In such cases, it's important
-that Aggregators ensure that the parameter eventually chosen by the Collector
-matches what they used. Re-preparing the reports with a new aggregation
-parameter can violate privacy, so Aggregators must take care. If they guess the
-wrong parameter, the reports can never be aggregated.<a href="#section-4.6.1-1" class="pilcrow">¶</a></p>
+aggregation.<a href="#section-4.6.1-2" class="pilcrow">¶</a></p>
+<p id="section-4.6.1-3">If the VDAF in use does have a non-trivial aggregation parameter, there might be
+some way the Aggregators can anticipate the parameter the Collector will choose
+and begin aggregation. For example, when using Poplar1 (<span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-14#section-8" class="relref">Section 8</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>),
+the Collector and Aggregators might agree ahead of time on the set of candidate
+prefixes to use.<a href="#section-4.6.1-3" class="pilcrow">¶</a></p>
+<p id="section-4.6.1-4">In such cases, it's important that Aggregators ensure that the parameter
+eventually chosen by the Collector matches what they used. Depending on the
+VDAF, aggregating reports with multiple aggregation parameters may impact
+privacy. Aggregators must therefore ensure they only ever use the aggregation
+parameter chosen by the Collector.<a href="#section-4.6.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="agg-init">
