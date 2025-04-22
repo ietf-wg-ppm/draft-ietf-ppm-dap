@@ -1835,11 +1835,12 @@ aggregation job 1                   aggregation job 2          aggregation job j
    (Section 5) allow for eager aggregation, but future batch modes might
    preclude it.
 
-   If the VDAF in use does have a non-trivial aggregation parameter,
-   there might be some way the Aggregators can anticipate the parameter
-   the Collector will choose and begin aggregation.  For example, when
-   using Poplar1 (Section 8 of [VDAF]), the Collector and Aggregators
-   might agree ahead of time on the set of candidate prefixes to use.
+   Even when the VDAF uses a non-empty aggregation parameter, there
+   still might be some applications inw which the Aggregators can
+   anticipate the parameter the Collector will choose and begin
+   aggregation.  For example, when using Poplar1 (Section 8 of [VDAF]),
+   the Collector and Aggregators might agree ahead of time on the set of
+   candidate prefixes to use.
 
    In such cases, it's important that Aggregators ensure that the
    parameter eventually chosen by the Collector matches what they used.
