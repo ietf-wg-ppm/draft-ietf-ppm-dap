@@ -83,6 +83,11 @@ contributor:
        email: csharrison@chromium.org
 
  -
+       name: Alex Koshelev
+       org: Meta
+       email: koshelev@meta.com
+
+ -
        name: Peter Saint-Andre
        email: stpeter@gmail.com
 
@@ -958,9 +963,6 @@ standard tokens for use in the "type" field:
 | invalidMessage              | A message received by a protocol participant could not be parsed or otherwise was invalid. |
 | unrecognizedTask            | A server received a message with an unknown task ID. |
 | unrecognizedAggregationJob  | A server received a message with an unknown aggregation job ID. |
-| outdatedConfig              | The message was generated using an outdated configuration. |
-| reportRejected              | Report could not be processed for an unspecified reason. |
-| reportTooEarly              | Report could not be processed because its timestamp is too far in the future. |
 | batchInvalid                | The batch boundary check for Collector's query failed. |
 | invalidBatchSize            | There are an invalid number of reports in the batch. |
 | invalidAggregationParameter | The aggregation parameter assigned to a batch is invalid. |
@@ -1050,6 +1052,27 @@ in different situations.
 
 ~~~ tls-presentation
 struct {} Empty;
+~~~
+
+Errors that occurred while handling individual reports in the upload or
+aggregation interactions are represented by the following enum:
+
+~~~ tls-presentation
+enum {
+  reserved(0),
+  batch_collected(1),
+  report_replayed(2),
+  report_dropped(3),
+  hpke_unknown_config_id(4),
+  hpke_decrypt_error(5),
+  vdaf_prep_error(6),
+  task_expired(7),
+  invalid_message(8),
+  report_too_early(9),
+  task_not_started(10),
+  outdated_config(11),
+  (255)
+} ReportError;
 ~~~
 
 ### Times, Durations and Intervals {#timestamps}
@@ -1347,8 +1370,8 @@ encoded([
 ### Upload Request
 
 Clients upload reports by sending a POST to `{leader}/tasks/{task-id}/reports`.
-The body is a `Report`, with media type "application/dap-report", structured as
-follows:
+The body is an `UploadRequest`, with media type "application/dap-upload-req",
+structured as follows:
 
 ~~~ tls-presentation
 struct {
@@ -1363,7 +1386,16 @@ struct {
   HpkeCiphertext leader_encrypted_input_share;
   HpkeCiphertext helper_encrypted_input_share;
 } Report;
+
+struct {
+  Report reports[message_length];
+} UploadRequest;
 ~~~
+
+Here `message_length` denotes the length of the HTTP message content ({{!RFC9110,
+Section 6.4}}).
+
+Each upload request contains a sequence of `Report` with the following fields:
 
 * `report_metadata` is public metadata describing the report.
 
@@ -1466,30 +1498,60 @@ If the upload request is malformed, the Leader aborts with error
 If the Leader does not recognize the task ID, then it aborts with error
 `unrecognizedTask`.
 
+Otherwise, the Leader responds with a body consisting of an `UploadResponse`
+with the media type `application/dap-upload-resp`. The structure of the response
+is as follows:
+
+~~~ tls-presentation
+struct {
+  ReportID id;
+  ReportError error;
+} ReportUploadStatus;
+
+struct {
+  ReportUploadStatus status[message_length];
+} UploadResponse;
+~~~
+
+Here `message_length` denotes the length in bytes of the concatenated
+`ReportUploadStatus` objects.
+
+The Leader only includes reports that failed processing in the response. Reports
+that are accepted do not have a response.
+
+Reports in the response MUST appear in the same order as in the request.
+
+For each report that failed to upload, the Leader creates a `ReportUploadStatus`
+and includes the `ReportId` from the input and a `ReportError`
+({{basic-definitions}}) that describes the failure. The length of this sequence
+is always less than or equal to the length of the upload sequence.
+
 If the Leader does not recognize the `config_id` in the encrypted input share,
-it aborts with an error of type `outdatedConfig`. When the Client receives an
-`outdatedConfig` error, it SHOULD invalidate any cached `HpkeConfigList` and
-retry with a freshly generated `Report`. If this retried upload does not
-succeed, the Client SHOULD abort and discontinue retrying.
+it sets the corresponding error field to `outdated_config`. When the Client
+receives an `outdated_config` error, it SHOULD invalidate any cached
+`HpkeConfigList` and retry with a freshly generated `Report`. If this retried
+upload does not succeed, the Client SHOULD abort and discontinue retrying.
 
 If a report's ID matches that of a previously uploaded report, the Leader MUST
-discard it. In addition, it MAY alert the Client with error `reportRejected`.
+discard it. In addition, it MAY set the corresponding error field to
+`report_replayed`.
 
 The Leader MUST discard any report pertaining to a batch that has already been
-collected (see {{replay-protection}} for details). The Leader MAY also abort
-with error `reportRejected`.
+collected (see {{replay-protection}} for details). The Leader MAY also set the
+corresponding error field to `report_replayed`.
 
 The Leader MUST discard any report whose timestamp is outside of the task's
-`time_interval`. When it does so, it SHOULD also abort with error
-`reportRejected`.
+`time_interval`. When it does so, it SHOULD set the corresponding error field to
+`report_dropped`.
 
 The Leader may need to buffer reports while waiting to aggregate them (e.g.,
 while waiting for an aggregation parameter from the Collector; see
 {{collect-flow}}). The Leader SHOULD NOT accept reports whose timestamps are too
 far in the future. Implementors MAY provide for some small leeway, usually no
 more than a few minutes, to account for clock skew. If the Leader rejects a
-report for this reason, it SHOULD abort with error `reportTooEarly`. In this
-situation, the Client MAY re-upload the report later on.
+report for this reason, it SHOULD set the corresponding error field to
+`report_too_early`. In this situation, the Client MAY re-upload the report later
+on.
 
 If the report contains an unrecognized public report extension, or if the
 Leader's input share contains an unrecognized private report extension, then the
@@ -1514,31 +1576,101 @@ will occur before aggregation.
 
 #### Example
 
+Successful upload
+
 ~~~ http
 POST /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/reports
 Host: example.com
-Content-Type: application/dap-report
+Content-Type: application/dap-upload-req
+Content-Length: 100
 
 encoded(struct {
-  report_metadata = struct {
-    report_id = [0x0a, 0x0b, 0x0c, 0x0d, ...],
-    time = 1741986088,
-    public_extensions = [0x00, 0x00],
-  } ReportMetadata,
-  public_share = [0x0a, 0x0b, ...],
-  leader_encrypted_input-share = struct {
-    config_id = 1,
-    enc = [0x0f, 0x0e, 0x0d, 0x0c, ...],
-    payload = [0x0b, 0x0a, 0x09, 0x08, ...],
-  } HpkeCiphertext,
-  helper_encrypted_input-share = struct {
-    config_id = 2,
-    enc = [0x0c, 0x0d, 0x0e, 0x0f, ...],
-    payload = [0x08, 0x00, 0x0a, 0x0b, ...],
-  } HpkeCiphertext,
-} Report)
+  reports = [
+    struct {
+      report_metadata = struct {
+        report_id = [0x0a, 0x0b, 0x0c, 0x0d, ...],
+        time = 1741986088,
+        public_extensions = [0x00, 0x00],
+      } ReportMetadata,
+      public_share = [0x0a, 0x0b, ...],
+      leader_encrypted_input-share = struct {
+        config_id = 1,
+        enc = [0x0f, 0x0e, 0x0d, 0x0c, ...],
+        payload = [0x0b, 0x0a, 0x09, 0x08, ...],
+      } HpkeCiphertext,
+      helper_encrypted_input-share = struct {
+        config_id = 2,
+        enc = [0x0c, 0x0d, 0x0e, 0x0f, ...],
+        payload = [0x08, 0x00, 0x0a, 0x0b, ...],
+      } HpkeCiphertext,
+    } Report,
+  ],
+} UploadRequest)
 
 HTTP/1.1 200
+~~~
+
+Failed upload of 1/2 reports submitted in one bulk upload
+
+~~~ http
+POST /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/reports
+Host: example.com
+Content-Type: application/dap-upload-req
+Content-Length: 200
+
+encoded(struct {
+  reports = [
+    struct {
+      report_metadata = struct {
+        report_id = [0x0a, 0x0b, 0x0c, 0x0d, ...],
+        time = 2000000000,
+        public_extensions = [0x00, 0x01],
+      } ReportMetadata,
+      public_share = [0x0a, 0x0b, ...],
+      leader_encrypted_input-share = struct {
+        config_id = 1,
+        enc = [0x0f, 0x0e, 0x0d, 0x0c, ...],
+        payload = [0x0b, 0x0a, 0x09, 0x08, ...],
+      } HpkeCiphertext,
+      helper_encrypted_input-share = struct {
+        config_id = 2,
+        enc = [0x0c, 0x0d, 0x0e, 0x0f, ...],
+        payload = [0x08, 0x00, 0x0a, 0x0b, ...],
+      } HpkeCiphertext,
+    } Report,
+    struct {
+      report_metadata = struct {
+        report_id = [0x0z, 0x0y, 0x0x, 0x0w, ...],
+        time = 2000000001,
+        public_extensions = [0x00, 0x01],
+      } ReportMetadata,
+      public_share = [0x0a, 0x0b, ...],
+      leader_encrypted_input-share = struct {
+        config_id = 1,
+        enc = [0x0f, 0x0e, 0x0d, 0x0c, ...],
+        payload = [0x0b, 0x0a, 0x09, 0x08, ...],
+      } HpkeCiphertext,
+      helper_encrypted_input-share = struct {
+        config_id = 2,
+        enc = [0x0c, 0x0d, 0x0e, 0x0f, ...],
+        payload = [0x08, 0x00, 0x0a, 0x0b, ...],
+      } HpkeCiphertext,
+    } Report,
+  ],
+} UploadRequest)
+
+HTTP/1.1 200
+Content-Type: application/dap-upload-resp
+Content-Length: 20
+
+encoded(struct {
+  reports = [
+    struct {
+      id = [0x0z, 0x0y, 0x0x, 0x0w, ...],
+      error = report_replayed,
+    },
+  ],
+} UploadResponse)
 ~~~
 
 ### Report Extensions {#report-extensions}
@@ -1961,21 +2093,6 @@ enum {
   reject(2),
   (255)
 } PrepareRespType;
-
-enum {
-  reserved(0),
-  batch_collected(1),
-  report_replayed(2),
-  report_dropped(3),
-  hpke_unknown_config_id(4),
-  hpke_decrypt_error(5),
-  vdaf_prep_error(6),
-  task_expired(7),
-  invalid_message(8),
-  report_too_early(9),
-  task_not_started(10),
-  (255)
-} ReportError;
 
 struct {
   ReportID report_id;
@@ -3540,7 +3657,7 @@ ensure correctness during concurrent operation. This section describes the
 relevant concerns and makes suggestions as to potential implementation
 tradeoffs.
 
-* The upload interaction requires the Leader to ignore uploaded reports with a
+* The upload interaction requires the Leader to discard uploaded reports with a
   duplicated ID, including concurrently-uploaded reports. This might be
   implemented by synchronization or via an eventually-consistent process. If the
   Leader wishes to alert the Client with a `reportRejected` error,
@@ -3876,7 +3993,8 @@ This specification defines the following protocol messages, along with their
 corresponding media types:
 
 - HpkeConfigList {{hpke-config}}: "application/dap-hpke-config-list"
-- Report {{upload-request}}: "application/dap-report"
+- UploadRequest {{upload-request}}: "application/dap-upload-req"
+- UploadResponse {{upload-request}}: "application/dap-upload-resp"
 - AggregationJobInitReq {{leader-init}}: "application/dap-aggregation-job-init-req"
 - AggregationJobResp {{aggregation-helper-init}}: "application/dap-aggregation-job-resp"
 - AggregationJobContinueReq {{aggregation-leader-continuation}}: "application/dap-aggregation-job-continue-req"
@@ -3899,7 +4017,7 @@ component is using. This MAY be used as a hint by the receiver of the request
 to do compatibility checks between client and server.
 For example, A report submission to leader from a client that supports
 draft-ietf-ppm-dap-09 could have the header
-`Content-Type: application/dap-report;version=09`.
+`Content-Type: application/dap-upload-req;version=09`.
 
 The "Media Types" registry at https://www.iana.org/assignments/media-types will
 be (RFC EDITOR: replace "will be" with "has been") updated to include each of
@@ -3977,7 +4095,7 @@ Change controller:
 
 : IESG
 
-### "application/dap-report" media type
+### "application/dap-upload-req" media type
 
 Type name:
 
@@ -3985,7 +4103,78 @@ Type name:
 
 Subtype name:
 
-: dap-report
+: dap-upload-req
+
+Required parameters:
+
+: N/A
+
+Optional parameters:
+
+: None
+
+Encoding considerations:
+
+: only "8bit" or "binary" is permitted
+
+Security considerations:
+
+: see {{upload-flow}} of the published specification
+
+Interoperability considerations:
+
+: N/A
+
+Published specification:
+
+: RFC XXXX
+
+Applications that use this media type:
+
+: N/A
+
+Fragment identifier considerations:
+
+: N/A
+
+Additional information:
+
+: <dl>
+  <dt>Magic number(s):</dt><dd>N/A</dd>
+  <dt>Deprecated alias names for this type:</dt><dd>N/A</dd>
+  <dt>File extension(s):</dt><dd>N/A</dd>
+  <dt>Macintosh file type code(s):</dt><dd>N/A</dd>
+  </dl>
+
+Person and email address to contact for further information:
+
+: see Authors' Addresses section of the published specification
+
+Intended usage:
+
+: COMMON
+
+Restrictions on usage:
+
+: N/A
+
+Author:
+
+: see Authors' Addresses section of the published specification
+
+Change controller:
+
+: IESG
+
+### "application/dap-upload-resp" media type
+
+Type name:
+
+: application
+
+Subtype name:
+
+: dap-upload-resp
 
 Required parameters:
 
@@ -4619,19 +4808,19 @@ The initial contents of this registry are listed below in {{report-error-id}}.
 
 | Value  | Name                     | Reference                               |
 |:-------|:-------------------------|:----------------------------------------|
-| `0x00` | `reserved`               | {{aggregation-helper-init}} of RFX XXXX |
-| `0x01` | `batch_collected`        | {{aggregation-helper-init}} of RFX XXXX |
-| `0x02` | `report_replayed`        | {{aggregation-helper-init}} of RFX XXXX |
-| `0x03` | `report_dropped`         | {{aggregation-helper-init}} of RFX XXXX |
-| `0x04` | `hpke_unknown_config_id` | {{aggregation-helper-init}} of RFX XXXX |
-| `0x05` | `hpke_decrypt_error`     | {{aggregation-helper-init}} of RFX XXXX |
-| `0x06` | `vdaf_prep_error`        | {{aggregation-helper-init}} of RFX XXXX |
-| `0x07` | `task_expired`           | {{aggregation-helper-init}} of RFX XXXX |
-| `0x08` | `invalid_message`        | {{aggregation-helper-init}} of RFX XXXX |
-| `0x09` | `report_too_early`       | {{aggregation-helper-init}} of RFX XXXX |
-| `0x10` | `task_not_started`       | {{aggregation-helper-init}} of RFX XXXX |
-{: #report-error-id title="Initial contents of the Report Error Identifiers
-registry."}
+| `0x00` | `reserved`               | {{basic-definitions}} of RFX XXXX |
+| `0x01` | `batch_collected`        | {{basic-definitions}} of RFX XXXX |
+| `0x02` | `report_replayed`        | {{basic-definitions}} of RFX XXXX |
+| `0x03` | `report_dropped`         | {{basic-definitions}} of RFX XXXX |
+| `0x04` | `hpke_unknown_config_id` | {{basic-definitions}} of RFX XXXX |
+| `0x05` | `hpke_decrypt_error`     | {{basic-definitions}} of RFX XXXX |
+| `0x06` | `vdaf_prep_error`        | {{basic-definitions}} of RFX XXXX |
+| `0x07` | `task_expired`           | {{basic-definitions}} of RFX XXXX |
+| `0x08` | `invalid_message`        | {{basic-definitions}} of RFX XXXX |
+| `0x09` | `report_too_early`       | {{basic-definitions}} of RFX XXXX |
+| `0x0A` | `task_not_started`       | {{basic-definitions}} of RFX XXXX |
+| `0x0B` | `outdated_config`        | {{basic-definitions}} of RFX XXXX |
+{: #report-error-id title="Initial contents of the Report Error Identifiers registry."}
 
 ## URN Sub-namespace for DAP (urn:ietf:params:ppm:dap) {#urn-space}
 
