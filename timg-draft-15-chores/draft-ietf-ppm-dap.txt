@@ -209,7 +209,7 @@ Table of Contents
 
    *  Use aasvg for prettier diagrams. (#657)
 
-   *  More precise description of time and intervals. (#658)
+   *  Add more precise description of time and intervals. (#658)
 
    *  Reorganize text for clarity and flow. (#659, #660, #661, #663,
       #665, #666, #668, #672, #678, #680, #684, #653, #654)
@@ -220,7 +220,7 @@ Table of Contents
       aggregation jobs, collection jobs and aggregate shares. (*) (#674,
       #675, #677)
 
-   *  Security consideration for predictable task IDs. (#679)
+   *  Add security consideration for predictable task IDs. (#679)
 
    *  Bump version tag from "dap-14" to "dap-15". (*)
 
