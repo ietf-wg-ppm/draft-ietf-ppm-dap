@@ -214,7 +214,7 @@ Table of Contents
    *  Reorganize text for clarity and flow. (#659, #660, #661, #663,
       #665, #666, #668, #672, #678, #680, #684, #653, #654)
 
-   *  Align with RFC 9205 recommendations. (#673, #683)
+   *  Align with RFC 9205 recommendations. (*) (#673, #683)
 
    *  Define consistent semantics for long-running interactions:
       aggregation jobs, collection jobs and aggregate shares. (*) (#674,
