@@ -1384,7 +1384,7 @@ encoded([
 ### Upload Request
 
 Clients upload reports by sending a POST to `{leader}/tasks/{task-id}/reports`.
-The body is a `Report`, with media type "application/dap-report", structured as
+The body is a `UploadRequest`, with media type "application/dap-report", structured as
 follows:
 
 ~~~ tls-presentation
@@ -1400,7 +1400,13 @@ struct {
   HpkeCiphertext leader_encrypted_input_share;
   HpkeCiphertext helper_encrypted_input_share;
 } Report;
+
+struct {
+  Report reports<0..2^32-1>;
+} UploadRequest;
 ~~~
+
+Each upload request contains a sequence of `Report` messages constructed as follows:
 
 * `report_metadata` is public metadata describing the report.
 
