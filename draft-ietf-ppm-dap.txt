@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 31 October 2025                                      Cloudflare
+Expires: 6 November 2025                                      Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                           29 April 2025
+                                                              5 May 2025
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -64,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 31 October 2025.
+   This Internet-Draft will expire on 6 November 2025.
 
 Copyright Notice
 
@@ -2671,7 +2671,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    something like a transient network failure.  The Leader could then
    resend the request to have the Helper advance to step n+1 and the
    Helper should be able to retransmit the AggregationJobResp that was
-   previously dropped.  To make that kind ofrecovery possible,
+   previously dropped.  To make that kind of recovery possible,
    Aggregator implementations SHOULD checkpoint the most recent step's
    prep state and messages to durable storage such that the Leader can
    re-construct continuation requests and the Helper can re-construct
