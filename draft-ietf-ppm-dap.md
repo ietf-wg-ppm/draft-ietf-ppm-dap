@@ -1532,7 +1532,7 @@ situation, the Client MAY re-upload the report later on.
 
 If the report contains an unrecognized public report extension, or if the
 Leader's input share contains an unrecognized private report extension, then the
-Leader MUST ignore the report and MAY abort with error `unsupportedExtension`.
+Leader MUST discard the report and MAY abort with error `unsupportedExtension`.
 If the Leader does abort for this reason, it SHOULD indicate the unsupported
 extensions in the resulting problem document via an extension member ({{Section
 3.2 of !RFC9457}}) `unsupported_extensions` on the problem document. This member
@@ -1543,7 +1543,7 @@ would contain the JSON value `[23, 42]`.
 
 If the same extension type appears more than once among the public extensions
 and the private extensions in the Leader's input share, then the Leader MUST
-ignore the report and MAY abort with error `invalidMessage`.
+discard the report and MAY abort with error `invalidMessage`.
 
 Validation of anti-replay and extensions is not mandatory during the handling of
 upload requests to avoid blocking on storage transactions or decryption of input
@@ -1802,7 +1802,7 @@ rejected and removed from the candidate set, and no message is sent to the
 Helper for this report.
 
 If `state` is of type `Continued`, then the Leader constructs a `PrepareInit`
-message.
+structure for that report.
 
 ~~~ tls-presentation
 struct {
@@ -1831,7 +1831,8 @@ It is not possible for `state` to be of type `Finished` during Leader
 initialization.
 
 Once all the report shares have been initialized, the Leader creates an
-`AggregationJobInitReq` message.
+`AggregationJobInitReq` message containing the `PrepareInit` structures
+for the relevant reports.
 
 ~~~ tls-presentation
 struct {
@@ -1918,8 +1919,9 @@ The Leader proceeds as follows with each report:
 1. Else the type is invalid, in which case the Leader MUST abort the aggregation
    job.
 
-Since VDAF preparation completes in a constant number of rounds, it will never
-be the case that some reports are completed and others are not.
+Since VDAF preparation completes in a constant number of rounds, it
+will never be the case that some reports in an aggregation job are
+completed and others are not.
 
 If the Leader fails to process the response from the Helper, for example because
 of a transient failure such as a network connection failure or process crash,
@@ -2003,10 +2005,11 @@ struct {
 } PrepareResp;
 ~~~
 
-Next the Helper decrypts each of its remaining report shares as described in
+The helper processes each of the remaining report shares in turn:
+It decrypts each of its remaining report shares as described in
 {{input-share-decryption}}, then checks input share validity as described in
-{{input-share-validation}}. For any report that was rejected, the Helper sets
-the outbound preparation response to
+{{input-share-validation}}. If these validity checkes fail, the Helper sets
+the corresponding outbound preparation response to
 
 ~~~ tls-presentation
 variant {
@@ -2089,15 +2092,18 @@ where `prepare_resps` are the outbound prep steps computed in the previous step.
 The order MUST match `AggregationJobInitReq.prepare_inits`. The media type for
 `AggregationJobResp` is "application/dap-aggregation-job-resp".
 
-Changing an aggregation job's parameters is illegal. If the Helper receives
-further PUT requests to the aggregation job with a different
-`AggregationJobInitReq` in the body, it MUST abort with a client error. For
-further requests with the same `AggregationJobInitReq` in the body, the Helper
-SHOULD respond as it did for the original `AggregationJobInitReq`.
+The Helper may receive multiple copies of a given initalization
+request due to the retry mechanism specified in {{leader-init}}. The
+Helper MUST verify that subsequent requests have the same
+`AggregationJobInitReq` value and abort with a client error if they do
+not.  It is illegal to rewind or reset the state of an aggregation
+job. If the Helper receives requests to initialize an aggregation job
+once it has been continued at least once, confirming that the Leader
+received the Helper's response (see {{agg-continue-flow}}), it MUST
+abort with a client error.  For all other duplicate initialization
+requests, the Helper SHOULD respond as it did for the original
+`AggregationJobInitReq`.
 
-It is illegal to rewind or reset the state of an aggregation job. If the Helper
-receives requests to initialize an aggregation job once it has been continued at
-least once (see {{agg-continue-flow}}), it MUST abort with a client error.
 
 #### Input Share Decryption {#input-share-decryption}
 
@@ -2162,13 +2168,12 @@ for each input share in the job:
    private extension fields. If so, the Aggregator MUST mark the input share as
    invalid with error `invalid_message`.
 
-1. If an Aggregator cannot determine if an input share is valid, it MUST mark
-   the input share as invalid with error `report_dropped`.
-
-   For example, the report timestamp may be so far in the past that the state
-   required to perform the check has been evicted from the Aggregator's storage.
-   See {{sharding-storage}} for details.
-
+1. If an Aggregator cannot determine if an input share is valid--for
+   example, the report timestamp may be so far in the past that the
+   state required to perform the check has been evicted from the
+   Aggregator's storage (see {{sharding-storage}} for details)--it
+   MUST mark the input share as invalid with error `report_dropped`.
+   
 If all of the above checks succeed, the input share is valid.
 
 #### Example
@@ -2279,8 +2284,9 @@ struct {
 The `step` field is the step of DAP aggregation that the Leader just reached and
 wants the Helper to advance to. The `prepare_continues` field is the sequence of
 preparation continuation messages constructed in the previous step. The
-`PrepareContinue`s MUST be in the same order as the previous request to the
-aggregation job, omitting any reports that were rejected.
+`PrepareContinue` elements MUST be in the same order as the previous request to the
+aggregation job, omitting any reports that were previously rejected by either
+side.
 
 The Leader MUST authenticate its requests to the Helper using a scheme that
 meets the requirements in {{request-authentication}}.
@@ -2503,9 +2509,9 @@ bucket:
 * Update the aggregate share `agg_share` to `Vdaf.agg_update(agg_param,
   agg_share, out_share)`.
 * Increment the count by 1.
-* Update the checksum value to the bitwise XOR of the checksum value with the
-  SHA256 {{!SHS=DOI.10.6028/NIST.FIPS.180-4}} hash of the report ID associated
-  with the output share.
+* Update the checksum value to the bitwise XOR of the current checksum
+  value with the SHA256 {{!SHS=DOI.10.6028/NIST.FIPS.180-4}} hash of
+  the report ID associated with the output share.
 * Store `out_share`'s report ID for future replay checks.
 
 This section describes a single set of values associated with each batch bucket.
@@ -2676,15 +2682,17 @@ struct {
 Collectors MUST authenticate their requests to Leaders using a scheme that meets
 the requirements in {{request-authentication}}.
 
-Depending on the VDAF scheme and how the Leader is configured, the Leader and
-Helper may already have prepared a sufficient number of reports satisfying the
-query and be ready to return the aggregate shares right away. However, this is
-not always the case. In fact, for some VDAFs, it is not be possible to begin
-running aggregation jobs ({{aggregate-flow}}) until the Collector initiates a
-collection job. This is because, in general, the aggregation parameter is not
-known until this point. In certain situations it is possible to predict the
-aggregation parameter in advance. For example, for Prio3 the only valid
-aggregation parameter is the empty string.
+Depending on the VDAF scheme and how the Leader is configured, the
+Leader and Helper may already have prepared a sufficient number of
+reports satisfying the query and be ready to return the aggregate
+shares right away. However, this is not always the case. In fact, for
+some VDAFs, it is not be possible to begin running aggregation jobs
+({{aggregate-flow}}) until the Collector initiates a collection
+job. This is because, in general (see {{eager-aggregation}}), the
+aggregation parameter is not known until this point. In certain
+situations it is possible to predict the aggregation parameter in
+advance. For example, for Prio3 the only valid aggregation parameter
+is the empty string.
 
 The Leader MAY defer handling the collection request. In this case, it indicates
 that the collection job is not yet ready by immediately sending an empty
@@ -2725,7 +2733,7 @@ batch buckets according to the criteria defined by the batch mode in use
 If any of the batch buckets identified by the query have already been collected,
 then the Leader MUST fail the job with error `batchOverlap`.
 
-If aggregation is performed eagerly ({{eager-aggregation}}), then the Leader
+If aggregation was performed eagerly ({{eager-aggregation}}), then the Leader
 checks that the aggregation parameter received in the `CollectionJobReq` matches
 the aggregation parameter used in each aggregation job pertaining to the batch.
 If not, the Leader MUST fail the job with error `invalidMessage`.
@@ -2743,10 +2751,11 @@ errors.
 
 If the number of validated reports in the batch is not equal to or greater than
 the task's minimum batch size, then the Leader SHOULD wait for more reports to
-be uploaded and aggregated and try the collection job again later. The Leader
-MAY give up on the collection job (for example, if it decides that no new
+be uploaded and aggregated and try the collection job again later. Alternately,
+the Leader MAY give up on the collection job (for example, if it decides that no new
 reports satisfying the query are likely to ever arrive), in which case it MUST
-fail the job with error `invalidBatchSize`.
+fail the job with error `invalidBatchSize`. In MUST NOT fulfill any jobs
+with an insufficient number of validated reports.
 
 Once the Leader has validated the collection job and run to completion all the
 aggregation jobs that pertain to it, it obtains the Helper's aggregate share
@@ -3599,7 +3608,7 @@ tradeoffs.
 
 * The Leader is responsible for generating aggregation jobs, and will generally
   want to place each report in exactly one aggregation job. (The only event in
-  which a Leader will want to place a report in multiple aggregation jobs is if
+  which a Leadercan place a report in multiple aggregation jobs is if
   the Helper rejects the report with `report_too_early`, in which case the
   Leader can place the report into a later aggregation job.) This may require
   synchronization between different components of the system which are
@@ -3794,7 +3803,7 @@ reports to an anonymizing proxy server which would then use Oblivious HTTP
 authentication would be performed by the proxy rather than any of the
 participants in the DAP protocol.
 
-The report itself may contain deanonmyizing information that cannot be removed
+The report itself may contain deanonymizing information that cannot be removed
 by a proxy:
 
 * The report timestamp indicates when a report was generated and may help an
