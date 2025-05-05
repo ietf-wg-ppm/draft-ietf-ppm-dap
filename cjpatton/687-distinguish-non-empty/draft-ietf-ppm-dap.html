@@ -4792,7 +4792,7 @@ successfully advances from step <code>n</code> to <code>n+1</code>, but its <cod
 response to the Leader gets dropped due to something like a transient network
 failure. The Leader could then resend the request to have the Helper advance to
 step <code>n+1</code> and the Helper should be able to retransmit the <code>AggregationJobResp</code>
-that was previously dropped. To make that kind of recovery possible, Aggregator
+that was previously dropped. To make that kind ofrecovery possible, Aggregator
 implementations <span class="bcp14">SHOULD</span> checkpoint the most recent step's prep state and messages
 to durable storage such that the Leader can re-construct continuation requests
 and the Helper can re-construct continuation responses as needed.<a href="#section-4.6.3.4-1" class="pilcrow">¶</a></p>
