@@ -2526,7 +2526,7 @@ successfully advances from step `n` to `n+1`, but its `AggregationJobResp`
 response to the Leader gets dropped due to something like a transient network
 failure. The Leader could then resend the request to have the Helper advance to
 step `n+1` and the Helper should be able to retransmit the `AggregationJobResp`
-that was previously dropped. To make that kind ofrecovery possible, Aggregator
+that was previously dropped. To make that kind of recovery possible, Aggregator
 implementations SHOULD checkpoint the most recent step's prep state and messages
 to durable storage such that the Leader can re-construct continuation requests
 and the Helper can re-construct continuation responses as needed.
