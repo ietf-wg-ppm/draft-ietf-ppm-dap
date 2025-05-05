@@ -1075,7 +1075,7 @@ DAP has three major interactions which need to be defined:
 
 Each of these interactions is defined in terms of HTTP resources. In this
 section we define these resources and the messages used to act on them.
-
+sxzaaazsxxxx
 ## Basic Type Definitions {#basic-definitions}
 
 A `ReportID` is used to uniquely identify a report in the context of a DAP task.
@@ -1512,13 +1512,13 @@ retry with a freshly generated `Report`. If this retried upload does not
 succeed, the Client SHOULD abort and discontinue retrying.
 
 If a report's ID matches that of a previously uploaded report, the Leader MUST
-ignore it. In addition, it MAY alert the Client with error `reportRejected`.
+discard it. In addition, it MAY alert the Client with error `reportRejected`.
 
-The Leader MUST ignore any report pertaining to a batch that has already been
+The Leader MUST discard any report pertaining to a batch that has already been
 collected (see {{replay-protection}} for details). The Leader MAY also abort
 with error `reportRejected`.
 
-The Leader MUST ignore any report whose timestamp is outside of the task's
+The Leader MUST discard any report whose timestamp is outside of the task's
 `time_interval`. When it does so, it SHOULD also abort with error
 `reportRejected`.
 
