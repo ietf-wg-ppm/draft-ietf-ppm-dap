@@ -135,7 +135,7 @@ measurement is usually not interested in people's individual responses but
 rather in aggregated data. Conventional methods require collecting individual
 responses and then aggregating them on some server, thus representing a threat
 to user privacy and rendering many such measurements difficult and impractical.
-This document describes a multi-party distributed aggregation protocol (DAP) for
+This document describes a multi-party Distributed Aggregation Protocol (DAP) for
 privacy preserving measurement which can be used to collect aggregate data
 without revealing any individual contributor's data.
 
@@ -548,7 +548,7 @@ Report share:
   report.
 
 Task:
-: A task in which measurements of an understood type will be reported by the
+: A set of measurements of an understood type which will be reported by the
   Clients, aggregated by the Aggregators and received by the Collector. Many
   collections can be performed in the course of a single task.
 
@@ -591,6 +591,13 @@ compatible with such VDAFs, but only allows each measurement to be aggregated
 once.
 
 ## System Architecture {#system-architecture}
+
+The basic unit of DAP operation is the _task_
+({{task-configuration}}), which corresponds to a set of measurements
+of a single type. A given task may result in multiple aggregated
+reported results, for instance when measurements are collected over a
+long time period and broken up into multiple batches according to
+different time windows.
 
 ~~~ aasvg
 .--------.
@@ -645,7 +652,7 @@ sometimes but HTTP servers at other times. It is even possible for a single
 entity to perform multiple DAP roles. For example, the Collector could also be
 one of the Aggregators.
 
-In the course of a measurement task ({{task-configuration}}), each Client
+In the course of a measurement task, each Client
 records its own measurement, packages it up into a report, and sends it to the
 Leader. Each share is encrypted to only one of the two Aggregators so that even
 though both pass through the Leader, the Leader is unable to see or modify the
@@ -837,7 +844,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
 ### Arity of Protocol Objects
 
-Reports are 1 to 1 to with measurements. In this illustration, `i` distinct
+Reports are 1 to 1 with measurements. In this illustration, `i` distinct
 Clients upload a distinct report, but a single Client could upload multiple
 reports to a task (see {{sybil}} for some implications of this). The process of
 sharding measurements, constructing reports and uploading them is specified in
@@ -1448,7 +1455,7 @@ of !VDAF}}), using the report ID as the nonce:
   `rand` MUST be independently sampled from a cryptographically secure random
   number generator.
 
-The sharding algorithm will return two input shares. The first is the Leader's
+`Vdaf.shard` algorithm will return two input shares. The first is the Leader's
 input share, and the second is the Helper's.
 
 The Client then wraps each input share in the following structure:
