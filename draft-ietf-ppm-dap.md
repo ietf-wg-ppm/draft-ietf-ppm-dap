@@ -902,12 +902,6 @@ Section 3}} to define messages in the protocol. Encoding and decoding of these
 messages as byte strings also follows {{!RFC8446}}. We enumerate the exceptions
 below.
 
-### Variable-Length Vectors
-
-{{Section 3.4 of !RFC8446}} describes a syntax for variable-length vectors where
-a range of permitted lengths is provided. This document always specifies the
-lower length limit of variable-length vectors to be `0`.
-
 ### Structure Variants
 
 {{Section 3.7 of !RFC8446}} defines a syntax for structure fields whose values
@@ -1104,8 +1098,8 @@ uint8 HpkeConfigId;
 
 struct {
   HpkeConfigId config_id;
-  opaque enc<0..2^16-1>;
-  opaque payload<0..2^32-1>;
+  opaque enc<1..2^16-1>;
+  opaque payload<1..2^32-1>;
 } HpkeCiphertext;
 ~~~
 
@@ -1316,7 +1310,7 @@ support multiple HPKE configurations and multiple sets of algorithms
 simultaneously.
 
 ~~~ tls-presentation
-HpkeConfig HpkeConfigList<0..2^16-1>;
+HpkeConfig HpkeConfigList<1..2^16-1>;
 
 struct {
   HpkeConfigId id;
@@ -1326,7 +1320,7 @@ struct {
   HpkePublicKey public_key;
 } HpkeConfig;
 
-opaque HpkePublicKey<0..2^16-1>;
+opaque HpkePublicKey<1..2^16-1>;
 uint16 HpkeAeadId;
 uint16 HpkeKemId;
 uint16 HpkeKdfId;
@@ -1462,7 +1456,7 @@ The Client then wraps each input share in the following structure:
 ~~~ tls-presentation
 struct {
   Extension private_extensions<0..2^16-1>;
-  opaque payload<0..2^32-1>;
+  opaque payload<1..2^32-1>;
 } PlaintextInputShare;
 ~~~
 
@@ -1813,7 +1807,7 @@ struct {
 
 struct {
   ReportShare report_share;
-  opaque payload<0..2^32-1>;
+  opaque payload<1..2^32-1>;
 } PrepareInit;
 ~~~
 
@@ -1843,7 +1837,7 @@ struct {
 struct {
   opaque agg_param<0..2^32-1>;
   PartialBatchSelector part_batch_selector;
-  PrepareInit prepare_inits<0..2^32-1>;
+  PrepareInit prepare_inits<1..2^32-1>;
 } AggregationJobInitReq;
 ~~~
 
@@ -1998,7 +1992,7 @@ struct {
   ReportID report_id;
   PrepareRespType prepare_resp_type;
   select (PrepareResp.prepare_resp_type) {
-    case continue: opaque payload<0..2^32-1>;
+    case continue: opaque payload<1..2^32-1>;
     case finish:   Empty;
     case reject:   ReportError report_error;
   };
@@ -2061,7 +2055,7 @@ Otherwise the Helper responds with
 variant {
   ReportID report_id;
   PrepareRespType prepare_resp_type = continue;
-  opaque payload<0..2^32-1> = outbound;
+  opaque payload<1..2^32-1> = outbound;
 } PrepareResp;
 ~~~
 
@@ -2087,7 +2081,7 @@ which is structured as follows:
 
 ~~~ tls-presentation
 struct {
-  PrepareResp prepare_resps<0..2^32-1>;
+  PrepareResp prepare_resps<1..2^32-1>;
 } AggregationJobResp;
 ~~~
 
@@ -2266,7 +2260,7 @@ report the Leader constructs a preparation continuation message:
 ~~~ tls-presentation
 struct {
   ReportID report_id;
-  opaque payload<0..2^32-1>;
+  opaque payload<1..2^32-1>;
 } PrepareContinue;
 ~~~
 
@@ -2279,7 +2273,7 @@ Next, the Leader sends a POST to the aggregation job with media type
 ~~~ tls-presentation
 struct {
   uint16 step;
-  PrepareContinue prepare_continues<0..2^32-1>;
+  PrepareContinue prepare_continues<1..2^32-1>;
 } AggregationJobContinueReq;
 ~~~
 
@@ -2446,7 +2440,7 @@ If commitment succeeds, the Helper's response depends on the value of
 variant {
   ReportID report_id;
   PrepareRespType prepare_resp_type = continue;
-  opaque payload<0..2^32-1> = outbound;
+  opaque payload<1..2^32-1> = outbound;
 } PrepareResp;
 ~~~
 
