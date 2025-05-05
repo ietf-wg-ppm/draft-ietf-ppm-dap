@@ -2173,7 +2173,7 @@ for each input share in the job:
    state required to perform the check has been evicted from the
    Aggregator's storage (see {{sharding-storage}} for details)--it
    MUST mark the input share as invalid with error `report_dropped`.
-   
+
 If all of the above checks succeed, the input share is valid.
 
 #### Example
