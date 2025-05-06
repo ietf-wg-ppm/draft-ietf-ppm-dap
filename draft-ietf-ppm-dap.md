@@ -1689,6 +1689,14 @@ The number of steps, and the type of the responses, depends on the VDAF. The
 message structures and processing rules are specified in the following
 subsections.
 
+Each Aggregator maintains some state for each report. A state transition is
+triggered by receiving a message from the Aggregator's peer. Eventually this
+process results in a terminal state, either rejecting the report or recovering
+an output share. Once a report has reached a terminal state, no more messages
+will be processed for it. There are four possible states (see {{Section 5.7 of
+!VDAF}}: `Continued`, `FinishedWithOutbound`, `Finished` and `Rejected`. The
+first two states include an outbound message to be processed by the peer.
+
 The Helper can either process each step synchronously, meaning it computes each
 preparation step before producing a response to the Leader's HTTP request, or
 asynchronously, meaning it responds immediately and defers processing to a
@@ -1758,8 +1766,24 @@ The Leader and Helper initialization behavior is detailed below.
 
 #### Leader Initialization {#leader-init}
 
+~~~ aasvg
+                     PrepareResp
+Report --> Continued -----+----> Continued
+                          |
+                          +----> FinishedWithOutbound
+                          |
+                          +----> Finished (*commit)
+                          |
+                          +----> Rejected (*reject)
+~~~
+{: #leader-init-state title="Leader state transition triggered by aggregation initialization. (\*) indicates a terminal state." }
+
 The Leader begins an aggregation job by choosing a set of candidate reports that
 belong to the same task and a job ID which MUST be unique within the task.
+
+First, the Leader MUST ensure each report in the candidate set can be committed
+per the criteria detailed in {{batch-buckets}}. If a report cannot be committed,
+then the Leader rejects it and removes it from the candidate set.
 
 Next, the Leader decrypts each of its report shares as described in
 {{input-share-decryption}}, then checks input share validity as described in
@@ -1769,7 +1793,7 @@ and removes it from the candidate set.
 For each report the Leader executes the following procedure:
 
 ~~~ pseudocode
-(state, outbound) = Vdaf.ping_pong_leader_init(
+state = Vdaf.ping_pong_leader_init(
     vdaf_verify_key,
     "dap-15" || task_id,
     agg_param,
@@ -1790,13 +1814,14 @@ where:
 * `plaintext_input_share` is the Leader's `PlaintextInputShare`
 
 `ping_pong_leader_init` is defined in {{Section 5.7.1 of !VDAF}}. This process
-determines the initial per-report `state`, as well as the initial `outbound`
-message to the Helper. If `state` is of type `Rejected`, then the report is
-rejected and removed from the candidate set, and no message is sent to the
-Helper for this report.
+determines the initial per-report `state`. If `state` is of type `Rejected`
+({{Section 5.7 of !VDAF}}, then the report is rejected and removed from the
+candidate set, and no message is sent to the Helper for this report.
 
-If `state` is of type `Continued`, then the Leader constructs a `PrepareInit`
-structure for that report.
+Otherwise, if `state` is of type `Continued` (no other state is reachable at
+this point), then the state includes an outbound message denoted
+`state.outbound`. The Leader uses it to construct a `PrepareInit` structure for
+that report.
 
 ~~~ tls-presentation
 struct {
@@ -1819,10 +1844,7 @@ This message consists of:
 
   * `report_share.encrypted_input_share`: The Helper's encrypted input share.
 
-  * `payload`: The `outbound` message computed by the previous step.
-
-It is not possible for `state` to be of type `Finished` during Leader
-initialization.
+  * `payload`: The outbound message, set to `state.outbound`.
 
 Once all the report shares have been initialized, the Leader creates an
 `AggregationJobInitReq` message containing the `PrepareInit` structures
@@ -1879,10 +1901,10 @@ The Leader proceeds as follows with each report:
 1. If the inbound prep response has type "continue", then the Leader computes
 
    ~~~ pseudocode
-   (state, outbound) = Vdaf.ping_pong_leader_continued(
+   state = Vdaf.ping_pong_leader_continued(
        "dap-15" || task_id,
        agg_param,
-       prev_state,
+       state,
        inbound,
    )
    ~~~
@@ -1892,26 +1914,35 @@ The Leader proceeds as follows with each report:
    * `task_id` is the task ID
    * `agg_param` is the VDAF aggregation parameter provided by the Collector
      (see {{collect-flow}})
-   * `prev_state` is the state computed earlier by calling
-     `Vdaf.ping_pong_leader_init` or `Vdaf.ping_pong_leader_continued`
-   * `inbound` is the message in the `PrepareResp`
+   * `state` is the report's initial prep state
+   * `inbound` is the payload of the `PrepareResp`
 
-   If `outbound != None`, then the Leader stores `state` and `outbound` and
-   proceeds to {{aggregation-leader-continuation}}. If `outbound == None`, then
-   the preparation process is complete: either `state == Rejected()`, in which
-   case the Leader rejects the report and removes it from the candidate set; or
-   `state == Finished(out_share)`, in which case preparation is complete and the
-   Leader commits `out_share` as described in {{batch-buckets}}. If commitment
-   fails, then the Leader rejects the report and removes it from the candidate
-   set.
+   If the new `state` has type `Continued` or `FinishedWithOutbound`,
+   then there is at least one more outbound message to send before preparation
+   is complete. The Leader stores `state` and proceeds as in
+   {{aggregation-leader-continuation}}.
 
-1. Else if the type is "reject", then the Leader rejects the report and removes
-   it from the candidate set. The Leader MUST NOT include the report in a
-   subsequent aggregation job, unless the error is `report_too_early`, in which
-   case the Leader MAY include the report in a subsequent aggregation job.
+   Else if the new `state` has type `Finished`, then preparation is complete and
+   the state includes an output share, denoted `state.out_share`. The Leader
+   commits to `state.out_share` as described in {{batch-buckets}}.
 
-1. Else the type is invalid, in which case the Leader MUST abort the aggregation
-   job.
+   Else if `state` has type `Rejected`, then the Leader rejects the
+   report and removes it from the candidate set.
+
+   Note on rejection agreement: rejecting at this point would result in a batch
+   mismatch if the Helper had already committed to its output share. This is
+   impossible due to the robustness of the VDAF: if the underlying measurement
+   were invalid, then the Helper would have indicated rejection in its
+   response.
+
+1. Else if the `PrepareResp` has type "reject", then the Leader rejects the
+   report and removes it from the candidate set. The Leader MUST NOT include
+   the report in a subsequent aggregation job, unless the report error is
+   `report_too_early`, in which case the Leader MAY include the report in a
+   subsequent aggregation job.
+
+1. Otherwise the inbound message type is invalid for the Leader's current
+   state, in which case the Leader MUST abort the aggregation job.
 
 Since VDAF preparation completes in a constant number of rounds, it will never
 be the case that preparation is complete for some of the reports in an
@@ -1923,6 +1954,15 @@ the Leader SHOULD re-send the original request unmodified in order to attempt
 recovery (see {{aggregation-step-skew-recovery}}).
 
 #### Helper Initialization {#aggregation-helper-init}
+
+~~~ aasvg
+PrepareInit --+--> Continued
+              |
+              +--> FinishedWithOutbound (*commit)
+              |
+              +--> Rejected (*reject)
+~~~
+{: #helper-init-state title="Helper state transition triggered by aggregation initialization. (\*) indicates a terminal state." }
 
 The Helper begins an aggregation job when it receives an `AggregationJobInitReq`
 message from the Leader. For each `PrepareInit` in this message, the Helper
@@ -1999,8 +2039,8 @@ struct {
 } PrepareResp;
 ~~~
 
-The Helper processes each of the remaining report shares in turn:
-It decrypts each of its remaining report shares as described in
+The Helper processes each of the remaining report shares in turn.
+First, the Helper decrypts each report share as described in
 {{input-share-decryption}}, then checks input share validity as described in
 {{input-share-validation}}. If either decryption of validation fails, the Helper
 sets the corresponding outbound preparation response to
@@ -2017,7 +2057,7 @@ where `report_id` is the report ID and `report_error` is the indicated error.
 For all other reports it initializes the VDAF prep state as follows:
 
 ~~~ pseudocode
-(state, outbound) = Vdaf.ping_pong_helper_init(
+state = Vdaf.ping_pong_helper_init(
     vdaf_verify_key,
     "dap-15" || task_id,
     agg_param,
@@ -2037,9 +2077,8 @@ For all other reports it initializes the VDAF prep state as follows:
 * `plaintext_input_share` is the Helper's `PlaintextInputShare`
 * `inbound` is the payload of the inbound `PrepareInit`
 
-This procedure determines the initial per-report `state`, as well as the
-initial `outbound` message to send in response to the Leader. If `state` is of
-type `Rejected`, then the Helper responds with
+This procedure determines the initial per-report `state`. If `state` is of type
+`Rejected`, then the Helper responds with
 
 ~~~ tls-presentation
 variant {
@@ -2049,23 +2088,27 @@ variant {
 } PrepareResp;
 ~~~
 
-Otherwise the Helper responds with
+Otherwise `state` has type `Continued` or `FinishedWithOutbound` and
+there is at least one more outbound message to process. State `Finished` is
+not reachable at this point. The Helper responds with
 
 ~~~ tls-presentation
 variant {
   ReportID report_id;
   PrepareRespType prepare_resp_type = continue;
-  opaque payload<1..2^32-1> = outbound;
+  opaque payload<1..2^32-1> = state.outbound;
 } PrepareResp;
 ~~~
 
-If `state == Continued(prep_state)`, then the Helper stores `state` to
-prepare for the next continuation step ({{aggregation-helper-continuation}}).
+If `state` has type `Continued`, then the Helper stores `state`
+for use in the first continuation step in
+{{aggregation-helper-continuation}}.
 
-If `state == Finished(out_share)`, then the Helper commits to `out_share` as
-described in {{batch-buckets}}. If commitment fails with some `ReportError`
-(e.g., the report was replayed or its batch bucket was collected), then instead
-of the `continue` response above, the Helper responds with
+Else if `state` has type `FinishedWithOutbound`, then the Helper commits to
+`state.out_share` as described in {{batch-buckets}}. If commitment fails with
+some `ReportError` (e.g., the report was replayed or its batch bucket was
+collected), then instead of the `continue` response above, the Helper responds
+with
 
 ~~~ tls-presentation
 variant {
@@ -2249,8 +2292,28 @@ round VDAFs like Prio3 will never reach this phase.
 
 #### Leader Continuation {#aggregation-leader-continuation}
 
-The Leader begins each step of aggregation continuation with a prep state object
-`state` and an outbound message `outbound` for each report in the candidate set.
+~~~ aasvg
+          PrepareResp
+Continued -----+----> Continued
+               |
+               +----> FinishedWithOutbound
+               |
+               +----> Finished (*commit)
+               |
+               +----> Rejected (*reject)
+
+                     PrepareResp
+FinishedWithOutbound -----+----> (*commit)
+                          |
+                          +----> (*reject)
+~~~
+{: #leader-cont-state title="Leader state transition triggered by aggregation continuation. (\*) indicates a terminal state." }
+
+The Leader begins each step of aggregation continuation with a prep state
+object `state` for each report in the candidate set. Either all states
+have type `Continued` or all states have type `FinishedWithOutbound`. In either
+case, there is at least one more outbound message to process, denoted
+`state.outbound`.
 
 The Leader advances its aggregation job to the next step (step 1 if this is the
 first continuation after initialization). Then it instructs the Helper to
@@ -2264,8 +2327,8 @@ struct {
 } PrepareContinue;
 ~~~
 
-where `report_id` is the report ID associated with `state` and `outbound`, and
-`payload` is set to the `outbound` message.
+where `report_id` is the report ID associated with `state`, and
+`payload` is set to `state.outbound`.
 
 Next, the Leader sends a POST to the aggregation job with media type
 "application/dap-aggregation-job-continue-req" and body structured as:
@@ -2301,11 +2364,11 @@ MUST abort the aggregation job.
 
 Otherwise, the Leader proceeds as follows with each report:
 
-1. If the inbound prep response type is "continue" and `state` is
-   `Continued(prep_state)`, then the Leader computes
+1. If `state` has type `Continued` and the inbound `PrepareResp` has
+   type "continue", then the Leader computes
 
    ~~~ pseudocode
-   (state, outbound) = Vdaf.ping_pong_leader_continued(
+   state = Vdaf.ping_pong_leader_continued(
        "dap-15" || task_id,
        agg_param,
        state,
@@ -2313,24 +2376,39 @@ Otherwise, the Leader proceeds as follows with each report:
    )
    ~~~
 
-   where `task_id` is the task ID and `inbound` is the message payload. If
-   `outbound != None`, then the Leader stores `state` and `outbound` and
-   proceeds to another continuation step. If `outbound == None`, then the
-   preparation process is complete: either `state == Rejected()`, in which case
-   the Leader rejects the report and removes it from the candidate set or
-   `state == Finished(out_share)`, in which case the Leader commits to
-   `out_share` as described in {{batch-buckets}}. If commitment fails, then the
-   Leader rejects the report and removes it from the candidate set.
+   where `task_id` is the task ID, `inbound` is the payload of the inbound
+   `PrepareResp`, and `state` is the report's prep state carried over from the
+   previous step. It then processes the next state transition:
 
-1. Else if the type is "finish" and `state == Finished(out_share)`, then
-   preparation is complete and the Leader stores the output share for use in
-   the collection interaction ({{collect-flow}}).
+   * If the type of the new `state` is `Continued` or
+     `FinishedWithOutbound`, then the Leader stores `state` and proceeds
+     to the next continuation step.
 
-1. Else if the type is "reject", then the Leader rejects the report and removes
-   it from the candidate set.
+   * Else if the new type is `Rejected`, then the Leader rejects the report and
+     removes it from the candidate set.
 
-1. Else the type is invalid, in which case the Leader MUST abort the
-   aggregation job.
+     Note on rejection agreement: rejecting at this point would result in a
+     batch mismatch if the Helper had already committed to its output share.
+     This is impossible due to the robustness of the VDAF: if the underlying
+     measurement were invalid, then the Helper would have indicated rejection
+     in its response.
+
+   * Else if the new type is `Finished`, then the Leader commits to
+     `state.out_share` as described in {{batch-buckets}}.
+
+1. Else if `state` has type `FinishedWithOutbound` and the inbound
+   `PrepareResp` has type "finish", then preparation is complete and the
+   Leader commits to `state.out_share` as described in
+   {{batch-buckets}}.
+
+1. Else if the inbound `PrepareResp` has type "reject", then the Leader rejects
+   the report and removes it from the candidate set. The Leader MUST NOT
+   include the report in a subsequent aggregation job, unless the report error
+   is `report_too_early`, in which case the Leader MAY include the report in a
+   subsequent aggregation job.
+
+1. Otherwise the inbound message is incompatible with the Leader's current
+   state, in which case the Leader MUST abort the aggregation job.
 
 If the Leader fails to process the response from the Helper, for example because
 of a transient failure such as a network connection failure or process crash,
@@ -2339,10 +2417,21 @@ recovery (see {{aggregation-step-skew-recovery}}).
 
 #### Helper Continuation {#aggregation-helper-continuation}
 
-The Helper begins continuation with a `state` object for each report in the
-candidate set, which will all be of type `Continued(prep_state)`. The Helper
-then waits for the Leader to POST an `AggregationJobContinueReq` to an
-aggregation job.
+~~~ aasvg
+          PrepareContinue
+Continued -----+----> Continued
+               |
+               +----> FinishedWithOutbound (commit*)
+               |
+               +----> Finished (commit*)
+               |
+               +----> Rejected (reject*)
+~~~
+{: #helper-cont-state title="Helper state transition triggered by aggregation continuation. (\*) indicates a terminal state." }
+
+The Helper begins continuation with a `state` object for each report in
+the candidate set, each of which has type `Continued`. The Helper waits for the
+Leader to POST an `AggregationJobContinueReq` to the aggregation job.
 
 The Helper MAY defer handling the continuation request. In this case, it
 indicates that the job continuation is not yet ready by immediately sending an
@@ -2394,11 +2483,10 @@ message (see {{aggregation-step-skew-recovery}}).
 If the Helper does not wish to attempt recovery, or if the step has some other
 value, the Helper MUST fail the job with error `stepMismatch`.
 
-Let `inbound` denote the payload of the prep step. For each report, the Helper
-computes the following:
+For each report, the Helper does the following:
 
 ~~~ pseudocode
-(state, outbound) = Vdaf.ping_pong_helper_continued(
+state = Vdaf.ping_pong_helper_continued(
     "dap-15" || task_id,
     agg_param,
     state,
@@ -2406,7 +2494,9 @@ computes the following:
 )
 ~~~
 
-where `task_id` is the task ID. If `state == Rejected()`, then the Helper's
+where `task_id` is the task ID, `inbound` is the payload of the inbound
+`PrepareContinue`, and `state` is the report's prep state carried over from the
+previous step. If the new `state` has type `Rejected`, then the Helper's
 response is
 
 ~~~ tls-presentation
@@ -2417,13 +2507,13 @@ variant {
 } PrepareResp;
 ~~~
 
-If `state == Continued(prep_state)`, then the Helper stores `state` to
-prepare for the next continuation step ({{aggregation-helper-continuation}}).
+If `state` has type `Continued`, then the Helper stores `state` for use in the
+next continuation step.
 
-If `state == Finished(out_share)`, the Helper commits `out_share` as described
-in {{batch-buckets}}. If commitment fails with some `ReportError` (e.g., the
-report was replayed or its batch bucket was collected), then the Helper responds
-with
+If `state` has type `FinishedWithOutbound` or `Finished`, then the Helper
+commits to `state.out_share` as described in {{batch-buckets}}. If commitment
+fails with some report error `commit_error` (e.g., the report was replayed or
+its batch bucket was collected), then the Helper responds with
 
 ~~~ tls-presentation
 variant {
@@ -2433,18 +2523,19 @@ variant {
 } PrepareResp;
 ~~~
 
-If commitment succeeds, the Helper's response depends on the value of
-`outbound`. If `outbound != None`, then the Helper's response is
+If commitment succeeds, the Helper's response depends on whether the state
+includes an outbound message that needs to be processed. If `state` has type
+`Continued` or `FinishedWithOutbound`` then the Helper's response is
 
 ~~~ tls-presentation
 variant {
   ReportID report_id;
   PrepareRespType prepare_resp_type = continue;
-  opaque payload<1..2^32-1> = outbound;
+  opaque payload<1..2^32-1> = state.outbound;
 } PrepareResp;
 ~~~
 
-Otherwise, if `outbound == None`, then the Helper's response is
+Otherwise, if `state` has type `Finished`, then the Helper's response is
 
 ~~~ tls-presentation
 variant {
@@ -2481,16 +2572,17 @@ A few different pieces of information are associated with each batch bucket:
 * The number of reports included in the batch bucket.
 * A 32-byte checksum value, as defined below.
 
-Aggregators MUST check the following conditions before committing an output
-share:
+An output share is eligible to be committed if the following conditions are met:
 
 * If the batch bucket has been collected, the Aggregator MUST mark the report
   invalid with error `batch_collected`.
 * If the report ID associated with `out_share` has been aggregated in the task,
   the Aggregator MUST mark the report invalid with error `report_replayed`.
 
-Aggregators may perform these checks at any time before commitment (i.e., during
-either aggregation initialization or continuation).
+Aggregators MUST check these conditions before committing an output share.
+Helpers may perform these checks at any time before commitment (i.e., during
+either aggregation initialization or continuation), but Leaders MUST perform
+these checks before adding a report to an aggregation job.
 
 The following procedure is used to commit an output share `out_share` to a batch
 bucket:
