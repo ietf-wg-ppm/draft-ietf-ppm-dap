@@ -2470,14 +2470,15 @@ aggregation job 1                   aggregation job 2          aggregation job j
    request unmodified in order to attempt recovery (see
    Section 4.6.3.4).
 
-   [[XXX got here]]
-
 4.6.3.2.  Helper Continuation
 
-   The Helper begins continuation with a state object for each report in
-   the candidate set, which will all be of type Continued(prep_state).
-   The Helper then waits for the Leader to POST an
-   AggregationJobContinueReq to an aggregation job.
+   The Helper begins continuation with a helper_state object for each
+   report in the candidate set.  The type of each state is either
+   Continued or FinishedWithOutbound and each state has the same type.
+   The Helper waits for the Leader to POST an AggregationJobContinueReq
+   to the aggregation job.
+
+   [[XXX got here]]
 
    The Helper MAY defer handling the continuation request.  In this
    case, it indicates that the job continuation is not yet ready by
