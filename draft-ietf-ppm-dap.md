@@ -1677,7 +1677,7 @@ exchanged during preparation.
    |   prep_continue                                     |
    |---------------------------------------------------->|
    |                                 AggregationJobResp: |
-   |                      prep_resp(continue|finished)   |
+   |                        prep_resp(continue|finish)   |
    |<----------------------------------------------------|
    |                                                     |
    v                                                     v
@@ -1965,7 +1965,7 @@ for each report share. This includes the following structures:
 ~~~ tls-presentation
 enum {
   continue(0),
-  finished(1)
+  finish(1)
   reject(2),
   (255)
 } PrepareRespState;
@@ -1990,7 +1990,7 @@ struct {
   PrepareRespState prepare_resp_state;
   select (PrepareResp.prepare_resp_state) {
     case continue: opaque payload<0..2^32-1>;
-    case finished: Empty;
+    case finish:   Empty;
     case reject:   ReportError report_error;
   };
 } PrepareResp;
@@ -2313,7 +2313,7 @@ Otherwise, the Leader proceeds as follows with each report:
    `out_share` as described in {{batch-buckets}}. If commitment fails, then the
    Leader rejects the report and removes it from the candidate set.
 
-1. Else if the type is "finished" and `state == Finished(out_share)`, then
+1. Else if the type is "finish" and `state == Finished(out_share)`, then
    preparation is complete and the Leader stores the output share for use in
    the collection interaction ({{collect-flow}}).
 
@@ -2440,7 +2440,7 @@ Otherwise, if `outbound == None`, then the Helper's response is
 ~~~ tls-presentation
 variant {
   ReportID report_id;
-  PrepareRespState prepare_resp_state = finished;
+  PrepareRespState prepare_resp_state = finish;
 } PrepareResp;
 ~~~
 
