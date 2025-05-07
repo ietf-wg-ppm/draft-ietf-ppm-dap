@@ -2209,8 +2209,8 @@ aggregation job 1                   aggregation job 2          aggregation job j
      PrepareResp prepare_resps<0..2^32-1>;
    } AggregationJobResp;
 
-   where prepare_resps are the outbound prep steps computed in the
-   previous step.  The order MUST match
+   where prepare_resps are the outbound PrepareResp messages for each
+   report computed in the previous step.  The order MUST match
    AggregationJobInitReq.prepare_inits.  The media type for
    AggregationJobResp is "application/dap-aggregation-job-resp".
 
