@@ -2058,11 +2058,11 @@ aggregation job 1                   aggregation job 2          aggregation job j
        Else if state has type Rejected, then the Leader rejects the
        report and removes it from the candidate set.
 
-       Note: rejecting at this point would result in a batch mismatch if
-       the Helper had already committed to its output share.  This is
-       impossible due to the robustness of the VDAF: if the underlying
-       measurement were invalid, then the Helper would have indicated
-       rejection in its response.
+       Note on rejection agreement: rejecting at this point would result
+       in a batch mismatch if the Helper had already committed to its
+       output share.  This is impossible due to the robustness of the
+       VDAF: if the underlying measurement were invalid, then the Helper
+       would have indicated rejection in its response.
 
    2.  Else if the PrepareResp has type "reject", then the Leader
        rejects the report and removes it from the candidate set.  The
@@ -2215,8 +2215,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    *  inbound is the payload of the inbound PrepareInit
 
    This procedure determines the initial per-report state.  If state is
-   of type Rejected (Section 5.7 of [VDAF]), then the Helper responds
-   with
+   of type Rejected, then the Helper responds with
 
    variant {
      ReportID report_id;
@@ -2504,7 +2503,8 @@ aggregation job 1                   aggregation job 2          aggregation job j
       )
 
        where task_id is the task ID and inbound is the payload of the
-       prepare response.  It then processes the next state transition:
+       inbound PrepareResp.  It then processes the next state
+       transition:
 
        *  If the type of the new state is Continued or
           FinishedWithOutbound, then the Leader stores state and
@@ -2513,11 +2513,11 @@ aggregation job 1                   aggregation job 2          aggregation job j
        *  Else if the new type is Rejected, then the Leader rejects the
           report and removes it from the candidate set.
 
-          Note: rejecting at this point would result in a batch mismatch
-          if the Helper had already committed to its output share.  This
-          is impossible due to the robustness of the VDAF: if the
-          underlying measurement were invalid, then the Helper would
-          have rejected the report in the previous step.
+          Note on rejection agreement: rejecting at this point would
+          result in a batch mismatch if the Helper had already committed
+          to its output share.  This is impossible due to the robustness
+          of the VDAF: if the underlying measurement were invalid, then
+          the Helper would have indicated rejection in its response.
 
        *  Else if the new type is Finished, then the Leader commits to
           state.out_share as described in Section 4.6.3.3.
