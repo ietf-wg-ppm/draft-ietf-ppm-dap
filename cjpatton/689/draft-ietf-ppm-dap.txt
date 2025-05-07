@@ -1940,8 +1940,8 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    Otherwise, if state is of type Continued (no other state is reachable
    at this point), then the state includes an outbound message denoted
-   state.outbound.  The Leader constructs a PrepareInit message for the
-   report:
+   state.outbound.  The Leader uses it to construct a PrepareInit
+   message for the report:
 
    struct {
      ReportMetadata report_metadata;

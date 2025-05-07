@@ -4027,10 +4027,10 @@ This process determines the initial per-report state, denoted <code>state</code>
 <code>state</code> is of type <code>Rejected</code> (<span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-14#section-5.7" class="relref">Section 5.7</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>, then the report is
 rejected and removed from the candidate set, and no message is sent to the
 Helper for this report.<a href="#section-4.6.2.1-9" class="pilcrow">¶</a></p>
-<p id="section-4.6.2.1-10">Otherwise, if <code>state</code> is of type <code>Continued</code> (no other state is
-reachable at this point), then the state includes an outbound message denoted
-<code>state.outbound</code>. The Leader constructs a <code>PrepareInit</code> message for the
-report:<a href="#section-4.6.2.1-10" class="pilcrow">¶</a></p>
+<p id="section-4.6.2.1-10">Otherwise, if <code>state</code> is of type <code>Continued</code> (no other state is reachable at
+this point), then the state includes an outbound message denoted
+<code>state.outbound</code>. The Leader uses it to construct a <code>PrepareInit</code> message for
+the report:<a href="#section-4.6.2.1-10" class="pilcrow">¶</a></p>
 <div class="lang-tls-presentation sourcecode" id="section-4.6.2.1-11">
 <pre>
 struct {
