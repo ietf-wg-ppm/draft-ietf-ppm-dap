@@ -3985,7 +3985,7 @@ message to the Helper. If <code>state</code> is of type <code>Rejected</code>, t
 rejected and removed from the candidate set, and no message is sent to the
 Helper for this report.<a href="#section-4.6.2.1-7" class="pilcrow">¶</a></p>
 <p id="section-4.6.2.1-8">If <code>state</code> is of type <code>Continued</code>, then the Leader constructs a <code>PrepareInit</code>
-message.<a href="#section-4.6.2.1-8" class="pilcrow">¶</a></p>
+message:<a href="#section-4.6.2.1-8" class="pilcrow">¶</a></p>
 <div class="lang-tls-presentation sourcecode" id="section-4.6.2.1-9">
 <pre>
 struct {
@@ -4000,19 +4000,19 @@ struct {
 } PrepareInit;
 </pre><a href="#section-4.6.2.1-9" class="pilcrow">¶</a>
 </div>
-<p id="section-4.6.2.1-10">Each of these messages is constructed as follows:<a href="#section-4.6.2.1-10" class="pilcrow">¶</a></p>
+<p id="section-4.6.2.1-10">This message consists of:<a href="#section-4.6.2.1-10" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-4.6.2.1-11.1">
-                <p id="section-4.6.2.1-11.1.1"><code>report_share.report_metadata</code> is the report's metadata.<a href="#section-4.6.2.1-11.1.1" class="pilcrow">¶</a></p>
+                <p id="section-4.6.2.1-11.1.1"><code>report_share.report_metadata</code>:  The report's metadata.<a href="#section-4.6.2.1-11.1.1" class="pilcrow">¶</a></p>
 </li>
               <li class="normal" id="section-4.6.2.1-11.2">
-                <p id="section-4.6.2.1-11.2.1"><code>report_share.public_share</code> is the report's public share.<a href="#section-4.6.2.1-11.2.1" class="pilcrow">¶</a></p>
+                <p id="section-4.6.2.1-11.2.1"><code>report_share.public_share</code>: The report's public share.<a href="#section-4.6.2.1-11.2.1" class="pilcrow">¶</a></p>
 </li>
               <li class="normal" id="section-4.6.2.1-11.3">
-                <p id="section-4.6.2.1-11.3.1"><code>report_share.encrypted_input_share</code> is the Helper's encrypted input share.<a href="#section-4.6.2.1-11.3.1" class="pilcrow">¶</a></p>
+                <p id="section-4.6.2.1-11.3.1"><code>report_share.encrypted_input_share</code>: The Helper's encrypted input share.<a href="#section-4.6.2.1-11.3.1" class="pilcrow">¶</a></p>
 </li>
               <li class="normal" id="section-4.6.2.1-11.4">
-                <p id="section-4.6.2.1-11.4.1"><code>payload</code> is set to the <code>outbound</code> message computed by the previous step.<a href="#section-4.6.2.1-11.4.1" class="pilcrow">¶</a></p>
+                <p id="section-4.6.2.1-11.4.1"><code>payload</code>: The <code>outbound</code> message computed by the previous step.<a href="#section-4.6.2.1-11.4.1" class="pilcrow">¶</a></p>
 </li>
             </ul>
 <p id="section-4.6.2.1-12">It is not possible for <code>state</code> to be of type <code>Finished</code> during Leader

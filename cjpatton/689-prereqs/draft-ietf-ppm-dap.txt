@@ -1919,7 +1919,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    set, and no message is sent to the Helper for this report.
 
    If state is of type Continued, then the Leader constructs a
-   PrepareInit message.
+   PrepareInit message:
 
    struct {
      ReportMetadata report_metadata;
@@ -1932,17 +1932,16 @@ aggregation job 1                   aggregation job 2          aggregation job j
      opaque payload<0..2^32-1>;
    } PrepareInit;
 
-   Each of these messages is constructed as follows:
+   This message consists of:
 
-   *  report_share.report_metadata is the report's metadata.
+   *  report_share.report_metadata: The report's metadata.
 
-   *  report_share.public_share is the report's public share.
+   *  report_share.public_share: The report's public share.
 
-   *  report_share.encrypted_input_share is the Helper's encrypted input
+   *  report_share.encrypted_input_share: The Helper's encrypted input
       share.
 
-   *  payload is set to the outbound message computed by the previous
-      step.
+   *  payload: The outbound message computed by the previous step.
 
    It is not possible for state to be of type Finished during Leader
    initialization.
