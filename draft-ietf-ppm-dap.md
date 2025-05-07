@@ -1677,7 +1677,7 @@ exchanged during preparation.
    |   prep_continue                                     |
    |---------------------------------------------------->|
    |                                 AggregationJobResp: |
-   |                      prep_resp(continue|finished)   |
+   |                        prep_resp(continue|finish)   |
    |<----------------------------------------------------|
    |                                                     |
    v                                                     v
@@ -1775,7 +1775,8 @@ For each report the Leader executes the following procedure:
     agg_param,
     report_id,
     public_share,
-    plaintext_input_share.payload)
+    plaintext_input_share.payload,
+)
 ~~~
 
 where:
@@ -1795,7 +1796,7 @@ rejected and removed from the candidate set, and no message is sent to the
 Helper for this report.
 
 If `state` is of type `Continued`, then the Leader constructs a `PrepareInit`
-message.
+message:
 
 ~~~ tls-presentation
 struct {
@@ -1810,21 +1811,21 @@ struct {
 } PrepareInit;
 ~~~
 
-Each of these messages is constructed as follows:
+This message consists of:
 
-  * `report_share.report_metadata` is the report's metadata.
+  * `report_share.report_metadata`: The report's metadata.
 
-  * `report_share.public_share` is the report's public share.
+  * `report_share.public_share`: The report's public share.
 
-  * `report_share.encrypted_input_share` is the Helper's encrypted input share.
+  * `report_share.encrypted_input_share`: The Helper's encrypted input share.
 
-  * `payload` is set to the `outbound` message computed by the previous step.
+  * `payload`: The `outbound` message computed by the previous step.
 
 It is not possible for `state` to be of type `Finished` during Leader
 initialization.
 
 Once all the report shares have been initialized, the Leader creates an
-`AggregationJobInitReq` message.
+`AggregationJobInitReq` message:
 
 ~~~ tls-presentation
 struct {
@@ -1912,7 +1913,7 @@ The Leader proceeds as follows with each report:
    job.
 
 Since VDAF preparation completes in a constant number of rounds, it will never
-be the case that some reports are completed and others are not.
+be the case that preparation is complete for some reports but not others.
 
 If the Leader fails to process the response from the Helper, for example because
 of a transient failure such as a network connection failure or process crash,
@@ -1959,16 +1960,16 @@ Next, the Helper checks that the report IDs in
 `AggregationJobInitReq.prepare_inits` are all distinct. If not, then the Helper
 MUST fail the job with error `invalidMessage`.
 
-To process the aggregation job, the Helper computes an outbound prepare step
-for each report share. This includes the following structures:
+To process the aggregation job, the Helper computes a response for each report
+share. This includes the following structures:
 
 ~~~ tls-presentation
 enum {
   continue(0),
-  finished(1)
+  finish(1)
   reject(2),
   (255)
-} PrepareRespState;
+} PrepareRespType;
 
 enum {
   reserved(0),
@@ -1987,10 +1988,10 @@ enum {
 
 struct {
   ReportID report_id;
-  PrepareRespState prepare_resp_state;
-  select (PrepareResp.prepare_resp_state) {
+  PrepareRespType prepare_resp_type;
+  select (PrepareResp.prepare_resp_type) {
     case continue: opaque payload<0..2^32-1>;
-    case finished: Empty;
+    case finish:   Empty;
     case reject:   ReportError report_error;
   };
 } PrepareResp;
@@ -2004,7 +2005,7 @@ the outbound preparation response to
 ~~~ tls-presentation
 variant {
   ReportID report_id;
-  PrepareRespState prepare_resp_state = reject;
+  PrepareRespType prepare_resp_type = reject;
   ReportError report_error;
 } PrepareResp;
 ~~~
@@ -2019,7 +2020,9 @@ For all other reports it initializes the VDAF prep state as follows:
     agg_param,
     report_id,
     public_share,
-    plaintext_input_share.payload)
+    plaintext_input_share.payload,
+    inbound,
+)
 ~~~
 
 * `vdaf_verify_key` is the VDAF verification key for the task
@@ -2029,6 +2032,7 @@ For all other reports it initializes the VDAF prep state as follows:
 * `report_id` is the report ID
 * `public_share` is the report's public share
 * `plaintext_input_share` is the Helper's `PlaintextInputShare`
+* `inbound` is the payload of the inbound `PrepareInit`
 
 This procedure determines the initial per-report `state`, as well as the
 initial `outbound` message to send in response to the Leader. If `state` is of
@@ -2037,7 +2041,7 @@ type `Rejected`, then the Helper responds with
 ~~~ tls-presentation
 variant {
   ReportID report_id;
-  PrepareRespState prepare_resp_state = reject;
+  PrepareRespType prepare_resp_type = reject;
   ReportError report_error = vdaf_prep_error;
 } PrepareResp;
 ~~~
@@ -2047,7 +2051,7 @@ Otherwise the Helper responds with
 ~~~ tls-presentation
 variant {
   ReportID report_id;
-  PrepareRespState prepare_resp_state = continue;
+  PrepareRespType prepare_resp_type = continue;
   opaque payload<0..2^32-1> = outbound;
 } PrepareResp;
 ~~~
@@ -2063,7 +2067,7 @@ of the `continue` response above, the Helper responds with
 ~~~ tls-presentation
 variant {
   ReportID report_id;
-  PrepareRespState prepare_resp_state = reject;
+  PrepareRespType prepare_resp_type = reject;
   ReportError report_error = commit_error;
 } PrepareResp;
 ~~~
@@ -2078,9 +2082,10 @@ struct {
 } AggregationJobResp;
 ~~~
 
-where `prepare_resps` are the outbound prep steps computed in the previous step.
-The order MUST match `AggregationJobInitReq.prepare_inits`. The media type for
-`AggregationJobResp` is "application/dap-aggregation-job-resp".
+where `prepare_resps` are the outbound `PrepareResp` messages for each report
+computed in the previous step. The order MUST match
+`AggregationJobInitReq.prepare_inits`. The media type for `AggregationJobResp`
+is "application/dap-aggregation-job-resp".
 
 Changing an aggregation job's parameters is illegal. If the Helper receives
 further PUT requests to the aggregation job with a different
@@ -2313,7 +2318,7 @@ Otherwise, the Leader proceeds as follows with each report:
    `out_share` as described in {{batch-buckets}}. If commitment fails, then the
    Leader rejects the report and removes it from the candidate set.
 
-1. Else if the type is "finished" and `state == Finished(out_share)`, then
+1. Else if the type is "finish" and `state == Finished(out_share)`, then
    preparation is complete and the Leader stores the output share for use in
    the collection interaction ({{collect-flow}}).
 
@@ -2403,7 +2408,7 @@ response is
 ~~~ tls-presentation
 variant {
   ReportID report_id;
-  PrepareRespState prepare_resp_state = reject;
+  PrepareRespType prepare_resp_type = reject;
   ReportError report_error = vdaf_prep_error;
 } PrepareResp;
 ~~~
@@ -2419,7 +2424,7 @@ with
 ~~~ tls-presentation
 variant {
   ReportID report_id;
-  PrepareRespState prepare_resp_state = reject;
+  PrepareRespType prepare_resp_type = reject;
   ReportError report_error = commit_error;
 } PrepareResp;
 ~~~
@@ -2430,7 +2435,7 @@ If commitment succeeds, the Helper's response depends on the value of
 ~~~ tls-presentation
 variant {
   ReportID report_id;
-  PrepareRespState prepare_resp_state = continue;
+  PrepareRespType prepare_resp_type = continue;
   opaque payload<0..2^32-1> = outbound;
 } PrepareResp;
 ~~~
@@ -2440,7 +2445,7 @@ Otherwise, if `outbound == None`, then the Helper's response is
 ~~~ tls-presentation
 variant {
   ReportID report_id;
-  PrepareRespState prepare_resp_state = finished;
+  PrepareRespType prepare_resp_type = finish;
 } PrepareResp;
 ~~~
 
