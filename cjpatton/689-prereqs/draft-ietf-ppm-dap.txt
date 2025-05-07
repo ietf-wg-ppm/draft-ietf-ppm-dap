@@ -2039,8 +2039,8 @@ aggregation job 1                   aggregation job 2          aggregation job j
        aggregation job.
 
    Since VDAF preparation completes in a constant number of rounds, it
-   will never be the case that some reports are completed and others are
-   not.
+   will never be the case that preparation is complete for some reports
+   but not others.
 
    If the Leader fails to process the response from the Helper, for
    example because of a transient failure such as a network connection
