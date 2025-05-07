@@ -1798,15 +1798,15 @@ aggregation job 1                   aggregation job 2          aggregation job j
    VDAF.  The message structures and processing rules are specified in
    the following subsections.
 
-   Each Aggregator maintains some state for each report.  State
-   transitions are triggered by receiving a message from its peer.
-   Eventually this process results in a terminal state, either rejecting
-   the report or recovering an output share.  Once a report has reached
-   a terminal state, no more messages will be processed for it.  Each
-   state is said to have one of four possible "types" (see Section 5.7
-   of [VDAF]: Continued, FinishedWithOutbound, Finished and Rejected.
-   The first two types include an outbound message to be processed by
-   the peer.
+   Each Aggregator maintains some state for each report.  A state
+   transition is triggered by receiving a message from the Aggregatro's
+   peer.  Eventually this process results in a terminal state, either
+   rejecting the report or recovering an output share.  Once a report
+   has reached a terminal state, no more messages will be processed for
+   it.  Each state is said to have one of four possible "types" (see
+   Section 5.7 of [VDAF]: Continued, FinishedWithOutbound, Finished and
+   Rejected.  The first two types include an outbound message to be
+   processed by the peer.
 
    The Helper can either process each step synchronously, meaning it
    computes each preparation step before producing a response to the
@@ -2026,7 +2026,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    The Leader proceeds as follows with each report:
 
-   1.  If the inbound PrepareResp has type "continue", then the Leader
+   1.  If the inbound prep response has type "continue", then the Leader
        computes
 
       state = Vdaf.ping_pong_leader_continued(
