@@ -4246,7 +4246,7 @@ enum {
   finish(1)
   reject(2),
   (255)
-} PrepareRespState;
+} PrepareRespType;
 
 enum {
   reserved(0),
@@ -4265,8 +4265,8 @@ enum {
 
 struct {
   ReportID report_id;
-  PrepareRespState prepare_resp_state;
-  select (PrepareResp.prepare_resp_state) {
+  PrepareRespType prepare_resp_type;
+  select (PrepareResp.prepare_resp_type) {
     case continue: opaque payload&lt;0..2^32-1&gt;;
     case finish:   Empty;
     case reject:   ReportError report_error;
@@ -4282,7 +4282,7 @@ the outbound preparation response to<a href="#section-4.6.2.2-11" class="pilcrow
 <pre>
 variant {
   ReportID report_id;
-  PrepareRespState prepare_resp_state = reject;
+  PrepareRespType prepare_resp_type = reject;
   ReportError report_error;
 } PrepareResp;
 </pre><a href="#section-4.6.2.2-12" class="pilcrow">¶</a>
@@ -4334,7 +4334,7 @@ Helper responds with<a href="#section-4.6.2.2-17" class="pilcrow">¶</a></p>
 <pre>
 variant {
   ReportID report_id;
-  PrepareRespState prepare_resp_state = reject;
+  PrepareRespType prepare_resp_type = reject;
   ReportError report_error = vdaf_prep_error;
 } PrepareResp;
 </pre><a href="#section-4.6.2.2-18" class="pilcrow">¶</a>
@@ -4363,7 +4363,7 @@ Helper responds with<a href="#section-4.6.2.2-22" class="pilcrow">¶</a></p>
 <pre>
 variant {
   ReportID report_id;
-  PrepareRespState prepare_resp_state = reject;
+  PrepareRespType prepare_resp_type = reject;
   ReportError report_error = commit_error;
 } PrepareResp;
 </pre><a href="#section-4.6.2.2-23" class="pilcrow">¶</a>
@@ -4833,7 +4833,7 @@ is<a href="#section-4.6.3.2-15" class="pilcrow">¶</a></p>
 <pre>
 variant {
   ReportID report_id;
-  PrepareRespState prepare_resp_state = reject;
+  PrepareRespType prepare_resp_type = reject;
   ReportError report_error = vdaf_prep_error;
 } PrepareResp;
 </pre><a href="#section-4.6.3.2-16" class="pilcrow">¶</a>
@@ -4848,7 +4848,7 @@ its batch bucket was collected), then the Helper responds with<a href="#section-
 <pre>
 variant {
   ReportID report_id;
-  PrepareRespState prepare_resp_state = reject;
+  PrepareRespType prepare_resp_type = reject;
   ReportError report_error = commit_error;
 } PrepareResp;
 </pre><a href="#section-4.6.3.2-19" class="pilcrow">¶</a>
@@ -4860,7 +4860,7 @@ includes an outbound message that needs to be processed. If <code>state</code> h
 <pre>
 variant {
   ReportID report_id;
-  PrepareRespState prepare_resp_state = continue;
+  PrepareRespType prepare_resp_type = continue;
   opaque payload&lt;0..2^32-1&gt; = state.outbound;
 } PrepareResp;
 </pre><a href="#section-4.6.3.2-21" class="pilcrow">¶</a>
@@ -4870,7 +4870,7 @@ variant {
 <pre>
 variant {
   ReportID report_id;
-  PrepareRespState prepare_resp_state = finish;
+  PrepareRespType prepare_resp_type = finish;
 } PrepareResp;
 </pre><a href="#section-4.6.3.2-23" class="pilcrow">¶</a>
 </div>
