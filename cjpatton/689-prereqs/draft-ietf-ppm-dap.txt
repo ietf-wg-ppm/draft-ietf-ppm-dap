@@ -2093,9 +2093,8 @@ aggregation job 1                   aggregation job 2          aggregation job j
    AggregationJobInitReq.prepare_inits are all distinct.  If not, then
    the Helper MUST fail the job with error invalidMessage.
 
-   To process the aggregation job, the Helper computes an outbound
-   prepare step for each report share.  This includes the following
-   structures:
+   To process the aggregation job, the Helper computes a response for
+   each report share.  This includes the following structures:
 
    enum {
      continue(0),

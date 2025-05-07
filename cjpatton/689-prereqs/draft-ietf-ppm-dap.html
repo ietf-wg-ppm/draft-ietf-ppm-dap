@@ -4163,8 +4163,8 @@ Helper <span class="bcp14">MUST</span> fail the job with error <code>invalidAggr
 <p id="section-4.6.2.2-7">Next, the Helper checks that the report IDs in
 <code>AggregationJobInitReq.prepare_inits</code> are all distinct. If not, then the Helper
 <span class="bcp14">MUST</span> fail the job with error <code>invalidMessage</code>.<a href="#section-4.6.2.2-7" class="pilcrow">¶</a></p>
-<p id="section-4.6.2.2-8">To process the aggregation job, the Helper computes an outbound prepare step
-for each report share. This includes the following structures:<a href="#section-4.6.2.2-8" class="pilcrow">¶</a></p>
+<p id="section-4.6.2.2-8">To process the aggregation job, the Helper computes a response for each report
+share. This includes the following structures:<a href="#section-4.6.2.2-8" class="pilcrow">¶</a></p>
 <div class="lang-tls-presentation sourcecode" id="section-4.6.2.2-9">
 <pre>
 enum {
