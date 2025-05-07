@@ -2198,8 +2198,6 @@ aggregation job 1                   aggregation job 2          aggregation job j
        inbound,
    )
 
-   where:
-
    *  vdaf_verify_key is the VDAF verification key for the task
 
    *  task_id is the task ID

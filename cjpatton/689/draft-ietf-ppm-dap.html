@@ -4307,94 +4307,93 @@ state = Vdaf.ping_pong_helper_init(
 )
 </pre><a href="#section-4.6.2.2-14" class="pilcrow">¶</a>
 </div>
-<p id="section-4.6.2.2-15">where:<a href="#section-4.6.2.2-15" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-4.6.2.2-16.1">
-                <p id="section-4.6.2.2-16.1.1"><code>vdaf_verify_key</code> is the VDAF verification key for the task<a href="#section-4.6.2.2-16.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="section-4.6.2.2-15.1">
+                <p id="section-4.6.2.2-15.1.1"><code>vdaf_verify_key</code> is the VDAF verification key for the task<a href="#section-4.6.2.2-15.1.1" class="pilcrow">¶</a></p>
 </li>
-              <li class="normal" id="section-4.6.2.2-16.2">
-                <p id="section-4.6.2.2-16.2.1"><code>task_id</code> is the task ID<a href="#section-4.6.2.2-16.2.1" class="pilcrow">¶</a></p>
+              <li class="normal" id="section-4.6.2.2-15.2">
+                <p id="section-4.6.2.2-15.2.1"><code>task_id</code> is the task ID<a href="#section-4.6.2.2-15.2.1" class="pilcrow">¶</a></p>
 </li>
-              <li class="normal" id="section-4.6.2.2-16.3">
-                <p id="section-4.6.2.2-16.3.1"><code>agg_param</code> is the VDAF aggregation parameter sent in the
-<code>AggregationJobInitReq</code><a href="#section-4.6.2.2-16.3.1" class="pilcrow">¶</a></p>
+              <li class="normal" id="section-4.6.2.2-15.3">
+                <p id="section-4.6.2.2-15.3.1"><code>agg_param</code> is the VDAF aggregation parameter sent in the
+<code>AggregationJobInitReq</code><a href="#section-4.6.2.2-15.3.1" class="pilcrow">¶</a></p>
 </li>
-              <li class="normal" id="section-4.6.2.2-16.4">
-                <p id="section-4.6.2.2-16.4.1"><code>report_id</code> is the report ID<a href="#section-4.6.2.2-16.4.1" class="pilcrow">¶</a></p>
+              <li class="normal" id="section-4.6.2.2-15.4">
+                <p id="section-4.6.2.2-15.4.1"><code>report_id</code> is the report ID<a href="#section-4.6.2.2-15.4.1" class="pilcrow">¶</a></p>
 </li>
-              <li class="normal" id="section-4.6.2.2-16.5">
-                <p id="section-4.6.2.2-16.5.1"><code>public_share</code> is the report's public share<a href="#section-4.6.2.2-16.5.1" class="pilcrow">¶</a></p>
+              <li class="normal" id="section-4.6.2.2-15.5">
+                <p id="section-4.6.2.2-15.5.1"><code>public_share</code> is the report's public share<a href="#section-4.6.2.2-15.5.1" class="pilcrow">¶</a></p>
 </li>
-              <li class="normal" id="section-4.6.2.2-16.6">
-                <p id="section-4.6.2.2-16.6.1"><code>plaintext_input_share</code> is the Helper's <code>PlaintextInputShare</code><a href="#section-4.6.2.2-16.6.1" class="pilcrow">¶</a></p>
+              <li class="normal" id="section-4.6.2.2-15.6">
+                <p id="section-4.6.2.2-15.6.1"><code>plaintext_input_share</code> is the Helper's <code>PlaintextInputShare</code><a href="#section-4.6.2.2-15.6.1" class="pilcrow">¶</a></p>
 </li>
-              <li class="normal" id="section-4.6.2.2-16.7">
-                <p id="section-4.6.2.2-16.7.1"><code>inbound</code> is the payload of the inbound <code>PrepareInit</code><a href="#section-4.6.2.2-16.7.1" class="pilcrow">¶</a></p>
+              <li class="normal" id="section-4.6.2.2-15.7">
+                <p id="section-4.6.2.2-15.7.1"><code>inbound</code> is the payload of the inbound <code>PrepareInit</code><a href="#section-4.6.2.2-15.7.1" class="pilcrow">¶</a></p>
 </li>
             </ul>
-<p id="section-4.6.2.2-17">This procedure determines the initial per-report <code>state</code>. If
+<p id="section-4.6.2.2-16">This procedure determines the initial per-report <code>state</code>. If
 <code>state</code> is of type <code>Rejected</code> (<span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-14#section-5.7" class="relref">Section 5.7</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>), then the
-Helper responds with<a href="#section-4.6.2.2-17" class="pilcrow">¶</a></p>
-<div class="lang-tls-presentation sourcecode" id="section-4.6.2.2-18">
+Helper responds with<a href="#section-4.6.2.2-16" class="pilcrow">¶</a></p>
+<div class="lang-tls-presentation sourcecode" id="section-4.6.2.2-17">
 <pre>
 variant {
   ReportID report_id;
   PrepareRespType prepare_resp_type = reject;
   ReportError report_error = vdaf_prep_error;
 } PrepareResp;
-</pre><a href="#section-4.6.2.2-18" class="pilcrow">¶</a>
+</pre><a href="#section-4.6.2.2-17" class="pilcrow">¶</a>
 </div>
-<p id="section-4.6.2.2-19">Otherwise <code>state</code> has type <code>Continued</code> or <code>FinishedWithOutbound</code> and
+<p id="section-4.6.2.2-18">Otherwise <code>state</code> has type <code>Continued</code> or <code>FinishedWithOutbound</code> and
 there is at least one more outbound message to process. (State <code>Finished</code> is
-not reachable at this point.) The Helper responds with<a href="#section-4.6.2.2-19" class="pilcrow">¶</a></p>
-<div class="lang-tls-presentation sourcecode" id="section-4.6.2.2-20">
+not reachable at this point.) The Helper responds with<a href="#section-4.6.2.2-18" class="pilcrow">¶</a></p>
+<div class="lang-tls-presentation sourcecode" id="section-4.6.2.2-19">
 <pre>
 variant {
   ReportID report_id;
   PrepareRespState prepare_resp_state = continue;
   opaque payload&lt;0..2^32-1&gt; = state.outbound;
 } PrepareResp;
-</pre><a href="#section-4.6.2.2-20" class="pilcrow">¶</a>
+</pre><a href="#section-4.6.2.2-19" class="pilcrow">¶</a>
 </div>
-<p id="section-4.6.2.2-21">If <code>state</code> has type <code>Continued</code>, then the Helper stores <code>state</code>
+<p id="section-4.6.2.2-20">If <code>state</code> has type <code>Continued</code>, then the Helper stores <code>state</code>
 for use in the first continuation step in
-(<a href="#aggregation-helper-continuation" class="auto internal xref">Section 4.6.3.2</a>).<a href="#section-4.6.2.2-21" class="pilcrow">¶</a></p>
-<p id="section-4.6.2.2-22">Else if <code>state</code> has type <code>FinishedWithOutbound</code>, then the Helper commits to
+(<a href="#aggregation-helper-continuation" class="auto internal xref">Section 4.6.3.2</a>).<a href="#section-4.6.2.2-20" class="pilcrow">¶</a></p>
+<p id="section-4.6.2.2-21">Else if <code>state</code> has type <code>FinishedWithOutbound</code>, then the Helper commits to
 <code>state.out_share</code> as described in <a href="#batch-buckets" class="auto internal xref">Section 4.6.3.3</a>. If commitment fails with
 some <code>ReportError</code> (e.g., the report was replayed or its batch bucket was
 collected), then instead of the <code>continue</code> response above, the Helper responds
-with<a href="#section-4.6.2.2-22" class="pilcrow">¶</a></p>
-<div class="lang-tls-presentation sourcecode" id="section-4.6.2.2-23">
+with<a href="#section-4.6.2.2-21" class="pilcrow">¶</a></p>
+<div class="lang-tls-presentation sourcecode" id="section-4.6.2.2-22">
 <pre>
 variant {
   ReportID report_id;
   PrepareRespType prepare_resp_type = reject;
   ReportError report_error = commit_error;
 } PrepareResp;
-</pre><a href="#section-4.6.2.2-23" class="pilcrow">¶</a>
+</pre><a href="#section-4.6.2.2-22" class="pilcrow">¶</a>
 </div>
-<p id="section-4.6.2.2-24">Once the Helper has constructed a <code>PrepareResp</code> for each report, the aggregation
+<p id="section-4.6.2.2-23">Once the Helper has constructed a <code>PrepareResp</code> for each report, the aggregation
 job response is ready. Its results are represented by an <code>AggregationJobResp</code>,
-which is structured as follows:<a href="#section-4.6.2.2-24" class="pilcrow">¶</a></p>
-<div class="lang-tls-presentation sourcecode" id="section-4.6.2.2-25">
+which is structured as follows:<a href="#section-4.6.2.2-23" class="pilcrow">¶</a></p>
+<div class="lang-tls-presentation sourcecode" id="section-4.6.2.2-24">
 <pre>
 struct {
   PrepareResp prepare_resps&lt;0..2^32-1&gt;;
 } AggregationJobResp;
-</pre><a href="#section-4.6.2.2-25" class="pilcrow">¶</a>
+</pre><a href="#section-4.6.2.2-24" class="pilcrow">¶</a>
 </div>
-<p id="section-4.6.2.2-26">where <code>prepare_resps</code> are the outbound <code>PrepareResp</code> messages for each report
+<p id="section-4.6.2.2-25">where <code>prepare_resps</code> are the outbound <code>PrepareResp</code> messages for each report
 computed in the previous step. The order <span class="bcp14">MUST</span> match
 <code>AggregationJobInitReq.prepare_inits</code>. The media type for <code>AggregationJobResp</code>
-is "application/dap-aggregation-job-resp".<a href="#section-4.6.2.2-26" class="pilcrow">¶</a></p>
-<p id="section-4.6.2.2-27">Changing an aggregation job's parameters is illegal. If the Helper receives
+is "application/dap-aggregation-job-resp".<a href="#section-4.6.2.2-25" class="pilcrow">¶</a></p>
+<p id="section-4.6.2.2-26">Changing an aggregation job's parameters is illegal. If the Helper receives
 further PUT requests to the aggregation job with a different
 <code>AggregationJobInitReq</code> in the body, it <span class="bcp14">MUST</span> abort with a client error. For
 further requests with the same <code>AggregationJobInitReq</code> in the body, the Helper
-<span class="bcp14">SHOULD</span> respond as it did for the original <code>AggregationJobInitReq</code>.<a href="#section-4.6.2.2-27" class="pilcrow">¶</a></p>
-<p id="section-4.6.2.2-28">It is illegal to rewind or reset the state of an aggregation job. If the Helper
+<span class="bcp14">SHOULD</span> respond as it did for the original <code>AggregationJobInitReq</code>.<a href="#section-4.6.2.2-26" class="pilcrow">¶</a></p>
+<p id="section-4.6.2.2-27">It is illegal to rewind or reset the state of an aggregation job. If the Helper
 receives requests to initialize an aggregation job once it has been continued at
-least once (see <a href="#agg-continue-flow" class="auto internal xref">Section 4.6.3</a>), it <span class="bcp14">MUST</span> abort with a client error.<a href="#section-4.6.2.2-28" class="pilcrow">¶</a></p>
+least once (see <a href="#agg-continue-flow" class="auto internal xref">Section 4.6.3</a>), it <span class="bcp14">MUST</span> abort with a client error.<a href="#section-4.6.2.2-27" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="input-share-decryption">
