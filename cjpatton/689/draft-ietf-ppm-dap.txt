@@ -2228,9 +2228,9 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    Else if state has type FinishedWithOutbound, then the Helper commits
    to state.out_share as described in Section 4.6.3.3.  If commitment
-   fails with report error commit_error (e.g., the report was replayed
-   or its batch bucket was collected), then instead of the "continue"
-   response above, the Helper responds with
+   fails with some ReportError (e.g., the report was replayed or its
+   batch bucket was collected), then instead of the continue response
+   above, the Helper responds with
 
    variant {
      ReportID report_id;

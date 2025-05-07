@@ -4355,11 +4355,11 @@ variant {
 <p id="section-4.6.2.2-21">If <code>state</code> has type <code>Continued</code>, then the Helper stores <code>state</code>
 for use in the first continuation step in
 (<a href="#aggregation-helper-continuation" class="auto internal xref">Section 4.6.3.2</a>).<a href="#section-4.6.2.2-21" class="pilcrow">¶</a></p>
-<p id="section-4.6.2.2-22">Else if <code>state</code> has type <code>FinishedWithOutbound</code>, then the Helper commits
-to <code>state.out_share</code> as described in <a href="#batch-buckets" class="auto internal xref">Section 4.6.3.3</a>. If commitment
-fails with report error <code>commit_error</code> (e.g., the report was replayed or its
-batch bucket was collected), then instead of the "continue" response above, the
-Helper responds with<a href="#section-4.6.2.2-22" class="pilcrow">¶</a></p>
+<p id="section-4.6.2.2-22">Else if <code>state</code> has type <code>FinishedWithOutbound</code>, then the Helper commits to
+<code>state.out_share</code> as described in <a href="#batch-buckets" class="auto internal xref">Section 4.6.3.3</a>. If commitment fails with
+some <code>ReportError</code> (e.g., the report was replayed or its batch bucket was
+collected), then instead of the <code>continue</code> response above, the Helper responds
+with<a href="#section-4.6.2.2-22" class="pilcrow">¶</a></p>
 <div class="lang-tls-presentation sourcecode" id="section-4.6.2.2-23">
 <pre>
 variant {
