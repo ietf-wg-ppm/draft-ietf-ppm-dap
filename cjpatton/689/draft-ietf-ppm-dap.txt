@@ -1801,10 +1801,12 @@ aggregation job 1                   aggregation job 2          aggregation job j
    Each Aggregator maintains some state for each report.  State
    transitions are triggered by receiving a message from its peer.
    Eventually this process results in a terminal state, either rejecting
-   the report or recovering an output share.  Each state said to have
-   one of four possible "types" (see Section 5.7 of [VDAF]: Continued,
-   FinishedWithOutbound, Finished and Rejected.  The first two types
-   include an outbound message to be processed by the peer.
+   the report or recovering an output share.  Once a report has reached
+   a terminal state, no more messages will be processed for it.  Each
+   state is said to have one of four possible "types" (see Section 5.7
+   of [VDAF]: Continued, FinishedWithOutbound, Finished and Rejected.
+   The first two types include an outbound message to be processed by
+   the peer.
 
    The Helper can either process each step synchronously, meaning it
    computes each preparation step before producing a response to the
@@ -1895,8 +1897,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
                              +----> Rejected (*reject)
 
          Figure 4: Leader state transition triggered by aggregation
-      initialization. (\*) indicates a terminal state, meaning no more
-                     messages will be processed for it.
+              initialization. (\*) indicates a terminal state.
 
    The Leader begins an aggregation job by choosing a set of candidate
    reports that belong to the same task and a job ID which MUST be
@@ -2092,8 +2093,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
                  +--> Rejected (*reject)
 
          Figure 5: Helper state transition triggered by aggregation
-      initialization. (\*) indicates a terminal state, meaning no more
-                     messages will be processed for it.
+              initialization. (\*) indicates a terminal state.
 
    The Helper begins an aggregation job when it receives an
    AggregationJobInitReq message from the Leader.  For each PrepareInit
@@ -2438,8 +2438,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
                              +----> (*reject)
 
          Figure 6: Leader state transition triggered by aggregation
-       continuation. (\*) indicates a terminal state, meaning no more
-                     messages will be processed for it.
+               continuation. (\*) indicates a terminal state.
 
    The Leader begins each step of aggregation continuation with a prep
    state object state for each report in the candidate set.  Either all
@@ -2558,8 +2557,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
                   +----> Rejected (reject*)
 
          Figure 7: Helper state transition triggered by aggregation
-       continuation. (\*) indicates a terminal state, meaning no more
-                     messages will be processed for it.
+               continuation. (\*) indicates a terminal state.
 
    The Helper begins continuation with a state object for each report in
    the candidate set, each of which has type Continued.  The Helper
