@@ -1890,11 +1890,12 @@ aggregation job 1                   aggregation job 2          aggregation job j
                              |
                              +----> FinishedWithOutbound
                              |
-                             +----> Finished -> commit
+                             +----> Finished (*)
                              |
-                             +----> Rejected -> reject
+                             +----> Rejected (*)
 
-                               Figure 4: XXX
+       Figure 4: XXX Leader state transition triggered by aggregation
+              initialization. (\*) indicates a terminal state.
 
    The Leader begins an aggregation job by choosing a set of candidate
    reports that belong to the same task and a job ID which MUST be
@@ -2085,11 +2086,12 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    PrepareInit --+--> Continued
                  |
-                 +--> FinishedWithOutbound -> commit
+                 +--> FinishedWithOutbound (*)
                  |
-                 +--> Rejected -> reject
+                 +--> Rejected (*)
 
-                               Figure 5: XXX
+       Figure 5: XXX Helper state transition triggered by aggregation
+              initialization. (\*) indicates a terminal state.
 
    The Helper begins an aggregation job when it receives an
    AggregationJobInitReq message from the Leader.  For each PrepareInit
@@ -2424,16 +2426,17 @@ aggregation job 1                   aggregation job 2          aggregation job j
                   |
                   +----> FinishedWithOutbound
                   |
-                  +----> Finished -> commit
+                  +----> Finished (*)
                   |
-                  +----> Rejected -> reject
+                  +----> Rejected (*)
 
                         PrepareResp
-   FinishedWithOutbound -----+----> commit
+   FinishedWithOutbound -----+----> (*)
                              |
-                             +----> reject
+                             +----> (*)
 
-                               Figure 6: XXX
+       Figure 6: XXX Leader state transition triggered by aggregation
+               continuation. (\*) indicates a terminal state.
 
    The Leader begins each step of aggregation continuation with a prep
    state object state for each report in the candidate set.  Either all
@@ -2545,13 +2548,14 @@ aggregation job 1                   aggregation job 2          aggregation job j
              PrepareContinue
    Continued -----+----> Continued
                   |
-                  +----> FinishedWithOutbound -> commit
+                  +----> FinishedWithOutbound (*)
                   |
-                  +----> Finished -> commit
+                  +----> Finished (*)
                   |
-                  +----> Rejected -> reject
+                  +----> Rejected (*)
 
-                               Figure 7: XXX
+       Figure 7: XXX Helper state transition triggered by aggregation
+               continuation. (\*) indicates a terminal state
 
    The Helper begins continuation with a state object for each report in
    the candidate set, each of which has type Continued.  The Helper
