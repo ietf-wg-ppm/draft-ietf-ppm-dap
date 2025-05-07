@@ -3943,7 +3943,7 @@ parameter chosen by the Collector.<a href="#section-4.6.1-4" class="pilcrow">¶<
             <h5 id="name-leader-initialization">
 <a href="#section-4.6.2.1" class="section-number selfRef">4.6.2.1. </a><a href="#name-leader-initialization" class="section-name selfRef">Leader Initialization</a>
             </h5>
-<span id="name-xxx-leader-state-transition"></span><div id="leader-init-state">
+<span id="name-leader-state-transition-tri"></span><div id="leader-init-state">
 <figure id="figure-4">
               <div id="section-4.6.2.1-1.1">
                 <div class="alignLeft art-svg artwork" id="section-4.6.2.1-1.1.1">
@@ -3959,8 +3959,6 @@ parameter chosen by the Collector.<a href="#section-4.6.1-4" class="pilcrow">¶<
                     <polygon class="arrowhead" points="264,80 252,74.4 252,85.6" fill="black" transform="rotate(0,256,80)"></polygon>
                     <polygon class="arrowhead" points="264,48 252,42.4 252,53.6" fill="black" transform="rotate(0,256,48)"></polygon>
                     <polygon class="arrowhead" points="88,48 76,42.4 76,53.6" fill="black" transform="rotate(0,80,48)"></polygon>
-                    <circle cx="352" cy="112" r="6" class="closeddot" fill="black"></circle>
-                    <circle cx="352" cy="144" r="6" class="closeddot" fill="black"></circle>
                     <g class="text">
                       <text x="216" y="36">PrepareResp</text>
                       <text x="28" y="52">Report</text>
@@ -3968,17 +3966,15 @@ parameter chosen by the Collector.<a href="#section-4.6.1-4" class="pilcrow">¶<
                       <text x="304" y="52">Continued</text>
                       <text x="348" y="84">FinishedWithOutbound</text>
                       <text x="300" y="116">Finished</text>
-                      <text x="344" y="116">(</text>
-                      <text x="360" y="116">)</text>
+                      <text x="376" y="116">(*commit)</text>
                       <text x="300" y="148">Rejected</text>
-                      <text x="344" y="148">(</text>
-                      <text x="360" y="148">)</text>
+                      <text x="376" y="148">(*reject)</text>
                     </g>
                   </svg><a href="#section-4.6.2.1-1.1.1" class="pilcrow">¶</a>
 </div>
 </div>
 <figcaption><a href="#figure-4" class="selfRef">Figure 4</a>:
-<a href="#name-xxx-leader-state-transition" class="selfRef">XXX Leader state transition triggered by aggregation initialization. (\*) indicates a terminal state.</a>
+<a href="#name-leader-state-transition-tri" class="selfRef">Leader state transition triggered by aggregation initialization. (\*) indicates a terminal state, meaning no more messages will be processed for it.</a>
               </figcaption></figure>
 </div>
 <p id="section-4.6.2.1-2">The Leader begins an aggregation job by choosing a set of candidate reports that
@@ -4185,11 +4181,11 @@ recovery (see <a href="#aggregation-step-skew-recovery" class="auto internal xre
             <h5 id="name-helper-initialization">
 <a href="#section-4.6.2.2" class="section-number selfRef">4.6.2.2. </a><a href="#name-helper-initialization" class="section-name selfRef">Helper Initialization</a>
             </h5>
-<span id="name-xxx-helper-state-transition"></span><div id="helper-init-state">
+<span id="name-helper-state-transition-tri"></span><div id="helper-init-state">
 <figure id="figure-5">
               <div id="section-4.6.2.2-1.1">
                 <div class="alignLeft art-svg artwork" id="section-4.6.2.2-1.1.1">
-<svg xmlns="http://www.w3.org/2000/svg" version="1.1" height="112" width="352" viewBox="0 0 352 112" class="diagram" text-anchor="middle" font-family="monospace" font-size="13px" stroke-linecap="round">
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" height="112" width="400" viewBox="0 0 400 112" class="diagram" text-anchor="middle" font-family="monospace" font-size="13px" stroke-linecap="round">
                     <path d="M 120,32 L 120,96" fill="none" stroke="black"></path>
                     <path d="M 104,32 L 144,32" fill="none" stroke="black"></path>
                     <path d="M 120,64 L 144,64" fill="none" stroke="black"></path>
@@ -4197,23 +4193,19 @@ recovery (see <a href="#aggregation-step-skew-recovery" class="auto internal xre
                     <polygon class="arrowhead" points="152,96 140,90.4 140,101.6" fill="black" transform="rotate(0,144,96)"></polygon>
                     <polygon class="arrowhead" points="152,64 140,58.4 140,69.6" fill="black" transform="rotate(0,144,64)"></polygon>
                     <polygon class="arrowhead" points="152,32 140,26.4 140,37.6" fill="black" transform="rotate(0,144,32)"></polygon>
-                    <circle cx="240" cy="96" r="6" class="closeddot" fill="black"></circle>
-                    <circle cx="336" cy="64" r="6" class="closeddot" fill="black"></circle>
                     <g class="text">
                       <text x="48" y="36">PrepareInit</text>
                       <text x="192" y="36">Continued</text>
                       <text x="236" y="68">FinishedWithOutbound</text>
-                      <text x="328" y="68">(</text>
-                      <text x="344" y="68">)</text>
+                      <text x="360" y="68">(*commit)</text>
                       <text x="188" y="100">Rejected</text>
-                      <text x="232" y="100">(</text>
-                      <text x="248" y="100">)</text>
+                      <text x="264" y="100">(*reject)</text>
                     </g>
                   </svg><a href="#section-4.6.2.2-1.1.1" class="pilcrow">¶</a>
 </div>
 </div>
 <figcaption><a href="#figure-5" class="selfRef">Figure 5</a>:
-<a href="#name-xxx-helper-state-transition" class="selfRef">XXX Helper state transition triggered by aggregation initialization. (\*) indicates a terminal state.</a>
+<a href="#name-helper-state-transition-tri" class="selfRef">Helper state transition triggered by aggregation initialization. (\*) indicates a terminal state, meaning no more messages will be processed for it.</a>
               </figcaption></figure>
 </div>
 <p id="section-4.6.2.2-2">The Helper begins an aggregation job when it receives an <code>AggregationJobInitReq</code>
@@ -4585,7 +4577,7 @@ round VDAFs like Prio3 will never reach this phase.<a href="#section-4.6.3-2" cl
             <h5 id="name-leader-continuation">
 <a href="#section-4.6.3.1" class="section-number selfRef">4.6.3.1. </a><a href="#name-leader-continuation" class="section-name selfRef">Leader Continuation</a>
             </h5>
-<span id="name-xxx-leader-state-transition-"></span><div id="leader-cont-state">
+<span id="name-leader-state-transition-trig"></span><div id="leader-cont-state">
 <figure id="figure-6">
               <div id="section-4.6.3.1-1.1">
                 <div class="alignLeft art-svg artwork" id="section-4.6.3.1-1.1.1">
@@ -4604,33 +4596,25 @@ round VDAFs like Prio3 will never reach this phase.<a href="#section-4.6.3-2" cl
                     <polygon class="arrowhead" points="176,112 164,106.4 164,117.6" fill="black" transform="rotate(0,168,112)"></polygon>
                     <polygon class="arrowhead" points="176,80 164,74.4 164,85.6" fill="black" transform="rotate(0,168,80)"></polygon>
                     <polygon class="arrowhead" points="176,48 164,42.4 164,53.6" fill="black" transform="rotate(0,168,48)"></polygon>
-                    <circle cx="264" cy="112" r="6" class="closeddot" fill="black"></circle>
-                    <circle cx="264" cy="144" r="6" class="closeddot" fill="black"></circle>
-                    <circle cx="280" cy="192" r="6" class="closeddot" fill="black"></circle>
-                    <circle cx="280" cy="224" r="6" class="closeddot" fill="black"></circle>
                     <g class="text">
                       <text x="128" y="36">PrepareResp</text>
                       <text x="40" y="52">Continued</text>
                       <text x="216" y="52">Continued</text>
                       <text x="260" y="84">FinishedWithOutbound</text>
                       <text x="212" y="116">Finished</text>
-                      <text x="256" y="116">(</text>
-                      <text x="272" y="116">)</text>
+                      <text x="288" y="116">(*commit)</text>
                       <text x="212" y="148">Rejected</text>
-                      <text x="256" y="148">(</text>
-                      <text x="272" y="148">)</text>
+                      <text x="288" y="148">(*reject)</text>
                       <text x="216" y="180">PrepareResp</text>
                       <text x="84" y="196">FinishedWithOutbound</text>
-                      <text x="272" y="196">(</text>
-                      <text x="288" y="196">)</text>
-                      <text x="272" y="228">(</text>
-                      <text x="288" y="228">)</text>
+                      <text x="304" y="196">(*commit)</text>
+                      <text x="304" y="228">(*reject)</text>
                     </g>
                   </svg><a href="#section-4.6.3.1-1.1.1" class="pilcrow">¶</a>
 </div>
 </div>
 <figcaption><a href="#figure-6" class="selfRef">Figure 6</a>:
-<a href="#name-xxx-leader-state-transition-" class="selfRef">XXX Leader state transition triggered by aggregation continuation. (\*) indicates a terminal state.</a>
+<a href="#name-leader-state-transition-trig" class="selfRef">Leader state transition triggered by aggregation continuation. (\*) indicates a terminal state, meaning no more messages will be processed for it.</a>
               </figcaption></figure>
 </div>
 <p id="section-4.6.3.1-2">The Leader begins each step of aggregation continuation with a prep state
@@ -4747,11 +4731,11 @@ recovery (see <a href="#aggregation-step-skew-recovery" class="auto internal xre
             <h5 id="name-helper-continuation">
 <a href="#section-4.6.3.2" class="section-number selfRef">4.6.3.2. </a><a href="#name-helper-continuation" class="section-name selfRef">Helper Continuation</a>
             </h5>
-<span id="name-xxx-helper-state-transition-"></span><div id="helper-cont-state">
+<span id="name-helper-state-transition-trig"></span><div id="helper-cont-state">
 <figure id="figure-7">
               <div id="section-4.6.3.2-1.1">
                 <div class="alignLeft art-svg artwork" id="section-4.6.3.2-1.1.1">
-<svg xmlns="http://www.w3.org/2000/svg" version="1.1" height="160" width="376" viewBox="0 0 376 160" class="diagram" text-anchor="middle" font-family="monospace" font-size="13px" stroke-linecap="round">
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" height="160" width="424" viewBox="0 0 424 160" class="diagram" text-anchor="middle" font-family="monospace" font-size="13px" stroke-linecap="round">
                     <path d="M 128,48 L 128,144" fill="none" stroke="black"></path>
                     <path d="M 88,48 L 168,48" fill="none" stroke="black"></path>
                     <path d="M 128,80 L 168,80" fill="none" stroke="black"></path>
@@ -4761,28 +4745,22 @@ recovery (see <a href="#aggregation-step-skew-recovery" class="auto internal xre
                     <polygon class="arrowhead" points="176,112 164,106.4 164,117.6" fill="black" transform="rotate(0,168,112)"></polygon>
                     <polygon class="arrowhead" points="176,80 164,74.4 164,85.6" fill="black" transform="rotate(0,168,80)"></polygon>
                     <polygon class="arrowhead" points="176,48 164,42.4 164,53.6" fill="black" transform="rotate(0,168,48)"></polygon>
-                    <circle cx="264" cy="112" r="6" class="closeddot" fill="black"></circle>
-                    <circle cx="264" cy="144" r="6" class="closeddot" fill="black"></circle>
-                    <circle cx="360" cy="80" r="6" class="closeddot" fill="black"></circle>
                     <g class="text">
                       <text x="144" y="36">PrepareContinue</text>
                       <text x="40" y="52">Continued</text>
                       <text x="216" y="52">Continued</text>
                       <text x="260" y="84">FinishedWithOutbound</text>
-                      <text x="352" y="84">(</text>
-                      <text x="368" y="84">)</text>
+                      <text x="384" y="84">(commit*)</text>
                       <text x="212" y="116">Finished</text>
-                      <text x="256" y="116">(</text>
-                      <text x="272" y="116">)</text>
+                      <text x="288" y="116">(commit*)</text>
                       <text x="212" y="148">Rejected</text>
-                      <text x="256" y="148">(</text>
-                      <text x="272" y="148">)</text>
+                      <text x="288" y="148">(reject*)</text>
                     </g>
                   </svg><a href="#section-4.6.3.2-1.1.1" class="pilcrow">¶</a>
 </div>
 </div>
 <figcaption><a href="#figure-7" class="selfRef">Figure 7</a>:
-<a href="#name-xxx-helper-state-transition-" class="selfRef">XXX Helper state transition triggered by aggregation continuation. (\*) indicates a terminal state</a>
+<a href="#name-helper-state-transition-trig" class="selfRef">Helper state transition triggered by aggregation continuation. (\*) indicates a terminal state, meaning no more messages will be processed for it.</a>
               </figcaption></figure>
 </div>
 <p id="section-4.6.3.2-2">The Helper begins continuation with a <code>state</code> object for each report in
