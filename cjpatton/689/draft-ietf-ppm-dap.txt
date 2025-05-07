@@ -1906,8 +1906,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    Section 4.6.2.4.  If either step fails, the Leader rejects the report
    and removes it from the candidate set.
 
-   For each remaining report the Leader executes the following
-   procedure:
+   For each report the Leader executes the following procedure:
 
    state = Vdaf.ping_pong_leader_init(
        vdaf_verify_key,
