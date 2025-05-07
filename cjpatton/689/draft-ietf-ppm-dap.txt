@@ -2200,7 +2200,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    *  plaintext_input_share is the Helper's PlaintextInputShare
 
-   *  inbound is the payload of the PrepareInit
+   *  inbound is the payload of the inbound PrepareInit
 
    This procedure determines the initial per-report state.  If state is
    of type Rejected (Section 5.7 of [VDAF]), then the Helper responds
