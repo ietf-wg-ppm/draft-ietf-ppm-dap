@@ -1941,7 +1941,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    Otherwise, if state is of type Continued (no other state is reachable
    at this point), then the state includes an outbound message denoted
    state.outbound.  The Leader uses it to construct a PrepareInit
-   message for the report:
+   message:
 
    struct {
      ReportMetadata report_metadata;
@@ -1954,6 +1954,8 @@ aggregation job 1                   aggregation job 2          aggregation job j
      opaque payload<0..2^32-1>;
    } PrepareInit;
 
+   This message consists of:
+
    *  report_share.report_metadata: The report's metadata.
 
    *  report_share.public_share: The report's public share.
@@ -1963,8 +1965,8 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    *  payload: The outbound message, set to state.outbound.
 
-   Next, the Leader constructs an AggregationJobInitReq message
-   containing the PrepareInit for each candidate report:
+   Once all the report shares have been initialized, the Leader creates
+   an AggregationJobInitReq message:
 
    struct {
      BatchMode batch_mode;
