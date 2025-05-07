@@ -4224,6 +4224,7 @@ For all other reports it initializes the VDAF prep state as follows:<a href="#se
     report_id,
     public_share,
     plaintext_input_share.payload,
+    inbound,
 )
 </pre><a href="#section-4.6.2.2-13" class="pilcrow">¶</a>
 </div>
@@ -4246,6 +4247,9 @@ For all other reports it initializes the VDAF prep state as follows:<a href="#se
 </li>
               <li class="normal" id="section-4.6.2.2-14.6">
                 <p id="section-4.6.2.2-14.6.1"><code>plaintext_input_share</code> is the Helper's <code>PlaintextInputShare</code><a href="#section-4.6.2.2-14.6.1" class="pilcrow">¶</a></p>
+</li>
+              <li class="normal" id="section-4.6.2.2-14.7">
+                <p id="section-4.6.2.2-14.7.1"><code>inbound</code> is the payload of the inbound <code>PrepareInit</code><a href="#section-4.6.2.2-14.7.1" class="pilcrow">¶</a></p>
 </li>
             </ul>
 <p id="section-4.6.2.2-15">This procedure determines the initial per-report <code>state</code>, as well as the

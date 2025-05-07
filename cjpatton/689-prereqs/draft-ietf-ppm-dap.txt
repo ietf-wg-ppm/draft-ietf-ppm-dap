@@ -2152,6 +2152,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
        report_id,
        public_share,
        plaintext_input_share.payload,
+       inbound,
    )
 
    *  vdaf_verify_key is the VDAF verification key for the task
@@ -2166,6 +2167,8 @@ aggregation job 1                   aggregation job 2          aggregation job j
    *  public_share is the report's public share
 
    *  plaintext_input_share is the Helper's PlaintextInputShare
+
+   *  inbound is the payload of the inbound PrepareInit
 
    This procedure determines the initial per-report state, as well as
    the initial outbound message to send in response to the Leader.  If
