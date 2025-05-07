@@ -4379,9 +4379,10 @@ struct {
 } AggregationJobResp;
 </pre><a href="#section-4.6.2.2-25" class="pilcrow">¶</a>
 </div>
-<p id="section-4.6.2.2-26">where <code>prepare_resps</code> are the <code>PrepareResp</code> messages computed in the previous
-step. The order <span class="bcp14">MUST</span> match <code>AggregationJobInitReq.prepare_inits</code>. The media
-type for <code>AggregationJobResp</code> is "application/dap-aggregation-job-resp".<a href="#section-4.6.2.2-26" class="pilcrow">¶</a></p>
+<p id="section-4.6.2.2-26">where <code>prepare_resps</code> are the outbound <code>PrepareResp</code> messages for each report
+computed in the previous step. The order <span class="bcp14">MUST</span> match
+<code>AggregationJobInitReq.prepare_inits</code>. The media type for <code>AggregationJobResp</code>
+is "application/dap-aggregation-job-resp".<a href="#section-4.6.2.2-26" class="pilcrow">¶</a></p>
 <p id="section-4.6.2.2-27">Changing an aggregation job's parameters is illegal. If the Helper receives
 further PUT requests to the aggregation job with a different
 <code>AggregationJobInitReq</code> in the body, it <span class="bcp14">MUST</span> abort with a client error. For
