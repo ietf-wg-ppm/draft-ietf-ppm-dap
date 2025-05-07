@@ -4146,9 +4146,9 @@ then there is at least one more outbound message to send before preparation
 is complete. The Leader stores <code>state</code> and proceeds as in
 <a href="#aggregation-leader-continuation" class="auto internal xref">Section 4.6.3.1</a>.<a href="#section-4.6.2.1-23.1.5" class="pilcrow">¶</a></p>
 <p id="section-4.6.2.1-23.1.6">
-Else if the new  <code>state</code> has type <code>Finished</code>, then preparation is
-complete and the state include an output share. The Leader commits to
-<code>state.out_share</code> as described in <a href="#batch-buckets" class="auto internal xref">Section 4.6.3.3</a>.<a href="#section-4.6.2.1-23.1.6" class="pilcrow">¶</a></p>
+Else if the new  <code>state</code> has type <code>Finished</code>, then preparation is complete
+and the state includes an output share, denoted <code>state.out_share</code>. The
+Leader commits to <code>state.out_share</code> as described in <a href="#batch-buckets" class="auto internal xref">Section 4.6.3.3</a>.<a href="#section-4.6.2.1-23.1.6" class="pilcrow">¶</a></p>
 <p id="section-4.6.2.1-23.1.7">
 Else if <code>state</code> has type <code>Rejected</code>, then the Leader rejects the
 report and removes it from the candidate set.<a href="#section-4.6.2.1-23.1.7" class="pilcrow">¶</a></p>
@@ -4156,7 +4156,7 @@ report and removes it from the candidate set.<a href="#section-4.6.2.1-23.1.7" c
 Note: rejecting at this point would result in a batch mismatch if the Helper
 had already committed to its output share. This is impossible due to the
 robustness of the VDAF: if the underlying measurement were invalid, then the
-Helper would have rejected the report in the previous step.<a href="#section-4.6.2.1-23.1.8" class="pilcrow">¶</a></p>
+Helper would have indicated rejection in its response.<a href="#section-4.6.2.1-23.1.8" class="pilcrow">¶</a></p>
 </li>
               <li id="section-4.6.2.1-23.2">
                 <p id="section-4.6.2.1-23.2.1">Else if the <code>PrepareResp</code> has type "reject", then the Leader rejects the
@@ -4349,7 +4349,7 @@ not reachable at this point.) The Helper responds with<a href="#section-4.6.2.2-
 <pre>
 variant {
   ReportID report_id;
-  PrepareRespState prepare_resp_state = continue;
+  PrepareRespType prepare_resp_type = continue;
   opaque payload&lt;0..2^32-1&gt; = state.outbound;
 } PrepareResp;
 </pre><a href="#section-4.6.2.2-19" class="pilcrow">¶</a>

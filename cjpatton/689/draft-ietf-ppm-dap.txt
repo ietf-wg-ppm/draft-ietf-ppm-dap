@@ -2051,8 +2051,9 @@ aggregation job 1                   aggregation job 2          aggregation job j
        in Section 4.6.3.1.
 
        Else if the new state has type Finished, then preparation is
-       complete and the state include an output share.  The Leader
-       commits to state.out_share as described in Section 4.6.3.3.
+       complete and the state includes an output share, denoted
+       state.out_share.  The Leader commits to state.out_share as
+       described in Section 4.6.3.3.
 
        Else if state has type Rejected, then the Leader rejects the
        report and removes it from the candidate set.
@@ -2060,8 +2061,8 @@ aggregation job 1                   aggregation job 2          aggregation job j
        Note: rejecting at this point would result in a batch mismatch if
        the Helper had already committed to its output share.  This is
        impossible due to the robustness of the VDAF: if the underlying
-       measurement were invalid, then the Helper would have rejected the
-       report in the previous step.
+       measurement were invalid, then the Helper would have indicated
+       rejection in its response.
 
    2.  Else if the PrepareResp has type "reject", then the Leader
        rejects the report and removes it from the candidate set.  The
@@ -2229,7 +2230,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    variant {
      ReportID report_id;
-     PrepareRespState prepare_resp_state = continue;
+     PrepareRespType prepare_resp_type = continue;
      opaque payload<0..2^32-1> = state.outbound;
    } PrepareResp;
 
