@@ -1994,7 +1994,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    *  part_batch_selector: The "partial batch selector" used by the
       Aggregators to determine how to aggregate each report.  Its
-      contents depends on the batch mode of the task.  This field is
+      contents depends on the indicated batch mode.  This field is
       called the "partial" batch selector because depending on the batch
       mode, it may only partially determine a batch.  See Section 5.
 
