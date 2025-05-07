@@ -1796,7 +1796,7 @@ rejected and removed from the candidate set, and no message is sent to the
 Helper for this report.
 
 If `state` is of type `Continued`, then the Leader constructs a `PrepareInit`
-message.
+message:
 
 ~~~ tls-presentation
 struct {
@@ -1811,21 +1811,21 @@ struct {
 } PrepareInit;
 ~~~
 
-Each of these messages is constructed as follows:
+This message consists of:
 
-  * `report_share.report_metadata` is the report's metadata.
+  * `report_share.report_metadata`: The report's metadata.
 
-  * `report_share.public_share` is the report's public share.
+  * `report_share.public_share`: The report's public share.
 
-  * `report_share.encrypted_input_share` is the Helper's encrypted input share.
+  * `report_share.encrypted_input_share`: The Helper's encrypted input share.
 
-  * `payload` is set to the `outbound` message computed by the previous step.
+  * `payload`: The `outbound` message computed by the previous step.
 
 It is not possible for `state` to be of type `Finished` during Leader
 initialization.
 
 Once all the report shares have been initialized, the Leader creates an
-`AggregationJobInitReq` message.
+`AggregationJobInitReq` message:
 
 ~~~ tls-presentation
 struct {
