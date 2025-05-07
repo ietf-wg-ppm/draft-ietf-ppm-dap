@@ -1798,6 +1798,14 @@ aggregation job 1                   aggregation job 2          aggregation job j
    VDAF.  The message structures and processing rules are specified in
    the following subsections.
 
+   Each Aggregator maintains some state for each report.  State
+   transitions are triggered by receiving a message from its peer.
+   Eventually this process results in a terminal state, either rejecting
+   the report or recovering an output share.  Each state said to have
+   one of four possible "types" (see Section 5.7 of [VDAF]: Continued,
+   FinishedWithOutbound, Finished and Rejected.  The first two types
+   include an outbound message to be processed by the peer.
+
    The Helper can either process each step synchronously, meaning it
    computes each preparation step before producing a response to the
    Leader's HTTP request, or asynchronously, meaning it responds
@@ -1865,8 +1873,6 @@ aggregation job 1                   aggregation job 2          aggregation job j
    by the Collector.
 
 4.6.2.  Aggregate Initialization
-
-   XXX Report states
 
    Aggregation initialization accomplishes two tasks:
 
