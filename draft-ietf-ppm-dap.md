@@ -1968,7 +1968,7 @@ enum {
   finish(1)
   reject(2),
   (255)
-} PrepareRespState;
+} PrepareRespType;
 
 enum {
   reserved(0),
@@ -1987,8 +1987,8 @@ enum {
 
 struct {
   ReportID report_id;
-  PrepareRespState prepare_resp_state;
-  select (PrepareResp.prepare_resp_state) {
+  PrepareRespType prepare_resp_type;
+  select (PrepareResp.prepare_resp_type) {
     case continue: opaque payload<0..2^32-1>;
     case finish:   Empty;
     case reject:   ReportError report_error;
@@ -2004,7 +2004,7 @@ the outbound preparation response to
 ~~~ tls-presentation
 variant {
   ReportID report_id;
-  PrepareRespState prepare_resp_state = reject;
+  PrepareRespType prepare_resp_type = reject;
   ReportError report_error;
 } PrepareResp;
 ~~~
@@ -2037,7 +2037,7 @@ type `Rejected`, then the Helper responds with
 ~~~ tls-presentation
 variant {
   ReportID report_id;
-  PrepareRespState prepare_resp_state = reject;
+  PrepareRespType prepare_resp_type = reject;
   ReportError report_error = vdaf_prep_error;
 } PrepareResp;
 ~~~
@@ -2047,7 +2047,7 @@ Otherwise the Helper responds with
 ~~~ tls-presentation
 variant {
   ReportID report_id;
-  PrepareRespState prepare_resp_state = continue;
+  PrepareRespType prepare_resp_type = continue;
   opaque payload<0..2^32-1> = outbound;
 } PrepareResp;
 ~~~
@@ -2063,7 +2063,7 @@ of the `continue` response above, the Helper responds with
 ~~~ tls-presentation
 variant {
   ReportID report_id;
-  PrepareRespState prepare_resp_state = reject;
+  PrepareRespType prepare_resp_type = reject;
   ReportError report_error = commit_error;
 } PrepareResp;
 ~~~
@@ -2403,7 +2403,7 @@ response is
 ~~~ tls-presentation
 variant {
   ReportID report_id;
-  PrepareRespState prepare_resp_state = reject;
+  PrepareRespType prepare_resp_type = reject;
   ReportError report_error = vdaf_prep_error;
 } PrepareResp;
 ~~~
@@ -2419,7 +2419,7 @@ with
 ~~~ tls-presentation
 variant {
   ReportID report_id;
-  PrepareRespState prepare_resp_state = reject;
+  PrepareRespType prepare_resp_type = reject;
   ReportError report_error = commit_error;
 } PrepareResp;
 ~~~
@@ -2430,7 +2430,7 @@ If commitment succeeds, the Helper's response depends on the value of
 ~~~ tls-presentation
 variant {
   ReportID report_id;
-  PrepareRespState prepare_resp_state = continue;
+  PrepareRespType prepare_resp_type = continue;
   opaque payload<0..2^32-1> = outbound;
 } PrepareResp;
 ~~~
@@ -2440,7 +2440,7 @@ Otherwise, if `outbound == None`, then the Helper's response is
 ~~~ tls-presentation
 variant {
   ReportID report_id;
-  PrepareRespState prepare_resp_state = finish;
+  PrepareRespType prepare_resp_type = finish;
 } PrepareResp;
 ~~~
 
