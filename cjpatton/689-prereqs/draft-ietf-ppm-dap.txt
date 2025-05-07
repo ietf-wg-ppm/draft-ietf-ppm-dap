@@ -1894,7 +1894,8 @@ aggregation job 1                   aggregation job 2          aggregation job j
        agg_param,
        report_id,
        public_share,
-       plaintext_input_share.payload)
+       plaintext_input_share.payload,
+   )
 
    where:
 
@@ -2150,7 +2151,8 @@ aggregation job 1                   aggregation job 2          aggregation job j
        agg_param,
        report_id,
        public_share,
-       plaintext_input_share.payload)
+       plaintext_input_share.payload,
+   )
 
    *  vdaf_verify_key is the VDAF verification key for the task
 
