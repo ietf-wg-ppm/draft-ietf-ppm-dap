@@ -1947,7 +1947,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    initialization.
 
    Once all the report shares have been initialized, the Leader creates
-   an AggregationJobInitReq message.
+   an AggregationJobInitReq message:
 
    struct {
      BatchMode batch_mode;
