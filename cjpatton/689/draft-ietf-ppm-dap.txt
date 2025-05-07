@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 7 November 2025                                      Cloudflare
+Expires: 8 November 2025                                      Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                              6 May 2025
+                                                              7 May 2025
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -64,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 7 November 2025.
+   This Internet-Draft will expire on 8 November 2025.
 
 Copyright Notice
 
@@ -1786,7 +1786,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
       |   prep_continue                                     |
       |---------------------------------------------------->|
       |                                 AggregationJobResp: |
-      |                      prep_resp(continue|finished)   |
+      |                        prep_resp(continue|finish)   |
       |<----------------------------------------------------|
       |                                                     |
       v                                                     v
@@ -1877,16 +1877,33 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
 4.6.2.1.  Leader Initialization
 
+                        PrepareResp
+   Report --> Continued -----+----> Continued
+                             |
+                             +----> FinishedWithOutbound
+                             |
+                             +----> Finished -> commit
+                             |
+                             +----> Rejected -> reject
+
+                               Figure 4: XXX
+
    The Leader begins an aggregation job by choosing a set of candidate
    reports that belong to the same task and a job ID which MUST be
    unique within the task.
+
+   XXX The Leader MUST ensure a commitment error won't happen for any
+   report in the candidate set.  Otherwise, if commitment fails during
+   aggregation, then the result will be a batch mismatch because the
+   Helper has already committed.
 
    Next, the Leader decrypts each of its report shares as described in
    Section 4.6.2.3, then checks input share validity as described in
    Section 4.6.2.4.  If either step fails, the Leader rejects the report
    and removes it from the candidate set.
 
-   For each report the Leader executes the following procedure:
+   For each remaining report the Leader executes the following
+   procedure:
 
    leader_state = Vdaf.ping_pong_leader_init(
        vdaf_verify_key,
@@ -1894,7 +1911,8 @@ aggregation job 1                   aggregation job 2          aggregation job j
        agg_param,
        report_id,
        public_share,
-       plaintext_input_share.payload)
+       plaintext_input_share.payload,
+   )
 
    where:
 
@@ -1911,14 +1929,18 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    *  plaintext_input_share is the Leader's PlaintextInputShare
 
-   ping_pong_leader_init is defined in Section 5.7.1 of [VDAF].  This
-   process determines the initial per-report state, as well as the
-   initial outbound message to the Helper.  If leader_state is of type
-   Rejected, then the report is rejected and removed from the candidate
-   set, and no message is sent to the Helper for this report.
+   Function ping_pong_leader_init() is defined in Section 5.7.1 of
+   [VDAF].  This process determines the initial per-report state,
+   denoted leader_state, as well as the initial outbound message to the
+   Helper, denoted leader_state.outbound.
 
-   If state is of type Continued, then the Leader constructs a
-   PrepareInit message.
+   If leader_state is of type Rejected (Section 5.7 of [VDAF], then the
+   report is rejected and removed from the candidate set, and no message
+   is sent to the Helper for this report.
+
+   Otherwise, if leader_state is of type Continued (no other state is
+   reachable at this point), then the Leader constructs a PrepareInit
+   message:
 
    struct {
      ReportMetadata report_metadata;
@@ -1931,23 +1953,17 @@ aggregation job 1                   aggregation job 2          aggregation job j
      opaque payload<0..2^32-1>;
    } PrepareInit;
 
-   Each of these messages is constructed as follows:
+   *  report_share.report_metadata: The report's metadata.
 
-   *  report_share.report_metadata is the report's metadata.
+   *  report_share.public_share: The report's public share.
 
-   *  report_share.public_share is the report's public share.
-
-   *  report_share.encrypted_input_share is the Helper's encrypted input
+   *  report_share.encrypted_input_share: The Helper's encrypted input
       share.
 
-   *  payload is set to the leader_state.outbound message computed by
-      the previous step.
+   *  payload: The outbound message, set to leader_state.outbound.
 
-   It is not possible for the Leader to reach any state other than
-   Rejected or Continued at this point.
-
-   Once all the report shares have been initialized, the Leader creates
-   an AggregationJobInitReq message.
+   Next, the Leader constructs an AggregationJobInitReq message
+   containing the PrepareInit for each candidate report:
 
    struct {
      BatchMode batch_mode;
@@ -1960,20 +1976,17 @@ aggregation job 1                   aggregation job 2          aggregation job j
      PrepareInit prepare_inits<0..2^32-1>;
    } AggregationJobInitReq;
 
-   This message consists of:
-
    *  agg_param: The VDAF aggregation parameter chosen by the Collector.
       Before initializing an aggregation job, the Leader MUST validate
       the parameter as described in Section 4.4.
 
    *  part_batch_selector: The "partial batch selector" used by the
       Aggregators to determine how to aggregate each report.  Its
-      contents depends on the indicated batch mode.  This field is
+      contents depends on the batch mode of the task.  This field is
       called the "partial" batch selector because depending on the batch
       mode, it may only partially determine a batch.  See Section 5.
 
-   *  prepare_inits: the sequence of PrepareInit messages constructed in
-      the previous step.
+   *  prepare_inits: The PrepareInit messages of each candidate report.
 
    The Leader sends the AggregationJobInitReq in the body of a PUT
    request to the aggregation job with a media type of "application/dap-
@@ -1998,7 +2011,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    The Leader proceeds as follows with each report:
 
-   1.  If the inbound prep response has type "continue", then the Leader
+   1.  If the inbound PrepareResp has type "continue", then the Leader
        computes
 
       leader_state = Vdaf.ping_pong_leader_continued(
@@ -2015,32 +2028,33 @@ aggregation job 1                   aggregation job 2          aggregation job j
        *  agg_param is the VDAF aggregation parameter provided by the
           Collector (see Section 4.7)
 
-       *  inbound is the message in the PrepareResp
+       *  inbound is the payload of the PrepareResp
 
        If the new leader_state has type Continued or
        FinishedWithOutbound, then there is at least one more outbound
        message to send before preparation is complete.  The Leader
        stores leader_state and proceeds as in Section 4.6.3.1.
 
-       Otherwise, preparation is complete: either leader_state ==
-       Rejected(), in which case the Leader rejects the report and
-       removes it from the candidate set; or leader_state ==
-       Finished(out_share), in which case the Leader commits out_share
-       as described in Section 4.6.3.3.  If commitment fails, then the
-       Leader rejects the report and removes it from the candidate set.
+       Else if leader_state has type Rejected, XXX rejection agreement
+       violated.
 
-   2.  Else if the type is "reject", then the Leader rejects the report
-       and removes it from the candidate set.  The Leader MUST NOT
-       include the report in a subsequent aggregation job, unless the
-       error is report_too_early, in which case the Leader MAY include
-       the report in a subsequent aggregation job.
+       Else if leader_state has type Finished, then preparation is
+       complete and the Leader commits to leader_state.out_share as
+       described in Section 4.6.3.3.  XXX commitment MUST NOT fail.
 
-   3.  Else the type is invalid, in which case the Leader MUST abort the
+   2.  Else if the PrepareResp has type "reject", then the Leader
+       rejects the report and removes it from the candidate set.  The
+       Leader MUST NOT include the report in a subsequent aggregation
+       job, unless the error is report_too_early, in which case the
+       Leader MAY include the report in a subsequent aggregation job.
+
+   3.  Otherwise the inbound message type is invalid for the Leader's
+       current state, in which case the Leader MUST abort the
        aggregation job.
 
    Since VDAF preparation completes in a constant number of rounds, it
-   will never be the case that some reports are completed and others are
-   not.
+   will never be the case that preparation is complete for some reports
+   but not others.
 
    If the Leader fails to process the response from the Helper, for
    example because of a transient failure such as a network connection
@@ -2049,6 +2063,14 @@ aggregation job 1                   aggregation job 2          aggregation job j
    Section 4.6.3.4).
 
 4.6.2.2.  Helper Initialization
+
+   PrepareInit --+--> Continued
+                 |
+                 +--> FinishedWithOutbound -> commit
+                 |
+                 +--> Rejected -> reject
+
+                               Figure 5: XXX
 
    The Helper begins an aggregation job when it receives an
    AggregationJobInitReq message from the Leader.  For each PrepareInit
@@ -2093,13 +2115,12 @@ aggregation job 1                   aggregation job 2          aggregation job j
    AggregationJobInitReq.prepare_inits are all distinct.  If not, then
    the Helper MUST fail the job with error invalidMessage.
 
-   To process the aggregation job, the Helper computes an outbound
-   prepare step for each report share.  This includes the following
-   structures:
+   To process the aggregation job, the Helper computes a response for
+   each report share.  This includes the following structures:
 
    enum {
      continue(0),
-     finished(1)
+     finish(1)
      reject(2),
      (255)
    } PrepareRespState;
@@ -2124,15 +2145,15 @@ aggregation job 1                   aggregation job 2          aggregation job j
      PrepareRespState prepare_resp_state;
      select (PrepareResp.prepare_resp_state) {
        case continue: opaque payload<0..2^32-1>;
-       case finished: Empty;
+       case finish:   Empty;
        case reject:   ReportError report_error;
      };
    } PrepareResp;
 
-   Next the Helper decrypts each of its remaining report shares as
-   described in Section 4.6.2.3, then checks input share validity as
-   described in Section 4.6.2.4.  For any report that was rejected, the
-   Helper sets the outbound preparation response to
+   First, the Helper decrypts each report share as described in
+   Section 4.6.2.3, then checks input share validity as described in
+   Section 4.6.2.4.  For any report that was rejected, the Helper sets
+   the outbound preparation response to
 
    variant {
      ReportID report_id;
@@ -2150,7 +2171,11 @@ aggregation job 1                   aggregation job 2          aggregation job j
        agg_param,
        report_id,
        public_share,
-       plaintext_input_share.payload)
+       plaintext_input_share.payload,
+       inbound,
+   )
+
+   where:
 
    *  vdaf_verify_key is the VDAF verification key for the task
 
@@ -2165,8 +2190,11 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    *  plaintext_input_share is the Helper's PlaintextInputShare
 
+   *  inbound is the payload of the PrepareInit
+
    This procedure determines the initial per-report helper_state.  If
-   helper_state is of type Rejected, then the Helper responds with
+   helper_state is of type Rejected (Section 5.7 of [VDAF]), then the
+   Helper responds with
 
    variant {
      ReportID report_id;
@@ -2184,16 +2212,15 @@ aggregation job 1                   aggregation job 2          aggregation job j
      opaque payload<0..2^32-1> = helper_state.outbound;
    } PrepareResp;
 
-   The Helper stores helper_state for use in the next continuation step
-   in (Section 4.6.3.2).
+   If helper_state has type Continued, then the Helper stores
+   helper_state for use in the first continuation step in
+   (Section 4.6.3.2).
 
-   If helper_state has type FinishedWithOutbound, then the Helper
+   Else if helper_state has type FinishedWithOutbound, then the Helper
    commits to helper_state.out_share as described in Section 4.6.3.3.
    If commitment fails with some ReportError (e.g., the report was
    replayed or its batch bucket was collected), then instead of the
-   continue response above, the Helper responds with [[CP: Let's change
-   the order here so we don't have rewind and change the message we
-   sent]]
+   continue response above, the Helper responds with
 
    variant {
      ReportID report_id;
@@ -2209,7 +2236,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
      PrepareResp prepare_resps<0..2^32-1>;
    } AggregationJobResp;
 
-   where prepare_resps are the outbound prep steps computed in the
+   where prepare_resps are the PrepareRresp messages computed in the
    previous step.  The order MUST match
    AggregationJobInitReq.prepare_inits.  The media type for
    AggregationJobResp is "application/dap-aggregation-job-resp".
@@ -2374,10 +2401,27 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
 4.6.3.1.  Leader Continuation
 
+             PrepareResp
+   Continued -----+----> Continued
+                  |
+                  +----> FinishedWithOutbound
+                  |
+                  +----> Finished -> commit
+                  |
+                  +----> Rejected -> reject
+
+                        PrepareResp
+   FinishedWithOutbound -----+----> commit
+                             |
+                             +----> reject
+
+                               Figure 6: XXX
+
    The Leader begins each step of aggregation continuation with a prep
-   state object leader_state for each report in the candidate set.  Each
-   state has type Continued or FinishedWithOutbound and there is at
-   least one more outbound message to process.
+   state object leader_state for each report in the candidate set.
+   Either all states have type Continued or all states have type
+   FinishedWithOutbound.  In either case, there is at least one more
+   outbound message to process.
 
    The Leader advances its aggregation job to the next step (step 1 if
    this is the first continuation after initialization).  Then it
@@ -2404,10 +2448,10 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    The step field is the step of DAP aggregation that the Leader just
    reached and wants the Helper to advance to.  The prepare_continues
-   field is the sequence of preparation continuation messages
-   constructed in the previous step.  The PrepareContinues MUST be in
-   the same order as the previous request to the aggregation job,
-   omitting any reports that were rejected.
+   field is the sequence of PrepareContinue messages constructed in the
+   previous step.  These messages MUST be in the same order as the
+   previous request to the aggregation job, omitting any reports that
+   were rejected.
 
    The Leader MUST authenticate its requests to the Helper using a
    scheme that meets the requirements in Section 3.3.
@@ -2427,8 +2471,8 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    Otherwise, the Leader proceeds as follows with each report:
 
-   1.  If the inbound prep response type is "continue", then the Leader
-       computes
+   1.  If leader_state has type Continued and the inbound PrepareResp
+       has type "continue", then the Leader computes
 
       leader_state = Vdaf.ping_pong_leader_continued(
           "dap-15" || task_id,
@@ -2437,32 +2481,31 @@ aggregation job 1                   aggregation job 2          aggregation job j
           inbound,
       )
 
-       where task_id is the task ID and inbound is the message payload.
-       It then processes the next state transition:
+       where task_id is the task ID and inbound is the payload of the
+       prepare response.  It then processes the next state transition:
 
        *  If the type of the new leader_state is Continued or
           FinishedWithOutbound, then the Leader stores leader_state and
           proceeds to another continuation step.
 
-       *  Else if the type is Rejected, then the Leader rejects the
+       *  Else if the new type is Rejected, then the Leader rejects the
           report and removes it from the candidate set.
 
-       *  Else if the type is Finished, then the Leader commits to
-          leader_state.out_share as described in Section 4.6.3.3.  If
-          commitment fails, then the Leader rejects the report and
-          removes it from the candidate set.
+       *  Else if the new type is Finished, then the Leader commits to
+          leader_state.out_share as described in Section 4.6.3.3.  XXX
+          Commitment MUST NOT fail.
 
-   2.  Else if the type is "finished" and state == Finished(out_share),
-       then preparation is complete and the Leader stores the output
-       share for use in the collection interaction (Section 4.7).  [[CP:
-       Say "commits to".  Is this state reachable?]]
+   2.  Else if leader_state has type FinishedWithOutbound and the
+       inbound PrepareResp has type "finish", then preparation is
+       complete and the Leader commits to leader_state.out_share as
+       described in Section 4.6.3.3.  XXX Commitment MUST NOT fail.
 
    3.  Else if the type is "reject", then the Leader rejects the report
        and removes it from the candidate set.
 
-   4.  Else the type is invalid, in which case the Leader MUST abort the
-       aggregation job.  [[CP: What would be an example of an invalid
-       type?]]
+   4.  Otherwise the inbound message is incompatible with the Helper's
+       current state, in which case the Leader MUST abort the
+       aggregation job.
 
    If the Leader fails to process the response from the Helper, for
    example because of a transient failure such as a network connection
@@ -2472,13 +2515,23 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
 4.6.3.2.  Helper Continuation
 
-   The Helper begins continuation with a helper_state object for each
-   report in the candidate set.  The type of each state is either
-   Continued or FinishedWithOutbound and each state has the same type.
-   The Helper waits for the Leader to POST an AggregationJobContinueReq
-   to the aggregation job.
+             PrepareContinue
+   Continued -----+----> Continued
+                  |
+                  +----> FinishedWithOutbound -> commit
+                  |
+                  +----> Finished -> commit
+                  |
+                  +----> Rejected -> reject
 
-   [[XXX got here]]
+                               Figure 7: XXX
+
+   The Helper begins continuation with a helper_state object for each
+   report in the candidate set, each of which has type Continued.  The
+   Helper waits for the Leader to POST an AggregationJobContinueReq to
+   the aggregation job.
+
+   XXX
 
    The Helper MAY defer handling the continuation request.  In this
    case, it indicates that the job continuation is not yet ready by
@@ -2583,7 +2636,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    variant {
      ReportID report_id;
-     PrepareRespState prepare_resp_state = finished;
+     PrepareRespState prepare_resp_state = finish;
    } PrepareResp;
 
    Once the Helper has computed a PrepareResp for every report, the
