@@ -1781,7 +1781,8 @@ For each report the Leader executes the following procedure:
     agg_param,
     report_id,
     public_share,
-    plaintext_input_share.payload)
+    plaintext_input_share.payload,
+)
 ~~~
 
 where:
@@ -2028,7 +2029,9 @@ For all other reports it initializes the VDAF prep state as follows:
     agg_param,
     report_id,
     public_share,
-    plaintext_input_share.payload)
+    plaintext_input_share.payload,
+    inbound,
+)
 ~~~
 
 * `vdaf_verify_key` is the VDAF verification key for the task
@@ -2038,6 +2041,7 @@ For all other reports it initializes the VDAF prep state as follows:
 * `report_id` is the report ID
 * `public_share` is the report's public share
 * `plaintext_input_share` is the Helper's `PlaintextInputShare`
+* `inbound` is the payload of the inbound `PrepareInit`
 
 This procedure determines the initial per-report `state`, as well as the
 initial `outbound` message to send in response to the Leader. If `state` is of
