@@ -2458,10 +2458,10 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    The step field is the step of DAP aggregation that the Leader just
    reached and wants the Helper to advance to.  The prepare_continues
-   field is the sequence of PrepareContinue messages constructed in the
-   previous step.  These messages MUST be in the same order as the
-   previous request to the aggregation job, omitting any reports that
-   were rejected.
+   field is the sequence of preparation continuation messages
+   constructed in the previous step.  The PrepareContinues MUST be in
+   the same order as the previous request to the aggregation job,
+   omitting any reports that were rejected.
 
    The Leader MUST authenticate its requests to the Helper using a
    scheme that meets the requirements in Section 3.3.

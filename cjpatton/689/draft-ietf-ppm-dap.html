@@ -4648,10 +4648,10 @@ struct {
 </pre><a href="#section-4.6.3.1-7" class="pilcrow">¶</a>
 </div>
 <p id="section-4.6.3.1-8">The <code>step</code> field is the step of DAP aggregation that the Leader just reached and
-wants the Helper to advance to. The <code>prepare_continues</code> field is the sequence
-of <code>PrepareContinue</code> messages constructed in the previous step. These messages
-<span class="bcp14">MUST</span> be in the same order as the previous request to the aggregation job,
-omitting any reports that were rejected.<a href="#section-4.6.3.1-8" class="pilcrow">¶</a></p>
+wants the Helper to advance to. The <code>prepare_continues</code> field is the sequence of
+preparation continuation messages constructed in the previous step. The
+<code>PrepareContinue</code>s <span class="bcp14">MUST</span> be in the same order as the previous request to the
+aggregation job, omitting any reports that were rejected.<a href="#section-4.6.3.1-8" class="pilcrow">¶</a></p>
 <p id="section-4.6.3.1-9">The Leader <span class="bcp14">MUST</span> authenticate its requests to the Helper using a scheme that
 meets the requirements in <a href="#request-authentication" class="auto internal xref">Section 3.3</a>.<a href="#section-4.6.3.1-9" class="pilcrow">¶</a></p>
 <p id="section-4.6.3.1-10">If the Helper responds with an <code>AggregationJobResp</code> (see
