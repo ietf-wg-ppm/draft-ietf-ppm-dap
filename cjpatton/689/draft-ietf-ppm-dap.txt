@@ -1989,7 +1989,8 @@ aggregation job 1                   aggregation job 2          aggregation job j
       called the "partial" batch selector because depending on the batch
       mode, it may only partially determine a batch.  See Section 5.
 
-   *  prepare_inits: The PrepareInit messages of each candidate report.
+   *  prepare_inits: the sequence of PrepareInit messages constructed in
+      the previous step.
 
    The Leader sends the AggregationJobInitReq in the body of a PUT
    request to the aggregation job with a media type of "application/dap-
