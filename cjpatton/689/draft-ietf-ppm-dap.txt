@@ -1979,6 +1979,8 @@ aggregation job 1                   aggregation job 2          aggregation job j
      PrepareInit prepare_inits<0..2^32-1>;
    } AggregationJobInitReq;
 
+   This message consists of:
+
    *  agg_param: The VDAF aggregation parameter chosen by the Collector.
       Before initializing an aggregation job, the Leader MUST validate
       the parameter as described in Section 4.4.
