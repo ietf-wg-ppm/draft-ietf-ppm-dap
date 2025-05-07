@@ -1913,7 +1913,7 @@ The Leader proceeds as follows with each report:
    job.
 
 Since VDAF preparation completes in a constant number of rounds, it will never
-be the case that some reports are completed and others are not.
+be the case that preparation is complete for some reports but not others.
 
 If the Leader fails to process the response from the Helper, for example because
 of a transient failure such as a network connection failure or process crash,
@@ -1960,8 +1960,8 @@ Next, the Helper checks that the report IDs in
 `AggregationJobInitReq.prepare_inits` are all distinct. If not, then the Helper
 MUST fail the job with error `invalidMessage`.
 
-To process the aggregation job, the Helper computes an outbound prepare step
-for each report share. This includes the following structures:
+To process the aggregation job, the Helper computes a response for each report
+share. This includes the following structures:
 
 ~~~ tls-presentation
 enum {
@@ -2082,9 +2082,10 @@ struct {
 } AggregationJobResp;
 ~~~
 
-where `prepare_resps` are the outbound prep steps computed in the previous step.
-The order MUST match `AggregationJobInitReq.prepare_inits`. The media type for
-`AggregationJobResp` is "application/dap-aggregation-job-resp".
+where `prepare_resps` are the outbound `PrepareResp` messages for each report
+computed in the previous step. The order MUST match
+`AggregationJobInitReq.prepare_inits`. The media type for `AggregationJobResp`
+is "application/dap-aggregation-job-resp".
 
 Changing an aggregation job's parameters is illegal. If the Helper receives
 further PUT requests to the aggregation job with a different
