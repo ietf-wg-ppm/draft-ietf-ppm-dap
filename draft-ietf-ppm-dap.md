@@ -1539,14 +1539,12 @@ If the upload request is malformed, the Leader aborts with error
 If the Leader does not recognize the task ID, then it aborts with error
 `unrecognizedTask`.
 
-Otherwise, the Leader responds with a body consisting
-of an `UploadResponse` and the media type `application/dap-report-resp`. If
-the entire upload has been successfully completed, the Leader MAY respond with
-an empty body.
-
-For each report in the upload, the Leader creates `ReportUploadStatus` struct
-and adds the `ReportId` to it. If there was no error during the processing,
-the Leader sets the `error` to `none`.
+Otherwise, the Leader responds with a body consisting of an `UploadResponse` and
+the media type `application/dap-report-resp`. The Leader only includes reports
+that failed processing in the response. For each report that failed to upload,
+the Leader creates a `ReportUploadStatus` struct and includes the `ReportId`
+from the input and a `ReportError` {{basic-definitions}} that describes the
+failure.
 
 If the Leader does not recognize the `config_id` in the encrypted input share,
 it sets the error field to `outdated_config`
