@@ -1470,12 +1470,12 @@ struct {
 
 ~~~ tls-presentation
 struct {
-ReportID id;
-ReportError error;
+  ReportID id;
+  ReportError error;
 } ReportUploadStatus;
 
 struct {
-ReportUploadStatus status<0..2^32-1>;
+  ReportUploadStatus status<0..2^32-1>;
 } UploadResponse;
 ~~~
 
