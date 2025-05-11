@@ -2069,18 +2069,17 @@ enum {
 
 enum {
   reserved(0),
-  none(1),
-  batch_collected(2),
-  report_replayed(3),
-  report_dropped(4),
-  hpke_unknown_config_id(5),
-  hpke_decrypt_error(6),
-  vdaf_prep_error(7),
-  task_expired(8),
-  invalid_message(9),
-  report_too_early(10),
-  task_not_started(11),
-  outdated_config(12),
+  batch_collected(1),
+  report_replayed(2),
+  report_dropped(3),
+  hpke_unknown_config_id(4),
+  hpke_decrypt_error(5),
+  vdaf_prep_error(6),
+  task_expired(7),
+  invalid_message(8),
+  report_too_early(9),
+  task_not_started(10),
+  outdated_config(11),
   (255)
 } ReportError;
 
