@@ -1116,6 +1116,28 @@ in different situations.
 struct {} Empty;
 ~~~
 
+Errors that occurred during processing individual reports are represented
+by the following enum:
+
+~~~ tls-presentation
+enum {
+  reserved(0),
+  batch_collected(1),
+  report_replayed(2),
+  report_dropped(3),
+  hpke_unknown_config_id(4),
+  hpke_decrypt_error(5),
+  vdaf_prep_error(6),
+  task_expired(7),
+  invalid_message(8),
+  report_too_early(9),
+  task_not_started(10),
+  outdated_config(11),
+  (255)
+} ReportError;
+~~~
+
+
 ### Times, Durations and Intervals {#timestamps}
 
 ~~~ tls-presentation
@@ -2067,22 +2089,6 @@ enum {
   (255)
 } PrepareRespState;
 
-enum {
-  reserved(0),
-  batch_collected(1),
-  report_replayed(2),
-  report_dropped(3),
-  hpke_unknown_config_id(4),
-  hpke_decrypt_error(5),
-  vdaf_prep_error(6),
-  task_expired(7),
-  invalid_message(8),
-  report_too_early(9),
-  task_not_started(10),
-  outdated_config(11),
-  (255)
-} ReportError;
-
 struct {
   ReportID report_id;
   PrepareRespState prepare_resp_state;
@@ -2107,7 +2113,8 @@ variant {
 } PrepareResp;
 ~~~
 
-where `report_id` is the report ID and `report_error` is the indicated error.
+where `report_id` is the report ID and `report_error` is the indicated error
+defined in {{basic-definitions}}.
 For all other reports it initializes the VDAF prep state as follows:
 
 ~~~ pseudocode
@@ -4830,17 +4837,18 @@ The initial contents of this registry are listed below in {{report-error-id}}.
 
 | Value  | Name                     | Reference                               |
 |:-------|:-------------------------|:----------------------------------------|
-| `0x00` | `reserved`               | {{aggregation-helper-init}} of RFX XXXX |
-| `0x01` | `batch_collected`        | {{aggregation-helper-init}} of RFX XXXX |
-| `0x02` | `report_replayed`        | {{aggregation-helper-init}} of RFX XXXX |
-| `0x03` | `report_dropped`         | {{aggregation-helper-init}} of RFX XXXX |
-| `0x04` | `hpke_unknown_config_id` | {{aggregation-helper-init}} of RFX XXXX |
-| `0x05` | `hpke_decrypt_error`     | {{aggregation-helper-init}} of RFX XXXX |
-| `0x06` | `vdaf_prep_error`        | {{aggregation-helper-init}} of RFX XXXX |
-| `0x07` | `task_expired`           | {{aggregation-helper-init}} of RFX XXXX |
-| `0x08` | `invalid_message`        | {{aggregation-helper-init}} of RFX XXXX |
-| `0x09` | `report_too_early`       | {{aggregation-helper-init}} of RFX XXXX |
-| `0x10` | `task_not_started`       | {{aggregation-helper-init}} of RFX XXXX |
+| `0x00` | `reserved`               | {{basic-definitions}} of RFX XXXX |
+| `0x01` | `batch_collected`        | {{basic-definitions}} of RFX XXXX |
+| `0x02` | `report_replayed`        | {{basic-definitions}} of RFX XXXX |
+| `0x03` | `report_dropped`         | {{basic-definitions}} of RFX XXXX |
+| `0x04` | `hpke_unknown_config_id` | {{basic-definitions}} of RFX XXXX |
+| `0x05` | `hpke_decrypt_error`     | {{basic-definitions}} of RFX XXXX |
+| `0x06` | `vdaf_prep_error`        | {{basic-definitions}} of RFX XXXX |
+| `0x07` | `task_expired`           | {{basic-definitions}} of RFX XXXX |
+| `0x08` | `invalid_message`        | {{basic-definitions}} of RFX XXXX |
+| `0x09` | `report_too_early`       | {{basic-definitions}} of RFX XXXX |
+| `0xA`  | `task_not_started`       | {{basic-definitions}} of RFX XXXX |
+| `0xB`  | `outdated_config`        | {{basic-definitions}} of RFX XXXX |
 {: #report-error-id title="Initial contents of the Report Error Identifiers registry."}
 
 ## URN Sub-namespace for DAP (urn:ietf:params:ppm:dap) {#urn-space}
