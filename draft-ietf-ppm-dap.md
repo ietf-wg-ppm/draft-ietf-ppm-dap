@@ -1517,8 +1517,8 @@ If the upload request is malformed, the Leader aborts with error
 If the Leader does not recognize the task ID, then it aborts with error
 `unrecognizedTask`.
 
-Otherwise, the Leader responds with HTTP status 200, a body consisting
-of `UploadResponse` and the media type `application/dap-report-resp`. If
+Otherwise, the Leader responds with a body consisting
+of an `UploadResponse` and the media type `application/dap-report-resp`. If
 the entire upload has been successfully completed, the Leader MAY respond with
 an empty body.
 
