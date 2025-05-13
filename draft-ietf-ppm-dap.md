@@ -1837,7 +1837,7 @@ struct {
 struct {
   opaque agg_param<0..2^32-1>;
   PartialBatchSelector part_batch_selector;
-  PrepareInit prepare_inits<41..2^32-1>;
+  PrepareInit prepare_inits<46..2^32-1>;
 } AggregationJobInitReq;
 ~~~
 
