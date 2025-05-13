@@ -1956,7 +1956,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    struct {
      opaque agg_param<0..2^32-1>;
      PartialBatchSelector part_batch_selector;
-     PrepareInit prepare_inits<46..2^32-1>;
+     PrepareInit prepare_inits<44..2^32-1>;
    } AggregationJobInitReq;
 
    This message consists of:
