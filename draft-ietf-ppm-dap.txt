@@ -1792,7 +1792,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
       |   prep_continue                                     |
       |---------------------------------------------------->|
       |                                 AggregationJobResp: |
-      |                      prep_resp(continue|finished)   |
+      |                        prep_resp(continue|finish)   |
       |<----------------------------------------------------|
       |                                                     |
       v                                                     v
@@ -1900,7 +1900,8 @@ aggregation job 1                   aggregation job 2          aggregation job j
        agg_param,
        report_id,
        public_share,
-       plaintext_input_share.payload)
+       plaintext_input_share.payload,
+   )
 
    where:
 
@@ -1937,17 +1938,16 @@ aggregation job 1                   aggregation job 2          aggregation job j
      opaque payload<0..2^32-1>;
    } PrepareInit;
 
-   Each of these messages is constructed as follows:
+   This message consists of:
 
-   *  report_share.report_metadata is the report's metadata.
+   *  report_share.report_metadata: The report's metadata.
 
-   *  report_share.public_share is the report's public share.
+   *  report_share.public_share: The report's public share.
 
-   *  report_share.encrypted_input_share is the Helper's encrypted input
+   *  report_share.encrypted_input_share: The Helper's encrypted input
       share.
 
-   *  payload is set to the outbound message computed by the previous
-      step.
+   *  payload: The outbound message computed by the previous step.
 
    It is not possible for state to be of type Finished during Leader
    initialization.
@@ -2046,8 +2046,8 @@ aggregation job 1                   aggregation job 2          aggregation job j
        aggregation job.
 
    Since VDAF preparation completes in a constant number of rounds, it
-   will never be the case that some reports in an aggregation job are
-   completed and others are not.
+   will never be the case that preparation is complete for some of the
+   reports in an aggregation job but not others.
 
    If the Leader fails to process the response from the Helper, for
    example because of a transient failure such as a network connection
@@ -2100,16 +2100,15 @@ aggregation job 1                   aggregation job 2          aggregation job j
    AggregationJobInitReq.prepare_inits are all distinct.  If not, then
    the Helper MUST fail the job with error invalidMessage.
 
-   To process the aggregation job, the Helper computes an outbound
-   prepare step for each report share.  This includes the following
-   structures:
+   To process the aggregation job, the Helper computes a response for
+   each report share.  This includes the following structures:
 
    enum {
      continue(0),
-     finished(1)
+     finish(1)
      reject(2),
      (255)
-   } PrepareRespState;
+   } PrepareRespType;
 
    enum {
      reserved(0),
@@ -2128,10 +2127,10 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    struct {
      ReportID report_id;
-     PrepareRespState prepare_resp_state;
-     select (PrepareResp.prepare_resp_state) {
+     PrepareRespType prepare_resp_type;
+     select (PrepareResp.prepare_resp_type) {
        case continue: opaque payload<0..2^32-1>;
-       case finished: Empty;
+       case finish:   Empty;
        case reject:   ReportError report_error;
      };
    } PrepareResp;
@@ -2144,7 +2143,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    variant {
      ReportID report_id;
-     PrepareRespState prepare_resp_state = reject;
+     PrepareRespType prepare_resp_type = reject;
      ReportError report_error;
    } PrepareResp;
 
@@ -2158,7 +2157,9 @@ aggregation job 1                   aggregation job 2          aggregation job j
        agg_param,
        report_id,
        public_share,
-       plaintext_input_share.payload)
+       plaintext_input_share.payload,
+       inbound,
+   )
 
    *  vdaf_verify_key is the VDAF verification key for the task
 
@@ -2173,13 +2174,15 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    *  plaintext_input_share is the Helper's PlaintextInputShare
 
+   *  inbound is the payload of the inbound PrepareInit
+
    This procedure determines the initial per-report state, as well as
    the initial outbound message to send in response to the Leader.  If
    state is of type Rejected, then the Helper responds with
 
    variant {
      ReportID report_id;
-     PrepareRespState prepare_resp_state = reject;
+     PrepareRespType prepare_resp_type = reject;
      ReportError report_error = vdaf_prep_error;
    } PrepareResp;
 
@@ -2187,7 +2190,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    variant {
      ReportID report_id;
-     PrepareRespState prepare_resp_state = continue;
+     PrepareRespType prepare_resp_type = continue;
      opaque payload<0..2^32-1> = outbound;
    } PrepareResp;
 
@@ -2202,7 +2205,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    variant {
      ReportID report_id;
-     PrepareRespState prepare_resp_state = reject;
+     PrepareRespType prepare_resp_type = reject;
      ReportError report_error = commit_error;
    } PrepareResp;
 
@@ -2214,8 +2217,8 @@ aggregation job 1                   aggregation job 2          aggregation job j
      PrepareResp prepare_resps<0..2^32-1>;
    } AggregationJobResp;
 
-   where prepare_resps are the outbound prep steps computed in the
-   previous step.  The order MUST match
+   where prepare_resps are the outbound PrepareResp messages for each
+   report computed in the previous step.  The order MUST match
    AggregationJobInitReq.prepare_inits.  The media type for
    AggregationJobResp is "application/dap-aggregation-job-resp".
 
@@ -2452,7 +2455,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
        then the Leader rejects the report and removes it from the
        candidate set.
 
-   2.  Else if the type is "finished" and state == Finished(out_share),
+   2.  Else if the type is "finish" and state == Finished(out_share),
        then preparation is complete and the Leader stores the output
        share for use in the collection interaction (Section 4.7).
 
@@ -2547,7 +2550,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    variant {
      ReportID report_id;
-     PrepareRespState prepare_resp_state = reject;
+     PrepareRespType prepare_resp_type = reject;
      ReportError report_error = vdaf_prep_error;
    } PrepareResp;
 
@@ -2561,7 +2564,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    variant {
      ReportID report_id;
-     PrepareRespState prepare_resp_state = reject;
+     PrepareRespType prepare_resp_type = reject;
      ReportError report_error = commit_error;
    } PrepareResp;
 
@@ -2570,7 +2573,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    variant {
      ReportID report_id;
-     PrepareRespState prepare_resp_state = continue;
+     PrepareRespType prepare_resp_type = continue;
      opaque payload<0..2^32-1> = outbound;
    } PrepareResp;
 
@@ -2578,7 +2581,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    variant {
      ReportID report_id;
-     PrepareRespState prepare_resp_state = finished;
+     PrepareRespType prepare_resp_type = finish;
    } PrepareResp;
 
    Once the Helper has computed a PrepareResp for every report, the
