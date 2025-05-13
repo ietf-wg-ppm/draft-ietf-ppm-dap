@@ -1310,7 +1310,7 @@ support multiple HPKE configurations and multiple sets of algorithms
 simultaneously.
 
 ~~~ tls-presentation
-HpkeConfig HpkeConfigList<1..2^16-1>;
+HpkeConfig HpkeConfigList<10..2^16-1>;
 
 struct {
   HpkeConfigId id;
@@ -1837,7 +1837,7 @@ struct {
 struct {
   opaque agg_param<0..2^32-1>;
   PartialBatchSelector part_batch_selector;
-  PrepareInit prepare_inits<1..2^32-1>;
+  PrepareInit prepare_inits<41..2^32-1>;
 } AggregationJobInitReq;
 ~~~
 
@@ -2081,7 +2081,7 @@ which is structured as follows:
 
 ~~~ tls-presentation
 struct {
-  PrepareResp prepare_resps<1..2^32-1>;
+  PrepareResp prepare_resps<17..2^32-1>;
 } AggregationJobResp;
 ~~~
 
@@ -2273,7 +2273,7 @@ Next, the Leader sends a POST to the aggregation job with media type
 ~~~ tls-presentation
 struct {
   uint16 step;
-  PrepareContinue prepare_continues<1..2^32-1>;
+  PrepareContinue prepare_continues<21..2^32-1>;
 } AggregationJobContinueReq;
 ~~~
 
