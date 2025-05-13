@@ -17,7 +17,7 @@ measurement is usually not interested in people's individual responses but
 rather in aggregated data. Conventional methods require collecting individual
 responses and then aggregating them on some server, thus representing a threat
 to user privacy and rendering many such measurements difficult and impractical.
-This document describes a multi-party distributed aggregation protocol (DAP) for
+This document describes a multi-party Distributed Aggregation Protocol (DAP) for
 privacy preserving measurement which can be used to collect aggregate data
 without revealing any individual contributor's data. 
     " name="description">
@@ -1059,7 +1059,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
 </tr></thead>
 <tfoot><tr>
 <td class="left">Geoghegan, et al.</td>
-<td class="center">Expires 8 November 2025</td>
+<td class="center">Expires 14 November 2025</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1072,12 +1072,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-ietf-ppm-dap-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2025-05-07" class="published">7 May 2025</time>
+<time datetime="2025-05-13" class="published">13 May 2025</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Standards Track</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2025-11-08">8 November 2025</time></dd>
+<dd class="expires"><time datetime="2025-11-14">14 November 2025</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -1112,7 +1112,7 @@ measurement is usually not interested in people's individual responses but
 rather in aggregated data. Conventional methods require collecting individual
 responses and then aggregating them on some server, thus representing a threat
 to user privacy and rendering many such measurements difficult and impractical.
-This document describes a multi-party distributed aggregation protocol (DAP) for
+This document describes a multi-party Distributed Aggregation Protocol (DAP) for
 privacy preserving measurement which can be used to collect aggregate data
 without revealing any individual contributor's data.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
 </section>
@@ -1151,7 +1151,7 @@ without revealing any individual contributor's data.<a href="#section-abstract-1
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 8 November 2025.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 14 November 2025.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -2098,7 +2098,7 @@ report.<a href="#section-1.2.1-1.38.1" class="pilcrow">¶</a></p>
             <dd class="break"></dd>
 <dt id="section-1.2.1-1.39">Task:</dt>
             <dd style="margin-left: 1.5em" id="section-1.2.1-1.40">
-              <p id="section-1.2.1-1.40.1">A task in which measurements of an understood type will be reported by the
+              <p id="section-1.2.1-1.40.1">A set of measurements of an understood type which will be reported by the
 Clients, aggregated by the Aggregators and received by the Collector. Many
 collections can be performed in the course of a single task.<a href="#section-1.2.1-1.40.1" class="pilcrow">¶</a></p>
 </dd>
@@ -2154,10 +2154,15 @@ once.<a href="#section-2-5" class="pilcrow">¶</a></p>
         <h3 id="name-system-architecture">
 <a href="#section-2.1" class="section-number selfRef">2.1. </a><a href="#name-system-architecture" class="section-name selfRef">System Architecture</a>
         </h3>
+<p id="section-2.1-1">The basic unit of DAP operation is the <em>task</em> (<a href="#task-configuration" class="auto internal xref">Section 4.2</a>), which
+corresponds to a set of measurements of a single type. A given task may result
+in multiple aggregated reported results, for instance when measurements are
+collected over a long time period and broken up into multiple batches according
+to different time windows.<a href="#section-2.1-1" class="pilcrow">¶</a></p>
 <span id="name-dap-architecture"></span><div id="dap-topology">
 <figure id="figure-1">
-          <div id="section-2.1-1.1">
-            <div class="alignLeft art-svg artwork" id="section-2.1-1.1.1">
+          <div id="section-2.1-2.1">
+            <div class="alignLeft art-svg artwork" id="section-2.1-2.1.1">
 <svg xmlns="http://www.w3.org/2000/svg" version="1.1" height="336" width="456" viewBox="0 0 456 336" class="diagram" text-anchor="middle" font-family="monospace" font-size="13px" stroke-linecap="round">
                 <path d="M 8,32 L 8,96" fill="none" stroke="black"></path>
                 <path d="M 8,128 L 8,192" fill="none" stroke="black"></path>
@@ -2207,60 +2212,60 @@ once.<a href="#section-2-5" class="pilcrow">¶</a></p>
                   <text x="44" y="292">Client</text>
                   <text x="220" y="292">Helper</text>
                 </g>
-              </svg><a href="#section-2.1-1.1.1" class="pilcrow">¶</a>
+              </svg><a href="#section-2.1-2.1.1" class="pilcrow">¶</a>
 </div>
 </div>
 <figcaption><a href="#figure-1" class="selfRef">Figure 1</a>:
 <a href="#name-dap-architecture" class="selfRef">DAP architecture</a>
           </figcaption></figure>
 </div>
-<p id="section-2.1-2">The main participants in the protocol are as follows:<a href="#section-2.1-2" class="pilcrow">¶</a></p>
-<span class="break"></span><dl class="dlParallel" id="section-2.1-3">
-          <dt id="section-2.1-3.1">Collector:</dt>
-          <dd style="margin-left: 1.5em" id="section-2.1-3.2">
-            <p id="section-2.1-3.2.1">The party which wants to obtain the aggregate result over the measurements
-generated by the Clients. A task will have a single Collector.<a href="#section-2.1-3.2.1" class="pilcrow">¶</a></p>
+<p id="section-2.1-3">The main participants in the protocol are as follows:<a href="#section-2.1-3" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlParallel" id="section-2.1-4">
+          <dt id="section-2.1-4.1">Collector:</dt>
+          <dd style="margin-left: 1.5em" id="section-2.1-4.2">
+            <p id="section-2.1-4.2.1">The party which wants to obtain the aggregate result over the measurements
+generated by the Clients. A task will have a single Collector.<a href="#section-2.1-4.2.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
-<dt id="section-2.1-3.3">Clients:</dt>
-          <dd style="margin-left: 1.5em" id="section-2.1-3.4">
-            <p id="section-2.1-3.4.1">The parties which take the measurements and report them to the Aggregators.
+<dt id="section-2.1-4.3">Clients:</dt>
+          <dd style="margin-left: 1.5em" id="section-2.1-4.4">
+            <p id="section-2.1-4.4.1">The parties which take the measurements and report them to the Aggregators.
 In order to provide reasonable levels of privacy, there must be a large number
-of Clients.<a href="#section-2.1-3.4.1" class="pilcrow">¶</a></p>
+of Clients.<a href="#section-2.1-4.4.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
-<dt id="section-2.1-3.5">Leader:</dt>
-          <dd style="margin-left: 1.5em" id="section-2.1-3.6">
-            <p id="section-2.1-3.6.1">The Aggregator responsible for coordinating the protocol. It receives the
+<dt id="section-2.1-4.5">Leader:</dt>
+          <dd style="margin-left: 1.5em" id="section-2.1-4.6">
+            <p id="section-2.1-4.6.1">The Aggregator responsible for coordinating the protocol. It receives the
 reports from Clients, aggregates them with the assistance of the Helper, and
 it orchestrates the process of computing the aggregate result as requested by
-the Collector. Each task has a single Leader.<a href="#section-2.1-3.6.1" class="pilcrow">¶</a></p>
+the Collector. Each task has a single Leader.<a href="#section-2.1-4.6.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
-<dt id="section-2.1-3.7">Helper:</dt>
-          <dd style="margin-left: 1.5em" id="section-2.1-3.8">
-            <p id="section-2.1-3.8.1">The Aggregator assisting the Leader with the computation. The protocol is
+<dt id="section-2.1-4.7">Helper:</dt>
+          <dd style="margin-left: 1.5em" id="section-2.1-4.8">
+            <p id="section-2.1-4.8.1">The Aggregator assisting the Leader with the computation. The protocol is
 designed so that the Helper is relatively lightweight, with most of the
-operational burden borne by the Leader. Each task has a single Helper.<a href="#section-2.1-3.8.1" class="pilcrow">¶</a></p>
+operational burden borne by the Leader. Each task has a single Helper.<a href="#section-2.1-4.8.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
 </dl>
-<p id="section-2.1-4"><a href="#dap-topology" class="auto internal xref">Figure 1</a> illustrates which participants exchange HTTP messages. Arrows
+<p id="section-2.1-5"><a href="#dap-topology" class="auto internal xref">Figure 1</a> illustrates which participants exchange HTTP messages. Arrows
 go from HTTP clients to HTTP servers. Some DAP participants may be HTTP clients
 sometimes but HTTP servers at other times. It is even possible for a single
 entity to perform multiple DAP roles. For example, the Collector could also be
-one of the Aggregators.<a href="#section-2.1-4" class="pilcrow">¶</a></p>
-<p id="section-2.1-5">In the course of a measurement task (<a href="#task-configuration" class="auto internal xref">Section 4.2</a>), each Client
-records its own measurement, packages it up into a report, and sends it to the
-Leader. Each share is encrypted to only one of the two Aggregators so that even
-though both pass through the Leader, the Leader is unable to see or modify the
-Helper's share. Depending on the task, the Client may only send one report or
-may send many reports over time.<a href="#section-2.1-5" class="pilcrow">¶</a></p>
-<p id="section-2.1-6">The Leader distributes the shares to the Helper and orchestrates the process of
+one of the Aggregators.<a href="#section-2.1-5" class="pilcrow">¶</a></p>
+<p id="section-2.1-6">In the course of a measurement task, each Client records its own measurement,
+packages it up into a report, and sends it to the Leader. Each share is
+encrypted to only one of the two Aggregators so that even though both pass
+through the Leader, the Leader is unable to see or modify the Helper's share.
+Depending on the task, the Client may only send one report or may send many
+reports over time.<a href="#section-2.1-6" class="pilcrow">¶</a></p>
+<p id="section-2.1-7">The Leader distributes the shares to the Helper and orchestrates the process of
 verifying them and assembling them into a aggregate shares for the Collector.
 Depending on the VDAF, it may be possible to process each report as it is
 uploaded, or it may be necessary to wait until the Collector initializes a
-collection job before processing can begin.<a href="#section-2.1-6" class="pilcrow">¶</a></p>
+collection job before processing can begin.<a href="#section-2.1-7" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="validating-inputs">
@@ -2797,10 +2802,10 @@ distinct, non-colluding parties.<a href="#section-2.4-1" class="pilcrow">¶</a><
           <h4 id="name-arity-of-protocol-objects">
 <a href="#section-2.4.1" class="section-number selfRef">2.4.1. </a><a href="#name-arity-of-protocol-objects" class="section-name selfRef">Arity of Protocol Objects</a>
           </h4>
-<p id="section-2.4.1-1">Reports are 1 to 1 to with measurements. In this illustration, <code>i</code> distinct
-Clients upload a distinct report, but a single Client could upload multiple
-reports to a task (see <a href="#sybil" class="auto internal xref">Section 8.1</a> for some implications of this). The process of
-sharding measurements, constructing reports and uploading them is specified in
+<p id="section-2.4.1-1">Reports are 1 to 1 with measurements. In this illustration, <code>i</code> distinct Clients
+upload a distinct report, but a single Client could upload multiple reports to a
+task (see <a href="#sybil" class="auto internal xref">Section 8.1</a> for some implications of this). The process of sharding
+measurements, constructing reports and uploading them is specified in
 <a href="#upload-flow" class="auto internal xref">Section 4.5</a>.<a href="#section-2.4.1-1" class="pilcrow">¶</a></p>
 <p id="section-2.4.1-2">Reports are many to 1 with aggregation jobs. The Leader assigns each of the <code>i</code>
 reports into one of <code>j</code> different aggregation jobs, which can be run in parallel
@@ -3574,7 +3579,7 @@ nonce.<a href="#section-4.5.2-8.3.1" class="pilcrow">¶</a></p>
 number generator.<a href="#section-4.5.2-8.4.1" class="pilcrow">¶</a></p>
 </li>
           </ul>
-<p id="section-4.5.2-9">The sharding algorithm will return two input shares. The first is the Leader's
+<p id="section-4.5.2-9"><code>Vdaf.shard</code> algorithm will return two input shares. The first is the Leader's
 input share, and the second is the Helper's.<a href="#section-4.5.2-9" class="pilcrow">¶</a></p>
 <p id="section-4.5.2-10">The Client then wraps each input share in the following structure:<a href="#section-4.5.2-10" class="pilcrow">¶</a></p>
 <div class="lang-tls-presentation sourcecode" id="section-4.5.2-11">
@@ -3642,11 +3647,11 @@ it aborts with an error of type <code>outdatedConfig</code>. When the Client rec
 retry with a freshly generated <code>Report</code>. If this retried upload does not
 succeed, the Client <span class="bcp14">SHOULD</span> abort and discontinue retrying.<a href="#section-4.5.2-20" class="pilcrow">¶</a></p>
 <p id="section-4.5.2-21">If a report's ID matches that of a previously uploaded report, the Leader <span class="bcp14">MUST</span>
-ignore it. In addition, it <span class="bcp14">MAY</span> alert the Client with error <code>reportRejected</code>.<a href="#section-4.5.2-21" class="pilcrow">¶</a></p>
-<p id="section-4.5.2-22">The Leader <span class="bcp14">MUST</span> ignore any report pertaining to a batch that has already been
+discard it. In addition, it <span class="bcp14">MAY</span> alert the Client with error <code>reportRejected</code>.<a href="#section-4.5.2-21" class="pilcrow">¶</a></p>
+<p id="section-4.5.2-22">The Leader <span class="bcp14">MUST</span> discard any report pertaining to a batch that has already been
 collected (see <a href="#replay-protection" class="auto internal xref">Section 2.3</a> for details). The Leader <span class="bcp14">MAY</span> also abort
 with error <code>reportRejected</code>.<a href="#section-4.5.2-22" class="pilcrow">¶</a></p>
-<p id="section-4.5.2-23">The Leader <span class="bcp14">MUST</span> ignore any report whose timestamp is outside of the task's
+<p id="section-4.5.2-23">The Leader <span class="bcp14">MUST</span> discard any report whose timestamp is outside of the task's
 <code>time_interval</code>. When it does so, it <span class="bcp14">SHOULD</span> also abort with error
 <code>reportRejected</code>.<a href="#section-4.5.2-23" class="pilcrow">¶</a></p>
 <p id="section-4.5.2-24">The Leader may need to buffer reports while waiting to aggregate them (e.g.,
@@ -3658,7 +3663,7 @@ report for this reason, it <span class="bcp14">SHOULD</span> abort with error <c
 situation, the Client <span class="bcp14">MAY</span> re-upload the report later on.<a href="#section-4.5.2-24" class="pilcrow">¶</a></p>
 <p id="section-4.5.2-25">If the report contains an unrecognized public report extension, or if the
 Leader's input share contains an unrecognized private report extension, then the
-Leader <span class="bcp14">MUST</span> ignore the report and <span class="bcp14">MAY</span> abort with error <code>unsupportedExtension</code>.
+Leader <span class="bcp14">MUST</span> discard the report and <span class="bcp14">MAY</span> abort with error <code>unsupportedExtension</code>.
 If the Leader does abort for this reason, it <span class="bcp14">SHOULD</span> indicate the unsupported
 extensions in the resulting problem document via an extension member (<span><a href="https://rfc-editor.org/rfc/rfc9457#section-3.2" class="relref">Section 3.2</a> of [<a href="#RFC9457" class="cite xref">RFC9457</a>]</span>) <code>unsupported_extensions</code> on the problem document. This member
 <span class="bcp14">MUST</span> contain an array of numbers indicating the extension code points which were
@@ -3667,7 +3672,7 @@ extensions with code points <code>23</code> and <code>42</code>, the "unsupporte
 would contain the JSON value <code>[23, 42]</code>.<a href="#section-4.5.2-25" class="pilcrow">¶</a></p>
 <p id="section-4.5.2-26">If the same extension type appears more than once among the public extensions
 and the private extensions in the Leader's input share, then the Leader <span class="bcp14">MUST</span>
-ignore the report and <span class="bcp14">MAY</span> abort with error <code>invalidMessage</code>.<a href="#section-4.5.2-26" class="pilcrow">¶</a></p>
+discard the report and <span class="bcp14">MAY</span> abort with error <code>invalidMessage</code>.<a href="#section-4.5.2-26" class="pilcrow">¶</a></p>
 <p id="section-4.5.2-27">Validation of anti-replay and extensions is not mandatory during the handling of
 upload requests to avoid blocking on storage transactions or decryption of input
 shares. The Leader also cannot validate the Helper's extensions because it
@@ -4033,7 +4038,8 @@ determines the initial per-report state, denoted <code>state</code>. If <code>st
 from the candidate set, and no message is sent to the Helper for this report.<a href="#section-4.6.2.1-9" class="pilcrow">¶</a></p>
 <p id="section-4.6.2.1-10">Otherwise, if <code>state</code> is of type <code>Continued</code> (no other state is reachable at
 this point), then the state includes an outbound message denoted
-<code>state.outbound</code>. The Leader uses it to construct a <code>PrepareInit</code> message:<a href="#section-4.6.2.1-10" class="pilcrow">¶</a></p>
+<code>state.outbound</code>. The Leader uses it to construct a <code>PrepareInit</code> structure for
+that report.<a href="#section-4.6.2.1-10" class="pilcrow">¶</a></p>
 <div class="lang-tls-presentation sourcecode" id="section-4.6.2.1-11">
 <pre>
 struct {
@@ -4064,7 +4070,8 @@ struct {
 </li>
             </ul>
 <p id="section-4.6.2.1-14">Once all the report shares have been initialized, the Leader creates an
-<code>AggregationJobInitReq</code> message:<a href="#section-4.6.2.1-14" class="pilcrow">¶</a></p>
+<code>AggregationJobInitReq</code> message containing the <code>PrepareInit</code> structures
+for the relevant reports.<a href="#section-4.6.2.1-14" class="pilcrow">¶</a></p>
 <div class="lang-tls-presentation sourcecode" id="section-4.6.2.1-15">
 <pre>
 struct {
@@ -4172,7 +4179,8 @@ state, in which case the Leader <span class="bcp14">MUST</span> abort the aggreg
 </li>
             </ol>
 <p id="section-4.6.2.1-24">Since VDAF preparation completes in a constant number of rounds, it will never
-be the case that preparation is complete for some reports but not others.<a href="#section-4.6.2.1-24" class="pilcrow">¶</a></p>
+be the case that preparation is complete for some of the reports in an
+aggregation job but not others.<a href="#section-4.6.2.1-24" class="pilcrow">¶</a></p>
 <p id="section-4.6.2.1-25">If the Leader fails to process the response from the Helper, for example because
 of a transient failure such as a network connection failure or process crash,
 the Leader <span class="bcp14">SHOULD</span> re-send the original request unmodified in order to attempt
@@ -4279,10 +4287,11 @@ struct {
 } PrepareResp;
 </pre><a href="#section-4.6.2.2-10" class="pilcrow">¶</a>
 </div>
-<p id="section-4.6.2.2-11">First, the Helper decrypts each report share as described in
+<p id="section-4.6.2.2-11">The Helper processes each of the remaining report shares in turn.
+First, the Helper decrypts each report share as described in
 <a href="#input-share-decryption" class="auto internal xref">Section 4.6.2.3</a>, then checks input share validity as described in
-<a href="#input-share-validation" class="auto internal xref">Section 4.6.2.4</a>. For any report that was rejected, the Helper sets
-the outbound preparation response to<a href="#section-4.6.2.2-11" class="pilcrow">¶</a></p>
+<a href="#input-share-validation" class="auto internal xref">Section 4.6.2.4</a>. If either decryption of validation fails, the Helper
+sets the corresponding outbound preparation response to<a href="#section-4.6.2.2-11" class="pilcrow">¶</a></p>
 <div class="lang-tls-presentation sourcecode" id="section-4.6.2.2-12">
 <pre>
 variant {
@@ -4385,14 +4394,15 @@ struct {
 computed in the previous step. The order <span class="bcp14">MUST</span> match
 <code>AggregationJobInitReq.prepare_inits</code>. The media type for <code>AggregationJobResp</code>
 is "application/dap-aggregation-job-resp".<a href="#section-4.6.2.2-25" class="pilcrow">¶</a></p>
-<p id="section-4.6.2.2-26">Changing an aggregation job's parameters is illegal. If the Helper receives
-further PUT requests to the aggregation job with a different
-<code>AggregationJobInitReq</code> in the body, it <span class="bcp14">MUST</span> abort with a client error. For
-further requests with the same <code>AggregationJobInitReq</code> in the body, the Helper
+<p id="section-4.6.2.2-26">The Helper may receive multiple copies of a given initialization request due to
+the retry mechanism specified in <a href="#leader-init" class="auto internal xref">Section 4.6.2.1</a>. The Helper <span class="bcp14">MUST</span> verify that
+subsequent requests have the same <code>AggregationJobInitReq</code> value and abort with a
+client error if they do not.  It is illegal to rewind or reset the state of an
+aggregation job. If the Helper receives requests to initialize an aggregation
+job once it has been continued at least once, confirming that the Leader
+received the Helper's response (see <a href="#agg-continue-flow" class="auto internal xref">Section 4.6.3</a>), it <span class="bcp14">MUST</span> abort with a
+client error.  For all other duplicate initialization requests, the Helper
 <span class="bcp14">SHOULD</span> respond as it did for the original <code>AggregationJobInitReq</code>.<a href="#section-4.6.2.2-26" class="pilcrow">¶</a></p>
-<p id="section-4.6.2.2-27">It is illegal to rewind or reset the state of an aggregation job. If the Helper
-receives requests to initialize an aggregation job once it has been continued at
-least once (see <a href="#agg-continue-flow" class="auto internal xref">Section 4.6.3</a>), it <span class="bcp14">MUST</span> abort with a client error.<a href="#section-4.6.2.2-27" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="input-share-decryption">
@@ -4479,12 +4489,11 @@ private extension fields. If so, the Aggregator <span class="bcp14">MUST</span> 
 invalid with error <code>invalid_message</code>.<a href="#section-4.6.2.4-2.7.1" class="pilcrow">¶</a></p>
 </li>
               <li id="section-4.6.2.4-2.8">
-                <p id="section-4.6.2.4-2.8.1">If an Aggregator cannot determine if an input share is valid, it <span class="bcp14">MUST</span> mark
-the input share as invalid with error <code>report_dropped</code>.<a href="#section-4.6.2.4-2.8.1" class="pilcrow">¶</a></p>
-<p id="section-4.6.2.4-2.8.2">
-For example, the report timestamp may be so far in the past that the state
-required to perform the check has been evicted from the Aggregator's storage.
-See <a href="#sharding-storage" class="auto internal xref">Section 6.4.1</a> for details.<a href="#section-4.6.2.4-2.8.2" class="pilcrow">¶</a></p>
+                <p id="section-4.6.2.4-2.8.1">If an Aggregator cannot determine if an input share is valid--for example,
+the report timestamp may be so far in the past that the state required to
+perform the check has been evicted from the Aggregator's storage (see
+<a href="#sharding-storage" class="auto internal xref">Section 6.4.1</a> for details)--it <span class="bcp14">MUST</span> mark the input share as invalid
+with error <code>report_dropped</code>.<a href="#section-4.6.2.4-2.8.1" class="pilcrow">¶</a></p>
 </li>
             </ol>
 <p id="section-4.6.2.4-3">If all of the above checks succeed, the input share is valid.<a href="#section-4.6.2.4-3" class="pilcrow">¶</a></p>
@@ -4650,8 +4659,9 @@ struct {
 <p id="section-4.6.3.1-8">The <code>step</code> field is the step of DAP aggregation that the Leader just reached and
 wants the Helper to advance to. The <code>prepare_continues</code> field is the sequence of
 preparation continuation messages constructed in the previous step. The
-<code>PrepareContinue</code>s <span class="bcp14">MUST</span> be in the same order as the previous request to the
-aggregation job, omitting any reports that were rejected.<a href="#section-4.6.3.1-8" class="pilcrow">¶</a></p>
+<code>PrepareContinue</code> elements <span class="bcp14">MUST</span> be in the same order as the previous request to
+the aggregation job, omitting any reports that were previously rejected by
+either Aggregator.<a href="#section-4.6.3.1-8" class="pilcrow">¶</a></p>
 <p id="section-4.6.3.1-9">The Leader <span class="bcp14">MUST</span> authenticate its requests to the Helper using a scheme that
 meets the requirements in <a href="#request-authentication" class="auto internal xref">Section 3.3</a>.<a href="#section-4.6.3.1-9" class="pilcrow">¶</a></p>
 <p id="section-4.6.3.1-10">If the Helper responds with an <code>AggregationJobResp</code> (see
@@ -4953,9 +4963,9 @@ agg_share, out_share)</code>.<a href="#section-4.6.3.3-10.2.1" class="pilcrow">�
                 <p id="section-4.6.3.3-10.3.1">Increment the count by 1.<a href="#section-4.6.3.3-10.3.1" class="pilcrow">¶</a></p>
 </li>
               <li class="normal" id="section-4.6.3.3-10.4">
-                <p id="section-4.6.3.3-10.4.1">Update the checksum value to the bitwise XOR of the checksum value with the
-SHA256 <span>[<a href="#SHS" class="cite xref">SHS</a>]</span> hash of the report ID associated
-with the output share.<a href="#section-4.6.3.3-10.4.1" class="pilcrow">¶</a></p>
+                <p id="section-4.6.3.3-10.4.1">Update the checksum value to the bitwise XOR of the current checksum value
+with the SHA256 <span>[<a href="#SHS" class="cite xref">SHS</a>]</span> hash of the report ID
+associated with the output share.<a href="#section-4.6.3.3-10.4.1" class="pilcrow">¶</a></p>
 </li>
               <li class="normal" id="section-4.6.3.3-10.5">
                 <p id="section-4.6.3.3-10.5.1">Store <code>out_share</code>'s report ID for future replay checks.<a href="#section-4.6.3.3-10.5.1" class="pilcrow">¶</a></p>
@@ -5164,10 +5174,10 @@ Helper may already have prepared a sufficient number of reports satisfying the
 query and be ready to return the aggregate shares right away. However, this is
 not always the case. In fact, for some VDAFs, it is not be possible to begin
 running aggregation jobs (<a href="#aggregate-flow" class="auto internal xref">Section 4.6</a>) until the Collector initiates a
-collection job. This is because, in general, the aggregation parameter is not
-known until this point. In certain situations it is possible to predict the
-aggregation parameter in advance. For example, for Prio3 the only valid
-aggregation parameter is the empty string.<a href="#section-4.7.1-6" class="pilcrow">¶</a></p>
+collection job. This is because, in general (see <a href="#eager-aggregation" class="auto internal xref">Section 4.6.1</a>), the
+aggregation parameter is not known until this point. In certain situations it is
+possible to predict the aggregation parameter in advance. For example, for Prio3
+the only valid aggregation parameter is the empty string.<a href="#section-4.7.1-6" class="pilcrow">¶</a></p>
 <p id="section-4.7.1-7">The Leader <span class="bcp14">MAY</span> defer handling the collection request. In this case, it indicates
 that the collection job is not yet ready by immediately sending an empty
 response body. The Leader <span class="bcp14">SHOULD</span> include a Retry-After header field (<span>[<a href="#RFC9110" class="cite xref">RFC9110</a>], <a href="https://rfc-editor.org/rfc/rfc9110#section-10.2.3" class="relref">Section 10.2.3</a></span>) to suggest a polling interval to the Collector. The Collector
@@ -5198,7 +5208,7 @@ batch buckets according to the criteria defined by the batch mode in use
 (<a href="#batch-modes" class="auto internal xref">Section 5</a>), then the Leader <span class="bcp14">MUST</span> fail the job with error <code>batchInvalid</code>.<a href="#section-4.7.1-13" class="pilcrow">¶</a></p>
 <p id="section-4.7.1-14">If any of the batch buckets identified by the query have already been collected,
 then the Leader <span class="bcp14">MUST</span> fail the job with error <code>batchOverlap</code>.<a href="#section-4.7.1-14" class="pilcrow">¶</a></p>
-<p id="section-4.7.1-15">If aggregation is performed eagerly (<a href="#eager-aggregation" class="auto internal xref">Section 4.6.1</a>), then the Leader
+<p id="section-4.7.1-15">If aggregation was performed eagerly (<a href="#eager-aggregation" class="auto internal xref">Section 4.6.1</a>), then the Leader
 checks that the aggregation parameter received in the <code>CollectionJobReq</code> matches
 the aggregation parameter used in each aggregation job pertaining to the batch.
 If not, the Leader <span class="bcp14">MUST</span> fail the job with error <code>invalidMessage</code>.<a href="#section-4.7.1-15" class="pilcrow">¶</a></p>
@@ -5213,10 +5223,11 @@ condition between aggregation and collection jobs that can yield batch mismatch
 errors.<a href="#section-4.7.1-17" class="pilcrow">¶</a></p>
 <p id="section-4.7.1-18">If the number of validated reports in the batch is not equal to or greater than
 the task's minimum batch size, then the Leader <span class="bcp14">SHOULD</span> wait for more reports to
-be uploaded and aggregated and try the collection job again later. The Leader
-<span class="bcp14">MAY</span> give up on the collection job (for example, if it decides that no new
+be uploaded and aggregated and try the collection job again later. Alternately,
+the Leader <span class="bcp14">MAY</span> give up on the collection job (for example, if it decides that no new
 reports satisfying the query are likely to ever arrive), in which case it <span class="bcp14">MUST</span>
-fail the job with error <code>invalidBatchSize</code>.<a href="#section-4.7.1-18" class="pilcrow">¶</a></p>
+fail the job with error <code>invalidBatchSize</code>. It <span class="bcp14">MUST NOT</span> fulfill any jobs with an
+insufficient number of validated reports.<a href="#section-4.7.1-18" class="pilcrow">¶</a></p>
 <p id="section-4.7.1-19">Once the Leader has validated the collection job and run to completion all the
 aggregation jobs that pertain to it, it obtains the Helper's aggregate share
 following the aggregate-share request flow described in <a href="#collect-aggregate" class="auto internal xref">Section 4.7.3</a>.
@@ -6235,9 +6246,9 @@ receive the error.<a href="#section-6.4.2-2.1.1" class="pilcrow">¶</a></p>
             <li class="normal" id="section-6.4.2-2.2">
               <p id="section-6.4.2-2.2.1">The Leader is responsible for generating aggregation jobs, and will generally
 want to place each report in exactly one aggregation job. (The only event in
-which a Leader will want to place a report in multiple aggregation jobs is if
-the Helper rejects the report with <code>report_too_early</code>, in which case the
-Leader can place the report into a later aggregation job.) This may require
+which a Leader can place a report in multiple aggregation jobs is if the
+Helper rejects the report with <code>report_too_early</code>, in which case the Leader
+can place the report into a later aggregation job.) This may require
 synchronization between different components of the system which are
 generating aggregation jobs. Note that placing a report into more than one
 aggregation job will result in a loss of throughput, rather than a loss of
@@ -6495,7 +6506,7 @@ reports to an anonymizing proxy server which would then use Oblivious HTTP
 <span>[<a href="#RFC9458" class="cite xref">RFC9458</a>]</span> to forward reports to the DAP Leader. In this scenario, Client
 authentication would be performed by the proxy rather than any of the
 participants in the DAP protocol.<a href="#section-8.4-1" class="pilcrow">¶</a></p>
-<p id="section-8.4-2">The report itself may contain deanonmyizing information that cannot be removed
+<p id="section-8.4-2">The report itself may contain deanonymizing information that cannot be removed
 by a proxy:<a href="#section-8.4-2" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-8.4-3.1">

@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 8 November 2025                                      Cloudflare
+Expires: 14 November 2025                                     Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                              7 May 2025
+                                                             13 May 2025
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -27,8 +27,8 @@ Abstract
    Conventional methods require collecting individual responses and then
    aggregating them on some server, thus representing a threat to user
    privacy and rendering many such measurements difficult and
-   impractical.  This document describes a multi-party distributed
-   aggregation protocol (DAP) for privacy preserving measurement which
+   impractical.  This document describes a multi-party Distributed
+   Aggregation Protocol (DAP) for privacy preserving measurement which
    can be used to collect aggregate data without revealing any
    individual contributor's data.
 
@@ -64,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 8 November 2025.
+   This Internet-Draft will expire on 14 November 2025.
 
 Copyright Notice
 
@@ -600,7 +600,7 @@ Table of Contents
       an Aggregator [HPKE].  The report share also includes some
       associated data used for processing the report.
 
-   Task:  A task in which measurements of an understood type will be
+   Task:  A set of measurements of an understood type which will be
       reported by the Clients, aggregated by the Aggregators and
       received by the Collector.  Many collections can be performed in
       the course of a single task.
@@ -645,6 +645,12 @@ Table of Contents
    aggregated once.
 
 2.1.  System Architecture
+
+   The basic unit of DAP operation is the _task_ (Section 4.2), which
+   corresponds to a set of measurements of a single type.  A given task
+   may result in multiple aggregated reported results, for instance when
+   measurements are collected over a long time period and broken up into
+   multiple batches according to different time windows.
 
    .--------.
    |        |
@@ -695,13 +701,13 @@ Table of Contents
    even possible for a single entity to perform multiple DAP roles.  For
    example, the Collector could also be one of the Aggregators.
 
-   In the course of a measurement task (Section 4.2), each Client
-   records its own measurement, packages it up into a report, and sends
-   it to the Leader.  Each share is encrypted to only one of the two
-   Aggregators so that even though both pass through the Leader, the
-   Leader is unable to see or modify the Helper's share.  Depending on
-   the task, the Client may only send one report or may send many
-   reports over time.
+   In the course of a measurement task, each Client records its own
+   measurement, packages it up into a report, and sends it to the
+   Leader.  Each share is encrypted to only one of the two Aggregators
+   so that even though both pass through the Leader, the Leader is
+   unable to see or modify the Helper's share.  Depending on the task,
+   the Client may only send one report or may send many reports over
+   time.
 
    The Leader distributes the shares to the Helper and orchestrates the
    process of verifying them and assembling them into a aggregate shares
@@ -892,7 +898,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
 2.4.1.  Arity of Protocol Objects
 
-   Reports are 1 to 1 to with measurements.  In this illustration, i
+   Reports are 1 to 1 with measurements.  In this illustration, i
    distinct Clients upload a distinct report, but a single Client could
    upload multiple reports to a task (see Section 8.1 for some
    implications of this).  The process of sharding measurements,
@@ -1554,8 +1560,8 @@ aggregation job 1                   aggregation job 2          aggregation job j
       Each report's rand MUST be independently sampled from a
       cryptographically secure random number generator.
 
-   The sharding algorithm will return two input shares.  The first is
-   the Leader's input share, and the second is the Helper's.
+   Vdaf.shard algorithm will return two input shares.  The first is the
+   Leader's input share, and the second is the Helper's.
 
    The Client then wraps each input share in the following structure:
 
@@ -1610,14 +1616,14 @@ aggregation job 1                   aggregation job 2          aggregation job j
    discontinue retrying.
 
    If a report's ID matches that of a previously uploaded report, the
-   Leader MUST ignore it.  In addition, it MAY alert the Client with
+   Leader MUST discard it.  In addition, it MAY alert the Client with
    error reportRejected.
 
-   The Leader MUST ignore any report pertaining to a batch that has
+   The Leader MUST discard any report pertaining to a batch that has
    already been collected (see Section 2.3 for details).  The Leader MAY
    also abort with error reportRejected.
 
-   The Leader MUST ignore any report whose timestamp is outside of the
+   The Leader MUST discard any report whose timestamp is outside of the
    task's time_interval.  When it does so, it SHOULD also abort with
    error reportRejected.
 
@@ -1632,7 +1638,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    If the report contains an unrecognized public report extension, or if
    the Leader's input share contains an unrecognized private report
-   extension, then the Leader MUST ignore the report and MAY abort with
+   extension, then the Leader MUST discard the report and MAY abort with
    error unsupportedExtension.  If the Leader does abort for this
    reason, it SHOULD indicate the unsupported extensions in the
    resulting problem document via an extension member (Section 3.2 of
@@ -1645,7 +1651,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    If the same extension type appears more than once among the public
    extensions and the private extensions in the Leader's input share,
-   then the Leader MUST ignore the report and MAY abort with error
+   then the Leader MUST discard the report and MAY abort with error
    invalidMessage.
 
    Validation of anti-replay and extensions is not mandatory during the
@@ -1950,7 +1956,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    Otherwise, if state is of type Continued (no other state is reachable
    at this point), then the state includes an outbound message denoted
    state.outbound.  The Leader uses it to construct a PrepareInit
-   message:
+   structure for that report.
 
    struct {
      ReportMetadata report_metadata;
@@ -1975,7 +1981,8 @@ aggregation job 1                   aggregation job 2          aggregation job j
    *  payload: The outbound message, set to state.outbound.
 
    Once all the report shares have been initialized, the Leader creates
-   an AggregationJobInitReq message:
+   an AggregationJobInitReq message containing the PrepareInit
+   structures for the relevant reports.
 
    struct {
      BatchMode batch_mode;
@@ -2076,8 +2083,8 @@ aggregation job 1                   aggregation job 2          aggregation job j
        aggregation job.
 
    Since VDAF preparation completes in a constant number of rounds, it
-   will never be the case that preparation is complete for some reports
-   but not others.
+   will never be the case that preparation is complete for some of the
+   reports in an aggregation job but not others.
 
    If the Leader fails to process the response from the Helper, for
    example because of a transient failure such as a network connection
@@ -2174,10 +2181,11 @@ aggregation job 1                   aggregation job 2          aggregation job j
      };
    } PrepareResp;
 
+   The Helper processes each of the remaining report shares in turn.
    First, the Helper decrypts each report share as described in
    Section 4.6.2.3, then checks input share validity as described in
-   Section 4.6.2.4.  For any report that was rejected, the Helper sets
-   the outbound preparation response to
+   Section 4.6.2.4.  If either decryption of validation fails, the
+   Helper sets the corresponding outbound preparation response to
 
    variant {
      ReportID report_id;
@@ -2261,17 +2269,17 @@ aggregation job 1                   aggregation job 2          aggregation job j
    AggregationJobInitReq.prepare_inits.  The media type for
    AggregationJobResp is "application/dap-aggregation-job-resp".
 
-   Changing an aggregation job's parameters is illegal.  If the Helper
-   receives further PUT requests to the aggregation job with a different
-   AggregationJobInitReq in the body, it MUST abort with a client error.
-   For further requests with the same AggregationJobInitReq in the body,
-   the Helper SHOULD respond as it did for the original
+   The Helper may receive multiple copies of a given initialization
+   request due to the retry mechanism specified in Section 4.6.2.1.  The
+   Helper MUST verify that subsequent requests have the same
+   AggregationJobInitReq value and abort with a client error if they do
+   not.  It is illegal to rewind or reset the state of an aggregation
+   job.  If the Helper receives requests to initialize an aggregation
+   job once it has been continued at least once, confirming that the
+   Leader received the Helper's response (see Section 4.6.3), it MUST
+   abort with a client error.  For all other duplicate initialization
+   requests, the Helper SHOULD respond as it did for the original
    AggregationJobInitReq.
-
-   It is illegal to rewind or reset the state of an aggregation job.  If
-   the Helper receives requests to initialize an aggregation job once it
-   has been continued at least once (see Section 4.6.3), it MUST abort
-   with a client error.
 
 4.6.2.3.  Input Share Decryption
 
@@ -2338,12 +2346,11 @@ aggregation job 1                   aggregation job 2          aggregation job j
        public and private extension fields.  If so, the Aggregator MUST
        mark the input share as invalid with error invalid_message.
 
-   8.  If an Aggregator cannot determine if an input share is valid, it
-       MUST mark the input share as invalid with error report_dropped.
-
-       For example, the report timestamp may be so far in the past that
-       the state required to perform the check has been evicted from the
-       Aggregator's storage.  See Section 6.4.1 for details.
+   8.  If an Aggregator cannot determine if an input share is valid--for
+       example, the report timestamp may be so far in the past that the
+       state required to perform the check has been evicted from the
+       Aggregator's storage (see Section 6.4.1 for details)--it MUST
+       mark the input share as invalid with error report_dropped.
 
    If all of the above checks succeed, the input share is valid.
 
@@ -2470,9 +2477,10 @@ aggregation job 1                   aggregation job 2          aggregation job j
    The step field is the step of DAP aggregation that the Leader just
    reached and wants the Helper to advance to.  The prepare_continues
    field is the sequence of preparation continuation messages
-   constructed in the previous step.  The PrepareContinues MUST be in
-   the same order as the previous request to the aggregation job,
-   omitting any reports that were rejected.
+   constructed in the previous step.  The PrepareContinue elements MUST
+   be in the same order as the previous request to the aggregation job,
+   omitting any reports that were previously rejected by either
+   Aggregator.
 
    The Leader MUST authenticate its requests to the Helper using a
    scheme that meets the requirements in Section 3.3.
@@ -2736,9 +2744,9 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    *  Increment the count by 1.
 
-   *  Update the checksum value to the bitwise XOR of the checksum value
-      with the SHA256 [SHS] hash of the report ID associated with the
-      output share.
+   *  Update the checksum value to the bitwise XOR of the current
+      checksum value with the SHA256 [SHS] hash of the report ID
+      associated with the output share.
 
    *  Store out_share's report ID for future replay checks.
 
@@ -2913,10 +2921,11 @@ aggregation job 1                   aggregation job 2          aggregation job j
    shares right away.  However, this is not always the case.  In fact,
    for some VDAFs, it is not be possible to begin running aggregation
    jobs (Section 4.6) until the Collector initiates a collection job.
-   This is because, in general, the aggregation parameter is not known
-   until this point.  In certain situations it is possible to predict
-   the aggregation parameter in advance.  For example, for Prio3 the
-   only valid aggregation parameter is the empty string.
+   This is because, in general (see Section 4.6.1), the aggregation
+   parameter is not known until this point.  In certain situations it is
+   possible to predict the aggregation parameter in advance.  For
+   example, for Prio3 the only valid aggregation parameter is the empty
+   string.
 
    The Leader MAY defer handling the collection request.  In this case,
    it indicates that the collection job is not yet ready by immediately
@@ -2961,7 +2970,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    If any of the batch buckets identified by the query have already been
    collected, then the Leader MUST fail the job with error batchOverlap.
 
-   If aggregation is performed eagerly (Section 4.6.1), then the Leader
+   If aggregation was performed eagerly (Section 4.6.1), then the Leader
    checks that the aggregation parameter received in the
    CollectionJobReq matches the aggregation parameter used in each
    aggregation job pertaining to the batch.  If not, the Leader MUST
@@ -2981,10 +2990,11 @@ aggregation job 1                   aggregation job 2          aggregation job j
    If the number of validated reports in the batch is not equal to or
    greater than the task's minimum batch size, then the Leader SHOULD
    wait for more reports to be uploaded and aggregated and try the
-   collection job again later.  The Leader MAY give up on the collection
-   job (for example, if it decides that no new reports satisfying the
-   query are likely to ever arrive), in which case it MUST fail the job
-   with error invalidBatchSize.
+   collection job again later.  Alternately, the Leader MAY give up on
+   the collection job (for example, if it decides that no new reports
+   satisfying the query are likely to ever arrive), in which case it
+   MUST fail the job with error invalidBatchSize.  It MUST NOT fulfill
+   any jobs with an insufficient number of validated reports.
 
    Once the Leader has validated the collection job and run to
    completion all the aggregation jobs that pertain to it, it obtains
@@ -3846,17 +3856,17 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    *  The Leader is responsible for generating aggregation jobs, and
       will generally want to place each report in exactly one
-      aggregation job.  (The only event in which a Leader will want to
-      place a report in multiple aggregation jobs is if the Helper
-      rejects the report with report_too_early, in which case the Leader
-      can place the report into a later aggregation job.)  This may
-      require synchronization between different components of the system
-      which are generating aggregation jobs.  Note that placing a report
-      into more than one aggregation job will result in a loss of
-      throughput, rather than a loss of correctness, privacy, or
-      robustness, so it is acceptable for implementations to use an
-      eventually-consistent scheme which may rarely place a report into
-      multiple aggregation jobs.
+      aggregation job.  (The only event in which a Leader can place a
+      report in multiple aggregation jobs is if the Helper rejects the
+      report with report_too_early, in which case the Leader can place
+      the report into a later aggregation job.)  This may require
+      synchronization between different components of the system which
+      are generating aggregation jobs.  Note that placing a report into
+      more than one aggregation job will result in a loss of throughput,
+      rather than a loss of correctness, privacy, or robustness, so it
+      is acceptable for implementations to use an eventually-consistent
+      scheme which may rarely place a report into multiple aggregation
+      jobs.
 
    *  Aggregation is implemented as a sequence of aggregation steps by
       both the Leader and the Helper.  The Leader must ensure that each
@@ -4075,7 +4085,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    would be performed by the proxy rather than any of the participants
    in the DAP protocol.
 
-   The report itself may contain deanonmyizing information that cannot
+   The report itself may contain deanonymizing information that cannot
    be removed by a proxy:
 
    *  The report timestamp indicates when a report was generated and may
