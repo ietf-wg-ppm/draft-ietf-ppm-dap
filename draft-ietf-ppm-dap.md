@@ -592,12 +592,11 @@ once.
 
 ## System Architecture {#system-architecture}
 
-The basic unit of DAP operation is the _task_
-({{task-configuration}}), which corresponds to a set of measurements
-of a single type. A given task may result in multiple aggregated
-reported results, for instance when measurements are collected over a
-long time period and broken up into multiple batches according to
-different time windows.
+The basic unit of DAP operation is the _task_ ({{task-configuration}}), which
+corresponds to a set of measurements of a single type. A given task may result
+in multiple aggregated reported results, for instance when measurements are
+collected over a long time period and broken up into multiple batches according
+to different time windows.
 
 ~~~ aasvg
 .--------.
@@ -652,12 +651,12 @@ sometimes but HTTP servers at other times. It is even possible for a single
 entity to perform multiple DAP roles. For example, the Collector could also be
 one of the Aggregators.
 
-In the course of a measurement task, each Client
-records its own measurement, packages it up into a report, and sends it to the
-Leader. Each share is encrypted to only one of the two Aggregators so that even
-though both pass through the Leader, the Leader is unable to see or modify the
-Helper's share. Depending on the task, the Client may only send one report or
-may send many reports over time.
+In the course of a measurement task, each Client records its own measurement,
+packages it up into a report, and sends it to the Leader. Each share is
+encrypted to only one of the two Aggregators so that even though both pass
+through the Leader, the Leader is unable to see or modify the Helper's share.
+Depending on the task, the Client may only send one report or may send many
+reports over time.
 
 The Leader distributes the shares to the Helper and orchestrates the process of
 verifying them and assembling them into a aggregate shares for the Collector.
@@ -844,10 +843,10 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
 ### Arity of Protocol Objects
 
-Reports are 1 to 1 with measurements. In this illustration, `i` distinct
-Clients upload a distinct report, but a single Client could upload multiple
-reports to a task (see {{sybil}} for some implications of this). The process of
-sharding measurements, constructing reports and uploading them is specified in
+Reports are 1 to 1 with measurements. In this illustration, `i` distinct Clients
+upload a distinct report, but a single Client could upload multiple reports to a
+task (see {{sybil}} for some implications of this). The process of sharding
+measurements, constructing reports and uploading them is specified in
 {{upload-flow}}.
 
 Reports are many to 1 with aggregation jobs. The Leader assigns each of the `i`
@@ -1075,7 +1074,7 @@ DAP has three major interactions which need to be defined:
 
 Each of these interactions is defined in terms of HTTP resources. In this
 section we define these resources and the messages used to act on them.
-sxzaaazsxxxx
+
 ## Basic Type Definitions {#basic-definitions}
 
 A `ReportID` is used to uniquely identify a report in the context of a DAP task.
@@ -1919,9 +1918,9 @@ The Leader proceeds as follows with each report:
 1. Else the type is invalid, in which case the Leader MUST abort the aggregation
    job.
 
-Since VDAF preparation completes in a constant number of rounds, it
-will never be the case that some reports in an aggregation job are
-completed and others are not.
+Since VDAF preparation completes in a constant number of rounds, it will never
+be the case that some reports in an aggregation job are completed and others are
+not.
 
 If the Leader fails to process the response from the Helper, for example because
 of a transient failure such as a network connection failure or process crash,
@@ -2005,11 +2004,11 @@ struct {
 } PrepareResp;
 ~~~
 
-The helper processes each of the remaining report shares in turn:
+The Helper processes each of the remaining report shares in turn:
 It decrypts each of its remaining report shares as described in
 {{input-share-decryption}}, then checks input share validity as described in
-{{input-share-validation}}. If these validity checkes fail, the Helper sets
-the corresponding outbound preparation response to
+{{input-share-validation}}. If either decryption of validation fails, the Helper
+sets the corresponding outbound preparation response to
 
 ~~~ tls-presentation
 variant {
@@ -2092,17 +2091,15 @@ where `prepare_resps` are the outbound prep steps computed in the previous step.
 The order MUST match `AggregationJobInitReq.prepare_inits`. The media type for
 `AggregationJobResp` is "application/dap-aggregation-job-resp".
 
-The Helper may receive multiple copies of a given initalization
-request due to the retry mechanism specified in {{leader-init}}. The
-Helper MUST verify that subsequent requests have the same
-`AggregationJobInitReq` value and abort with a client error if they do
-not.  It is illegal to rewind or reset the state of an aggregation
-job. If the Helper receives requests to initialize an aggregation job
-once it has been continued at least once, confirming that the Leader
-received the Helper's response (see {{agg-continue-flow}}), it MUST
-abort with a client error.  For all other duplicate initialization
-requests, the Helper SHOULD respond as it did for the original
-`AggregationJobInitReq`.
+The Helper may receive multiple copies of a given initialization request due to
+the retry mechanism specified in {{leader-init}}. The Helper MUST verify that
+subsequent requests have the same `AggregationJobInitReq` value and abort with a
+client error if they do not.  It is illegal to rewind or reset the state of an
+aggregation job. If the Helper receives requests to initialize an aggregation
+job once it has been continued at least once, confirming that the Leader
+received the Helper's response (see {{agg-continue-flow}}), it MUST abort with a
+client error.  For all other duplicate initialization requests, the Helper
+SHOULD respond as it did for the original `AggregationJobInitReq`.
 
 
 #### Input Share Decryption {#input-share-decryption}
@@ -2168,11 +2165,11 @@ for each input share in the job:
    private extension fields. If so, the Aggregator MUST mark the input share as
    invalid with error `invalid_message`.
 
-1. If an Aggregator cannot determine if an input share is valid--for
-   example, the report timestamp may be so far in the past that the
-   state required to perform the check has been evicted from the
-   Aggregator's storage (see {{sharding-storage}} for details)--it
-   MUST mark the input share as invalid with error `report_dropped`.
+1. If an Aggregator cannot determine if an input share is valid--for example,
+   the report timestamp may be so far in the past that the state required to
+   perform the check has been evicted from the Aggregator's storage (see
+   {{sharding-storage}} for details)--it MUST mark the input share as invalid
+   with error `report_dropped`.
 
 If all of the above checks succeed, the input share is valid.
 
@@ -2284,9 +2281,9 @@ struct {
 The `step` field is the step of DAP aggregation that the Leader just reached and
 wants the Helper to advance to. The `prepare_continues` field is the sequence of
 preparation continuation messages constructed in the previous step. The
-`PrepareContinue` elements MUST be in the same order as the previous request to the
-aggregation job, omitting any reports that were previously rejected by either
-side.
+`PrepareContinue` elements MUST be in the same order as the previous request to
+the aggregation job, omitting any reports that were previously rejected by
+either Aggregator.
 
 The Leader MUST authenticate its requests to the Helper using a scheme that
 meets the requirements in {{request-authentication}}.
@@ -2509,9 +2506,9 @@ bucket:
 * Update the aggregate share `agg_share` to `Vdaf.agg_update(agg_param,
   agg_share, out_share)`.
 * Increment the count by 1.
-* Update the checksum value to the bitwise XOR of the current checksum
-  value with the SHA256 {{!SHS=DOI.10.6028/NIST.FIPS.180-4}} hash of
-  the report ID associated with the output share.
+* Update the checksum value to the bitwise XOR of the current checksum value
+  with the SHA256 {{!SHS=DOI.10.6028/NIST.FIPS.180-4}} hash of the report ID
+  associated with the output share.
 * Store `out_share`'s report ID for future replay checks.
 
 This section describes a single set of values associated with each batch bucket.
@@ -2682,17 +2679,15 @@ struct {
 Collectors MUST authenticate their requests to Leaders using a scheme that meets
 the requirements in {{request-authentication}}.
 
-Depending on the VDAF scheme and how the Leader is configured, the
-Leader and Helper may already have prepared a sufficient number of
-reports satisfying the query and be ready to return the aggregate
-shares right away. However, this is not always the case. In fact, for
-some VDAFs, it is not be possible to begin running aggregation jobs
-({{aggregate-flow}}) until the Collector initiates a collection
-job. This is because, in general (see {{eager-aggregation}}), the
-aggregation parameter is not known until this point. In certain
-situations it is possible to predict the aggregation parameter in
-advance. For example, for Prio3 the only valid aggregation parameter
-is the empty string.
+Depending on the VDAF scheme and how the Leader is configured, the Leader and
+Helper may already have prepared a sufficient number of reports satisfying the
+query and be ready to return the aggregate shares right away. However, this is
+not always the case. In fact, for some VDAFs, it is not be possible to begin
+running aggregation jobs ({{aggregate-flow}}) until the Collector initiates a
+collection job. This is because, in general (see {{eager-aggregation}}), the
+aggregation parameter is not known until this point. In certain situations it is
+possible to predict the aggregation parameter in advance. For example, for Prio3
+the only valid aggregation parameter is the empty string.
 
 The Leader MAY defer handling the collection request. In this case, it indicates
 that the collection job is not yet ready by immediately sending an empty
@@ -2754,8 +2749,8 @@ the task's minimum batch size, then the Leader SHOULD wait for more reports to
 be uploaded and aggregated and try the collection job again later. Alternately,
 the Leader MAY give up on the collection job (for example, if it decides that no new
 reports satisfying the query are likely to ever arrive), in which case it MUST
-fail the job with error `invalidBatchSize`. In MUST NOT fulfill any jobs
-with an insufficient number of validated reports.
+fail the job with error `invalidBatchSize`. It MUST NOT fulfill any jobs with an
+insufficient number of validated reports.
 
 Once the Leader has validated the collection job and run to completion all the
 aggregation jobs that pertain to it, it obtains the Helper's aggregate share
@@ -3608,9 +3603,9 @@ tradeoffs.
 
 * The Leader is responsible for generating aggregation jobs, and will generally
   want to place each report in exactly one aggregation job. (The only event in
-  which a Leadercan place a report in multiple aggregation jobs is if
-  the Helper rejects the report with `report_too_early`, in which case the
-  Leader can place the report into a later aggregation job.) This may require
+  which a Leader can place a report in multiple aggregation jobs is if the
+  Helper rejects the report with `report_too_early`, in which case the Leader
+  can place the report into a later aggregation job.) This may require
   synchronization between different components of the system which are
   generating aggregation jobs. Note that placing a report into more than one
   aggregation job will result in a loss of throughput, rather than a loss of
