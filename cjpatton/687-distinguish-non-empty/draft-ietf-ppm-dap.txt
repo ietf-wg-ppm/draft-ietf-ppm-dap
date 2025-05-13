@@ -1416,7 +1416,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    an Aggregator to support multiple HPKE configurations and multiple
    sets of algorithms simultaneously.
 
-   HpkeConfig HpkeConfigList<1..2^16-1>;
+   HpkeConfig HpkeConfigList<10..2^16-1>;
 
    struct {
      HpkeConfigId id;
@@ -1956,7 +1956,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    struct {
      opaque agg_param<0..2^32-1>;
      PartialBatchSelector part_batch_selector;
-     PrepareInit prepare_inits<1..2^32-1>;
+     PrepareInit prepare_inits<41..2^32-1>;
    } AggregationJobInitReq;
 
    This message consists of:
@@ -2206,7 +2206,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    AggregationJobResp, which is structured as follows:
 
    struct {
-     PrepareResp prepare_resps<1..2^32-1>;
+     PrepareResp prepare_resps<17..2^32-1>;
    } AggregationJobResp;
 
    where prepare_resps are the outbound PrepareResp messages for each
@@ -2397,7 +2397,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    struct {
      uint16 step;
-     PrepareContinue prepare_continues<1..2^32-1>;
+     PrepareContinue prepare_continues<21..2^32-1>;
    } AggregationJobContinueReq;
 
    The step field is the step of DAP aggregation that the Leader just
