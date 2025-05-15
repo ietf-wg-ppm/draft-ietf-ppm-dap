@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 14 November 2025                                     Cloudflare
+Expires: 16 November 2025                                     Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                             13 May 2025
+                                                             15 May 2025
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -64,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 14 November 2025.
+   This Internet-Draft will expire on 16 November 2025.
 
 Copyright Notice
 
@@ -95,8 +95,7 @@ Table of Contents
    3.  Message Transport
      3.1.  HTTP Status Codes
      3.2.  Presentation Language
-       3.2.1.  Variable-Length Vectors
-       3.2.2.  Structure Variants
+       3.2.1.  Structure Variants
      3.3.  HTTPS Request Authentication
      3.4.  Errors
    4.  Protocol Definition
@@ -962,14 +961,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    and decoding of these messages as byte strings also follows
    [RFC8446].  We enumerate the exceptions below.
 
-3.2.1.  Variable-Length Vectors
-
-   Section 3.4 of [RFC8446] describes a syntax for variable-length
-   vectors where a range of permitted lengths is provided.  This
-   document always specifies the lower length limit of variable-length
-   vectors to be 0.
-
-3.2.2.  Structure Variants
+3.2.1.  Structure Variants
 
    Section 3.7 of [RFC8446] defines a syntax for structure fields whose
    values are constants.  In this document, we do not use that notation,
@@ -1199,8 +1191,8 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    struct {
      HpkeConfigId config_id;
-     opaque enc<0..2^16-1>;
-     opaque payload<0..2^32-1>;
+     opaque enc<1..2^16-1>;
+     opaque payload<1..2^32-1>;
    } HpkeCiphertext;
 
    config_id identifies the HPKE configuration to which the message was
@@ -1424,7 +1416,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    an Aggregator to support multiple HPKE configurations and multiple
    sets of algorithms simultaneously.
 
-   HpkeConfig HpkeConfigList<0..2^16-1>;
+   HpkeConfig HpkeConfigList<10..2^16-1>;
 
    struct {
      HpkeConfigId id;
@@ -1434,7 +1426,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
      HpkePublicKey public_key;
    } HpkeConfig;
 
-   opaque HpkePublicKey<0..2^16-1>;
+   opaque HpkePublicKey<1..2^16-1>;
    uint16 HpkeAeadId;
    uint16 HpkeKemId;
    uint16 HpkeKdfId;
@@ -1567,7 +1559,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    struct {
      Extension private_extensions<0..2^16-1>;
-     opaque payload<0..2^32-1>;
+     opaque payload<1..2^32-1>;
    } PlaintextInputShare;
 
    *  private_extensions is the list of private report extensions for
@@ -1966,7 +1958,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    struct {
      ReportShare report_share;
-     opaque payload<0..2^32-1>;
+     opaque payload<1..2^32-1>;
    } PrepareInit;
 
    This message consists of:
@@ -1992,7 +1984,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    struct {
      opaque agg_param<0..2^32-1>;
      PartialBatchSelector part_batch_selector;
-     PrepareInit prepare_inits<0..2^32-1>;
+     PrepareInit prepare_inits<44..2^32-1>;
    } AggregationJobInitReq;
 
    This message consists of:
@@ -2175,7 +2167,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
      ReportID report_id;
      PrepareRespType prepare_resp_type;
      select (PrepareResp.prepare_resp_type) {
-       case continue: opaque payload<0..2^32-1>;
+       case continue: opaque payload<1..2^32-1>;
        case finish:   Empty;
        case reject:   ReportError report_error;
      };
@@ -2238,7 +2230,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    variant {
      ReportID report_id;
      PrepareRespType prepare_resp_type = continue;
-     opaque payload<0..2^32-1> = state.outbound;
+     opaque payload<1..2^32-1> = state.outbound;
    } PrepareResp;
 
    If state has type Continued, then the Helper stores state for use in
@@ -2261,7 +2253,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    AggregationJobResp, which is structured as follows:
 
    struct {
-     PrepareResp prepare_resps<0..2^32-1>;
+     PrepareResp prepare_resps<17..2^32-1>;
    } AggregationJobResp;
 
    where prepare_resps are the outbound PrepareResp messages for each
@@ -2459,7 +2451,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    struct {
      ReportID report_id;
-     opaque payload<0..2^32-1>;
+     opaque payload<1..2^32-1>;
    } PrepareContinue;
 
    where report_id is the report ID associated with state, and payload
@@ -2471,7 +2463,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    struct {
      uint16 step;
-     PrepareContinue prepare_continues<0..2^32-1>;
+     PrepareContinue prepare_continues<21..2^32-1>;
    } AggregationJobContinueReq;
 
    The step field is the step of DAP aggregation that the Leader just
@@ -2670,7 +2662,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    variant {
      ReportID report_id;
      PrepareRespType prepare_resp_type = continue;
-     opaque payload<0..2^32-1> = state.outbound;
+     opaque payload<1..2^32-1> = state.outbound;
    } PrepareResp;
 
    Otherwise, if state has type Finished, then the Helper's response is
