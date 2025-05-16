@@ -2042,8 +2042,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
        *  inbound is the payload of the PrepareResp
 
-       *  state is the report's prep state carried over from the
-          previous step
+       *  state is the report's initial prep state
 
        If the new state has type Continued or FinishedWithOutbound, then
        there is at least one more outbound message to send before
