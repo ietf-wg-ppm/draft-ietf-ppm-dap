@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 16 November 2025                                     Cloudflare
+Expires: 17 November 2025                                     Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                             15 May 2025
+                                                             16 May 2025
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -64,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 16 November 2025.
+   This Internet-Draft will expire on 17 November 2025.
 
 Copyright Notice
 
@@ -1797,7 +1797,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    the following subsections.
 
    Each Aggregator maintains some state for each report.  A state
-   transition is triggered by receiving a message from the Aggregatro's
+   transition is triggered by receiving a message from the Aggregator's
    peer.  Eventually this process results in a terminal state, either
    rejecting the report or recovering an output share.  Once a report
    has reached a terminal state, no more messages will be processed for
@@ -2224,8 +2224,8 @@ aggregation job 1                   aggregation job 2          aggregation job j
    } PrepareResp;
 
    Otherwise state has type Continued or FinishedWithOutbound and there
-   is at least one more outbound message to process.  (State Finished is
-   not reachable at this point.)  The Helper responds with
+   is at least one more outbound message to process.  State Finished is
+   not reachable at this point.  The Helper responds with
 
    variant {
      ReportID report_id;
@@ -2234,7 +2234,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    } PrepareResp;
 
    If state has type Continued, then the Helper stores state for use in
-   the first continuation step in (Section 4.6.3.2).
+   the first continuation step in Section 4.6.3.2.
 
    Else if state has type FinishedWithOutbound, then the Helper commits
    to state.out_share as described in Section 4.6.3.3.  If commitment
