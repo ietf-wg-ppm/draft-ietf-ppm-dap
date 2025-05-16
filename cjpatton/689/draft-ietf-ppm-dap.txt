@@ -2040,9 +2040,9 @@ aggregation job 1                   aggregation job 2          aggregation job j
        *  agg_param is the VDAF aggregation parameter provided by the
           Collector (see Section 4.7)
 
-       *  inbound is the payload of the PrepareResp
-
        *  state is the report's initial prep state
+
+       *  inbound is the payload of the PrepareResp
 
        If the new state has type Continued or FinishedWithOutbound, then
        there is at least one more outbound message to send before
