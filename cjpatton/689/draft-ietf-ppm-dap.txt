@@ -2042,6 +2042,9 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
        *  inbound is the payload of the PrepareResp
 
+       *  state is the report's prep state carried over from the
+          previous step
+
        If the new state has type Continued or FinishedWithOutbound, then
        there is at least one more outbound message to send before
        preparation is complete.  The Leader stores state and proceeds as
@@ -2500,8 +2503,9 @@ aggregation job 1                   aggregation job 2          aggregation job j
           inbound,
       )
 
-       where task_id is the task ID and inbound is the payload of the
-       inbound PrepareResp.  It then processes the next state
+       where task_id is the task ID, inbound is the payload of the
+       inbound PrepareResp, and state is the report's prep state carried
+       over from the previous step.  It then processes the next state
        transition:
 
        *  If the type of the new state is Continued or
@@ -2627,8 +2631,9 @@ aggregation job 1                   aggregation job 2          aggregation job j
        inbound,
    )
 
-   where task_id is the task ID and inbound is the payload of the
-   inbound PrepareContinue.  If state has type Rejected, then the
+   where task_id is the task ID, inbound is the payload of the inbound
+   PrepareContinue, and state is the report's prep state carried over
+   from the previous step.  If the new state has type Rejected, then the
    Helper's response is
 
    variant {
