@@ -1902,11 +1902,9 @@ aggregation job 1                   aggregation job 2          aggregation job j
    unique within the task.
 
    First, the Leader MUST ensure each report in the candidate set can be
-   committed.  That is: the Leader MUST ensure it has not committed a
-   report with the same ID and task; and the Leader MUST ensure the
-   batch bucket to which the report belongs has not been collected.  See
-   Section 4.6.3.3 for details.  If a report is not cannot be committed,
-   then the Leader rejects it and removes it from the candidate set.
+   committed per the criteria detailed in Section 4.6.3.3.  If a If a
+   report is not cannot be committed, then the Leader rejects it and
+   removes it from the candidate set.
 
    Next, the Leader decrypts each of its report shares as described in
    Section 4.6.2.3, then checks input share validity as described in
