@@ -2713,8 +2713,10 @@ aggregation job 1                   aggregation job 2          aggregation job j
       the task, the Aggregator MUST mark the report invalid with error
       report_replayed.
 
-   Aggregators may perform these checks at any time before commitment
-   (i.e., during either aggregation initialization or continuation).
+   Helpers may perform these checks at any time before commitment (i.e.,
+   during either aggregation initialization or continuation), but
+   Leaders MUST perform these checks before adding a report to an
+   aggregation job.
 
    The following procedure is used to commit an output share out_share
    to a batch bucket:
