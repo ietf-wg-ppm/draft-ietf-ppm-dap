@@ -2703,8 +2703,8 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    *  A 32-byte checksum value, as defined below.
 
-   Aggregators MUST check the following conditions before committing an
-   output share:
+   An output share is eligible to be committed if the following
+   conditions are met:
 
    *  If the batch bucket has been collected, the Aggregator MUST mark
       the report invalid with error batch_collected.
@@ -2713,10 +2713,11 @@ aggregation job 1                   aggregation job 2          aggregation job j
       the task, the Aggregator MUST mark the report invalid with error
       report_replayed.
 
-   Helpers may perform these checks at any time before commitment (i.e.,
-   during either aggregation initialization or continuation), but
-   Leaders MUST perform these checks before adding a report to an
-   aggregation job.
+   Aggregators MUST check the following conditions before committing an
+   output share.  Helpers may perform these checks at any time before
+   commitment (i.e., during either aggregation initialization or
+   continuation), but Leaders MUST perform these checks before adding a
+   report to an aggregation job.
 
    The following procedure is used to commit an output share out_share
    to a batch bucket:

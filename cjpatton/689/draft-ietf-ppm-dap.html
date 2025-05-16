@@ -4909,8 +4909,7 @@ batch bucket identifier is the batch ID and indicated in the aggregation job.<a 
                 <p id="section-4.6.3.3-5.3.1">A 32-byte checksum value, as defined below.<a href="#section-4.6.3.3-5.3.1" class="pilcrow">¶</a></p>
 </li>
             </ul>
-<p id="section-4.6.3.3-6">Aggregators <span class="bcp14">MUST</span> check the following conditions before committing an output
-share:<a href="#section-4.6.3.3-6" class="pilcrow">¶</a></p>
+<p id="section-4.6.3.3-6">An output share is eligible to be committed if the following conditions are met:<a href="#section-4.6.3.3-6" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-4.6.3.3-7.1">
                 <p id="section-4.6.3.3-7.1.1">If the batch bucket has been collected, the Aggregator <span class="bcp14">MUST</span> mark the report
@@ -4921,9 +4920,10 @@ invalid with error <code>batch_collected</code>.<a href="#section-4.6.3.3-7.1.1"
 the Aggregator <span class="bcp14">MUST</span> mark the report invalid with error <code>report_replayed</code>.<a href="#section-4.6.3.3-7.2.1" class="pilcrow">¶</a></p>
 </li>
             </ul>
-<p id="section-4.6.3.3-8">Helpers may perform these checks at any time before commitment (i.e., during
-either aggregation initialization or continuation), but Leaders <span class="bcp14">MUST</span> perform
-these checks before adding a report to an aggregation job.<a href="#section-4.6.3.3-8" class="pilcrow">¶</a></p>
+<p id="section-4.6.3.3-8">Aggregators <span class="bcp14">MUST</span> check the following conditions before committing an output
+share. Helpers may perform these checks at any time before commitment (i.e.,
+during either aggregation initialization or continuation), but Leaders <span class="bcp14">MUST</span>
+perform these checks before adding a report to an aggregation job.<a href="#section-4.6.3.3-8" class="pilcrow">¶</a></p>
 <p id="section-4.6.3.3-9">The following procedure is used to commit an output share <code>out_share</code> to a batch
 bucket:<a href="#section-4.6.3.3-9" class="pilcrow">¶</a></p>
 <ul class="normal">
