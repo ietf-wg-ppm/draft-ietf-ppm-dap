@@ -1937,10 +1937,10 @@ aggregation job 1                   aggregation job 2          aggregation job j
    *  plaintext_input_share is the Leader's PlaintextInputShare
 
    ping_pong_leader_init is defined in Section 5.7.1 of [VDAF].  This
-   process determines the initial per-report state, denoted state.  If
-   state is of type Rejected (Section 5.7 of [VDAF], then the report is
-   rejected and removed from the candidate set, and no message is sent
-   to the Helper for this report.
+   process determines the initial per-report state.  If state is of type
+   Rejected (Section 5.7 of [VDAF], then the report is rejected and
+   removed from the candidate set, and no message is sent to the Helper
+   for this report.
 
    Otherwise, if state is of type Continued (no other state is reachable
    at this point), then the state includes an outbound message denoted
