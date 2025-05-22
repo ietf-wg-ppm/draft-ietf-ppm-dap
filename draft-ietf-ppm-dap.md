@@ -1116,8 +1116,8 @@ in different situations.
 struct {} Empty;
 ~~~
 
-Errors that occurred during processing individual reports are represented
-by the following enum:
+Errors that occur while handling individual reports in the upload or aggregation
+interactions are represented by the following enum:
 
 ~~~ tls-presentation
 enum {
@@ -1136,7 +1136,6 @@ enum {
   (255)
 } ReportError;
 ~~~
-
 
 ### Times, Durations and Intervals {#timestamps}
 
@@ -1403,8 +1402,8 @@ encoded([
 ### Upload Request
 
 Clients upload reports by sending a POST to `{leader}/tasks/{task-id}/reports`.
-The body is a `UploadRequest`, with media type "application/dap-report-req", structured as
-follows:
+The body is an `UploadRequest`, with media type "application/dap-upload-req",
+structured as follows:
 
 ~~~ tls-presentation
 struct {
@@ -1421,9 +1420,12 @@ struct {
 } Report;
 
 struct {
-  Report reports<0..2^32-1>;
+  Report reports[content_length];
 } UploadRequest;
 ~~~
+
+Where `content_length` is the value of the Content-Length header ({{!RFC9110,
+Section 8.6}}) from the enclosing HTTP message.
 
 Each upload request contains a sequence of `Report` messages constructed as follows:
 
@@ -1529,7 +1531,7 @@ struct {
 } ReportUploadStatus;
 
 struct {
-  ReportUploadStatus status<0..2^32-1>;
+  ReportUploadStatus status[content_length];
 } UploadResponse;
 ~~~
 
@@ -1540,30 +1542,32 @@ If the Leader does not recognize the task ID, then it aborts with error
 `unrecognizedTask`.
 
 Otherwise, the Leader responds with a body consisting of an `UploadResponse` and
-the media type `application/dap-report-resp`. The Leader only includes reports
+the media type `application/dap-upload-resp`. The Leader only includes reports
 that failed processing in the response. For each report that failed to upload,
 the Leader creates a `ReportUploadStatus` struct and includes the `ReportId`
 from the input and a `ReportError` {{basic-definitions}} that describes the
-failure.
+failure. The reports in the response MUST appear in the same order as they did
+in the request.
+
+The response's Content-Length header ({{!RFC9110, Section 8.6}}) MUST contain
+`content_length`, the length of the vector of `ReportUploadStatus`.
 
 If the Leader does not recognize the `config_id` in the encrypted input share,
-it sets the error field to `outdated_config`
-(see {{aggregation-helper-init}}). When the Client receives an
+it sets the error field to `outdated_config`. When the Client receives an
 `outdated_config` error, it SHOULD invalidate any cached `HpkeConfigList` and
 retry with a freshly generated `Report`. If this retried upload does not
 succeed, the Client SHOULD abort and discontinue retrying.
 
 If a report's ID matches that of a previously uploaded report, the Leader MUST
-ignore it. In addition, it MAY alert the Client with setting the
-error field to `report_replayed`.
+ignore it. In addition, it MAY alert the Client with error `report_replayed`.
 
 The Leader MUST ignore any report pertaining to a batch that has already been
-collected (see {{replay-protection}} for details). The Leader MAY also return
-`report_replayed` error for this report.
+collected (see {{replay-protection}} for details). The Leader MAY also alert the
+client with error `report_replayed`.
 
 The Leader MUST ignore any report whose timestamp is outside of the task's
-`time_interval`. When it does so, it SHOULD also set the error field to
-`report_dropped` for the corresponding report in the response.
+`time_interval`. When it does so, it SHOULD also alert the client with
+`report_dropped`.
 
 The Leader may need to buffer reports while waiting to aggregate them (e.g.,
 while waiting for an aggregation parameter from the Collector; see
@@ -1601,26 +1605,27 @@ Successful upload
 ~~~ http
 POST /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/reports
 Host: example.com
-Content-Type: application/dap-report-req
+Content-Type: application/dap-upload-req
 
 encoded(struct {
-  reports = [struct {
-    report_metadata = struct {
-      report_id = [0x0a, 0x0b, 0x0c, 0x0d, ...],
-      time = 1741986088,
-      public_extensions = [0x00, 0x00],
-    } ReportMetadata,
-    public_share = [0x0a, 0x0b, ...],
-    leader_encrypted_input-share = struct {
-      config_id = 1,
-      enc = [0x0f, 0x0e, 0x0d, 0x0c, ...],
-      payload = [0x0b, 0x0a, 0x09, 0x08, ...],
-    } HpkeCiphertext,
-    helper_encrypted_input-share = struct {
-      config_id = 2,
-      enc = [0x0c, 0x0d, 0x0e, 0x0f, ...],
-      payload = [0x08, 0x00, 0x0a, 0x0b, ...],
-    } HpkeCiphertext,
+  reports = [
+    struct {
+      report_metadata = struct {
+        report_id = [0x0a, 0x0b, 0x0c, 0x0d, ...],
+        time = 1741986088,
+        public_extensions = [0x00, 0x00],
+      } ReportMetadata,
+      public_share = [0x0a, 0x0b, ...],
+      leader_encrypted_input-share = struct {
+        config_id = 1,
+        enc = [0x0f, 0x0e, 0x0d, 0x0c, ...],
+        payload = [0x0b, 0x0a, 0x09, 0x08, ...],
+      } HpkeCiphertext,
+      helper_encrypted_input-share = struct {
+        config_id = 2,
+        enc = [0x0c, 0x0d, 0x0e, 0x0f, ...],
+        payload = [0x08, 0x00, 0x0a, 0x0b, ...],
+      } HpkeCiphertext,
     } Report
   ]
 } UploadRequest)
@@ -1633,26 +1638,27 @@ Failed upload of 1/2 reports submitted in one bulk upload
 ~~~ http
 POST /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/reports
 Host: example.com
-Content-Type: application/dap-report-req
+Content-Type: application/dap-upload-req
 
 encoded(struct {
-  reports = [struct {
-    report_metadata = struct {
-      report_id = [0x0a, 0x0b, 0x0c, 0x0d, ...],
-      time = 2000000000,
-      public_extensions = [0x00, 0x01],
-    } ReportMetadata,
-    public_share = [0x0a, 0x0b, ...],
-    leader_encrypted_input-share = struct {
-      config_id = 1,
-      enc = [0x0f, 0x0e, 0x0d, 0x0c, ...],
-      payload = [0x0b, 0x0a, 0x09, 0x08, ...],
-    } HpkeCiphertext,
-    helper_encrypted_input-share = struct {
-      config_id = 2,
-      enc = [0x0c, 0x0d, 0x0e, 0x0f, ...],
-      payload = [0x08, 0x00, 0x0a, 0x0b, ...],
-    } HpkeCiphertext,
+  reports = [
+    struct {
+      report_metadata = struct {
+        report_id = [0x0a, 0x0b, 0x0c, 0x0d, ...],
+        time = 2000000000,
+        public_extensions = [0x00, 0x01],
+      } ReportMetadata,
+      public_share = [0x0a, 0x0b, ...],
+      leader_encrypted_input-share = struct {
+        config_id = 1,
+        enc = [0x0f, 0x0e, 0x0d, 0x0c, ...],
+        payload = [0x0b, 0x0a, 0x09, 0x08, ...],
+      } HpkeCiphertext,
+      helper_encrypted_input-share = struct {
+        config_id = 2,
+        enc = [0x0c, 0x0d, 0x0e, 0x0f, ...],
+        payload = [0x08, 0x00, 0x0a, 0x0b, ...],
+      } HpkeCiphertext,
     } Report,
     struct {
       report_metadata = struct {
@@ -1672,12 +1678,11 @@ encoded(struct {
         payload = [0x08, 0x00, 0x0a, 0x0b, ...],
       } HpkeCiphertext,
     } Report,
-
   ]
 } UploadRequest)
 
 HTTP/1.1 200
-Content-Type: application/dap-report-resp
+Content-Type: application/dap-upload-resp
 
 encoded(struct {
   reports = [
@@ -4022,8 +4027,8 @@ This specification defines the following protocol messages, along with their
 corresponding media types:
 
 - HpkeConfigList {{hpke-config}}: "application/dap-hpke-config-list"
-- UploadRequest {{upload-request}}: "application/dap-report-req"
-- UploadResponse {{upload-request}}: "application/dap-report-resp"
+- UploadRequest {{upload-request}}: "application/dap-upload-req"
+- UploadResponse {{upload-request}}: "application/dap-upload-resp"
 - AggregationJobInitReq {{leader-init}}: "application/dap-aggregation-job-init-req"
 - AggregationJobResp {{aggregation-helper-init}}: "application/dap-aggregation-job-resp"
 - AggregationJobContinueReq {{aggregation-leader-continuation}}: "application/dap-aggregation-job-continue-req"
@@ -4124,7 +4129,7 @@ Change controller:
 
 : IESG
 
-### "application/dap-report-req" media type
+### "application/dap-upload-req" media type
 
 Type name:
 
@@ -4195,7 +4200,7 @@ Change controller:
 
 : IESG
 
-### "application/dap-report-resp" media type
+### "application/dap-upload-resp" media type
 
 Type name:
 
@@ -4845,8 +4850,8 @@ The initial contents of this registry are listed below in {{report-error-id}}.
 | `0x07` | `task_expired`           | {{basic-definitions}} of RFX XXXX |
 | `0x08` | `invalid_message`        | {{basic-definitions}} of RFX XXXX |
 | `0x09` | `report_too_early`       | {{basic-definitions}} of RFX XXXX |
-| `0xA`  | `task_not_started`       | {{basic-definitions}} of RFX XXXX |
-| `0xB`  | `outdated_config`        | {{basic-definitions}} of RFX XXXX |
+| `0x0A` | `task_not_started`       | {{basic-definitions}} of RFX XXXX |
+| `0x0B` | `outdated_config`        | {{basic-definitions}} of RFX XXXX |
 {: #report-error-id title="Initial contents of the Report Error Identifiers registry."}
 
 ## URN Sub-namespace for DAP (urn:ietf:params:ppm:dap) {#urn-space}
