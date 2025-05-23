@@ -897,81 +897,9 @@ code as the most general code of that class. For example, 202 may be handled as
 
 ## Presentation Language
 
-With some exceptions, we use the presentation language defined in {{!RFC8446,
-Section 3}} to define messages in the protocol. Encoding and decoding of these
-messages as byte strings also follows {{!RFC8446}}. We enumerate the exceptions
-below.
-
-### Structure Variants
-
-{{Section 3.7 of !RFC8446}} defines a syntax for structure fields whose values
-are constants. In this document, we do not use that notation, but use something
-similar to describe specific variants of structures that use an enumerated type
-as a discriminator, described in {{!RFC8446, Section 3.8}}.
-
-For example, suppose we have an enumeration and a structure defined as follows:
-
-~~~ tls-presentation
-enum {
-  number(0),
-  string(1),
-  (255)
-} ExampleEnum;
-
-struct {
-  uint32 always_present;
-  ExampleEnum type;
-  select (ExampleStruct.type) {
-    case number: uint32 a_number;
-    case string: opaque a_string<0..10>;
-  };
-} ExampleStruct;
-~~~
-
-Then we describe the specific variant of `ExampleStruct` where `type == number`
-with a `variant` block as follows:
-
-~~~ tls-presentation
-variant {
-  /* Field exists regardless of variant */
-  uint32 always_present;
-  ExampleEnum type = number;
-  /* Only fields included in the `type == number`
-     variant are described */
-  uint32 a_number;
-} ExampleStruct;
-~~~
-
-The protocol text accompanying this would explain how implementations should
-handle the `always_present` and `a_number` fields, but not the `type` field.
-This does not mean that the `type` field of `ExampleStruct` can only ever have
-value `number`; it means only that it has this type in this instance.
-
-This notation can also be used in structures where the enum field is not used as
-a discriminant. For example, given the following structure containing an
-enumerator:
-
-~~~ tls-presentation
-enum {
-  something(0),
-  something_else(1),
-  (255)
-} FailureReason;
-
-struct {
-  FailureReason failure_reason;
-  opaque another_field<0..256>;
-} FailedOperation;
-~~~
-
-The protocol text might include a description like:
-
-~~~ tls-presentation
-variant {
-  FailureReason failure_reason = something;
-  opaque another_field<0..256>;
-} FailedOperation;
-~~~
+We use the presentation language defined in {{!RFC8446, Section 3}} to define
+messages in the protocol. Encoding and decoding of these messages as byte
+strings also follows {{!RFC8446}}.
 
 ## HTTPS Request Authentication {#request-authentication}
 
@@ -2039,21 +1967,17 @@ struct {
 } PrepareResp;
 ~~~
 
+`PrepareResp.report_id` is always set to the ID of the report that the Helper is
+preparing. The values of the other fields in different cases are discussed
+below.
+
 The Helper processes each of the remaining report shares in turn.
 First, the Helper decrypts each report share as described in
 {{input-share-decryption}}, then checks input share validity as described in
 {{input-share-validation}}. If either decryption of validation fails, the Helper
-sets the corresponding outbound preparation response to
+sets `PrepareResp.prepare_resp_type` to `reject` and `PrepareResp.report_error`
+to the indicated error.
 
-~~~ tls-presentation
-variant {
-  ReportID report_id;
-  PrepareRespType prepare_resp_type = reject;
-  ReportError report_error;
-} PrepareResp;
-~~~
-
-where `report_id` is the report ID and `report_error` is the indicated error.
 For all other reports it initializes the VDAF prep state as follows:
 
 ~~~ pseudocode
@@ -2078,45 +2002,22 @@ state = Vdaf.ping_pong_helper_init(
 * `inbound` is the payload of the inbound `PrepareInit`
 
 This procedure determines the initial per-report `state`. If `state` is of type
-`Rejected`, then the Helper responds with
-
-~~~ tls-presentation
-variant {
-  ReportID report_id;
-  PrepareRespType prepare_resp_type = reject;
-  ReportError report_error = vdaf_prep_error;
-} PrepareResp;
-~~~
+`Rejected`, then the Helper sets `PrepareResp.prepare_resp_type` to `reject` and
+`PrepareResp.report_error` to `vdaf_prep_error`.
 
 Otherwise `state` has type `Continued` or `FinishedWithOutbound` and
 there is at least one more outbound message to process. State `Finished` is
-not reachable at this point. The Helper responds with
+not reachable at this point. The Helper sets `PrepareResp.prepare_resp_type` to
+`continue` and `PrepareResp.payload` to `state.outbound`.
 
-~~~ tls-presentation
-variant {
-  ReportID report_id;
-  PrepareRespType prepare_resp_type = continue;
-  opaque payload<1..2^32-1> = state.outbound;
-} PrepareResp;
-~~~
-
-If `state` has type `Continued`, then the Helper stores `state`
-for use in the first continuation step in
-{{aggregation-helper-continuation}}.
+If `state` has type `Continued`, then the Helper stores `state` for use in the
+first continuation step in {{aggregation-helper-continuation}}.
 
 Else if `state` has type `FinishedWithOutbound`, then the Helper commits to
 `state.out_share` as described in {{batch-buckets}}. If commitment fails with
-some `ReportError` (e.g., the report was replayed or its batch bucket was
-collected), then instead of the `continue` response above, the Helper responds
-with
-
-~~~ tls-presentation
-variant {
-  ReportID report_id;
-  PrepareRespType prepare_resp_type = reject;
-  ReportError report_error = commit_error;
-} PrepareResp;
-~~~
+some report error `commit_error` (e.g., the report was replayed or its batch
+bucket was collected), then the Helper sets `PrepareResp.prepare_resp_type` to
+`reject` and `PrepareResp.report_error` to `commit_error`.
 
 Once the Helper has constructed a `PrepareResp` for each report, the aggregation
 job response is ready. Its results are represented by an `AggregationJobResp`,
@@ -2496,16 +2397,9 @@ state = Vdaf.ping_pong_helper_continued(
 
 where `task_id` is the task ID, `inbound` is the payload of the inbound
 `PrepareContinue`, and `state` is the report's prep state carried over from the
-previous step. If the new `state` has type `Rejected`, then the Helper's
-response is
-
-~~~ tls-presentation
-variant {
-  ReportID report_id;
-  PrepareRespType prepare_resp_type = reject;
-  ReportError report_error = vdaf_prep_error;
-} PrepareResp;
-~~~
+previous step. If the new `state` has type `Rejected`, then the Helper sets
+`PrepareResp.prepare_resp_type` to `reject` and `PrepareResp.report_error` to
+`vdaf_prep_error`.
 
 If `state` has type `Continued`, then the Helper stores `state` for use in the
 next continuation step.
@@ -2513,36 +2407,18 @@ next continuation step.
 If `state` has type `FinishedWithOutbound` or `Finished`, then the Helper
 commits to `state.out_share` as described in {{batch-buckets}}. If commitment
 fails with some report error `commit_error` (e.g., the report was replayed or
-its batch bucket was collected), then the Helper responds with
-
-~~~ tls-presentation
-variant {
-  ReportID report_id;
-  PrepareRespType prepare_resp_type = reject;
-  ReportError report_error = commit_error;
-} PrepareResp;
-~~~
+its batch bucket was collected), then the Helper sets
+`PrepareResp.prepare_resp_type` to `reject` and `PrepareResp.report_error` to
+`commit_error`.
 
 If commitment succeeds, the Helper's response depends on whether the state
 includes an outbound message that needs to be processed. If `state` has type
-`Continued` or `FinishedWithOutbound`` then the Helper's response is
+`Continued` or `FinishedWithOutbound` then the Helper sets
+`PrepareResp.prepare_resp_type` to `continue` and `PrepareResp.payload` to
+`state.outbound`.
 
-~~~ tls-presentation
-variant {
-  ReportID report_id;
-  PrepareRespType prepare_resp_type = continue;
-  opaque payload<1..2^32-1> = state.outbound;
-} PrepareResp;
-~~~
-
-Otherwise, if `state` has type `Finished`, then the Helper's response is
-
-~~~ tls-presentation
-variant {
-  ReportID report_id;
-  PrepareRespType prepare_resp_type = finish;
-} PrepareResp;
-~~~
+Otherwise, if `state` has type `Finished`, then the Helper sets
+`PrepareResp.prepare_resp_type` to `finish`.
 
 Once the Helper has computed a `PrepareResp` for every report, the aggregation
 job response is ready. It is represented by an `AggregationJobResp` message (see
