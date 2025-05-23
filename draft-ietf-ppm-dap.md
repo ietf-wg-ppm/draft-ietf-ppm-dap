@@ -1987,23 +1987,26 @@ the Leader's PUT until the aggregation job initialization is ready, in which
 case it responds with the`AggregationJobResp`, or the job fails, in which case
 the Helper MUST abort with the error that caused the failure.
 
-Upon receipt of an `AggregationJobInitReq`, the Helper checks if it recognizes
-the task ID. If not, then it MUST fail the job with error `unrecognizedTask`.
+Upon receipt of an `AggregationJobInitReq`, the Helper checks the following
+conditions:
 
-Next, it checks that the batch mode indicated by
-`part_batch_selector.batch_mode` matches the task's batch mode. If not, the
-Helper MUST fail the job with error `invalidMessage`.
+* Whether it recognizes the task ID. If not, then the Helper MUST fail the job
+  with error `unrecognizedTask`.
 
-Next, the Helper checks that the aggregation parameter is valid as described in
-{{agg-param-validation}}. If the aggregation parameter is invalid, then the
-Helper MUST fail the job with error `invalidAggregationParameter`.
+* Whether the batch mode indicated by `part_batch_selector.batch_mode` matches
+  the task's batch mode. If not, then the Helper MUST fail the job with error
+  `invalidMessage`.
 
-Next, the Helper checks that the report IDs in
-`AggregationJobInitReq.prepare_inits` are all distinct. If not, then the Helper
-MUST fail the job with error `invalidMessage`.
+* Whether the aggregation parameter is valid as described in
+  {{agg-param-validation}}. If the aggregation parameter is invalid, then the
+  Helper MUST fail the job with error `invalidAggregationParameter`.
 
-To process the aggregation job, the Helper computes a response for each report
-share. This includes the following structures:
+* Whether  the report IDs in `AggregationJobInitReq.prepare_inits` are all
+  distinct. If not, then the Helper MUST fail the job with error
+  `invalidMessage`.
+
+The Helper then processes the aggregation job by computing a response for each
+report share. This includes the following structures:
 
 ~~~ tls-presentation
 enum {
@@ -2449,23 +2452,26 @@ the Leader's POST until the aggregation job continuation is ready, in which
 case it responds with the `AggregationJobResp`, or the job fails, in which case
 it MUST abort with the error that caused the failure.
 
-Next, it checks that it recognizes the task ID. If not, then it MUST fail the
-job with error `unrecognizedTask`.
+To begin handling an `AggregationJobContinueReq`, the Helper checks the
+following conditions:
 
-Next, it checks if it recognizes the indicated aggregation job ID. If not, it
-MUST fail the job with error `unrecognizedAggregationJob`.
+* Whether it recognizes the task ID. If not, then the Helper MUST fail the job
+  with error `unrecognizedTask`.
 
-Next, the Helper checks that:
+* Whether it recognizes the indicated aggregation job ID. If not, the Helper
+  MUST fail the job with error `unrecognizedAggregationJob`.
 
-1. `AggregationJobContinueReq.step` is not equal to `0`
-1. the report IDs are all distinct
-1. each report ID corresponds to one of the `state` objects
+* Whether `AggregationJobContinueReq.step` is equal to `0`. If so, the Helper
+  MUST fail the job with error `invalidMessage`.
 
-If any of these checks fail, then the Helper MUST fail the job with error
-`invalidMessage`. Additionally, if any prep step appears out of order relative
-to the previous request, then the Helper MAY fail the job with error
-`invalidMessage`. A report may be missing, in which case the Helper assumes the
-Leader rejected it and removes it from the candidate set.
+* Whether the report IDs are all distinct and each report ID corresponds to one
+  of the `state` objects. If either of these checks fail, then the Helper MUST
+  fail the job with error `invalidMessage`.
+
+Additionally, if any prep step appears out of order relative to the previous
+request, then the Helper MAY fail the job with error `invalidMessage`. A report
+may be missing, in which case the Helper assumes the Leader rejected it and
+removes it from the candidate set.
 
 Next, the Helper checks the continuation step indicated by the request. If the
 `step` value is one greater than the job's current step, then the Helper
@@ -2798,29 +2804,31 @@ If the job fails with `invalidBatchSize`, then the Collector MAY retry it later,
 once it believes enough new reports have been uploaded and aggregated to allow
 the collection job to succeed.
 
-The Leader begins handling a `CollectionJobReq` by checking that it recognizes
-the task ID. If not, it MUST fail the collection job with error
-`unrecognizedTask`.
+The Leader begins handling a `CollectionJobReq` by checking the following
+conditions:
 
-Next, the Leader checks that the indicated batch mode matches the task's batch
-mode. If not, it MUST fail the job with error `invalidMessage`.
+* Whether it recognizes the task ID. If not, the Leader MUST fail the collection
+  job with error `unrecognizedTask`.
 
-Next, the Leader checks that the aggregation parameter is valid as described in
-{{agg-param-validation}}. If not, it MUST fail the job with error
-`invalidAggregationParameter`.
+* Whether the indicated batch mode matches the task's batch mode. If not, the
+  Leader MUST fail the job with error `invalidMessage`.
 
-The Leader then checks whether the `Query` in the Collector's request determines
-a batch that can be collected. If the query does not identify a valid set of
-batch buckets according to the criteria defined by the batch mode in use
-({{batch-modes}}), then the Leader MUST fail the job with error `batchInvalid`.
+* Whether the aggregation parameter is valid as described in
+  {{agg-param-validation}}. If not, the Leader MUST fail the job with error
+  `invalidAggregationParameter`.
 
-If any of the batch buckets identified by the query have already been collected,
-then the Leader MUST fail the job with error `batchOverlap`.
+* Whether the `Query` in the Collector's request determines a batch that can be
+  collected. If the query does not identify a valid set of batch buckets
+  according to the criteria defined by the batch mode in use ({{batch-modes}}),
+  then the Leader MUST fail the job with error `batchInvalid`.
 
-If aggregation was performed eagerly ({{eager-aggregation}}), then the Leader
-checks that the aggregation parameter received in the `CollectionJobReq` matches
-the aggregation parameter used in each aggregation job pertaining to the batch.
-If not, the Leader MUST fail the job with error `invalidMessage`.
+* Whether any of the batch buckets identified by the query have already been
+  collected, then the Leader MUST fail the job with error `batchOverlap`.
+
+* If aggregation was performed eagerly ({{eager-aggregation}}), then the Leader
+  checks that the aggregation parameter received in the `CollectionJobReq`
+  matches the aggregation parameter used in each aggregation job pertaining to
+  the batch. If not, the Leader MUST fail the job with error `invalidMessage`.
 
 Having validated the `CollectionJobReq`, the Leader begins working with the
 Helper to aggregate the reports satisfying the query (or continues this process,
