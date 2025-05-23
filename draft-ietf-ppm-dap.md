@@ -2136,13 +2136,11 @@ is "application/dap-aggregation-job-resp".
 The Helper may receive multiple copies of a given initialization request due to
 the retry mechanism specified in {{leader-init}}. The Helper MUST verify that
 subsequent requests have the same `AggregationJobInitReq` value and abort with a
-client error if they do not.  It is illegal to rewind or reset the state of an
+client error if they do not. It is illegal to rewind or reset the state of an
 aggregation job. If the Helper receives requests to initialize an aggregation
 job once it has been continued at least once, confirming that the Leader
 received the Helper's response (see {{agg-continue-flow}}), it MUST abort with a
-client error.  For all other duplicate initialization requests, the Helper
-SHOULD respond as it did for the original `AggregationJobInitReq`.
-
+client error.
 
 #### Input Share Decryption {#input-share-decryption}
 
