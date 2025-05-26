@@ -4803,8 +4803,8 @@ The initial contents of this registry are listed below in {{report-error-id}}.
 | `0x07` | `task_expired`           | {{basic-definitions}} of RFX XXXX |
 | `0x08` | `invalid_message`        | {{basic-definitions}} of RFX XXXX |
 | `0x09` | `report_too_early`       | {{basic-definitions}} of RFX XXXX |
-| `0xA`  | `task_not_started`       | {{basic-definitions}} of RFX XXXX |
-| `0xB`  | `outdated_config`        | {{basic-definitions}} of RFX XXXX |
+| `0x0A` | `task_not_started`       | {{basic-definitions}} of RFX XXXX |
+| `0x0B` | `outdated_config`        | {{basic-definitions}} of RFX XXXX |
 {: #report-error-id title="Initial contents of the Report Error Identifiers registry."}
 
 ## URN Sub-namespace for DAP (urn:ietf:params:ppm:dap) {#urn-space}
