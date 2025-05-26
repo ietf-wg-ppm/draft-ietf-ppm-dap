@@ -1573,22 +1573,22 @@ Content-Type: application/dap-report-req
 
 encoded(struct {
   reports = [struct {
-    report_metadata = struct {
-      report_id = [0x0a, 0x0b, 0x0c, 0x0d, ...],
-      time = 1741986088,
-      public_extensions = [0x00, 0x00],
-    } ReportMetadata,
-    public_share = [0x0a, 0x0b, ...],
-    leader_encrypted_input-share = struct {
-      config_id = 1,
-      enc = [0x0f, 0x0e, 0x0d, 0x0c, ...],
-      payload = [0x0b, 0x0a, 0x09, 0x08, ...],
-    } HpkeCiphertext,
-    helper_encrypted_input-share = struct {
-      config_id = 2,
-      enc = [0x0c, 0x0d, 0x0e, 0x0f, ...],
-      payload = [0x08, 0x00, 0x0a, 0x0b, ...],
-    } HpkeCiphertext,
+      report_metadata = struct {
+        report_id = [0x0a, 0x0b, 0x0c, 0x0d, ...],
+        time = 1741986088,
+        public_extensions = [0x00, 0x00],
+      } ReportMetadata,
+      public_share = [0x0a, 0x0b, ...],
+      leader_encrypted_input-share = struct {
+        config_id = 1,
+        enc = [0x0f, 0x0e, 0x0d, 0x0c, ...],
+        payload = [0x0b, 0x0a, 0x09, 0x08, ...],
+      } HpkeCiphertext,
+      helper_encrypted_input-share = struct {
+        config_id = 2,
+        enc = [0x0c, 0x0d, 0x0e, 0x0f, ...],
+        payload = [0x08, 0x00, 0x0a, 0x0b, ...],
+      } HpkeCiphertext,
     } Report
   ]
 } UploadRequest)
