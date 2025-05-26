@@ -1389,7 +1389,7 @@ struct {
 } Report;
 
 struct {
-  Report reports<0..2^32-1>;
+  Report reports[2^32-1];
 } UploadRequest;
 ~~~
 
@@ -1507,7 +1507,7 @@ struct {
 } ReportUploadStatus;
 
 struct {
-  ReportUploadStatus status<0..2^32-1>;
+  ReportUploadStatus status[2^32-1];
 } UploadResponse;
 ~~~
 
