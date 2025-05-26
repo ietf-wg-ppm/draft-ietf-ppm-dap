@@ -1490,6 +1490,16 @@ struct {
 } InputShareAad;
 ~~~
 
+If the upload request is malformed, the Leader aborts with error
+`invalidMessage`.
+
+If the Leader does not recognize the task ID, then it aborts with error
+`unrecognizedTask`.
+
+Otherwise, the Leader responds with a body consisting of an `UploadResponse` and
+the media type `application/dap-report-resp`. The structure of the response
+is shown below:
+
 ~~~ tls-presentation
 struct {
   ReportID id;
@@ -1501,16 +1511,8 @@ struct {
 } UploadResponse;
 ~~~
 
-If the upload request is malformed, the Leader aborts with error
-`invalidMessage`.
-
-If the Leader does not recognize the task ID, then it aborts with error
-`unrecognizedTask`.
-
-Otherwise, the Leader responds with a body consisting of an `UploadResponse` and
-the media type `application/dap-report-resp`. The Leader only includes reports
-that failed processing in the response. Reports that are accepted do not
-have a response.
+The Leader only includes reports that failed processing in the response.
+Reports that are accepted do not have a response.
 
 Reports in the response follow the same order as specified in the request.
 
