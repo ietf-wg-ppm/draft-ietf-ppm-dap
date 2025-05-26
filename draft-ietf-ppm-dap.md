@@ -1509,10 +1509,14 @@ If the Leader does not recognize the task ID, then it aborts with error
 
 Otherwise, the Leader responds with a body consisting of an `UploadResponse` and
 the media type `application/dap-report-resp`. The Leader only includes reports
-that failed processing in the response. For each report that failed to upload,
-the Leader creates a `ReportUploadStatus` struct and includes the `ReportId`
-from the input and a `ReportError` {{basic-definitions}} that describes the
-failure.
+that failed processing in the response. Reports that are accepted do not
+have a response.
+
+Reports in the response follow the same order as specified in the request.
+
+For each report that failed to upload, the Leader creates a
+`ReportUploadStatus` struct and includes the `ReportId` from the input and a
+`ReportError` {{basic-definitions}} that describes the failure.
 
 If the Leader does not recognize the `config_id` in the encrypted input share,
 it sets the error field to `outdated_config`
