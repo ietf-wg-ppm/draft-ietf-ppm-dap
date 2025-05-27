@@ -1218,7 +1218,7 @@ servers can appropriately allocate resources for long-running transactions.
 
 In DAP, an HTTP server indicates that it is deferring the handling of a request
 by immediately sending an empty response body with a successful status code
-({{!RFC9110, Section 15.3}}. The response SHOULD include a Retry-After field
+({{!RFC9110, Section 15.3}}). The response SHOULD include a Retry-After field
 ({{!RFC9110, Section 10.2.3}}) to suggest a polling interval to the HTTP client.
 The HTTP client then polls the state of the resource by sending GET requests to
 the resource URL. In some interactions, the HTTP server will include a Location
