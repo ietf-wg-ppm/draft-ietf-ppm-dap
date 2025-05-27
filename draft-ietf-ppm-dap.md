@@ -1371,7 +1371,7 @@ encoded([
 ### Upload Request
 
 Clients upload reports by sending a POST to `{leader}/tasks/{task-id}/reports`.
-The body is a `UploadRequest`, with media type "application/dap-report-req", structured as
+The body is a `UploadRequest`, with media type "application/dap-upload-req", structured as
 follows:
 
 ~~~ tls-presentation
@@ -1497,7 +1497,7 @@ If the Leader does not recognize the task ID, then it aborts with error
 `unrecognizedTask`.
 
 Otherwise, the Leader responds with a body consisting of an `UploadResponse` and
-the media type `application/dap-report-resp`. The structure of the response
+the media type `application/dap-upload-resp`. The structure of the response
 is shown below:
 
 ~~~ tls-presentation
@@ -1575,7 +1575,7 @@ Successful upload
 ~~~ http
 POST /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/reports
 Host: example.com
-Content-Type: application/dap-report-req
+Content-Type: application/dap-upload-req
 
 encoded(struct {
   reports = [struct {
@@ -1607,7 +1607,7 @@ Failed upload of 1/2 reports submitted in one bulk upload
 ~~~ http
 POST /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/reports
 Host: example.com
-Content-Type: application/dap-report-req
+Content-Type: application/dap-upload-req
 
 encoded(struct {
   reports = [struct {
@@ -1651,7 +1651,7 @@ encoded(struct {
 } UploadRequest)
 
 HTTP/1.1 200
-Content-Type: application/dap-report-resp
+Content-Type: application/dap-upload-resp
 
 encoded(struct {
   reports = [
@@ -3984,8 +3984,8 @@ This specification defines the following protocol messages, along with their
 corresponding media types:
 
 - HpkeConfigList {{hpke-config}}: "application/dap-hpke-config-list"
-- UploadRequest {{upload-request}}: "application/dap-report-req"
-- UploadResponse {{upload-request}}: "application/dap-report-resp"
+- UploadRequest {{upload-request}}: "application/dap-upload-req"
+- UploadResponse {{upload-request}}: "application/dap-upload-resp"
 - AggregationJobInitReq {{leader-init}}: "application/dap-aggregation-job-init-req"
 - AggregationJobResp {{aggregation-helper-init}}: "application/dap-aggregation-job-resp"
 - AggregationJobContinueReq {{aggregation-leader-continuation}}: "application/dap-aggregation-job-continue-req"
@@ -4008,7 +4008,7 @@ component is using. This MAY be used as a hint by the receiver of the request
 to do compatibility checks between client and server.
 For example, A report submission to leader from a client that supports
 draft-ietf-ppm-dap-09 could have the header
-`Content-Type: application/dap-report-req;version=09`.
+`Content-Type: application/dap-upload-req;version=09`.
 
 The "Media Types" registry at https://www.iana.org/assignments/media-types will
 be (RFC EDITOR: replace "will be" with "has been") updated to include each of
@@ -4086,7 +4086,7 @@ Change controller:
 
 : IESG
 
-### "application/dap-report-req" media type
+### "application/dap-upload-req" media type
 
 Type name:
 
@@ -4157,7 +4157,7 @@ Change controller:
 
 : IESG
 
-### "application/dap-report-resp" media type
+### "application/dap-upload-resp" media type
 
 Type name:
 
