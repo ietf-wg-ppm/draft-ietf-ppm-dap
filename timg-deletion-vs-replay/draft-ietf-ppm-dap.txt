@@ -2847,7 +2847,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    it SHOULD let the Helper know it can clean up its state by sending a
    DELETE request to the job.  Deletion of an aggregation job MUST NOT
    delete information needed for replay or double collection checks
-   (Section 2.3).
+   (Section 4.6.3.3).
 
 4.6.4.1.  Example
 
@@ -3140,7 +3140,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    discard state related to it.
 
    Aggregators MUST NOT delete information needed for replay or double
-   collection checks (Section 2.3).
+   collection checks (Section 4.6.3.3).
 
    Collectors MUST authenticate their requests to Leaders using a scheme
    that meets the requirements in Section 3.3.
@@ -3394,7 +3394,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    discard state related to it.
 
    Aggregators MUST NOT delete information needed for replay or double
-   collection checks (Section 2.3).
+   collection checks (Section 4.6.3.3).
 
    Leaders MUST authenticate their requests to Helpers using a scheme
    that meets the requirements in Section 3.3.
