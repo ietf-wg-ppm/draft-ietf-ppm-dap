@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 23 November 2025                                     Cloudflare
+Expires: 28 November 2025                                     Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                             22 May 2025
+                                                             27 May 2025
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -64,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 23 November 2025.
+   This Internet-Draft will expire on 28 November 2025.
 
 Copyright Notice
 
@@ -2268,9 +2268,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    job.  If the Helper receives requests to initialize an aggregation
    job once it has been continued at least once, confirming that the
    Leader received the Helper's response (see Section 4.6.3), it MUST
-   abort with a client error.  For all other duplicate initialization
-   requests, the Helper SHOULD respond as it did for the original
-   AggregationJobInitReq.
+   abort with a client error.
 
 4.6.2.3.  Input Share Decryption
 
