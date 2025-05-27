@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 24 November 2025                                     Cloudflare
+Expires: 28 November 2025                                     Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                             23 May 2025
+                                                             27 May 2025
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -64,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 24 November 2025.
+   This Internet-Draft will expire on 28 November 2025.
 
 Copyright Notice
 
@@ -2562,11 +2562,11 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    If commitment succeeds, the Helper's response depends on whether the
    state includes an outbound message that needs to be processed.  If
-   state has type Continued or FinishedWithOutbound then the Helper's
-   sets PrepareResp.prepare_resp_type to continue and
-   PrepareResp.payload to state.outbound.
+   state has type Continued or FinishedWithOutbound then the Helper sets
+   PrepareResp.prepare_resp_type to continue and PrepareResp.payload to
+   state.outbound.
 
-   Otherwise, if state has type Finished, then the Helper's sets
+   Otherwise, if state has type Finished, then the Helper sets
    PrepareResp.prepare_resp_type to finish.
 
    Once the Helper has computed a PrepareResp for every report, the
