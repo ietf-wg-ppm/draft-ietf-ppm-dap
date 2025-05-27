@@ -1183,7 +1183,7 @@ interaction ({{collect-flow}}). Information used to guide batch selection is
 conveyed from the Leader to the Helper when initializing aggregation jobs
 ({{aggregate-flow}}) and finalizing the aggregate shares.
 
-## Resource URLs
+## Resources {#http-resources}
 
 DAP is defined in terms of HTTP resources, such as reports ({{upload-flow}}),
 aggregation jobs ({{aggregate-flow}}), and collection jobs ({{collect-flow}}).
@@ -1207,6 +1207,38 @@ For example, given a helper URL "https://example.com/api/dap", task ID "f0 16 34
 `{helper}/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}` would be
 expanded into
 `https://example.com/api/dap/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA`.
+
+Protocol participants act on resources using HTTP requests, which follow the
+semantics laid out in {{!RFC9110}}, in particular with regard to safety and
+idempotence of HTTP methods ({{Sections 9.2.1 and 9.2.2 of !RFC9110}},
+respectively).
+
+Many of the protocol's interactions MAY be handled asynchronously so that
+servers can appropriately allocate resources for long-running transactions.
+
+In DAP, an HTTP server indicates that it is deferring the handling of a request
+by immediately sending an empty response body with a successful status code
+({{!RFC9110, Section 15.3}}. The response SHOULD include a Retry-After field
+({{!RFC9110, Section 10.2.3}}) to suggest a polling interval to the HTTP client.
+The HTTP client then polls the state of the resource by sending GET requests to
+the resource URL. In some interactions, the HTTP server will include a Location
+header field ({{!RFC9110, Section 10.2.2}}) that the HTTP client MUST resolve
+against the HTTP server's base API URL to obtain the resource URL. Otherwise the
+resource URL is the URL to which the HTTP client initially sent its request.
+
+The HTTP client SHOULD use each response's Retry-After header field to decide
+when to try again. The HTTP server responds the same way as it did to the
+initial request until either the resource is ready, from which point it responds
+with the resource's representation ({{!RFC9110, Section 3.2}}), or the request
+fails, in which case it MUST abort with the error that caused the failure.
+
+The HTTP server MAY instead handle the request immediately. It waits to respond
+to the HTTP client's request until the resource is ready, in which case it
+responds with the resource's representation, or the request fails, in which case
+it MUST abort with the error that caused the failure.
+
+HTTP clients MUST be ready for either asynchronous or synchronous request
+handling.
 
 ## Aggregation Parameter Validation {#agg-param-validation}
 
@@ -1819,14 +1851,8 @@ This message consists of:
 
 The Leader sends the `AggregationJobInitReq` in the body of a PUT request to the
 aggregation job with a media type of "application/dap-aggregation-job-init-req".
-
-If the Helper responds with an `AggregationJobResp` (see
-{{aggregation-helper-init}}), then the Leader proceeds onward. If the request
-succeeds but the response body is empty, the Leader polls the aggregation job by
-resolving the Location header field ({{!RFC9110, Section 10.2.2}}) against the
-`{helper}` URL and sending GET requests to that URL until it receives an
-`AggregationJobResp`. The Leader SHOULD use each response's Retry-After header
-field ({{!RFC9110, Section 10.2.3}}) to decide when to try again.
+The Leader handles the response(s) as described in {{http-resources}} to obtain
+an `AggregationJobResp`.
 
 The `AggregationJobResp.prepare_resps` field must include exactly the same
 report IDs in the same order as the Leader's `AggregationJobInitReq`. Otherwise,
@@ -1884,11 +1910,6 @@ Since VDAF preparation completes in a constant number of rounds, it will never
 be the case that preparation is complete for some of the reports in an
 aggregation job but not others.
 
-If the Leader fails to process the response from the Helper, for example because
-of a transient failure such as a network connection failure or process crash,
-the Leader SHOULD re-send the original request unmodified in order to attempt
-recovery (see {{aggregation-step-skew-recovery}}).
-
 #### Helper Initialization {#aggregation-helper-init}
 
 ~~~ aasvg
@@ -1907,22 +1928,12 @@ attempts to initialize VDAF preparation (see {{Section 5.1 of !VDAF}}) just as
 the Leader does. If successful, it includes the result in its response for the
 Leader to use to continue preparing the report.
 
-The Helper MAY defer handling the initialization request. In this case, it
-indicates that the job is not yet ready by immediately sending an empty response
-body and sets a Location header field ({{!RFC9110, Section 10.2.2}}) set to the
-relative reference
-`/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}?step=0`. The response
-SHOULD include a Retry-After header field ({{!RFC9110, Section 10.2.3}}) to
-suggest a polling interval to the Leader. The Leader then polls the state of the
-job by sending GET requests to the resolved URL. The Helper responds the same
-way until either the job is ready, from which point it responds with the
-`AggregationJobResp` (defined below), or the job fails, from which point it MUST
-abort with the error that caused the failure.
-
-The Helper MAY instead handle the request immediately. It waits to respond to
-the Leader's PUT until the aggregation job initialization is ready, in which
-case it responds with the`AggregationJobResp`, or the job fails, in which case
-the Helper MUST abort with the error that caused the failure.
+The initialization request can be handled either asynchronously or synchronously
+as described in {{http-resources}}. When indicating that the job is not yet
+ready, the response MUST include a Location header field ({{!RFC9110, Section
+10.2.2}}) set to the relative reference
+`/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}?step=0`. When the job is
+ready, the Helper responds with the `AggregationJobResp` (defined below).
 
 Upon receipt of an `AggregationJobInitReq`, the Helper checks the following
 conditions:
@@ -2046,14 +2057,13 @@ computed in the previous step. The order MUST match
 `AggregationJobInitReq.prepare_inits`. The media type for `AggregationJobResp`
 is "application/dap-aggregation-job-resp".
 
-The Helper may receive multiple copies of a given initialization request due to
-the retry mechanism specified in {{leader-init}}. The Helper MUST verify that
-subsequent requests have the same `AggregationJobInitReq` value and abort with a
-client error if they do not. It is illegal to rewind or reset the state of an
-aggregation job. If the Helper receives requests to initialize an aggregation
-job once it has been continued at least once, confirming that the Leader
-received the Helper's response (see {{agg-continue-flow}}), it MUST abort with a
-client error.
+The Helper may receive multiple copies of a given initialization request. The
+Helper MUST verify that subsequent requests have the same
+`AggregationJobInitReq` value and abort with a client error if they do not. It
+is illegal to rewind or reset the state of an aggregation job. If the Helper
+receives requests to initialize an aggregation job once it has been continued at
+least once, confirming that the Leader received the Helper's response (see
+{{agg-continue-flow}}), it MUST abort with a client error.
 
 #### Input Share Decryption {#input-share-decryption}
 
@@ -2259,13 +2269,8 @@ preparation continuation messages constructed in the previous step. The
 the aggregation job, omitting any reports that were previously rejected by
 either Aggregator.
 
-If the Helper responds with an `AggregationJobResp` (see
-{{aggregation-helper-init}}), then the Leader proceeds onward. If the request
-succeeds but the response body is empty, the Leader polls the aggregation job by
-resolving the Location header field ({{!RFC9110, Section 10.2.2}}) against the
-`{helper}` URL and sending GET requests to that URL until it receives an
-`AggregationJobResp`. The Leader SHOULD use each response's Retry-After header
-field ({{!RFC9110, Section 10.2.3}}) to decide when to try again.
+The Leader handles the response(s) as described in {{http-resources}} to obtain
+an `AggregationJobResp`.
 
 The response's `prepare_resps` MUST include exactly the same report IDs in the
 same order as the Leader's `AggregationJobContinueReq`. Otherwise, the Leader
@@ -2343,23 +2348,13 @@ The Helper begins continuation with a `state` object for each report in
 the candidate set, each of which has type `Continued`. The Helper waits for the
 Leader to POST an `AggregationJobContinueReq` to the aggregation job.
 
-The Helper MAY defer handling the continuation request. In this case, it
-indicates that the job continuation is not yet ready by immediately sending an
-empty response body and sets the Location header field ({{!RFC9110, Section
+The continuation request can be handled either asynchronously or synchronously
+as described in {{http-resources}}. When indicating that the job is not yet
+ready, the response MUST include a Location header field ({{!RFC9110, Section
 10.2.2}}) to the relative reference
 `/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}?step={step}`, where
-`step` is set to `AggregationJobContinueReq.step`. The response SHOULD include a
-Retry-After header field ({{!RFC9110, Section 10.2.3}}) to suggest a polling
-interval to the Leader. The Leader then polls the state of the job by sending
-GET requests to the resolved URL. The Helper responds the same way until either
-the job is ready, from which point it responds with the `AggregationJobResp`, or
-the job fails, from which point it MUST abort with the error that caused the
-failure.
-
-The Helper MAY instead handle the request immediately. It waits to respond to
-the Leader's POST until the aggregation job continuation is ready, in which
-case it responds with the `AggregationJobResp`, or the job fails, in which case
-it MUST abort with the error that caused the failure.
+`step` is set to `AggregationJobContinueReq.step`. The representation of the
+aggregation job is an `AggregationJobResp`.
 
 To begin handling an `AggregationJobContinueReq`, the Helper checks the
 following conditions:
@@ -2386,12 +2381,13 @@ Next, the Helper checks the continuation step indicated by the request. If the
 `step` value is one greater than the job's current step, then the Helper
 proceeds.
 
-If it is equal to the current step (e.g., the Leader has resent the previous
-request), then the Helper MAY attempt to recover by sending the same response as
-it did for the previous `AggregationJobContinueReq`, without performing any
-additional work on the aggregation job. In this case it SHOULD verify that the
-contents of the `AggregationJobContinueReq` are identical to the previous
-message (see {{aggregation-step-skew-recovery}}).
+The Helper may receive multiple copies of a continuation request for a given
+step. The Helper MAY attempt to recover by sending the same response as it did
+for the previous `AggregationJobContinueReq`, without performing any additional
+work on the aggregation job. It is illegal to rewind or reset the state of an
+aggregation job, so in this case it MUST verify that the contents of the
+`AggregationJobContinueReq` are identical to the previous message (see
+{{aggregation-step-skew-recovery}}).
 
 If the Helper does not wish to attempt recovery, or if the step has some other
 value, the Helper MUST fail the job with error `stepMismatch`.
@@ -2666,21 +2662,9 @@ aggregation parameter is not known until this point. In certain situations it is
 possible to predict the aggregation parameter in advance. For example, for Prio3
 the only valid aggregation parameter is the empty string.
 
-The Leader MAY defer handling the collection request. In this case, it indicates
-that the collection job is not yet ready by immediately sending an empty
-response body. The Leader SHOULD include a Retry-After header field ({{!RFC9110,
-Section 10.2.3}}) to suggest a polling interval to the Collector. The Collector
-then polls the state of the job by sending GET requests to the collection job.
-The Collector SHOULD use each response's Retry-After header field to decide when
-to try again. The Leader responds the same way until either the job is ready,
-from which point it responds with a `CollectionJobResp` (defined below), or the
-job fails, from which point the Leader MUST abort with the error that caused the
-failure.
-
-The Leader MAY instead handle the request immediately. It waits to respond to
-the Collector's PUT until the collection job is ready, in which case it responds
-with the `CollectionJobResp`, or the job fails, in which case the Leader MUST
-abort with the error that caused the failure.
+The collection request can be handled either asynchronously or synchronously as
+described in {{http-resources}}. The representation of the collection job is a
+`CollectionJobResp` (defined below).
 
 If the job fails with `invalidBatchSize`, then the Collector MAY retry it later,
 once it believes enough new reports have been uploaded and aggregated to allow
@@ -2961,21 +2945,9 @@ The structure contains the following parameters:
 
 * `checksum`: The batch checksum, as computed above.
 
-The Helper MAY defer handling the aggregate share request. In this case, it
-indicates that the aggregate share is not yet ready by immediately sending an
-empty response body. The Helper SHOULD include a Retry-After header field
-({{!RFC9110, Section 10.2.3}}) to suggest a polling interval to the Leader. The
-Leader then polls the state of the job by sending GET requests to the aggregate
-share. The Leader SHOULD use each response's Retry-After header field to decide
-when to try again. The Helper responds the same way until either the share is
-ready, from which point it responds with the `AggregateShare` (defined below),
-or the job fails, from which point it MUST abort with the error that caused the
-failure.
-
-The Helper MAY instead handle the request immediately. It waits to respond to
-the Leader's PUT until the aggregate share is ready, in which case, it responds
-with the `AggregateShare` (defined below), or the job fails, in which case it
-MUST abort with the error that caused the failure.
+The aggregate share request can be handled either asynchronously or
+synchronously as described in {{http-resources}}. The representation of the
+share is an `AggregateShare` (defined below).
 
 The Helper first ensures that it recognizes the task ID. If not, it MUST fail
 the job with error `unrecognizedTask`.
