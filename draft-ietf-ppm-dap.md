@@ -2587,7 +2587,8 @@ encoded(struct { prepare_resps } AggregationJobResp)
 
 If for whatever reason, the Leader must abandon an aggregation job, it SHOULD
 let the Helper know it can clean up its state by sending a DELETE request to the
-job.
+job. Deletion of an aggregation job MUST NOT delete information needed for
+replay or double collection checks ({{replay-protection}}).
 
 #### Example
 
@@ -2877,8 +2878,11 @@ encoded(struct {
 ### Collection Job Deletion
 
 The Collector can send a DELETE request to the collection job, which indicates
-to the Leader that it can abandon the collection job and discard all state
-related to it.
+to the Leader that it can abandon the collection job and discard state related
+to it.
+
+Aggregators MUST NOT delete information needed for replay or double collection
+checks ({{replay-protection}}).
 
 Collectors MUST authenticate their requests to Leaders using a scheme that meets
 the requirements in {{request-authentication}}.
@@ -3126,8 +3130,11 @@ encoded(struct {
 ### Aggregate Share Deletion
 
 The Leader can send a DELETE request to the aggregate share, which indicates to
-the Helper that it can abandon the aggregate share and discard all state related
-to it.
+the Helper that it can abandon the aggregate share and discard state related to
+it.
+
+Aggregators MUST NOT delete information needed for replay or double collection
+checks ({{replay-protection}}).
 
 Leaders MUST authenticate their requests to Helpers using a scheme that meets
 the requirements in {{request-authentication}}.
