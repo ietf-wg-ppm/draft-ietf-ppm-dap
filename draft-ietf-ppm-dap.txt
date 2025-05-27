@@ -1826,7 +1826,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
                              +----> Rejected (*reject)
 
          Figure 4: Leader state transition triggered by aggregation
-              initialization. (\*) indicates a terminal state.
+              initialization. (*) indicates a terminal state.
 
    The Leader begins an aggregation job by choosing a set of candidate
    reports that belong to the same task and a job ID which MUST be
@@ -2024,7 +2024,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
                  +--> Rejected (*reject)
 
          Figure 5: Helper state transition triggered by aggregation
-              initialization. (\*) indicates a terminal state.
+              initialization. (*) indicates a terminal state.
 
    The Helper begins an aggregation job when it receives an
    AggregationJobInitReq message from the Leader.  For each PrepareInit
@@ -2348,7 +2348,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
                              +----> (*reject)
 
          Figure 6: Leader state transition triggered by aggregation
-               continuation. (\*) indicates a terminal state.
+               continuation. (*) indicates a terminal state.
 
    The Leader begins each step of aggregation continuation with a prep
    state object state for each report in the candidate set.  Either all
@@ -2470,7 +2470,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
                   +----> Rejected (reject*)
 
          Figure 7: Helper state transition triggered by aggregation
-               continuation. (\*) indicates a terminal state.
+               continuation. (*) indicates a terminal state.
 
    The Helper begins continuation with a state object for each report in
    the candidate set, each of which has type Continued.  The Helper
