@@ -929,6 +929,16 @@ This flexibility allows organizations deploying DAP to use authentication
 mechanisms that they already support. Discovering what authentication mechanisms
 are supported by a participant is outside of this document's scope.
 
+Request authentication is REQUIRED in the following interactions:
+
+* Leaders initializing or continuing aggregation jobs with Helpers
+  ({{aggregate-flow}}).
+
+* Collectors initializing or polling collection jobs with Leaders
+  ({{collect-init}}).
+
+* Leaders obtaining aggregate shares from Helpers ({{collect-aggregate}}).
+
 ## Errors
 
 Errors are reported as HTTP status codes. Any of the standard client or server
@@ -1810,9 +1820,6 @@ This message consists of:
 The Leader sends the `AggregationJobInitReq` in the body of a PUT request to the
 aggregation job with a media type of "application/dap-aggregation-job-init-req".
 
-The Leader MUST authenticate its requests to the Helper using a scheme that
-meets the requirements in {{request-authentication}}.
-
 If the Helper responds with an `AggregationJobResp` (see
 {{aggregation-helper-init}}), then the Leader proceeds onward. If the request
 succeeds but the response body is empty, the Leader polls the aggregation job by
@@ -2252,9 +2259,6 @@ preparation continuation messages constructed in the previous step. The
 the aggregation job, omitting any reports that were previously rejected by
 either Aggregator.
 
-The Leader MUST authenticate its requests to the Helper using a scheme that
-meets the requirements in {{request-authentication}}.
-
 If the Helper responds with an `AggregationJobResp` (see
 {{aggregation-helper-init}}), then the Leader proceeds onward. If the request
 succeeds but the response body is empty, the Leader polls the aggregation job by
@@ -2652,9 +2656,6 @@ struct {
 * `agg_param`, an aggregation parameter for the VDAF being executed. This is
   the same value as in `AggregationJobInitReq` (see {{leader-init}}).
 
-Collectors MUST authenticate their requests to Leaders using a scheme that meets
-the requirements in {{request-authentication}}.
-
 Depending on the VDAF scheme and how the Leader is configured, the Leader and
 Helper may already have prepared a sufficient number of reports satisfying the
 query and be ready to return the aggregate shares right away. However, this is
@@ -2884,9 +2885,6 @@ to it.
 Aggregators MUST NOT delete information needed for replay or double collection
 checks ({{batch-buckets}}).
 
-Collectors MUST authenticate their requests to Leaders using a scheme that meets
-the requirements in {{request-authentication}}.
-
 #### Example
 
 ~~~ http
@@ -2962,9 +2960,6 @@ The structure contains the following parameters:
   computed above.
 
 * `checksum`: The batch checksum, as computed above.
-
-Leaders MUST authenticate their requests to Helpers using a scheme that meets
-the requirements in {{request-authentication}}.
 
 The Helper MAY defer handling the aggregate share request. In this case, it
 indicates that the aggregate share is not yet ready by immediately sending an
@@ -3135,9 +3130,6 @@ it.
 
 Aggregators MUST NOT delete information needed for replay or double collection
 checks ({{batch-buckets}}).
-
-Leaders MUST authenticate their requests to Helpers using a scheme that meets
-the requirements in {{request-authentication}}.
 
 #### Example
 
