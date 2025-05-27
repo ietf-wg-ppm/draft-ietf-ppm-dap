@@ -2744,7 +2744,9 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    If for whatever reason, the Leader must abandon an aggregation job,
    it SHOULD let the Helper know it can clean up its state by sending a
-   DELETE request to the job.
+   DELETE request to the job.  Deletion of an aggregation job MUST NOT
+   delete information needed for replay or double collection checks
+   (Section 4.6.3.3).
 
 4.6.4.1.  Example
 
@@ -3036,7 +3038,10 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    The Collector can send a DELETE request to the collection job, which
    indicates to the Leader that it can abandon the collection job and
-   discard all state related to it.
+   discard state related to it.
+
+   Aggregators MUST NOT delete information needed for replay or double
+   collection checks (Section 4.6.3.3).
 
    Collectors MUST authenticate their requests to Leaders using a scheme
    that meets the requirements in Section 3.3.
@@ -3287,7 +3292,10 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    The Leader can send a DELETE request to the aggregate share, which
    indicates to the Helper that it can abandon the aggregate share and
-   discard all state related to it.
+   discard state related to it.
+
+   Aggregators MUST NOT delete information needed for replay or double
+   collection checks (Section 4.6.3.3).
 
    Leaders MUST authenticate their requests to Helpers using a scheme
    that meets the requirements in Section 3.3.

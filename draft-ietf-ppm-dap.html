@@ -4946,7 +4946,8 @@ encoded(struct { prepare_resps } AggregationJobResp)
           </h4>
 <p id="section-4.6.4-1">If for whatever reason, the Leader must abandon an aggregation job, it <span class="bcp14">SHOULD</span>
 let the Helper know it can clean up its state by sending a DELETE request to the
-job.<a href="#section-4.6.4-1" class="pilcrow">¶</a></p>
+job. Deletion of an aggregation job <span class="bcp14">MUST NOT</span> delete information needed for
+replay or double collection checks (<a href="#batch-buckets" class="auto internal xref">Section 4.6.3.3</a>).<a href="#section-4.6.4-1" class="pilcrow">¶</a></p>
 <div id="example-4">
 <section id="section-4.6.4.1">
             <h5 id="name-example-5">
@@ -5266,10 +5267,12 @@ encoded(struct {
 <a href="#section-4.7.2" class="section-number selfRef">4.7.2. </a><a href="#name-collection-job-deletion" class="section-name selfRef">Collection Job Deletion</a>
           </h4>
 <p id="section-4.7.2-1">The Collector can send a DELETE request to the collection job, which indicates
-to the Leader that it can abandon the collection job and discard all state
-related to it.<a href="#section-4.7.2-1" class="pilcrow">¶</a></p>
-<p id="section-4.7.2-2">Collectors <span class="bcp14">MUST</span> authenticate their requests to Leaders using a scheme that meets
-the requirements in <a href="#request-authentication" class="auto internal xref">Section 3.3</a>.<a href="#section-4.7.2-2" class="pilcrow">¶</a></p>
+to the Leader that it can abandon the collection job and discard state related
+to it.<a href="#section-4.7.2-1" class="pilcrow">¶</a></p>
+<p id="section-4.7.2-2">Aggregators <span class="bcp14">MUST NOT</span> delete information needed for replay or double collection
+checks (<a href="#batch-buckets" class="auto internal xref">Section 4.6.3.3</a>).<a href="#section-4.7.2-2" class="pilcrow">¶</a></p>
+<p id="section-4.7.2-3">Collectors <span class="bcp14">MUST</span> authenticate their requests to Leaders using a scheme that meets
+the requirements in <a href="#request-authentication" class="auto internal xref">Section 3.3</a>.<a href="#section-4.7.2-3" class="pilcrow">¶</a></p>
 <div id="example-6">
 <section id="section-4.7.2.1">
             <h5 id="name-example-7">
@@ -5531,10 +5534,12 @@ encoded(struct {
 <a href="#section-4.7.4" class="section-number selfRef">4.7.4. </a><a href="#name-aggregate-share-deletion" class="section-name selfRef">Aggregate Share Deletion</a>
           </h4>
 <p id="section-4.7.4-1">The Leader can send a DELETE request to the aggregate share, which indicates to
-the Helper that it can abandon the aggregate share and discard all state related
-to it.<a href="#section-4.7.4-1" class="pilcrow">¶</a></p>
-<p id="section-4.7.4-2">Leaders <span class="bcp14">MUST</span> authenticate their requests to Helpers using a scheme that meets
-the requirements in <a href="#request-authentication" class="auto internal xref">Section 3.3</a>.<a href="#section-4.7.4-2" class="pilcrow">¶</a></p>
+the Helper that it can abandon the aggregate share and discard state related to
+it.<a href="#section-4.7.4-1" class="pilcrow">¶</a></p>
+<p id="section-4.7.4-2">Aggregators <span class="bcp14">MUST NOT</span> delete information needed for replay or double collection
+checks (<a href="#batch-buckets" class="auto internal xref">Section 4.6.3.3</a>).<a href="#section-4.7.4-2" class="pilcrow">¶</a></p>
+<p id="section-4.7.4-3">Leaders <span class="bcp14">MUST</span> authenticate their requests to Helpers using a scheme that meets
+the requirements in <a href="#request-authentication" class="auto internal xref">Section 3.3</a>.<a href="#section-4.7.4-3" class="pilcrow">¶</a></p>
 <div id="example-8">
 <section id="section-4.7.4.1">
             <h5 id="name-example-9">
