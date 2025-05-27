@@ -1389,7 +1389,7 @@ struct {
 } Report;
 
 struct {
-  Report reports[2^32-1];
+  Report reports[report_count];
 } UploadRequest;
 ~~~
 
@@ -1413,6 +1413,9 @@ Each upload request contains a sequence of `Report` messages constructed as foll
 * `leader_encrypted_input_share` is the Leader's encrypted input share.
 
 * `helper_encrypted_input_share` is the Helper's encrypted input share.
+
+The length of the sequence is specified at runtime, but it must not exceed
+2^32 - 1 bytes.
 
 Aggregators MAY require Clients to authenticate when uploading reports (see
 {{client-auth}}). If it is used, client authentication MUST use a scheme that
@@ -1507,7 +1510,7 @@ struct {
 } ReportUploadStatus;
 
 struct {
-  ReportUploadStatus status[2^32-1];
+  ReportUploadStatus status[status_count];
 } UploadResponse;
 ~~~
 
@@ -1518,7 +1521,8 @@ Reports in the response follow the same order as specified in the request.
 
 For each report that failed to upload, the Leader creates a
 `ReportUploadStatus` struct and includes the `ReportId` from the input and a
-`ReportError` {{basic-definitions}} that describes the failure.
+`ReportError` {{basic-definitions}} that describes the failure. The length of
+this sequence is always less than or equal to the length of the upload sequence.
 
 If the Leader does not recognize the `config_id` in the encrypted input share,
 it sets the error field to `outdated_config`
