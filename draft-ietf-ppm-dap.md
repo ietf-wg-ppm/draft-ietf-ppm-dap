@@ -3874,6 +3874,26 @@ document does not specify how to choose an appropriate minimum batch size, but
 an appropriate value may be determined from the differential privacy ({{dp}})
 parameters in use, if any.
 
+### Relaxing Replay Checks
+
+Aggregators are required to defend against replaying reports and double
+collection (see {{replay-protection}} and {{batch-buckets}}). However,
+statistical analyses like contingency tables require aggregating individual
+measurements multiple times. e.g. to measure both how many times users used
+feature _a_ and then how many times they did so while in geographical region
+_b_.
+
+DAP does not support doing this, but it is not necessarily unsafe. Deployments
+that extend DAP to support this type of analysis will have to consider several
+additional problems:
+
+- How many times can an individual measurement be collected without violating
+  the contributor's privacy?
+- Are the aggregators in the deployment capable of tracking not just whether a
+  measurement has been collected, but how many times?
+- If an aggregation involves intersecting sets of measurements, is the resulting
+  anonymity set large enough to protect individuals?
+
 ### Task Configuration Agreement and Consistency
 
 In order to execute a DAP task, it is necessary for all parties to ensure they
