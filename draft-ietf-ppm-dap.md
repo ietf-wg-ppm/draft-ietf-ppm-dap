@@ -1776,7 +1776,8 @@ Report --> Continued -----+----> Continued
                           |
                           +----> Rejected (*reject)
 ~~~
-{: #leader-init-state title="Leader state transition triggered by aggregation initialization. (\*) indicates a terminal state." }
+{: #leader-init-state title="Leader state transition triggered by aggregation
+initialization. (*) indicates a terminal state." }
 
 The Leader begins an aggregation job by choosing a set of candidate reports that
 belong to the same task and a job ID which MUST be unique within the task.
@@ -1962,7 +1963,8 @@ PrepareInit --+--> Continued
               |
               +--> Rejected (*reject)
 ~~~
-{: #helper-init-state title="Helper state transition triggered by aggregation initialization. (\*) indicates a terminal state." }
+{: #helper-init-state title="Helper state transition triggered by aggregation
+initialization. (*) indicates a terminal state." }
 
 The Helper begins an aggregation job when it receives an `AggregationJobInitReq`
 message from the Leader. For each `PrepareInit` in this message, the Helper
@@ -2305,7 +2307,8 @@ FinishedWithOutbound -----+----> (*commit)
                           |
                           +----> (*reject)
 ~~~
-{: #leader-cont-state title="Leader state transition triggered by aggregation continuation. (\*) indicates a terminal state." }
+{: #leader-cont-state title="Leader state transition triggered by aggregation
+continuation. (*) indicates a terminal state." }
 
 The Leader begins each step of aggregation continuation with a prep state
 object `state` for each report in the candidate set. Either all states
@@ -2425,7 +2428,8 @@ Continued -----+----> Continued
                |
                +----> Rejected (reject*)
 ~~~
-{: #helper-cont-state title="Helper state transition triggered by aggregation continuation. (\*) indicates a terminal state." }
+{: #helper-cont-state title="Helper state transition triggered by aggregation
+continuation. (*) indicates a terminal state." }
 
 The Helper begins continuation with a `state` object for each report in
 the candidate set, each of which has type `Continued`. The Helper waits for the
@@ -4717,7 +4721,8 @@ The initial contents of this registry listed in {{batch-mode-id}}.
 | `0x00` | `reserved`        | {{batch-modes}} of RFC XXXX                |
 | `0x01` | `time_interval`   | {{time-interval-batch-mode}} of RFC XXXX   |
 | `0x02` | `leader_selected` | {{leader-selected-batch-mode}} of RFC XXXX |
-{: #batch-mode-id title="Initial contents of the Batch Mode Identifiers registry."}
+{: #batch-mode-id title="Initial contents of the Batch Mode Identifiers
+registry."}
 
 ### Report Extension Registry
 
@@ -4739,7 +4744,8 @@ The initial contents of this registry are listed in {{upload-extension-id}}.
 | Value    | Name              | Reference |
 |:---------|:------------------|:----------|
 | `0x0000` | `reserved`        | RFC XXXX  |
-{: #upload-extension-id title="Initial contents of the Report Extension Identifiers registry."}
+{: #upload-extension-id title="Initial contents of the Report Extension
+Identifiers registry."}
 
 ### Report Error Registry {#report-error-reg}
 
@@ -4771,7 +4777,8 @@ The initial contents of this registry are listed below in {{report-error-id}}.
 | `0x08` | `invalid_message`        | {{aggregation-helper-init}} of RFX XXXX |
 | `0x09` | `report_too_early`       | {{aggregation-helper-init}} of RFX XXXX |
 | `0x10` | `task_not_started`       | {{aggregation-helper-init}} of RFX XXXX |
-{: #report-error-id title="Initial contents of the Report Error Identifiers registry."}
+{: #report-error-id title="Initial contents of the Report Error Identifiers
+registry."}
 
 ## URN Sub-namespace for DAP (urn:ietf:params:ppm:dap) {#urn-space}
 
