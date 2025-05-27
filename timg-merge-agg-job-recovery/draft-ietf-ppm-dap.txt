@@ -1328,15 +1328,15 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    In DAP, an HTTP server indicates that it is deferring the handling of
    a request by immediately sending an empty response body with a
-   successful status code ([RFC9110], Section 15.3.  The response SHOULD
-   include a Retry-After field ([RFC9110], Section 10.2.3) to suggest a
-   polling interval to the HTTP client.  The HTTP client then polls the
-   state of the resource by sending GET requests to the resource URL.
-   In some interactions, the HTTP server will include a Location header
-   field ([RFC9110], Section 10.2.2) that the HTTP client MUST resolve
-   against the HTTP server's base API URL to obtain the resource URL.
-   Otherwise the resource URL is the URL to which the HTTP client
-   initially sent its request.
+   successful status code ([RFC9110], Section 15.3).  The response
+   SHOULD include a Retry-After field ([RFC9110], Section 10.2.3) to
+   suggest a polling interval to the HTTP client.  The HTTP client then
+   polls the state of the resource by sending GET requests to the
+   resource URL.  In some interactions, the HTTP server will include a
+   Location header field ([RFC9110], Section 10.2.2) that the HTTP
+   client MUST resolve against the HTTP server's base API URL to obtain
+   the resource URL.  Otherwise the resource URL is the URL to which the
+   HTTP client initially sent its request.
 
    The HTTP client SHOULD use each response's Retry-After header field
    to decide when to try again.  The HTTP server responds the same way
