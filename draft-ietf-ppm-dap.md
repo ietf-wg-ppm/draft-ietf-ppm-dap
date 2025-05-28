@@ -1075,7 +1075,6 @@ enum {
 } ReportError;
 ~~~
 
-
 ### Times, Durations and Intervals {#timestamps}
 
 ~~~ tls-presentation
@@ -1371,7 +1370,7 @@ encoded([
 ### Upload Request
 
 Clients upload reports by sending a POST to `{leader}/tasks/{task-id}/reports`.
-The body is a `UploadRequest`, with media type "application/dap-upload-req", structured as
+The body is an `UploadRequest`, with media type "application/dap-upload-req", structured as
 follows:
 
 ~~~ tls-presentation
@@ -1517,16 +1516,15 @@ struct {
 The Leader only includes reports that failed processing in the response.
 Reports that are accepted do not have a response.
 
-Reports in the response follow the same order as specified in the request.
+Reports in the response MUST appear in the same order as in the request.
 
 For each report that failed to upload, the Leader creates a
 `ReportUploadStatus` struct and includes the `ReportId` from the input and a
-`ReportError` {{basic-definitions}} that describes the failure. The length of
+`ReportError` ({{basic-definitions}}) that describes the failure. The length of
 this sequence is always less than or equal to the length of the upload sequence.
 
 If the Leader does not recognize the `config_id` in the encrypted input share,
-it sets the error field to `outdated_config`
-(see {{aggregation-helper-init}}). When the Client receives an
+it sets the error field to `outdated_config`. When the Client receives an
 `outdated_config` error, it SHOULD invalidate any cached `HpkeConfigList` and
 retry with a freshly generated `Report`. If this retried upload does not
 succeed, the Client SHOULD abort and discontinue retrying.
@@ -1666,7 +1664,6 @@ encoded(struct {
   ]
 } UploadResponse)
 ~~~
-
 
 ### Report Extensions {#report-extensions}
 
