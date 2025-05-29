@@ -1213,7 +1213,7 @@ semantics laid out in {{!RFC9110}}, in particular with regard to safety and
 idempotence of HTTP methods ({{Sections 9.2.1 and 9.2.2 of !RFC9110}},
 respectively).
 
-Many of the protocol's interactions MAY be handled asynchronously so that
+Many of the protocol's interactions may be handled asynchronously so that
 servers can appropriately allocate resources for long-running transactions.
 
 In DAP, an HTTP server indicates that it is deferring the handling of a request
@@ -1229,16 +1229,16 @@ resource URL is the URL to which the HTTP client initially sent its request.
 The HTTP client SHOULD use each response's Retry-After header field to decide
 when to try again. The HTTP server responds the same way as it did to the
 initial request until either the resource is ready, from which point it responds
-with the resource's representation ({{!RFC9110, Section 3.2}}), or the request
-fails, in which case it MUST abort with the error that caused the failure.
+with the resource's representation ({{!RFC9110, Section 3.2}}), or handling the
+request fails, in which case it MUST abort with the error that caused the
+failure.
 
-The HTTP server MAY instead handle the request immediately. It waits to respond
+The HTTP server may instead handle the request immediately. It waits to respond
 to the HTTP client's request until the resource is ready, in which case it
-responds with the resource's representation, or the request fails, in which case
-it MUST abort with the error that caused the failure.
+responds with the resource's representation, or handling the request fails, in
+which case it MUST abort with the error that caused the failure.
 
-HTTP clients MUST be ready for either asynchronous or synchronous request
-handling.
+HTTP clients MUST support either asynchronous or synchronous request handling.
 
 ## Aggregation Parameter Validation {#agg-param-validation}
 
