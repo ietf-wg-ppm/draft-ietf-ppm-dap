@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 28 November 2025                                     Cloudflare
+Expires: 30 November 2025                                     Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                             27 May 2025
+                                                             29 May 2025
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -64,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 28 November 2025.
+   This Internet-Draft will expire on 30 November 2025.
 
 Copyright Notice
 
@@ -1322,7 +1322,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    to safety and idempotence of HTTP methods (Sections 9.2.1 and 9.2.2
    of [RFC9110], respectively).
 
-   Many of the protocol's interactions MAY be handled asynchronously so
+   Many of the protocol's interactions may be handled asynchronously so
    that servers can appropriately allocate resources for long-running
    transactions.
 
@@ -1342,17 +1342,17 @@ aggregation job 1                   aggregation job 2          aggregation job j
    to decide when to try again.  The HTTP server responds the same way
    as it did to the initial request until either the resource is ready,
    from which point it responds with the resource's representation
-   ([RFC9110], Section 3.2), or the request fails, in which case it MUST
-   abort with the error that caused the failure.
+   ([RFC9110], Section 3.2), or handling the request fails, in which
+   case it MUST abort with the error that caused the failure.
 
-   The HTTP server MAY instead handle the request immediately.  It waits
+   The HTTP server may instead handle the request immediately.  It waits
    to respond to the HTTP client's request until the resource is ready,
-   in which case it responds with the resource's representation, or the
-   request fails, in which case it MUST abort with the error that caused
-   the failure.
+   in which case it responds with the resource's representation, or
+   handling the request fails, in which case it MUST abort with the
+   error that caused the failure.
 
-   HTTP clients MUST be ready for either asynchronous or synchronous
-   request handling.
+   HTTP clients MUST support either asynchronous or synchronous request
+   handling.
 
 4.4.  Aggregation Parameter Validation
 
