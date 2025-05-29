@@ -1238,8 +1238,6 @@ to the HTTP client's request until the resource is ready, in which case it
 responds with the resource's representation, or handling the request fails, in
 which case it MUST abort with the error that caused the failure.
 
-HTTP clients MUST support either asynchronous or synchronous request handling.
-
 ## Aggregation Parameter Validation {#agg-param-validation}
 
 For each batch it collects, the Collector chooses an aggregation parameter used
