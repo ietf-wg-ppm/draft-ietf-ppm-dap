@@ -1351,9 +1351,6 @@ aggregation job 1                   aggregation job 2          aggregation job j
    handling the request fails, in which case it MUST abort with the
    error that caused the failure.
 
-   HTTP clients MUST support either asynchronous or synchronous request
-   handling.
-
 4.4.  Aggregation Parameter Validation
 
    For each batch it collects, the Collector chooses an aggregation
