@@ -1054,8 +1054,8 @@ in different situations.
 struct {} Empty;
 ~~~
 
-Errors that occurred during processing individual reports are represented
-by the following enum:
+Errors that occurred while handling individual reports in the upload or
+aggregation interactions are represented by the following enum:
 
 ~~~ tls-presentation
 enum {
@@ -1370,8 +1370,8 @@ encoded([
 ### Upload Request
 
 Clients upload reports by sending a POST to `{leader}/tasks/{task-id}/reports`.
-The body is an `UploadRequest`, with media type "application/dap-upload-req", structured as
-follows:
+The body is an `UploadRequest`, with media type "application/dap-upload-req",
+structured as follows:
 
 ~~~ tls-presentation
 struct {
@@ -1388,9 +1388,14 @@ struct {
 } Report;
 
 struct {
-  Report reports[report_count];
+  Report reports[message_length];
 } UploadRequest;
 ~~~
+
+Where `message_length` is the length in bytes of the enclosing HTTP message. For
+example, this could be the HTTP/1.1 Content-Length header field
+({{RFC9110, Section 8.6}}) or the sum of the lengths of the data frames in an
+HTTP/2 message ({{RFC9113, Section 8.1}}).
 
 Each upload request contains a sequence of `Report` messages constructed as follows:
 
@@ -1412,9 +1417,6 @@ Each upload request contains a sequence of `Report` messages constructed as foll
 * `leader_encrypted_input_share` is the Leader's encrypted input share.
 
 * `helper_encrypted_input_share` is the Helper's encrypted input share.
-
-The length of the sequence is specified at runtime, but it must not exceed
-2^32 - 1 bytes.
 
 Aggregators MAY require Clients to authenticate when uploading reports (see
 {{client-auth}}). If it is used, client authentication MUST use a scheme that
@@ -1498,8 +1500,8 @@ If the upload request is malformed, the Leader aborts with error
 If the Leader does not recognize the task ID, then it aborts with error
 `unrecognizedTask`.
 
-Otherwise, the Leader responds with a body consisting of an `UploadResponse` and
-the media type `application/dap-upload-resp`. The structure of the response
+Otherwise, the Leader responds with a body consisting of an `UploadResponse`
+with the media type `application/dap-upload-resp`. The structure of the response
 is shown below:
 
 ~~~ tls-presentation
@@ -1509,45 +1511,49 @@ struct {
 } ReportUploadStatus;
 
 struct {
-  ReportUploadStatus status[status_count];
+  ReportUploadStatus status[message_length];
 } UploadResponse;
 ~~~
 
-The Leader only includes reports that failed processing in the response.
-Reports that are accepted do not have a response.
+Where `message_length` is the length in bytes of the concatenated
+`ReportUploadStatus` objects.
+
+The Leader only includes reports that failed processing in the response. Reports
+that are accepted do not have a response.
 
 Reports in the response MUST appear in the same order as in the request.
 
-For each report that failed to upload, the Leader creates a
-`ReportUploadStatus` struct and includes the `ReportId` from the input and a
-`ReportError` ({{basic-definitions}}) that describes the failure. The length of
-this sequence is always less than or equal to the length of the upload sequence.
+For each report that failed to upload, the Leader creates a `ReportUploadStatus`
+and includes the `ReportId` from the input and a `ReportError`
+({{basic-definitions}}) that describes the failure. The length of this sequence
+is always less than or equal to the length of the upload sequence.
 
 If the Leader does not recognize the `config_id` in the encrypted input share,
-it sets the error field to `outdated_config`. When the Client receives an
-`outdated_config` error, it SHOULD invalidate any cached `HpkeConfigList` and
-retry with a freshly generated `Report`. If this retried upload does not
-succeed, the Client SHOULD abort and discontinue retrying.
+it sets the corresponding error field to `outdated_config`. When the Client
+receives an `outdated_config` error, it SHOULD invalidate any cached
+`HpkeConfigList` and retry with a freshly generated `Report`. If this retried
+upload does not succeed, the Client SHOULD abort and discontinue retrying.
 
 If a report's ID matches that of a previously uploaded report, the Leader MUST
-ignore it. In addition, it MAY alert the Client with setting the
-error field to `report_replayed`.
+discard it. In addition, it MAY set the corresponding error field to
+`report_replayed`.
 
-The Leader MUST ignore any report pertaining to a batch that has already been
-collected (see {{replay-protection}} for details). The Leader MAY also return
-`report_replayed` error for this report.
+The Leader MUST discard any report pertaining to a batch that has already been
+collected (see {{replay-protection}} for details). The Leader MAY also set the
+corresponding error field to `report_replayed`.
 
-The Leader MUST ignore any report whose timestamp is outside of the task's
-`time_interval`. When it does so, it SHOULD also set the error field to
-`report_dropped` for the corresponding report in the response.
+The Leader MUST discard any report whose timestamp is outside of the task's
+`time_interval`. When it does so, it SHOULD set the corresponding error field to
+`report_dropped`.
 
 The Leader may need to buffer reports while waiting to aggregate them (e.g.,
 while waiting for an aggregation parameter from the Collector; see
 {{collect-flow}}). The Leader SHOULD NOT accept reports whose timestamps are too
 far in the future. Implementors MAY provide for some small leeway, usually no
 more than a few minutes, to account for clock skew. If the Leader rejects a
-report for this reason, it SHOULD indicate it with `report_too_early` error.
-In this situation, the Client MAY re-upload the report later on.
+report for this reason, it SHOULD set the corresponding error field to
+`report_too_early`. In this situation, the Client MAY re-upload the report later
+on.
 
 If the report contains an unrecognized public report extension, or if the
 Leader's input share contains an unrecognized private report extension, then the
@@ -1578,9 +1584,11 @@ Successful upload
 POST /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/reports
 Host: example.com
 Content-Type: application/dap-upload-req
+Content-Length: 100
 
 encoded(struct {
-  reports = [struct {
+  reports = [
+    struct {
       report_metadata = struct {
         report_id = [0x0a, 0x0b, 0x0c, 0x0d, ...],
         time = 1741986088,
@@ -1597,8 +1605,8 @@ encoded(struct {
         enc = [0x0c, 0x0d, 0x0e, 0x0f, ...],
         payload = [0x08, 0x00, 0x0a, 0x0b, ...],
       } HpkeCiphertext,
-    } Report
-  ]
+    } Report,
+  ],
 } UploadRequest)
 
 HTTP/1.1 200
@@ -1610,25 +1618,27 @@ Failed upload of 1/2 reports submitted in one bulk upload
 POST /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/reports
 Host: example.com
 Content-Type: application/dap-upload-req
+Content-Length: 200
 
 encoded(struct {
-  reports = [struct {
-    report_metadata = struct {
-      report_id = [0x0a, 0x0b, 0x0c, 0x0d, ...],
-      time = 2000000000,
-      public_extensions = [0x00, 0x01],
-    } ReportMetadata,
-    public_share = [0x0a, 0x0b, ...],
-    leader_encrypted_input-share = struct {
-      config_id = 1,
-      enc = [0x0f, 0x0e, 0x0d, 0x0c, ...],
-      payload = [0x0b, 0x0a, 0x09, 0x08, ...],
-    } HpkeCiphertext,
-    helper_encrypted_input-share = struct {
-      config_id = 2,
-      enc = [0x0c, 0x0d, 0x0e, 0x0f, ...],
-      payload = [0x08, 0x00, 0x0a, 0x0b, ...],
-    } HpkeCiphertext,
+  reports = [
+    struct {
+      report_metadata = struct {
+        report_id = [0x0a, 0x0b, 0x0c, 0x0d, ...],
+        time = 2000000000,
+        public_extensions = [0x00, 0x01],
+      } ReportMetadata,
+      public_share = [0x0a, 0x0b, ...],
+      leader_encrypted_input-share = struct {
+        config_id = 1,
+        enc = [0x0f, 0x0e, 0x0d, 0x0c, ...],
+        payload = [0x0b, 0x0a, 0x09, 0x08, ...],
+      } HpkeCiphertext,
+      helper_encrypted_input-share = struct {
+        config_id = 2,
+        enc = [0x0c, 0x0d, 0x0e, 0x0f, ...],
+        payload = [0x08, 0x00, 0x0a, 0x0b, ...],
+      } HpkeCiphertext,
     } Report,
     struct {
       report_metadata = struct {
@@ -1648,20 +1658,20 @@ encoded(struct {
         payload = [0x08, 0x00, 0x0a, 0x0b, ...],
       } HpkeCiphertext,
     } Report,
-
-  ]
+  ],
 } UploadRequest)
 
 HTTP/1.1 200
 Content-Type: application/dap-upload-resp
+Content-Length: 20
 
 encoded(struct {
   reports = [
     struct {
       id = [0x0z, 0x0y, 0x0x, 0x0w, ...],
-      error = report_replayed
-    }
-  ]
+      error = report_replayed,
+    },
+  ],
 } UploadResponse)
 ~~~
 
@@ -3649,7 +3659,7 @@ ensure correctness during concurrent operation. This section describes the
 relevant concerns and makes suggestions as to potential implementation
 tradeoffs.
 
-* The upload interaction requires the Leader to ignore uploaded reports with a
+* The upload interaction requires the Leader to discard uploaded reports with a
   duplicated ID, including concurrently-uploaded reports. This might be
   implemented by synchronization or via an eventually-consistent process. If the
   Leader wishes to alert the Client with a `reportRejected` error,
@@ -4095,7 +4105,7 @@ Type name:
 
 Subtype name:
 
-: dap-report
+: dap-upload-req
 
 Required parameters:
 
@@ -4166,7 +4176,7 @@ Type name:
 
 Subtype name:
 
-: dap-report
+: dap-upload-resp
 
 Required parameters:
 
