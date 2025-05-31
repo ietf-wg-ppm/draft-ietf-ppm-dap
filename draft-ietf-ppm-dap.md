@@ -1394,8 +1394,8 @@ struct {
 
 Where `message_length` is the length in bytes of the enclosing HTTP message. For
 example, this could be the HTTP/1.1 Content-Length header field
-({{RFC9110, Section 8.6}}) or the sum of the lengths of the data frames in an
-HTTP/2 message ({{RFC9113, Section 8.1}}).
+({{?RFC9110, Section 8.6}}) or the sum of the lengths of the data frames in an
+HTTP/2 message ({{?RFC9113, Section 8.1}}).
 
 Each upload request contains a sequence of `Report` messages constructed as follows:
 
