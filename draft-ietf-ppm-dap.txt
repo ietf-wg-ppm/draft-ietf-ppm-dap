@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 30 November 2025                                     Cloudflare
+Expires: 13 December 2025                                     Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                             29 May 2025
+                                                            11 June 2025
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -64,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 30 November 2025.
+   This Internet-Draft will expire on 13 December 2025.
 
 Copyright Notice
 
@@ -158,15 +158,16 @@ Table of Contents
    9.  IANA Considerations
      9.1.  Protocol Message Media Types
        9.1.1.  "application/dap-hpke-config-list" media type
-       9.1.2.  "application/dap-report" media type
-       9.1.3.  "application/dap-aggregation-job-init-req" media type
-       9.1.4.  "application/dap-aggregation-job-resp" media type
-       9.1.5.  "application/dap-aggregation-job-continue-req" media
+       9.1.2.  "application/dap-upload-req" media type
+       9.1.3.  "application/dap-upload-resp" media type
+       9.1.4.  "application/dap-aggregation-job-init-req" media type
+       9.1.5.  "application/dap-aggregation-job-resp" media type
+       9.1.6.  "application/dap-aggregation-job-continue-req" media
                type
-       9.1.6.  "application/dap-aggregate-share-req" media type
-       9.1.7.  "application/dap-aggregate-share" media type
-       9.1.8.  "application/dap-collection-job-req" media type
-       9.1.9.  "application/dap-collection-job-resp" media type
+       9.1.7.  "application/dap-aggregate-share-req" media type
+       9.1.8.  "application/dap-aggregate-share" media type
+       9.1.9.  "application/dap-collection-job-req" media type
+       9.1.10. "application/dap-collection-job-resp" media type
      9.2.  DAP Type Registries
        9.2.1.  Batch Modes Registry
        9.2.2.  Report Extension Registry
@@ -1028,16 +1029,6 @@ aggregation job 1                   aggregation job 2          aggregation job j
     | unrecognizedAggregationJob  | A server received a message with |
     |                             | an unknown aggregation job ID.   |
     +-----------------------------+----------------------------------+
-    | outdatedConfig              | The message was generated using  |
-    |                             | an outdated configuration.       |
-    +-----------------------------+----------------------------------+
-    | reportRejected              | Report could not be processed    |
-    |                             | for an unspecified reason.       |
-    +-----------------------------+----------------------------------+
-    | reportTooEarly              | Report could not be processed    |
-    |                             | because its timestamp is too far |
-    |                             | in the future.                   |
-    +-----------------------------+----------------------------------+
     | batchInvalid                | The batch boundary check for     |
     |                             | Collector's query failed.        |
     +-----------------------------+----------------------------------+
@@ -1145,6 +1136,25 @@ aggregation job 1                   aggregation job 2          aggregation job j
    Empty is a zero-length byte string.
 
    struct {} Empty;
+
+   Errors that occurred while handling individual reports in the upload
+   or aggregation interactions are represented by the following enum:
+
+   enum {
+     reserved(0),
+     batch_collected(1),
+     report_replayed(2),
+     report_dropped(3),
+     hpke_unknown_config_id(4),
+     hpke_decrypt_error(5),
+     vdaf_prep_error(6),
+     task_expired(7),
+     invalid_message(8),
+     report_too_early(9),
+     task_not_started(10),
+     outdated_config(11),
+     (255)
+   } ReportError;
 
 4.1.1.  Times, Durations and Intervals
 
@@ -1460,8 +1470,8 @@ aggregation job 1                   aggregation job 2          aggregation job j
 4.5.2.  Upload Request
 
    Clients upload reports by sending a POST to {leader}/tasks/{task-
-   id}/reports.  The body is a Report, with media type "application/dap-
-   report", structured as follows:
+   id}/reports.  The body is an UploadRequest, with media type
+   "application/dap-upload-req", structured as follows:
 
    struct {
      ReportID report_id;
@@ -1475,6 +1485,16 @@ aggregation job 1                   aggregation job 2          aggregation job j
      HpkeCiphertext leader_encrypted_input_share;
      HpkeCiphertext helper_encrypted_input_share;
    } Report;
+
+   struct {
+     Report reports[message_length];
+   } UploadRequest;
+
+   Here message_length denotes the length of the HTTP message content
+   ([RFC9110], Section 6.4).
+
+   Each upload request contains a sequence of Report with the following
+   fields:
 
    *  report_metadata is public metadata describing the report.
 
@@ -1576,24 +1596,52 @@ aggregation job 1                   aggregation job 2          aggregation job j
    If the Leader does not recognize the task ID, then it aborts with
    error unrecognizedTask.
 
+   Otherwise, the Leader responds with a body consisting of an
+   UploadResponse with the media type application/dap-upload-resp. The
+   structure of the response is as follows:
+
+   struct {
+     ReportID id;
+     ReportError error;
+   } ReportUploadStatus;
+
+   struct {
+     ReportUploadStatus status[message_length];
+   } UploadResponse;
+
+   Here message_length denotes the length in bytes of the concatenated
+   ReportUploadStatus objects.
+
+   The Leader only includes reports that failed processing in the
+   response.  Reports that are accepted do not have a response.
+
+   Reports in the response MUST appear in the same order as in the
+   request.
+
+   For each report that failed to upload, the Leader creates a
+   ReportUploadStatus and includes the ReportId from the input and a
+   ReportError (Section 4.1) that describes the failure.  The length of
+   this sequence is always less than or equal to the length of the
+   upload sequence.
+
    If the Leader does not recognize the config_id in the encrypted input
-   share, it aborts with an error of type outdatedConfig.  When the
-   Client receives an outdatedConfig error, it SHOULD invalidate any
-   cached HpkeConfigList and retry with a freshly generated Report.  If
-   this retried upload does not succeed, the Client SHOULD abort and
-   discontinue retrying.
+   share, it sets the corresponding error field to outdated_config.
+   When the Client receives an outdated_config error, it SHOULD
+   invalidate any cached HpkeConfigList and retry with a freshly
+   generated Report.  If this retried upload does not succeed, the
+   Client SHOULD abort and discontinue retrying.
 
    If a report's ID matches that of a previously uploaded report, the
-   Leader MUST discard it.  In addition, it MAY alert the Client with
-   error reportRejected.
+   Leader MUST discard it.  In addition, it MAY set the corresponding
+   error field to report_replayed.
 
    The Leader MUST discard any report pertaining to a batch that has
    already been collected (see Section 2.3 for details).  The Leader MAY
-   also abort with error reportRejected.
+   also set the corresponding error field to report_replayed.
 
    The Leader MUST discard any report whose timestamp is outside of the
-   task's time_interval.  When it does so, it SHOULD also abort with
-   error reportRejected.
+   task's time_interval.  When it does so, it SHOULD set the
+   corresponding error field to report_dropped.
 
    The Leader may need to buffer reports while waiting to aggregate them
    (e.g., while waiting for an aggregation parameter from the Collector;
@@ -1601,8 +1649,8 @@ aggregation job 1                   aggregation job 2          aggregation job j
    timestamps are too far in the future.  Implementors MAY provide for
    some small leeway, usually no more than a few minutes, to account for
    clock skew.  If the Leader rejects a report for this reason, it
-   SHOULD abort with error reportTooEarly.  In this situation, the
-   Client MAY re-upload the report later on.
+   SHOULD set the corresponding error field to report_too_early.  In
+   this situation, the Client MAY re-upload the report later on.
 
    If the report contains an unrecognized public report extension, or if
    the Leader's input share contains an unrecognized private report
@@ -1631,30 +1679,98 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
 4.5.2.1.  Example
 
+   Successful upload
+
    POST /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/reports
    Host: example.com
-   Content-Type: application/dap-report
+   Content-Type: application/dap-upload-req
+   Content-Length: 100
 
    encoded(struct {
-     report_metadata = struct {
-       report_id = [0x0a, 0x0b, 0x0c, 0x0d, ...],
-       time = 1741986088,
-       public_extensions = [0x00, 0x00],
-     } ReportMetadata,
-     public_share = [0x0a, 0x0b, ...],
-     leader_encrypted_input-share = struct {
-       config_id = 1,
-       enc = [0x0f, 0x0e, 0x0d, 0x0c, ...],
-       payload = [0x0b, 0x0a, 0x09, 0x08, ...],
-     } HpkeCiphertext,
-     helper_encrypted_input-share = struct {
-       config_id = 2,
-       enc = [0x0c, 0x0d, 0x0e, 0x0f, ...],
-       payload = [0x08, 0x00, 0x0a, 0x0b, ...],
-     } HpkeCiphertext,
-   } Report)
+     reports = [
+       struct {
+         report_metadata = struct {
+           report_id = [0x0a, 0x0b, 0x0c, 0x0d, ...],
+           time = 1741986088,
+           public_extensions = [0x00, 0x00],
+         } ReportMetadata,
+         public_share = [0x0a, 0x0b, ...],
+         leader_encrypted_input-share = struct {
+           config_id = 1,
+           enc = [0x0f, 0x0e, 0x0d, 0x0c, ...],
+           payload = [0x0b, 0x0a, 0x09, 0x08, ...],
+         } HpkeCiphertext,
+         helper_encrypted_input-share = struct {
+           config_id = 2,
+           enc = [0x0c, 0x0d, 0x0e, 0x0f, ...],
+           payload = [0x08, 0x00, 0x0a, 0x0b, ...],
+         } HpkeCiphertext,
+       } Report,
+     ],
+   } UploadRequest)
 
    HTTP/1.1 200
+
+   Failed upload of 1/2 reports submitted in one bulk upload
+
+   POST /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/reports
+   Host: example.com
+   Content-Type: application/dap-upload-req
+   Content-Length: 200
+
+   encoded(struct {
+     reports = [
+       struct {
+         report_metadata = struct {
+           report_id = [0x0a, 0x0b, 0x0c, 0x0d, ...],
+           time = 2000000000,
+           public_extensions = [0x00, 0x01],
+         } ReportMetadata,
+         public_share = [0x0a, 0x0b, ...],
+         leader_encrypted_input-share = struct {
+           config_id = 1,
+           enc = [0x0f, 0x0e, 0x0d, 0x0c, ...],
+           payload = [0x0b, 0x0a, 0x09, 0x08, ...],
+         } HpkeCiphertext,
+         helper_encrypted_input-share = struct {
+           config_id = 2,
+           enc = [0x0c, 0x0d, 0x0e, 0x0f, ...],
+           payload = [0x08, 0x00, 0x0a, 0x0b, ...],
+         } HpkeCiphertext,
+       } Report,
+       struct {
+         report_metadata = struct {
+           report_id = [0x0z, 0x0y, 0x0x, 0x0w, ...],
+           time = 2000000001,
+           public_extensions = [0x00, 0x01],
+         } ReportMetadata,
+         public_share = [0x0a, 0x0b, ...],
+         leader_encrypted_input-share = struct {
+           config_id = 1,
+           enc = [0x0f, 0x0e, 0x0d, 0x0c, ...],
+           payload = [0x0b, 0x0a, 0x09, 0x08, ...],
+         } HpkeCiphertext,
+         helper_encrypted_input-share = struct {
+           config_id = 2,
+           enc = [0x0c, 0x0d, 0x0e, 0x0f, ...],
+           payload = [0x08, 0x00, 0x0a, 0x0b, ...],
+         } HpkeCiphertext,
+       } Report,
+     ],
+   } UploadRequest)
+
+   HTTP/1.1 200
+   Content-Type: application/dap-upload-resp
+   Content-Length: 20
+
+   encoded(struct {
+     reports = [
+       struct {
+         id = [0x0z, 0x0y, 0x0x, 0x0w, ...],
+         error = report_replayed,
+       },
+     ],
+   } UploadResponse)
 
 4.5.3.  Report Extensions
 
@@ -2095,21 +2211,6 @@ aggregation job 1                   aggregation job 2          aggregation job j
      reject(2),
      (255)
    } PrepareRespType;
-
-   enum {
-     reserved(0),
-     batch_collected(1),
-     report_replayed(2),
-     report_dropped(3),
-     hpke_unknown_config_id(4),
-     hpke_decrypt_error(5),
-     vdaf_prep_error(6),
-     task_expired(7),
-     invalid_message(8),
-     report_too_early(9),
-     task_not_started(10),
-     (255)
-   } ReportError;
 
    struct {
      ReportID report_id;
@@ -3704,7 +3805,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    section describes the relevant concerns and makes suggestions as to
    potential implementation tradeoffs.
 
-   *  The upload interaction requires the Leader to ignore uploaded
+   *  The upload interaction requires the Leader to discard uploaded
       reports with a duplicated ID, including concurrently-uploaded
       reports.  This might be implemented by synchronization or via an
       eventually-consistent process.  If the Leader wishes to alert the
@@ -4080,7 +4181,9 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    *  HpkeConfigList Section 4.5.1: "application/dap-hpke-config-list"
 
-   *  Report Section 4.5.2: "application/dap-report"
+   *  UploadRequest Section 4.5.2: "application/dap-upload-req"
+
+   *  UploadResponse Section 4.5.2: "application/dap-upload-resp"
 
    *  AggregationJobInitReq Section 4.6.2.1: "application/dap-
       aggregation-job-init-req"
@@ -4117,7 +4220,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    used as a hint by the receiver of the request to do compatibility
    checks between client and server.  For example, A report submission
    to leader from a client that supports draft-ietf-ppm-dap-09 could
-   have the header Content-Type: application/dap-report;version=09.
+   have the header Content-Type: application/dap-upload-req;version=09.
 
    The "Media Types" registry at https://www.iana.org/assignments/media-
    types will be (RFC EDITOR: replace "will be" with "has been") updated
@@ -4167,11 +4270,11 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    Change controller:  IESG
 
-9.1.2.  "application/dap-report" media type
+9.1.2.  "application/dap-upload-req" media type
 
    Type name:  application
 
-   Subtype name:  dap-report
+   Subtype name:  dap-upload-req
 
    Required parameters:  N/A
 
@@ -4210,7 +4313,50 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    Change controller:  IESG
 
-9.1.3.  "application/dap-aggregation-job-init-req" media type
+9.1.3.  "application/dap-upload-resp" media type
+
+   Type name:  application
+
+   Subtype name:  dap-upload-resp
+
+   Required parameters:  N/A
+
+   Optional parameters:  None
+
+   Encoding considerations:  only "8bit" or "binary" is permitted
+
+   Security considerations:  see Section 4.5 of the published
+      specification
+
+   Interoperability considerations:  N/A
+
+   Published specification:  RFC XXXX
+
+   Applications that use this media type:  N/A
+
+   Fragment identifier considerations:  N/A
+
+   Additional information:  Magic number(s):  N/A
+
+                            Deprecated alias names for this type:  N/A
+
+                            File extension(s):  N/A
+
+                            Macintosh file type code(s):  N/A
+
+   Person and email address to contact for further information:  see Aut
+      hors' Addresses section of the published specification
+
+   Intended usage:  COMMON
+
+   Restrictions on usage:  N/A
+
+   Author:  see Authors' Addresses section of the published
+      specification
+
+   Change controller:  IESG
+
+9.1.4.  "application/dap-aggregation-job-init-req" media type
 
    Type name:  application
 
@@ -4253,7 +4399,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    Change controller:  IESG
 
-9.1.4.  "application/dap-aggregation-job-resp" media type
+9.1.5.  "application/dap-aggregation-job-resp" media type
 
    Type name:  application
 
@@ -4296,7 +4442,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    Change controller:  IESG
 
-9.1.5.  "application/dap-aggregation-job-continue-req" media type
+9.1.6.  "application/dap-aggregation-job-continue-req" media type
 
    Type name:  application
 
@@ -4339,7 +4485,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    Change controller:  IESG
 
-9.1.6.  "application/dap-aggregate-share-req" media type
+9.1.7.  "application/dap-aggregate-share-req" media type
 
    Type name:  application
 
@@ -4382,7 +4528,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    Change controller:  IESG
 
-9.1.7.  "application/dap-aggregate-share" media type
+9.1.8.  "application/dap-aggregate-share" media type
 
    Type name:  application
 
@@ -4425,7 +4571,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    Change controller:  IESG
 
-9.1.8.  "application/dap-collection-job-req" media type
+9.1.9.  "application/dap-collection-job-req" media type
 
    Type name:  application
 
@@ -4468,7 +4614,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    Change controller:  IESG
 
-9.1.9.  "application/dap-collection-job-resp" media type
+9.1.10.  "application/dap-collection-job-resp" media type
 
    Type name:  application
 
@@ -4584,34 +4730,36 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    The initial contents of this registry are listed below in Table 4.
 
-     +=======+========================+=============================+
-     | Value | Name                   | Reference                   |
-     +=======+========================+=============================+
-     | 0x00  | reserved               | Section 4.6.2.2 of RFX XXXX |
-     +-------+------------------------+-----------------------------+
-     | 0x01  | batch_collected        | Section 4.6.2.2 of RFX XXXX |
-     +-------+------------------------+-----------------------------+
-     | 0x02  | report_replayed        | Section 4.6.2.2 of RFX XXXX |
-     +-------+------------------------+-----------------------------+
-     | 0x03  | report_dropped         | Section 4.6.2.2 of RFX XXXX |
-     +-------+------------------------+-----------------------------+
-     | 0x04  | hpke_unknown_config_id | Section 4.6.2.2 of RFX XXXX |
-     +-------+------------------------+-----------------------------+
-     | 0x05  | hpke_decrypt_error     | Section 4.6.2.2 of RFX XXXX |
-     +-------+------------------------+-----------------------------+
-     | 0x06  | vdaf_prep_error        | Section 4.6.2.2 of RFX XXXX |
-     +-------+------------------------+-----------------------------+
-     | 0x07  | task_expired           | Section 4.6.2.2 of RFX XXXX |
-     +-------+------------------------+-----------------------------+
-     | 0x08  | invalid_message        | Section 4.6.2.2 of RFX XXXX |
-     +-------+------------------------+-----------------------------+
-     | 0x09  | report_too_early       | Section 4.6.2.2 of RFX XXXX |
-     +-------+------------------------+-----------------------------+
-     | 0x10  | task_not_started       | Section 4.6.2.2 of RFX XXXX |
-     +-------+------------------------+-----------------------------+
+       +=======+========================+=========================+
+       | Value | Name                   | Reference               |
+       +=======+========================+=========================+
+       | 0x00  | reserved               | Section 4.1 of RFX XXXX |
+       +-------+------------------------+-------------------------+
+       | 0x01  | batch_collected        | Section 4.1 of RFX XXXX |
+       +-------+------------------------+-------------------------+
+       | 0x02  | report_replayed        | Section 4.1 of RFX XXXX |
+       +-------+------------------------+-------------------------+
+       | 0x03  | report_dropped         | Section 4.1 of RFX XXXX |
+       +-------+------------------------+-------------------------+
+       | 0x04  | hpke_unknown_config_id | Section 4.1 of RFX XXXX |
+       +-------+------------------------+-------------------------+
+       | 0x05  | hpke_decrypt_error     | Section 4.1 of RFX XXXX |
+       +-------+------------------------+-------------------------+
+       | 0x06  | vdaf_prep_error        | Section 4.1 of RFX XXXX |
+       +-------+------------------------+-------------------------+
+       | 0x07  | task_expired           | Section 4.1 of RFX XXXX |
+       +-------+------------------------+-------------------------+
+       | 0x08  | invalid_message        | Section 4.1 of RFX XXXX |
+       +-------+------------------------+-------------------------+
+       | 0x09  | report_too_early       | Section 4.1 of RFX XXXX |
+       +-------+------------------------+-------------------------+
+       | 0x0A  | task_not_started       | Section 4.1 of RFX XXXX |
+       +-------+------------------------+-------------------------+
+       | 0x0B  | outdated_config        | Section 4.1 of RFX XXXX |
+       +-------+------------------------+-------------------------+
 
-        Table 4: Initial contents of the Report Error Identifiers
-                                registry.
+              Table 4: Initial contents of the Report Error
+                          Identifiers registry.
 
 9.3.  URN Sub-namespace for DAP (urn:ietf:params:ppm:dap)
 
@@ -4820,6 +4968,11 @@ Contributors
    Charlie Harrison
    Google
    Email: csharrison@chromium.org
+
+
+   Alex Koshelev
+   Meta
+   Email: koshelev@meta.com
 
 
    Peter Saint-Andre
