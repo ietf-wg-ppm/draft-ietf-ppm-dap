@@ -3963,6 +3963,32 @@ document does not specify how to choose an appropriate minimum batch size, but
 an appropriate value may be determined from the differential privacy ({{dp}})
 parameters in use, if any.
 
+### Relaxing Report Processing Rules
+
+DAP Aggregators enforce several rules for report processing related to the
+privacy of individual measurements:
+
+1. Each report may be aggregated at most once ({{batch-buckets}})
+
+1. A batch bucket may be collected at most once (reports pertaining to
+   collected buckets are rejected; see {{batch-buckets}})
+
+1. A batch may only be collected if the number of reports aggregated exceeds
+   the minimum batch size ({{collect-flow}})
+
+It may be desirable to relax these rules in some applications. It may also be
+safe to do so when DAP is combined with other privacy enhancements such as
+differential privacy. When applications wish to relax any of one of these
+requirements, they:
+
+1. MUST adhere to the VDAF's requirements for aggregating a report more than
+   once. See {{Section 5.3 of !VDAF}} for details.
+
+1. SHOULD define a mechanism by which each party explicitly opts into the
+   change in report processing rules, e.g., via a report extension
+   ({{report-extensions}}). This helps prevent an implementation from
+   relaxing the rules by mistake.
+
 ### Task Configuration Agreement and Consistency
 
 In order to execute a DAP task, it is necessary for all parties to ensure they
