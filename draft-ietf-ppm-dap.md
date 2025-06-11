@@ -3722,14 +3722,19 @@ suite:
 # Security Considerations {#sec-considerations}
 
 DAP aims to achieve the privacy and robustness security goals defined in
-{{Section 9 of !VDAF}}, even in the presence of an active attacker. It is
-assumed that the attacker may control the network and have the ability to
-control a subset of of Clients, one of the Aggregators, and the Collector for a
-given task.
+{{Section 9 of !VDAF}}. That is, an active attacker that controls a subset of
+the Clients, one of the Aggregators, and the Collector learns nothing about the
+honest Clients' measurements beyond their aggregate result. At the same time,
+an attacker that controls a subset of Clients cannot force the Collector to
+compute anything but the aggregate result over the honest Clients'
+measurements.
 
-In the presence of this adversary, there are some threats DAP does not defend
-against and which are considered outside of DAP's threat model. These are
-enumerated below, along with potential mitigations.
+Since DAP requires HTTPS ({{message-transport}}), the attacker cannot tamper
+with messages delivered by honest parties or forge messages from honest,
+authenticated parties; but it can drop messages or forge messages from
+unauthenticated parties. Thus there are some threats that DAP does not defend
+against and which are considered outside of its threat model. These and others
+are enumerated below, along with potential mitigations.
 
 Attacks on robustness:
 
