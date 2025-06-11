@@ -2858,7 +2858,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    The Collector initiates this phase with a query to the Leader
    (Section 5), which the Aggregators use to select a batch of reports
    to aggregate.  Each Aggregator emits an aggregate share encrypted to
-   the Collector so that it can decrypt and combine them to y``ield the
+   the Collector so that it can decrypt and combine them to yield the
    aggregate result.  This process is referred to as a "collection job"
    and is composed of two interactions:
 
