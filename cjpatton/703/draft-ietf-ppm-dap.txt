@@ -153,7 +153,8 @@ Table of Contents
        8.6.1.  Predictable or Enumerable Task IDs
        8.6.2.  VDAF Verification Key Requirements
        8.6.3.  Batch Parameters
-       8.6.4.  Task Configuration Agreement and Consistency
+       8.6.4.  Relaxing Requirements
+       8.6.5.  Task Configuration Agreement and Consistency
      8.7.  Infrastructure Diversity
    9.  IANA Considerations
      9.1.  Protocol Message Media Types
@@ -2857,7 +2858,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    The Collector initiates this phase with a query to the Leader
    (Section 5), which the Aggregators use to select a batch of reports
    to aggregate.  Each Aggregator emits an aggregate share encrypted to
-   the Collector so that it can decrypt and combine them to yield the
+   the Collector so that it can decrypt and combine them to y``ield the
    aggregate result.  This process is referred to as a "collection job"
    and is composed of two interactions:
 
@@ -3881,17 +3882,14 @@ aggregation job 1                   aggregation job 2          aggregation job j
 8.  Security Considerations
 
    DAP aims to achieve the privacy and robustness security goals defined
-   in Section 9 of [VDAF].  That is, an attacker that controls a subset
-   of the Clients, one of the Aggregators, and the Collector and can
-   eavesdrop on the network learns nothing about the honest Clients'
-   measurements beyond their aggregate result.  At the same time, an
-   attacker that controls a subset of Clients and can eavesdrop on the
-   network cannot force the Collector to compute anything but the
-   aggregate result over the honest Clients' measurements.
+   in Section 9 of [VDAF], even in the presence of an active attacker.
+   It is assumed that the attacker may control the network and have the
+   ability to control a subset of of Clients, one of the Aggregators,
+   and the Collector for a given task.
 
-   There are some threats DAP does not defend against and which are
-   considered outside of DAP's threat model.  These are enumerated
-   below, along with potential mitigations.
+   In the presence of this adversary, there are some threats DAP does
+   not defend against and which are considered outside of DAP's threat
+   model.  These are enumerated below, along with potential mitigations.
 
    Attacks on robustness:
 
@@ -4141,7 +4139,33 @@ aggregation job 1                   aggregation job 2          aggregation job j
    value may be determined from the differential privacy (Section 8.5)
    parameters in use, if any.
 
-8.6.4.  Task Configuration Agreement and Consistency
+8.6.4.  Relaxing Requirements
+
+   DAP Aggregators enforce several rules related to the privacy of
+   individual measurements:
+
+   1.  Each report may be aggregated at most once (Section 4.6.3.3)
+
+   2.  A batch bucket may be collected at most once (reports pertaining
+       to collected buckets are rejected; see Section 4.6.3.3)
+
+   3.  A batch may only be collected if the number of reports aggregated
+       exceeds the minimum batch size (Section 4.7)
+
+   It may be desirable to relax these rules in some applications.  It
+   may also be safe to do so when DAP is combined with other privacy
+   enhancements such as differential privacy.  When applications wish to
+   relax any of one of these requirements, they:
+
+   1.  MUST adhere to the VDAF's requirements for aggregating a report
+       more than once.  See Section 5.3 of [VDAF] for details.
+
+   2.  SHOULD define a mechanism by which each party explicitly opts
+       into the change in report processing rules, e.g., via a report
+       extension (Section 4.5.3).  This helps prevent an implementation
+       from relaxing the rules by mistake.
+
+8.6.5.  Task Configuration Agreement and Consistency
 
    In order to execute a DAP task, it is necessary for all parties to
    ensure they agree on the configuration of the task.  However, it is

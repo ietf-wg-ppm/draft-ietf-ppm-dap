@@ -1428,7 +1428,10 @@ without revealing any individual contributor's data.<a href="#section-abstract-1
                     <p id="section-toc.1-1.8.2.6.2.3.1"><a href="#section-8.6.3" class="auto internal xref">8.6.3</a>.  <a href="#name-batch-parameters" class="internal xref">Batch Parameters</a></p>
 </li>
                   <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8.2.6.2.4">
-                    <p id="section-toc.1-1.8.2.6.2.4.1"><a href="#section-8.6.4" class="auto internal xref">8.6.4</a>.  <a href="#name-task-configuration-agreemen" class="internal xref">Task Configuration Agreement and Consistency</a></p>
+                    <p id="section-toc.1-1.8.2.6.2.4.1"><a href="#section-8.6.4" class="auto internal xref">8.6.4</a>.  <a href="#name-relaxing-requirements" class="internal xref">Relaxing Requirements</a></p>
+</li>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8.2.6.2.5">
+                    <p id="section-toc.1-1.8.2.6.2.5.1"><a href="#section-8.6.5" class="auto internal xref">8.6.5</a>.  <a href="#name-task-configuration-agreemen" class="internal xref">Task Configuration Agreement and Consistency</a></p>
 </li>
                 </ul>
 </li>
@@ -5076,7 +5079,7 @@ HTTP/1.1 200
 <p id="section-4.7-1">The Collector initiates this phase with a query to the Leader (<a href="#batch-modes" class="auto internal xref">Section 5</a>),
 which the Aggregators use to select a batch of reports to aggregate. Each
 Aggregator emits an aggregate share encrypted to the Collector so that it can
-decrypt and combine them to yield the aggregate result. This process is referred
+decrypt and combine them to y``ield the aggregate result. This process is referred
 to as a "collection job" and is composed of two interactions:<a href="#section-4.7-1" class="pilcrow">¶</a></p>
 <ol start="1" type="1" class="normal type-1" id="section-4.7-2">
 <li id="section-4.7-2.1">
@@ -6280,15 +6283,13 @@ suite:<a href="#section-7-1" class="pilcrow">¶</a></p>
 <a href="#section-8" class="section-number selfRef">8. </a><a href="#name-security-considerations" class="section-name selfRef">Security Considerations</a>
       </h2>
 <p id="section-8-1">DAP aims to achieve the privacy and robustness security goals defined in
-<span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-14#section-9" class="relref">Section 9</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>. That is, an attacker that controls a subset of the
-Clients, one of the Aggregators, and the Collector and can eavesdrop on the
-network learns nothing about the honest Clients' measurements beyond their
-aggregate result. At the same time, an attacker that controls a subset of
-Clients and can eavesdrop on the network cannot force the Collector to compute
-anything but the aggregate result over the honest Clients' measurements.<a href="#section-8-1" class="pilcrow">¶</a></p>
-<p id="section-8-2">There are some threats DAP does not defend against and which are considered
-outside of DAP's threat model. These are enumerated below, along with potential
-mitigations.<a href="#section-8-2" class="pilcrow">¶</a></p>
+<span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-14#section-9" class="relref">Section 9</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>, even in the presence of an active attacker. It is
+assumed that the attacker may control the network and have the ability to
+control a subset of of Clients, one of the Aggregators, and the Collector for a
+given task.<a href="#section-8-1" class="pilcrow">¶</a></p>
+<p id="section-8-2">In the presence of this adversary, there are some threats DAP does not defend
+against and which are considered outside of DAP's threat model. These are
+enumerated below, along with potential mitigations.<a href="#section-8-2" class="pilcrow">¶</a></p>
 <p id="section-8-3">Attacks on robustness:<a href="#section-8-3" class="pilcrow">¶</a></p>
 <ol start="1" type="1" class="normal type-1" id="section-8-4">
 <li id="section-8-4.1">
@@ -6573,24 +6574,62 @@ an appropriate value may be determined from the differential privacy (<a href="#
 parameters in use, if any.<a href="#section-8.6.3-1" class="pilcrow">¶</a></p>
 </section>
 </div>
-<div id="task-configuration-agreement-and-consistency">
+<div id="relaxing-requirements">
 <section id="section-8.6.4">
-          <h4 id="name-task-configuration-agreemen">
-<a href="#section-8.6.4" class="section-number selfRef">8.6.4. </a><a href="#name-task-configuration-agreemen" class="section-name selfRef">Task Configuration Agreement and Consistency</a>
+          <h4 id="name-relaxing-requirements">
+<a href="#section-8.6.4" class="section-number selfRef">8.6.4. </a><a href="#name-relaxing-requirements" class="section-name selfRef">Relaxing Requirements</a>
           </h4>
-<p id="section-8.6.4-1">In order to execute a DAP task, it is necessary for all parties to ensure they
+<p id="section-8.6.4-1">DAP Aggregators enforce several rules related to the privacy of individual
+measurements:<a href="#section-8.6.4-1" class="pilcrow">¶</a></p>
+<ol start="1" type="1" class="normal type-1" id="section-8.6.4-2">
+<li id="section-8.6.4-2.1">
+              <p id="section-8.6.4-2.1.1">Each report may be aggregated at most once (<a href="#batch-buckets" class="auto internal xref">Section 4.6.3.3</a>)<a href="#section-8.6.4-2.1.1" class="pilcrow">¶</a></p>
+</li>
+            <li id="section-8.6.4-2.2">
+              <p id="section-8.6.4-2.2.1">A batch bucket may be collected at most once (reports pertaining to
+collected buckets are rejected; see <a href="#batch-buckets" class="auto internal xref">Section 4.6.3.3</a>)<a href="#section-8.6.4-2.2.1" class="pilcrow">¶</a></p>
+</li>
+            <li id="section-8.6.4-2.3">
+              <p id="section-8.6.4-2.3.1">A batch may only be collected if the number of reports aggregated exceeds
+the minimum batch size (<a href="#collect-flow" class="auto internal xref">Section 4.7</a>)<a href="#section-8.6.4-2.3.1" class="pilcrow">¶</a></p>
+</li>
+          </ol>
+<p id="section-8.6.4-3">It may be desirable to relax these rules in some applications. It may also be
+safe to do so when DAP is combined with other privacy enhancements such as
+differential privacy. When applications wish to relax any of one of these
+requirements, they:<a href="#section-8.6.4-3" class="pilcrow">¶</a></p>
+<ol start="1" type="1" class="normal type-1" id="section-8.6.4-4">
+<li id="section-8.6.4-4.1">
+              <p id="section-8.6.4-4.1.1"><span class="bcp14">MUST</span> adhere to the VDAF's requirements for aggregating a report more than
+once. See <span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-14#section-5.3" class="relref">Section 5.3</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span> for details.<a href="#section-8.6.4-4.1.1" class="pilcrow">¶</a></p>
+</li>
+            <li id="section-8.6.4-4.2">
+              <p id="section-8.6.4-4.2.1"><span class="bcp14">SHOULD</span> define a mechanism by which each party explicitly opts into the
+change in report processing rules, e.g., via a report extension
+(<a href="#report-extensions" class="auto internal xref">Section 4.5.3</a>). This helps prevent an implementation from
+relaxing the rules by mistake.<a href="#section-8.6.4-4.2.1" class="pilcrow">¶</a></p>
+</li>
+          </ol>
+</section>
+</div>
+<div id="task-configuration-agreement-and-consistency">
+<section id="section-8.6.5">
+          <h4 id="name-task-configuration-agreemen">
+<a href="#section-8.6.5" class="section-number selfRef">8.6.5. </a><a href="#name-task-configuration-agreemen" class="section-name selfRef">Task Configuration Agreement and Consistency</a>
+          </h4>
+<p id="section-8.6.5-1">In order to execute a DAP task, it is necessary for all parties to ensure they
 agree on the configuration of the task. However, it is possible for a party to
 participate in the execution of DAP without knowing all of the task's
 parameters. For example, a Client can upload a report (<a href="#upload-flow" class="auto internal xref">Section 4.5</a>) without
 knowing the minimum batch size that is enforced by the Aggregators during
-collection (<a href="#collect-flow" class="auto internal xref">Section 4.7</a>).<a href="#section-8.6.4-1" class="pilcrow">¶</a></p>
-<p id="section-8.6.4-2">Depending on the deployment model, agreement can require that task parameters
+collection (<a href="#collect-flow" class="auto internal xref">Section 4.7</a>).<a href="#section-8.6.5-1" class="pilcrow">¶</a></p>
+<p id="section-8.6.5-2">Depending on the deployment model, agreement can require that task parameters
 are visible to all parties such that each party can choose whether to
 participate based on the value of any parameter. This includes the parameters
 enumerated in <a href="#task-configuration" class="auto internal xref">Section 4.2</a> and any additional parameters implied by
 report extensions <a href="#report-extensions" class="auto internal xref">Section 4.5.3</a> used by the task. Since meaningful
 privacy requires that multiple Clients contribute to a task, they should also
-share a consistent view of the task configuration.<a href="#section-8.6.4-2" class="pilcrow">¶</a></p>
+share a consistent view of the task configuration.<a href="#section-8.6.5-2" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
