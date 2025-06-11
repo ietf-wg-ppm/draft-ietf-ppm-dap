@@ -153,7 +153,7 @@ Table of Contents
        8.6.1.  Predictable or Enumerable Task IDs
        8.6.2.  VDAF Verification Key Requirements
        8.6.3.  Batch Parameters
-       8.6.4.  Relaxing Requirements
+       8.6.4.  Relaxing Report Processing Rules
        8.6.5.  Task Configuration Agreement and Consistency
      8.7.  Infrastructure Diversity
    9.  IANA Considerations
@@ -4139,10 +4139,10 @@ aggregation job 1                   aggregation job 2          aggregation job j
    value may be determined from the differential privacy (Section 8.5)
    parameters in use, if any.
 
-8.6.4.  Relaxing Requirements
+8.6.4.  Relaxing Report Processing Rules
 
-   DAP Aggregators enforce several rules related to the privacy of
-   individual measurements:
+   DAP Aggregators enforce several rules for report processing related
+   to the privacy of individual measurements:
 
    1.  Each report may be aggregated at most once (Section 4.6.3.3)
 
