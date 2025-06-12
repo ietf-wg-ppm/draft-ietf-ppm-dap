@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 13 December 2025                                     Cloudflare
+Expires: 14 December 2025                                     Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                            11 June 2025
+                                                            12 June 2025
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -64,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 13 December 2025.
+   This Internet-Draft will expire on 14 December 2025.
 
 Copyright Notice
 
@@ -3881,14 +3881,20 @@ aggregation job 1                   aggregation job 2          aggregation job j
 8.  Security Considerations
 
    DAP aims to achieve the privacy and robustness security goals defined
-   in Section 9 of [VDAF], even in the presence of an active attacker.
-   It is assumed that the attacker may control the network and have the
-   ability to control a subset of of Clients, one of the Aggregators,
-   and the Collector for a given task.
+   in Section 9 of [VDAF].  That is, an active attacker that controls a
+   subset of the Clients, one of the Aggregators, and the Collector
+   learns nothing about the honest Clients' measurements beyond their
+   aggregate result.  At the same time, an attacker that controls a
+   subset of Clients cannot force the Collector to compute anything but
+   the aggregate result over the honest Clients' measurements.
 
-   In the presence of this adversary, there are some threats DAP does
-   not defend against and which are considered outside of DAP's threat
-   model.  These are enumerated below, along with potential mitigations.
+   Since DAP requires HTTPS (Section 3), the attacker cannot tamper with
+   messages delivered by honest parties or forge messages from honest,
+   authenticated parties; but it can drop messages or forge messages
+   from unauthenticated parties.  Thus there are some threats that DAP
+   does not defend against and which are considered outside of its
+   threat model.  These and others are enumerated below, along with
+   potential mitigations.
 
    Attacks on robustness:
 
