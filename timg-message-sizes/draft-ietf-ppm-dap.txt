@@ -2294,7 +2294,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    Here message_length is the length of the HTTP message content
    ([RFC9110], Section 6.4).
 
-   prepare_resps are the outbound PrepareResp messages for each report
+   prepare_resps is the outbound PrepareResp messages for each report
    computed in the previous step.  The order MUST match
    AggregationJobInitReq.prepare_inits.  The media type for
    AggregationJobResp is "application/dap-aggregation-job-resp".

@@ -4396,8 +4396,8 @@ struct {
 </pre><a href="#section-4.6.2.2-18" class="pilcrow">¶</a>
 </div>
 <p id="section-4.6.2.2-19">Here <code>message_length</code> is the length of the HTTP message content (<span>[<a href="#RFC9110" class="cite xref">RFC9110</a>], <a href="https://rfc-editor.org/rfc/rfc9110#section-6.4" class="relref">Section 6.4</a></span>).<a href="#section-4.6.2.2-19" class="pilcrow">¶</a></p>
-<p id="section-4.6.2.2-20"><code>prepare_resps</code> are the outbound <code>PrepareResp</code> messages for each report
-computed in the previous step. The order <span class="bcp14">MUST</span> match
+<p id="section-4.6.2.2-20"><code>prepare_resps</code> is the outbound <code>PrepareResp</code> messages for each report computed
+in the previous step. The order <span class="bcp14">MUST</span> match
 <code>AggregationJobInitReq.prepare_inits</code>. The media type for <code>AggregationJobResp</code>
 is "application/dap-aggregation-job-resp".<a href="#section-4.6.2.2-20" class="pilcrow">¶</a></p>
 <p id="section-4.6.2.2-21">The Helper may receive multiple copies of a given initialization request. The
