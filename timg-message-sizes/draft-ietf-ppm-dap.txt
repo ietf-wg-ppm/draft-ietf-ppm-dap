@@ -2091,8 +2091,8 @@ aggregation job 1                   aggregation job 2          aggregation job j
    *  prepare_inits: the sequence of PrepareInit messages constructed in
       the previous step.  Here prepare_inits_length is the length of the
       HTTP message content ([RFC9110], Section 6.4), minus the lengths
-      of agg_param and part_batch_selector.  That is, the remainder of
-      the HTTP message consists of prepare_inits.
+      in octets of agg_param and part_batch_selector.  That is, the
+      remainder of the HTTP message consists of prepare_inits.
 
    The Leader sends the AggregationJobInitReq in the body of a PUT
    request to the aggregation job with a media type of "application/dap-
@@ -2388,6 +2388,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
    Host: example.com
    Content-Type: application/dap-aggregation-job-init-req
+   Content-Length: 100
    Authorization: Bearer auth-token
 
    encoded(struct {
@@ -2403,6 +2404,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    HTTP/1.1 200
    Content-Type: application/dap-aggregation-job-resp
+   Content-Length: 100
 
    encoded(struct { prepare_resps } AggregationJobResp)
 
@@ -2411,6 +2413,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
    Host: example.com
    Content-Type: application/dap-aggregation-job-init-req
+   Content-Length: 100
    Authorization: Bearer auth-token
 
    encoded(struct {
@@ -2440,6 +2443,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    HTTP/1.1 200
    Content-Type: application/dap-aggregation-job-resp
+   Content-Length: 100
 
    encoded(struct { prepare_resps } AggregationJobResp)
 
@@ -2506,7 +2510,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    field is the sequence of preparation continuation messages
    constructed in the previous step.  Here prepare_continues_length is
    the length of the HTTP message content ([RFC9110], Section 6.4),
-   minus 2 (the size in octets of step).  The PrepareContinue elements
+   minus the length in octets of step.  The PrepareContinue elements
    MUST be in the same order as the previous request to the aggregation
    job, omitting any reports that were previously rejected by either
    Aggregator.
@@ -2799,6 +2803,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    POST /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
    Host: example.com
    Content-Type: application/dap-aggregation-job-continue-req
+   Content-Length: 100
    Authorization: Bearer auth-token
 
    encoded(struct {
@@ -2808,6 +2813,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    HTTP/1.1 200
    Content-Type: application/dap-aggregation-job-resp
+   Content-Length: 100
 
    encoded(struct { prepare_resps } AggregationJobResp)
 
@@ -2816,6 +2822,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    POST /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
    Host: example.com
    Content-Type: application/dap-aggregation-job-continue-req
+   Content-Length: 100
    Authorization: Bearer auth-token
 
    encoded(struct {
@@ -2841,6 +2848,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    HTTP/1.1 200
    Content-Type: application/dap-aggregation-job-resp
+   Content-Length: 100
 
    encoded(struct { prepare_resps } AggregationJobResp)
 
@@ -2910,9 +2918,9 @@ aggregation job 1                   aggregation job 2          aggregation job j
    *  agg_param, an aggregation parameter for the VDAF being executed.
       This is the same value as in AggregationJobInitReq (see
       Section 4.6.2.1).  Here agg_param_length is the length of the HTTP
-      message content ([RFC9110], Section 6.4) minus the length of
-      query.  That is, agg_param consists of the remainder of the HTTP
-      message.
+      message content ([RFC9110], Section 6.4) minus the length in
+      octets of query.  That is, agg_param consists of the remainder of
+      the HTTP message.
 
    Depending on the VDAF scheme and how the Leader is configured, the
    Leader and Helper may already have prepared a sufficient number of
@@ -3039,6 +3047,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    PUT /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/collection_jobs/lc7aUeGpdSNosNlh-UZhKA
    Host: example.com
    Content-Type: application/dap-collection-job-req
+   Content-Length: 100
    Authorization: Bearer auth-token
 
    encoded(struct {
@@ -3073,6 +3082,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    PUT /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/collection_jobs/lc7aUeGpdSNosNlh-UZhKA
    Host: example.com
    Content-Type: application/dap-collection-job-req
+   Content-Length: 100
    Authorization: Bearer auth-token
 
    encoded(struct {
@@ -3193,9 +3203,9 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    struct {
      BatchSelector batch_selector;
-     opaque agg_param<0..2^32-1>;
      uint64 report_count;
      opaque checksum[32];
+     opaque agg_param[agg_param_length];
    } AggregateShareReq;
 
    The media type of AggregateShareReq is "application/dap-aggregate-
@@ -3205,7 +3215,10 @@ aggregation job 1                   aggregation job 2          aggregation job j
       depends on the indicated batch mode (see Section 5.
 
    *  agg_param: The encoded aggregation parameter for the VDAF being
-      executed.
+      executed.  Here agg_param_length is the length of the HTTP message
+      content ([RFC9110], Section 6.4) minus the lengths in octets of
+      batch_selector, report_count and checksum.  That is agg_param
+      consists of the remainder of the HTTP message.
 
    *  report_count: The number number of reports included in the batch,
       as computed above.
@@ -3291,6 +3304,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregate_shares/lc7aUeGpdSNosNlh-UZhKA
    Host: example.com
    Content-Type: application/dap-aggregate-share-req
+   Content-Length: 100
    Authorization: Bearer auth-token
 
    encoded(struct {
@@ -3303,9 +3317,9 @@ aggregation job 1                   aggregation job 2          aggregation job j
          } Interval,
        } TimeIntervalBatchSelectorConfig),
      } BatchSelector,
-     agg_param = [0x00, 0x01, ...],
      report_count = 1000,
      checksum = [0x0a, 0x0b, ..., 0x0f],
+     agg_param = [0x00, 0x01, ...],
    } AggregateShareReq)
 
    HTTP/1.1 200
@@ -3320,6 +3334,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregate_shares/lc7aUeGpdSNosNlh-UZhKA
    Host: example.com
    Content-Type: application/dap-aggregate-share-req
+   Content-Length: 100
    Authorization: Bearer auth-token
 
    encoded(struct {
@@ -3332,9 +3347,9 @@ aggregation job 1                   aggregation job 2          aggregation job j
          } Interval,
        } TimeIntervalBatchSelectorConfig),
      } BatchSelector,
-     agg_param = [0x00, 0x01, ...],
      report_count = 1000,
      checksum = [0x0a, 0x0b, ..., 0x0f],
+     agg_param = [0x00, 0x01, ...],
    } AggregateShareReq)
 
    HTTP/1.1 200

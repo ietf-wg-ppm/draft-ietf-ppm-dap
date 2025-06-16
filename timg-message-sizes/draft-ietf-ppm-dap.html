@@ -4158,9 +4158,9 @@ depending on the batch mode, it may only partially determine a batch. See
               <li class="normal" id="section-4.6.2.1-17.3">
                 <p id="section-4.6.2.1-17.3.1"><code>prepare_inits</code>: the sequence of <code>PrepareInit</code> messages constructed in the
 previous step. Here <code>prepare_inits_length</code> is the length of the HTTP message
-content (<span>[<a href="#RFC9110" class="cite xref">RFC9110</a>], <a href="https://rfc-editor.org/rfc/rfc9110#section-6.4" class="relref">Section 6.4</a></span>), minus the lengths of <code>agg_param</code> and
-<code>part_batch_selector.</code> That is, the remainder of the HTTP message consists of
-<code>prepare_inits</code>.<a href="#section-4.6.2.1-17.3.1" class="pilcrow">¶</a></p>
+content (<span>[<a href="#RFC9110" class="cite xref">RFC9110</a>], <a href="https://rfc-editor.org/rfc/rfc9110#section-6.4" class="relref">Section 6.4</a></span>), minus the lengths in octets of
+<code>agg_param</code> and <code>part_batch_selector.</code> That is, the remainder of the HTTP
+message consists of <code>prepare_inits</code>.<a href="#section-4.6.2.1-17.3.1" class="pilcrow">¶</a></p>
 </li>
             </ul>
 <p id="section-4.6.2.1-18">The Leader sends the <code>AggregationJobInitReq</code> in the body of a PUT request to the
@@ -4514,6 +4514,7 @@ with error <code>report_dropped</code>.<a href="#section-4.6.2.4-2.8.1" class="p
 PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
 Content-Type: application/dap-aggregation-job-init-req
+Content-Length: 100
 Authorization: Bearer auth-token
 
 encoded(struct {
@@ -4529,6 +4530,7 @@ encoded(struct {
 
 HTTP/1.1 200
 Content-Type: application/dap-aggregation-job-resp
+Content-Length: 100
 
 encoded(struct { prepare_resps } AggregationJobResp)
 </pre><a href="#section-4.6.2.5-2" class="pilcrow">¶</a>
@@ -4539,6 +4541,7 @@ encoded(struct { prepare_resps } AggregationJobResp)
 PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
 Content-Type: application/dap-aggregation-job-init-req
+Content-Length: 100
 Authorization: Bearer auth-token
 
 encoded(struct {
@@ -4568,6 +4571,7 @@ Authorization: Bearer auth-token
 
 HTTP/1.1 200
 Content-Type: application/dap-aggregation-job-resp
+Content-Length: 100
 
 encoded(struct { prepare_resps } AggregationJobResp)
 </pre><a href="#section-4.6.2.5-4" class="pilcrow">¶</a>
@@ -4664,7 +4668,7 @@ struct {
 wants the Helper to advance to. The <code>prepare_continues</code> field is the sequence of
 preparation continuation messages constructed in the previous step. Here
 <code>prepare_continues_length</code> is the length of the HTTP message content
-(<span>[<a href="#RFC9110" class="cite xref">RFC9110</a>], <a href="https://rfc-editor.org/rfc/rfc9110#section-6.4" class="relref">Section 6.4</a></span>), minus 2 (the size in octets of <code>step</code>). The
+(<span>[<a href="#RFC9110" class="cite xref">RFC9110</a>], <a href="https://rfc-editor.org/rfc/rfc9110#section-6.4" class="relref">Section 6.4</a></span>), minus the length in octets of <code>step</code>. The
 <code>PrepareContinue</code> elements <span class="bcp14">MUST</span> be in the same order as the previous request to
 the aggregation job, omitting any reports that were previously rejected by
 either Aggregator.<a href="#section-4.6.3.1-8" class="pilcrow">¶</a></p>
@@ -4993,6 +4997,7 @@ any).<a href="#section-4.6.3.4-3" class="pilcrow">¶</a></p>
 POST /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
 Content-Type: application/dap-aggregation-job-continue-req
+Content-Length: 100
 Authorization: Bearer auth-token
 
 encoded(struct {
@@ -5002,6 +5007,7 @@ encoded(struct {
 
 HTTP/1.1 200
 Content-Type: application/dap-aggregation-job-resp
+Content-Length: 100
 
 encoded(struct { prepare_resps } AggregationJobResp)
 </pre><a href="#section-4.6.3.5-2" class="pilcrow">¶</a>
@@ -5012,6 +5018,7 @@ encoded(struct { prepare_resps } AggregationJobResp)
 POST /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
 Content-Type: application/dap-aggregation-job-continue-req
+Content-Length: 100
 Authorization: Bearer auth-token
 
 encoded(struct {
@@ -5037,6 +5044,7 @@ Authorization: Bearer auth-token
 
 HTTP/1.1 200
 Content-Type: application/dap-aggregation-job-resp
+Content-Length: 100
 
 encoded(struct { prepare_resps } AggregationJobResp)
 </pre><a href="#section-4.6.3.5-4" class="pilcrow">¶</a>
@@ -5135,8 +5143,8 @@ indicated batch mode (<a href="#batch-modes" class="auto internal xref">Section 
             <li class="normal" id="section-4.7.1-4.2">
               <p id="section-4.7.1-4.2.1"><code>agg_param</code>, an aggregation parameter for the VDAF being executed. This is
 the same value as in <code>AggregationJobInitReq</code> (see <a href="#leader-init" class="auto internal xref">Section 4.6.2.1</a>). Here
-<code>agg_param_length</code> is the length of the HTTP message content (<span>[<a href="#RFC9110" class="cite xref">RFC9110</a>], <a href="https://rfc-editor.org/rfc/rfc9110#section-6.4" class="relref">Section 6.4</a></span>) minus the length of query. That is, <code>agg_param</code> consists of the
-remainder of the HTTP message.<a href="#section-4.7.1-4.2.1" class="pilcrow">¶</a></p>
+<code>agg_param_length</code> is the length of the HTTP message content (<span>[<a href="#RFC9110" class="cite xref">RFC9110</a>], <a href="https://rfc-editor.org/rfc/rfc9110#section-6.4" class="relref">Section 6.4</a></span>) minus the length in octets of query. That is, <code>agg_param</code>
+consists of the remainder of the HTTP message.<a href="#section-4.7.1-4.2.1" class="pilcrow">¶</a></p>
 </li>
           </ul>
 <p id="section-4.7.1-5">Depending on the VDAF scheme and how the Leader is configured, the Leader and
@@ -5265,6 +5273,7 @@ requests to the collection job with a different <code>CollectionJobReq</code>, t
 PUT /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/collection_jobs/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
 Content-Type: application/dap-collection-job-req
+Content-Length: 100
 Authorization: Bearer auth-token
 
 encoded(struct {
@@ -5301,6 +5310,7 @@ encoded(struct {
 PUT /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/collection_jobs/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
 Content-Type: application/dap-collection-job-req
+Content-Length: 100
 Authorization: Bearer auth-token
 
 encoded(struct {
@@ -5443,9 +5453,9 @@ struct {
 
 struct {
   BatchSelector batch_selector;
-  opaque agg_param&lt;0..2^32-1&gt;;
   uint64 report_count;
   opaque checksum[32];
+  opaque agg_param[agg_param_length];
 } AggregateShareReq;
 </pre><a href="#section-4.7.3-10" class="pilcrow">¶</a>
 </div>
@@ -5457,7 +5467,10 @@ The structure contains the following parameters:<a href="#section-4.7.3-11" clas
 indicated batch mode (see <a href="#batch-modes" class="auto internal xref">Section 5</a>.<a href="#section-4.7.3-12.1.1" class="pilcrow">¶</a></p>
 </li>
             <li class="normal" id="section-4.7.3-12.2">
-              <p id="section-4.7.3-12.2.1"><code>agg_param</code>: The encoded aggregation parameter for the VDAF being executed.<a href="#section-4.7.3-12.2.1" class="pilcrow">¶</a></p>
+              <p id="section-4.7.3-12.2.1"><code>agg_param</code>: The encoded aggregation parameter for the VDAF being executed.
+Here <code>agg_param_length</code> is the length of the HTTP message content (<span>[<a href="#RFC9110" class="cite xref">RFC9110</a>], <a href="https://rfc-editor.org/rfc/rfc9110#section-6.4" class="relref">Section 6.4</a></span>) minus the lengths in octets of <code>batch_selector</code>, <code>report_count</code>
+and <code>checksum</code>. That is <code>agg_param</code> consists of the remainder of the HTTP
+message.<a href="#section-4.7.3-12.2.1" class="pilcrow">¶</a></p>
 </li>
             <li class="normal" id="section-4.7.3-12.3">
               <p id="section-4.7.3-12.3.1"><code>report_count</code>: The number number of reports included in the batch, as
@@ -5535,6 +5548,7 @@ under the Collector's HPKE public key as described in
 PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregate_shares/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
 Content-Type: application/dap-aggregate-share-req
+Content-Length: 100
 Authorization: Bearer auth-token
 
 encoded(struct {
@@ -5547,9 +5561,9 @@ encoded(struct {
       } Interval,
     } TimeIntervalBatchSelectorConfig),
   } BatchSelector,
-  agg_param = [0x00, 0x01, ...],
   report_count = 1000,
   checksum = [0x0a, 0x0b, ..., 0x0f],
+  agg_param = [0x00, 0x01, ...],
 } AggregateShareReq)
 
 HTTP/1.1 200
@@ -5566,6 +5580,7 @@ encoded(struct {
 PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregate_shares/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
 Content-Type: application/dap-aggregate-share-req
+Content-Length: 100
 Authorization: Bearer auth-token
 
 encoded(struct {
@@ -5578,9 +5593,9 @@ encoded(struct {
       } Interval,
     } TimeIntervalBatchSelectorConfig),
   } BatchSelector,
-  agg_param = [0x00, 0x01, ...],
   report_count = 1000,
   checksum = [0x0a, 0x0b, ..., 0x0f],
+  agg_param = [0x00, 0x01, ...],
 } AggregateShareReq)
 
 HTTP/1.1 200
