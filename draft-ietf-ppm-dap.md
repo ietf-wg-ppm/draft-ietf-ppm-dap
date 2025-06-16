@@ -1392,7 +1392,7 @@ struct {
 } UploadRequest;
 ~~~
 
-Here `message_length` denotes the length of the HTTP message content ({{!RFC9110,
+Here `message_length` is the length of the HTTP message content ({{!RFC9110,
 Section 6.4}}).
 
 Each upload request contains a sequence of `Report` with the following fields:
@@ -1960,7 +1960,7 @@ struct {
 struct {
   opaque agg_param<0..2^32-1>;
   PartialBatchSelector part_batch_selector;
-  PrepareInit prepare_inits<44..2^32-1>;
+  PrepareInit prepare_inits[prepare_inits_length];
 } AggregationJobInitReq;
 ~~~
 
@@ -1977,7 +1977,10 @@ This message consists of:
   {{batch-modes}}.
 
 * `prepare_inits`: the sequence of `PrepareInit` messages constructed in the
-  previous step.
+  previous step. Here `prepare_inits_length` is the length of the HTTP message
+  content ({{!RFC9110, Section 6.4}}), minus the lengths in octets of the
+  encoded `agg_param` and `part_batch_selector` fields. That is, the remainder
+  of the HTTP message consists of `prepare_inits`.
 
 The Leader sends the `AggregationJobInitReq` in the body of a PUT request to the
 aggregation job with a media type of "application/dap-aggregation-job-init-req".
@@ -2163,12 +2166,15 @@ which is structured as follows:
 
 ~~~ tls-presentation
 struct {
-  PrepareResp prepare_resps<17..2^32-1>;
+  PrepareResp prepare_resps[message_length];
 } AggregationJobResp;
 ~~~
 
-where `prepare_resps` are the outbound `PrepareResp` messages for each report
-computed in the previous step. The order MUST match
+Here `message_length` is the length of the HTTP message content ({{!RFC9110,
+Section 6.4}}).
+
+`prepare_resps` is the outbound `PrepareResp` messages for each report computed
+in the previous step. The order MUST match
 `AggregationJobInitReq.prepare_inits`. The media type for `AggregationJobResp`
 is "application/dap-aggregation-job-resp".
 
@@ -2259,6 +2265,7 @@ The Helper handles the aggregation job initialization synchronously:
 PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
 Content-Type: application/dap-aggregation-job-init-req
+Content-Length: 100
 Authorization: Bearer auth-token
 
 encoded(struct {
@@ -2274,6 +2281,7 @@ encoded(struct {
 
 HTTP/1.1 200
 Content-Type: application/dap-aggregation-job-resp
+Content-Length: 100
 
 encoded(struct { prepare_resps } AggregationJobResp)
 ~~~
@@ -2284,6 +2292,7 @@ Or asynchronously:
 PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
 Content-Type: application/dap-aggregation-job-init-req
+Content-Length: 100
 Authorization: Bearer auth-token
 
 encoded(struct {
@@ -2313,6 +2322,7 @@ Authorization: Bearer auth-token
 
 HTTP/1.1 200
 Content-Type: application/dap-aggregation-job-resp
+Content-Length: 100
 
 encoded(struct { prepare_resps } AggregationJobResp)
 ~~~
@@ -2373,13 +2383,15 @@ Next, the Leader sends a POST to the aggregation job with media type
 ~~~ tls-presentation
 struct {
   uint16 step;
-  PrepareContinue prepare_continues<21..2^32-1>;
+  PrepareContinue prepare_continues[prepare_continues_length];
 } AggregationJobContinueReq;
 ~~~
 
 The `step` field is the step of DAP aggregation that the Leader just reached and
 wants the Helper to advance to. The `prepare_continues` field is the sequence of
-preparation continuation messages constructed in the previous step. The
+preparation continuation messages constructed in the previous step. Here
+`prepare_continues_length` is the length of the HTTP message content
+({{!RFC9110, Section 6.4}}), minus the length in octets of `step`. The
 `PrepareContinue` elements MUST be in the same order as the previous request to
 the aggregation job, omitting any reports that were previously rejected by
 either Aggregator.
@@ -2650,6 +2662,7 @@ The Helper handles the aggregation job continuation synchronously:
 POST /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
 Content-Type: application/dap-aggregation-job-continue-req
+Content-Length: 100
 Authorization: Bearer auth-token
 
 encoded(struct {
@@ -2659,6 +2672,7 @@ encoded(struct {
 
 HTTP/1.1 200
 Content-Type: application/dap-aggregation-job-resp
+Content-Length: 100
 
 encoded(struct { prepare_resps } AggregationJobResp)
 ~~~
@@ -2669,6 +2683,7 @@ Or asynchronously:
 POST /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
 Content-Type: application/dap-aggregation-job-continue-req
+Content-Length: 100
 Authorization: Bearer auth-token
 
 encoded(struct {
@@ -2694,6 +2709,7 @@ Authorization: Bearer auth-token
 
 HTTP/1.1 200
 Content-Type: application/dap-aggregation-job-resp
+Content-Length: 100
 
 encoded(struct { prepare_resps } AggregationJobResp)
 ~~~
@@ -2757,7 +2773,7 @@ struct {
 
 struct {
   Query query;
-  opaque agg_param<0..2^32-1>; /* VDAF aggregation parameter */
+  opaque agg_param<0..2^32-1>;
 } CollectionJobReq;
 ~~~
 
@@ -3650,7 +3666,7 @@ the task and all data pertaining to this task after the `task_interval`.
 Implementors SHOULD provide for some leeway so the Collector can collect the
 batch after some delay.
 
-### Distributed-systems and Synchronization Concerns {#distributed-systems}
+### Distributed Systems and Synchronization Concerns {#distributed-systems}
 
 Various parts of a DAP implementation will need to synchronize in order to
 ensure correctness during concurrent operation. This section describes the
@@ -3708,6 +3724,19 @@ tradeoffs.
   determine the aggregated report count and checksum of aggregated report IDs
   before responding to an aggregate share request, requiring synchronization
   between the Helper's collection and aggregation interactions.
+
+### Streaming Messages
+
+Most messages in the protocol contain fixed-length or length-prefixed fields
+such that they can be parsed independently of context. The exceptions are the
+`UploadReq`, `UploadResp` ({{upload-request}}), `AggregationJobInitReq`,
+`AggregationJobContinueReq`, and `AggregationJobResp` ({{aggregate-flow}})
+messages, all of which contain vectors whose length is determined by the length
+of the enclosing HTTP message.
+
+This allows implementations to begin transmitting these messages before knowing
+how long the message will ultimately be. This is useful if implementations wish
+to avoid buffering exceptionally large messages in memory.
 
 # Compliance Requirements {#compliance}
 
