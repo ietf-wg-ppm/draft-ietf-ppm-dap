@@ -163,6 +163,11 @@ aggregator.
 
 (\*) Indicates a change that breaks wire compatibility with the previous draft.
 
+16:
+
+- Bump draft-irtf-cfrg-vdaf-13 to 14 {{!VDAF}} and adopt changes to the
+  ping-pong API (\#705, \#718).
+
 15:
 
 - Specify body of responses to aggregation job GET requests. (#651)
@@ -573,7 +578,7 @@ function" and `agg_result` the "aggregate result".
 DAP is extensible in that it allows for the addition of new cryptographic
 schemes that compute different aggregation functions, determined by the
 Verifiable Distributed Aggregation Function, or
-{{!VDAF=I-D.draft-irtf-cfrg-vdaf-14}}, used to compute it.
+{{!VDAF=I-D.draft-irtf-cfrg-vdaf-15}}, used to compute it.
 
 VDAFs rely on secret sharing to protect the privacy of the measurements. Rather
 than sending its measurement in the clear, each Client shards its measurement
