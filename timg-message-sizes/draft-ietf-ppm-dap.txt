@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 18 December 2025                                     Cloudflare
+Expires: 20 December 2025                                     Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                            16 June 2025
+                                                            18 June 2025
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -64,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 18 December 2025.
+   This Internet-Draft will expire on 20 December 2025.
 
 Copyright Notice
 
@@ -141,7 +141,8 @@ Table of Contents
      6.3.  Aggregation Utility and Soft Batch Deadlines
      6.4.  Protocol-specific Optimizations
        6.4.1.  Reducing Storage Requirements
-       6.4.2.  Distributed-systems and Synchronization Concerns
+       6.4.2.  Distributed Systems and Synchronization Concerns
+       6.4.3.  Streaming Messages
    7.  Compliance Requirements
    8.  Security Considerations
      8.1.  Sybil Attacks
@@ -2909,7 +2910,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    struct {
      Query query;
-     opaque agg_param[agg_param_length];
+     opaque agg_param<0..2^32-1>;
    } CollectionJobReq;
 
    *  query, the Collector's query.  The content of this field depends
@@ -2917,10 +2918,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    *  agg_param, an aggregation parameter for the VDAF being executed.
       This is the same value as in AggregationJobInitReq (see
-      Section 4.6.2.1).  Here agg_param_length is the length of the HTTP
-      message content ([RFC9110], Section 6.4) minus the length in
-      octets of query.  That is, agg_param consists of the remainder of
-      the HTTP message.
+      Section 4.6.2.1).
 
    Depending on the VDAF scheme and how the Leader is configured, the
    Leader and Helper may already have prepared a sufficient number of
@@ -3047,7 +3045,6 @@ aggregation job 1                   aggregation job 2          aggregation job j
    PUT /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/collection_jobs/lc7aUeGpdSNosNlh-UZhKA
    Host: example.com
    Content-Type: application/dap-collection-job-req
-   Content-Length: 100
    Authorization: Bearer auth-token
 
    encoded(struct {
@@ -3082,7 +3079,6 @@ aggregation job 1                   aggregation job 2          aggregation job j
    PUT /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/collection_jobs/lc7aUeGpdSNosNlh-UZhKA
    Host: example.com
    Content-Type: application/dap-collection-job-req
-   Content-Length: 100
    Authorization: Bearer auth-token
 
    encoded(struct {
@@ -3203,9 +3199,9 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    struct {
      BatchSelector batch_selector;
+     opaque agg_param<0..2^32-1>;
      uint64 report_count;
      opaque checksum[32];
-     opaque agg_param[agg_param_length];
    } AggregateShareReq;
 
    The media type of AggregateShareReq is "application/dap-aggregate-
@@ -3215,10 +3211,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
       depends on the indicated batch mode (see Section 5.
 
    *  agg_param: The encoded aggregation parameter for the VDAF being
-      executed.  Here agg_param_length is the length of the HTTP message
-      content ([RFC9110], Section 6.4) minus the lengths in octets of
-      batch_selector, report_count and checksum.  That is agg_param
-      consists of the remainder of the HTTP message.
+      executed.
 
    *  report_count: The number number of reports included in the batch,
       as computed above.
@@ -3304,7 +3297,6 @@ aggregation job 1                   aggregation job 2          aggregation job j
    PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregate_shares/lc7aUeGpdSNosNlh-UZhKA
    Host: example.com
    Content-Type: application/dap-aggregate-share-req
-   Content-Length: 100
    Authorization: Bearer auth-token
 
    encoded(struct {
@@ -3317,9 +3309,9 @@ aggregation job 1                   aggregation job 2          aggregation job j
          } Interval,
        } TimeIntervalBatchSelectorConfig),
      } BatchSelector,
+     agg_param = [0x00, 0x01, ...],
      report_count = 1000,
      checksum = [0x0a, 0x0b, ..., 0x0f],
-     agg_param = [0x00, 0x01, ...],
    } AggregateShareReq)
 
    HTTP/1.1 200
@@ -3334,7 +3326,6 @@ aggregation job 1                   aggregation job 2          aggregation job j
    PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregate_shares/lc7aUeGpdSNosNlh-UZhKA
    Host: example.com
    Content-Type: application/dap-aggregate-share-req
-   Content-Length: 100
    Authorization: Bearer auth-token
 
    encoded(struct {
@@ -3347,9 +3338,9 @@ aggregation job 1                   aggregation job 2          aggregation job j
          } Interval,
        } TimeIntervalBatchSelectorConfig),
      } BatchSelector,
+     agg_param = [0x00, 0x01, ...],
      report_count = 1000,
      checksum = [0x0a, 0x0b, ..., 0x0f],
-     agg_param = [0x00, 0x01, ...],
    } AggregateShareReq)
 
    HTTP/1.1 200
@@ -3824,7 +3815,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    after the task_interval.  Implementors SHOULD provide for some leeway
    so the Collector can collect the batch after some delay.
 
-6.4.2.  Distributed-systems and Synchronization Concerns
+6.4.2.  Distributed Systems and Synchronization Concerns
 
    Various parts of a DAP implementation will need to synchronize in
    order to ensure correctness during concurrent operation.  This
@@ -3891,6 +3882,21 @@ aggregation job 1                   aggregation job 2          aggregation job j
       before responding to an aggregate share request, requiring
       synchronization between the Helper's collection and aggregation
       interactions.
+
+6.4.3.  Streaming Messages
+
+   Most messages in the protocol contain fixed-length or length-prefixed
+   fields such that they can be parsed independently of context.  The
+   exceptions are the UploadReq, UploadResp (Section 4.5.2),
+   AggregationJobInitReq, AggregationJobContinueReq, and
+   AggregationJobResp (Section 4.6) messages, all of which contain
+   vectors whose length is determined by the length of the enclosing
+   HTTP message.
+
+   This allows implementations to begin transmitting these messages
+   before knowing how long the message will ultimately be.  This is
+   useful if implementations wish to avoid buffering exceptionally large
+   messages in memory.
 
 7.  Compliance Requirements
 

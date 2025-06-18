@@ -21,10 +21,10 @@ This document describes a multi-party Distributed Aggregation Protocol (DAP) for
 privacy preserving measurement which can be used to collect aggregate data
 without revealing any individual contributor's data. 
     " name="description">
-<meta content="xml2rfc 3.28.1" name="generator">
+<meta content="xml2rfc 3.29.0" name="generator">
 <meta content="draft-ietf-ppm-dap-latest" name="ietf.draft">
 <!-- Generator version information:
-  xml2rfc 3.28.1
+  xml2rfc 3.29.0
     Python 3.12.11
     ConfigArgParse 1.7
     google-i18n-address 3.1.1
@@ -1059,7 +1059,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
 </tr></thead>
 <tfoot><tr>
 <td class="left">Geoghegan, et al.</td>
-<td class="center">Expires 18 December 2025</td>
+<td class="center">Expires 20 December 2025</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1072,12 +1072,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-ietf-ppm-dap-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2025-06-16" class="published">16 June 2025</time>
+<time datetime="2025-06-18" class="published">18 June 2025</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Standards Track</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2025-12-18">18 December 2025</time></dd>
+<dd class="expires"><time datetime="2025-12-20">20 December 2025</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -1151,7 +1151,7 @@ without revealing any individual contributor's data.<a href="#section-abstract-1
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 18 December 2025.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 20 December 2025.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1388,7 +1388,10 @@ without revealing any individual contributor's data.<a href="#section-abstract-1
                     <p id="section-toc.1-1.6.2.4.2.1.1"><a href="#section-6.4.1" class="auto internal xref">6.4.1</a>.  <a href="#name-reducing-storage-requiremen" class="internal xref">Reducing Storage Requirements</a></p>
 </li>
                   <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.4.2.2">
-                    <p id="section-toc.1-1.6.2.4.2.2.1"><a href="#section-6.4.2" class="auto internal xref">6.4.2</a>.  <a href="#name-distributed-systems-and-syn" class="internal xref">Distributed-systems and Synchronization Concerns</a></p>
+                    <p id="section-toc.1-1.6.2.4.2.2.1"><a href="#section-6.4.2" class="auto internal xref">6.4.2</a>.  <a href="#name-distributed-systems-and-syn" class="internal xref">Distributed Systems and Synchronization Concerns</a></p>
+</li>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.4.2.3">
+                    <p id="section-toc.1-1.6.2.4.2.3.1"><a href="#section-6.4.3" class="auto internal xref">6.4.3</a>.  <a href="#name-streaming-messages" class="internal xref">Streaming Messages</a></p>
 </li>
                 </ul>
 </li>
@@ -5131,7 +5134,7 @@ struct {
 
 struct {
   Query query;
-  opaque agg_param[agg_param_length];
+  opaque agg_param&lt;0..2^32-1&gt;;
 } CollectionJobReq;
 </pre><a href="#section-4.7.1-3" class="pilcrow">¶</a>
 </div>
@@ -5142,9 +5145,7 @@ indicated batch mode (<a href="#batch-modes" class="auto internal xref">Section 
 </li>
             <li class="normal" id="section-4.7.1-4.2">
               <p id="section-4.7.1-4.2.1"><code>agg_param</code>, an aggregation parameter for the VDAF being executed. This is
-the same value as in <code>AggregationJobInitReq</code> (see <a href="#leader-init" class="auto internal xref">Section 4.6.2.1</a>). Here
-<code>agg_param_length</code> is the length of the HTTP message content (<span>[<a href="#RFC9110" class="cite xref">RFC9110</a>], <a href="https://rfc-editor.org/rfc/rfc9110#section-6.4" class="relref">Section 6.4</a></span>) minus the length in octets of query. That is, <code>agg_param</code>
-consists of the remainder of the HTTP message.<a href="#section-4.7.1-4.2.1" class="pilcrow">¶</a></p>
+the same value as in <code>AggregationJobInitReq</code> (see <a href="#leader-init" class="auto internal xref">Section 4.6.2.1</a>).<a href="#section-4.7.1-4.2.1" class="pilcrow">¶</a></p>
 </li>
           </ul>
 <p id="section-4.7.1-5">Depending on the VDAF scheme and how the Leader is configured, the Leader and
@@ -5273,7 +5274,6 @@ requests to the collection job with a different <code>CollectionJobReq</code>, t
 PUT /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/collection_jobs/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
 Content-Type: application/dap-collection-job-req
-Content-Length: 100
 Authorization: Bearer auth-token
 
 encoded(struct {
@@ -5310,7 +5310,6 @@ encoded(struct {
 PUT /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/collection_jobs/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
 Content-Type: application/dap-collection-job-req
-Content-Length: 100
 Authorization: Bearer auth-token
 
 encoded(struct {
@@ -5453,9 +5452,9 @@ struct {
 
 struct {
   BatchSelector batch_selector;
+  opaque agg_param&lt;0..2^32-1&gt;;
   uint64 report_count;
   opaque checksum[32];
-  opaque agg_param[agg_param_length];
 } AggregateShareReq;
 </pre><a href="#section-4.7.3-10" class="pilcrow">¶</a>
 </div>
@@ -5467,10 +5466,7 @@ The structure contains the following parameters:<a href="#section-4.7.3-11" clas
 indicated batch mode (see <a href="#batch-modes" class="auto internal xref">Section 5</a>.<a href="#section-4.7.3-12.1.1" class="pilcrow">¶</a></p>
 </li>
             <li class="normal" id="section-4.7.3-12.2">
-              <p id="section-4.7.3-12.2.1"><code>agg_param</code>: The encoded aggregation parameter for the VDAF being executed.
-Here <code>agg_param_length</code> is the length of the HTTP message content (<span>[<a href="#RFC9110" class="cite xref">RFC9110</a>], <a href="https://rfc-editor.org/rfc/rfc9110#section-6.4" class="relref">Section 6.4</a></span>) minus the lengths in octets of <code>batch_selector</code>, <code>report_count</code>
-and <code>checksum</code>. That is <code>agg_param</code> consists of the remainder of the HTTP
-message.<a href="#section-4.7.3-12.2.1" class="pilcrow">¶</a></p>
+              <p id="section-4.7.3-12.2.1"><code>agg_param</code>: The encoded aggregation parameter for the VDAF being executed.<a href="#section-4.7.3-12.2.1" class="pilcrow">¶</a></p>
 </li>
             <li class="normal" id="section-4.7.3-12.3">
               <p id="section-4.7.3-12.3.1"><code>report_count</code>: The number number of reports included in the batch, as
@@ -5548,7 +5544,6 @@ under the Collector's HPKE public key as described in
 PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregate_shares/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
 Content-Type: application/dap-aggregate-share-req
-Content-Length: 100
 Authorization: Bearer auth-token
 
 encoded(struct {
@@ -5561,9 +5556,9 @@ encoded(struct {
       } Interval,
     } TimeIntervalBatchSelectorConfig),
   } BatchSelector,
+  agg_param = [0x00, 0x01, ...],
   report_count = 1000,
   checksum = [0x0a, 0x0b, ..., 0x0f],
-  agg_param = [0x00, 0x01, ...],
 } AggregateShareReq)
 
 HTTP/1.1 200
@@ -5580,7 +5575,6 @@ encoded(struct {
 PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregate_shares/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
 Content-Type: application/dap-aggregate-share-req
-Content-Length: 100
 Authorization: Bearer auth-token
 
 encoded(struct {
@@ -5593,9 +5587,9 @@ encoded(struct {
       } Interval,
     } TimeIntervalBatchSelectorConfig),
   } BatchSelector,
+  agg_param = [0x00, 0x01, ...],
   report_count = 1000,
   checksum = [0x0a, 0x0b, ..., 0x0f],
-  agg_param = [0x00, 0x01, ...],
 } AggregateShareReq)
 
 HTTP/1.1 200
@@ -6205,7 +6199,7 @@ batch after some delay.<a href="#section-6.4.1-3" class="pilcrow">¶</a></p>
 <div id="distributed-systems">
 <section id="section-6.4.2">
           <h4 id="name-distributed-systems-and-syn">
-<a href="#section-6.4.2" class="section-number selfRef">6.4.2. </a><a href="#name-distributed-systems-and-syn" class="section-name selfRef">Distributed-systems and Synchronization Concerns</a>
+<a href="#section-6.4.2" class="section-number selfRef">6.4.2. </a><a href="#name-distributed-systems-and-syn" class="section-name selfRef">Distributed Systems and Synchronization Concerns</a>
           </h4>
 <p id="section-6.4.2-1">Various parts of a DAP implementation will need to synchronize in order to
 ensure correctness during concurrent operation. This section describes the
@@ -6270,6 +6264,22 @@ before responding to an aggregate share request, requiring synchronization
 between the Helper's collection and aggregation interactions.<a href="#section-6.4.2-2.5.1" class="pilcrow">¶</a></p>
 </li>
           </ul>
+</section>
+</div>
+<div id="streaming-messages">
+<section id="section-6.4.3">
+          <h4 id="name-streaming-messages">
+<a href="#section-6.4.3" class="section-number selfRef">6.4.3. </a><a href="#name-streaming-messages" class="section-name selfRef">Streaming Messages</a>
+          </h4>
+<p id="section-6.4.3-1">Most messages in the protocol contain fixed-length or length-prefixed fields
+such that they can be parsed independently of context. The exceptions are the
+<code>UploadReq</code>, <code>UploadResp</code> (<a href="#upload-request" class="auto internal xref">Section 4.5.2</a>), <code>AggregationJobInitReq</code>,
+<code>AggregationJobContinueReq</code>, and <code>AggregationJobResp</code> (<a href="#aggregate-flow" class="auto internal xref">Section 4.6</a>)
+messages, all of which contain vectors whose length is determined by the length
+of the enclosing HTTP message.<a href="#section-6.4.3-1" class="pilcrow">¶</a></p>
+<p id="section-6.4.3-2">This allows implementations to begin transmitting these messages before knowing
+how long the message will ultimately be. This is useful if implementations wish
+to avoid buffering exceptionally large messages in memory.<a href="#section-6.4.3-2" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
