@@ -2773,7 +2773,7 @@ struct {
 
 struct {
   Query query;
-  opaque agg_param[agg_param_length];
+  opaque agg_param<0..2^32-1>;
 } CollectionJobReq;
 ~~~
 
@@ -2781,10 +2781,7 @@ struct {
   indicated batch mode ({{batch-modes}}).
 
 * `agg_param`, an aggregation parameter for the VDAF being executed. This is
-  the same value as in `AggregationJobInitReq` (see {{leader-init}}). Here
-  `agg_param_length` is the length of the HTTP message content ({{!RFC9110,
-  Section 6.4}}) minus the length in octets of query. That is, `agg_param`
-  consists of the remainder of the HTTP message.
+  the same value as in `AggregationJobInitReq` (see {{leader-init}}).
 
 Depending on the VDAF scheme and how the Leader is configured, the Leader and
 Helper may already have prepared a sufficient number of reports satisfying the
@@ -2906,7 +2903,6 @@ The Leader handles the collection job request synchronously:
 PUT /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/collection_jobs/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
 Content-Type: application/dap-collection-job-req
-Content-Length: 100
 Authorization: Bearer auth-token
 
 encoded(struct {
@@ -2943,7 +2939,6 @@ Or asynchronously:
 PUT /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/collection_jobs/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
 Content-Type: application/dap-collection-job-req
-Content-Length: 100
 Authorization: Bearer auth-token
 
 encoded(struct {
@@ -3062,9 +3057,9 @@ struct {
 
 struct {
   BatchSelector batch_selector;
+  opaque agg_param<0..2^32-1>;
   uint64 report_count;
   opaque checksum[32];
-  opaque agg_param[agg_param_length];
 } AggregateShareReq;
 ~~~
 
@@ -3075,10 +3070,6 @@ The structure contains the following parameters:
   indicated batch mode (see {{batch-modes}}.
 
 * `agg_param`: The encoded aggregation parameter for the VDAF being executed.
-  Here `agg_param_length` is the length of the HTTP message content ({{!RFC9110,
-  Section 6.4}}) minus the lengths in octets of `batch_selector`, `report_count`
-  and `checksum`. That is `agg_param` consists of the remainder of the HTTP
-  message.
 
 * `report_count`: The number number of reports included in the batch, as
   computed above.
@@ -3164,7 +3155,6 @@ The Helper handles the aggregate share request synchronously:
 PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregate_shares/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
 Content-Type: application/dap-aggregate-share-req
-Content-Length: 100
 Authorization: Bearer auth-token
 
 encoded(struct {
@@ -3177,9 +3167,9 @@ encoded(struct {
       } Interval,
     } TimeIntervalBatchSelectorConfig),
   } BatchSelector,
+  agg_param = [0x00, 0x01, ...],
   report_count = 1000,
   checksum = [0x0a, 0x0b, ..., 0x0f],
-  agg_param = [0x00, 0x01, ...],
 } AggregateShareReq)
 
 HTTP/1.1 200
@@ -3196,7 +3186,6 @@ Or asynchronously:
 PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregate_shares/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
 Content-Type: application/dap-aggregate-share-req
-Content-Length: 100
 Authorization: Bearer auth-token
 
 encoded(struct {
@@ -3209,9 +3198,9 @@ encoded(struct {
       } Interval,
     } TimeIntervalBatchSelectorConfig),
   } BatchSelector,
+  agg_param = [0x00, 0x01, ...],
   report_count = 1000,
   checksum = [0x0a, 0x0b, ..., 0x0f],
-  agg_param = [0x00, 0x01, ...],
 } AggregateShareReq)
 
 HTTP/1.1 200
@@ -3677,7 +3666,7 @@ the task and all data pertaining to this task after the `task_interval`.
 Implementors SHOULD provide for some leeway so the Collector can collect the
 batch after some delay.
 
-### Distributed-systems and Synchronization Concerns {#distributed-systems}
+### Distributed Systems and Synchronization Concerns {#distributed-systems}
 
 Various parts of a DAP implementation will need to synchronize in order to
 ensure correctness during concurrent operation. This section describes the
@@ -3735,6 +3724,19 @@ tradeoffs.
   determine the aggregated report count and checksum of aggregated report IDs
   before responding to an aggregate share request, requiring synchronization
   between the Helper's collection and aggregation interactions.
+
+### Streaming Messages
+
+Most messages in the protocol contain fixed-length or length-prefixed fields
+such that they can be parsed independently of context. The exceptions are the
+`UploadReq`, `UploadResp` ({{upload-request}}), `AggregationJobInitReq`,
+`AggregationJobContinueReq`, and `AggregationJobResp` ({{aggregate-flow}})
+messages, all of which contain vectors whose length is determined by the length
+of the enclosing HTTP message.
+
+This allows implementations to begin transmitting these messages before knowing
+how long the message will ultimately be. This is useful if implementations wish
+to avoid buffering exceptionally large messages in memory.
 
 # Compliance Requirements {#compliance}
 
