@@ -21,10 +21,10 @@ This document describes a multi-party Distributed Aggregation Protocol (DAP) for
 privacy preserving measurement which can be used to collect aggregate data
 without revealing any individual contributor's data. 
     " name="description">
-<meta content="xml2rfc 3.28.1" name="generator">
+<meta content="xml2rfc 3.29.0" name="generator">
 <meta content="draft-ietf-ppm-dap-latest" name="ietf.draft">
 <!-- Generator version information:
-  xml2rfc 3.28.1
+  xml2rfc 3.29.0
     Python 3.12.11
     ConfigArgParse 1.7
     google-i18n-address 3.1.1
@@ -1059,7 +1059,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
 </tr></thead>
 <tfoot><tr>
 <td class="left">Geoghegan, et al.</td>
-<td class="center">Expires 19 December 2025</td>
+<td class="center">Expires 24 December 2025</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1072,12 +1072,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-ietf-ppm-dap-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2025-06-17" class="published">17 June 2025</time>
+<time datetime="2025-06-22" class="published">22 June 2025</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Standards Track</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2025-12-19">19 December 2025</time></dd>
+<dd class="expires"><time datetime="2025-12-24">24 December 2025</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -1151,7 +1151,7 @@ without revealing any individual contributor's data.<a href="#section-abstract-1
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 19 December 2025.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 24 December 2025.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1428,7 +1428,10 @@ without revealing any individual contributor's data.<a href="#section-abstract-1
                     <p id="section-toc.1-1.8.2.6.2.3.1"><a href="#section-8.6.3" class="auto internal xref">8.6.3</a>.  <a href="#name-batch-parameters" class="internal xref">Batch Parameters</a></p>
 </li>
                   <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8.2.6.2.4">
-                    <p id="section-toc.1-1.8.2.6.2.4.1"><a href="#section-8.6.4" class="auto internal xref">8.6.4</a>.  <a href="#name-task-configuration-agreemen" class="internal xref">Task Configuration Agreement and Consistency</a></p>
+                    <p id="section-toc.1-1.8.2.6.2.4.1"><a href="#section-8.6.4" class="auto internal xref">8.6.4</a>.  <a href="#name-relaxing-report-processing-" class="internal xref">Relaxing Report Processing Rules</a></p>
+</li>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8.2.6.2.5">
+                    <p id="section-toc.1-1.8.2.6.2.5.1"><a href="#section-8.6.5" class="auto internal xref">8.6.5</a>.  <a href="#name-task-configuration-agreemen" class="internal xref">Task Configuration Agreement and Consistency</a></p>
 </li>
                 </ul>
 </li>
@@ -6583,24 +6586,62 @@ an appropriate value may be determined from the differential privacy (<a href="#
 parameters in use, if any.<a href="#section-8.6.3-1" class="pilcrow">¶</a></p>
 </section>
 </div>
-<div id="task-configuration-agreement-and-consistency">
+<div id="relaxing-report-processing-rules">
 <section id="section-8.6.4">
-          <h4 id="name-task-configuration-agreemen">
-<a href="#section-8.6.4" class="section-number selfRef">8.6.4. </a><a href="#name-task-configuration-agreemen" class="section-name selfRef">Task Configuration Agreement and Consistency</a>
+          <h4 id="name-relaxing-report-processing-">
+<a href="#section-8.6.4" class="section-number selfRef">8.6.4. </a><a href="#name-relaxing-report-processing-" class="section-name selfRef">Relaxing Report Processing Rules</a>
           </h4>
-<p id="section-8.6.4-1">In order to execute a DAP task, it is necessary for all parties to ensure they
+<p id="section-8.6.4-1">DAP Aggregators enforce several rules for report processing related to the
+privacy of individual measurements:<a href="#section-8.6.4-1" class="pilcrow">¶</a></p>
+<ol start="1" type="1" class="normal type-1" id="section-8.6.4-2">
+<li id="section-8.6.4-2.1">
+              <p id="section-8.6.4-2.1.1">Each report may be aggregated at most once (<a href="#batch-buckets" class="auto internal xref">Section 4.6.3.3</a>)<a href="#section-8.6.4-2.1.1" class="pilcrow">¶</a></p>
+</li>
+            <li id="section-8.6.4-2.2">
+              <p id="section-8.6.4-2.2.1">A batch bucket may be collected at most once (reports pertaining to
+collected buckets are rejected; see <a href="#batch-buckets" class="auto internal xref">Section 4.6.3.3</a>)<a href="#section-8.6.4-2.2.1" class="pilcrow">¶</a></p>
+</li>
+            <li id="section-8.6.4-2.3">
+              <p id="section-8.6.4-2.3.1">A batch may only be collected if the number of reports aggregated exceeds
+the minimum batch size (<a href="#collect-flow" class="auto internal xref">Section 4.7</a>)<a href="#section-8.6.4-2.3.1" class="pilcrow">¶</a></p>
+</li>
+          </ol>
+<p id="section-8.6.4-3">It may be desirable to relax these rules in some applications. It may also be
+safe to do so when DAP is combined with other privacy enhancements such as
+differential privacy. When applications wish to relax any of one of these
+requirements, they:<a href="#section-8.6.4-3" class="pilcrow">¶</a></p>
+<ol start="1" type="1" class="normal type-1" id="section-8.6.4-4">
+<li id="section-8.6.4-4.1">
+              <p id="section-8.6.4-4.1.1"><span class="bcp14">MUST</span> adhere to the VDAF's requirements for aggregating a report more than
+once. See <span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-15#section-5.3" class="relref">Section 5.3</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span> for details.<a href="#section-8.6.4-4.1.1" class="pilcrow">¶</a></p>
+</li>
+            <li id="section-8.6.4-4.2">
+              <p id="section-8.6.4-4.2.1"><span class="bcp14">SHOULD</span> define a mechanism by which each party explicitly opts into the
+change in report processing rules, e.g., via a report extension
+(<a href="#report-extensions" class="auto internal xref">Section 4.5.3</a>). This helps prevent an implementation from
+relaxing the rules by mistake.<a href="#section-8.6.4-4.2.1" class="pilcrow">¶</a></p>
+</li>
+          </ol>
+</section>
+</div>
+<div id="task-configuration-agreement-and-consistency">
+<section id="section-8.6.5">
+          <h4 id="name-task-configuration-agreemen">
+<a href="#section-8.6.5" class="section-number selfRef">8.6.5. </a><a href="#name-task-configuration-agreemen" class="section-name selfRef">Task Configuration Agreement and Consistency</a>
+          </h4>
+<p id="section-8.6.5-1">In order to execute a DAP task, it is necessary for all parties to ensure they
 agree on the configuration of the task. However, it is possible for a party to
 participate in the execution of DAP without knowing all of the task's
 parameters. For example, a Client can upload a report (<a href="#upload-flow" class="auto internal xref">Section 4.5</a>) without
 knowing the minimum batch size that is enforced by the Aggregators during
-collection (<a href="#collect-flow" class="auto internal xref">Section 4.7</a>).<a href="#section-8.6.4-1" class="pilcrow">¶</a></p>
-<p id="section-8.6.4-2">Depending on the deployment model, agreement can require that task parameters
+collection (<a href="#collect-flow" class="auto internal xref">Section 4.7</a>).<a href="#section-8.6.5-1" class="pilcrow">¶</a></p>
+<p id="section-8.6.5-2">Depending on the deployment model, agreement can require that task parameters
 are visible to all parties such that each party can choose whether to
 participate based on the value of any parameter. This includes the parameters
 enumerated in <a href="#task-configuration" class="auto internal xref">Section 4.2</a> and any additional parameters implied by
 report extensions <a href="#report-extensions" class="auto internal xref">Section 4.5.3</a> used by the task. Since meaningful
 privacy requires that multiple Clients contribute to a task, they should also
-share a consistent view of the task configuration.<a href="#section-8.6.4-2" class="pilcrow">¶</a></p>
+share a consistent view of the task configuration.<a href="#section-8.6.5-2" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>

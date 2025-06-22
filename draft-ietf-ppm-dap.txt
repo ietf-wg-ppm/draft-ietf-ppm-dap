@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 19 December 2025                                     Cloudflare
+Expires: 24 December 2025                                     Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                            17 June 2025
+                                                            22 June 2025
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -64,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 19 December 2025.
+   This Internet-Draft will expire on 24 December 2025.
 
 Copyright Notice
 
@@ -153,7 +153,8 @@ Table of Contents
        8.6.1.  Predictable or Enumerable Task IDs
        8.6.2.  VDAF Verification Key Requirements
        8.6.3.  Batch Parameters
-       8.6.4.  Task Configuration Agreement and Consistency
+       8.6.4.  Relaxing Report Processing Rules
+       8.6.5.  Task Configuration Agreement and Consistency
      8.7.  Infrastructure Diversity
    9.  IANA Considerations
      9.1.  Protocol Message Media Types
@@ -4149,7 +4150,33 @@ aggregation job 1                   aggregation job 2          aggregation job j
    value may be determined from the differential privacy (Section 8.5)
    parameters in use, if any.
 
-8.6.4.  Task Configuration Agreement and Consistency
+8.6.4.  Relaxing Report Processing Rules
+
+   DAP Aggregators enforce several rules for report processing related
+   to the privacy of individual measurements:
+
+   1.  Each report may be aggregated at most once (Section 4.6.3.3)
+
+   2.  A batch bucket may be collected at most once (reports pertaining
+       to collected buckets are rejected; see Section 4.6.3.3)
+
+   3.  A batch may only be collected if the number of reports aggregated
+       exceeds the minimum batch size (Section 4.7)
+
+   It may be desirable to relax these rules in some applications.  It
+   may also be safe to do so when DAP is combined with other privacy
+   enhancements such as differential privacy.  When applications wish to
+   relax any of one of these requirements, they:
+
+   1.  MUST adhere to the VDAF's requirements for aggregating a report
+       more than once.  See Section 5.3 of [VDAF] for details.
+
+   2.  SHOULD define a mechanism by which each party explicitly opts
+       into the change in report processing rules, e.g., via a report
+       extension (Section 4.5.3).  This helps prevent an implementation
+       from relaxing the rules by mistake.
+
+8.6.5.  Task Configuration Agreement and Consistency
 
    In order to execute a DAP task, it is necessary for all parties to
    ensure they agree on the configuration of the task.  However, it is
