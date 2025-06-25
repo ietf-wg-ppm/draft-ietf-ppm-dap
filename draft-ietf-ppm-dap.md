@@ -1114,7 +1114,7 @@ uint64 Duration;
 ~~~
 
 Durations of time are integers, representing a number of `time_precision`s.
-They can be added to POSIX timestamps to produce other POSIX timestamps.
+They can be added to times to produce other times.
 
 ~~~ tls-presentation
 struct {
@@ -2085,6 +2085,9 @@ conditions:
 * Whether it recognizes the task ID. If not, then the Helper MUST fail the job
   with error `unrecognizedTask`.
 
+* Whether the `AggregationJobInitReq` is malformed. If so, the the Helper MUST
+  fail the job with error `invalidMessage`.
+
 * Whether the batch mode indicated by `part_batch_selector.batch_mode` matches
   the task's batch mode. If not, then the Helper MUST fail the job with error
   `invalidMessage`.
@@ -2093,7 +2096,7 @@ conditions:
   {{agg-param-validation}}. If the aggregation parameter is invalid, then the
   Helper MUST fail the job with error `invalidAggregationParameter`.
 
-* Whether  the report IDs in `AggregationJobInitReq.prepare_inits` are all
+* Whether the report IDs in `AggregationJobInitReq.prepare_inits` are all
   distinct. If not, then the Helper MUST fail the job with error
   `invalidMessage`.
 
@@ -2235,10 +2238,6 @@ input share in the job:
 
 1. Check that the input share can be decoded as specified by the VDAF. If not,
    the input share MUST be marked as invalid with the error `invalid_message`.
-
-1. Check that the report's timestamp is well-formed as specified in
-   {{timestamps}}. If not, the Aggregator MUST mark the input share as invalid
-   with error `invalid_message`.
 
 1. Check if the report's timestamp is more than a few minutes ahead of the
    current time. If so, then the Aggregator SHOULD mark the input share as
@@ -2502,6 +2501,9 @@ following conditions:
 
 * Whether it recognizes the indicated aggregation job ID. If not, the Helper
   MUST fail the job with error `unrecognizedAggregationJob`.
+
+* Whether the `AggregationJobContinueReq` is malformed. If so, the the Helper
+  MUST fail the job with error `invalidMessage`.
 
 * Whether `AggregationJobContinueReq.step` is equal to `0`. If so, the Helper
   MUST fail the job with error `invalidMessage`.
@@ -2821,6 +2823,9 @@ conditions:
 * Whether the indicated batch mode matches the task's batch mode. If not, the
   Leader MUST fail the job with error `invalidMessage`.
 
+* Whether the `CollectionJobReq` is malformed. If so, the the Helper MUST fail
+  the job with error `invalidMessage`.
+
 * Whether the aggregation parameter is valid as described in
   {{agg-param-validation}}. If not, the Leader MUST fail the job with error
   `invalidAggregationParameter`.
@@ -3095,7 +3100,10 @@ The Helper first ensures that it recognizes the task ID. If not, it MUST fail
 the job with error `unrecognizedTask`.
 
 The indicated batch mode MUST match the task's batch mode. If not, the Helper
-MUST fail the job with `invalidMessage`.
+MUST fail the job with error `invalidMessage`.
+
+If the `AggregateShareReq` is malformed, the Helper MUST fail the job with error
+`invalidMessage`.
 
 The Helper then verifies that the `BatchSelector` in the Leader's request
 determines a batch that can be collected. If the selector does not identify a
