@@ -2229,10 +2229,6 @@ input share in the job:
 1. Check that the input share can be decoded as specified by the VDAF. If not,
    the input share MUST be marked as invalid with the error `invalid_message`.
 
-1. Check that the report's timestamp is well-formed as specified in
-   {{timestamps}}. If not, the Aggregator MUST mark the input share as invalid
-   with error `invalid_message`.
-
 1. Check if the report's timestamp is more than a few minutes ahead of the
    current time. If so, then the Aggregator SHOULD mark the input share as
    invalid with error `report_too_early`.
