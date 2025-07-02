@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 20 December 2025                                     Cloudflare
+Expires: 3 January 2026                                       Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                            18 June 2025
+                                                             2 July 2025
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -64,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 20 December 2025.
+   This Internet-Draft will expire on 3 January 2026.
 
 Copyright Notice
 
@@ -2092,8 +2092,9 @@ aggregation job 1                   aggregation job 2          aggregation job j
    *  prepare_inits: the sequence of PrepareInit messages constructed in
       the previous step.  Here prepare_inits_length is the length of the
       HTTP message content ([RFC9110], Section 6.4), minus the lengths
-      in octets of agg_param and part_batch_selector.  That is, the
-      remainder of the HTTP message consists of prepare_inits.
+      in octets of the encoded agg_param and part_batch_selector fields.
+      That is, the remainder of the HTTP message consists of
+      prepare_inits.
 
    The Leader sends the AggregationJobInitReq in the body of a PUT
    request to the aggregation job with a media type of "application/dap-
