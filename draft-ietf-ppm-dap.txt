@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 24 December 2025                                     Cloudflare
+Expires: 5 January 2026                                       Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                            22 June 2025
+                                                             4 July 2025
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -64,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 24 December 2025.
+   This Internet-Draft will expire on 5 January 2026.
 
 Copyright Notice
 
@@ -141,7 +141,8 @@ Table of Contents
      6.3.  Aggregation Utility and Soft Batch Deadlines
      6.4.  Protocol-specific Optimizations
        6.4.1.  Reducing Storage Requirements
-       6.4.2.  Distributed-systems and Synchronization Concerns
+       6.4.2.  Distributed Systems and Synchronization Concerns
+       6.4.3.  Streaming Messages
    7.  Compliance Requirements
    8.  Security Considerations
      8.1.  Sybil Attacks
@@ -1496,7 +1497,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
      Report reports[message_length];
    } UploadRequest;
 
-   Here message_length denotes the length of the HTTP message content
+   Here message_length is the length of the HTTP message content
    ([RFC9110], Section 6.4).
 
    Each upload request contains a sequence of Report with the following
@@ -2079,7 +2080,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    struct {
      opaque agg_param<0..2^32-1>;
      PartialBatchSelector part_batch_selector;
-     PrepareInit prepare_inits<44..2^32-1>;
+     PrepareInit prepare_inits[prepare_inits_length];
    } AggregationJobInitReq;
 
    This message consists of:
@@ -2095,7 +2096,11 @@ aggregation job 1                   aggregation job 2          aggregation job j
       mode, it may only partially determine a batch.  See Section 5.
 
    *  prepare_inits: the sequence of PrepareInit messages constructed in
-      the previous step.
+      the previous step.  Here prepare_inits_length is the length of the
+      HTTP message content ([RFC9110], Section 6.4), minus the lengths
+      in octets of the encoded agg_param and part_batch_selector fields.
+      That is, the remainder of the HTTP message consists of
+      prepare_inits.
 
    The Leader sends the AggregationJobInitReq in the body of a PUT
    request to the aggregation job with a media type of "application/dap-
@@ -2291,11 +2296,14 @@ aggregation job 1                   aggregation job 2          aggregation job j
    AggregationJobResp, which is structured as follows:
 
    struct {
-     PrepareResp prepare_resps<17..2^32-1>;
+     PrepareResp prepare_resps[message_length];
    } AggregationJobResp;
 
-   where prepare_resps are the outbound PrepareResp messages for each
-   report computed in the previous step.  The order MUST match
+   Here message_length is the length of the HTTP message content
+   ([RFC9110], Section 6.4).
+
+   prepare_resps is the outbound PrepareResp messages for each report
+   computed in the previous step.  The order MUST match
    AggregationJobInitReq.prepare_inits.  The media type for
    AggregationJobResp is "application/dap-aggregation-job-resp".
 
@@ -2388,6 +2396,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
    Host: example.com
    Content-Type: application/dap-aggregation-job-init-req
+   Content-Length: 100
    Authorization: Bearer auth-token
 
    encoded(struct {
@@ -2403,6 +2412,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    HTTP/1.1 200
    Content-Type: application/dap-aggregation-job-resp
+   Content-Length: 100
 
    encoded(struct { prepare_resps } AggregationJobResp)
 
@@ -2411,6 +2421,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
    Host: example.com
    Content-Type: application/dap-aggregation-job-init-req
+   Content-Length: 100
    Authorization: Bearer auth-token
 
    encoded(struct {
@@ -2440,6 +2451,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    HTTP/1.1 200
    Content-Type: application/dap-aggregation-job-resp
+   Content-Length: 100
 
    encoded(struct { prepare_resps } AggregationJobResp)
 
@@ -2498,15 +2510,17 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    struct {
      uint16 step;
-     PrepareContinue prepare_continues<21..2^32-1>;
+     PrepareContinue prepare_continues[prepare_continues_length];
    } AggregationJobContinueReq;
 
    The step field is the step of DAP aggregation that the Leader just
    reached and wants the Helper to advance to.  The prepare_continues
    field is the sequence of preparation continuation messages
-   constructed in the previous step.  The PrepareContinue elements MUST
-   be in the same order as the previous request to the aggregation job,
-   omitting any reports that were previously rejected by either
+   constructed in the previous step.  Here prepare_continues_length is
+   the length of the HTTP message content ([RFC9110], Section 6.4),
+   minus the length in octets of step.  The PrepareContinue elements
+   MUST be in the same order as the previous request to the aggregation
+   job, omitting any reports that were previously rejected by either
    Aggregator.
 
    The Leader handles the response(s) as described in Section 4.3 to
@@ -2797,6 +2811,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    POST /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
    Host: example.com
    Content-Type: application/dap-aggregation-job-continue-req
+   Content-Length: 100
    Authorization: Bearer auth-token
 
    encoded(struct {
@@ -2806,6 +2821,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    HTTP/1.1 200
    Content-Type: application/dap-aggregation-job-resp
+   Content-Length: 100
 
    encoded(struct { prepare_resps } AggregationJobResp)
 
@@ -2814,6 +2830,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    POST /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
    Host: example.com
    Content-Type: application/dap-aggregation-job-continue-req
+   Content-Length: 100
    Authorization: Bearer auth-token
 
    encoded(struct {
@@ -2839,6 +2856,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    HTTP/1.1 200
    Content-Type: application/dap-aggregation-job-resp
+   Content-Length: 100
 
    encoded(struct { prepare_resps } AggregationJobResp)
 
@@ -2899,7 +2917,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    struct {
      Query query;
-     opaque agg_param<0..2^32-1>; /* VDAF aggregation parameter */
+     opaque agg_param<0..2^32-1>;
    } CollectionJobReq;
 
    *  query, the Collector's query.  The content of this field depends
@@ -3804,7 +3822,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    after the task_interval.  Implementors SHOULD provide for some leeway
    so the Collector can collect the batch after some delay.
 
-6.4.2.  Distributed-systems and Synchronization Concerns
+6.4.2.  Distributed Systems and Synchronization Concerns
 
    Various parts of a DAP implementation will need to synchronize in
    order to ensure correctness during concurrent operation.  This
@@ -3871,6 +3889,21 @@ aggregation job 1                   aggregation job 2          aggregation job j
       before responding to an aggregate share request, requiring
       synchronization between the Helper's collection and aggregation
       interactions.
+
+6.4.3.  Streaming Messages
+
+   Most messages in the protocol contain fixed-length or length-prefixed
+   fields such that they can be parsed independently of context.  The
+   exceptions are the UploadReq, UploadResp (Section 4.5.2),
+   AggregationJobInitReq, AggregationJobContinueReq, and
+   AggregationJobResp (Section 4.6) messages, all of which contain
+   vectors whose length is determined by the length of the enclosing
+   HTTP message.
+
+   This allows implementations to begin transmitting these messages
+   before knowing how long the message will ultimately be.  This is
+   useful if implementations wish to avoid buffering exceptionally large
+   messages in memory.
 
 7.  Compliance Requirements
 
