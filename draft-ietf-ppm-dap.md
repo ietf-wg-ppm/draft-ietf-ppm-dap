@@ -83,6 +83,11 @@ contributor:
        email: csharrison@chromium.org
 
  -
+       name: J.C. Jones
+       org: ISRG
+       email: ietf@insufficient.coffee
+
+ -
        name: Alex Koshelev
        org: Meta
        email: koshelev@meta.com
@@ -167,6 +172,9 @@ aggregator.
 
 - Bump draft-irtf-cfrg-vdaf-13 to 14 {{!VDAF}} and adopt changes to the
   ping-pong API (\#705, \#718).
+
+- Represent the Time and Duration types as a number of time_precision
+  intervals, rather than seconds (\*) (#720).
 
 15:
 
@@ -1086,29 +1094,19 @@ enum {
 uint64 Time;
 ~~~
 
-Times are represented by POSIX timestamps, defined to be integers containing a
-number of seconds since the Epoch, defined in section 4.16 of {{POSIX}}. That
-is, the number of seconds after 1970-01-01 00:00:00 UTC, excluding leap seconds.
+Times are represented by POSIX timestamps, defined to be integers representing
+a number of `time_precision`s since the Epoch ({{task-configuration}}), defined
+in section 4.16 of {{POSIX}}. That is, the number of seconds after 1970-01-01
+00:00:00 UTC, excluding leap seconds, divided by the task's `time_precision`.
 One POSIX timestamp is said to be before (respectively, after) another POSIX
 timestamp if it is less than (respectively, greater than) the other value.
-
-Every timestamp MUST be rounded down to the nearest multiple of the task's
-`time_precision` ({{task-configuration}}). That is, the value is computed as:
-
-~~~
-rounded_timestamp = timestamp - (timestamp % time_precision)
-~~~
-
-A timestamp is malformed if `received_timestamp % time_precision > 0`.
 
 ~~~ tls-presentation
 uint64 Duration;
 ~~~
 
-Durations of time are integers, representing a number of seconds not including
-leap seconds. They can be added to POSIX timestamps to produce other POSIX
-timestamps. The duration MUST be a multiple of `time_precision`. If `duration %
-time_precision > 0`, then the interval is malformed.
+Durations of time are integers, representing a number of `time_precision`s.
+They can be added to POSIX timestamps to produce other POSIX timestamps.
 
 ~~~ tls-presentation
 struct {
@@ -1594,7 +1592,7 @@ encoded(struct {
     struct {
       report_metadata = struct {
         report_id = [0x0a, 0x0b, 0x0c, 0x0d, ...],
-        time = 1741986088,
+        time = 17419860,
         public_extensions = [0x00, 0x00],
       } ReportMetadata,
       public_share = [0x0a, 0x0b, ...],
@@ -1628,7 +1626,7 @@ encoded(struct {
     struct {
       report_metadata = struct {
         report_id = [0x0a, 0x0b, 0x0c, 0x0d, ...],
-        time = 2000000000,
+        time = 20000000,
         public_extensions = [0x00, 0x01],
       } ReportMetadata,
       public_share = [0x0a, 0x0b, ...],
@@ -1646,7 +1644,7 @@ encoded(struct {
     struct {
       report_metadata = struct {
         report_id = [0x0z, 0x0y, 0x0x, 0x0w, ...],
-        time = 2000000001,
+        time = 20000000,
         public_extensions = [0x00, 0x01],
       } ReportMetadata,
       public_share = [0x0a, 0x0b, ...],
@@ -2930,8 +2928,8 @@ encoded(struct {
   } PartialBatchSelector,
   report_count = 1000,
   interval = struct {
-    start = 1659544000,
-    duration = 1000,
+    start = 16595440,
+    duration = 1,
   } Interval,
   leader_encrypted_agg_share = struct { ... } HpkeCiphertext,
   helper_encrypted_agg_share = struct { ... } HpkeCiphertext,
@@ -2951,8 +2949,8 @@ encoded(struct {
     batch_mode = BatchMode.time_interval,
     query = encoded(struct {
       batch_interval = struct {
-        start = 1659544000,
-        duration = 10000,
+        start = 16595440,
+        duration = 1,
       } Interval,
     } TimeIntervalQueryConfig),
   },
@@ -2981,15 +2979,15 @@ encoded(struct {
     batch_mode = BatchMode.time_interval,
     config = encoded(struct {
       interval = struct {
-        start = 1659544000,
-        duration = 10000,
+        start = 1659544,
+        duration = 10,
       } Interval,
     } TimeIntervalBatchSelectorConfig)
   },
   report_count = 4000,
   interval = struct {
-    start = 1659547000,
-    duration = 1000,
+    start = 1659547,
+    duration = 10,
   } Interval,
   leader_encrypted_agg_share = struct { ... } HpkeCiphertext,
   helper_encrypted_agg_share = struct { ... } HpkeCiphertext,
@@ -3167,8 +3165,8 @@ encoded(struct {
     batch_mode = BatchMode.time_interval,
     config = encoded(struct {
       batch_interval = struct {
-        start = 1659544000,
-        duration = 10000,
+        start = 1659544,
+        duration = 10,
       } Interval,
     } TimeIntervalBatchSelectorConfig),
   } BatchSelector,
@@ -3198,8 +3196,8 @@ encoded(struct {
     batch_mode = BatchMode.time_interval,
     config = encoded(struct {
       batch_interval = struct {
-        start = 1659544000,
-        duration = 10000,
+        start = 1659544,
+        duration = 10,
       } Interval,
     } TimeIntervalBatchSelectorConfig),
   } BatchSelector,
@@ -3374,20 +3372,20 @@ sequence of batch intervals satisfies these conditions:
 ~~~ tls-presentation
 [
   struct {
-    start = 1659544000,
-    duration = 1000,
+    start = 1659544,
+    duration = 1,
   } Interval,
   struct {
-    start = 1659545000,
-    duration = 1000,
+    start = 1659545,
+    duration = 1,
   } Interval,
   struct {
-    start = 1659546000,
-    duration = 1000,
+    start = 1659546,
+    duration = 1,
   } Interval,
   struct {
-    start = 1659547000,
-    duration = 1000,
+    start = 1659547,
+    duration = 1,
   } Interval,
 ]
 ~~~
@@ -3431,13 +3429,14 @@ where `batch_interval` is the batch interval requested by the Collector.
 Each batch bucket is identified by an `Interval` whose duration is equal to the
 task's `time_precision`. The identifier associated with a given report is the
 unique such interval containing the timestamp of the report. For example, if
-the task's `time_precision` is 1000 seconds and the report's timestamp is
-1729629081, the relevant batch bucket identifier is
+the task's `time_precision` is 1000 seconds and the report was generated at
+1729629081 seconds after the start of the UNIX epoch, the relevant batch
+bucket identifier is
 
 ~~~ tls-presentation
 struct {
-  start = 1729629000,
-  duration = 1000,
+  start = 1729629,
+  duration = 1,
 } Interval
 ~~~
 
@@ -3452,16 +3451,16 @@ batch bucket identifiers for the batch interval is
 [
   struct {
     start = batch_interval.start,
-    duration = time_precision,
+    duration = 1,
   } Interval,
   struct {
-    start = batch_interval.start + time_precision,
-    duration = time_precision,
+    start = batch_interval.start + 1,
+    duration = 1,
   } Interval,
   ...
   struct {
-    start = batch_interval.start + batch_interval.duration - time_precision,
-    duration = time_precision,
+    start = batch_interval.start + batch_interval.duration - 1,
+    duration = 1,
   } Interval,
 ]
 ~~~
