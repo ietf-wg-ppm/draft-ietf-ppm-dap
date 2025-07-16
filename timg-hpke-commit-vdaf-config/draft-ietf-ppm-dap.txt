@@ -213,7 +213,7 @@ Table of Contents
       ping-pong API (#705, #718).
 
    *  Include VDAF configuration in InputShareAad to mitigate cross-VDAF
-      confusion attacks. (*) (#TODO(timg): fill in PR number)
+      confusion attacks. (*) (#722)
 
    15:
 
