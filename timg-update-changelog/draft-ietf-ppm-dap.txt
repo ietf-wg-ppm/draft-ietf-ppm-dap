@@ -203,10 +203,8 @@ Table of Contents
 
    16:
 
-   *  Bump draft-irtf-cfrg-vdaf-13 to 14 [VDAF] and adopt changes to the
+   *  Bump draft-irtf-cfrg-vdaf-13 to 15 [VDAF] and adopt changes to the
       ping-pong API. (*) (#705, #718)
-
-   *  Bump draft-irtf-cfrg-vdaf-14 to 15. (*) (#718)
 
    *  Numerous editorial changes for clarity and concision.
 
