@@ -169,7 +169,7 @@ aggregator.
   ping-pong API (\#705, \#718).
 
 - Include VDAF configuration in InputShareAad to mitigate cross-VDAF confusion
-  attacks. (\*) (#TODO(timg): fill in PR number)
+  attacks. (\*) (#722)
 
 15:
 
