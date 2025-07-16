@@ -165,8 +165,16 @@ aggregator.
 
 16:
 
-- Bump draft-irtf-cfrg-vdaf-13 to 14 {{!VDAF}} and adopt changes to the
-  ping-pong API (\#705, \#718).
+- Bump draft-irtf-cfrg-vdaf-13 to 15 {{!VDAF}} and adopt changes to the
+  ping-pong API. (#705, #718)
+
+- Allow many reports to be uploaded at once. (\*) (#686)
+
+- Remove TLS presentation language syntax extensions. (#707)
+
+- Use HTTP message content length to determine length of vectors in
+  `AggregationJobInitReq`, `AggregationJobResp` and `AggregationJobContinueReq`
+  messages. (\*) (#717)
 
 15:
 
