@@ -1499,21 +1499,27 @@ The `SealBase()` function is as specified in {{!HPKE, Section 6.1}} for the
 ciphersuite indicated by the Aggregator's HPKE configuration.
 
 ~~~ tls-presentation
+uint32 VdafIdentifier;
+
 struct {
   TaskID task_id;
   ReportMetadata report_metadata;
   opaque public_share<0..2^32-1>;
-  opaque vdaf_configuraton<0..2^16-1>;
+  VdafIdentifier vdaf_identifier;
+  opaque vdaf_configuration<0..2^16-1>;
 } InputShareAad;
 ~~~
 
 * `task_id`, `report_metadata` and `public_share` are the corresponding fields
   from the `Report` structure.
 
+* `vdaf_identifier` is the identifier for the VDAF, defined in {{Section 10 of
+  !VDAF}}.
+
 * `vdaf_configuration` is the encoding of the VDAF's configuration. Encodings
   for the Prio3 family of VDAFs are specified in
   {{vdaf-configuration-encodings}}. Other VDAFs will provide encodings of their
-  configuration (see {{extending-this-document}}).
+  configuration (see {{extending-this-doc}}).
 
 If the upload request is malformed, the Leader aborts with error
 `invalidMessage`.
