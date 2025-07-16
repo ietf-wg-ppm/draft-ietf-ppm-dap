@@ -168,6 +168,9 @@ aggregator.
 - Bump draft-irtf-cfrg-vdaf-13 to 14 {{!VDAF}} and adopt changes to the
   ping-pong API (\#705, \#718).
 
+- Include VDAF configuration in InputShareAad to mitigate cross-VDAF confusion
+  attacks. (\*) (#TODO(timg): fill in PR number)
+
 15:
 
 - Specify body of responses to aggregation job GET requests. (#651)
@@ -1141,6 +1144,13 @@ VDAF types:
 * PrepShare
 * PrepMessage
 
+Additionally, to prevent cross-VDAF confusion attacks, in which an input
+intended for a particular VDAF configuration is evaluated under another VDAF
+configuration, Clients commit to the configuration in use by incorporating it
+into {{!HPKE}} authenticated data (see {{upload-request}}). This requires VDAFs
+compatible with DAP to specify an encoding of their configuration. Encodings for
+the Prio3 family of VDAFs are provided in {{vdaf-configuration-encodings}}.
+
 ## Task Configuration {#task-configuration}
 
 A task represents a single measurement process, though potentially aggregating
@@ -1483,8 +1493,7 @@ enc, payload = SealBase(pk,
 * `server_role` is the `Role` of the recipient (`0x02` for the Leader and `0x03`
    for the Helper).
 * `plaintext_input_share` is the Aggregator's `PlaintextInputShare`.
-* `input_share_aad` is an encoded `InputShareAad`, constructed from the
-  corresponding fields in the report per the definition below.
+* `input_share_aad` is an encoded `InputShareAad`, defined below.
 
 The `SealBase()` function is as specified in {{!HPKE, Section 6.1}} for the
 ciphersuite indicated by the Aggregator's HPKE configuration.
@@ -1494,8 +1503,17 @@ struct {
   TaskID task_id;
   ReportMetadata report_metadata;
   opaque public_share<0..2^32-1>;
+  opaque vdaf_configuraton<0..2^16-1>;
 } InputShareAad;
 ~~~
+
+* `task_id`, `report_metadata` and `public_share` are the corresponding fields
+  from the `Report` structure.
+
+* `vdaf_configuration` is the encoding of the VDAF's configuration. Encodings
+  for the Prio3 family of VDAFs are specified in
+  {{vdaf-configuration-encodings}}. Other VDAFs will provide encodings of their
+  configuration (see {{extending-this-document}}).
 
 If the upload request is malformed, the Leader aborts with error
 `invalidMessage`.
@@ -2198,7 +2216,8 @@ timestamp, and public extensions), public share, and the Aggregator's encrypted
 input share. Let `task_id`, `report_metadata`, `public_share`, and
 `encrypted_input_share` denote these values, respectively. Given these values,
 an Aggregator decrypts the input share as follows. First, it constructs an
-`InputShareAad` message from `task_id`, `report_metadata`, and `public_share`.
+`InputShareAad` message from `task_id`, `report_metadata`, `public_share` and
+the encoding of the VDAF configuration (see {{vdaf-configuration-encodings}}).
 Let this be denoted by `input_share_aad`. Then, the Aggregator attempts
 decryption of the payload with the following procedure:
 
@@ -4936,4 +4955,56 @@ Each of these requires registration of a codepoint or other value; see
   impacts the security of DAP with respect to the threat model in
   {{sec-considerations}}.
 
+* When a document defines a new VDAF ({{!VDAF, Section 5}}), it must specify an
+  encoding of that VDAF's configuration like the ones in
+  {{vdaf-configuration-encodings}}.
+
 --- back
+
+# VDAF Configuration Encodings
+
+This section provides encodings of configuration of the Prio3 family of VDAFs.
+These are included in `InputShareAad` structures ({{upload-request}}) to prevent
+cross-VDAF confusion attacks.
+
+## Prio3Count
+
+There are no parameters for this VDAF so `Empty` ({{basic-definitions}}) is
+used.
+
+## Prio3Sum
+
+~~~ tls-presentation
+struct {
+    uint32 max_measurement; /* largest summand */
+} Prio3SumConfig;
+~~~
+
+## Prio3SumVec
+
+~~~ tls-presentation
+struct {
+    uint32 length;       /* length of the vector */
+    uint8 bits;          /* bit length of each summand */
+    uint32 chunk_length; /* size of each proof chunk */
+} Prio3SumVecConfig;
+~~~
+
+## Prio3Histogram
+
+~~~ tls-presentation
+struct {
+    uint32 length;       /* number of buckets */
+    uint32 chunk_length; /* size of each proof chunk */
+} Prio3HistogramConfig;
+~~~
+
+## Prio3MultihotCountVec
+
+~~~ tls-presentation
+struct {
+    uint32 length;       /* length of the vector */
+    uint32 chunk_length; /* size of each proof chunk */
+    uint32 max_weight;   /* largest vector weight /
+} Prio3MultihotCountVecConfig;
+~~~
