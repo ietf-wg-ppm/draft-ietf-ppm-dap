@@ -183,7 +183,10 @@ aggregator.
 - Add verification key ID to aggregation jobs to enable but not require
   verification key management. (\*) (#766)
 
-- Define colleciton job extensions. (\*) (#769)
+- Define collection job extensions. (\*) (#769)
+
+- Define extensible task configuration as a structure and include it in
+  InputShareAad and AggregateShareAad. (\*) (#774)
 
 17:
 
@@ -1297,6 +1300,15 @@ enum {
 } ReportError;
 ~~~
 
+A `Url` is the encoding of a URL ({{!RFC3986}}) as ASCII bytes. The encoding of
+any particular URL into ASCII is agreed upon by participants out of band from
+the protocol. Protocol participants MUST NOT re-encode or otherwise alter a
+`Url` when including it in a network message or cryptographic digest.
+
+~~~ tls-presentation
+opaque Url<1..2^16-1>;
+~~~
+
 ### Times, Durations and Intervals {#timestamps}
 
 ~~~ tls-presentation
@@ -1372,12 +1384,23 @@ VDAF types:
 * VerifierShare
 * VerifierMessage
 
+VDAFs compatible with DAP MUST specify an encoding of their configuration, which
+is included into the task configuration to prevent cross protocol attacks or
+parameter disagreement; see {{task-configuration}} and {{task-binding}}.
+Encodings for the VDAFs defined in {{!VDAF}} are provided in
+{{vdaf-configuration-encodings}}.
+
 ## Task Configuration {#task-configuration}
 
 A task represents a single measurement process, though potentially aggregating
 multiple, non-overlapping batches of measurements. Each participant in a task
 must agree on its configuration prior to its execution. This document does not
-specify a mechanism for distributing task parameters among participants.
+specify a mechanism for distributing task parameters among participants. See
+{{sec-considerations}} for some discussion of task parameter choices.
+
+To ensure that reports are only aggregated if the Client, Aggregators and
+Collector agree on the parameters in use, protocol participants incorporate the
+encoding of agreed-upon task parameters into {{!HPKE}} authenticated data.
 
 A task is uniquely identified by its task ID:
 
@@ -1385,30 +1408,63 @@ A task is uniquely identified by its task ID:
 opaque TaskID[32];
 ~~~
 
-The task ID MUST be a globally unique sequence of bytes. Each task has the
-following parameters associated with it:
+The task ID MUST be a globally unique sequence of bytes. Each task is described
+by a `TaskConfiguration` structure:
 
-* The VDAF which determines the type of measurements and the aggregation
-  function. The VDAF itself may have further parameters (e.g., number of buckets
-  in a `Prio3Histogram`).
-* A URL relative to which the Leader's API resources can be found.
-* A URL relative to which the Helper's API resources can be found.
-* The batch mode for this task (see {{batch-modes-overview}}), which determines
-  how reports are grouped into batches.
-* `task_interval` (`Interval`): Reports whose timestamp is outside of this
+~~~ tls-presentation
+uint32 VdafType;
+
+struct {
+    opaque task_info<1..2^8-1>;
+    Url leader_aggregator_endpoint;
+    Url helper_aggregator_endpoint;
+    TimePrecision time_precision;
+    uint64 min_batch_size;
+    BatchMode batch_mode;
+    opaque batch_config<0..2^16-1>;
+    Interval task_interval;
+    VdafType vdaf_type;
+    opaque vdaf_configuration<0..2^16-1>;
+    TaskExtension extensions<0..2^16-1>;
+} TaskConfiguration;
+~~~
+
+* `task_info` is an opaque sequence of bytes. Deployments may use it to
+  differentiate two tasks that otherwise would have identical configurations.
+* `leader_aggregator_endpoint` is the URL relative to which the Leader's API
+  resources can be found.
+* `helper_aggregator_endpoint` is the URL relative to which the Helper's API
+  resources can be found.
+* `time_precision` is the time precision used in this task; see {{timestamps}}.
+* `min_batch_size` is the smallest number of reports a batch is allowed to
+  include.
+* `batch_mode` is the codepoint from the Batch Modes Registry
+  ({{batch-mode-reg}}) corresponding to the DAP batch mode the task uses; see
+  {{batch-modes-overview}}.
+* `batch_config` contains any parameters that are required for configuring the
+  batch mode. For the time-interval and leader-selected batch modes, the payload
+  is empty. Batch modes defined by future documents may specify a non-empty
+  payload; see {{batch-modes}} for details.
+
+> TODO: move `task_interval` to a task extension
+
+* `task_interval` is an interval of time that the timestamps of all reports in
+  the task must fall into. That is, reports whose timestamp is outside of this
   interval will be rejected by the Aggregators.
-* `time_precision` (`TimePrecision`): The time precision used in this task. See
-  {{timestamps}}.
+* `vdaf_type` indicates which VDAF the task is using and corresponds to a
+  codepoint in the VDAF Identifiers registry ({{Section 10 of !VDAF}}).
+* `vdaf_configuration` is the encoding of the VDAF's configuration. Encodings
+  for several VDAFs are specified in {{vdaf-configuration-encodings}}. Other
+  VDAFs will provide encodings of their configuration ({{extending-this-doc}}).
+* `extensions` is the extensions in use for this task, if any; see
+  {{task-extensions}}.
 
 The Leader and Helper API URLs MAY include arbitrary path components.
 
 In order to facilitate the aggregation and collection interactions, each of the
-Aggregators is configured with the following parameters:
+Aggregators is configured with the following parameters, but not necessarily to
+Clients or the Collector:
 
-* `min_batch_size` (`uint64`): The smallest number of reports the batch is
-  allowed to include. A larger minimum batch size will yield a higher degree of
-  privacy. However, this ultimately depends on the application and the nature of
-  the measurements and aggregation function.
 * `collector_hpke_config` (`HpkeConfig`): The {{!HPKE=RFC9180}} configuration of
   the Collector (described in {{hpke-config}}); see {{compliance}} for
   information about the HPKE configuration algorithms.
@@ -1421,7 +1477,7 @@ Finally, the Collector is configured with the HPKE secret key corresponding to
 `collector_hpke_config`.
 
 A task's parameters are immutable for the lifetime of that task. The only way to
-change parameters or to rotate secret values like collector HPKE configuration
+change parameters or to rotate secret values like Collector HPKE configuration
 or the VDAF verification key is to configure a new task.
 
 ### Batch Modes, Batches, and Queries {#batch-modes-overview}
@@ -1441,6 +1497,37 @@ The query is issued to the Leader by the Collector during the collection
 interaction ({{collect-flow}}). Information used to guide batch selection is
 conveyed from the Leader to the Helper when initializing aggregation jobs
 ({{aggregate-flow}}) and finalizing the aggregate shares.
+
+### Task Extensions {#task-extensions}
+
+The `TaskConfiguration` structure includes a list of extensions. Extensions can
+be used to bind additional, application-specific information to the task. For
+example, an extension might be used to encode the identity of the Collector.
+
+Each extension is structured as follows:
+
+~~~ tls-presentation
+struct {
+  TaskExtensionType extension_type;
+  opaque extension_data<0..2^16-1>;
+} TaskExtension;
+
+enum {
+  reserved(0),
+  (2^16-1)
+} TaskExtensionType;
+~~~
+
+The `extension_type` identifies the extension and `extension_data` is
+structured as specified by the extension. Extension type values are defined in
+{{task-extensions-registry}}.
+
+Extensions are mandatory to support. Protocol participants MUST NOT participate
+in tasks containing unrecognized extensions.
+
+Extensions MUST be encoded in strictly increasing order of `extension_type`.
+That is, each `extension_type` value must be greater than that of the extension
+that precedes it.
 
 ## Aggregation Parameter Validation {#agg-param-validation}
 
@@ -1662,8 +1749,7 @@ enc, payload = SealBase(pk,
 * `server_role` is the `Role` of the recipient (`0x02` for the Leader and `0x03`
    for the Helper).
 * `plaintext_input_share` is the Aggregator's `PlaintextInputShare`.
-* `input_share_aad` is an encoded `InputShareAad`, constructed from the
-  corresponding fields in the report per the definition below.
+* `input_share_aad` is an encoded `InputShareAad`, defined below.
 
 The `SealBase()` function is as specified in {{!HPKE, Section 6.1}} for the
 ciphersuite indicated by the Aggregator's HPKE configuration.
@@ -1671,10 +1757,16 @@ ciphersuite indicated by the Aggregator's HPKE configuration.
 ~~~ tls-presentation
 struct {
   TaskID task_id;
+  TaskConfiguration task_configuration;
   ReportMetadata report_metadata;
   opaque public_share<0..2^32-1>;
 } InputShareAad;
 ~~~
+
+* `task_id`, `report_metadata` and `public_share` are the corresponding fields
+  from the `Report` structure.
+* `task_configuration` is the configuration of the task; see
+  {{task-configuration}}.
 
 Clients upload reports by sending an `UploadRequest` as the body of a POST to
 the Leader's reports resource.
@@ -1893,7 +1985,8 @@ enum {
 ~~~
 
 Field `extension_type` indicates the type of extension, and `extension_data`
-contains the opaque encoding of the extension.
+contains the opaque encoding of the extension. Extension type values are defined
+in {{report-extensions-registry}}.
 
 Extensions are mandatory to support. Unrecognized extensions are handled as
 specified in {{input-share-validation}}.
@@ -2414,9 +2507,10 @@ timestamp, and public extensions), public share, and the Aggregator's encrypted
 input share. Let `task_id`, `report_metadata`, `public_share`, and
 `encrypted_input_share` denote these values, respectively. Given these values,
 an Aggregator decrypts the input share as follows. First, it constructs an
-`InputShareAad` message from `task_id`, `report_metadata`, and `public_share`.
-Let this be denoted by `input_share_aad`. Then, the Aggregator attempts
-decryption of the payload with the following procedure:
+`InputShareAad` message from `task_id`, `report_metadata`, `public_share` and
+the task configuration; see {{task-configuration}}. Let this be denoted by
+`input_share_aad`. Then, the Aggregator attempts decryption of the payload with
+the following procedure:
 
 ~~~ pseudocode
 plaintext_input_share = OpenBase(encrypted_input_share.enc, sk,
@@ -3655,15 +3749,17 @@ ciphersuite indicated by the HPKE configuration.
 ~~~ tls-presentation
 struct {
   TaskID task_id;
+  TaskConfiguration task_configuration;
   CollectionJobReq collection_job_req;
 } AggregateShareAad;
 ~~~
 
 * `task_id` is the ID of the task the aggregate share was computed in.
+* `task_configuration` is the configuration of the task; see
+  {{task-configuration}}.
 * `collection_job_req` is the message that the Collector used
   to initiate the associated collection job (see {{collect-init}}),
-  the value of which is passed by the Leader to the Helper
-  in `AggregateShareReq` (see {{collect-aggregate}}).
+  the value of which is passed by the Leader to the Helper.
 
 The Collector decrypts these aggregate shares using the opposite process.
 Specifically, given an encrypted input share, denoted `enc_share`, for a given
@@ -3713,6 +3809,11 @@ Each batch mode specifies the following:
 1. Batch buckets ({{batch-buckets}}): how reports are assigned to batch
    buckets; how each bucket is identified; and how batch buckets are mapped to
    batches
+
+1. Batch mode configuration: any configuration needed for the batch mode. New
+   batch modes MUST define a deterministic encoding of their configuration so it
+   can be incorporated into `TaskConfiguration` ({{task-configuration}})
+   structures.
 
 ## Time Interval {#time-interval-batch-mode}
 
@@ -4358,10 +4459,12 @@ An important parameter of a DAP deployment is the minimum batch size. If a batch
 includes too few reports, then the aggregate result can reveal information
 about individual measurements. Aggregators enforce the agreed-upon minimum
 batch size during collection, but implementations SHOULD also opt out of
-participating in a DAP task if the minimum batch size is too small. This
-document does not specify how to choose an appropriate minimum batch size, but
-an appropriate value may be determined from the differential privacy ({{dp}})
-parameters in use, if any.
+participating in a DAP task if the minimum batch size is too small.
+
+A larger minimum batch size will yield a higher degree of privacy, but since
+this ultimately depends on the application, the nature of the measurements, the
+aggregation function and whether and how differential privacy ({{dp}}) is used,
+this document does not specify how to choose an appropriate minimum batch size.
 
 ### Relaxing Report Processing Rules
 
@@ -4389,22 +4492,29 @@ requirements, they:
    ({{report-extensions}}). This helps prevent an implementation from
    relaxing the rules by mistake.
 
-### Task Configuration Agreement and Consistency
+### Task Configuration Agreement and Consistency {#task-binding}
 
-In order to execute a DAP task, it is necessary for all parties to ensure they
-agree on the configuration of the task. However, it is possible for a party to
-participate in the execution of DAP without knowing all of the task's
-parameters. For example, a Client can upload a report ({{upload-flow}}) without
-knowing the minimum batch size that is enforced by the Aggregators during
-collection ({{collect-flow}}).
+{{Section 9.9 of !VDAF}} warns of cross protocol attacks, in which a message
+recipient can be manipulated into handling a message intended for use in one
+protocol as a message from another (i.e., evaluating a `Prio3Count` input share
+as though it was a `Prio3Sum` input share).
 
-Depending on the deployment model, agreement can require that task parameters
-are visible to all parties such that each party can choose whether to
-participate based on the value of any parameter. This includes the parameters
-enumerated in {{task-configuration}} and any additional parameters implied by
-report extensions {{report-extensions}} used by the task. Since meaningful
-privacy requires that multiple Clients contribute to a task, they should also
-share a consistent view of the task configuration.
+VDAF also calls out the risk of parameter disagreement, where both parties can
+be running the same VDAF but with different parameters. For example, a malicious
+Leader could manipulate the Helper into enforcing a minimum batch size that is
+too small for the aggregates to protect client privacy.
+
+To rule out these attacks, DAP sets the goal of ensuring that protocol
+participants have a consistent view of essential task configuration parameters.
+This is achieved by including them into HPKE authenticated data when Clients
+upload reports and when Aggregators deliver aggregate shares.
+
+Besides ensuring that no participant has been tricked into using the wrong
+parameters, this also gives participants an opportunity to refuse to participate
+in a task if the parameters are not acceptable. For example, a Client could
+present the task parameters to a user and request consent before uploading
+reports, allowing the user to decide whether they find the task's Aggregators
+trustworthy.
 
 ## Infrastructure Diversity
 
@@ -4546,8 +4656,8 @@ Required policy {{!RFC8126}}.
 ### Batch Modes Registry {#batch-mode-reg}
 
 A new registry will be (RFC EDITOR: change "will be" to "has been") created
-called "DAP Batch Mode Identifiers" ({{batch-modes}}). This registry should
-contain the following columns:
+called "DAP Batch Mode Identifiers" ({{batch-modes}}). This registry contains
+the following columns:
 
 Value:
 : The one-byte identifier for the batch mode
@@ -4568,7 +4678,30 @@ The initial contents of this registry listed in {{batch-mode-id}}.
 {: #batch-mode-id title="Initial contents of the DAP Batch Mode Identifiers
 registry."}
 
-### Report Extension Registry
+### Task Extensions Registry
+
+A new registry will be (RFC EDITOR: change "will be" to "has been") created
+called "DAP Task Extension Identifiers". This registry contains the following
+columns:
+
+Value:
+: The two-byte identifier for the task extension
+
+Name:
+: The name of the task extension
+
+Reference:
+: Where the task extension is defined
+
+The initial contents of this registry are listed in {{task-extension-id}}.
+
+| Value    | Name       | Reference                     |
+|:---------|:-----------|:------------------------------|
+| `0x0000` | `reserved` | {{task-extensions-registry}} of RFC XXXX |
+{: #task-extension-id title="Initial contents of the Task Extensions Identifiers
+registry."}
+
+### Report Extensions Registry
 
 A new registry will be (RFC EDITOR: change "will be" to "has been") created
 called "DAP Report Extension Identifiers" for extensions to the report structure
@@ -4587,12 +4720,11 @@ The initial contents of this registry are listed in {{report-extension-id}}.
 
 | Value    | Name              | Reference |
 |:---------|:------------------|:----------|
-| `0x0000` | `reserved`        | RFC XXXX  |
+| `0x0000` | `reserved`        | {{report-extensions-registry}} of RFC XXXX  |
 {: #report-extension-id title="Initial contents of the DAP Report Extension
 Identifiers registry."}
 
-
-### Collection Job Extension Registry
+### Collection Job Extensions Registry
 
 A new registry will be (RFC EDITOR: change "will be" to "has been") created
 called "DAP Collection Job Extension Identifiers" for extensions included in the
@@ -4616,12 +4748,10 @@ The initial contents of this registry are listed in {{collect-extension-id}}.
 {: #collect-extension-id title="Initial contents of the DAP Collection Job Extension
 Identifiers registry."}
 
-
-### Report Error Registry {#report-error-reg}
+### Report Errors Registry {#report-error-reg}
 
 A new registry will be (RFC EDITOR: change "will be" to "has been") created
-called "DAP Report Error Identifiers" for reasons for rejecting reports during
-the aggregation interaction ({{aggregation-helper-init}}).
+called "DAP Report Error Identifiers".
 
 Value:
 : The one-byte identifier of the report error
@@ -4683,6 +4813,7 @@ The behavior of DAP may be extended or modified by future documents defining
 one or more of the following:
 
 1. a new batch mode ({{batch-modes}})
+1. a new task extension ({{task-extensions}})
 1. a new report extension ({{report-extensions}})
 1. a new collection job extension ({{collect-ext}})
 1. a new report error ({{aggregation-helper-init}})
@@ -4707,6 +4838,11 @@ Each of these requires registration of a codepoint or other value; see
   "Security Considerations" section some discussion of how the extension
   impacts the security of DAP with respect to the threat model in
   {{sec-considerations}}.
+
+* When a document defines a new VDAF ({{!VDAF, Section 5}}), it MUST specify an
+  encoding of that VDAF's configuration like the ones in
+  {{vdaf-configuration-encodings}}. The encoding MUST be sufficient to prevent
+  attacks described in {{task-binding}}.
 
 --- back
 
@@ -4798,3 +4934,60 @@ Request media-type `message` values: `aggregate-share-req`
 Response media-type `message` values: `aggregate-share`
 
 Reference: {{collect-aggregate}}
+
+# VDAF Configuration Encodings
+
+This section provides encodings of configuration of the Prio3 family of VDAFs.
+These are included in `InputShareAad` ({{upload-request}}) and
+`AggregateShareAad` ({{aggregate-share-encrypt}}) structures to prevent attacks
+described in {{task-binding}}.
+
+## Prio3Count
+
+There are no parameters for this VDAF so `Empty` ({{basic-definitions}}) is
+used.
+
+## Prio3Sum
+
+~~~ tls-presentation
+struct {
+    uint32 max_measurement; /* largest summand */
+} Prio3SumConfig;
+~~~
+
+## Prio3SumVec
+
+~~~ tls-presentation
+struct {
+    uint32 length;          /* length of the vector */
+    uint32 max_measurement; /* maximum value of each summand */
+    uint32 chunk_length;    /* size of each proof chunk */
+} Prio3SumVecConfig;
+~~~
+
+## Prio3Histogram
+
+~~~ tls-presentation
+struct {
+    uint32 length;       /* number of buckets */
+    uint32 chunk_length; /* size of each proof chunk */
+} Prio3HistogramConfig;
+~~~
+
+## Prio3MultihotCountVec
+
+~~~ tls-presentation
+struct {
+    uint32 length;       /* length of the vector */
+    uint32 chunk_length; /* size of each proof chunk */
+    uint32 max_weight;   /* largest vector weight */
+} Prio3MultihotCountVecConfig;
+~~~
+
+## Poplar1
+
+~~~ tls-presentation
+struct {
+    uint16 bits; /* bit length of the input string */
+} Poplar1Config;
+~~~
