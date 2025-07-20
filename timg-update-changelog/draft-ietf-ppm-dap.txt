@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 17 January 2026                                      Cloudflare
+Expires: 21 January 2026                                      Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                            16 July 2025
+                                                            20 July 2025
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -64,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 17 January 2026.
+   This Internet-Draft will expire on 21 January 2026.
 
 Copyright Notice
 
@@ -204,16 +204,15 @@ Table of Contents
    16:
 
    *  Bump draft-irtf-cfrg-vdaf-13 to 15 [VDAF] and adopt changes to the
-      ping-pong API. (*) (#705, #718)
-
-   *  Numerous editorial changes for clarity and concision.
+      ping-pong API. (#705, #718)
 
    *  Allow many reports to be uploaded at once. (*) (#686)
 
    *  Remove TLS presentation language syntax extensions. (#707)
 
    *  Use HTTP message content length to determine length of vectors in
-      messages where possible. (*) (#717)
+      AggregationJobInitReq, AggregationJobResp and
+      AggregationJobContinueReq messages. (*) (#717)
 
    15:
 
