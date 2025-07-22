@@ -214,6 +214,9 @@ Table of Contents
       AggregationJobInitReq, AggregationJobResp and
       AggregationJobContinueReq messages. (*) (#717)
 
+   *  Represent the Time and Duration types as a number of
+      time_precision intervals, rather than seconds (*) (#720).
+
    15:
 
    *  Specify body of responses to aggregation job GET requests. (#651)
@@ -1176,27 +1179,18 @@ aggregation job 1                   aggregation job 2          aggregation job j
    uint64 Time;
 
    Times are represented by POSIX timestamps, defined to be integers
-   containing a number of seconds since the Epoch, defined in section
-   4.16 of [POSIX].  That is, the number of seconds after 1970-01-01
-   00:00:00 UTC, excluding leap seconds.  One POSIX timestamp is said to
-   be before (respectively, after) another POSIX timestamp if it is less
-   than (respectively, greater than) the other value.
-
-   Every timestamp MUST be rounded down to the nearest multiple of the
-   task's time_precision (Section 4.2).  That is, the value is computed
-   as:
-
-   rounded_timestamp = timestamp - (timestamp % time_precision)
-
-   A timestamp is malformed if received_timestamp % time_precision > 0.
+   representing a number of time_precisions since the Epoch
+   (Section 4.2), defined in section 4.16 of [POSIX].  That is, the
+   number of seconds after 1970-01-01 00:00:00 UTC, excluding leap
+   seconds, divided by the task's time_precision.  One POSIX timestamp
+   is said to be before (respectively, after) another POSIX timestamp if
+   it is less than (respectively, greater than) the other value.
 
    uint64 Duration;
 
-   Durations of time are integers, representing a number of seconds not
-   including leap seconds.  They can be added to POSIX timestamps to
-   produce other POSIX timestamps.  The duration MUST be a multiple of
-   time_precision.  If duration % time_precision > 0, then the interval
-   is malformed.
+   Durations of time are integers, representing a number of
+   time_precisions.  They can be added to POSIX timestamps to produce
+   other POSIX timestamps.
 
    struct {
      Time start;
@@ -1706,7 +1700,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
        struct {
          report_metadata = struct {
            report_id = [0x0a, 0x0b, 0x0c, 0x0d, ...],
-           time = 1741986088,
+           time = 17419860,
            public_extensions = [0x00, 0x00],
          } ReportMetadata,
          public_share = [0x0a, 0x0b, ...],
@@ -1738,7 +1732,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
        struct {
          report_metadata = struct {
            report_id = [0x0a, 0x0b, 0x0c, 0x0d, ...],
-           time = 2000000000,
+           time = 20000000,
            public_extensions = [0x00, 0x01],
          } ReportMetadata,
          public_share = [0x0a, 0x0b, ...],
@@ -1756,7 +1750,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
        struct {
          report_metadata = struct {
            report_id = [0x0z, 0x0y, 0x0x, 0x0w, ...],
-           time = 2000000001,
+           time = 20000000,
            public_extensions = [0x00, 0x01],
          } ReportMetadata,
          public_share = [0x0a, 0x0b, ...],
@@ -3082,8 +3076,8 @@ aggregation job 1                   aggregation job 2          aggregation job j
      } PartialBatchSelector,
      report_count = 1000,
      interval = struct {
-       start = 1659544000,
-       duration = 1000,
+       start = 16595440,
+       duration = 1,
      } Interval,
      leader_encrypted_agg_share = struct { ... } HpkeCiphertext,
      helper_encrypted_agg_share = struct { ... } HpkeCiphertext,
@@ -3101,8 +3095,8 @@ aggregation job 1                   aggregation job 2          aggregation job j
        batch_mode = BatchMode.time_interval,
        query = encoded(struct {
          batch_interval = struct {
-           start = 1659544000,
-           duration = 10000,
+           start = 16595440,
+           duration = 1,
          } Interval,
        } TimeIntervalQueryConfig),
      },
@@ -3131,15 +3125,15 @@ aggregation job 1                   aggregation job 2          aggregation job j
        batch_mode = BatchMode.time_interval,
        config = encoded(struct {
          interval = struct {
-           start = 1659544000,
-           duration = 10000,
+           start = 1659544,
+           duration = 10,
          } Interval,
        } TimeIntervalBatchSelectorConfig)
      },
      report_count = 4000,
      interval = struct {
-       start = 1659547000,
-       duration = 1000,
+       start = 1659547,
+       duration = 10,
      } Interval,
      leader_encrypted_agg_share = struct { ... } HpkeCiphertext,
      helper_encrypted_agg_share = struct { ... } HpkeCiphertext,
@@ -3319,8 +3313,8 @@ aggregation job 1                   aggregation job 2          aggregation job j
        batch_mode = BatchMode.time_interval,
        config = encoded(struct {
          batch_interval = struct {
-           start = 1659544000,
-           duration = 10000,
+           start = 1659544,
+           duration = 10,
          } Interval,
        } TimeIntervalBatchSelectorConfig),
      } BatchSelector,
@@ -3348,8 +3342,8 @@ aggregation job 1                   aggregation job 2          aggregation job j
        batch_mode = BatchMode.time_interval,
        config = encoded(struct {
          batch_interval = struct {
-           start = 1659544000,
-           duration = 10000,
+           start = 1659544,
+           duration = 10,
          } Interval,
        } TimeIntervalBatchSelectorConfig),
      } BatchSelector,
@@ -3522,20 +3516,20 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    [
      struct {
-       start = 1659544000,
-       duration = 1000,
+       start = 1659544,
+       duration = 1,
      } Interval,
      struct {
-       start = 1659545000,
-       duration = 1000,
+       start = 1659545,
+       duration = 1,
      } Interval,
      struct {
-       start = 1659546000,
-       duration = 1000,
+       start = 1659546,
+       duration = 1,
      } Interval,
      struct {
-       start = 1659547000,
-       duration = 1000,
+       start = 1659547,
+       duration = 1,
      } Interval,
    ]
 
@@ -3577,12 +3571,12 @@ aggregation job 1                   aggregation job 2          aggregation job j
    equal to the task's time_precision.  The identifier associated with a
    given report is the unique such interval containing the timestamp of
    the report.  For example, if the task's time_precision is 1000
-   seconds and the report's timestamp is 1729629081, the relevant batch
-   bucket identifier is
+   seconds and the report was generated at 1729629081 seconds after the
+   start of the UNIX epoch, the relevant batch bucket identifier is
 
    struct {
-     start = 1729629000,
-     duration = 1000,
+     start = 1729629,
+     duration = 1,
    } Interval
 
    The Query received by the Leader or BatchSelector received by the
@@ -3596,16 +3590,16 @@ aggregation job 1                   aggregation job 2          aggregation job j
    [
      struct {
        start = batch_interval.start,
-       duration = time_precision,
+       duration = 1,
      } Interval,
      struct {
-       start = batch_interval.start + time_precision,
-       duration = time_precision,
+       start = batch_interval.start + 1,
+       duration = 1,
      } Interval,
      ...
      struct {
-       start = batch_interval.start + batch_interval.duration - time_precision,
-       duration = time_precision,
+       start = batch_interval.start + batch_interval.duration - 1,
+       duration = 1,
      } Interval,
    ]
 
@@ -5047,6 +5041,11 @@ Contributors
    Charlie Harrison
    Google
    Email: csharrison@chromium.org
+
+
+   J.C. Jones
+   ISRG
+   Email: ietf@insufficient.coffee
 
 
    Alex Koshelev
