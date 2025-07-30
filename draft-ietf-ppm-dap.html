@@ -1059,7 +1059,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
 </tr></thead>
 <tfoot><tr>
 <td class="left">Geoghegan, et al.</td>
-<td class="center">Expires 23 January 2026</td>
+<td class="center">Expires 31 January 2026</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1072,12 +1072,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-ietf-ppm-dap-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2025-07-22" class="published">22 July 2025</time>
+<time datetime="2025-07-30" class="published">30 July 2025</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Standards Track</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2026-01-23">23 January 2026</time></dd>
+<dd class="expires"><time datetime="2026-01-31">31 January 2026</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -1151,7 +1151,7 @@ without revealing any individual contributor's data.<a href="#section-abstract-1
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 23 January 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 31 January 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -3142,7 +3142,7 @@ uint64 Duration;
 </pre><a href="#section-4.1.1-3" class="pilcrow">¶</a>
 </div>
 <p id="section-4.1.1-4">Durations of time are integers, representing a number of <code>time_precision</code>s.
-They can be added to POSIX timestamps to produce other POSIX timestamps.<a href="#section-4.1.1-4" class="pilcrow">¶</a></p>
+They can be added to times to produce other times.<a href="#section-4.1.1-4" class="pilcrow">¶</a></p>
 <div class="lang-tls-presentation sourcecode" id="section-4.1.1-5">
 <pre>
 struct {
@@ -4306,19 +4306,23 @@ conditions:<a href="#section-4.6.2.2-4" class="pilcrow">¶</a></p>
 with error <code>unrecognizedTask</code>.<a href="#section-4.6.2.2-5.1.1" class="pilcrow">¶</a></p>
 </li>
               <li class="normal" id="section-4.6.2.2-5.2">
-                <p id="section-4.6.2.2-5.2.1">Whether the batch mode indicated by <code>part_batch_selector.batch_mode</code> matches
-the task's batch mode. If not, then the Helper <span class="bcp14">MUST</span> fail the job with error
-<code>invalidMessage</code>.<a href="#section-4.6.2.2-5.2.1" class="pilcrow">¶</a></p>
+                <p id="section-4.6.2.2-5.2.1">Whether the <code>AggregationJobInitReq</code> is malformed. If so, the the Helper <span class="bcp14">MUST</span>
+fail the job with error <code>invalidMessage</code>.<a href="#section-4.6.2.2-5.2.1" class="pilcrow">¶</a></p>
 </li>
               <li class="normal" id="section-4.6.2.2-5.3">
-                <p id="section-4.6.2.2-5.3.1">Whether the aggregation parameter is valid as described in
-<a href="#agg-param-validation" class="auto internal xref">Section 4.4</a>. If the aggregation parameter is invalid, then the
-Helper <span class="bcp14">MUST</span> fail the job with error <code>invalidAggregationParameter</code>.<a href="#section-4.6.2.2-5.3.1" class="pilcrow">¶</a></p>
+                <p id="section-4.6.2.2-5.3.1">Whether the batch mode indicated by <code>part_batch_selector.batch_mode</code> matches
+the task's batch mode. If not, then the Helper <span class="bcp14">MUST</span> fail the job with error
+<code>invalidMessage</code>.<a href="#section-4.6.2.2-5.3.1" class="pilcrow">¶</a></p>
 </li>
               <li class="normal" id="section-4.6.2.2-5.4">
-                <p id="section-4.6.2.2-5.4.1">Whether  the report IDs in <code>AggregationJobInitReq.prepare_inits</code> are all
+                <p id="section-4.6.2.2-5.4.1">Whether the aggregation parameter is valid as described in
+<a href="#agg-param-validation" class="auto internal xref">Section 4.4</a>. If the aggregation parameter is invalid, then the
+Helper <span class="bcp14">MUST</span> fail the job with error <code>invalidAggregationParameter</code>.<a href="#section-4.6.2.2-5.4.1" class="pilcrow">¶</a></p>
+</li>
+              <li class="normal" id="section-4.6.2.2-5.5">
+                <p id="section-4.6.2.2-5.5.1">Whether the report IDs in <code>AggregationJobInitReq.prepare_inits</code> are all
 distinct. If not, then the Helper <span class="bcp14">MUST</span> fail the job with error
-<code>invalidMessage</code>.<a href="#section-4.6.2.2-5.4.1" class="pilcrow">¶</a></p>
+<code>invalidMessage</code>.<a href="#section-4.6.2.2-5.5.1" class="pilcrow">¶</a></p>
 </li>
             </ul>
 <p id="section-4.6.2.2-6">The Helper then processes the aggregation job by computing a response for each
@@ -4482,41 +4486,36 @@ input share in the job:<a href="#section-4.6.2.4-1" class="pilcrow">¶</a></p>
 the input share <span class="bcp14">MUST</span> be marked as invalid with the error <code>invalid_message</code>.<a href="#section-4.6.2.4-2.1.1" class="pilcrow">¶</a></p>
 </li>
               <li id="section-4.6.2.4-2.2">
-                <p id="section-4.6.2.4-2.2.1">Check that the report's timestamp is well-formed as specified in
-<a href="#timestamps" class="auto internal xref">Section 4.1.1</a>. If not, the Aggregator <span class="bcp14">MUST</span> mark the input share as invalid
-with error <code>invalid_message</code>.<a href="#section-4.6.2.4-2.2.1" class="pilcrow">¶</a></p>
+                <p id="section-4.6.2.4-2.2.1">Check if the report's timestamp is more than a few minutes ahead of the
+current time. If so, then the Aggregator <span class="bcp14">SHOULD</span> mark the input share as
+invalid with error <code>report_too_early</code>.<a href="#section-4.6.2.4-2.2.1" class="pilcrow">¶</a></p>
 </li>
               <li id="section-4.6.2.4-2.3">
-                <p id="section-4.6.2.4-2.3.1">Check if the report's timestamp is more than a few minutes ahead of the
-current time. If so, then the Aggregator <span class="bcp14">SHOULD</span> mark the input share as
-invalid with error <code>report_too_early</code>.<a href="#section-4.6.2.4-2.3.1" class="pilcrow">¶</a></p>
+                <p id="section-4.6.2.4-2.3.1">Check if the report's timestamp is before the task's <code>task_interval</code>. If so,
+the Aggregator <span class="bcp14">MUST</span> mark the input share as invalid with the error
+<code>task_not_started</code>.<a href="#section-4.6.2.4-2.3.1" class="pilcrow">¶</a></p>
 </li>
               <li id="section-4.6.2.4-2.4">
-                <p id="section-4.6.2.4-2.4.1">Check if the report's timestamp is before the task's <code>task_interval</code>. If so,
+                <p id="section-4.6.2.4-2.4.1">Check if the report's timestamp is after the task's <code>task_interval</code>. If so,
 the Aggregator <span class="bcp14">MUST</span> mark the input share as invalid with the error
-<code>task_not_started</code>.<a href="#section-4.6.2.4-2.4.1" class="pilcrow">¶</a></p>
+<code>task_expired</code>.<a href="#section-4.6.2.4-2.4.1" class="pilcrow">¶</a></p>
 </li>
               <li id="section-4.6.2.4-2.5">
-                <p id="section-4.6.2.4-2.5.1">Check if the report's timestamp is after the task's <code>task_interval</code>. If so,
-the Aggregator <span class="bcp14">MUST</span> mark the input share as invalid with the error
-<code>task_expired</code>.<a href="#section-4.6.2.4-2.5.1" class="pilcrow">¶</a></p>
+                <p id="section-4.6.2.4-2.5.1">Check if the public or private report extensions contain any unrecognized
+report extension types. If so, the Aggregator <span class="bcp14">MUST</span> mark the input share as
+invalid with error <code>invalid_message</code>.<a href="#section-4.6.2.4-2.5.1" class="pilcrow">¶</a></p>
 </li>
               <li id="section-4.6.2.4-2.6">
-                <p id="section-4.6.2.4-2.6.1">Check if the public or private report extensions contain any unrecognized
-report extension types. If so, the Aggregator <span class="bcp14">MUST</span> mark the input share as
+                <p id="section-4.6.2.4-2.6.1">Check if any two extensions have the same extension type across public and
+private extension fields. If so, the Aggregator <span class="bcp14">MUST</span> mark the input share as
 invalid with error <code>invalid_message</code>.<a href="#section-4.6.2.4-2.6.1" class="pilcrow">¶</a></p>
 </li>
               <li id="section-4.6.2.4-2.7">
-                <p id="section-4.6.2.4-2.7.1">Check if any two extensions have the same extension type across public and
-private extension fields. If so, the Aggregator <span class="bcp14">MUST</span> mark the input share as
-invalid with error <code>invalid_message</code>.<a href="#section-4.6.2.4-2.7.1" class="pilcrow">¶</a></p>
-</li>
-              <li id="section-4.6.2.4-2.8">
-                <p id="section-4.6.2.4-2.8.1">If an Aggregator cannot determine if an input share is valid--for example,
+                <p id="section-4.6.2.4-2.7.1">If an Aggregator cannot determine if an input share is valid--for example,
 the report timestamp may be so far in the past that the state required to
 perform the check has been evicted from the Aggregator's storage (see
 <a href="#sharding-storage" class="auto internal xref">Section 6.4.1</a> for details)--it <span class="bcp14">MUST</span> mark the input share as invalid
-with error <code>report_dropped</code>.<a href="#section-4.6.2.4-2.8.1" class="pilcrow">¶</a></p>
+with error <code>report_dropped</code>.<a href="#section-4.6.2.4-2.7.1" class="pilcrow">¶</a></p>
 </li>
             </ol>
 <p id="section-4.6.2.4-3">If all of the above checks succeed, the input share is valid.<a href="#section-4.6.2.4-3" class="pilcrow">¶</a></p>
@@ -4819,13 +4818,17 @@ with error <code>unrecognizedTask</code>.<a href="#section-4.6.3.2-5.1.1" class=
 <span class="bcp14">MUST</span> fail the job with error <code>unrecognizedAggregationJob</code>.<a href="#section-4.6.3.2-5.2.1" class="pilcrow">¶</a></p>
 </li>
               <li class="normal" id="section-4.6.3.2-5.3">
-                <p id="section-4.6.3.2-5.3.1">Whether <code>AggregationJobContinueReq.step</code> is equal to <code>0</code>. If so, the Helper
+                <p id="section-4.6.3.2-5.3.1">Whether the <code>AggregationJobContinueReq</code> is malformed. If so, the the Helper
 <span class="bcp14">MUST</span> fail the job with error <code>invalidMessage</code>.<a href="#section-4.6.3.2-5.3.1" class="pilcrow">¶</a></p>
 </li>
               <li class="normal" id="section-4.6.3.2-5.4">
-                <p id="section-4.6.3.2-5.4.1">Whether the report IDs are all distinct and each report ID corresponds to one
+                <p id="section-4.6.3.2-5.4.1">Whether <code>AggregationJobContinueReq.step</code> is equal to <code>0</code>. If so, the Helper
+<span class="bcp14">MUST</span> fail the job with error <code>invalidMessage</code>.<a href="#section-4.6.3.2-5.4.1" class="pilcrow">¶</a></p>
+</li>
+              <li class="normal" id="section-4.6.3.2-5.5">
+                <p id="section-4.6.3.2-5.5.1">Whether the report IDs are all distinct and each report ID corresponds to one
 of the <code>state</code> objects. If either of these checks fail, then the Helper <span class="bcp14">MUST</span>
-fail the job with error <code>invalidMessage</code>.<a href="#section-4.6.3.2-5.4.1" class="pilcrow">¶</a></p>
+fail the job with error <code>invalidMessage</code>.<a href="#section-4.6.3.2-5.5.1" class="pilcrow">¶</a></p>
 </li>
             </ul>
 <p id="section-4.6.3.2-6">Additionally, if any prep step appears out of order relative to the previous
@@ -5191,25 +5194,29 @@ job with error <code>unrecognizedTask</code>.<a href="#section-4.7.1-9.1.1" clas
 Leader <span class="bcp14">MUST</span> fail the job with error <code>invalidMessage</code>.<a href="#section-4.7.1-9.2.1" class="pilcrow">¶</a></p>
 </li>
             <li class="normal" id="section-4.7.1-9.3">
-              <p id="section-4.7.1-9.3.1">Whether the aggregation parameter is valid as described in
-<a href="#agg-param-validation" class="auto internal xref">Section 4.4</a>. If not, the Leader <span class="bcp14">MUST</span> fail the job with error
-<code>invalidAggregationParameter</code>.<a href="#section-4.7.1-9.3.1" class="pilcrow">¶</a></p>
+              <p id="section-4.7.1-9.3.1">Whether the <code>CollectionJobReq</code> is malformed. If so, the the Helper <span class="bcp14">MUST</span> fail
+the job with error <code>invalidMessage</code>.<a href="#section-4.7.1-9.3.1" class="pilcrow">¶</a></p>
 </li>
             <li class="normal" id="section-4.7.1-9.4">
-              <p id="section-4.7.1-9.4.1">Whether the <code>Query</code> in the Collector's request determines a batch that can be
-collected. If the query does not identify a valid set of batch buckets
-according to the criteria defined by the batch mode in use (<a href="#batch-modes" class="auto internal xref">Section 5</a>),
-then the Leader <span class="bcp14">MUST</span> fail the job with error <code>batchInvalid</code>.<a href="#section-4.7.1-9.4.1" class="pilcrow">¶</a></p>
+              <p id="section-4.7.1-9.4.1">Whether the aggregation parameter is valid as described in
+<a href="#agg-param-validation" class="auto internal xref">Section 4.4</a>. If not, the Leader <span class="bcp14">MUST</span> fail the job with error
+<code>invalidAggregationParameter</code>.<a href="#section-4.7.1-9.4.1" class="pilcrow">¶</a></p>
 </li>
             <li class="normal" id="section-4.7.1-9.5">
-              <p id="section-4.7.1-9.5.1">Whether any of the batch buckets identified by the query have already been
-collected, then the Leader <span class="bcp14">MUST</span> fail the job with error <code>batchOverlap</code>.<a href="#section-4.7.1-9.5.1" class="pilcrow">¶</a></p>
+              <p id="section-4.7.1-9.5.1">Whether the <code>Query</code> in the Collector's request determines a batch that can be
+collected. If the query does not identify a valid set of batch buckets
+according to the criteria defined by the batch mode in use (<a href="#batch-modes" class="auto internal xref">Section 5</a>),
+then the Leader <span class="bcp14">MUST</span> fail the job with error <code>batchInvalid</code>.<a href="#section-4.7.1-9.5.1" class="pilcrow">¶</a></p>
 </li>
             <li class="normal" id="section-4.7.1-9.6">
-              <p id="section-4.7.1-9.6.1">If aggregation was performed eagerly (<a href="#eager-aggregation" class="auto internal xref">Section 4.6.1</a>), then the Leader
+              <p id="section-4.7.1-9.6.1">Whether any of the batch buckets identified by the query have already been
+collected, then the Leader <span class="bcp14">MUST</span> fail the job with error <code>batchOverlap</code>.<a href="#section-4.7.1-9.6.1" class="pilcrow">¶</a></p>
+</li>
+            <li class="normal" id="section-4.7.1-9.7">
+              <p id="section-4.7.1-9.7.1">If aggregation was performed eagerly (<a href="#eager-aggregation" class="auto internal xref">Section 4.6.1</a>), then the Leader
 checks that the aggregation parameter received in the <code>CollectionJobReq</code>
 matches the aggregation parameter used in each aggregation job pertaining to
-the batch. If not, the Leader <span class="bcp14">MUST</span> fail the job with error <code>invalidMessage</code>.<a href="#section-4.7.1-9.6.1" class="pilcrow">¶</a></p>
+the batch. If not, the Leader <span class="bcp14">MUST</span> fail the job with error <code>invalidMessage</code>.<a href="#section-4.7.1-9.7.1" class="pilcrow">¶</a></p>
 </li>
           </ul>
 <p id="section-4.7.1-10">Having validated the <code>CollectionJobReq</code>, the Leader begins working with the
@@ -5498,57 +5505,59 @@ share is an <code>AggregateShare</code> (defined below).<a href="#section-4.7.3-
 <p id="section-4.7.3-14">The Helper first ensures that it recognizes the task ID. If not, it <span class="bcp14">MUST</span> fail
 the job with error <code>unrecognizedTask</code>.<a href="#section-4.7.3-14" class="pilcrow">¶</a></p>
 <p id="section-4.7.3-15">The indicated batch mode <span class="bcp14">MUST</span> match the task's batch mode. If not, the Helper
-<span class="bcp14">MUST</span> fail the job with <code>invalidMessage</code>.<a href="#section-4.7.3-15" class="pilcrow">¶</a></p>
-<p id="section-4.7.3-16">The Helper then verifies that the <code>BatchSelector</code> in the Leader's request
+<span class="bcp14">MUST</span> fail the job with error <code>invalidMessage</code>.<a href="#section-4.7.3-15" class="pilcrow">¶</a></p>
+<p id="section-4.7.3-16">If the <code>AggregateShareReq</code> is malformed, the Helper <span class="bcp14">MUST</span> fail the job with error
+<code>invalidMessage</code>.<a href="#section-4.7.3-16" class="pilcrow">¶</a></p>
+<p id="section-4.7.3-17">The Helper then verifies that the <code>BatchSelector</code> in the Leader's request
 determines a batch that can be collected. If the selector does not identify a
 valid set of batch buckets according to the criteria defined by the batch mode
 in use (<a href="#batch-modes" class="auto internal xref">Section 5</a>), then the Helper <span class="bcp14">MUST</span> fail the job with error
-<code>batchInvalid</code>.<a href="#section-4.7.3-16" class="pilcrow">¶</a></p>
-<p id="section-4.7.3-17">If any of the batch buckets identified by the selector have already been
-collected, then the Helper <span class="bcp14">MUST</span> fail the job with error <code>batchOverlap</code>.<a href="#section-4.7.3-17" class="pilcrow">¶</a></p>
-<p id="section-4.7.3-18">If the number of validated reports in the batch is not equal to or greater than
+<code>batchInvalid</code>.<a href="#section-4.7.3-17" class="pilcrow">¶</a></p>
+<p id="section-4.7.3-18">If any of the batch buckets identified by the selector have already been
+collected, then the Helper <span class="bcp14">MUST</span> fail the job with error <code>batchOverlap</code>.<a href="#section-4.7.3-18" class="pilcrow">¶</a></p>
+<p id="section-4.7.3-19">If the number of validated reports in the batch is not equal to or greater than
 the task's minimum batch size, then the Helper <span class="bcp14">MUST</span> abort with
-<code>invalidBatchSize</code>.<a href="#section-4.7.3-18" class="pilcrow">¶</a></p>
-<p id="section-4.7.3-19">The aggregation parameter <span class="bcp14">MUST</span> match the aggregation parameter used in
+<code>invalidBatchSize</code>.<a href="#section-4.7.3-19" class="pilcrow">¶</a></p>
+<p id="section-4.7.3-20">The aggregation parameter <span class="bcp14">MUST</span> match the aggregation parameter used in
 aggregation jobs pertaining to this batch. If not, the Helper <span class="bcp14">MUST</span> fail the job
-with error <code>invalidMessage</code>.<a href="#section-4.7.3-19" class="pilcrow">¶</a></p>
-<p id="section-4.7.3-20">Next, the Helper retrieves and combines the batch buckets associated with the
+with error <code>invalidMessage</code>.<a href="#section-4.7.3-20" class="pilcrow">¶</a></p>
+<p id="section-4.7.3-21">Next, the Helper retrieves and combines the batch buckets associated with the
 request using the same process used by the Leader (described at the beginning of
 this section), arriving at its aggregate share, report count, and checksum
 values. If the Helper's computed report count and checksum values do not match
 the values provided in the <code>AggregateShareReq</code>, it <span class="bcp14">MUST</span> fail the job with error
-<code>batchMismatch</code>.<a href="#section-4.7.3-20" class="pilcrow">¶</a></p>
-<p id="section-4.7.3-21">The Helper then encrypts <code>agg_share</code> under the Collector's HPKE public key as
+<code>batchMismatch</code>.<a href="#section-4.7.3-21" class="pilcrow">¶</a></p>
+<p id="section-4.7.3-22">The Helper then encrypts <code>agg_share</code> under the Collector's HPKE public key as
 described in <a href="#aggregate-share-encrypt" class="auto internal xref">Section 4.7.6</a>, yielding <code>encrypted_agg_share</code>.
 Encryption prevents the Leader from learning the actual result, as it only has
-its own aggregate share and cannot compute the Helper's.<a href="#section-4.7.3-21" class="pilcrow">¶</a></p>
-<p id="section-4.7.3-22">Once the Helper has encrypted its aggregate share, the aggregate share job is
+its own aggregate share and cannot compute the Helper's.<a href="#section-4.7.3-22" class="pilcrow">¶</a></p>
+<p id="section-4.7.3-23">Once the Helper has encrypted its aggregate share, the aggregate share job is
 ready. Its results are represented by an <code>AggregateShare</code>, with media type
-"application/dap-aggregate-share":<a href="#section-4.7.3-22" class="pilcrow">¶</a></p>
-<div class="lang-tls-presentation sourcecode" id="section-4.7.3-23">
+"application/dap-aggregate-share":<a href="#section-4.7.3-23" class="pilcrow">¶</a></p>
+<div class="lang-tls-presentation sourcecode" id="section-4.7.3-24">
 <pre>
 struct {
   HpkeCiphertext encrypted_aggregate_share;
 } AggregateShare;
-</pre><a href="#section-4.7.3-23" class="pilcrow">¶</a>
+</pre><a href="#section-4.7.3-24" class="pilcrow">¶</a>
 </div>
-<p id="section-4.7.3-24"><code>encrypted_aggregate_share.config_id</code> is set to the Collector's HPKE config ID.
+<p id="section-4.7.3-25"><code>encrypted_aggregate_share.config_id</code> is set to the Collector's HPKE config ID.
 <code>encrypted_aggregate_share.enc</code> is set to the encapsulated HPKE context <code>enc</code>
 computed above and <code>encrypted_aggregate_share.ciphertext</code> is the ciphertext
-<code>encrypted_agg_share</code> computed above.<a href="#section-4.7.3-24" class="pilcrow">¶</a></p>
-<p id="section-4.7.3-25">After receiving the Helper's response, the Leader includes the HpkeCiphertext in
-its response to the Collector (see <a href="#collect-finalization" class="auto internal xref">Section 4.7.5</a>).<a href="#section-4.7.3-25" class="pilcrow">¶</a></p>
-<p id="section-4.7.3-26">Once an <code>AggregateShareReq</code> has been constructed for the batch determined by a
+<code>encrypted_agg_share</code> computed above.<a href="#section-4.7.3-25" class="pilcrow">¶</a></p>
+<p id="section-4.7.3-26">After receiving the Helper's response, the Leader includes the HpkeCiphertext in
+its response to the Collector (see <a href="#collect-finalization" class="auto internal xref">Section 4.7.5</a>).<a href="#section-4.7.3-26" class="pilcrow">¶</a></p>
+<p id="section-4.7.3-27">Once an <code>AggregateShareReq</code> has been constructed for the batch determined by a
 given query, the Helper considers the batch to be collected. The Helper <span class="bcp14">MUST NOT</span>
 commit any more output shares to the batch. It is an error for the Leader to
 issue any more aggregation jobs for additional reports that satisfy the query.
-These reports <span class="bcp14">MUST</span> be rejected by the Helper as described in <a href="#batch-buckets" class="auto internal xref">Section 4.6.3.3</a>.<a href="#section-4.7.3-26" class="pilcrow">¶</a></p>
-<p id="section-4.7.3-27">Changing an aggregate share's parameters is illegal, so if there are further PUT
+These reports <span class="bcp14">MUST</span> be rejected by the Helper as described in <a href="#batch-buckets" class="auto internal xref">Section 4.6.3.3</a>.<a href="#section-4.7.3-27" class="pilcrow">¶</a></p>
+<p id="section-4.7.3-28">Changing an aggregate share's parameters is illegal, so if there are further PUT
 requests to the aggregate share with a different <code>AggregateShareReq</code>, the Helper
-<span class="bcp14">MUST</span> abort with error <code>invalidMessage</code>.<a href="#section-4.7.3-27" class="pilcrow">¶</a></p>
-<p id="section-4.7.3-28">Before completing the collection job, the Leader encrypts its aggregate share
+<span class="bcp14">MUST</span> abort with error <code>invalidMessage</code>.<a href="#section-4.7.3-28" class="pilcrow">¶</a></p>
+<p id="section-4.7.3-29">Before completing the collection job, the Leader encrypts its aggregate share
 under the Collector's HPKE public key as described in
-<a href="#aggregate-share-encrypt" class="auto internal xref">Section 4.7.6</a>.<a href="#section-4.7.3-28" class="pilcrow">¶</a></p>
+<a href="#aggregate-share-encrypt" class="auto internal xref">Section 4.7.6</a>.<a href="#section-4.7.3-29" class="pilcrow">¶</a></p>
 <div id="example-7">
 <section id="section-4.7.3.1">
             <h5 id="name-example-8">
