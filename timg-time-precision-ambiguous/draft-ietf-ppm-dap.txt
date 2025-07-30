@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 28 December 2025                                     Cloudflare
+Expires: 31 January 2026                                      Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                            26 June 2025
+                                                            30 July 2025
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -64,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 28 December 2025.
+   This Internet-Draft will expire on 31 January 2026.
 
 Copyright Notice
 
@@ -141,7 +141,8 @@ Table of Contents
      6.3.  Aggregation Utility and Soft Batch Deadlines
      6.4.  Protocol-specific Optimizations
        6.4.1.  Reducing Storage Requirements
-       6.4.2.  Distributed-systems and Synchronization Concerns
+       6.4.2.  Distributed Systems and Synchronization Concerns
+       6.4.3.  Streaming Messages
    7.  Compliance Requirements
    8.  Security Considerations
      8.1.  Sybil Attacks
@@ -202,8 +203,19 @@ Table of Contents
 
    16:
 
-   *  Bump draft-irtf-cfrg-vdaf-13 to 14 [VDAF] and adopt changes to the
-      ping-pong API (#705, #718).
+   *  Bump draft-irtf-cfrg-vdaf-13 to 15 [VDAF] and adopt changes to the
+      ping-pong API. (#705, #718)
+
+   *  Allow many reports to be uploaded at once. (*) (#686)
+
+   *  Remove TLS presentation language syntax extensions. (#707)
+
+   *  Use HTTP message content length to determine length of vectors in
+      AggregationJobInitReq, AggregationJobResp and
+      AggregationJobContinueReq messages. (*) (#717)
+
+   *  Represent the Time and Duration types as a number of
+      time_precision intervals, rather than seconds (*) (#720).
 
    15:
 
@@ -1167,30 +1179,17 @@ aggregation job 1                   aggregation job 2          aggregation job j
    uint64 Time;
 
    Times are represented by POSIX timestamps, defined to be integers
-   containing a number of seconds since the Epoch, defined in section
-   4.16 of [POSIX].  That is, the number of seconds after 1970-01-01
-   00:00:00 UTC, excluding leap seconds.  One POSIX timestamp is said to
-   be before (respectively, after) another POSIX timestamp if it is less
-   than (respectively, greater than) the other value.
-
-   Every timestamp MUST be rounded down to the nearest multiple of the
-   task's time_precision (Section 4.2).  That is, the value is computed
-   as:
-
-   rounded_timestamp = timestamp - (timestamp % time_precision)
-
-   A timestamp is malformed if received_timestamp % time_precision > 0.
+   representing a number of time_precisions since the Epoch
+   (Section 4.2), defined in section 4.16 of [POSIX].  That is, the
+   number of seconds after 1970-01-01 00:00:00 UTC, excluding leap
+   seconds, divided by the task's time_precision.  One POSIX timestamp
+   is said to be before (respectively, after) another POSIX timestamp if
+   it is less than (respectively, greater than) the other value.
 
    uint64 Duration;
 
-   Durations of time are integers, representing a number of seconds not
-   including leap seconds.  They can be added to POSIX timestamps to
-   produce other POSIX timestamps.  The duration MUST be a multiple of
-   time_precision.  If duration % time_precision > 0, then the interval
-   is malformed.
-
-   Any message containing a malformed Time or Duration is in turn
-   malformed.
+   Durations of time are integers, representing a number of
+   time_precisions.  They can be added to times to produce other times.
 
    struct {
      Time start;
@@ -1499,7 +1498,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
      Report reports[message_length];
    } UploadRequest;
 
-   Here message_length denotes the length of the HTTP message content
+   Here message_length is the length of the HTTP message content
    ([RFC9110], Section 6.4).
 
    Each upload request contains a sequence of Report with the following
@@ -1700,7 +1699,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
        struct {
          report_metadata = struct {
            report_id = [0x0a, 0x0b, 0x0c, 0x0d, ...],
-           time = 1741986088,
+           time = 17419860,
            public_extensions = [0x00, 0x00],
          } ReportMetadata,
          public_share = [0x0a, 0x0b, ...],
@@ -1732,7 +1731,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
        struct {
          report_metadata = struct {
            report_id = [0x0a, 0x0b, 0x0c, 0x0d, ...],
-           time = 2000000000,
+           time = 20000000,
            public_extensions = [0x00, 0x01],
          } ReportMetadata,
          public_share = [0x0a, 0x0b, ...],
@@ -1750,7 +1749,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
        struct {
          report_metadata = struct {
            report_id = [0x0z, 0x0y, 0x0x, 0x0w, ...],
-           time = 2000000001,
+           time = 20000000,
            public_extensions = [0x00, 0x01],
          } ReportMetadata,
          public_share = [0x0a, 0x0b, ...],
@@ -2082,7 +2081,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    struct {
      opaque agg_param<0..2^32-1>;
      PartialBatchSelector part_batch_selector;
-     PrepareInit prepare_inits<44..2^32-1>;
+     PrepareInit prepare_inits[prepare_inits_length];
    } AggregationJobInitReq;
 
    This message consists of:
@@ -2098,7 +2097,11 @@ aggregation job 1                   aggregation job 2          aggregation job j
       mode, it may only partially determine a batch.  See Section 5.
 
    *  prepare_inits: the sequence of PrepareInit messages constructed in
-      the previous step.
+      the previous step.  Here prepare_inits_length is the length of the
+      HTTP message content ([RFC9110], Section 6.4), minus the lengths
+      in octets of the encoded agg_param and part_batch_selector fields.
+      That is, the remainder of the HTTP message consists of
+      prepare_inits.
 
    The Leader sends the AggregationJobInitReq in the body of a PUT
    request to the aggregation job with a media type of "application/dap-
@@ -2297,11 +2300,14 @@ aggregation job 1                   aggregation job 2          aggregation job j
    AggregationJobResp, which is structured as follows:
 
    struct {
-     PrepareResp prepare_resps<17..2^32-1>;
+     PrepareResp prepare_resps[message_length];
    } AggregationJobResp;
 
-   where prepare_resps are the outbound PrepareResp messages for each
-   report computed in the previous step.  The order MUST match
+   Here message_length is the length of the HTTP message content
+   ([RFC9110], Section 6.4).
+
+   prepare_resps is the outbound PrepareResp messages for each report
+   computed in the previous step.  The order MUST match
    AggregationJobInitReq.prepare_inits.  The media type for
    AggregationJobResp is "application/dap-aggregation-job-resp".
 
@@ -2390,6 +2396,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
    Host: example.com
    Content-Type: application/dap-aggregation-job-init-req
+   Content-Length: 100
    Authorization: Bearer auth-token
 
    encoded(struct {
@@ -2405,6 +2412,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    HTTP/1.1 200
    Content-Type: application/dap-aggregation-job-resp
+   Content-Length: 100
 
    encoded(struct { prepare_resps } AggregationJobResp)
 
@@ -2413,6 +2421,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
    Host: example.com
    Content-Type: application/dap-aggregation-job-init-req
+   Content-Length: 100
    Authorization: Bearer auth-token
 
    encoded(struct {
@@ -2442,6 +2451,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    HTTP/1.1 200
    Content-Type: application/dap-aggregation-job-resp
+   Content-Length: 100
 
    encoded(struct { prepare_resps } AggregationJobResp)
 
@@ -2500,15 +2510,17 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    struct {
      uint16 step;
-     PrepareContinue prepare_continues<21..2^32-1>;
+     PrepareContinue prepare_continues[prepare_continues_length];
    } AggregationJobContinueReq;
 
    The step field is the step of DAP aggregation that the Leader just
    reached and wants the Helper to advance to.  The prepare_continues
    field is the sequence of preparation continuation messages
-   constructed in the previous step.  The PrepareContinue elements MUST
-   be in the same order as the previous request to the aggregation job,
-   omitting any reports that were previously rejected by either
+   constructed in the previous step.  Here prepare_continues_length is
+   the length of the HTTP message content ([RFC9110], Section 6.4),
+   minus the length in octets of step.  The PrepareContinue elements
+   MUST be in the same order as the previous request to the aggregation
+   job, omitting any reports that were previously rejected by either
    Aggregator.
 
    The Leader handles the response(s) as described in Section 4.3 to
@@ -2802,6 +2814,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    POST /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
    Host: example.com
    Content-Type: application/dap-aggregation-job-continue-req
+   Content-Length: 100
    Authorization: Bearer auth-token
 
    encoded(struct {
@@ -2811,6 +2824,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    HTTP/1.1 200
    Content-Type: application/dap-aggregation-job-resp
+   Content-Length: 100
 
    encoded(struct { prepare_resps } AggregationJobResp)
 
@@ -2819,6 +2833,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    POST /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
    Host: example.com
    Content-Type: application/dap-aggregation-job-continue-req
+   Content-Length: 100
    Authorization: Bearer auth-token
 
    encoded(struct {
@@ -2844,6 +2859,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    HTTP/1.1 200
    Content-Type: application/dap-aggregation-job-resp
+   Content-Length: 100
 
    encoded(struct { prepare_resps } AggregationJobResp)
 
@@ -2904,7 +2920,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    struct {
      Query query;
-     opaque agg_param<0..2^32-1>; /* VDAF aggregation parameter */
+     opaque agg_param<0..2^32-1>;
    } CollectionJobReq;
 
    *  query, the Collector's query.  The content of this field depends
@@ -3064,8 +3080,8 @@ aggregation job 1                   aggregation job 2          aggregation job j
      } PartialBatchSelector,
      report_count = 1000,
      interval = struct {
-       start = 1659544000,
-       duration = 1000,
+       start = 16595440,
+       duration = 1,
      } Interval,
      leader_encrypted_agg_share = struct { ... } HpkeCiphertext,
      helper_encrypted_agg_share = struct { ... } HpkeCiphertext,
@@ -3083,8 +3099,8 @@ aggregation job 1                   aggregation job 2          aggregation job j
        batch_mode = BatchMode.time_interval,
        query = encoded(struct {
          batch_interval = struct {
-           start = 1659544000,
-           duration = 10000,
+           start = 16595440,
+           duration = 1,
          } Interval,
        } TimeIntervalQueryConfig),
      },
@@ -3113,15 +3129,15 @@ aggregation job 1                   aggregation job 2          aggregation job j
        batch_mode = BatchMode.time_interval,
        config = encoded(struct {
          interval = struct {
-           start = 1659544000,
-           duration = 10000,
+           start = 1659544,
+           duration = 10,
          } Interval,
        } TimeIntervalBatchSelectorConfig)
      },
      report_count = 4000,
      interval = struct {
-       start = 1659547000,
-       duration = 1000,
+       start = 1659547,
+       duration = 10,
      } Interval,
      leader_encrypted_agg_share = struct { ... } HpkeCiphertext,
      helper_encrypted_agg_share = struct { ... } HpkeCiphertext,
@@ -3304,8 +3320,8 @@ aggregation job 1                   aggregation job 2          aggregation job j
        batch_mode = BatchMode.time_interval,
        config = encoded(struct {
          batch_interval = struct {
-           start = 1659544000,
-           duration = 10000,
+           start = 1659544,
+           duration = 10,
          } Interval,
        } TimeIntervalBatchSelectorConfig),
      } BatchSelector,
@@ -3333,8 +3349,8 @@ aggregation job 1                   aggregation job 2          aggregation job j
        batch_mode = BatchMode.time_interval,
        config = encoded(struct {
          batch_interval = struct {
-           start = 1659544000,
-           duration = 10000,
+           start = 1659544,
+           duration = 10,
          } Interval,
        } TimeIntervalBatchSelectorConfig),
      } BatchSelector,
@@ -3507,20 +3523,20 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    [
      struct {
-       start = 1659544000,
-       duration = 1000,
+       start = 1659544,
+       duration = 1,
      } Interval,
      struct {
-       start = 1659545000,
-       duration = 1000,
+       start = 1659545,
+       duration = 1,
      } Interval,
      struct {
-       start = 1659546000,
-       duration = 1000,
+       start = 1659546,
+       duration = 1,
      } Interval,
      struct {
-       start = 1659547000,
-       duration = 1000,
+       start = 1659547,
+       duration = 1,
      } Interval,
    ]
 
@@ -3562,12 +3578,12 @@ aggregation job 1                   aggregation job 2          aggregation job j
    equal to the task's time_precision.  The identifier associated with a
    given report is the unique such interval containing the timestamp of
    the report.  For example, if the task's time_precision is 1000
-   seconds and the report's timestamp is 1729629081, the relevant batch
-   bucket identifier is
+   seconds and the report was generated at 1729629081 seconds after the
+   start of the UNIX epoch, the relevant batch bucket identifier is
 
    struct {
-     start = 1729629000,
-     duration = 1000,
+     start = 1729629,
+     duration = 1,
    } Interval
 
    The Query received by the Leader or BatchSelector received by the
@@ -3581,16 +3597,16 @@ aggregation job 1                   aggregation job 2          aggregation job j
    [
      struct {
        start = batch_interval.start,
-       duration = time_precision,
+       duration = 1,
      } Interval,
      struct {
-       start = batch_interval.start + time_precision,
-       duration = time_precision,
+       start = batch_interval.start + 1,
+       duration = 1,
      } Interval,
      ...
      struct {
-       start = batch_interval.start + batch_interval.duration - time_precision,
-       duration = time_precision,
+       start = batch_interval.start + batch_interval.duration - 1,
+       duration = 1,
      } Interval,
    ]
 
@@ -3815,7 +3831,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    after the task_interval.  Implementors SHOULD provide for some leeway
    so the Collector can collect the batch after some delay.
 
-6.4.2.  Distributed-systems and Synchronization Concerns
+6.4.2.  Distributed Systems and Synchronization Concerns
 
    Various parts of a DAP implementation will need to synchronize in
    order to ensure correctness during concurrent operation.  This
@@ -3882,6 +3898,21 @@ aggregation job 1                   aggregation job 2          aggregation job j
       before responding to an aggregate share request, requiring
       synchronization between the Helper's collection and aggregation
       interactions.
+
+6.4.3.  Streaming Messages
+
+   Most messages in the protocol contain fixed-length or length-prefixed
+   fields such that they can be parsed independently of context.  The
+   exceptions are the UploadReq, UploadResp (Section 4.5.2),
+   AggregationJobInitReq, AggregationJobContinueReq, and
+   AggregationJobResp (Section 4.6) messages, all of which contain
+   vectors whose length is determined by the length of the enclosing
+   HTTP message.
+
+   This allows implementations to begin transmitting these messages
+   before knowing how long the message will ultimately be.  This is
+   useful if implementations wish to avoid buffering exceptionally large
+   messages in memory.
 
 7.  Compliance Requirements
 
@@ -5017,6 +5048,11 @@ Contributors
    Charlie Harrison
    Google
    Email: csharrison@chromium.org
+
+
+   J.C. Jones
+   ISRG
+   Email: ietf@insufficient.coffee
 
 
    Alex Koshelev
