@@ -1312,7 +1312,7 @@ support multiple HPKE configurations and multiple sets of algorithms
 simultaneously.
 
 ~~~ tls-presentation
-HpkeConfig HpkeConfigList<10..2^16-1>;
+HpkeConfig HpkeConfigList<1..2^16-1>;
 
 struct {
   HpkeConfigId id;
