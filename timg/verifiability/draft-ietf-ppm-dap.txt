@@ -2155,9 +2155,9 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
        Note on rejection agreement: rejecting at this point would result
        in a batch mismatch if the Helper had already committed to its
-       output share.  This is impossible due to the verifiability of the
-       VDAF: if the underlying measurement were invalid, then the Helper
-       would have indicated rejection in its response.
+       output share.  This is impossible due to the verifiability
+       property of the VDAF: if the underlying measurement were invalid,
+       then the Helper would have indicated rejection in its response.
 
    2.  Else if the PrepareResp has type "reject", then the Leader
        rejects the report and removes it from the candidate set.  The
@@ -2561,9 +2561,9 @@ aggregation job 1                   aggregation job 2          aggregation job j
           Note on rejection agreement: rejecting at this point would
           result in a batch mismatch if the Helper had already committed
           to its output share.  This is impossible due to the
-          verifiability of the VDAF: if the underlying measurement were
-          invalid, then the Helper would have indicated rejection in its
-          response.
+          verifiability property of the VDAF: if the underlying
+          measurement were invalid, then the Helper would have indicated
+          rejection in its response.
 
        *  Else if the new type is Finished, then the Leader commits to
           state.out_share as described in Section 4.6.3.3.
@@ -3952,11 +3952,12 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    Attacks on verifiability:
 
-   1.  Aggregators can defeat verifiability by emitting incorrect
-       aggregate shares, by omitting reports from the aggregation
-       process, or by manipulating the VDAF preparation process for a
-       single report.  DAP follows VDAF in providing verifiability only
-       if both Aggregators honestly follow the protocol.
+   1.  Aggregators can change the result by an arbitrary amount by
+       emitting incorrect aggregate shares, by omitting reports from the
+       aggregation process, or by manipulating the VDAF preparation
+       process for a single report.  Like the underlying VDAF, DAP only
+       ensures correct computation of the aggregate result if both
+       Aggregators honestly execute the protocol.
 
    2.  Clients may affect the quality of aggregate results by reporting
        false measurements.  A VDAF can only verify that a submitted
@@ -4006,8 +4007,9 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
 8.1.  Sybil Attacks
 
-   Several attacks on privacy or verifiability involve malicious Clients
-   uploading reports that are valid under the chosen VDAF but incorrect.
+   Several attacks on the security of the VDAF (Section 9 of [VDAF])
+   involve malicious Clients uploading reports that are valid under the
+   chosen VDAF but incorrect.
 
    For example, a DAP deployment might be measuring the heights of a
    human population and configure a variant of Prio3 to prove that
@@ -4152,7 +4154,8 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    Such enumeration attacks can be mitigated by incorporating
    unpredictable values into the task ID derivation.  They do not,
-   however, affect the protocol goals of privacy or verifiability.
+   however, affect the core security goals of VDAFs (Section 9 of
+   [VDAF]).
 
 8.6.2.  VDAF Verification Key Requirements
 
