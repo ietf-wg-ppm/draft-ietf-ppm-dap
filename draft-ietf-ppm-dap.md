@@ -184,6 +184,10 @@ aggregator.
 - Represent the Time and Duration types as a number of time_precision
   intervals, rather than seconds (\*) (#720).
 
+- Discuss the property of "verifiability" instead of "robustness" to match
+  recent VDAF changes (https://github.com/cfrg/draft-irtf-cfrg-vdaf/pull/558).
+  (#725)
+
 15:
 
 - Specify body of responses to aggregation job GET requests. (#651)
@@ -2037,9 +2041,9 @@ The Leader proceeds as follows with each report:
 
    Note on rejection agreement: rejecting at this point would result in a batch
    mismatch if the Helper had already committed to its output share. This is
-   impossible due to the robustness of the VDAF: if the underlying measurement
-   were invalid, then the Helper would have indicated rejection in its
-   response.
+   impossible due to the verifiability property of the VDAF: if the underlying
+   measurement were invalid, then the Helper would have indicated rejection in
+   its response.
 
 1. Else if the `PrepareResp` has type "reject", then the Leader rejects the
    report and removes it from the candidate set. The Leader MUST NOT include
@@ -2440,9 +2444,9 @@ Otherwise, the Leader proceeds as follows with each report:
 
      Note on rejection agreement: rejecting at this point would result in a
      batch mismatch if the Helper had already committed to its output share.
-     This is impossible due to the robustness of the VDAF: if the underlying
-     measurement were invalid, then the Helper would have indicated rejection
-     in its response.
+     This is impossible due to the verifiability property of the VDAF: if the
+     underlying measurement were invalid, then the Helper would have indicated
+     rejection in its response.
 
    * Else if the new type is `Finished`, then the Leader commits to
      `state.out_share` as described in {{batch-buckets}}.
@@ -3708,9 +3712,9 @@ tradeoffs.
   synchronization between different components of the system which are
   generating aggregation jobs. Note that placing a report into more than one
   aggregation job will result in a loss of throughput, rather than a loss of
-  correctness, privacy, or robustness, so it is acceptable for implementations
-  to use an eventually-consistent scheme which may rarely place a report into
-  multiple aggregation jobs.
+  correctness, privacy, or verifiability, so it is acceptable for
+  implementations to use an eventually-consistent scheme which may rarely place
+  a report into multiple aggregation jobs.
 
 * Aggregation is implemented as a sequence of aggregation steps by both the
   Leader and the Helper. The Leader must ensure that each aggregation job is
@@ -3770,7 +3774,7 @@ suite:
 
 # Security Considerations {#sec-considerations}
 
-DAP aims to achieve the privacy and robustness security goals defined in
+DAP aims to achieve the privacy and verifiability security goals defined in
 {{Section 9 of !VDAF}}. That is, an active attacker that controls a subset of
 the Clients, one of the Aggregators, and the Collector learns nothing about the
 honest Clients' measurements beyond their aggregate result. At the same time,
@@ -3785,12 +3789,13 @@ unauthenticated parties. Thus there are some threats that DAP does not defend
 against and which are considered outside of its threat model. These and others
 are enumerated below, along with potential mitigations.
 
-Attacks on robustness:
+Attacks on verifiability:
 
-1. Aggregators can defeat robustness by emitting incorrect aggregate shares, by
-   omitting reports from the aggregation process, or by manipulating the VDAF
-   preparation process for a single report. DAP follows VDAF in providing
-   robustness only if both Aggregators honestly follow the protocol.
+1. Aggregators can change the result by an arbitrary amount by emitting
+   incorrect aggregate shares, by omitting reports from the aggregation process,
+   or by manipulating the VDAF preparation process for a single report. Like the
+   underlying VDAF, DAP only ensures correct computation of the aggregate result
+   if both Aggregators honestly execute the protocol.
 1. Clients may affect the quality of aggregate results by reporting false
    measurements. A VDAF can only verify that a submitted measurement is valid,
    not that it is true.
@@ -3830,8 +3835,9 @@ Attacks on other properties of the system:
 
 ## Sybil Attacks {#sybil}
 
-Several attacks on privacy or robustness involve malicious Clients uploading
-reports that are valid under the chosen VDAF but incorrect.
+Several attacks on the security of the VDAF ({{Section 9 of !VDAF}}) involve
+malicious Clients uploading reports that are valid under the chosen VDAF but
+incorrect.
 
 For example, a DAP deployment might be measuring the heights of a human
 population and configure a variant of Prio3 to prove that measurements are
@@ -3909,9 +3915,9 @@ Client reports may be transmitted alongside auxiliary information such as
 source IP, HTTP user agent, or Client authentication information (in
 deployments which use it, see {{client-auth}}). This metadata can be used by
 Aggregators to identify participating Clients or permit some attacks on
-robustness. This auxiliary information can be removed by having Clients submit
-reports to an anonymizing proxy server which would then use Oblivious HTTP
-{{!RFC9458}} to forward reports to the DAP Leader. In this scenario, Client
+verifiability. This auxiliary information can be removed by having Clients
+submit reports to an anonymizing proxy server which would then use Oblivious
+HTTP {{!RFC9458}} to forward reports to the DAP Leader. In this scenario, Client
 authentication would be performed by the proxy rather than any of the
 participants in the DAP protocol.
 
@@ -3960,8 +3966,8 @@ label describing the task, the identities of participating Aggregators or the
 fact that some measurement is being taken at all.
 
 Such enumeration attacks can be mitigated by incorporating unpredictable values
-into the task ID derivation. They do not, however, affect the protocol goals of
-privacy or robustness.
+into the task ID derivation. They do not, however, affect the core security
+goals of VDAFs ({{Section 9 of !VDAF}}).
 
 ### VDAF Verification Key Requirements {#verification-key}
 
