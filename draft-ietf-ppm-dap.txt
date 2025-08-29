@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 1 March 2026                                         Cloudflare
+Expires: 2 March 2026                                         Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                          28 August 2025
+                                                          29 August 2025
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -64,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 1 March 2026.
+   This Internet-Draft will expire on 2 March 2026.
 
 Copyright Notice
 
@@ -220,6 +220,8 @@ Table of Contents
    *  Discuss the property of "verifiability" instead of "robustness" to
       match recent VDAF changes (https://github.com/cfrg/draft-irtf-
       cfrg-vdaf/pull/558). (#725)
+
+   *  Bump version tag from "dap-15" to "dap-16". (*)
 
    15:
 
@@ -1542,7 +1544,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    algorithm (Section 5.1 of [VDAF]), using the report ID as the nonce:
 
    (public_share, input_shares) = Vdaf.shard(
-       "dap-15" || task_id,
+       "dap-16" || task_id,
        measurement,
        report_id,
        rand,
@@ -1578,7 +1580,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    Next, the Client encrypts each PlaintextInputShare as follows:
 
    enc, payload = SealBase(pk,
-     "dap-15 input share" || 0x01 || server_role,
+     "dap-16 input share" || 0x01 || server_role,
      input_share_aad, plaintext_input_share)
 
    *  pk is the public key from the Aggregator's HPKE configuration.
@@ -2018,7 +2020,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    state = Vdaf.ping_pong_leader_init(
        vdaf_verify_key,
-       "dap-15" || task_id,
+       "dap-16" || task_id,
        agg_param,
        report_id,
        public_share,
@@ -2123,7 +2125,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
        computes
 
       state = Vdaf.ping_pong_leader_continued(
-          "dap-15" || task_id,
+          "dap-16" || task_id,
           agg_param,
           state,
           inbound,
@@ -2256,7 +2258,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    state = Vdaf.ping_pong_helper_init(
        vdaf_verify_key,
-       "dap-15" || task_id,
+       "dap-16" || task_id,
        agg_param,
        report_id,
        public_share,
@@ -2337,7 +2339,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    payload with the following procedure:
 
    plaintext_input_share = OpenBase(encrypted_input_share.enc, sk,
-     "dap-15 input share" || 0x01 || server_role,
+     "dap-16 input share" || 0x01 || server_role,
      input_share_aad, encrypted_input_share.payload)
 
    *  sk is the secret key from the HPKE configuration indicated by
@@ -2540,7 +2542,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
        "continue", then the Leader computes
 
       state = Vdaf.ping_pong_leader_continued(
-          "dap-15" || task_id,
+          "dap-16" || task_id,
           agg_param,
           state,
           inbound,
@@ -2663,7 +2665,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    For each report, the Helper does the following:
 
    state = Vdaf.ping_pong_helper_continued(
-       "dap-15" || task_id,
+       "dap-16" || task_id,
        agg_param,
        state,
        inbound,
@@ -3428,7 +3430,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    (enc, payload) = SealBase(
        pk,
-       "dap-15 aggregate share" || server_role || 0x00,
+       "dap-16 aggregate share" || server_role || 0x00,
        agg_share_aad,
        agg_share)
 
@@ -3466,7 +3468,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    agg_share = OpenBase(
        enc_share.enc,
        sk,
-       "dap-15 aggregate share" || server_role || 0x00,
+       "dap-16 aggregate share" || server_role || 0x00,
        agg_share_aad,
        enc_share.payload)
 
