@@ -942,10 +942,10 @@ Using the Collector's query, each Aggregator will merge one or more batch
 buckets together into its aggregate share, meaning batch buckets are many to 1
 with aggregate shares.
 
-The Leader and Helper's aggregate shares are finally delivered to the Collector
-to be unsharded into the aggregate result. Since there are always exactly two
-Aggregators, aggregate shares are 2 to 1 with aggregate results. The collection
-interaction is specified in {{collect-flow}}.
+The Leader and Helper finally deliver their encrypted aggregate shares to the
+Collector to be decrypted and then unsharded into the aggregate result. Since
+there are always exactly two Aggregators, aggregate shares are 2 to 1 with
+aggregate results. The collection interaction is specified in {{collect-flow}}.
 
 There can be many aggregate results for a single task. The Collection process
 may occur multiple times for each task, with the Collector obtaining multiple
@@ -955,7 +955,6 @@ aggregate results once an hour, or every time 10,000,000 reports are uploaded.
 ~~~ aasvg
             from aggregation interaction
                           |
-                          v
         .-+-----+---------+-------------+-+-----.
         | |     |                       | |     |
         v |     |                       v |     |
@@ -970,9 +969,24 @@ Leader batch bucket 1            Helper batch bucket 1
         | |     |     query chosen      | |     |
         v v ... v     by Collector      v v ... v
      .--+-+-----+--.        |        .--+-+-----+--.
-    |  merge Leader |       v       | merge Helper  |
-    | batch buckets |<------+------>| batch buckets |
+    |  merge Leader |       |       | merge Helper  |
+    | batch buckets +-------+-------+ batch buckets |
      '------+------'                 '------+------'
+            |                               |
+            v                               v
+  Leader aggregate share          Helper aggregate share
+            |                               |
+   .--------+-----------.          .--------+-----------.
+  | encrypt to Collector |        | encrypt to Collector |
+   '--------+-----------'          '--------+-----------'
+            |                               |
+            v                               v
+     encrypted Leader                encrypted Helper
+      aggregate share                aggregate share
+            |                               |
+        .---+---.                       .---+---.
+       | decrypt |                     | decrypt |
+        '---+---'                       '---+---'
             |                               |
             v                               v
   Leader aggregate share          Helper aggregate share
@@ -982,7 +996,6 @@ Leader batch bucket 1            Helper batch bucket 1
                         .---+---.
                        | unshard |
                         '---+---'
-                            |
                             v
                      aggregate result
 ~~~
