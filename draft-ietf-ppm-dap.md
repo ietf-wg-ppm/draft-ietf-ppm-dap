@@ -600,7 +600,7 @@ function" and `agg_result` the "aggregate result".
 DAP is extensible in that it allows for the addition of new cryptographic
 schemes that compute different aggregation functions, determined by the
 Verifiable Distributed Aggregation Function, or
-{{!VDAF=I-D.draft-irtf-cfrg-vdaf-15}}, used to compute it.
+{{!VDAF=I-D.draft-irtf-cfrg-vdaf-16}}, used to compute it.
 
 VDAFs rely on secret sharing to protect the privacy of the measurements. Rather
 than sending its measurement in the clear, each Client shards its measurement
@@ -939,7 +939,7 @@ The protocol is made up of several interactions in which different subsets of
 participants interact with each other.
 
 In those cases where a channel between two participants is tunneled through
-another protocol participant, Hybrid Public-Key Encryption ({{!HPKE=RFC9180}})
+another protocol participant, Hybrid Public Key Encryption ({{!HPKE=RFC9180}})
 ensures that only the intended recipient can see a message in the clear.
 
 In other cases, HTTP client authentication is required as well as server
@@ -3902,9 +3902,8 @@ authenticating proxy deployed between Clients and the Aggregators; see
 because the Helper never handles messages directly from the Clients, reports
 would need to include an extension ({{report-extensions}}) to convey
 authentication information to the Helper. For example, a deployment might
-include a Privacy Pass token ({{?I-D.draft-ietf-privacypass-architecture-16}})
-in a report extension to allow both Aggregators to independently verify the
-Client's identity.
+include a Privacy Pass token ({{?RFC9576}}) in a report extension to allow both
+Aggregators to independently verify the Client's identity.
 
 However, in some deployments, it will not be practical to require Clients to
 authenticate, so Client authentication is not mandatory in DAP. For example, a
@@ -3958,7 +3957,7 @@ of 1 report).
 
 This specification imposes no requirements on task IDs except that they be
 globally unique. One way to achieve this is to use random task IDs, but
-deployments can also use schemes like {{?I-D.draft-ietf-ppm-dap-taskprov-01}}
+deployments can also use schemes like {{?I-D.draft-ietf-ppm-dap-taskprov-03}}
 where task IDs are deterministically generated from some set of task parameters.
 
 In such settings, deployments should consider whether an Aggregator
