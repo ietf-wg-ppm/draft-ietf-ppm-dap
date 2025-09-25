@@ -951,9 +951,6 @@ allowed. For example:
 
 * TLS client certificates can be used to authenticate the underlying transport.
 
-* The `DAP-Auth-Token` HTTP header described in
-  {{?I-D.draft-dcook-ppm-dap-interop-test-design-04}}.
-
 * {{?RFC9421}} HTTP message signatures authenticate messages without
   transmitting a secret.
 
