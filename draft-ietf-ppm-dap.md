@@ -755,7 +755,9 @@ has been collected ({{collect-flow}}).
 The following diagrams illustrate how the various objects in the protocol are
 constructed or transformed into other protocol objects. Oval nodes are verbs or
 actions which process, transform or combine one or more objects into one or more
-other objects. This diagram does not necessarily illustrate how participants
+other objects.
+
+The diagrams in this section do not necessarily illustrate how participants
 communicate. In particular, the processing of aggregation jobs happens in
 distinct, non-colluding parties.
 
