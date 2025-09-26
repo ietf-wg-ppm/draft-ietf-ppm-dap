@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 28 March 2026                                        Cloudflare
+Expires: 30 March 2026                                        Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                       24 September 2025
+                                                       26 September 2025
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -64,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 28 March 2026.
+   This Internet-Draft will expire on 30 March 2026.
 
 Copyright Notice
 
@@ -803,10 +803,11 @@ Table of Contents
    The following diagrams illustrate how the various objects in the
    protocol are constructed or transformed into other protocol objects.
    Oval nodes are verbs or actions which process, transform or combine
-   one or more objects into one or more other objects.  This diagram
-   does not necessarily illustrate how participants communicate.  In
-   particular, the processing of aggregation jobs happens in distinct,
-   non-colluding parties.
+   one or more objects into one or more other objects.
+
+   The diagrams in this section do not necessarily illustrate how
+   participants communicate.  In particular, the processing of
+   aggregation jobs happens in distinct, non-colluding parties.
 
 2.4.1.  The Upload Interaction
 
