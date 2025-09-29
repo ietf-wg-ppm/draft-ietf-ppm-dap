@@ -1383,9 +1383,10 @@ encoded([
 
 ### Upload Request
 
-Clients upload reports by sending a POST to `{leader}/tasks/{task-id}/reports`.
-The body is an `UploadRequest`, with media type "application/dap-upload-req",
-structured as follows:
+Reports are uploaded using the reports resource, served by the Leader at
+`{leader}/tasks/{task-id}/reports`. An upload is represented as an
+`UploadRequest`, with media type "application/dap-upload-req", structured as
+follows:
 
 ~~~ tls-presentation
 struct {
@@ -1434,8 +1435,7 @@ Aggregators MAY require Clients to authenticate when uploading reports (see
 {{client-auth}}). If it is used, client authentication MUST use a scheme that
 meets the requirements in {{request-authentication}}.
 
-The handling of the upload request by the Leader MUST be idempotent as discussed
-in {{Section 9.2.2 of !RFC9110}}.
+#### Client Behavior
 
 To generate a report, the Client begins by sharding its measurement into input
 shares and the public share using the VDAF's sharding algorithm ({{Section 5.1
@@ -1505,6 +1505,14 @@ struct {
   opaque public_share<0..2^32-1>;
 } InputShareAad;
 ~~~
+
+Clients upload reports by sending an `UploadRequest` as the body of a POST to
+the Leader's reports resource.
+
+#### Leader Behavior
+
+The handling of the upload request by the Leader MUST be idempotent as discussed
+in {{Section 9.2.2 of !RFC9110}}.
 
 If the upload request is malformed, the Leader aborts with error
 `invalidMessage`.
