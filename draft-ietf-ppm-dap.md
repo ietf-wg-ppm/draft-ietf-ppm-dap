@@ -1783,16 +1783,16 @@ exchanged during preparation.
 | Leader |                                         | Helper |
 '--+-----'                                         '-----+--'
    | AggregationJobInitReq:                              |
-   |   agg_param, prep_init                              |
+   |   agg_param, prepare_init                           |
    |---------------------------------------------------->|
    |                                 AggregationJobResp: |
-   |                               prep_resp(continue)   |
+   |                            prepare_resp(continue)   |
    |<----------------------------------------------------|
    | AggregationJobContinueReq:                          |
-   |   prep_continue                                     |
+   |   prepare_continue                                  |
    |---------------------------------------------------->|
    |                                 AggregationJobResp: |
-   |                               prep_resp(continue)   |
+   |                            prepare_resp(continue)   |
    |<----------------------------------------------------|
    |                                                     |
 
@@ -1800,10 +1800,10 @@ exchanged during preparation.
 
    |                                                     |
    | AggregationJobContinueReq:                          |
-   |   prep_continue                                     |
+   |   prepare_continue                                  |
    |---------------------------------------------------->|
    |                                 AggregationJobResp: |
-   |                        prep_resp(continue|finish)   |
+   |                     prepare_resp(continue|finish)   |
    |<----------------------------------------------------|
    |                                                     |
    v                                                     v
