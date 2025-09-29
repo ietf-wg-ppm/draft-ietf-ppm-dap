@@ -2017,7 +2017,7 @@ an `AggregationJobResp`.
 
 The `AggregationJobResp.prepare_resps` field must include exactly the same
 report IDs in the same order as the Leader's `AggregationJobInitReq`. Otherwise,
-the Leader MUST abort the aggregation job.
+the Leader MUST abandon the aggregation job.
 
 The Leader proceeds as follows with each report:
 
@@ -2065,7 +2065,7 @@ The Leader proceeds as follows with each report:
    subsequent aggregation job.
 
 1. Otherwise the inbound message type is invalid for the Leader's current
-   state, in which case the Leader MUST abort the aggregation job.
+   state, in which case the Leader MUST abandon the aggregation job.
 
 Since VDAF preparation completes in a constant number of rounds, it will never
 be the case that preparation is complete for some of the reports in an
@@ -2428,7 +2428,7 @@ an `AggregationJobResp`.
 
 The response's `prepare_resps` MUST include exactly the same report IDs in the
 same order as the Leader's `AggregationJobContinueReq`. Otherwise, the Leader
-MUST abort the aggregation job.
+MUST abandon the aggregation job.
 
 Otherwise, the Leader proceeds as follows with each report:
 
@@ -2476,7 +2476,7 @@ Otherwise, the Leader proceeds as follows with each report:
    subsequent aggregation job.
 
 1. Otherwise the inbound message is incompatible with the Leader's current
-   state, in which case the Leader MUST abort the aggregation job.
+   state, in which case the Leader MUST abandon the aggregation job.
 
 If the Leader fails to process the response from the Helper, for example because
 of a transient failure such as a network connection failure or process crash,
@@ -2744,12 +2744,19 @@ Content-Length: 100
 encoded(struct { prepare_resps } AggregationJobResp)
 ~~~
 
-### Aggregation Job Deletion
+### Aggregation Job Abandonment and Deletion
 
-If for whatever reason, the Leader must abandon an aggregation job, it SHOULD
-let the Helper know it can clean up its state by sending a DELETE request to the
-job. Deletion of an aggregation job MUST NOT delete information needed for
-replay or double collection checks ({{batch-buckets}}).
+This document describes various error cases where a Leader is required to
+abandon an aggregation job. This means the Leader should discontinue further
+processing of the job and the reports included in it. Reports included in an
+abandoned aggregation job MUST NOT be considered collected for purposes of
+replay and double collection checks ({{batch-buckets}}) and MAY be
+included in future aggregation jobs.
+
+If the Leader must abandon an aggregation job, it SHOULD let the Helper know it
+can clean up its state by sending a DELETE request to the job. Deletion of an
+aggregation job MUST NOT delete information needed for replay or double
+collection checks.
 
 #### Example
 
