@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 29 March 2026                                        Cloudflare
+Expires: 2 April 2026                                         Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                       25 September 2025
+                                                       29 September 2025
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -64,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 29 March 2026.
+   This Internet-Draft will expire on 2 April 2026.
 
 Copyright Notice
 
@@ -1004,9 +1004,6 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    *  TLS client certificates can be used to authenticate the underlying
       transport.
-
-   *  The DAP-Auth-Token HTTP header described in
-      [I-D.draft-dcook-ppm-dap-interop-test-design-04].
 
    *  [RFC9421] HTTP message signatures authenticate messages without
       transmitting a secret.
@@ -4983,13 +4980,6 @@ aggregation job 1                   aggregation job 2          aggregation job j
    [Dou02]    Douceur, J. R., "The Sybil Attack", International Workshop
               on Peer-to-Peer Systems (IPTPS), 2002,
               <https://doi.org/10.1007/3-540-45748-8_24>.
-
-   [I-D.draft-dcook-ppm-dap-interop-test-design-04]
-              Cook, D., "DAP Interoperation Test Design", Work in
-              Progress, Internet-Draft, draft-dcook-ppm-dap-interop-
-              test-design-04, 14 June 2023,
-              <https://datatracker.ietf.org/doc/html/draft-dcook-ppm-
-              dap-interop-test-design-04>.
 
    [I-D.draft-ietf-ppm-dap-taskprov-03]
               Wang, S. and C. Patton, "Task Binding and In-Band
