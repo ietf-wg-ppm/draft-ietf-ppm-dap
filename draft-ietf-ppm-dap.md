@@ -1512,9 +1512,13 @@ If the upload request is malformed, the Leader aborts with error
 If the Leader does not recognize the task ID, then it aborts with error
 `unrecognizedTask`.
 
-Otherwise, the Leader responds with a body consisting of an `UploadResponse`
-with the media type `application/dap-upload-resp`. The structure of the response
-is as follows:
+If all the reports in the request are accepted, then the Leader sends a response
+with an empty body.
+
+If some or all of the reports fail to upload for one of the reasons described in
+the remainder of this section, the Leader responds with a body consisting of an
+`UploadErrors` with the media type `application/dap-upload-errors`. The
+structure of the response is as follows:
 
 ~~~ tls-presentation
 struct {
@@ -1524,7 +1528,7 @@ struct {
 
 struct {
   ReportUploadStatus status[message_length];
-} UploadResponse;
+} UploadErrors;
 ~~~
 
 Here `message_length` denotes the length in bytes of the concatenated
@@ -1684,7 +1688,7 @@ encoded(struct {
       error = report_replayed,
     },
   ],
-} UploadResponse)
+} UploadErrors)
 ~~~
 
 ### Report Extensions {#report-extensions}
@@ -4078,7 +4082,7 @@ corresponding media types:
 
 - HpkeConfigList {{hpke-config}}: "application/dap-hpke-config-list"
 - UploadRequest {{upload-request}}: "application/dap-upload-req"
-- UploadResponse {{upload-request}}: "application/dap-upload-resp"
+- UploadErrors {{upload-request}}: "application/dap-upload-errors"
 - AggregationJobInitReq {{leader-init}}: "application/dap-aggregation-job-init-req"
 - AggregationJobResp {{aggregation-helper-init}}: "application/dap-aggregation-job-resp"
 - AggregationJobContinueReq {{aggregation-leader-continuation}}: "application/dap-aggregation-job-continue-req"
