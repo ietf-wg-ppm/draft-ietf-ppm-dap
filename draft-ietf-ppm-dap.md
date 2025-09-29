@@ -1762,7 +1762,7 @@ refinement process. We instead think of these as properties of the output shares
 themselves: if preparation succeeds, then the resulting output shares are
 guaranteed to combine into a valid, refined measurement.
 
-Aggregation jobs are identified by 16-byte job ID:
+Aggregation jobs are identified by 16-byte job ID, chosen by the Leader:
 
 ~~~ tls-presentation
 opaque AggregationJobID[16];
@@ -2777,7 +2777,7 @@ to as a "collection job" and is composed of two interactions:
 Once complete, the Collector computes the final aggregate result as specified in
 {{collect-finalization}}.
 
-Collection jobs are identified by a 16-byte job ID:
+Collection jobs are identified by a 16-byte job ID, chosen by the Collector:
 
 ~~~ tls-presentation
 opaque CollectionJobID[16];
