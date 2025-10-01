@@ -91,7 +91,9 @@ Table of Contents
      2.2.  Validating Measurements
      2.3.  Replay Protection and Double Collection
      2.4.  Lifecycle of Protocol Objects
-       2.4.1.  Arity of Protocol Objects
+       2.4.1.  The Upload Interaction
+       2.4.2.  The Aggregation Interaction
+       2.4.3.  The Collection Interaction
    3.  Message Transport
      3.1.  HTTP Status Codes
      3.2.  Presentation Language
@@ -798,171 +800,244 @@ Table of Contents
 
 2.4.  Lifecycle of Protocol Objects
 
-   The following diagram illustrates how the various objects in the
+   The following diagrams illustrate how the various objects in the
    protocol are constructed or transformed into other protocol objects.
    Oval nodes are verbs or actions which process, transform or combine
-   one or more objects into one or more other objects.  This diagram
-   does not necessarily illustrate how participants communicate.  In
-   particular, the processing of aggregation jobs happens in distinct,
-   non-colluding parties.
+   one or more objects into one or more other objects.
 
-                   measurement
-                        |
-                     .--+--.
-                    | shard |
-                     '--+--'
-                        |
-                        v
-      .-----------------+-------------------------.
-      |                 |                         |
-public share   Leader input share         Helper input share
-      |                 |                         |
-      |        .--------+--------.       .--------+--------.
-      |       | encrypt to Leader |     | encrypt to Helper |
-      |        '--------+--------'       '--------+--------'
-      |                 |                         |
-      |                 v                         v
-      |        Leader report share       Helper report share
-      |                 |                         |
-      '---------------->+<------------------------'
-                        |
-                        v           Client 2 report  ...   Client i report
-                 Client 1 report           |                      |
-                        |              .---+--.               .---+--.
-                    .---+--.          | upload |             | upload |
-                   | upload |          '---+--'               '---+--'
-                    '---+--'               |                      |
-                        | .----------------'                      |
-                        | |     .---------------------------------'
-                        | |     |
-                        v v ... v
-               .--------+-+-----+--.
-              |    assign reports   |
-              | to aggregation jobs |<--- aggregation parameter
-               '--------+----------'      chosen by Collector
-                        |
-                        v
-        .---------------+------------------+---------------------- ... -------.
-        |                                  |                                  |
-aggregation job 1                   aggregation job 2          aggregation job j
-        |                                  |                                  |
-        |                                  '-------------------------.        |
-+==+====+==========================================================+ |        |
-║                  report 1         report 2 ... report k          ║=+=+      |
-║                     |                  |        |                ║   ║      |
-║  +==================+================+ |        |   aggregation  ║   ║      |
-║  ║   Leader    Helper report  public ║=+=+      |    parameter   ║   ║      |
-║  ║ report share 1  share 1   share 1 ║   ║      |        |       ║   ║ ... =++
-║  ║      |            |           |   ║   ║      |        |       ║   ║       ║
-║  ║  .---+---.    .---+---.       |   ║   ║      |        |       ║   ║       ║
-║  ║ | decrypt |  | decrypt |      |   ║   ║ ... =++       |       ║   ║       ║
-║  ║  '---+---'    '---+---'       |   ║   ║       ║       |       ║   ║       ║
-║  ║      |            |           |   ║   ║       ║       |       ║   ║       ║
-║  ║      v            v           |   ║   ║       ║       |       ║   ║       ║
-║  ║ Leader input   Helper input   |   ║   ║       ║       |       ║   ║       ║
-║  ║   share 1      share 1     .--'   ║   ║       ║       |       ║   ║       ║
-║  ║      |            |        |      ║   ║       ║       |       ║   ║       ║
-║  ║      v            v        v      ║   ║       ║       |       ║   ║       ║
-║  ║  .---+------------+--------+.     ║   ║       ║       |       ║   ║       ║
-║  ║ |    prepare input shares    |<---║---║-------║-------+       ║   ║       ║
-║  ║  '----+---------------+-----'     ║   ║       ║       |       ║   ║       ║
-║  ║       |               |           ║   ║       ║       |       ║   ║       ║
-║  ║       v               v           ║   ║<------║-------+       ║   ║       ║
-║  ║  Leader output   Helper output    ║   ║       ║       |       ║   ║       ║
-║  ║    share 1         share 1        ║   ║       ║               ║   ║       ║
-║  ║       |               |           ║   ║       ║      ...      ║   ║       ║
-║  +=======+===============+===========+   ║       ║               ║   ║       ║
-║    ║     | Leader output | Helper output ║       ║       |       ║   ║       ║
-║    ║     | share 2       | share 2       ║       ║<------'       ║   ║       ║
-║    ║     | |             | |             ║       ║               ║   ║       ║
-║    +=====+=+=============+=+=============+       ║               ║   ║       ║
-║      ... | |  Leader     | |   Helper            ║               ║   ║       ║
-║          | |  output     | |   output            ║               ║   ║       ║
-║       ║  | |  share k    | |   share k           ║               ║   ║       ║
-║       ║  | |     |       | |     |               ║               ║   ║       ║
-║       +==+=+=====+=======+=+=====+===============+               ║   ║       ║
-║          v v ... v       v v ... v                               ║   ║       ║
-║  .-------+-+-----+-.   .-+-+-----+-------.                       ║   ║       ║
-║ | accumulate Leader | | accumulate Helper |                      ║   ║       ║
-║ |   output shares   | |   output shares   |                      ║   ║       ║
-║  '----+------------'   '--------------+--'                       ║   ║       ║
-║       |                               |                          ║   ║       ║
-║       v                               v                          ║   ║       ║
-║  Leader batch bucket 1          Helper batch bucket 1            ║   ║       ║
-║       |                               |                          ║   ║       ║
-+=======+===============================+==========================+   ║       ║
-  ║     |  Leader batch bucket 2        |  Helper batch bucket 2       ║       ║
-  ║     |        |                      |     |                        ║       ║
-  +=====+========+======================+=====+========================+       ║
-   ...  | .------'                      | .---'                                ║
-        | |  Leader batch bucket j      | |  Helper batch bucket j             ║
-    ║   | |     |                       | |     |                              ║
-    +===+=+=====+=======================+=+=====+==============================+
-        v v ... v      query chosen     v v ... v
-     .--+-+-----+--.   by Collector  .--+-+-----+--.
-    |  merge Leader |       |       | merge Helper  |
-    | batch buckets |<------+------>| batch buckets |
-     '------+------'                 '------+------'
-            |                               |
-            v                               v
-         Leader                          Helper
-    aggregate share                  aggregate share
-            |                               |
-            '---------------+---------------'
-                            |
-                        .---+---.
-                       | unshard |
-                        '---+---'
-                            |
-                            v
-                     aggregate result
+   The diagrams in this section do not necessarily illustrate how
+   participants communicate.  In particular, the processing of
+   aggregation jobs happens in distinct, non-colluding parties.
 
-               Figure 2: Lifecycles of protocol objects
-
-2.4.1.  Arity of Protocol Objects
+2.4.1.  The Upload Interaction
 
    Reports are 1 to 1 with measurements.  In this illustration, i
-   distinct Clients upload a distinct report, but a single Client could
+   distinct Clients upload i distinct reports, but a single Client could
    upload multiple reports to a task (see Section 8.1 for some
    implications of this).  The process of sharding measurements,
    constructing reports and uploading them is specified in Section 4.5.
 
+                   measurement 1
+                         |
+                      .--+--.
+                     | shard |
+                      '--+--'
+                         |
+                         v
+       .-----------------+-------------------------.
+       |                 |                         |
+ public share   Leader input share         Helper input share
+       |                 |                         |
+       |        .--------+--------.       .--------+--------.
+       |       | encrypt to Leader |     | encrypt to Helper |
+       |        '--------+--------'       '--------+--------'
+       |                 |                         |
+       |                 v                         v
+       |        Leader report share       Helper report share
+       |                 |                         |
+       '-----------------+-------------------------'
+                         |
+                         v           Client 2 report ... Client i report
+                  Client 1 report           |                   |
+                         |              .---+--.            .---+--.
+                     .---+--.          | upload |          | upload |
+                    | upload |          '---+--'            '---+--'
+                     '---+--'               |                   |
+                         | .----------------'                   |
+                         | |     .------------------------------'
+                         | |     |
+                         v v ... v
+             to aggregation job interaction
+
+   Figure 2: Lifecycles of protocol objects in the upload interaction
+
+2.4.2.  The Aggregation Interaction
+
    Reports are many to 1 with aggregation jobs.  The Leader assigns each
    of the i reports into one of j different aggregation jobs, which can
-   be run in parallel by the Aggregators.  Each aggregation job contains
-   k reports. k is roughly i / j, but it is not necessary for
-   aggregation jobs to have uniform size.  See Section 6 for some
-   discussion of performance implications for aggregation job scheduling
-   strategies.
+   be run in parallel by the Aggregators.  Each aggregation job prepares
+   k reports, outputting k output shares. k is roughly i / j, but it is
+   not necessary for aggregation jobs to have uniform size.
+
+   See Section 4.6 for the specification of aggregation jobs and
+   Section 6 for some discussion of aggregation job scheduling
+   strategies and their performance implications.
+
+   Output shares are accumulated into m batch buckets, and so have a
+   many to 1 relationship.  Aggregation jobs and batch buckets are not
+   necessarily 1 to 1.  A single aggregation job may contribute to
+   multiple batch buckets, and multiple aggregation jobs may contribute
+   to the same batch bucket.
+
+   The assignation of output shares to batch buckets is specified in
+   Section 4.6.3.3.
+
+                 from upload interaction
+                            |
+         .------------------+-----------------------.
+         |                  |                       |
+         v                  v                       v
+   Client report 1    Client report 2   ...   Client report i
+         |                  |                       |
+         '----------------. |     .-----------------'
+                          | | ... |
+                  .-------+-+-----+---.
+                 |    assign reports   +---- aggregation parameter
+                 | to aggregation jobs |      chosen by Collector
+                  '--------+----------'
+                           |
+          .----------------+--------------------.
+          |                |                    |
+          v                v                    v
+     aggregation      aggregation    ...   aggregation
+        job 1            job 2                 job j
+         | |              | |                   | |
+         | |              | '---------------.   | |
+         | '------------------------------. |   | |
+         |                |               | |   | |
+         | .--------------'               | |   | |
+         | |     .------------------------------' |
+         | | ... |                        | | ... |
+    .----+-+-----+-----.            .-----+-+-----+---.
+   | accumulate Leader  |          | accumulate Helper |
+   |   output shares    |          |   output shares   |
+    '----+--+-----+----'            '---+--+-----+----'
+         |  | ... |                     |  | ... |
+         v  |     |                     v  |     |
+   Leader batch bucket 1            Helper batch bucket 1
+         |  |     |                     |  |     |
+         |  v     |                     |  v     |
+     Leader batch bucket 2            Helper batch bucket 2
+         |  |     |                     |  |     |
+         |  |     v                     |  |     v
+       Leader batch bucket m            | Helper batch bucket m
+         |  | ... |                     |  | ... |
+         '--+-----+----------+----------+--+-----'
+                             v
+                 to collection interaction
+
+      Figure 3: Lifecycles of protocol objects in the aggregation job
+                                interaction
+
+   Each aggregation job prepares k reports (each consisting of a public
+   share, Leader report share and Helper report share) into k Leader
+   output shares and k Helper output shares.  The aggregation parameter
+   is chosen by the Collector (or in some settings it may be known prior
+   to the Collector's involvement, as discussed in Section 4.6.1) and is
+   used to prepare all the reports in one or more aggregation jobs.
+
+     report 1         report 2    ...     report k
+        |  .-------------|--+----------------|--+--- aggregation
+        |  |             |  |                |  |     parameter
+    .---+--+----.    .---+--+----.       .---+--+----.
+   | preparation |  | preparation | ... | preparation |
+    '---+---+---'    '---+---+---'       '---+---+---'
+        |   |            |   |               |   |
+        v   |            v   |               v   |
+    leader output    leader output  ...  leader output
+       share 1          share 2             share k
+            |                |                   |
+            v                v                   v
+      helper output    helper output  ...  helper output
+         share 1          share 2             share k
+
+             Figure 4: Detail of an individual aggregation job
 
    Report shares, input shares and output shares have a 1 to 1 to 1
    relationship.  Report shares are decrypted into input shares and then
-   prepared into output shares.  The scheduling of aggregation jobs and
-   their execution by the Aggregators is specified in Section 4.6.
+   prepared into output shares.
 
-   Output shares are accumulated into batch buckets, and so have a many
-   to 1 relationship.  In this example, we show one batch bucket for
-   each aggregation job, but aggregation jobs and batch buckets are not
-   necessarily 1 to 1.  Multiple aggregation jobs could contribute to
-   the same batch bucket, and a single aggregation job could contribute
-   to multiple batch buckets.  The assignation of output shares to batch
-   buckets is specified in Section 4.6.3.3.
+                     report           aggregation parameter
+                        |                       |
+        .---------------+------------.          |
+        |               |            |          |
+     Leader       Helper report    public       |
+   report share       share        share        |
+        |               |            |          |
+    .---+---.       .---+---.        |          |
+   | decrypt |     | decrypt |       |          |
+    '---+---'       '---+---'        |          |
+        |               |            |          |
+        v               v            |          |
+      Leader          Helper         |          |
+   input share     input share       |          |
+        |               |            |          |
+    .---+---------------+------------+.         |
+   |        prepare input share        +--------+
+    '----+---------------+------------'
+         |               |
+         v               v
+   Leader output   Helper output
+       share           share
+
+          Figure 5: Detail of preparation of an individual report
+
+2.4.3.  The Collection Interaction
 
    Using the Collector's query, each Aggregator will merge one or more
    batch buckets together into its aggregate share, meaning batch
    buckets are many to 1 with aggregate shares.
 
-   The Leader and Helper's aggregate shares are finally delivered to the
-   Collector to be unsharded into the aggregate result.  Since there are
-   always exactly two Aggregators, aggregate shares are 2 to 1 with
-   aggregate results.  The collection interaction is specified in
-   Section 4.7.
+   The Leader and Helper finally deliver their encrypted aggregate
+   shares to the Collector to be decrypted and then unsharded into the
+   aggregate result.  Since there are always exactly two Aggregators,
+   aggregate shares are 2 to 1 with aggregate results.  The collection
+   interaction is specified in Section 4.7.
 
    There can be many aggregate results for a single task.  The
    Collection process may occur multiple times for each task, with the
    Collector obtaining multiple aggregate results.  For example, imagine
    tasks where the Collector obtains aggregate results once an hour, or
    every time 10,000,000 reports are uploaded.
+
+               from aggregation interaction
+                             |
+           .-+-----+---------+-------------+-+-----.
+           | |     |                       | |     |
+           v |     |                       v |     |
+   Leader batch bucket 1            Helper batch bucket 1
+           | |     |                       | |     |
+           | v     |                       | v     |
+     Leader batch bucket 2            Helper batch bucket 2
+           | |     |                       | |     |
+           | |     v                       | |     v
+       Leader batch bucket m              Helper batch bucket m
+           | |     |                       | |     |
+           | |     |     query chosen      | |     |
+           v v ... v     by Collector      v v ... v
+        .--+-+-----+--.        |        .--+-+-----+--.
+       |  merge Leader |       |       | merge Helper  |
+       | batch buckets +-------+-------+ batch buckets |
+        '------+------'                 '------+------'
+               |                               |
+               v                               v
+     Leader aggregate share          Helper aggregate share
+               |                               |
+      .--------+-----------.          .--------+-----------.
+     | encrypt to Collector |        | encrypt to Collector |
+      '--------+-----------'          '--------+-----------'
+               |                               |
+               v                               v
+        encrypted Leader                encrypted Helper
+         aggregate share                aggregate share
+               |                               |
+           .---+---.                       .---+---.
+          | decrypt |                     | decrypt |
+           '---+---'                       '---+---'
+               |                               |
+               v                               v
+     Leader aggregate share          Helper aggregate share
+               |                               |
+               '---------------+---------------'
+                               |
+                           .---+---.
+                          | unshard |
+                           '---+---'
+                               v
+                        aggregate result
+
+         Figure 6: Lifecycles of protocol objects in the collection
+                                interaction
 
 3.  Message Transport
 
@@ -1869,7 +1944,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    An aggregation job is an HTTP resource served by the Helper at the
    URL {helper}/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}.
    VDAF preparation is mapped onto an aggregation job as illustrated in
-   Figure 3.  The first request from the Leader to the Helper includes
+   Figure 7.  The first request from the Leader to the Helper includes
    the aggregation parameter, the Helper's report share for each report
    in the job, and for each report the initialization step for
    preparation.  The Helper's response, along with each subsequent
@@ -1909,7 +1984,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
       v                                                     v
      leader_out_share                         helper_out_share
 
-           Figure 3: Overview of the DAP aggregation interaction.
+           Figure 7: Overview of the DAP aggregation interaction.
 
    The number of steps, and the type of the responses, depends on the
    VDAF.  The message structures and processing rules are specified in
@@ -2012,7 +2087,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
                              |
                              +----> Rejected (*reject)
 
-         Figure 4: Leader state transition triggered by aggregation
+         Figure 8: Leader state transition triggered by aggregation
               initialization. (*) indicates a terminal state.
 
    The Leader begins an aggregation job by choosing a set of candidate
@@ -2197,7 +2272,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
                  |
                  +--> Rejected (*reject)
 
-         Figure 5: Helper state transition triggered by aggregation
+         Figure 9: Helper state transition triggered by aggregation
               initialization. (*) indicates a terminal state.
 
    The Helper begins an aggregation job when it receives an
@@ -2500,7 +2575,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
                              |
                              +----> (*reject)
 
-         Figure 6: Leader state transition triggered by aggregation
+        Figure 10: Leader state transition triggered by aggregation
                continuation. (*) indicates a terminal state.
 
    The Leader begins each step of aggregation continuation with a prep
@@ -2616,7 +2691,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
                   |
                   +----> Rejected (reject*)
 
-         Figure 7: Helper state transition triggered by aggregation
+        Figure 11: Helper state transition triggered by aggregation
                continuation. (*) indicates a terminal state.
 
    The Helper begins continuation with a state object for each report in
@@ -3748,7 +3823,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
       encrypted output shares from Helpers.
 
    *  Implement and store state for the form of inter- and intra-batch
-      replay mitigation in Figure 3.  This requires storing the report
+      replay mitigation in Figure 7.  This requires storing the report
       IDs of all reports processed for a given task.  Implementations
       may find it helpful to track additional information, like the
       timestamp, so that the storage used for anti-replay can be sharded

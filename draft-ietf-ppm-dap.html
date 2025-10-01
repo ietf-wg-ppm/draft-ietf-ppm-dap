@@ -1212,7 +1212,13 @@ without revealing any individual contributor's data.<a href="#section-abstract-1
                 <p id="section-toc.1-1.2.2.4.1"><a href="#section-2.4" class="auto internal xref">2.4</a>.  <a href="#name-lifecycle-of-protocol-objec" class="internal xref">Lifecycle of Protocol Objects</a></p>
 <ul class="compact toc ulBare ulEmpty">
 <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.2.2.4.2.1">
-                    <p id="section-toc.1-1.2.2.4.2.1.1"><a href="#section-2.4.1" class="auto internal xref">2.4.1</a>.  <a href="#name-arity-of-protocol-objects" class="internal xref">Arity of Protocol Objects</a></p>
+                    <p id="section-toc.1-1.2.2.4.2.1.1"><a href="#section-2.4.1" class="auto internal xref">2.4.1</a>.  <a href="#name-the-upload-interaction" class="internal xref">The Upload Interaction</a></p>
+</li>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.2.2.4.2.2">
+                    <p id="section-toc.1-1.2.2.4.2.2.1"><a href="#section-2.4.2" class="auto internal xref">2.4.2</a>.  <a href="#name-the-aggregation-interaction" class="internal xref">The Aggregation Interaction</a></p>
+</li>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.2.2.4.2.3">
+                    <p id="section-toc.1-1.2.2.4.2.3.1"><a href="#section-2.4.3" class="auto internal xref">2.4.3</a>.  <a href="#name-the-collection-interaction" class="internal xref">The Collection Interaction</a></p>
 </li>
                 </ul>
 </li>
@@ -2359,512 +2365,744 @@ has been collected (<a href="#collect-flow" class="auto internal xref">Section 4
         <h3 id="name-lifecycle-of-protocol-objec">
 <a href="#section-2.4" class="section-number selfRef">2.4. </a><a href="#name-lifecycle-of-protocol-objec" class="section-name selfRef">Lifecycle of Protocol Objects</a>
         </h3>
-<p id="section-2.4-1">The following diagram illustrates how the various objects in the protocol are
+<p id="section-2.4-1">The following diagrams illustrate how the various objects in the protocol are
 constructed or transformed into other protocol objects. Oval nodes are verbs or
 actions which process, transform or combine one or more objects into one or more
-other objects. This diagram does not necessarily illustrate how participants
+other objects.<a href="#section-2.4-1" class="pilcrow">¶</a></p>
+<p id="section-2.4-2">The diagrams in this section do not necessarily illustrate how participants
 communicate. In particular, the processing of aggregation jobs happens in
-distinct, non-colluding parties.<a href="#section-2.4-1" class="pilcrow">¶</a></p>
-<span id="name-lifecycles-of-protocol-obje"></span><div id="object-lifecycle">
+distinct, non-colluding parties.<a href="#section-2.4-2" class="pilcrow">¶</a></p>
+<div id="the-upload-interaction">
+<section id="section-2.4.1">
+          <h4 id="name-the-upload-interaction">
+<a href="#section-2.4.1" class="section-number selfRef">2.4.1. </a><a href="#name-the-upload-interaction" class="section-name selfRef">The Upload Interaction</a>
+          </h4>
+<p id="section-2.4.1-1">Reports are 1 to 1 with measurements. In this illustration, <code>i</code> distinct Clients
+upload <code>i</code> distinct reports, but a single Client could upload multiple reports
+to a task (see <a href="#sybil" class="auto internal xref">Section 8.1</a> for some implications of this). The process of sharding
+measurements, constructing reports and uploading them is specified in
+<a href="#upload-flow" class="auto internal xref">Section 4.5</a>.<a href="#section-2.4.1-1" class="pilcrow">¶</a></p>
+<span id="name-lifecycles-of-protocol-obje"></span><div id="object-lifecycle-upload">
 <figure id="figure-2">
-          <div id="section-2.4-2.1">
-            <div class="alignLeft art-svg artwork" id="section-2.4-2.1.1">
-<svg xmlns="http://www.w3.org/2000/svg" version="1.1" height="1792" width="648" viewBox="0 0 648 1792" class="diagram" text-anchor="middle" font-family="monospace" font-size="13px" stroke-linecap="round">
-                <path d="M 10,688 L 10,1376" fill="none" stroke="black"></path>
-                <path d="M 6,688 L 6,1376" fill="none" stroke="black"></path>
-                <path d="M 24,1264 L 24,1280" fill="none" stroke="black"></path>
-                <path d="M 26,1392 L 26,1424" fill="none" stroke="black"></path>
-                <path d="M 22,1392 L 22,1424" fill="none" stroke="black"></path>
-                <path d="M 34,736 L 34,1072" fill="none" stroke="black"></path>
-                <path d="M 30,736 L 30,1072" fill="none" stroke="black"></path>
-                <path d="M 42,1472 L 42,1488" fill="none" stroke="black"></path>
-                <path d="M 38,1472 L 38,1488" fill="none" stroke="black"></path>
-                <path d="M 40,1536 L 40,1552" fill="none" stroke="black"></path>
-                <path d="M 50,1088 L 50,1136" fill="none" stroke="black"></path>
-                <path d="M 46,1088 L 46,1136" fill="none" stroke="black"></path>
-                <path d="M 56,144 L 56,160" fill="none" stroke="black"></path>
-                <path d="M 56,192 L 56,320" fill="none" stroke="black"></path>
-                <path d="M 72,608 L 72,624" fill="none" stroke="black"></path>
-                <path d="M 72,656 L 72,688" fill="none" stroke="black"></path>
-                <path d="M 74,1184 L 74,1216" fill="none" stroke="black"></path>
-                <path d="M 70,1184 L 70,1216" fill="none" stroke="black"></path>
-                <path d="M 72,1296 L 72,1328" fill="none" stroke="black"></path>
-                <path d="M 72,1360 L 72,1512" fill="none" stroke="black"></path>
-                <path d="M 88,784 L 88,800" fill="none" stroke="black"></path>
-                <path d="M 88,832 L 88,864" fill="none" stroke="black"></path>
-                <path d="M 88,912 L 88,936" fill="none" stroke="black"></path>
-                <path d="M 88,1440 L 88,1512" fill="none" stroke="black"></path>
-                <path d="M 96,976 L 96,1008" fill="none" stroke="black"></path>
-                <path d="M 96,1056 L 96,1240" fill="none" stroke="black"></path>
-                <path d="M 104,1568 L 104,1600" fill="none" stroke="black"></path>
-                <path d="M 104,1648 L 104,1664" fill="none" stroke="black"></path>
-                <path d="M 112,1120 L 112,1240" fill="none" stroke="black"></path>
-                <path d="M 120,528 L 120,544" fill="none" stroke="black"></path>
-                <path d="M 136,1472 L 136,1512" fill="none" stroke="black"></path>
-                <path d="M 144,1408 L 144,1440" fill="none" stroke="black"></path>
-                <path d="M 160,1200 L 160,1240" fill="none" stroke="black"></path>
-                <path d="M 168,1536 L 168,1552" fill="none" stroke="black"></path>
-                <path d="M 184,720 L 184,736" fill="none" stroke="black"></path>
-                <path d="M 184,1264 L 184,1280" fill="none" stroke="black"></path>
-                <path d="M 192,784 L 192,800" fill="none" stroke="black"></path>
-                <path d="M 192,832 L 192,864" fill="none" stroke="black"></path>
-                <path d="M 192,912 L 192,936" fill="none" stroke="black"></path>
-                <path d="M 200,48 L 200,64" fill="none" stroke="black"></path>
-                <path d="M 200,96 L 200,160" fill="none" stroke="black"></path>
-                <path d="M 200,192 L 200,208" fill="none" stroke="black"></path>
-                <path d="M 200,240 L 200,272" fill="none" stroke="black"></path>
-                <path d="M 200,304 L 200,352" fill="none" stroke="black"></path>
-                <path d="M 200,384 L 200,400" fill="none" stroke="black"></path>
-                <path d="M 200,432 L 200,504" fill="none" stroke="black"></path>
-                <path d="M 200,560 L 200,600" fill="none" stroke="black"></path>
-                <path d="M 200,1264 L 200,1280" fill="none" stroke="black"></path>
-                <path d="M 216,448 L 216,504" fill="none" stroke="black"></path>
-                <path d="M 224,976 L 224,1008" fill="none" stroke="black"></path>
-                <path d="M 224,1056 L 224,1240" fill="none" stroke="black"></path>
-                <path d="M 232,1536 L 232,1552" fill="none" stroke="black"></path>
-                <path d="M 232,1664 L 232,1696" fill="none" stroke="black"></path>
-                <path d="M 232,1728 L 232,1760" fill="none" stroke="black"></path>
-                <path d="M 240,1120 L 240,1240" fill="none" stroke="black"></path>
-                <path d="M 264,464 L 264,504" fill="none" stroke="black"></path>
-                <path d="M 264,896 L 264,936" fill="none" stroke="black"></path>
-                <path d="M 288,784 L 288,896" fill="none" stroke="black"></path>
-                <path d="M 288,1200 L 288,1240" fill="none" stroke="black"></path>
-                <path d="M 296,528 L 296,544" fill="none" stroke="black"></path>
-                <path d="M 296,1536 L 296,1552" fill="none" stroke="black"></path>
-                <path d="M 322,736 L 322,1072" fill="none" stroke="black"></path>
-                <path d="M 318,736 L 318,1072" fill="none" stroke="black"></path>
-                <path d="M 328,1296 L 328,1328" fill="none" stroke="black"></path>
-                <path d="M 328,1360 L 328,1512" fill="none" stroke="black"></path>
-                <path d="M 336,720 L 336,752" fill="none" stroke="black"></path>
-                <path d="M 344,1440 L 344,1512" fill="none" stroke="black"></path>
-                <path d="M 352,368 L 352,384" fill="none" stroke="black"></path>
-                <path d="M 352,416 L 352,448" fill="none" stroke="black"></path>
-                <path d="M 352,608 L 352,624" fill="none" stroke="black"></path>
-                <path d="M 352,656 L 352,672" fill="none" stroke="black"></path>
-                <path d="M 354,752 L 354,1136" fill="none" stroke="black"></path>
-                <path d="M 350,752 L 350,1136" fill="none" stroke="black"></path>
-                <path d="M 360,1264 L 360,1280" fill="none" stroke="black"></path>
-                <path d="M 360,1568 L 360,1600" fill="none" stroke="black"></path>
-                <path d="M 360,1648 L 360,1664" fill="none" stroke="black"></path>
-                <path d="M 376,1408 L 376,1440" fill="none" stroke="black"></path>
-                <path d="M 392,1472 L 392,1512" fill="none" stroke="black"></path>
-                <path d="M 408,144 L 408,160" fill="none" stroke="black"></path>
-                <path d="M 408,192 L 408,208" fill="none" stroke="black"></path>
-                <path d="M 408,240 L 408,272" fill="none" stroke="black"></path>
-                <path d="M 408,304 L 408,320" fill="none" stroke="black"></path>
-                <path d="M 408,720 L 408,816" fill="none" stroke="black"></path>
-                <path d="M 418,816 L 418,1216" fill="none" stroke="black"></path>
-                <path d="M 414,816 L 414,1216" fill="none" stroke="black"></path>
-                <path d="M 424,1536 L 424,1552" fill="none" stroke="black"></path>
-                <path d="M 480,768 L 480,1024" fill="none" stroke="black"></path>
-                <path d="M 480,1088 L 480,1104" fill="none" stroke="black"></path>
-                <path d="M 536,368 L 536,384" fill="none" stroke="black"></path>
-                <path d="M 536,416 L 536,464" fill="none" stroke="black"></path>
-                <path d="M 546,688 L 546,1376" fill="none" stroke="black"></path>
-                <path d="M 542,688 L 542,1376" fill="none" stroke="black"></path>
-                <path d="M 560,672 L 560,704" fill="none" stroke="black"></path>
-                <path d="M 578,704 L 578,1424" fill="none" stroke="black"></path>
-                <path d="M 574,704 L 574,1424" fill="none" stroke="black"></path>
-                <path d="M 632,608 L 632,624" fill="none" stroke="black"></path>
-                <path d="M 632,656 L 632,768" fill="none" stroke="black"></path>
-                <path d="M 642,768 L 642,1488" fill="none" stroke="black"></path>
-                <path d="M 638,768 L 638,1488" fill="none" stroke="black"></path>
-                <path d="M 184,64 L 216,64" fill="none" stroke="black"></path>
-                <path d="M 184,96 L 216,96" fill="none" stroke="black"></path>
-                <path d="M 56,144 L 408,144" fill="none" stroke="black"></path>
-                <path d="M 136,208 L 264,208" fill="none" stroke="black"></path>
-                <path d="M 344,208 L 472,208" fill="none" stroke="black"></path>
-                <path d="M 136,240 L 264,240" fill="none" stroke="black"></path>
-                <path d="M 344,240 L 472,240" fill="none" stroke="black"></path>
-                <path d="M 56,320 L 192,320" fill="none" stroke="black"></path>
-                <path d="M 208,320 L 408,320" fill="none" stroke="black"></path>
-                <path d="M 328,384 L 368,384" fill="none" stroke="black"></path>
-                <path d="M 512,384 L 552,384" fill="none" stroke="black"></path>
-                <path d="M 176,400 L 216,400" fill="none" stroke="black"></path>
-                <path d="M 328,416 L 368,416" fill="none" stroke="black"></path>
-                <path d="M 512,416 L 552,416" fill="none" stroke="black"></path>
-                <path d="M 176,432 L 216,432" fill="none" stroke="black"></path>
-                <path d="M 216,448 L 352,448" fill="none" stroke="black"></path>
-                <path d="M 264,464 L 536,464" fill="none" stroke="black"></path>
-                <path d="M 136,512 L 280,512" fill="none" stroke="black"></path>
-                <path d="M 304,544 L 328,544" fill="none" stroke="black"></path>
-                <path d="M 136,560 L 280,560" fill="none" stroke="black"></path>
-                <path d="M 72,608 L 528,608" fill="none" stroke="black"></path>
-                <path d="M 576,608 L 632,608" fill="none" stroke="black"></path>
-                <path d="M 352,672 L 560,672" fill="none" stroke="black"></path>
-                <path d="M 8,686 L 544,686" fill="none" stroke="black"></path>
-                <path d="M 8,690 L 544,690" fill="none" stroke="black"></path>
-                <path d="M 552,702 L 576,702" fill="none" stroke="black"></path>
-                <path d="M 552,706 L 576,706" fill="none" stroke="black"></path>
-                <path d="M 32,734 L 320,734" fill="none" stroke="black"></path>
-                <path d="M 32,738 L 320,738" fill="none" stroke="black"></path>
-                <path d="M 328,750 L 352,750" fill="none" stroke="black"></path>
-                <path d="M 328,754 L 352,754" fill="none" stroke="black"></path>
-                <path d="M 624,766 L 640,766" fill="none" stroke="black"></path>
-                <path d="M 624,770 L 640,770" fill="none" stroke="black"></path>
-                <path d="M 64,800 L 112,800" fill="none" stroke="black"></path>
-                <path d="M 168,800 L 216,800" fill="none" stroke="black"></path>
-                <path d="M 400,814 L 416,814" fill="none" stroke="black"></path>
-                <path d="M 400,818 L 416,818" fill="none" stroke="black"></path>
-                <path d="M 64,832 L 112,832" fill="none" stroke="black"></path>
-                <path d="M 168,832 L 216,832" fill="none" stroke="black"></path>
-                <path d="M 264,896 L 288,896" fill="none" stroke="black"></path>
-                <path d="M 64,944 L 264,944" fill="none" stroke="black"></path>
-                <path d="M 288,960 L 312,960" fill="none" stroke="black"></path>
-                <path d="M 328,960 L 344,960" fill="none" stroke="black"></path>
-                <path d="M 360,960 L 408,960" fill="none" stroke="black"></path>
-                <path d="M 424,960 L 480,960" fill="none" stroke="black"></path>
-                <path d="M 64,976 L 264,976" fill="none" stroke="black"></path>
-                <path d="M 360,1008 L 408,1008" fill="none" stroke="black"></path>
-                <path d="M 424,1008 L 480,1008" fill="none" stroke="black"></path>
-                <path d="M 32,1070 L 320,1070" fill="none" stroke="black"></path>
-                <path d="M 32,1074 L 320,1074" fill="none" stroke="black"></path>
-                <path d="M 424,1104 L 480,1104" fill="none" stroke="black"></path>
-                <path d="M 48,1134 L 352,1134" fill="none" stroke="black"></path>
-                <path d="M 48,1138 L 352,1138" fill="none" stroke="black"></path>
-                <path d="M 72,1214 L 416,1214" fill="none" stroke="black"></path>
-                <path d="M 72,1218 L 416,1218" fill="none" stroke="black"></path>
-                <path d="M 40,1248 L 168,1248" fill="none" stroke="black"></path>
-                <path d="M 216,1248 L 344,1248" fill="none" stroke="black"></path>
-                <path d="M 40,1296 L 168,1296" fill="none" stroke="black"></path>
-                <path d="M 216,1296 L 344,1296" fill="none" stroke="black"></path>
-                <path d="M 8,1374 L 544,1374" fill="none" stroke="black"></path>
-                <path d="M 8,1378 L 544,1378" fill="none" stroke="black"></path>
-                <path d="M 24,1422 L 576,1422" fill="none" stroke="black"></path>
-                <path d="M 24,1426 L 576,1426" fill="none" stroke="black"></path>
-                <path d="M 88,1440 L 144,1440" fill="none" stroke="black"></path>
-                <path d="M 344,1440 L 376,1440" fill="none" stroke="black"></path>
-                <path d="M 40,1486 L 640,1486" fill="none" stroke="black"></path>
-                <path d="M 40,1490 L 640,1490" fill="none" stroke="black"></path>
-                <path d="M 56,1520 L 152,1520" fill="none" stroke="black"></path>
-                <path d="M 312,1520 L 408,1520" fill="none" stroke="black"></path>
-                <path d="M 176,1552 L 288,1552" fill="none" stroke="black"></path>
-                <path d="M 56,1568 L 152,1568" fill="none" stroke="black"></path>
-                <path d="M 312,1568 L 408,1568" fill="none" stroke="black"></path>
-                <path d="M 104,1664 L 360,1664" fill="none" stroke="black"></path>
-                <path d="M 208,1696 L 256,1696" fill="none" stroke="black"></path>
-                <path d="M 208,1728 L 256,1728" fill="none" stroke="black"></path>
-                <path d="M 184,64 C 175.16936,64 168,71.16936 168,80" fill="none" stroke="black"></path>
-                <path d="M 216,64 C 224.83064,64 232,71.16936 232,80" fill="none" stroke="black"></path>
-                <path d="M 184,96 C 175.16936,96 168,88.83064 168,80" fill="none" stroke="black"></path>
-                <path d="M 216,96 C 224.83064,96 232,88.83064 232,80" fill="none" stroke="black"></path>
-                <path d="M 136,208 C 127.16936,208 120,215.16936 120,224" fill="none" stroke="black"></path>
-                <path d="M 264,208 C 272.83064,208 280,215.16936 280,224" fill="none" stroke="black"></path>
-                <path d="M 344,208 C 335.16936,208 328,215.16936 328,224" fill="none" stroke="black"></path>
-                <path d="M 472,208 C 480.83064,208 488,215.16936 488,224" fill="none" stroke="black"></path>
-                <path d="M 136,240 C 127.16936,240 120,232.83064 120,224" fill="none" stroke="black"></path>
-                <path d="M 264,240 C 272.83064,240 280,232.83064 280,224" fill="none" stroke="black"></path>
-                <path d="M 344,240 C 335.16936,240 328,232.83064 328,224" fill="none" stroke="black"></path>
-                <path d="M 472,240 C 480.83064,240 488,232.83064 488,224" fill="none" stroke="black"></path>
-                <path d="M 328,384 C 319.16936,384 312,391.16936 312,400" fill="none" stroke="black"></path>
-                <path d="M 368,384 C 376.83064,384 384,391.16936 384,400" fill="none" stroke="black"></path>
-                <path d="M 512,384 C 503.16936,384 496,391.16936 496,400" fill="none" stroke="black"></path>
-                <path d="M 552,384 C 560.83064,384 568,391.16936 568,400" fill="none" stroke="black"></path>
-                <path d="M 176,400 C 167.16936,400 160,407.16936 160,416" fill="none" stroke="black"></path>
-                <path d="M 216,400 C 224.83064,400 232,407.16936 232,416" fill="none" stroke="black"></path>
-                <path d="M 328,416 C 319.16936,416 312,408.83064 312,400" fill="none" stroke="black"></path>
-                <path d="M 368,416 C 376.83064,416 384,408.83064 384,400" fill="none" stroke="black"></path>
-                <path d="M 512,416 C 503.16936,416 496,408.83064 496,400" fill="none" stroke="black"></path>
-                <path d="M 552,416 C 560.83064,416 568,408.83064 568,400" fill="none" stroke="black"></path>
-                <path d="M 176,432 C 167.16936,432 160,424.83064 160,416" fill="none" stroke="black"></path>
-                <path d="M 216,432 C 224.83064,432 232,424.83064 232,416" fill="none" stroke="black"></path>
-                <path d="M 136,512 C 127.16936,512 120,519.16936 120,528" fill="none" stroke="black"></path>
-                <path d="M 280,512 C 288.83064,512 296,519.16936 296,528" fill="none" stroke="black"></path>
-                <path d="M 136,560 C 127.16936,560 120,552.83064 120,544" fill="none" stroke="black"></path>
-                <path d="M 280,560 C 288.83064,560 296,552.83064 296,544" fill="none" stroke="black"></path>
-                <path d="M 64,800 C 55.16936,800 48,807.16936 48,816" fill="none" stroke="black"></path>
-                <path d="M 112,800 C 120.83064,800 128,807.16936 128,816" fill="none" stroke="black"></path>
-                <path d="M 168,800 C 159.16936,800 152,807.16936 152,816" fill="none" stroke="black"></path>
-                <path d="M 216,800 C 224.83064,800 232,807.16936 232,816" fill="none" stroke="black"></path>
-                <path d="M 64,832 C 55.16936,832 48,824.83064 48,816" fill="none" stroke="black"></path>
-                <path d="M 112,832 C 120.83064,832 128,824.83064 128,816" fill="none" stroke="black"></path>
-                <path d="M 168,832 C 159.16936,832 152,824.83064 152,816" fill="none" stroke="black"></path>
-                <path d="M 216,832 C 224.83064,832 232,824.83064 232,816" fill="none" stroke="black"></path>
-                <path d="M 64,944 C 55.16936,944 48,951.16936 48,960" fill="none" stroke="black"></path>
-                <path d="M 264,944 C 272.83064,944 280,951.16936 280,960" fill="none" stroke="black"></path>
-                <path d="M 64,976 C 55.16936,976 48,968.83064 48,960" fill="none" stroke="black"></path>
-                <path d="M 264,976 C 272.83064,976 280,968.83064 280,960" fill="none" stroke="black"></path>
-                <path d="M 40,1248 C 31.16936,1248 24,1255.16936 24,1264" fill="none" stroke="black"></path>
-                <path d="M 168,1248 C 176.83064,1248 184,1255.16936 184,1264" fill="none" stroke="black"></path>
-                <path d="M 216,1248 C 207.16936,1248 200,1255.16936 200,1264" fill="none" stroke="black"></path>
-                <path d="M 344,1248 C 352.83064,1248 360,1255.16936 360,1264" fill="none" stroke="black"></path>
-                <path d="M 40,1296 C 31.16936,1296 24,1288.83064 24,1280" fill="none" stroke="black"></path>
-                <path d="M 168,1296 C 176.83064,1296 184,1288.83064 184,1280" fill="none" stroke="black"></path>
-                <path d="M 216,1296 C 207.16936,1296 200,1288.83064 200,1280" fill="none" stroke="black"></path>
-                <path d="M 344,1296 C 352.83064,1296 360,1288.83064 360,1280" fill="none" stroke="black"></path>
-                <path d="M 56,1520 C 47.16936,1520 40,1527.16936 40,1536" fill="none" stroke="black"></path>
-                <path d="M 152,1520 C 160.83064,1520 168,1527.16936 168,1536" fill="none" stroke="black"></path>
-                <path d="M 312,1520 C 303.16936,1520 296,1527.16936 296,1536" fill="none" stroke="black"></path>
-                <path d="M 408,1520 C 416.83064,1520 424,1527.16936 424,1536" fill="none" stroke="black"></path>
-                <path d="M 56,1568 C 47.16936,1568 40,1560.83064 40,1552" fill="none" stroke="black"></path>
-                <path d="M 152,1568 C 160.83064,1568 168,1560.83064 168,1552" fill="none" stroke="black"></path>
-                <path d="M 312,1568 C 303.16936,1568 296,1560.83064 296,1552" fill="none" stroke="black"></path>
-                <path d="M 408,1568 C 416.83064,1568 424,1560.83064 424,1552" fill="none" stroke="black"></path>
-                <path d="M 208,1696 C 199.16936,1696 192,1703.16936 192,1712" fill="none" stroke="black"></path>
-                <path d="M 256,1696 C 264.83064,1696 272,1703.16936 272,1712" fill="none" stroke="black"></path>
-                <path d="M 208,1728 C 199.16936,1728 192,1720.83064 192,1712" fill="none" stroke="black"></path>
-                <path d="M 256,1728 C 264.83064,1728 272,1720.83064 272,1712" fill="none" stroke="black"></path>
-                <polygon class="arrowhead" points="432,1104 420,1098.4 420,1109.6" fill="black" transform="rotate(180,424,1104)"></polygon>
-                <polygon class="arrowhead" points="416,272 404,266.4 404,277.6" fill="black" transform="rotate(90,408,272)"></polygon>
-                <polygon class="arrowhead" points="400,1512 388,1506.4 388,1517.6" fill="black" transform="rotate(90,392,1512)"></polygon>
-                <polygon class="arrowhead" points="368,1600 356,1594.4 356,1605.6" fill="black" transform="rotate(90,360,1600)"></polygon>
-                <polygon class="arrowhead" points="368,1008 356,1002.4 356,1013.6" fill="black" transform="rotate(180,360,1008)"></polygon>
-                <polygon class="arrowhead" points="352,1512 340,1506.4 340,1517.6" fill="black" transform="rotate(90,344,1512)"></polygon>
-                <polygon class="arrowhead" points="336,1512 324,1506.4 324,1517.6" fill="black" transform="rotate(90,328,1512)"></polygon>
-                <polygon class="arrowhead" points="336,1328 324,1322.4 324,1333.6" fill="black" transform="rotate(90,328,1328)"></polygon>
-                <polygon class="arrowhead" points="312,544 300,538.4 300,549.6" fill="black" transform="rotate(180,304,544)"></polygon>
-                <polygon class="arrowhead" points="296,1552 284,1546.4 284,1557.6" fill="black" transform="rotate(0,288,1552)"></polygon>
-                <polygon class="arrowhead" points="296,1240 284,1234.4 284,1245.6" fill="black" transform="rotate(90,288,1240)"></polygon>
-                <polygon class="arrowhead" points="296,960 284,954.4 284,965.6" fill="black" transform="rotate(180,288,960)"></polygon>
-                <polygon class="arrowhead" points="272,936 260,930.4 260,941.6" fill="black" transform="rotate(90,264,936)"></polygon>
-                <polygon class="arrowhead" points="272,504 260,498.4 260,509.6" fill="black" transform="rotate(90,264,504)"></polygon>
-                <polygon class="arrowhead" points="248,1240 236,1234.4 236,1245.6" fill="black" transform="rotate(90,240,1240)"></polygon>
-                <polygon class="arrowhead" points="240,1760 228,1754.4 228,1765.6" fill="black" transform="rotate(90,232,1760)"></polygon>
-                <polygon class="arrowhead" points="232,1240 220,1234.4 220,1245.6" fill="black" transform="rotate(90,224,1240)"></polygon>
-                <polygon class="arrowhead" points="232,1008 220,1002.4 220,1013.6" fill="black" transform="rotate(90,224,1008)"></polygon>
-                <polygon class="arrowhead" points="224,504 212,498.4 212,509.6" fill="black" transform="rotate(90,216,504)"></polygon>
-                <polygon class="arrowhead" points="216,320 204,314.4 204,325.6" fill="black" transform="rotate(180,208,320)"></polygon>
-                <polygon class="arrowhead" points="208,600 196,594.4 196,605.6" fill="black" transform="rotate(90,200,600)"></polygon>
-                <polygon class="arrowhead" points="208,504 196,498.4 196,509.6" fill="black" transform="rotate(90,200,504)"></polygon>
-                <polygon class="arrowhead" points="208,352 196,346.4 196,357.6" fill="black" transform="rotate(90,200,352)"></polygon>
-                <polygon class="arrowhead" points="208,272 196,266.4 196,277.6" fill="black" transform="rotate(90,200,272)"></polygon>
-                <polygon class="arrowhead" points="208,136 196,130.4 196,141.6" fill="black" transform="rotate(90,200,136)"></polygon>
-                <polygon class="arrowhead" points="200,936 188,930.4 188,941.6" fill="black" transform="rotate(90,192,936)"></polygon>
-                <polygon class="arrowhead" points="200,864 188,858.4 188,869.6" fill="black" transform="rotate(90,192,864)"></polygon>
-                <polygon class="arrowhead" points="200,320 188,314.4 188,325.6" fill="black" transform="rotate(0,192,320)"></polygon>
-                <polygon class="arrowhead" points="184,1552 172,1546.4 172,1557.6" fill="black" transform="rotate(180,176,1552)"></polygon>
-                <polygon class="arrowhead" points="168,1240 156,1234.4 156,1245.6" fill="black" transform="rotate(90,160,1240)"></polygon>
-                <polygon class="arrowhead" points="144,1512 132,1506.4 132,1517.6" fill="black" transform="rotate(90,136,1512)"></polygon>
-                <polygon class="arrowhead" points="120,1240 108,1234.4 108,1245.6" fill="black" transform="rotate(90,112,1240)"></polygon>
-                <polygon class="arrowhead" points="112,1600 100,1594.4 100,1605.6" fill="black" transform="rotate(90,104,1600)"></polygon>
-                <polygon class="arrowhead" points="104,1240 92,1234.4 92,1245.6" fill="black" transform="rotate(90,96,1240)"></polygon>
-                <polygon class="arrowhead" points="104,1008 92,1002.4 92,1013.6" fill="black" transform="rotate(90,96,1008)"></polygon>
-                <polygon class="arrowhead" points="96,1512 84,1506.4 84,1517.6" fill="black" transform="rotate(90,88,1512)"></polygon>
-                <polygon class="arrowhead" points="96,936 84,930.4 84,941.6" fill="black" transform="rotate(90,88,936)"></polygon>
-                <polygon class="arrowhead" points="96,864 84,858.4 84,869.6" fill="black" transform="rotate(90,88,864)"></polygon>
-                <polygon class="arrowhead" points="80,1512 68,1506.4 68,1517.6" fill="black" transform="rotate(90,72,1512)"></polygon>
-                <polygon class="arrowhead" points="80,1328 68,1322.4 68,1333.6" fill="black" transform="rotate(90,72,1328)"></polygon>
-                <g class="text">
-                  <text x="200" y="36">measurement</text>
-                  <text x="200" y="84">shard</text>
-                  <text x="28" y="180">public</text>
-                  <text x="80" y="180">share</text>
-                  <text x="148" y="180">Leader</text>
-                  <text x="200" y="180">input</text>
-                  <text x="248" y="180">share</text>
-                  <text x="364" y="180">Helper</text>
-                  <text x="416" y="180">input</text>
-                  <text x="464" y="180">share</text>
-                  <text x="160" y="228">encrypt</text>
-                  <text x="204" y="228">to</text>
-                  <text x="244" y="228">Leader</text>
-                  <text x="368" y="228">encrypt</text>
-                  <text x="412" y="228">to</text>
-                  <text x="452" y="228">Helper</text>
-                  <text x="148" y="292">Leader</text>
-                  <text x="204" y="292">report</text>
-                  <text x="256" y="292">share</text>
-                  <text x="356" y="292">Helper</text>
-                  <text x="412" y="292">report</text>
-                  <text x="464" y="292">share</text>
-                  <text x="316" y="356">Client</text>
-                  <text x="352" y="356">2</text>
-                  <text x="388" y="356">report</text>
-                  <text x="440" y="356">...</text>
-                  <text x="500" y="356">Client</text>
-                  <text x="536" y="356">i</text>
-                  <text x="572" y="356">report</text>
-                  <text x="164" y="372">Client</text>
-                  <text x="200" y="372">1</text>
-                  <text x="236" y="372">report</text>
-                  <text x="348" y="404">upload</text>
-                  <text x="532" y="404">upload</text>
-                  <text x="196" y="420">upload</text>
-                  <text x="240" y="500">...</text>
-                  <text x="180" y="532">assign</text>
-                  <text x="240" y="532">reports</text>
-                  <text x="140" y="548">to</text>
-                  <text x="200" y="548">aggregation</text>
-                  <text x="268" y="548">jobs</text>
-                  <text x="384" y="548">aggregation</text>
-                  <text x="472" y="548">parameter</text>
-                  <text x="364" y="564">chosen</text>
-                  <text x="404" y="564">by</text>
-                  <text x="456" y="564">Collector</text>
-                  <text x="552" y="612">...</text>
-                  <text x="48" y="644">aggregation</text>
-                  <text x="112" y="644">job</text>
-                  <text x="136" y="644">1</text>
-                  <text x="336" y="644">aggregation</text>
-                  <text x="400" y="644">job</text>
-                  <text x="424" y="644">2</text>
-                  <text x="552" y="644">aggregation</text>
-                  <text x="616" y="644">job</text>
-                  <text x="640" y="644">j</text>
-                  <text x="180" y="708">report</text>
-                  <text x="216" y="708">1</text>
-                  <text x="316" y="708">report</text>
-                  <text x="352" y="708">2</text>
-                  <text x="376" y="708">...</text>
-                  <text x="420" y="708">report</text>
-                  <text x="456" y="708">k</text>
-                  <text x="480" y="740">aggregation</text>
-                  <text x="84" y="756">Leader</text>
-                  <text x="164" y="756">Helper</text>
-                  <text x="220" y="756">report</text>
-                  <text x="284" y="756">public</text>
-                  <text x="480" y="756">parameter</text>
-                  <text x="68" y="772">report</text>
-                  <text x="120" y="772">share</text>
-                  <text x="152" y="772">1</text>
-                  <text x="192" y="772">share</text>
-                  <text x="224" y="772">1</text>
-                  <text x="272" y="772">share</text>
-                  <text x="304" y="772">1</text>
-                  <text x="600" y="772">...</text>
-                  <text x="88" y="820">decrypt</text>
-                  <text x="192" y="820">decrypt</text>
-                  <text x="376" y="820">...</text>
-                  <text x="68" y="884">Leader</text>
-                  <text x="120" y="884">input</text>
-                  <text x="188" y="884">Helper</text>
-                  <text x="240" y="884">input</text>
-                  <text x="80" y="900">share</text>
-                  <text x="112" y="900">1</text>
-                  <text x="184" y="900">share</text>
-                  <text x="216" y="900">1</text>
-                  <text x="112" y="964">prepare</text>
-                  <text x="168" y="964">input</text>
-                  <text x="220" y="964">shares</text>
-                  <text x="76" y="1028">Leader</text>
-                  <text x="132" y="1028">output</text>
-                  <text x="204" y="1028">Helper</text>
-                  <text x="260" y="1028">output</text>
-                  <text x="88" y="1044">share</text>
-                  <text x="120" y="1044">1</text>
-                  <text x="216" y="1044">share</text>
-                  <text x="248" y="1044">1</text>
-                  <text x="480" y="1060">...</text>
-                  <text x="132" y="1092">Leader</text>
-                  <text x="188" y="1092">output</text>
-                  <text x="260" y="1092">Helper</text>
-                  <text x="316" y="1092">output</text>
-                  <text x="128" y="1108">share</text>
-                  <text x="160" y="1108">2</text>
-                  <text x="256" y="1108">share</text>
-                  <text x="288" y="1108">2</text>
-                  <text x="72" y="1156">...</text>
-                  <text x="156" y="1156">Leader</text>
-                  <text x="292" y="1156">Helper</text>
-                  <text x="156" y="1172">output</text>
-                  <text x="292" y="1172">output</text>
-                  <text x="152" y="1188">share</text>
-                  <text x="184" y="1188">k</text>
-                  <text x="288" y="1188">share</text>
-                  <text x="320" y="1188">k</text>
-                  <text x="136" y="1236">...</text>
-                  <text x="264" y="1236">...</text>
-                  <text x="76" y="1268">accumulate</text>
-                  <text x="148" y="1268">Leader</text>
-                  <text x="252" y="1268">accumulate</text>
-                  <text x="324" y="1268">Helper</text>
-                  <text x="76" y="1284">output</text>
-                  <text x="132" y="1284">shares</text>
-                  <text x="252" y="1284">output</text>
-                  <text x="308" y="1284">shares</text>
-                  <text x="52" y="1348">Leader</text>
-                  <text x="104" y="1348">batch</text>
-                  <text x="156" y="1348">bucket</text>
-                  <text x="192" y="1348">1</text>
-                  <text x="300" y="1348">Helper</text>
-                  <text x="352" y="1348">batch</text>
-                  <text x="404" y="1348">bucket</text>
-                  <text x="440" y="1348">1</text>
-                  <text x="116" y="1396">Leader</text>
-                  <text x="168" y="1396">batch</text>
-                  <text x="220" y="1396">bucket</text>
-                  <text x="256" y="1396">2</text>
-                  <text x="372" y="1396">Helper</text>
-                  <text x="424" y="1396">batch</text>
-                  <text x="476" y="1396">bucket</text>
-                  <text x="512" y="1396">2</text>
-                  <text x="40" y="1444">...</text>
-                  <text x="132" y="1460">Leader</text>
-                  <text x="184" y="1460">batch</text>
-                  <text x="236" y="1460">bucket</text>
-                  <text x="272" y="1460">j</text>
-                  <text x="388" y="1460">Helper</text>
-                  <text x="440" y="1460">batch</text>
-                  <text x="492" y="1460">bucket</text>
-                  <text x="528" y="1460">j</text>
-                  <text x="112" y="1508">...</text>
-                  <text x="208" y="1508">query</text>
-                  <text x="260" y="1508">chosen</text>
-                  <text x="368" y="1508">...</text>
-                  <text x="196" y="1524">by</text>
-                  <text x="248" y="1524">Collector</text>
-                  <text x="80" y="1540">merge</text>
-                  <text x="132" y="1540">Leader</text>
-                  <text x="328" y="1540">merge</text>
-                  <text x="380" y="1540">Helper</text>
-                  <text x="72" y="1556">batch</text>
-                  <text x="128" y="1556">buckets</text>
-                  <text x="328" y="1556">batch</text>
-                  <text x="384" y="1556">buckets</text>
-                  <text x="100" y="1620">Leader</text>
-                  <text x="356" y="1620">Helper</text>
-                  <text x="72" y="1636">aggregate</text>
-                  <text x="136" y="1636">share</text>
-                  <text x="336" y="1636">aggregate</text>
-                  <text x="400" y="1636">share</text>
-                  <text x="232" y="1716">unshard</text>
-                  <text x="208" y="1780">aggregate</text>
-                  <text x="276" y="1780">result</text>
-                </g>
-              </svg><a href="#section-2.4-2.1.1" class="pilcrow">¶</a>
+            <div id="section-2.4.1-2.1">
+              <div class="alignLeft art-svg artwork" id="section-2.4.1-2.1.1">
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" height="528" width="576" viewBox="0 0 576 528" class="diagram" text-anchor="middle" font-family="monospace" font-size="13px" stroke-linecap="round">
+                  <path d="M 56,144 L 56,160" fill="none" stroke="black"></path>
+                  <path d="M 56,192 L 56,320" fill="none" stroke="black"></path>
+                  <path d="M 200,48 L 200,64" fill="none" stroke="black"></path>
+                  <path d="M 200,96 L 200,160" fill="none" stroke="black"></path>
+                  <path d="M 200,192 L 200,208" fill="none" stroke="black"></path>
+                  <path d="M 200,240 L 200,272" fill="none" stroke="black"></path>
+                  <path d="M 200,304 L 200,352" fill="none" stroke="black"></path>
+                  <path d="M 200,384 L 200,400" fill="none" stroke="black"></path>
+                  <path d="M 200,432 L 200,496" fill="none" stroke="black"></path>
+                  <path d="M 216,448 L 216,496" fill="none" stroke="black"></path>
+                  <path d="M 264,464 L 264,496" fill="none" stroke="black"></path>
+                  <path d="M 352,368 L 352,384" fill="none" stroke="black"></path>
+                  <path d="M 352,416 L 352,448" fill="none" stroke="black"></path>
+                  <path d="M 408,144 L 408,160" fill="none" stroke="black"></path>
+                  <path d="M 408,192 L 408,208" fill="none" stroke="black"></path>
+                  <path d="M 408,240 L 408,272" fill="none" stroke="black"></path>
+                  <path d="M 408,304 L 408,320" fill="none" stroke="black"></path>
+                  <path d="M 512,368 L 512,384" fill="none" stroke="black"></path>
+                  <path d="M 512,416 L 512,464" fill="none" stroke="black"></path>
+                  <path d="M 184,64 L 216,64" fill="none" stroke="black"></path>
+                  <path d="M 184,96 L 216,96" fill="none" stroke="black"></path>
+                  <path d="M 56,144 L 408,144" fill="none" stroke="black"></path>
+                  <path d="M 136,208 L 264,208" fill="none" stroke="black"></path>
+                  <path d="M 344,208 L 472,208" fill="none" stroke="black"></path>
+                  <path d="M 136,240 L 264,240" fill="none" stroke="black"></path>
+                  <path d="M 344,240 L 472,240" fill="none" stroke="black"></path>
+                  <path d="M 56,320 L 408,320" fill="none" stroke="black"></path>
+                  <path d="M 328,384 L 368,384" fill="none" stroke="black"></path>
+                  <path d="M 488,384 L 528,384" fill="none" stroke="black"></path>
+                  <path d="M 176,400 L 216,400" fill="none" stroke="black"></path>
+                  <path d="M 328,416 L 368,416" fill="none" stroke="black"></path>
+                  <path d="M 488,416 L 528,416" fill="none" stroke="black"></path>
+                  <path d="M 176,432 L 216,432" fill="none" stroke="black"></path>
+                  <path d="M 216,448 L 352,448" fill="none" stroke="black"></path>
+                  <path d="M 264,464 L 512,464" fill="none" stroke="black"></path>
+                  <path d="M 184,64 C 175.16936,64 168,71.16936 168,80" fill="none" stroke="black"></path>
+                  <path d="M 216,64 C 224.83064,64 232,71.16936 232,80" fill="none" stroke="black"></path>
+                  <path d="M 184,96 C 175.16936,96 168,88.83064 168,80" fill="none" stroke="black"></path>
+                  <path d="M 216,96 C 224.83064,96 232,88.83064 232,80" fill="none" stroke="black"></path>
+                  <path d="M 136,208 C 127.16936,208 120,215.16936 120,224" fill="none" stroke="black"></path>
+                  <path d="M 264,208 C 272.83064,208 280,215.16936 280,224" fill="none" stroke="black"></path>
+                  <path d="M 344,208 C 335.16936,208 328,215.16936 328,224" fill="none" stroke="black"></path>
+                  <path d="M 472,208 C 480.83064,208 488,215.16936 488,224" fill="none" stroke="black"></path>
+                  <path d="M 136,240 C 127.16936,240 120,232.83064 120,224" fill="none" stroke="black"></path>
+                  <path d="M 264,240 C 272.83064,240 280,232.83064 280,224" fill="none" stroke="black"></path>
+                  <path d="M 344,240 C 335.16936,240 328,232.83064 328,224" fill="none" stroke="black"></path>
+                  <path d="M 472,240 C 480.83064,240 488,232.83064 488,224" fill="none" stroke="black"></path>
+                  <path d="M 328,384 C 319.16936,384 312,391.16936 312,400" fill="none" stroke="black"></path>
+                  <path d="M 368,384 C 376.83064,384 384,391.16936 384,400" fill="none" stroke="black"></path>
+                  <path d="M 488,384 C 479.16936,384 472,391.16936 472,400" fill="none" stroke="black"></path>
+                  <path d="M 528,384 C 536.83064,384 544,391.16936 544,400" fill="none" stroke="black"></path>
+                  <path d="M 176,400 C 167.16936,400 160,407.16936 160,416" fill="none" stroke="black"></path>
+                  <path d="M 216,400 C 224.83064,400 232,407.16936 232,416" fill="none" stroke="black"></path>
+                  <path d="M 328,416 C 319.16936,416 312,408.83064 312,400" fill="none" stroke="black"></path>
+                  <path d="M 368,416 C 376.83064,416 384,408.83064 384,400" fill="none" stroke="black"></path>
+                  <path d="M 488,416 C 479.16936,416 472,408.83064 472,400" fill="none" stroke="black"></path>
+                  <path d="M 528,416 C 536.83064,416 544,408.83064 544,400" fill="none" stroke="black"></path>
+                  <path d="M 176,432 C 167.16936,432 160,424.83064 160,416" fill="none" stroke="black"></path>
+                  <path d="M 216,432 C 224.83064,432 232,424.83064 232,416" fill="none" stroke="black"></path>
+                  <polygon class="arrowhead" points="416,272 404,266.4 404,277.6" fill="black" transform="rotate(90,408,272)"></polygon>
+                  <polygon class="arrowhead" points="272,496 260,490.4 260,501.6" fill="black" transform="rotate(90,264,496)"></polygon>
+                  <polygon class="arrowhead" points="224,496 212,490.4 212,501.6" fill="black" transform="rotate(90,216,496)"></polygon>
+                  <polygon class="arrowhead" points="208,496 196,490.4 196,501.6" fill="black" transform="rotate(90,200,496)"></polygon>
+                  <polygon class="arrowhead" points="208,352 196,346.4 196,357.6" fill="black" transform="rotate(90,200,352)"></polygon>
+                  <polygon class="arrowhead" points="208,272 196,266.4 196,277.6" fill="black" transform="rotate(90,200,272)"></polygon>
+                  <polygon class="arrowhead" points="208,136 196,130.4 196,141.6" fill="black" transform="rotate(90,200,136)"></polygon>
+                  <g class="text">
+                    <text x="192" y="36">measurement</text>
+                    <text x="248" y="36">1</text>
+                    <text x="200" y="84">shard</text>
+                    <text x="28" y="180">public</text>
+                    <text x="80" y="180">share</text>
+                    <text x="148" y="180">Leader</text>
+                    <text x="200" y="180">input</text>
+                    <text x="248" y="180">share</text>
+                    <text x="364" y="180">Helper</text>
+                    <text x="416" y="180">input</text>
+                    <text x="464" y="180">share</text>
+                    <text x="160" y="228">encrypt</text>
+                    <text x="204" y="228">to</text>
+                    <text x="244" y="228">Leader</text>
+                    <text x="368" y="228">encrypt</text>
+                    <text x="412" y="228">to</text>
+                    <text x="452" y="228">Helper</text>
+                    <text x="148" y="292">Leader</text>
+                    <text x="204" y="292">report</text>
+                    <text x="256" y="292">share</text>
+                    <text x="356" y="292">Helper</text>
+                    <text x="412" y="292">report</text>
+                    <text x="464" y="292">share</text>
+                    <text x="316" y="356">Client</text>
+                    <text x="352" y="356">2</text>
+                    <text x="388" y="356">report</text>
+                    <text x="432" y="356">...</text>
+                    <text x="476" y="356">Client</text>
+                    <text x="512" y="356">i</text>
+                    <text x="548" y="356">report</text>
+                    <text x="164" y="372">Client</text>
+                    <text x="200" y="372">1</text>
+                    <text x="236" y="372">report</text>
+                    <text x="348" y="404">upload</text>
+                    <text x="508" y="404">upload</text>
+                    <text x="196" y="420">upload</text>
+                    <text x="240" y="500">...</text>
+                    <text x="108" y="516">to</text>
+                    <text x="168" y="516">aggregation</text>
+                    <text x="232" y="516">job</text>
+                    <text x="296" y="516">interaction</text>
+                  </g>
+                </svg><a href="#section-2.4.1-2.1.1" class="pilcrow">¶</a>
 </div>
 </div>
 <figcaption><a href="#figure-2" class="selfRef">Figure 2</a>:
-<a href="#name-lifecycles-of-protocol-obje" class="selfRef">Lifecycles of protocol objects</a>
-          </figcaption></figure>
+<a href="#name-lifecycles-of-protocol-obje" class="selfRef">Lifecycles of protocol objects in the upload interaction</a>
+            </figcaption></figure>
 </div>
-<div id="arity-of-protocol-objects">
-<section id="section-2.4.1">
-          <h4 id="name-arity-of-protocol-objects">
-<a href="#section-2.4.1" class="section-number selfRef">2.4.1. </a><a href="#name-arity-of-protocol-objects" class="section-name selfRef">Arity of Protocol Objects</a>
+</section>
+</div>
+<div id="agg-job-lifecycle">
+<section id="section-2.4.2">
+          <h4 id="name-the-aggregation-interaction">
+<a href="#section-2.4.2" class="section-number selfRef">2.4.2. </a><a href="#name-the-aggregation-interaction" class="section-name selfRef">The Aggregation Interaction</a>
           </h4>
-<p id="section-2.4.1-1">Reports are 1 to 1 with measurements. In this illustration, <code>i</code> distinct Clients
-upload a distinct report, but a single Client could upload multiple reports to a
-task (see <a href="#sybil" class="auto internal xref">Section 8.1</a> for some implications of this). The process of sharding
-measurements, constructing reports and uploading them is specified in
-<a href="#upload-flow" class="auto internal xref">Section 4.5</a>.<a href="#section-2.4.1-1" class="pilcrow">¶</a></p>
-<p id="section-2.4.1-2">Reports are many to 1 with aggregation jobs. The Leader assigns each of the <code>i</code>
+<p id="section-2.4.2-1">Reports are many to 1 with aggregation jobs. The Leader assigns each of the <code>i</code>
 reports into one of <code>j</code> different aggregation jobs, which can be run in parallel
-by the Aggregators. Each aggregation job contains <code>k</code> reports. <code>k</code> is roughly
-<code>i / j</code>, but it is not necessary for aggregation jobs to have uniform size. See
-<a href="#operational-capabilities" class="auto internal xref">Section 6</a> for some discussion of performance implications for
-aggregation job scheduling strategies.<a href="#section-2.4.1-2" class="pilcrow">¶</a></p>
-<p id="section-2.4.1-3">Report shares, input shares and output shares have a 1 to 1 to 1 relationship.
+by the Aggregators. Each aggregation job prepares <code>k</code> reports, outputting <code>k</code>
+output shares. <code>k</code> is roughly <code>i / j</code>, but it is not necessary for aggregation
+jobs to have uniform size.<a href="#section-2.4.2-1" class="pilcrow">¶</a></p>
+<p id="section-2.4.2-2">See <a href="#aggregate-flow" class="auto internal xref">Section 4.6</a> for the specification of aggregation jobs and
+<a href="#operational-capabilities" class="auto internal xref">Section 6</a> for some discussion of aggregation job scheduling
+strategies and their performance implications.<a href="#section-2.4.2-2" class="pilcrow">¶</a></p>
+<p id="section-2.4.2-3">Output shares are accumulated into <code>m</code> batch buckets, and so have a many to 1
+relationship. Aggregation jobs and batch buckets are not necessarily 1 to 1. A
+single aggregation job may contribute to multiple batch buckets, and multiple
+aggregation jobs may contribute to the same batch bucket.<a href="#section-2.4.2-3" class="pilcrow">¶</a></p>
+<p id="section-2.4.2-4">The assignation of output shares to batch buckets is specified in
+<a href="#batch-buckets" class="auto internal xref">Section 4.6.3.3</a>.<a href="#section-2.4.2-4" class="pilcrow">¶</a></p>
+<span id="name-lifecycles-of-protocol-objec"></span><div id="object-lifecycle-many-agg-job">
+<figure id="figure-3">
+            <div id="section-2.4.2-5.1">
+              <div class="alignLeft art-svg artwork" id="section-2.4.2-5.1.1">
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" height="720" width="512" viewBox="0 0 512 720" class="diagram" text-anchor="middle" font-family="monospace" font-size="13px" stroke-linecap="round">
+                  <path d="M 8,464 L 8,480" fill="none" stroke="black"></path>
+                  <path d="M 56,64 L 56,96" fill="none" stroke="black"></path>
+                  <path d="M 56,128 L 56,144" fill="none" stroke="black"></path>
+                  <path d="M 56,336 L 56,448" fill="none" stroke="black"></path>
+                  <path d="M 56,496 L 56,528" fill="none" stroke="black"></path>
+                  <path d="M 56,560 L 56,576" fill="none" stroke="black"></path>
+                  <path d="M 56,608 L 56,624" fill="none" stroke="black"></path>
+                  <path d="M 56,656 L 56,672" fill="none" stroke="black"></path>
+                  <path d="M 64,256 L 64,288" fill="none" stroke="black"></path>
+                  <path d="M 72,336 L 72,368" fill="none" stroke="black"></path>
+                  <path d="M 72,400 L 72,448" fill="none" stroke="black"></path>
+                  <path d="M 80,496 L 80,528" fill="none" stroke="black"></path>
+                  <path d="M 80,560 L 80,576" fill="none" stroke="black"></path>
+                  <path d="M 80,608 L 80,624" fill="none" stroke="black"></path>
+                  <path d="M 80,656 L 80,672" fill="none" stroke="black"></path>
+                  <path d="M 120,192 L 120,208" fill="none" stroke="black"></path>
+                  <path d="M 120,416 L 120,448" fill="none" stroke="black"></path>
+                  <path d="M 128,496 L 128,528" fill="none" stroke="black"></path>
+                  <path d="M 128,560 L 128,576" fill="none" stroke="black"></path>
+                  <path d="M 128,608 L 128,624" fill="none" stroke="black"></path>
+                  <path d="M 128,656 L 128,672" fill="none" stroke="black"></path>
+                  <path d="M 176,464 L 176,480" fill="none" stroke="black"></path>
+                  <path d="M 192,144 L 192,176" fill="none" stroke="black"></path>
+                  <path d="M 192,336 L 192,360" fill="none" stroke="black"></path>
+                  <path d="M 192,376 L 192,400" fill="none" stroke="black"></path>
+                  <path d="M 200,224 L 200,288" fill="none" stroke="black"></path>
+                  <path d="M 208,48 L 208,96" fill="none" stroke="black"></path>
+                  <path d="M 208,128 L 208,176" fill="none" stroke="black"></path>
+                  <path d="M 208,336 L 208,352" fill="none" stroke="black"></path>
+                  <path d="M 216,672 L 216,688" fill="none" stroke="black"></path>
+                  <path d="M 256,144 L 256,176" fill="none" stroke="black"></path>
+                  <path d="M 264,464 L 264,480" fill="none" stroke="black"></path>
+                  <path d="M 296,192 L 296,208" fill="none" stroke="black"></path>
+                  <path d="M 304,496 L 304,528" fill="none" stroke="black"></path>
+                  <path d="M 304,560 L 304,576" fill="none" stroke="black"></path>
+                  <path d="M 304,608 L 304,672" fill="none" stroke="black"></path>
+                  <path d="M 320,368 L 320,408" fill="none" stroke="black"></path>
+                  <path d="M 320,424 L 320,448" fill="none" stroke="black"></path>
+                  <path d="M 328,496 L 328,528" fill="none" stroke="black"></path>
+                  <path d="M 328,560 L 328,576" fill="none" stroke="black"></path>
+                  <path d="M 328,608 L 328,624" fill="none" stroke="black"></path>
+                  <path d="M 328,656 L 328,672" fill="none" stroke="black"></path>
+                  <path d="M 336,352 L 336,408" fill="none" stroke="black"></path>
+                  <path d="M 336,424 L 336,448" fill="none" stroke="black"></path>
+                  <path d="M 368,256 L 368,288" fill="none" stroke="black"></path>
+                  <path d="M 368,336 L 368,416" fill="none" stroke="black"></path>
+                  <path d="M 376,496 L 376,528" fill="none" stroke="black"></path>
+                  <path d="M 376,560 L 376,576" fill="none" stroke="black"></path>
+                  <path d="M 376,608 L 376,624" fill="none" stroke="black"></path>
+                  <path d="M 376,656 L 376,672" fill="none" stroke="black"></path>
+                  <path d="M 384,336 L 384,448" fill="none" stroke="black"></path>
+                  <path d="M 400,64 L 400,96" fill="none" stroke="black"></path>
+                  <path d="M 400,128 L 400,144" fill="none" stroke="black"></path>
+                  <path d="M 424,464 L 424,480" fill="none" stroke="black"></path>
+                  <path d="M 56,64 L 400,64" fill="none" stroke="black"></path>
+                  <path d="M 56,144 L 192,144" fill="none" stroke="black"></path>
+                  <path d="M 256,144 L 400,144" fill="none" stroke="black"></path>
+                  <path d="M 136,176 L 280,176" fill="none" stroke="black"></path>
+                  <path d="M 296,192 L 328,192" fill="none" stroke="black"></path>
+                  <path d="M 136,224 L 280,224" fill="none" stroke="black"></path>
+                  <path d="M 64,256 L 368,256" fill="none" stroke="black"></path>
+                  <path d="M 208,352 L 336,352" fill="none" stroke="black"></path>
+                  <path d="M 72,368 L 320,368" fill="none" stroke="black"></path>
+                  <path d="M 72,400 L 192,400" fill="none" stroke="black"></path>
+                  <path d="M 120,416 L 368,416" fill="none" stroke="black"></path>
+                  <path d="M 24,448 L 160,448" fill="none" stroke="black"></path>
+                  <path d="M 280,448 L 408,448" fill="none" stroke="black"></path>
+                  <path d="M 24,496 L 160,496" fill="none" stroke="black"></path>
+                  <path d="M 280,496 L 408,496" fill="none" stroke="black"></path>
+                  <path d="M 56,672 L 376,672" fill="none" stroke="black"></path>
+                  <path d="M 136,176 C 127.16936,176 120,183.16936 120,192" fill="none" stroke="black"></path>
+                  <path d="M 280,176 C 288.83064,176 296,183.16936 296,192" fill="none" stroke="black"></path>
+                  <path d="M 136,224 C 127.16936,224 120,216.83064 120,208" fill="none" stroke="black"></path>
+                  <path d="M 280,224 C 288.83064,224 296,216.83064 296,208" fill="none" stroke="black"></path>
+                  <path d="M 24,448 C 15.16936,448 8,455.16936 8,464" fill="none" stroke="black"></path>
+                  <path d="M 160,448 C 168.83064,448 176,455.16936 176,464" fill="none" stroke="black"></path>
+                  <path d="M 280,448 C 271.16936,448 264,455.16936 264,464" fill="none" stroke="black"></path>
+                  <path d="M 408,448 C 416.83064,448 424,455.16936 424,464" fill="none" stroke="black"></path>
+                  <path d="M 24,496 C 15.16936,496 8,488.83064 8,480" fill="none" stroke="black"></path>
+                  <path d="M 160,496 C 168.83064,496 176,488.83064 176,480" fill="none" stroke="black"></path>
+                  <path d="M 280,496 C 271.16936,496 264,488.83064 264,480" fill="none" stroke="black"></path>
+                  <path d="M 408,496 C 416.83064,496 424,488.83064 424,480" fill="none" stroke="black"></path>
+                  <polygon class="arrowhead" points="408,96 396,90.4 396,101.6" fill="black" transform="rotate(90,400,96)"></polygon>
+                  <polygon class="arrowhead" points="384,624 372,618.4 372,629.6" fill="black" transform="rotate(90,376,624)"></polygon>
+                  <polygon class="arrowhead" points="376,288 364,282.4 364,293.6" fill="black" transform="rotate(90,368,288)"></polygon>
+                  <polygon class="arrowhead" points="336,576 324,570.4 324,581.6" fill="black" transform="rotate(90,328,576)"></polygon>
+                  <polygon class="arrowhead" points="312,528 300,522.4 300,533.6" fill="black" transform="rotate(90,304,528)"></polygon>
+                  <polygon class="arrowhead" points="224,688 212,682.4 212,693.6" fill="black" transform="rotate(90,216,688)"></polygon>
+                  <polygon class="arrowhead" points="216,96 204,90.4 204,101.6" fill="black" transform="rotate(90,208,96)"></polygon>
+                  <polygon class="arrowhead" points="208,288 196,282.4 196,293.6" fill="black" transform="rotate(90,200,288)"></polygon>
+                  <polygon class="arrowhead" points="136,624 124,618.4 124,629.6" fill="black" transform="rotate(90,128,624)"></polygon>
+                  <polygon class="arrowhead" points="88,576 76,570.4 76,581.6" fill="black" transform="rotate(90,80,576)"></polygon>
+                  <polygon class="arrowhead" points="72,288 60,282.4 60,293.6" fill="black" transform="rotate(90,64,288)"></polygon>
+                  <polygon class="arrowhead" points="64,528 52,522.4 52,533.6" fill="black" transform="rotate(90,56,528)"></polygon>
+                  <polygon class="arrowhead" points="64,96 52,90.4 52,101.6" fill="black" transform="rotate(90,56,96)"></polygon>
+                  <g class="text">
+                    <text x="132" y="36">from</text>
+                    <text x="180" y="36">upload</text>
+                    <text x="256" y="36">interaction</text>
+                    <text x="28" y="116">Client</text>
+                    <text x="84" y="116">report</text>
+                    <text x="120" y="116">1</text>
+                    <text x="180" y="116">Client</text>
+                    <text x="236" y="116">report</text>
+                    <text x="272" y="116">2</text>
+                    <text x="312" y="116">...</text>
+                    <text x="372" y="116">Client</text>
+                    <text x="428" y="116">report</text>
+                    <text x="464" y="116">i</text>
+                    <text x="232" y="164">...</text>
+                    <text x="180" y="196">assign</text>
+                    <text x="240" y="196">reports</text>
+                    <text x="384" y="196">aggregation</text>
+                    <text x="472" y="196">parameter</text>
+                    <text x="140" y="212">to</text>
+                    <text x="200" y="212">aggregation</text>
+                    <text x="268" y="212">jobs</text>
+                    <text x="372" y="212">chosen</text>
+                    <text x="412" y="212">by</text>
+                    <text x="464" y="212">Collector</text>
+                    <text x="64" y="308">aggregation</text>
+                    <text x="200" y="308">aggregation</text>
+                    <text x="288" y="308">...</text>
+                    <text x="368" y="308">aggregation</text>
+                    <text x="56" y="324">job</text>
+                    <text x="80" y="324">1</text>
+                    <text x="192" y="324">job</text>
+                    <text x="216" y="324">2</text>
+                    <text x="368" y="324">job</text>
+                    <text x="392" y="324">j</text>
+                    <text x="96" y="436">...</text>
+                    <text x="360" y="436">...</text>
+                    <text x="60" y="468">accumulate</text>
+                    <text x="132" y="468">Leader</text>
+                    <text x="316" y="468">accumulate</text>
+                    <text x="388" y="468">Helper</text>
+                    <text x="60" y="484">output</text>
+                    <text x="116" y="484">shares</text>
+                    <text x="316" y="484">output</text>
+                    <text x="372" y="484">shares</text>
+                    <text x="104" y="516">...</text>
+                    <text x="352" y="516">...</text>
+                    <text x="28" y="548">Leader</text>
+                    <text x="80" y="548">batch</text>
+                    <text x="132" y="548">bucket</text>
+                    <text x="168" y="548">1</text>
+                    <text x="292" y="548">Helper</text>
+                    <text x="344" y="548">batch</text>
+                    <text x="396" y="548">bucket</text>
+                    <text x="432" y="548">1</text>
+                    <text x="44" y="596">Leader</text>
+                    <text x="96" y="596">batch</text>
+                    <text x="148" y="596">bucket</text>
+                    <text x="184" y="596">2</text>
+                    <text x="308" y="596">Helper</text>
+                    <text x="360" y="596">batch</text>
+                    <text x="412" y="596">bucket</text>
+                    <text x="448" y="596">2</text>
+                    <text x="60" y="644">Leader</text>
+                    <text x="112" y="644">batch</text>
+                    <text x="164" y="644">bucket</text>
+                    <text x="200" y="644">m</text>
+                    <text x="340" y="644">Helper</text>
+                    <text x="392" y="644">batch</text>
+                    <text x="444" y="644">bucket</text>
+                    <text x="480" y="644">m</text>
+                    <text x="104" y="660">...</text>
+                    <text x="352" y="660">...</text>
+                    <text x="124" y="708">to</text>
+                    <text x="180" y="708">collection</text>
+                    <text x="272" y="708">interaction</text>
+                  </g>
+                </svg><a href="#section-2.4.2-5.1.1" class="pilcrow">¶</a>
+</div>
+</div>
+<figcaption><a href="#figure-3" class="selfRef">Figure 3</a>:
+<a href="#name-lifecycles-of-protocol-objec" class="selfRef">Lifecycles of protocol objects in the aggregation job interaction</a>
+            </figcaption></figure>
+</div>
+<p id="section-2.4.2-6">Each aggregation job prepares <code>k</code> reports (each consisting of a public share,
+Leader report share and Helper report share) into <code>k</code> Leader output shares and
+<code>k</code> Helper output shares. The aggregation parameter is chosen by the Collector
+(or in some settings it may be known prior to the Collector's involvement, as
+discussed in <a href="#eager-aggregation" class="auto internal xref">Section 4.6.1</a>) and is used to prepare all the reports in
+one or more aggregation jobs.<a href="#section-2.4.2-6" class="pilcrow">¶</a></p>
+<span id="name-detail-of-an-individual-agg"></span><div id="object-lifecycle-agg-job">
+<figure id="figure-4">
+            <div id="section-2.4.2-7.1">
+              <div class="alignLeft art-svg artwork" id="section-2.4.2-7.1.1">
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" height="256" width="496" viewBox="0 0 496 256" class="diagram" text-anchor="middle" font-family="monospace" font-size="13px" stroke-linecap="round">
+                  <path d="M 48,48 L 48,80" fill="none" stroke="black"></path>
+                  <path d="M 48,112 L 48,144" fill="none" stroke="black"></path>
+                  <path d="M 72,48 L 72,80" fill="none" stroke="black"></path>
+                  <path d="M 80,112 L 80,144" fill="none" stroke="black"></path>
+                  <path d="M 80,192 L 80,208" fill="none" stroke="black"></path>
+                  <path d="M 184,48 L 184,80" fill="none" stroke="black"></path>
+                  <path d="M 184,112 L 184,144" fill="none" stroke="black"></path>
+                  <path d="M 208,48 L 208,80" fill="none" stroke="black"></path>
+                  <path d="M 216,112 L 216,144" fill="none" stroke="black"></path>
+                  <path d="M 216,192 L 216,208" fill="none" stroke="black"></path>
+                  <path d="M 344,48 L 344,80" fill="none" stroke="black"></path>
+                  <path d="M 344,112 L 344,144" fill="none" stroke="black"></path>
+                  <path d="M 368,48 L 368,80" fill="none" stroke="black"></path>
+                  <path d="M 376,112 L 376,144" fill="none" stroke="black"></path>
+                  <path d="M 376,192 L 376,208" fill="none" stroke="black"></path>
+                  <path d="M 72,48 L 176,48" fill="none" stroke="black"></path>
+                  <path d="M 192,48 L 336,48" fill="none" stroke="black"></path>
+                  <path d="M 352,48 L 392,48" fill="none" stroke="black"></path>
+                  <path d="M 24,80 L 104,80" fill="none" stroke="black"></path>
+                  <path d="M 160,80 L 240,80" fill="none" stroke="black"></path>
+                  <path d="M 320,80 L 400,80" fill="none" stroke="black"></path>
+                  <path d="M 24,112 L 104,112" fill="none" stroke="black"></path>
+                  <path d="M 160,112 L 240,112" fill="none" stroke="black"></path>
+                  <path d="M 320,112 L 400,112" fill="none" stroke="black"></path>
+                  <path d="M 24,80 C 15.16936,80 8,87.16936 8,96" fill="none" stroke="black"></path>
+                  <path d="M 104,80 C 112.83064,80 120,87.16936 120,96" fill="none" stroke="black"></path>
+                  <path d="M 160,80 C 151.16936,80 144,87.16936 144,96" fill="none" stroke="black"></path>
+                  <path d="M 240,80 C 248.83064,80 256,87.16936 256,96" fill="none" stroke="black"></path>
+                  <path d="M 320,80 C 311.16936,80 304,87.16936 304,96" fill="none" stroke="black"></path>
+                  <path d="M 400,80 C 408.83064,80 416,87.16936 416,96" fill="none" stroke="black"></path>
+                  <path d="M 24,112 C 15.16936,112 8,104.83064 8,96" fill="none" stroke="black"></path>
+                  <path d="M 104,112 C 112.83064,112 120,104.83064 120,96" fill="none" stroke="black"></path>
+                  <path d="M 160,112 C 151.16936,112 144,104.83064 144,96" fill="none" stroke="black"></path>
+                  <path d="M 240,112 C 248.83064,112 256,104.83064 256,96" fill="none" stroke="black"></path>
+                  <path d="M 320,112 C 311.16936,112 304,104.83064 304,96" fill="none" stroke="black"></path>
+                  <path d="M 400,112 C 408.83064,112 416,104.83064 416,96" fill="none" stroke="black"></path>
+                  <polygon class="arrowhead" points="384,208 372,202.4 372,213.6" fill="black" transform="rotate(90,376,208)"></polygon>
+                  <polygon class="arrowhead" points="352,144 340,138.4 340,149.6" fill="black" transform="rotate(90,344,144)"></polygon>
+                  <polygon class="arrowhead" points="224,208 212,202.4 212,213.6" fill="black" transform="rotate(90,216,208)"></polygon>
+                  <polygon class="arrowhead" points="192,144 180,138.4 180,149.6" fill="black" transform="rotate(90,184,144)"></polygon>
+                  <polygon class="arrowhead" points="88,208 76,202.4 76,213.6" fill="black" transform="rotate(90,80,208)"></polygon>
+                  <polygon class="arrowhead" points="56,144 44,138.4 44,149.6" fill="black" transform="rotate(90,48,144)"></polygon>
+                  <g class="text">
+                    <text x="44" y="36">report</text>
+                    <text x="80" y="36">1</text>
+                    <text x="180" y="36">report</text>
+                    <text x="216" y="36">2</text>
+                    <text x="264" y="36">...</text>
+                    <text x="340" y="36">report</text>
+                    <text x="376" y="36">k</text>
+                    <text x="448" y="52">aggregation</text>
+                    <text x="448" y="68">parameter</text>
+                    <text x="64" y="100">preparation</text>
+                    <text x="200" y="100">preparation</text>
+                    <text x="280" y="100">...</text>
+                    <text x="360" y="100">preparation</text>
+                    <text x="36" y="164">leader</text>
+                    <text x="92" y="164">output</text>
+                    <text x="172" y="164">leader</text>
+                    <text x="228" y="164">output</text>
+                    <text x="280" y="164">...</text>
+                    <text x="332" y="164">leader</text>
+                    <text x="388" y="164">output</text>
+                    <text x="56" y="180">share</text>
+                    <text x="88" y="180">1</text>
+                    <text x="192" y="180">share</text>
+                    <text x="224" y="180">2</text>
+                    <text x="352" y="180">share</text>
+                    <text x="384" y="180">k</text>
+                    <text x="52" y="228">helper</text>
+                    <text x="108" y="228">output</text>
+                    <text x="188" y="228">helper</text>
+                    <text x="244" y="228">output</text>
+                    <text x="296" y="228">...</text>
+                    <text x="348" y="228">helper</text>
+                    <text x="404" y="228">output</text>
+                    <text x="72" y="244">share</text>
+                    <text x="104" y="244">1</text>
+                    <text x="208" y="244">share</text>
+                    <text x="240" y="244">2</text>
+                    <text x="368" y="244">share</text>
+                    <text x="400" y="244">k</text>
+                  </g>
+                </svg><a href="#section-2.4.2-7.1.1" class="pilcrow">¶</a>
+</div>
+</div>
+<figcaption><a href="#figure-4" class="selfRef">Figure 4</a>:
+<a href="#name-detail-of-an-individual-agg" class="selfRef">Detail of an individual aggregation job</a>
+            </figcaption></figure>
+</div>
+<p id="section-2.4.2-8">Report shares, input shares and output shares have a 1 to 1 to 1 relationship.
 Report shares are decrypted into input shares and then prepared into output
-shares. The scheduling of aggregation jobs and their execution by the
-Aggregators is specified in <a href="#aggregate-flow" class="auto internal xref">Section 4.6</a>.<a href="#section-2.4.1-3" class="pilcrow">¶</a></p>
-<p id="section-2.4.1-4">Output shares are accumulated into batch buckets, and so have a many to 1
-relationship. In this example, we show one batch bucket for each aggregation
-job, but aggregation jobs and batch buckets are not necessarily 1 to 1. Multiple
-aggregation jobs could contribute to the same batch bucket, and a single
-aggregation job could contribute to multiple batch buckets. The assignation of
-output shares to batch buckets is specified in <a href="#batch-buckets" class="auto internal xref">Section 4.6.3.3</a>.<a href="#section-2.4.1-4" class="pilcrow">¶</a></p>
-<p id="section-2.4.1-5">Using the Collector's query, each Aggregator will merge one or more batch
+shares.<a href="#section-2.4.2-8" class="pilcrow">¶</a></p>
+<span id="name-detail-of-preparation-of-an"></span><div id="object-lifecycle-report-prep">
+<figure id="figure-5">
+            <div id="section-2.4.2-9.1">
+              <div class="alignLeft art-svg artwork" id="section-2.4.2-9.1.1">
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" height="384" width="456" viewBox="0 0 456 384" class="diagram" text-anchor="middle" font-family="monospace" font-size="13px" stroke-linecap="round">
+                  <path d="M 48,64 L 48,80" fill="none" stroke="black"></path>
+                  <path d="M 48,128 L 48,144" fill="none" stroke="black"></path>
+                  <path d="M 48,176 L 48,208" fill="none" stroke="black"></path>
+                  <path d="M 48,256 L 48,272" fill="none" stroke="black"></path>
+                  <path d="M 56,304 L 56,336" fill="none" stroke="black"></path>
+                  <path d="M 176,48 L 176,80" fill="none" stroke="black"></path>
+                  <path d="M 176,128 L 176,144" fill="none" stroke="black"></path>
+                  <path d="M 176,176 L 176,208" fill="none" stroke="black"></path>
+                  <path d="M 176,256 L 176,272" fill="none" stroke="black"></path>
+                  <path d="M 184,304 L 184,336" fill="none" stroke="black"></path>
+                  <path d="M 280,64 L 280,80" fill="none" stroke="black"></path>
+                  <path d="M 280,128 L 280,272" fill="none" stroke="black"></path>
+                  <path d="M 368,48 L 368,288" fill="none" stroke="black"></path>
+                  <path d="M 48,64 L 280,64" fill="none" stroke="black"></path>
+                  <path d="M 24,144 L 72,144" fill="none" stroke="black"></path>
+                  <path d="M 152,144 L 200,144" fill="none" stroke="black"></path>
+                  <path d="M 24,176 L 72,176" fill="none" stroke="black"></path>
+                  <path d="M 152,176 L 200,176" fill="none" stroke="black"></path>
+                  <path d="M 24,272 L 280,272" fill="none" stroke="black"></path>
+                  <path d="M 296,288 L 368,288" fill="none" stroke="black"></path>
+                  <path d="M 24,304 L 280,304" fill="none" stroke="black"></path>
+                  <path d="M 24,144 C 15.16936,144 8,151.16936 8,160" fill="none" stroke="black"></path>
+                  <path d="M 72,144 C 80.83064,144 88,151.16936 88,160" fill="none" stroke="black"></path>
+                  <path d="M 152,144 C 143.16936,144 136,151.16936 136,160" fill="none" stroke="black"></path>
+                  <path d="M 200,144 C 208.83064,144 216,151.16936 216,160" fill="none" stroke="black"></path>
+                  <path d="M 24,176 C 15.16936,176 8,168.83064 8,160" fill="none" stroke="black"></path>
+                  <path d="M 72,176 C 80.83064,176 88,168.83064 88,160" fill="none" stroke="black"></path>
+                  <path d="M 152,176 C 143.16936,176 136,168.83064 136,160" fill="none" stroke="black"></path>
+                  <path d="M 200,176 C 208.83064,176 216,168.83064 216,160" fill="none" stroke="black"></path>
+                  <path d="M 24,272 C 15.16936,272 8,279.16936 8,288" fill="none" stroke="black"></path>
+                  <path d="M 280,272 C 288.83064,272 296,279.16936 296,288" fill="none" stroke="black"></path>
+                  <path d="M 24,304 C 15.16936,304 8,296.83064 8,288" fill="none" stroke="black"></path>
+                  <path d="M 280,304 C 288.83064,304 296,296.83064 296,288" fill="none" stroke="black"></path>
+                  <polygon class="arrowhead" points="192,336 180,330.4 180,341.6" fill="black" transform="rotate(90,184,336)"></polygon>
+                  <polygon class="arrowhead" points="184,208 172,202.4 172,213.6" fill="black" transform="rotate(90,176,208)"></polygon>
+                  <polygon class="arrowhead" points="64,336 52,330.4 52,341.6" fill="black" transform="rotate(90,56,336)"></polygon>
+                  <polygon class="arrowhead" points="56,208 44,202.4 44,213.6" fill="black" transform="rotate(90,48,208)"></polygon>
+                  <g class="text">
+                    <text x="172" y="36">report</text>
+                    <text x="328" y="36">aggregation</text>
+                    <text x="416" y="36">parameter</text>
+                    <text x="44" y="100">Leader</text>
+                    <text x="148" y="100">Helper</text>
+                    <text x="204" y="100">report</text>
+                    <text x="284" y="100">public</text>
+                    <text x="28" y="116">report</text>
+                    <text x="80" y="116">share</text>
+                    <text x="176" y="116">share</text>
+                    <text x="280" y="116">share</text>
+                    <text x="48" y="164">decrypt</text>
+                    <text x="176" y="164">decrypt</text>
+                    <text x="52" y="228">Leader</text>
+                    <text x="180" y="228">Helper</text>
+                    <text x="24" y="244">input</text>
+                    <text x="72" y="244">share</text>
+                    <text x="152" y="244">input</text>
+                    <text x="200" y="244">share</text>
+                    <text x="104" y="292">prepare</text>
+                    <text x="160" y="292">input</text>
+                    <text x="208" y="292">share</text>
+                    <text x="28" y="356">Leader</text>
+                    <text x="84" y="356">output</text>
+                    <text x="156" y="356">Helper</text>
+                    <text x="212" y="356">output</text>
+                    <text x="56" y="372">share</text>
+                    <text x="184" y="372">share</text>
+                  </g>
+                </svg><a href="#section-2.4.2-9.1.1" class="pilcrow">¶</a>
+</div>
+</div>
+<figcaption><a href="#figure-5" class="selfRef">Figure 5</a>:
+<a href="#name-detail-of-preparation-of-an" class="selfRef">Detail of preparation of an individual report</a>
+            </figcaption></figure>
+</div>
+</section>
+</div>
+<div id="the-collection-interaction">
+<section id="section-2.4.3">
+          <h4 id="name-the-collection-interaction">
+<a href="#section-2.4.3" class="section-number selfRef">2.4.3. </a><a href="#name-the-collection-interaction" class="section-name selfRef">The Collection Interaction</a>
+          </h4>
+<p id="section-2.4.3-1">Using the Collector's query, each Aggregator will merge one or more batch
 buckets together into its aggregate share, meaning batch buckets are many to 1
-with aggregate shares.<a href="#section-2.4.1-5" class="pilcrow">¶</a></p>
-<p id="section-2.4.1-6">The Leader and Helper's aggregate shares are finally delivered to the Collector
-to be unsharded into the aggregate result. Since there are always exactly two
-Aggregators, aggregate shares are 2 to 1 with aggregate results. The collection
-interaction is specified in <a href="#collect-flow" class="auto internal xref">Section 4.7</a>.<a href="#section-2.4.1-6" class="pilcrow">¶</a></p>
-<p id="section-2.4.1-7">There can be many aggregate results for a single task. The Collection process
+with aggregate shares.<a href="#section-2.4.3-1" class="pilcrow">¶</a></p>
+<p id="section-2.4.3-2">The Leader and Helper finally deliver their encrypted aggregate shares to the
+Collector to be decrypted and then unsharded into the aggregate result. Since
+there are always exactly two Aggregators, aggregate shares are 2 to 1 with
+aggregate results. The collection interaction is specified in <a href="#collect-flow" class="auto internal xref">Section 4.7</a>.<a href="#section-2.4.3-2" class="pilcrow">¶</a></p>
+<p id="section-2.4.3-3">There can be many aggregate results for a single task. The Collection process
 may occur multiple times for each task, with the Collector obtaining multiple
 aggregate results. For example, imagine tasks where the Collector obtains
-aggregate results once an hour, or every time 10,000,000 reports are uploaded.<a href="#section-2.4.1-7" class="pilcrow">¶</a></p>
+aggregate results once an hour, or every time 10,000,000 reports are uploaded.<a href="#section-2.4.3-3" class="pilcrow">¶</a></p>
+<span id="name-lifecycles-of-protocol-object"></span><div id="object-lifecycle-collection">
+<figure id="figure-6">
+            <div id="section-2.4.3-4.1">
+              <div class="alignLeft art-svg artwork" id="section-2.4.3-4.1.1">
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" height="752" width="488" viewBox="0 0 488 752" class="diagram" text-anchor="middle" font-family="monospace" font-size="13px" stroke-linecap="round">
+                  <path d="M 40,288 L 40,304" fill="none" stroke="black"></path>
+                  <path d="M 72,64 L 72,96" fill="none" stroke="black"></path>
+                  <path d="M 72,128 L 72,144" fill="none" stroke="black"></path>
+                  <path d="M 72,176 L 72,192" fill="none" stroke="black"></path>
+                  <path d="M 72,224 L 72,264" fill="none" stroke="black"></path>
+                  <path d="M 88,64 L 88,96" fill="none" stroke="black"></path>
+                  <path d="M 88,128 L 88,144" fill="none" stroke="black"></path>
+                  <path d="M 88,176 L 88,192" fill="none" stroke="black"></path>
+                  <path d="M 88,224 L 88,264" fill="none" stroke="black"></path>
+                  <path d="M 104,320 L 104,352" fill="none" stroke="black"></path>
+                  <path d="M 104,384 L 104,400" fill="none" stroke="black"></path>
+                  <path d="M 104,432 L 104,464" fill="none" stroke="black"></path>
+                  <path d="M 104,512 L 104,528" fill="none" stroke="black"></path>
+                  <path d="M 104,560 L 104,592" fill="none" stroke="black"></path>
+                  <path d="M 104,624 L 104,640" fill="none" stroke="black"></path>
+                  <path d="M 136,64 L 136,96" fill="none" stroke="black"></path>
+                  <path d="M 136,128 L 136,144" fill="none" stroke="black"></path>
+                  <path d="M 136,176 L 136,192" fill="none" stroke="black"></path>
+                  <path d="M 136,224 L 136,264" fill="none" stroke="black"></path>
+                  <path d="M 168,288 L 168,304" fill="none" stroke="black"></path>
+                  <path d="M 216,48 L 216,64" fill="none" stroke="black"></path>
+                  <path d="M 232,272 L 232,304" fill="none" stroke="black"></path>
+                  <path d="M 232,640 L 232,672" fill="none" stroke="black"></path>
+                  <path d="M 232,704 L 232,720" fill="none" stroke="black"></path>
+                  <path d="M 296,288 L 296,304" fill="none" stroke="black"></path>
+                  <path d="M 328,64 L 328,96" fill="none" stroke="black"></path>
+                  <path d="M 328,128 L 328,144" fill="none" stroke="black"></path>
+                  <path d="M 328,176 L 328,192" fill="none" stroke="black"></path>
+                  <path d="M 328,224 L 328,264" fill="none" stroke="black"></path>
+                  <path d="M 344,64 L 344,96" fill="none" stroke="black"></path>
+                  <path d="M 344,128 L 344,144" fill="none" stroke="black"></path>
+                  <path d="M 344,176 L 344,192" fill="none" stroke="black"></path>
+                  <path d="M 344,224 L 344,264" fill="none" stroke="black"></path>
+                  <path d="M 360,320 L 360,352" fill="none" stroke="black"></path>
+                  <path d="M 360,384 L 360,400" fill="none" stroke="black"></path>
+                  <path d="M 360,432 L 360,464" fill="none" stroke="black"></path>
+                  <path d="M 360,512 L 360,528" fill="none" stroke="black"></path>
+                  <path d="M 360,560 L 360,592" fill="none" stroke="black"></path>
+                  <path d="M 360,624 L 360,640" fill="none" stroke="black"></path>
+                  <path d="M 392,64 L 392,96" fill="none" stroke="black"></path>
+                  <path d="M 392,128 L 392,144" fill="none" stroke="black"></path>
+                  <path d="M 392,176 L 392,192" fill="none" stroke="black"></path>
+                  <path d="M 392,224 L 392,264" fill="none" stroke="black"></path>
+                  <path d="M 424,288 L 424,304" fill="none" stroke="black"></path>
+                  <path d="M 72,64 L 392,64" fill="none" stroke="black"></path>
+                  <path d="M 56,272 L 152,272" fill="none" stroke="black"></path>
+                  <path d="M 312,272 L 408,272" fill="none" stroke="black"></path>
+                  <path d="M 168,304 L 296,304" fill="none" stroke="black"></path>
+                  <path d="M 56,320 L 152,320" fill="none" stroke="black"></path>
+                  <path d="M 312,320 L 408,320" fill="none" stroke="black"></path>
+                  <path d="M 40,400 L 192,400" fill="none" stroke="black"></path>
+                  <path d="M 296,400 L 448,400" fill="none" stroke="black"></path>
+                  <path d="M 40,432 L 192,432" fill="none" stroke="black"></path>
+                  <path d="M 296,432 L 448,432" fill="none" stroke="black"></path>
+                  <path d="M 80,528 L 128,528" fill="none" stroke="black"></path>
+                  <path d="M 336,528 L 384,528" fill="none" stroke="black"></path>
+                  <path d="M 80,560 L 128,560" fill="none" stroke="black"></path>
+                  <path d="M 336,560 L 384,560" fill="none" stroke="black"></path>
+                  <path d="M 104,640 L 360,640" fill="none" stroke="black"></path>
+                  <path d="M 208,672 L 256,672" fill="none" stroke="black"></path>
+                  <path d="M 208,704 L 256,704" fill="none" stroke="black"></path>
+                  <path d="M 56,272 C 47.16936,272 40,279.16936 40,288" fill="none" stroke="black"></path>
+                  <path d="M 152,272 C 160.83064,272 168,279.16936 168,288" fill="none" stroke="black"></path>
+                  <path d="M 312,272 C 303.16936,272 296,279.16936 296,288" fill="none" stroke="black"></path>
+                  <path d="M 408,272 C 416.83064,272 424,279.16936 424,288" fill="none" stroke="black"></path>
+                  <path d="M 56,320 C 47.16936,320 40,312.83064 40,304" fill="none" stroke="black"></path>
+                  <path d="M 152,320 C 160.83064,320 168,312.83064 168,304" fill="none" stroke="black"></path>
+                  <path d="M 312,320 C 303.16936,320 296,312.83064 296,304" fill="none" stroke="black"></path>
+                  <path d="M 408,320 C 416.83064,320 424,312.83064 424,304" fill="none" stroke="black"></path>
+                  <path d="M 40,400 C 31.16936,400 24,407.16936 24,416" fill="none" stroke="black"></path>
+                  <path d="M 192,400 C 200.83064,400 208,407.16936 208,416" fill="none" stroke="black"></path>
+                  <path d="M 296,400 C 287.16936,400 280,407.16936 280,416" fill="none" stroke="black"></path>
+                  <path d="M 448,400 C 456.83064,400 464,407.16936 464,416" fill="none" stroke="black"></path>
+                  <path d="M 40,432 C 31.16936,432 24,424.83064 24,416" fill="none" stroke="black"></path>
+                  <path d="M 192,432 C 200.83064,432 208,424.83064 208,416" fill="none" stroke="black"></path>
+                  <path d="M 296,432 C 287.16936,432 280,424.83064 280,416" fill="none" stroke="black"></path>
+                  <path d="M 448,432 C 456.83064,432 464,424.83064 464,416" fill="none" stroke="black"></path>
+                  <path d="M 80,528 C 71.16936,528 64,535.16936 64,544" fill="none" stroke="black"></path>
+                  <path d="M 128,528 C 136.83064,528 144,535.16936 144,544" fill="none" stroke="black"></path>
+                  <path d="M 336,528 C 327.16936,528 320,535.16936 320,544" fill="none" stroke="black"></path>
+                  <path d="M 384,528 C 392.83064,528 400,535.16936 400,544" fill="none" stroke="black"></path>
+                  <path d="M 80,560 C 71.16936,560 64,552.83064 64,544" fill="none" stroke="black"></path>
+                  <path d="M 128,560 C 136.83064,560 144,552.83064 144,544" fill="none" stroke="black"></path>
+                  <path d="M 336,560 C 327.16936,560 320,552.83064 320,544" fill="none" stroke="black"></path>
+                  <path d="M 384,560 C 392.83064,560 400,552.83064 400,544" fill="none" stroke="black"></path>
+                  <path d="M 208,672 C 199.16936,672 192,679.16936 192,688" fill="none" stroke="black"></path>
+                  <path d="M 256,672 C 264.83064,672 272,679.16936 272,688" fill="none" stroke="black"></path>
+                  <path d="M 208,704 C 199.16936,704 192,696.83064 192,688" fill="none" stroke="black"></path>
+                  <path d="M 256,704 C 264.83064,704 272,696.83064 272,688" fill="none" stroke="black"></path>
+                  <polygon class="arrowhead" points="400,264 388,258.4 388,269.6" fill="black" transform="rotate(90,392,264)"></polygon>
+                  <polygon class="arrowhead" points="400,192 388,186.4 388,197.6" fill="black" transform="rotate(90,392,192)"></polygon>
+                  <polygon class="arrowhead" points="368,592 356,586.4 356,597.6" fill="black" transform="rotate(90,360,592)"></polygon>
+                  <polygon class="arrowhead" points="368,464 356,458.4 356,469.6" fill="black" transform="rotate(90,360,464)"></polygon>
+                  <polygon class="arrowhead" points="368,352 356,346.4 356,357.6" fill="black" transform="rotate(90,360,352)"></polygon>
+                  <polygon class="arrowhead" points="352,264 340,258.4 340,269.6" fill="black" transform="rotate(90,344,264)"></polygon>
+                  <polygon class="arrowhead" points="352,144 340,138.4 340,149.6" fill="black" transform="rotate(90,344,144)"></polygon>
+                  <polygon class="arrowhead" points="336,264 324,258.4 324,269.6" fill="black" transform="rotate(90,328,264)"></polygon>
+                  <polygon class="arrowhead" points="336,96 324,90.4 324,101.6" fill="black" transform="rotate(90,328,96)"></polygon>
+                  <polygon class="arrowhead" points="240,720 228,714.4 228,725.6" fill="black" transform="rotate(90,232,720)"></polygon>
+                  <polygon class="arrowhead" points="144,264 132,258.4 132,269.6" fill="black" transform="rotate(90,136,264)"></polygon>
+                  <polygon class="arrowhead" points="144,192 132,186.4 132,197.6" fill="black" transform="rotate(90,136,192)"></polygon>
+                  <polygon class="arrowhead" points="112,592 100,586.4 100,597.6" fill="black" transform="rotate(90,104,592)"></polygon>
+                  <polygon class="arrowhead" points="112,464 100,458.4 100,469.6" fill="black" transform="rotate(90,104,464)"></polygon>
+                  <polygon class="arrowhead" points="112,352 100,346.4 100,357.6" fill="black" transform="rotate(90,104,352)"></polygon>
+                  <polygon class="arrowhead" points="96,264 84,258.4 84,269.6" fill="black" transform="rotate(90,88,264)"></polygon>
+                  <polygon class="arrowhead" points="96,144 84,138.4 84,149.6" fill="black" transform="rotate(90,88,144)"></polygon>
+                  <polygon class="arrowhead" points="80,264 68,258.4 68,269.6" fill="black" transform="rotate(90,72,264)"></polygon>
+                  <polygon class="arrowhead" points="80,96 68,90.4 68,101.6" fill="black" transform="rotate(90,72,96)"></polygon>
+                  <g class="text">
+                    <text x="116" y="36">from</text>
+                    <text x="184" y="36">aggregation</text>
+                    <text x="280" y="36">interaction</text>
+                    <text x="28" y="116">Leader</text>
+                    <text x="80" y="116">batch</text>
+                    <text x="132" y="116">bucket</text>
+                    <text x="168" y="116">1</text>
+                    <text x="292" y="116">Helper</text>
+                    <text x="344" y="116">batch</text>
+                    <text x="396" y="116">bucket</text>
+                    <text x="432" y="116">1</text>
+                    <text x="44" y="164">Leader</text>
+                    <text x="96" y="164">batch</text>
+                    <text x="148" y="164">bucket</text>
+                    <text x="184" y="164">2</text>
+                    <text x="308" y="164">Helper</text>
+                    <text x="360" y="164">batch</text>
+                    <text x="412" y="164">bucket</text>
+                    <text x="448" y="164">2</text>
+                    <text x="60" y="212">Leader</text>
+                    <text x="112" y="212">batch</text>
+                    <text x="164" y="212">bucket</text>
+                    <text x="200" y="212">m</text>
+                    <text x="340" y="212">Helper</text>
+                    <text x="392" y="212">batch</text>
+                    <text x="444" y="212">bucket</text>
+                    <text x="480" y="212">m</text>
+                    <text x="200" y="244">query</text>
+                    <text x="252" y="244">chosen</text>
+                    <text x="112" y="260">...</text>
+                    <text x="188" y="260">by</text>
+                    <text x="240" y="260">Collector</text>
+                    <text x="368" y="260">...</text>
+                    <text x="80" y="292">merge</text>
+                    <text x="132" y="292">Leader</text>
+                    <text x="328" y="292">merge</text>
+                    <text x="380" y="292">Helper</text>
+                    <text x="72" y="308">batch</text>
+                    <text x="128" y="308">buckets</text>
+                    <text x="328" y="308">batch</text>
+                    <text x="384" y="308">buckets</text>
+                    <text x="44" y="372">Leader</text>
+                    <text x="112" y="372">aggregate</text>
+                    <text x="176" y="372">share</text>
+                    <text x="300" y="372">Helper</text>
+                    <text x="368" y="372">aggregate</text>
+                    <text x="432" y="372">share</text>
+                    <text x="64" y="420">encrypt</text>
+                    <text x="108" y="420">to</text>
+                    <text x="160" y="420">Collector</text>
+                    <text x="320" y="420">encrypt</text>
+                    <text x="364" y="420">to</text>
+                    <text x="416" y="420">Collector</text>
+                    <text x="80" y="484">encrypted</text>
+                    <text x="148" y="484">Leader</text>
+                    <text x="336" y="484">encrypted</text>
+                    <text x="404" y="484">Helper</text>
+                    <text x="88" y="500">aggregate</text>
+                    <text x="152" y="500">share</text>
+                    <text x="336" y="500">aggregate</text>
+                    <text x="400" y="500">share</text>
+                    <text x="104" y="548">decrypt</text>
+                    <text x="360" y="548">decrypt</text>
+                    <text x="44" y="612">Leader</text>
+                    <text x="112" y="612">aggregate</text>
+                    <text x="176" y="612">share</text>
+                    <text x="300" y="612">Helper</text>
+                    <text x="368" y="612">aggregate</text>
+                    <text x="432" y="612">share</text>
+                    <text x="232" y="692">unshard</text>
+                    <text x="208" y="740">aggregate</text>
+                    <text x="276" y="740">result</text>
+                  </g>
+                </svg><a href="#section-2.4.3-4.1.1" class="pilcrow">¶</a>
+</div>
+</div>
+<figcaption><a href="#figure-6" class="selfRef">Figure 6</a>:
+<a href="#name-lifecycles-of-protocol-object" class="selfRef">Lifecycles of protocol objects in the collection interaction</a>
+            </figcaption></figure>
+</div>
 </section>
 </div>
 </section>
@@ -3896,14 +4134,14 @@ opaque AggregationJobID[16];
 </div>
 <p id="section-4.6-7">An aggregation job is an HTTP resource served by the Helper at the
 URL <code>{helper}/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}</code>. VDAF
-preparation is mapped onto an aggregation job as illustrated in <a href="#agg-flow" class="auto internal xref">Figure 3</a>.
+preparation is mapped onto an aggregation job as illustrated in <a href="#agg-flow" class="auto internal xref">Figure 7</a>.
 The first request from the Leader to the Helper includes the aggregation
 parameter, the Helper's report share for each report in the job, and for each
 report the initialization step for preparation. The Helper's response, along
 with each subsequent request and response, carries the remaining messages
 exchanged during preparation.<a href="#section-4.6-7" class="pilcrow">¶</a></p>
 <span id="name-overview-of-the-dap-aggrega"></span><div id="agg-flow">
-<figure id="figure-3">
+<figure id="figure-7">
           <div id="section-4.6-8.1">
             <div class="alignLeft art-svg artwork" id="section-4.6-8.1.1">
 <svg xmlns="http://www.w3.org/2000/svg" version="1.1" height="544" width="496" viewBox="0 0 496 544" class="diagram" text-anchor="middle" font-family="monospace" font-size="13px" stroke-linecap="round">
@@ -3961,7 +4199,7 @@ exchanged during preparation.<a href="#section-4.6-7" class="pilcrow">¶</a></p>
               </svg><a href="#section-4.6-8.1.1" class="pilcrow">¶</a>
 </div>
 </div>
-<figcaption><a href="#figure-3" class="selfRef">Figure 3</a>:
+<figcaption><a href="#figure-7" class="selfRef">Figure 7</a>:
 <a href="#name-overview-of-the-dap-aggrega" class="selfRef">Overview of the DAP aggregation interaction.</a>
           </figcaption></figure>
 </div>
@@ -4055,7 +4293,7 @@ parameter chosen by the Collector.<a href="#section-4.6.1-4" class="pilcrow">¶<
 <a href="#section-4.6.2.1" class="section-number selfRef">4.6.2.1. </a><a href="#name-leader-initialization" class="section-name selfRef">Leader Initialization</a>
             </h5>
 <span id="name-leader-state-transition-tri"></span><div id="leader-init-state">
-<figure id="figure-4">
+<figure id="figure-8">
               <div id="section-4.6.2.1-1.1">
                 <div class="alignLeft art-svg artwork" id="section-4.6.2.1-1.1.1">
 <svg xmlns="http://www.w3.org/2000/svg" version="1.1" height="160" width="432" viewBox="0 0 432 160" class="diagram" text-anchor="middle" font-family="monospace" font-size="13px" stroke-linecap="round">
@@ -4084,7 +4322,7 @@ parameter chosen by the Collector.<a href="#section-4.6.1-4" class="pilcrow">¶<
                   </svg><a href="#section-4.6.2.1-1.1.1" class="pilcrow">¶</a>
 </div>
 </div>
-<figcaption><a href="#figure-4" class="selfRef">Figure 4</a>:
+<figcaption><a href="#figure-8" class="selfRef">Figure 8</a>:
 <a href="#name-leader-state-transition-tri" class="selfRef">Leader state transition triggered by aggregation initialization. (*) indicates a terminal state.</a>
               </figcaption></figure>
 </div>
@@ -4288,7 +4526,7 @@ aggregation job but not others.<a href="#section-4.6.2.1-22" class="pilcrow">¶<
 <a href="#section-4.6.2.2" class="section-number selfRef">4.6.2.2. </a><a href="#name-helper-initialization" class="section-name selfRef">Helper Initialization</a>
             </h5>
 <span id="name-helper-state-transition-tri"></span><div id="helper-init-state">
-<figure id="figure-5">
+<figure id="figure-9">
               <div id="section-4.6.2.2-1.1">
                 <div class="alignLeft art-svg artwork" id="section-4.6.2.2-1.1.1">
 <svg xmlns="http://www.w3.org/2000/svg" version="1.1" height="112" width="400" viewBox="0 0 400 112" class="diagram" text-anchor="middle" font-family="monospace" font-size="13px" stroke-linecap="round">
@@ -4310,7 +4548,7 @@ aggregation job but not others.<a href="#section-4.6.2.1-22" class="pilcrow">¶<
                   </svg><a href="#section-4.6.2.2-1.1.1" class="pilcrow">¶</a>
 </div>
 </div>
-<figcaption><a href="#figure-5" class="selfRef">Figure 5</a>:
+<figcaption><a href="#figure-9" class="selfRef">Figure 9</a>:
 <a href="#name-helper-state-transition-tri" class="selfRef">Helper state transition triggered by aggregation initialization. (*) indicates a terminal state.</a>
               </figcaption></figure>
 </div>
@@ -4640,7 +4878,7 @@ round VDAFs like Prio3 will never reach this phase.<a href="#section-4.6.3-2" cl
 <a href="#section-4.6.3.1" class="section-number selfRef">4.6.3.1. </a><a href="#name-leader-continuation" class="section-name selfRef">Leader Continuation</a>
             </h5>
 <span id="name-leader-state-transition-trig"></span><div id="leader-cont-state">
-<figure id="figure-6">
+<figure id="figure-10">
               <div id="section-4.6.3.1-1.1">
                 <div class="alignLeft art-svg artwork" id="section-4.6.3.1-1.1.1">
 <svg xmlns="http://www.w3.org/2000/svg" version="1.1" height="240" width="344" viewBox="0 0 344 240" class="diagram" text-anchor="middle" font-family="monospace" font-size="13px" stroke-linecap="round">
@@ -4675,7 +4913,7 @@ round VDAFs like Prio3 will never reach this phase.<a href="#section-4.6.3-2" cl
                   </svg><a href="#section-4.6.3.1-1.1.1" class="pilcrow">¶</a>
 </div>
 </div>
-<figcaption><a href="#figure-6" class="selfRef">Figure 6</a>:
+<figcaption><a href="#figure-10" class="selfRef">Figure 10</a>:
 <a href="#name-leader-state-transition-trig" class="selfRef">Leader state transition triggered by aggregation continuation. (*) indicates a terminal state.</a>
               </figcaption></figure>
 </div>
@@ -4792,7 +5030,7 @@ recovery (see <a href="#aggregation-step-skew-recovery" class="auto internal xre
 <a href="#section-4.6.3.2" class="section-number selfRef">4.6.3.2. </a><a href="#name-helper-continuation" class="section-name selfRef">Helper Continuation</a>
             </h5>
 <span id="name-helper-state-transition-trig"></span><div id="helper-cont-state">
-<figure id="figure-7">
+<figure id="figure-11">
               <div id="section-4.6.3.2-1.1">
                 <div class="alignLeft art-svg artwork" id="section-4.6.3.2-1.1.1">
 <svg xmlns="http://www.w3.org/2000/svg" version="1.1" height="160" width="424" viewBox="0 0 424 160" class="diagram" text-anchor="middle" font-family="monospace" font-size="13px" stroke-linecap="round">
@@ -4819,7 +5057,7 @@ recovery (see <a href="#aggregation-step-skew-recovery" class="auto internal xre
                   </svg><a href="#section-4.6.3.2-1.1.1" class="pilcrow">¶</a>
 </div>
 </div>
-<figcaption><a href="#figure-7" class="selfRef">Figure 7</a>:
+<figcaption><a href="#figure-11" class="selfRef">Figure 11</a>:
 <a href="#name-helper-state-transition-trig" class="selfRef">Helper state transition triggered by aggregation continuation. (*) indicates a terminal state.</a>
               </figcaption></figure>
 </div>
@@ -6134,7 +6372,7 @@ shares from Helpers.<a href="#section-6.1.2-4.2.1" class="pilcrow">¶</a></p>
 </li>
             <li class="normal" id="section-6.1.2-4.3">
               <p id="section-6.1.2-4.3.1">Implement and store state for the form of inter- and intra-batch replay
-mitigation in <a href="#agg-flow" class="auto internal xref">Figure 3</a>. This requires storing the report IDs of all
+mitigation in <a href="#agg-flow" class="auto internal xref">Figure 7</a>. This requires storing the report IDs of all
 reports processed for a given task. Implementations may find it helpful to
 track additional information, like the timestamp, so that the storage used
 for anti-replay can be sharded efficiently.<a href="#section-6.1.2-4.3.1" class="pilcrow">¶</a></p>
