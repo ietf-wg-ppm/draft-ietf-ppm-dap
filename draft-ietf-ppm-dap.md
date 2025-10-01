@@ -5070,3 +5070,92 @@ Each of these requires registration of a codepoint or other value; see
   {{sec-considerations}}.
 
 --- back
+
+# HTTP Resources Reference
+
+This appendix enumerates all the HTTP resources this document describes, the
+HTTP methods that they support and media-types that may occur in requests and
+responses. It is organized by the protocol role that serves the resource.
+
+This section is intended to act as a reference and checklist for implementers.
+The HTTP methods and media-types described in this appendix are not
+authoritative. See the section that each resource refers to for detailed
+specifications.
+
+## Aggregator
+
+### HPKE Configurations
+
+Aggregator HPKE configurations to which Clients will encrypt report shares.
+
+Resource URL: `{aggregator}/hpke_config`
+
+HTTP methods: GET
+
+Request media-type `message` values: N/A
+
+Response media-type `message` values: `hpke-config-list`
+
+Reference: {{hpke-config}}
+
+## Leader
+
+### Reports
+
+Reports being uploaded to the Leader by the Client.
+
+Resource URL: `{leader}/tasks/{task-id}/reports`
+
+HTTP methods: POST
+
+Request media-type `message` values: `upload-req`
+
+Response media-type `message` values: `upload-errors`
+
+Reference: {{upload-request}}
+
+### Collection Jobs
+
+A Collector's request to collect reports identified by some query.
+
+Resource URL: `{leader}/tasks/{task-id}/collection_jobs/{collection-job-id}`
+
+HTTP methods: PUT, GET
+
+Request media-type `message` values: `collection-job-req`
+
+Response media-type `message` values: `collection-job-resp`
+
+Reference: {{collect-flow}}
+
+## Helper
+
+### Aggregation Jobs
+
+An aggregation job created by the Leader.
+
+Resource URL: `/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}`
+
+HTTP methods: PUT, POST, GET
+
+Request media-type `message` values: `aggregation-job-init-req`,
+`aggregation-job-continue-req`
+
+Response media-type `message` values: `aggregation-job-resp`
+
+Reference: {{aggregate-flow}}
+
+### Aggregate Shares
+
+The Helper's share of an aggregation over the reports identified by the
+Collector's query.
+
+Resource URL: `{helper}/tasks/{task-id}/aggregate_shares/{aggregate-share-id}`
+
+HTTP methods: PUT, GET
+
+Request media-type `message` values: `aggregate-share-req`
+
+Response media-type `message` values: `aggregate-share`
+
+Reference: {{collect-aggregate}}
