@@ -1290,7 +1290,7 @@ without revealing any individual contributor's data.<a href="#section-abstract-1
                     <p id="section-toc.1-1.4.2.6.2.3.1"><a href="#section-4.6.3" class="auto internal xref">4.6.3</a>.  <a href="#name-aggregate-continuation" class="internal xref">Aggregate Continuation</a></p>
 </li>
                   <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.6.2.4">
-                    <p id="section-toc.1-1.4.2.6.2.4.1"><a href="#section-4.6.4" class="auto internal xref">4.6.4</a>.  <a href="#name-aggregation-job-deletion" class="internal xref">Aggregation Job Deletion</a></p>
+                    <p id="section-toc.1-1.4.2.6.2.4.1"><a href="#section-4.6.4" class="auto internal xref">4.6.4</a>.  <a href="#name-aggregation-job-abandonment" class="internal xref">Aggregation Job Abandonment and Deletion</a></p>
 </li>
                 </ul>
 </li>
@@ -3294,39 +3294,41 @@ conveyed from the Leader to the Helper when initializing aggregation jobs
         <h3 id="name-resources">
 <a href="#section-4.3" class="section-number selfRef">4.3. </a><a href="#name-resources" class="section-name selfRef">Resources</a>
         </h3>
-<p id="section-4.3-1">DAP is defined in terms of HTTP resources, such as reports (<a href="#upload-flow" class="auto internal xref">Section 4.5</a>),
-aggregation jobs (<a href="#aggregate-flow" class="auto internal xref">Section 4.6</a>), and collection jobs (<a href="#collect-flow" class="auto internal xref">Section 4.7</a>).
-Each resource has a URL. Resource URLs are specified as string literals
+<p id="section-4.3-1">DAP is defined in terms of HTTP resources. These are HPKE configurations
+(<a href="#hpke-config" class="auto internal xref">Section 4.5.1</a>), reports (<a href="#upload-flow" class="auto internal xref">Section 4.5</a>), aggregation jobs
+(<a href="#aggregate-flow" class="auto internal xref">Section 4.6</a>), collection jobs (<a href="#collect-flow" class="auto internal xref">Section 4.7</a>), and aggregate shares
+(<a href="#collect-aggregate" class="auto internal xref">Section 4.7.3</a>).<a href="#section-4.3-1" class="pilcrow">¶</a></p>
+<p id="section-4.3-2">Each resource has a URL. Resource URLs are specified as string literals
 containing variables. Variables are expanded into strings according to the
-following rules:<a href="#section-4.3-1" class="pilcrow">¶</a></p>
+following rules:<a href="#section-4.3-2" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-4.3-2.1">
-            <p id="section-4.3-2.1.1">Variables <code>{leader}</code> and <code>{helper}</code> are replaced with the base API URL of the
-Leader and Helper respectively.<a href="#section-4.3-2.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="section-4.3-3.1">
+            <p id="section-4.3-3.1.1">Variables <code>{leader}</code> and <code>{helper}</code> are replaced with the base API URL of the
+Leader and Helper respectively.<a href="#section-4.3-3.1.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-4.3-2.2">
-            <p id="section-4.3-2.2.1">Variables <code>{task-id}</code>, <code>{aggregation-job-id}</code>, <code>{aggregate-share-id}</code>, and
+          <li class="normal" id="section-4.3-3.2">
+            <p id="section-4.3-3.2.1">Variables <code>{task-id}</code>, <code>{aggregation-job-id}</code>, <code>{aggregate-share-id}</code>, and
 <code>{collection-job-id}</code> are replaced with the task ID (<a href="#task-configuration" class="auto internal xref">Section 4.2</a>),
 aggregation job ID (<a href="#agg-init" class="auto internal xref">Section 4.6.2</a>), aggregate share ID (<a href="#collect-aggregate" class="auto internal xref">Section 4.7.3</a>)
 and collection job ID (<a href="#collect-init" class="auto internal xref">Section 4.7.1</a>) respectively. The value <span class="bcp14">MUST</span> be
 encoded in its URL-safe, unpadded Base 64 representation as specified in
-Sections <a href="https://rfc-editor.org/rfc/rfc4648#section-5" class="relref">5</a> and <a href="https://rfc-editor.org/rfc/rfc4648#section-3.2" class="relref">3.2</a> of <span>[<a href="#RFC4648" class="cite xref">RFC4648</a>]</span>.<a href="#section-4.3-2.2.1" class="pilcrow">¶</a></p>
+Sections <a href="https://rfc-editor.org/rfc/rfc4648#section-5" class="relref">5</a> and <a href="https://rfc-editor.org/rfc/rfc4648#section-3.2" class="relref">3.2</a> of <span>[<a href="#RFC4648" class="cite xref">RFC4648</a>]</span>.<a href="#section-4.3-3.2.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
-<p id="section-4.3-3">For example, given a helper URL "https://example.com/api/dap", task ID "f0 16 34
+<p id="section-4.3-4">For example, given a helper URL "https://example.com/api/dap", task ID "f0 16 34
 47 36 4c cf 1b c0 e3 af fc ca 68 73 c9 c3 81 f6 4a cd f9 02 06 62 f8 3f 46 c0 72
 19 e7" and an aggregation job ID "95 ce da 51 e1 a9 75 23 68 b0 d9 61 f9 46 61
 28" (32 and 16 byte octet strings, represented in hexadecimal), resource URL
 <code>{helper}/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}</code> would be
 expanded into
-<code>https://example.com/api/dap/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA</code>.<a href="#section-4.3-3" class="pilcrow">¶</a></p>
-<p id="section-4.3-4">Protocol participants act on resources using HTTP requests, which follow the
+<code>https://example.com/api/dap/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA</code>.<a href="#section-4.3-4" class="pilcrow">¶</a></p>
+<p id="section-4.3-5">Protocol participants act on resources using HTTP requests, which follow the
 semantics laid out in <span>[<a href="#RFC9110" class="cite xref">RFC9110</a>]</span>, in particular with regard to safety and
 idempotence of HTTP methods (Sections <a href="https://rfc-editor.org/rfc/rfc9110#section-9.2.1" class="relref">9.2.1</a> and <a href="https://rfc-editor.org/rfc/rfc9110#section-9.2.2" class="relref">9.2.2</a> of <span>[<a href="#RFC9110" class="cite xref">RFC9110</a>]</span>,
-respectively).<a href="#section-4.3-4" class="pilcrow">¶</a></p>
-<p id="section-4.3-5">Many of the protocol's interactions may be handled asynchronously so that
-servers can appropriately allocate resources for long-running transactions.<a href="#section-4.3-5" class="pilcrow">¶</a></p>
-<p id="section-4.3-6">In DAP, an HTTP server indicates that it is deferring the handling of a request
+respectively).<a href="#section-4.3-5" class="pilcrow">¶</a></p>
+<p id="section-4.3-6">Many of the protocol's interactions may be handled asynchronously so that
+servers can appropriately allocate resources for long-running transactions.<a href="#section-4.3-6" class="pilcrow">¶</a></p>
+<p id="section-4.3-7">In DAP, an HTTP server indicates that it is deferring the handling of a request
 by immediately sending an empty response body with a successful status code
 (<span>[<a href="#RFC9110" class="cite xref">RFC9110</a>], <a href="https://rfc-editor.org/rfc/rfc9110#section-15.3" class="relref">Section 15.3</a></span>). The response <span class="bcp14">SHOULD</span> include a Retry-After field
 (<span>[<a href="#RFC9110" class="cite xref">RFC9110</a>], <a href="https://rfc-editor.org/rfc/rfc9110#section-10.2.3" class="relref">Section 10.2.3</a></span>) to suggest a polling interval to the HTTP client.
@@ -3334,17 +3336,17 @@ The HTTP client then polls the state of the resource by sending GET requests to
 the resource URL. In some interactions, the HTTP server will include a Location
 header field (<span>[<a href="#RFC9110" class="cite xref">RFC9110</a>], <a href="https://rfc-editor.org/rfc/rfc9110#section-10.2.2" class="relref">Section 10.2.2</a></span>) that the HTTP client <span class="bcp14">MUST</span> resolve
 against the HTTP server's base API URL to obtain the resource URL. Otherwise the
-resource URL is the URL to which the HTTP client initially sent its request.<a href="#section-4.3-6" class="pilcrow">¶</a></p>
-<p id="section-4.3-7">The HTTP client <span class="bcp14">SHOULD</span> use each response's Retry-After header field to decide
+resource URL is the URL to which the HTTP client initially sent its request.<a href="#section-4.3-7" class="pilcrow">¶</a></p>
+<p id="section-4.3-8">The HTTP client <span class="bcp14">SHOULD</span> use each response's Retry-After header field to decide
 when to try again. The HTTP server responds the same way as it did to the
 initial request until either the resource is ready, from which point it responds
 with the resource's representation (<span>[<a href="#RFC9110" class="cite xref">RFC9110</a>], <a href="https://rfc-editor.org/rfc/rfc9110#section-3.2" class="relref">Section 3.2</a></span>), or handling the
 request fails, in which case it <span class="bcp14">MUST</span> abort with the error that caused the
-failure.<a href="#section-4.3-7" class="pilcrow">¶</a></p>
-<p id="section-4.3-8">The HTTP server may instead handle the request immediately. It waits to respond
+failure.<a href="#section-4.3-8" class="pilcrow">¶</a></p>
+<p id="section-4.3-9">The HTTP server may instead handle the request immediately. It waits to respond
 to the HTTP client's request until the resource is ready, in which case it
 responds with the resource's representation, or handling the request fails, in
-which case it <span class="bcp14">MUST</span> abort with the error that caused the failure.<a href="#section-4.3-8" class="pilcrow">¶</a></p>
+which case it <span class="bcp14">MUST</span> abort with the error that caused the failure.<a href="#section-4.3-9" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="agg-param-validation">
@@ -3886,7 +3888,7 @@ some VDAFs, verification may only be achieved implicitly as a result of the
 refinement process. We instead think of these as properties of the output shares
 themselves: if preparation succeeds, then the resulting output shares are
 guaranteed to combine into a valid, refined measurement.<a href="#section-4.6-4" class="pilcrow">¶</a></p>
-<p id="section-4.6-5">Aggregation jobs are identified by 16-byte job ID:<a href="#section-4.6-5" class="pilcrow">¶</a></p>
+<p id="section-4.6-5">Aggregation jobs are identified by 16-byte job ID, chosen by the Leader:<a href="#section-4.6-5" class="pilcrow">¶</a></p>
 <div class="lang-tls-presentation sourcecode" id="section-4.6-6">
 <pre>
 opaque AggregationJobID[16];
@@ -3940,19 +3942,19 @@ exchanged during preparation.<a href="#section-4.6-7" class="pilcrow">¶</a></p>
                   <text x="452" y="100">Helper</text>
                   <text x="132" y="132">AggregationJobInitReq:</text>
                   <text x="100" y="148">agg_param,</text>
-                  <text x="184" y="148">prep_init</text>
+                  <text x="196" y="148">prepare_init</text>
                   <text x="376" y="180">AggregationJobResp:</text>
-                  <text x="360" y="196">prep_resp(continue)</text>
+                  <text x="348" y="196">prepare_resp(continue)</text>
                   <text x="148" y="228">AggregationJobContinueReq:</text>
-                  <text x="112" y="244">prep_continue</text>
+                  <text x="124" y="244">prepare_continue</text>
                   <text x="376" y="276">AggregationJobResp:</text>
-                  <text x="360" y="292">prep_resp(continue)</text>
+                  <text x="348" y="292">prepare_resp(continue)</text>
                   <text x="32" y="356">...</text>
                   <text x="464" y="356">...</text>
                   <text x="148" y="404">AggregationJobContinueReq:</text>
-                  <text x="112" y="420">prep_continue</text>
+                  <text x="124" y="420">prepare_continue</text>
                   <text x="376" y="452">AggregationJobResp:</text>
-                  <text x="332" y="468">prep_resp(continue|finish)</text>
+                  <text x="320" y="468">prepare_resp(continue|finish)</text>
                   <text x="84" y="532">leader_out_share</text>
                   <text x="412" y="532">helper_out_share</text>
                 </g>
@@ -4212,7 +4214,7 @@ The Leader handles the response(s) as described in <a href="#http-resources" cla
 an <code>AggregationJobResp</code>.<a href="#section-4.6.2.1-18" class="pilcrow">¶</a></p>
 <p id="section-4.6.2.1-19">The <code>AggregationJobResp.prepare_resps</code> field must include exactly the same
 report IDs in the same order as the Leader's <code>AggregationJobInitReq</code>. Otherwise,
-the Leader <span class="bcp14">MUST</span> abort the aggregation job.<a href="#section-4.6.2.1-19" class="pilcrow">¶</a></p>
+the Leader <span class="bcp14">MUST</span> abandon the aggregation job.<a href="#section-4.6.2.1-19" class="pilcrow">¶</a></p>
 <p id="section-4.6.2.1-20">The Leader proceeds as follows with each report:<a href="#section-4.6.2.1-20" class="pilcrow">¶</a></p>
 <ol start="1" type="1" class="normal type-1" id="section-4.6.2.1-21">
 <li id="section-4.6.2.1-21.1">
@@ -4272,7 +4274,7 @@ subsequent aggregation job.<a href="#section-4.6.2.1-21.2.1" class="pilcrow">¶<
 </li>
               <li id="section-4.6.2.1-21.3">
                 <p id="section-4.6.2.1-21.3.1">Otherwise the inbound message type is invalid for the Leader's current
-state, in which case the Leader <span class="bcp14">MUST</span> abort the aggregation job.<a href="#section-4.6.2.1-21.3.1" class="pilcrow">¶</a></p>
+state, in which case the Leader <span class="bcp14">MUST</span> abandon the aggregation job.<a href="#section-4.6.2.1-21.3.1" class="pilcrow">¶</a></p>
 </li>
             </ol>
 <p id="section-4.6.2.1-22">Since VDAF preparation completes in a constant number of rounds, it will never
@@ -4718,7 +4720,7 @@ either Aggregator.<a href="#section-4.6.3.1-8" class="pilcrow">¶</a></p>
 an <code>AggregationJobResp</code>.<a href="#section-4.6.3.1-9" class="pilcrow">¶</a></p>
 <p id="section-4.6.3.1-10">The response's <code>prepare_resps</code> <span class="bcp14">MUST</span> include exactly the same report IDs in the
 same order as the Leader's <code>AggregationJobContinueReq</code>. Otherwise, the Leader
-<span class="bcp14">MUST</span> abort the aggregation job.<a href="#section-4.6.3.1-10" class="pilcrow">¶</a></p>
+<span class="bcp14">MUST</span> abandon the aggregation job.<a href="#section-4.6.3.1-10" class="pilcrow">¶</a></p>
 <p id="section-4.6.3.1-11">Otherwise, the Leader proceeds as follows with each report:<a href="#section-4.6.3.1-11" class="pilcrow">¶</a></p>
 <ol start="1" type="1" class="normal type-1" id="section-4.6.3.1-12">
 <li id="section-4.6.3.1-12.1">
@@ -4775,7 +4777,7 @@ subsequent aggregation job.<a href="#section-4.6.3.1-12.3.1" class="pilcrow">¶<
 </li>
               <li id="section-4.6.3.1-12.4">
                 <p id="section-4.6.3.1-12.4.1">Otherwise the inbound message is incompatible with the Leader's current
-state, in which case the Leader <span class="bcp14">MUST</span> abort the aggregation job.<a href="#section-4.6.3.1-12.4.1" class="pilcrow">¶</a></p>
+state, in which case the Leader <span class="bcp14">MUST</span> abandon the aggregation job.<a href="#section-4.6.3.1-12.4.1" class="pilcrow">¶</a></p>
 </li>
             </ol>
 <p id="section-4.6.3.1-13">If the Leader fails to process the response from the Helper, for example because
@@ -5099,15 +5101,21 @@ encoded(struct { prepare_resps } AggregationJobResp)
 </div>
 </section>
 </div>
-<div id="aggregation-job-deletion">
+<div id="aggregation-job-abandonment-and-deletion">
 <section id="section-4.6.4">
-          <h4 id="name-aggregation-job-deletion">
-<a href="#section-4.6.4" class="section-number selfRef">4.6.4. </a><a href="#name-aggregation-job-deletion" class="section-name selfRef">Aggregation Job Deletion</a>
+          <h4 id="name-aggregation-job-abandonment">
+<a href="#section-4.6.4" class="section-number selfRef">4.6.4. </a><a href="#name-aggregation-job-abandonment" class="section-name selfRef">Aggregation Job Abandonment and Deletion</a>
           </h4>
-<p id="section-4.6.4-1">If for whatever reason, the Leader must abandon an aggregation job, it <span class="bcp14">SHOULD</span>
-let the Helper know it can clean up its state by sending a DELETE request to the
-job. Deletion of an aggregation job <span class="bcp14">MUST NOT</span> delete information needed for
-replay or double collection checks (<a href="#batch-buckets" class="auto internal xref">Section 4.6.3.3</a>).<a href="#section-4.6.4-1" class="pilcrow">¶</a></p>
+<p id="section-4.6.4-1">This document describes various error cases where a Leader is required to
+abandon an aggregation job. This means the Leader should discontinue further
+processing of the job and the reports included in it. Reports included in an
+abandoned aggregation job <span class="bcp14">MUST NOT</span> be considered collected for purposes of
+replay and double collection checks (<a href="#batch-buckets" class="auto internal xref">Section 4.6.3.3</a>) and <span class="bcp14">MAY</span> be
+included in future aggregation jobs.<a href="#section-4.6.4-1" class="pilcrow">¶</a></p>
+<p id="section-4.6.4-2">If the Leader must abandon an aggregation job, it <span class="bcp14">SHOULD</span> let the Helper know it
+can clean up its state by sending a DELETE request to the job. Deletion of an
+aggregation job <span class="bcp14">MUST NOT</span> delete information needed for replay or double
+collection checks.<a href="#section-4.6.4-2" class="pilcrow">¶</a></p>
 <div id="example-4">
 <section id="section-4.6.4.1">
             <h5 id="name-example-5">
@@ -5150,7 +5158,7 @@ specified in <a href="#collect-aggregate" class="auto internal xref">Section 4.7
         </ol>
 <p id="section-4.7-3">Once complete, the Collector computes the final aggregate result as specified in
 <a href="#collect-finalization" class="auto internal xref">Section 4.7.5</a>.<a href="#section-4.7-3" class="pilcrow">¶</a></p>
-<p id="section-4.7-4">Collection jobs are identified by a 16-byte job ID:<a href="#section-4.7-4" class="pilcrow">¶</a></p>
+<p id="section-4.7-4">Collection jobs are identified by a 16-byte job ID, chosen by the Collector:<a href="#section-4.7-4" class="pilcrow">¶</a></p>
 <div class="lang-tls-presentation sourcecode" id="section-4.7-5">
 <pre>
 opaque CollectionJobID[16];

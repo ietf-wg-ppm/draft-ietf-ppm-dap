@@ -113,7 +113,7 @@ Table of Contents
        4.6.1.  Eager Aggregation
        4.6.2.  Aggregate Initialization
        4.6.3.  Aggregate Continuation
-       4.6.4.  Aggregation Job Deletion
+       4.6.4.  Aggregation Job Abandonment and Deletion
      4.7.  Collecting Results
        4.7.1.  Collection Job Initialization
        4.7.2.  Collection Job Deletion
@@ -1312,11 +1312,14 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
 4.3.  Resources
 
-   DAP is defined in terms of HTTP resources, such as reports
-   (Section 4.5), aggregation jobs (Section 4.6), and collection jobs
-   (Section 4.7).  Each resource has a URL.  Resource URLs are specified
-   as string literals containing variables.  Variables are expanded into
-   strings according to the following rules:
+   DAP is defined in terms of HTTP resources.  These are HPKE
+   configurations (Section 4.5.1), reports (Section 4.5), aggregation
+   jobs (Section 4.6), collection jobs (Section 4.7), and aggregate
+   shares (Section 4.7.3).
+
+   Each resource has a URL.  Resource URLs are specified as string
+   literals containing variables.  Variables are expanded into strings
+   according to the following rules:
 
    *  Variables {leader} and {helper} are replaced with the base API URL
       of the Leader and Helper respectively.
@@ -1858,7 +1861,8 @@ aggregation job 1                   aggregation job 2          aggregation job j
    preparation succeeds, then the resulting output shares are guaranteed
    to combine into a valid, refined measurement.
 
-   Aggregation jobs are identified by 16-byte job ID:
+   Aggregation jobs are identified by 16-byte job ID, chosen by the
+   Leader:
 
    opaque AggregationJobID[16];
 
@@ -1879,16 +1883,16 @@ aggregation job 1                   aggregation job 2          aggregation job j
    | Leader |                                         | Helper |
    '--+-----'                                         '-----+--'
       | AggregationJobInitReq:                              |
-      |   agg_param, prep_init                              |
+      |   agg_param, prepare_init                           |
       |---------------------------------------------------->|
       |                                 AggregationJobResp: |
-      |                               prep_resp(continue)   |
+      |                            prepare_resp(continue)   |
       |<----------------------------------------------------|
       | AggregationJobContinueReq:                          |
-      |   prep_continue                                     |
+      |   prepare_continue                                  |
       |---------------------------------------------------->|
       |                                 AggregationJobResp: |
-      |                               prep_resp(continue)   |
+      |                            prepare_resp(continue)   |
       |<----------------------------------------------------|
       |                                                     |
 
@@ -1896,10 +1900,10 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
       |                                                     |
       | AggregationJobContinueReq:                          |
-      |   prep_continue                                     |
+      |   prepare_continue                                  |
       |---------------------------------------------------->|
       |                                 AggregationJobResp: |
-      |                        prep_resp(continue|finish)   |
+      |                     prepare_resp(continue|finish)   |
       |<----------------------------------------------------|
       |                                                     |
       v                                                     v
@@ -2125,7 +2129,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    The AggregationJobResp.prepare_resps field must include exactly the
    same report IDs in the same order as the Leader's
-   AggregationJobInitReq.  Otherwise, the Leader MUST abort the
+   AggregationJobInitReq.  Otherwise, the Leader MUST abandon the
    aggregation job.
 
    The Leader proceeds as follows with each report:
@@ -2178,7 +2182,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
        job.
 
    3.  Otherwise the inbound message type is invalid for the Leader's
-       current state, in which case the Leader MUST abort the
+       current state, in which case the Leader MUST abandon the
        aggregation job.
 
    Since VDAF preparation completes in a constant number of rounds, it
@@ -2543,7 +2547,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    The response's prepare_resps MUST include exactly the same report IDs
    in the same order as the Leader's AggregationJobContinueReq.
-   Otherwise, the Leader MUST abort the aggregation job.
+   Otherwise, the Leader MUST abandon the aggregation job.
 
    Otherwise, the Leader proceeds as follows with each report:
 
@@ -2592,7 +2596,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
        aggregation job.
 
    4.  Otherwise the inbound message is incompatible with the Leader's
-       current state, in which case the Leader MUST abort the
+       current state, in which case the Leader MUST abandon the
        aggregation job.
 
    If the Leader fails to process the response from the Helper, for
@@ -2879,13 +2883,20 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    encoded(struct { prepare_resps } AggregationJobResp)
 
-4.6.4.  Aggregation Job Deletion
+4.6.4.  Aggregation Job Abandonment and Deletion
 
-   If for whatever reason, the Leader must abandon an aggregation job,
-   it SHOULD let the Helper know it can clean up its state by sending a
-   DELETE request to the job.  Deletion of an aggregation job MUST NOT
-   delete information needed for replay or double collection checks
-   (Section 4.6.3.3).
+   This document describes various error cases where a Leader is
+   required to abandon an aggregation job.  This means the Leader should
+   discontinue further processing of the job and the reports included in
+   it.  Reports included in an abandoned aggregation job MUST NOT be
+   considered collected for purposes of replay and double collection
+   checks (Section 4.6.3.3) and MAY be included in future aggregation
+   jobs.
+
+   If the Leader must abandon an aggregation job, it SHOULD let the
+   Helper know it can clean up its state by sending a DELETE request to
+   the job.  Deletion of an aggregation job MUST NOT delete information
+   needed for replay or double collection checks.
 
 4.6.4.1.  Example
 
@@ -2913,7 +2924,8 @@ aggregation job 1                   aggregation job 2          aggregation job j
    Once complete, the Collector computes the final aggregate result as
    specified in Section 4.7.5.
 
-   Collection jobs are identified by a 16-byte job ID:
+   Collection jobs are identified by a 16-byte job ID, chosen by the
+   Collector:
 
    opaque CollectionJobID[16];
 
