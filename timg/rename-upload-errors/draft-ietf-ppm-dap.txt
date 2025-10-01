@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 2 April 2026                                         Cloudflare
+Expires: 4 April 2026                                         Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                       29 September 2025
+                                                          1 October 2025
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -64,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 2 April 2026.
+   This Internet-Draft will expire on 4 April 2026.
 
 Copyright Notice
 
@@ -1608,7 +1608,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    error unrecognizedTask.
 
    If all the reports in the request are accepted, then the Leader sends
-   a response with no body.
+   a response with an empty body.
 
    If some or all of the reports fail to upload for one of the reasons
    described in the remainder of this section, the Leader responds with
