@@ -1404,10 +1404,10 @@ Clients retrieve the HPKE configuration from each Aggregator by sending a GET to
 `{aggregator}/hpke_config`.
 
 An Aggregator responds with an `HpkeConfigList`, with media type
-"application/dap-hpke-config-list". The `HpkeConfigList` contains one or more
-`HpkeConfig`s in decreasing order of preference. This allows an Aggregator to
-support multiple HPKE configurations and multiple sets of algorithms
-simultaneously.
+"application/ppm-dap;message=hpke-config-list". The `HpkeConfigList` contains
+one or more `HpkeConfig`s in decreasing order of preference. This allows an
+Aggregator to support multiple HPKE configurations and multiple sets of
+algorithms simultaneously.
 
 ~~~ tls-presentation
 HpkeConfig HpkeConfigList<10..2^16-1>;
@@ -1455,7 +1455,7 @@ GET /leader/hpke_config
 Host: example.com
 
 HTTP/1.1 200
-Content-Type: application/dap-hpke-config-list
+Content-Type: application/ppm-dap;message=hpke-config-list
 Cache-Control: max-age=86400
 
 encoded([
@@ -1480,8 +1480,8 @@ encoded([
 
 Reports are uploaded using the reports resource, served by the Leader at
 `{leader}/tasks/{task-id}/reports`. An upload is represented as an
-`UploadRequest`, with media type "application/dap-upload-req", structured as
-follows:
+`UploadRequest`, with media type "application/ppm-dap;message=upload-req",
+structured as follows:
 
 ~~~ tls-presentation
 struct {
@@ -1620,8 +1620,8 @@ with an empty body.
 
 If some or all of the reports fail to upload for one of the reasons described in
 the remainder of this section, the Leader responds with a body consisting of an
-`UploadErrors` with the media type `application/dap-upload-errors`. The
-structure of the response is as follows:
+`UploadErrors` with the media type `application/ppm-dap;message=upload-errors`.
+The structure of the response is as follows:
 
 ~~~ tls-presentation
 struct {
@@ -1702,7 +1702,7 @@ Successful upload
 ~~~ http
 POST /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/reports
 Host: example.com
-Content-Type: application/dap-upload-req
+Content-Type: application/ppm-dap;message=upload-req
 Content-Length: 100
 
 encoded(struct {
@@ -1736,7 +1736,7 @@ Failed upload of 1/2 reports submitted in one bulk upload
 ~~~ http
 POST /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/reports
 Host: example.com
-Content-Type: application/dap-upload-req
+Content-Type: application/ppm-dap;message=upload-req
 Content-Length: 200
 
 encoded(struct {
@@ -1781,7 +1781,7 @@ encoded(struct {
 } UploadRequest)
 
 HTTP/1.1 200
-Content-Type: application/dap-upload-resp
+Content-Type: application/ppm-dap;message=upload-errors
 Content-Length: 20
 
 encoded(struct {
@@ -2104,9 +2104,10 @@ This message consists of:
   of the HTTP message consists of `prepare_inits`.
 
 The Leader sends the `AggregationJobInitReq` in the body of a PUT request to the
-aggregation job with a media type of "application/dap-aggregation-job-init-req".
-The Leader handles the response(s) as described in {{http-resources}} to obtain
-an `AggregationJobResp`.
+aggregation job with a media type of
+"application/ppm-dap;message=aggregation-job-init-req". The Leader handles the
+response(s) as described in {{http-resources}} to obtain an
+`AggregationJobResp`.
 
 The `AggregationJobResp.prepare_resps` field must include exactly the same
 report IDs in the same order as the Leader's `AggregationJobInitReq`. Otherwise,
@@ -2300,7 +2301,7 @@ Section 6.4}}).
 `prepare_resps` is the outbound `PrepareResp` messages for each report computed
 in the previous step. The order MUST match
 `AggregationJobInitReq.prepare_inits`. The media type for `AggregationJobResp`
-is "application/dap-aggregation-job-resp".
+is "application/ppm-dap;message=aggregation-job-resp".
 
 The Helper may receive multiple copies of a given initialization request. The
 Helper MUST verify that subsequent requests have the same
@@ -2384,7 +2385,7 @@ The Helper handles the aggregation job initialization synchronously:
 ~~~ http
 PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
-Content-Type: application/dap-aggregation-job-init-req
+Content-Type: application/ppm-dap;message=aggregation-job-init-req
 Content-Length: 100
 Authorization: Bearer auth-token
 
@@ -2400,7 +2401,7 @@ encoded(struct {
 } AggregationJobInitReq)
 
 HTTP/1.1 200
-Content-Type: application/dap-aggregation-job-resp
+Content-Type: application/ppm-dap;message=aggregation-job-resp
 Content-Length: 100
 
 encoded(struct { prepare_resps } AggregationJobResp)
@@ -2411,7 +2412,7 @@ Or asynchronously:
 ~~~ http
 PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
-Content-Type: application/dap-aggregation-job-init-req
+Content-Type: application/ppm-dap;message=aggregation-job-init-req
 Content-Length: 100
 Authorization: Bearer auth-token
 
@@ -2441,7 +2442,7 @@ Host: example.com
 Authorization: Bearer auth-token
 
 HTTP/1.1 200
-Content-Type: application/dap-aggregation-job-resp
+Content-Type: application/ppm-dap;message=aggregation-job-resp
 Content-Length: 100
 
 encoded(struct { prepare_resps } AggregationJobResp)
@@ -2498,7 +2499,8 @@ where `report_id` is the report ID associated with `state`, and
 `payload` is set to `state.outbound`.
 
 Next, the Leader sends a POST to the aggregation job with media type
-"application/dap-aggregation-job-continue-req" and body structured as:
+"application/ppm-dap;message=aggregation-job-continue-req" and body structured
+as:
 
 ~~~ tls-presentation
 struct {
@@ -2784,7 +2786,7 @@ The Helper handles the aggregation job continuation synchronously:
 ~~~ http
 POST /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
-Content-Type: application/dap-aggregation-job-continue-req
+Content-Type: application/ppm-dap;message=aggregation-job-continue-req
 Content-Length: 100
 Authorization: Bearer auth-token
 
@@ -2794,7 +2796,7 @@ encoded(struct {
 } AggregationJobContinueReq)
 
 HTTP/1.1 200
-Content-Type: application/dap-aggregation-job-resp
+Content-Type: application/ppm-dap;message=aggregation-job-resp
 Content-Length: 100
 
 encoded(struct { prepare_resps } AggregationJobResp)
@@ -2805,7 +2807,7 @@ Or asynchronously:
 ~~~ http
 POST /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
-Content-Type: application/dap-aggregation-job-continue-req
+Content-Type: application/ppm-dap;message=aggregation-job-continue-req
 Content-Length: 100
 Authorization: Bearer auth-token
 
@@ -2831,7 +2833,7 @@ Host: example.com
 Authorization: Bearer auth-token
 
 HTTP/1.1 200
-Content-Type: application/dap-aggregation-job-resp
+Content-Type: application/ppm-dap;message=aggregation-job-resp
 Content-Length: 100
 
 encoded(struct { prepare_resps } AggregationJobResp)
@@ -2892,8 +2894,8 @@ First, the Collector chooses a collection job ID, which MUST be unique within
 the scope of the corresponding DAP task.
 
 To initiate the collection job, the Collector issues a PUT request to the
-collection job with media type "application/dap-collection-job-req", and a body
-structured as follows:
+collection job with media type "application/ppm-dap;message=collection-job-req",
+and a body structured as follows:
 
 ~~~ tls-presentation
 struct {
@@ -2999,8 +3001,9 @@ struct {
 } CollectionJobResp;
 ~~~
 
-A `CollectionJobResp`'s media type is "application/dap-collection-job-resp". The
-structure includes the following:
+A `CollectionJobResp`'s media type is
+"application/ppm-dap;message=collection-job-resp". The structure includes the
+following:
 
 * `part_batch_selector`: Information used to bind the aggregate result to the
   query. For leader-selected tasks, this includes the batch ID assigned to the
@@ -3035,7 +3038,7 @@ The Leader handles the collection job request synchronously:
 ~~~ http
 PUT /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/collection_jobs/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
-Content-Type: application/dap-collection-job-req
+Content-Type: application/ppm-dap;message=collection-job-req
 Authorization: Bearer auth-token
 
 encoded(struct {
@@ -3047,7 +3050,7 @@ encoded(struct {
 } CollectionJobReq)
 
 HTTP/1.1 200
-Content-Type: application/dap-collection
+Content-Type: application/ppm-dap;message=collection-job-resp
 
 encoded(struct {
   part_batch_selector = struct {
@@ -3071,7 +3074,7 @@ Or asynchronously:
 ~~~ http
 PUT /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/collection_jobs/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
-Content-Type: application/dap-collection-job-req
+Content-Type: application/ppm-dap;message=collection-job-req
 Authorization: Bearer auth-token
 
 encoded(struct {
@@ -3102,7 +3105,7 @@ Host: example.com
 Authorization: Bearer auth-token
 
 HTTP/1.1 200
-Content-Type: application/dap-collection
+Content-Type: application/ppm-dap;message=collection-job-resp
 
 encoded(struct {
   part_batch_selector = struct {
@@ -3196,8 +3199,9 @@ struct {
 } AggregateShareReq;
 ~~~
 
-The media type of `AggregateShareReq` is "application/dap-aggregate-share-req".
-The structure contains the following parameters:
+The media type of `AggregateShareReq` is
+"application/ppm-dap;message=aggregate-share-req". The structure contains the
+following parameters:
 
 * `batch_selector`: The "batch selector", the contents of which depends on the
   indicated batch mode (see {{batch-modes}}.
@@ -3253,7 +3257,7 @@ its own aggregate share and cannot compute the Helper's.
 
 Once the Helper has encrypted its aggregate share, the aggregate share job is
 ready. Its results are represented by an `AggregateShare`, with media type
-"application/dap-aggregate-share":
+"application/ppm-dap;message=aggregate-share":
 
 ~~~ tls-presentation
 struct {
@@ -3290,7 +3294,7 @@ The Helper handles the aggregate share request synchronously:
 ~~~ http
 PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregate_shares/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
-Content-Type: application/dap-aggregate-share-req
+Content-Type: application/ppm-dap;message=aggregate-share-req
 Authorization: Bearer auth-token
 
 encoded(struct {
@@ -3309,7 +3313,7 @@ encoded(struct {
 } AggregateShareReq)
 
 HTTP/1.1 200
-Content-Type: application/dap-aggregate-share
+Content-Type: application/ppm-dap;message=aggregate-share
 
 encoded(struct {
   encrypted_aggregate_share = struct { ... } HpkeCiphertext,
@@ -3321,7 +3325,7 @@ Or asynchronously:
 ~~~ http
 PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregate_shares/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
-Content-Type: application/dap-aggregate-share-req
+Content-Type: application/ppm-dap;message=aggregate-share-req
 Authorization: Bearer auth-token
 
 encoded(struct {
@@ -3354,7 +3358,7 @@ Host: example.com
 Authorization: Bearer auth-token
 
 HTTP/1.1 200
-Content-Type: application/dap-aggregate-share
+Content-Type: application/ppm-dap;message=aggregate-share
 
 encoded(struct {
   encrypted_aggregate_share = struct { ... } HpkeCiphertext,
@@ -3866,7 +3870,7 @@ tradeoffs.
 
 Most messages in the protocol contain fixed-length or length-prefixed fields
 such that they can be parsed independently of context. The exceptions are the
-`UploadReq`, `UploadResp` ({{upload-request}}), `AggregationJobInitReq`,
+`UploadReq`, `UploadErrors` ({{upload-request}}), `AggregationJobInitReq`,
 `AggregationJobContinueReq`, and `AggregationJobResp` ({{aggregate-flow}})
 messages, all of which contain vectors whose length is determined by the length
 of the enclosing HTTP message.
@@ -4178,35 +4182,43 @@ the input shares and defeat privacy.
 
 # IANA Considerations {#iana}
 
-This document requests registry of new media types ({{iana-media-types}}),
+This document requests registry of a new media type ({{iana-media-type}}),
 creation of new codepoint registries ({{iana-codepoints}}), and registration of
 an IETF URN sub-namespace ({{urn-space}}).
 
 (RFC EDITOR: In the remainder of this section, replace "RFC XXXX" with the RFC
 number assigned to this document.)
 
-## Protocol Message Media Types {#iana-media-types}
+## Protocol Message Media Type {#iana-media-type}
+
+This specification defines a new media type used for all protocol messages:
+`application/ppm-dap`. Specific message types are distinguished using a `message`
+parameter.
 
 This specification defines the following protocol messages, along with their
-corresponding media types:
+corresponding `message` value:
 
-- HpkeConfigList {{hpke-config}}: "application/dap-hpke-config-list"
-- UploadRequest {{upload-request}}: "application/dap-upload-req"
-- UploadErrors {{upload-request}}: "application/dap-upload-errors"
-- AggregationJobInitReq {{leader-init}}: "application/dap-aggregation-job-init-req"
-- AggregationJobResp {{aggregation-helper-init}}: "application/dap-aggregation-job-resp"
-- AggregationJobContinueReq {{aggregation-leader-continuation}}: "application/dap-aggregation-job-continue-req"
-- AggregateShareReq {{collect-aggregate}}: "application/dap-aggregate-share-req"
-- AggregateShare {{collect-aggregate}}: "application/dap-aggregate-share"
-- CollectionJobReq {{collect-init}}: "application/dap-collection-job-req"
-- CollectionJobResp {{collect-init}}: "application/dap-collection-job-resp"
+- HpkeConfigList {{hpke-config}}: "hpke-config-list"
+- UploadRequest {{upload-request}}: "upload-req"
+- UploadErrors {{upload-request}}: "upload-errors"
+- AggregationJobInitReq {{leader-init}}: "aggregation-job-init-req"
+- AggregationJobResp {{aggregation-helper-init}}: "aggregation-job-resp"
+- AggregationJobContinueReq {{aggregation-leader-continuation}}: "aggregation-job-continue-req"
+- AggregateShareReq {{collect-aggregate}}: "aggregate-share-req"
+- AggregateShare {{collect-aggregate}}: "aggregate-share"
+- CollectionJobReq {{collect-init}}: "collection-job-req"
+- CollectionJobResp {{collect-init}}: "collection-job-resp"
+
+For example, a request whose body consists of an `AggregationJobInitReq` could
+have the header
+`Content-Type: application/ppm-dap;message=aggregation-job-init-req`.
 
 Protocol message format evolution is supported through the definition of new
-formats that are identified by new media types. The messages above are specific
+formats that are identified by `message` values. The messages above are specific
 to this specification. When a new major enhancement is proposed that results in
-newer IETF specification for DAP, a new set of media types will be defined. In
-other words, newer versions of DAP will not be backward compatible with this
-version of DAP.
+newer IETF specification for DAP, a new media type will be defined. In other
+words, newer versions of DAP will not be backward compatible with this version
+of DAP.
 
 (RFC EDITOR: Remove this paragraph.) HTTP requests with DAP media types MAY
 express an optional parameter 'version', following {{Section 8.3 of !RFC9110}}.
@@ -4215,14 +4227,11 @@ component is using. This MAY be used as a hint by the receiver of the request
 to do compatibility checks between client and server.
 For example, A report submission to leader from a client that supports
 draft-ietf-ppm-dap-09 could have the header
-`Content-Type: application/dap-upload-req;version=09`.
+`Content-Type: application/ppm-dap;message=upload-req;version=09`.
 
 The "Media Types" registry at https://www.iana.org/assignments/media-types will
-be (RFC EDITOR: replace "will be" with "has been") updated to include each of
-these media types. The information required for each media type is listed in
-the remaining subsections.
-
-### "application/dap-hpke-config-list" media type
+be (RFC EDITOR: replace "will be" with "has been") updated to include the
+`application/ppm-dap` media type.
 
 Type name:
 
@@ -4230,11 +4239,11 @@ Type name:
 
 Subtype name:
 
-: dap-hpke-config-list
+: ppm-dap
 
 Required parameters:
 
-: N/A
+: message
 
 Optional parameters:
 
@@ -4246,646 +4255,7 @@ Encoding considerations:
 
 Security considerations:
 
-: see {{upload-flow}} of the published specification
-
-Interoperability considerations:
-
-: N/A
-
-Published specification:
-
-: RFC XXXX
-
-Applications that use this media type:
-
-: N/A
-
-Fragment identifier considerations:
-
-: N/A
-
-Additional information:
-
-: <dl>
-  <dt>Magic number(s):</dt><dd>N/A</dd>
-  <dt>Deprecated alias names for this type:</dt><dd>N/A</dd>
-  <dt>File extension(s):</dt><dd>N/A</dd>
-  <dt>Macintosh file type code(s):</dt><dd>N/A</dd>
-  </dl>
-
-Person and email address to contact for further information:
-
-: see Authors' Addresses section of the published specification
-
-Intended usage:
-
-: COMMON
-
-Restrictions on usage:
-
-: N/A
-
-Author:
-
-: see Authors' Addresses section of the published specification
-
-Change controller:
-
-: IESG
-
-### "application/dap-upload-req" media type
-
-Type name:
-
-: application
-
-Subtype name:
-
-: dap-upload-req
-
-Required parameters:
-
-: N/A
-
-Optional parameters:
-
-: None
-
-Encoding considerations:
-
-: only "8bit" or "binary" is permitted
-
-Security considerations:
-
-: see {{upload-flow}} of the published specification
-
-Interoperability considerations:
-
-: N/A
-
-Published specification:
-
-: RFC XXXX
-
-Applications that use this media type:
-
-: N/A
-
-Fragment identifier considerations:
-
-: N/A
-
-Additional information:
-
-: <dl>
-  <dt>Magic number(s):</dt><dd>N/A</dd>
-  <dt>Deprecated alias names for this type:</dt><dd>N/A</dd>
-  <dt>File extension(s):</dt><dd>N/A</dd>
-  <dt>Macintosh file type code(s):</dt><dd>N/A</dd>
-  </dl>
-
-Person and email address to contact for further information:
-
-: see Authors' Addresses section of the published specification
-
-Intended usage:
-
-: COMMON
-
-Restrictions on usage:
-
-: N/A
-
-Author:
-
-: see Authors' Addresses section of the published specification
-
-Change controller:
-
-: IESG
-
-### "application/dap-upload-resp" media type
-
-Type name:
-
-: application
-
-Subtype name:
-
-: dap-upload-resp
-
-Required parameters:
-
-: N/A
-
-Optional parameters:
-
-: None
-
-Encoding considerations:
-
-: only "8bit" or "binary" is permitted
-
-Security considerations:
-
-: see {{upload-flow}} of the published specification
-
-Interoperability considerations:
-
-: N/A
-
-Published specification:
-
-: RFC XXXX
-
-Applications that use this media type:
-
-: N/A
-
-Fragment identifier considerations:
-
-: N/A
-
-Additional information:
-
-: <dl>
-  <dt>Magic number(s):</dt><dd>N/A</dd>
-  <dt>Deprecated alias names for this type:</dt><dd>N/A</dd>
-  <dt>File extension(s):</dt><dd>N/A</dd>
-  <dt>Macintosh file type code(s):</dt><dd>N/A</dd>
-  </dl>
-
-Person and email address to contact for further information:
-
-: see Authors' Addresses section of the published specification
-
-Intended usage:
-
-: COMMON
-
-Restrictions on usage:
-
-: N/A
-
-Author:
-
-: see Authors' Addresses section of the published specification
-
-Change controller:
-
-: IESG
-
-### "application/dap-aggregation-job-init-req" media type
-
-Type name:
-
-: application
-
-Subtype name:
-
-: dap-aggregation-job-init-req
-
-Required parameters:
-
-: N/A
-
-Optional parameters:
-
-: None
-
-Encoding considerations:
-
-: only "8bit" or "binary" is permitted
-
-Security considerations:
-
-: see {{aggregate-flow}} of the published specification
-
-Interoperability considerations:
-
-: N/A
-
-Published specification:
-
-: RFC XXXX
-
-Applications that use this media type:
-
-: N/A
-
-Fragment identifier considerations:
-
-: N/A
-
-Additional information:
-
-: <dl>
-  <dt>Magic number(s):</dt><dd>N/A</dd>
-  <dt>Deprecated alias names for this type:</dt><dd>N/A</dd>
-  <dt>File extension(s):</dt><dd>N/A</dd>
-  <dt>Macintosh file type code(s):</dt><dd>N/A</dd>
-  </dl>
-
-Person and email address to contact for further information:
-
-: see Authors' Addresses section of the published specification
-
-Intended usage:
-
-: COMMON
-
-Restrictions on usage:
-
-: N/A
-
-Author:
-
-: see Authors' Addresses section of the published specification
-
-Change controller:
-
-: IESG
-
-### "application/dap-aggregation-job-resp" media type
-
-Type name:
-
-: application
-
-Subtype name:
-
-: dap-aggregation-job-resp
-
-Required parameters:
-
-: N/A
-
-Optional parameters:
-
-: None
-
-Encoding considerations:
-
-: only "8bit" or "binary" is permitted
-
-Security considerations:
-
-: see {{aggregate-flow}} of the published specification
-
-Interoperability considerations:
-
-: N/A
-
-Published specification:
-
-: RFC XXXX
-
-Applications that use this media type:
-
-: N/A
-
-Fragment identifier considerations:
-
-: N/A
-
-Additional information:
-
-: <dl>
-  <dt>Magic number(s):</dt><dd>N/A</dd>
-  <dt>Deprecated alias names for this type:</dt><dd>N/A</dd>
-  <dt>File extension(s):</dt><dd>N/A</dd>
-  <dt>Macintosh file type code(s):</dt><dd>N/A</dd>
-  </dl>
-
-Person and email address to contact for further information:
-
-: see Authors' Addresses section of the published specification
-
-Intended usage:
-
-: COMMON
-
-Restrictions on usage:
-
-: N/A
-
-Author:
-
-: see Authors' Addresses section of the published specification
-
-Change controller:
-
-: IESG
-
-### "application/dap-aggregation-job-continue-req" media type
-
-Type name:
-
-: application
-
-Subtype name:
-
-: dap-aggregation-job-continue-req
-
-Required parameters:
-
-: N/A
-
-Optional parameters:
-
-: None
-
-Encoding considerations:
-
-: only "8bit" or "binary" is permitted
-
-Security considerations:
-
-: see {{aggregate-flow}} of the published specification
-
-Interoperability considerations:
-
-: N/A
-
-Published specification:
-
-: RFC XXXX
-
-Applications that use this media type:
-
-: N/A
-
-Fragment identifier considerations:
-
-: N/A
-
-Additional information:
-
-: <dl>
-  <dt>Magic number(s):</dt><dd>N/A</dd>
-  <dt>Deprecated alias names for this type:</dt><dd>N/A</dd>
-  <dt>File extension(s):</dt><dd>N/A</dd>
-  <dt>Macintosh file type code(s):</dt><dd>N/A</dd>
-  </dl>
-
-Person and email address to contact for further information:
-
-: see Authors' Addresses section of the published specification
-
-Intended usage:
-
-: COMMON
-
-Restrictions on usage:
-
-: N/A
-
-Author:
-
-: see Authors' Addresses section of the published specification
-
-Change controller:
-
-: IESG
-
-### "application/dap-aggregate-share-req" media type
-
-Type name:
-
-: application
-
-Subtype name:
-
-: dap-aggregate-share-req
-
-Required parameters:
-
-: N/A
-
-Optional parameters:
-
-: None
-
-Encoding considerations:
-
-: only "8bit" or "binary" is permitted
-
-Security considerations:
-
-: see {{collect-flow}} of the published specification
-
-Interoperability considerations:
-
-: N/A
-
-Published specification:
-
-: RFC XXXX
-
-Applications that use this media type:
-
-: N/A
-
-Fragment identifier considerations:
-
-: N/A
-
-Additional information:
-
-: <dl>
-  <dt>Magic number(s):</dt><dd>N/A</dd>
-  <dt>Deprecated alias names for this type:</dt><dd>N/A</dd>
-  <dt>File extension(s):</dt><dd>N/A</dd>
-  <dt>Macintosh file type code(s):</dt><dd>N/A</dd>
-  </dl>
-
-Person and email address to contact for further information:
-
-: see Authors' Addresses section of the published specification
-
-Intended usage:
-
-: COMMON
-
-Restrictions on usage:
-
-: N/A
-
-Author:
-
-: see Authors' Addresses section of the published specification
-
-Change controller:
-
-: IESG
-
-### "application/dap-aggregate-share" media type
-
-Type name:
-
-: application
-
-Subtype name:
-
-: dap-aggregate-share
-
-Required parameters:
-
-: N/A
-
-Optional parameters:
-
-: None
-
-Encoding considerations:
-
-: only "8bit" or "binary" is permitted
-
-Security considerations:
-
-: see {{collect-flow}} of the published specification
-
-Interoperability considerations:
-
-: N/A
-
-Published specification:
-
-: RFC XXXX
-
-Applications that use this media type:
-
-: N/A
-
-Fragment identifier considerations:
-
-: N/A
-
-Additional information:
-
-: <dl>
-  <dt>Magic number(s):</dt><dd>N/A</dd>
-  <dt>Deprecated alias names for this type:</dt><dd>N/A</dd>
-  <dt>File extension(s):</dt><dd>N/A</dd>
-  <dt>Macintosh file type code(s):</dt><dd>N/A</dd>
-  </dl>
-
-Person and email address to contact for further information:
-
-: see Authors' Addresses section of the published specification
-
-Intended usage:
-
-: COMMON
-
-Restrictions on usage:
-
-: N/A
-
-Author:
-
-: see Authors' Addresses section of the published specification
-
-Change controller:
-
-: IESG
-
-### "application/dap-collection-job-req" media type
-
-Type name:
-
-: application
-
-Subtype name:
-
-: dap-collection-job-req
-
-Required parameters:
-
-: N/A
-
-Optional parameters:
-
-: None
-
-Encoding considerations:
-
-: only "8bit" or "binary" is permitted
-
-Security considerations:
-
-: see {{collect-flow}} of the published specification
-
-Interoperability considerations:
-
-: N/A
-
-Published specification:
-
-: RFC XXXX
-
-Applications that use this media type:
-
-: N/A
-
-Fragment identifier considerations:
-
-: N/A
-
-Additional information:
-
-: <dl>
-  <dt>Magic number(s):</dt><dd>N/A</dd>
-  <dt>Deprecated alias names for this type:</dt><dd>N/A</dd>
-  <dt>File extension(s):</dt><dd>N/A</dd>
-  <dt>Macintosh file type code(s):</dt><dd>N/A</dd>
-  </dl>
-
-Person and email address to contact for further information:
-
-: see Authors' Addresses section of the published specification
-
-Intended usage:
-
-: COMMON
-
-Restrictions on usage:
-
-: N/A
-
-Author:
-
-: see Authors' Addresses section of the published specification
-
-Change controller:
-
-: IESG
-
-### "application/dap-collection-job-resp" media type
-
-Type name:
-
-: application
-
-Subtype name:
-
-: dap-collection-job-resp
-
-Required parameters:
-
-: N/A
-
-Optional parameters:
-
-: None
-
-Encoding considerations:
-
-: only "8bit" or "binary" is permitted
-
-Security considerations:
-
-: see {{collect-flow}} of the published specification
+: see {{sec-considerations}} of the published specification
 
 Interoperability considerations:
 
