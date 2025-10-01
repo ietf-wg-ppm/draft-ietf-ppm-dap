@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 2 April 2026                                         Cloudflare
+Expires: 4 April 2026                                         Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                       29 September 2025
+                                                          1 October 2025
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -64,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 2 April 2026.
+   This Internet-Draft will expire on 4 April 2026.
 
 Copyright Notice
 
@@ -1312,9 +1312,10 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
 4.3.  Resources
 
-   DAP is defined in terms of HTTP resources, such as HPKE
+   DAP is defined in terms of HTTP resources.  These are HPKE
    configurations (Section 4.5.1), reports (Section 4.5), aggregation
-   jobs (Section 4.6), and collection jobs (Section 4.7).
+   jobs (Section 4.6), collection jobs (Section 4.7), and aggregate
+   shares (Section 4.7.3).
 
    Each resource has a URL.  Resource URLs are specified as string
    literals containing variables.  Variables are expanded into strings
@@ -1482,9 +1483,10 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
 4.5.2.  Upload Request
 
-   Clients upload reports by sending a POST to {leader}/tasks/{task-
-   id}/reports.  The body is an UploadRequest, with media type
-   "application/dap-upload-req", structured as follows:
+   Reports are uploaded using the reports resource, served by the Leader
+   at {leader}/tasks/{task-id}/reports.  An upload is represented as an
+   UploadRequest, with media type "application/dap-upload-req",
+   structured as follows:
 
    struct {
      ReportID report_id;
@@ -1535,8 +1537,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    reports (see Section 8.3).  If it is used, client authentication MUST
    use a scheme that meets the requirements in Section 3.3.
 
-   The handling of the upload request by the Leader MUST be idempotent
-   as discussed in Section 9.2.2 of [RFC9110].
+4.5.2.1.  Client Behavior
 
    To generate a report, the Client begins by sharding its measurement
    into input shares and the public share using the VDAF's sharding
@@ -1603,15 +1604,27 @@ aggregation job 1                   aggregation job 2          aggregation job j
      opaque public_share<0..2^32-1>;
    } InputShareAad;
 
+   Clients upload reports by sending an UploadRequest as the body of a
+   POST to the Leader's reports resource.
+
+4.5.2.2.  Leader Behavior
+
+   The handling of the upload request by the Leader MUST be idempotent
+   as discussed in Section 9.2.2 of [RFC9110].
+
    If the upload request is malformed, the Leader aborts with error
    invalidMessage.
 
    If the Leader does not recognize the task ID, then it aborts with
    error unrecognizedTask.
 
-   Otherwise, the Leader responds with a body consisting of an
-   UploadResponse with the media type application/dap-upload-resp. The
-   structure of the response is as follows:
+   If all the reports in the request are accepted, then the Leader sends
+   a response with an empty body.
+
+   If some or all of the reports fail to upload for one of the reasons
+   described in the remainder of this section, the Leader responds with
+   a body consisting of an UploadErrors with the media type application/
+   dap-upload-errors.  The structure of the response is as follows:
 
    struct {
      ReportID id;
@@ -1620,7 +1633,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    struct {
      ReportUploadStatus status[message_length];
-   } UploadResponse;
+   } UploadErrors;
 
    Here message_length denotes the length in bytes of the concatenated
    ReportUploadStatus objects.
@@ -1690,7 +1703,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    share.  Validation of report IDs and extensions will occur before
    aggregation.
 
-4.5.2.1.  Example
+4.5.2.3.  Example
 
    Successful upload
 
@@ -1783,7 +1796,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
          error = report_replayed,
        },
      ],
-   } UploadResponse)
+   } UploadErrors)
 
 4.5.3.  Report Extensions
 
@@ -4281,7 +4294,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
    *  UploadRequest Section 4.5.2: "application/dap-upload-req"
 
-   *  UploadResponse Section 4.5.2: "application/dap-upload-resp"
+   *  UploadErrors Section 4.5.2: "application/dap-upload-errors"
 
    *  AggregationJobInitReq Section 4.6.2.1: "application/dap-
       aggregation-job-init-req"

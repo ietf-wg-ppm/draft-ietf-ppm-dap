@@ -1055,11 +1055,11 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <thead><tr>
 <td class="left">Internet-Draft</td>
 <td class="center">DAP</td>
-<td class="right">September 2025</td>
+<td class="right">October 2025</td>
 </tr></thead>
 <tfoot><tr>
 <td class="left">Geoghegan, et al.</td>
-<td class="center">Expires 2 April 2026</td>
+<td class="center">Expires 4 April 2026</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1072,12 +1072,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-ietf-ppm-dap-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2025-09-29" class="published">29 September 2025</time>
+<time datetime="2025-10-01" class="published">1 October 2025</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Standards Track</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2026-04-02">2 April 2026</time></dd>
+<dd class="expires"><time datetime="2026-04-04">4 April 2026</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -1151,7 +1151,7 @@ without revealing any individual contributor's data.<a href="#section-abstract-1
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 2 April 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 4 April 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -3294,9 +3294,10 @@ conveyed from the Leader to the Helper when initializing aggregation jobs
         <h3 id="name-resources">
 <a href="#section-4.3" class="section-number selfRef">4.3. </a><a href="#name-resources" class="section-name selfRef">Resources</a>
         </h3>
-<p id="section-4.3-1">DAP is defined in terms of HTTP resources, such as HPKE configurations
+<p id="section-4.3-1">DAP is defined in terms of HTTP resources. These are HPKE configurations
 (<a href="#hpke-config" class="auto internal xref">Section 4.5.1</a>), reports (<a href="#upload-flow" class="auto internal xref">Section 4.5</a>), aggregation jobs
-(<a href="#aggregate-flow" class="auto internal xref">Section 4.6</a>), and collection jobs (<a href="#collect-flow" class="auto internal xref">Section 4.7</a>).<a href="#section-4.3-1" class="pilcrow">¶</a></p>
+(<a href="#aggregate-flow" class="auto internal xref">Section 4.6</a>), collection jobs (<a href="#collect-flow" class="auto internal xref">Section 4.7</a>), and aggregate shares
+(<a href="#collect-aggregate" class="auto internal xref">Section 4.7.3</a>).<a href="#section-4.3-1" class="pilcrow">¶</a></p>
 <p id="section-4.3-2">Each resource has a URL. Resource URLs are specified as string literals
 containing variables. Variables are expanded into strings according to the
 following rules:<a href="#section-4.3-2" class="pilcrow">¶</a></p>
@@ -3478,9 +3479,10 @@ encoded([
           <h4 id="name-upload-request">
 <a href="#section-4.5.2" class="section-number selfRef">4.5.2. </a><a href="#name-upload-request" class="section-name selfRef">Upload Request</a>
           </h4>
-<p id="section-4.5.2-1">Clients upload reports by sending a POST to <code>{leader}/tasks/{task-id}/reports</code>.
-The body is an <code>UploadRequest</code>, with media type "application/dap-upload-req",
-structured as follows:<a href="#section-4.5.2-1" class="pilcrow">¶</a></p>
+<p id="section-4.5.2-1">Reports are uploaded using the reports resource, served by the Leader at
+<code>{leader}/tasks/{task-id}/reports</code>. An upload is represented as an
+<code>UploadRequest</code>, with media type "application/dap-upload-req", structured as
+follows:<a href="#section-4.5.2-1" class="pilcrow">¶</a></p>
 <div class="lang-tls-presentation sourcecode" id="section-4.5.2-2">
 <pre>
 struct {
@@ -3536,11 +3538,14 @@ public share might be empty, depending on the VDAF.<a href="#section-4.5.2-5.2.1
 <p id="section-4.5.2-6">Aggregators <span class="bcp14">MAY</span> require Clients to authenticate when uploading reports (see
 <a href="#client-auth" class="auto internal xref">Section 8.3</a>). If it is used, client authentication <span class="bcp14">MUST</span> use a scheme that
 meets the requirements in <a href="#request-authentication" class="auto internal xref">Section 3.3</a>.<a href="#section-4.5.2-6" class="pilcrow">¶</a></p>
-<p id="section-4.5.2-7">The handling of the upload request by the Leader <span class="bcp14">MUST</span> be idempotent as discussed
-in <span><a href="https://rfc-editor.org/rfc/rfc9110#section-9.2.2" class="relref">Section 9.2.2</a> of [<a href="#RFC9110" class="cite xref">RFC9110</a>]</span>.<a href="#section-4.5.2-7" class="pilcrow">¶</a></p>
-<p id="section-4.5.2-8">To generate a report, the Client begins by sharding its measurement into input
-shares and the public share using the VDAF's sharding algorithm (<span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-16#section-5.1" class="relref">Section 5.1</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>), using the report ID as the nonce:<a href="#section-4.5.2-8" class="pilcrow">¶</a></p>
-<div class="lang-pseudocode sourcecode" id="section-4.5.2-9">
+<div id="client-behavior">
+<section id="section-4.5.2.1">
+            <h5 id="name-client-behavior">
+<a href="#section-4.5.2.1" class="section-number selfRef">4.5.2.1. </a><a href="#name-client-behavior" class="section-name selfRef">Client Behavior</a>
+            </h5>
+<p id="section-4.5.2.1-1">To generate a report, the Client begins by sharding its measurement into input
+shares and the public share using the VDAF's sharding algorithm (<span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-16#section-5.1" class="relref">Section 5.1</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>), using the report ID as the nonce:<a href="#section-4.5.2.1-1" class="pilcrow">¶</a></p>
+<div class="lang-pseudocode sourcecode" id="section-4.5.2.1-2">
 <pre>
 (public_share, input_shares) = Vdaf.shard(
     "dap-16" || task_id,
@@ -3548,92 +3553,106 @@ shares and the public share using the VDAF's sharding algorithm (<span><a href="
     report_id,
     rand,
 )
-</pre><a href="#section-4.5.2-9" class="pilcrow">¶</a>
+</pre><a href="#section-4.5.2.1-2" class="pilcrow">¶</a>
 </div>
 <ul class="normal">
-<li class="normal" id="section-4.5.2-10.1">
-              <p id="section-4.5.2-10.1.1"><code>task_id</code> is the task ID.<a href="#section-4.5.2-10.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="section-4.5.2.1-3.1">
+                <p id="section-4.5.2.1-3.1.1"><code>task_id</code> is the task ID.<a href="#section-4.5.2.1-3.1.1" class="pilcrow">¶</a></p>
 </li>
-            <li class="normal" id="section-4.5.2-10.2">
-              <p id="section-4.5.2-10.2.1"><code>measurement</code> is the plaintext measurement, represented as the VDAF's
-<code>Measurement</code> associated type.<a href="#section-4.5.2-10.2.1" class="pilcrow">¶</a></p>
+              <li class="normal" id="section-4.5.2.1-3.2">
+                <p id="section-4.5.2.1-3.2.1"><code>measurement</code> is the plaintext measurement, represented as the VDAF's
+<code>Measurement</code> associated type.<a href="#section-4.5.2.1-3.2.1" class="pilcrow">¶</a></p>
 </li>
-            <li class="normal" id="section-4.5.2-10.3">
-              <p id="section-4.5.2-10.3.1"><code>report_id</code> is the corresponding value from <code>ReportMetadata</code>, used as the
-nonce.<a href="#section-4.5.2-10.3.1" class="pilcrow">¶</a></p>
+              <li class="normal" id="section-4.5.2.1-3.3">
+                <p id="section-4.5.2.1-3.3.1"><code>report_id</code> is the corresponding value from <code>ReportMetadata</code>, used as the
+nonce.<a href="#section-4.5.2.1-3.3.1" class="pilcrow">¶</a></p>
 </li>
-            <li class="normal" id="section-4.5.2-10.4">
-              <p id="section-4.5.2-10.4.1"><code>rand</code> is a random byte string of length specified by the VDAF. Each report's
+              <li class="normal" id="section-4.5.2.1-3.4">
+                <p id="section-4.5.2.1-3.4.1"><code>rand</code> is a random byte string of length specified by the VDAF. Each report's
 <code>rand</code> <span class="bcp14">MUST</span> be independently sampled from a cryptographically secure random
-number generator.<a href="#section-4.5.2-10.4.1" class="pilcrow">¶</a></p>
+number generator.<a href="#section-4.5.2.1-3.4.1" class="pilcrow">¶</a></p>
 </li>
-          </ul>
-<p id="section-4.5.2-11"><code>Vdaf.shard</code> algorithm will return two input shares. The first is the Leader's
-input share, and the second is the Helper's.<a href="#section-4.5.2-11" class="pilcrow">¶</a></p>
-<p id="section-4.5.2-12">The Client then wraps each input share in the following structure:<a href="#section-4.5.2-12" class="pilcrow">¶</a></p>
-<div class="lang-tls-presentation sourcecode" id="section-4.5.2-13">
+            </ul>
+<p id="section-4.5.2.1-4"><code>Vdaf.shard</code> algorithm will return two input shares. The first is the Leader's
+input share, and the second is the Helper's.<a href="#section-4.5.2.1-4" class="pilcrow">¶</a></p>
+<p id="section-4.5.2.1-5">The Client then wraps each input share in the following structure:<a href="#section-4.5.2.1-5" class="pilcrow">¶</a></p>
+<div class="lang-tls-presentation sourcecode" id="section-4.5.2.1-6">
 <pre>
 struct {
   Extension private_extensions&lt;0..2^16-1&gt;;
   opaque payload&lt;1..2^32-1&gt;;
 } PlaintextInputShare;
-</pre><a href="#section-4.5.2-13" class="pilcrow">¶</a>
+</pre><a href="#section-4.5.2.1-6" class="pilcrow">¶</a>
 </div>
 <ul class="normal">
-<li class="normal" id="section-4.5.2-14.1">
-              <p id="section-4.5.2-14.1.1"><code>private_extensions</code> is the list of private report extensions for the given
- Aggregator (see <a href="#report-extensions" class="auto internal xref">Section 4.5.3</a>).<a href="#section-4.5.2-14.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="section-4.5.2.1-7.1">
+                <p id="section-4.5.2.1-7.1.1"><code>private_extensions</code> is the list of private report extensions for the given
+ Aggregator (see <a href="#report-extensions" class="auto internal xref">Section 4.5.3</a>).<a href="#section-4.5.2.1-7.1.1" class="pilcrow">¶</a></p>
 </li>
-            <li class="normal" id="section-4.5.2-14.2">
-              <p id="section-4.5.2-14.2.1"><code>payload</code> is the Aggregator's input share.<a href="#section-4.5.2-14.2.1" class="pilcrow">¶</a></p>
+              <li class="normal" id="section-4.5.2.1-7.2">
+                <p id="section-4.5.2.1-7.2.1"><code>payload</code> is the Aggregator's input share.<a href="#section-4.5.2.1-7.2.1" class="pilcrow">¶</a></p>
 </li>
-          </ul>
-<p id="section-4.5.2-15">Next, the Client encrypts each <code>PlaintextInputShare</code> as follows:<a href="#section-4.5.2-15" class="pilcrow">¶</a></p>
-<div class="lang-pseudocode sourcecode" id="section-4.5.2-16">
+            </ul>
+<p id="section-4.5.2.1-8">Next, the Client encrypts each <code>PlaintextInputShare</code> as follows:<a href="#section-4.5.2.1-8" class="pilcrow">¶</a></p>
+<div class="lang-pseudocode sourcecode" id="section-4.5.2.1-9">
 <pre>
 enc, payload = SealBase(pk,
   "dap-16 input share" || 0x01 || server_role,
   input_share_aad, plaintext_input_share)
-</pre><a href="#section-4.5.2-16" class="pilcrow">¶</a>
+</pre><a href="#section-4.5.2.1-9" class="pilcrow">¶</a>
 </div>
 <ul class="normal">
-<li class="normal" id="section-4.5.2-17.1">
-              <p id="section-4.5.2-17.1.1"><code>pk</code> is the public key from the Aggregator's HPKE configuration.<a href="#section-4.5.2-17.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="section-4.5.2.1-10.1">
+                <p id="section-4.5.2.1-10.1.1"><code>pk</code> is the public key from the Aggregator's HPKE configuration.<a href="#section-4.5.2.1-10.1.1" class="pilcrow">¶</a></p>
 </li>
-            <li class="normal" id="section-4.5.2-17.2">
-              <p id="section-4.5.2-17.2.1"><code>0x01</code> represents the <code>Role</code> of the sender (always the Client).<a href="#section-4.5.2-17.2.1" class="pilcrow">¶</a></p>
+              <li class="normal" id="section-4.5.2.1-10.2">
+                <p id="section-4.5.2.1-10.2.1"><code>0x01</code> represents the <code>Role</code> of the sender (always the Client).<a href="#section-4.5.2.1-10.2.1" class="pilcrow">¶</a></p>
 </li>
-            <li class="normal" id="section-4.5.2-17.3">
-              <p id="section-4.5.2-17.3.1"><code>server_role</code> is the <code>Role</code> of the recipient (<code>0x02</code> for the Leader and <code>0x03</code>
- for the Helper).<a href="#section-4.5.2-17.3.1" class="pilcrow">¶</a></p>
+              <li class="normal" id="section-4.5.2.1-10.3">
+                <p id="section-4.5.2.1-10.3.1"><code>server_role</code> is the <code>Role</code> of the recipient (<code>0x02</code> for the Leader and <code>0x03</code>
+ for the Helper).<a href="#section-4.5.2.1-10.3.1" class="pilcrow">¶</a></p>
 </li>
-            <li class="normal" id="section-4.5.2-17.4">
-              <p id="section-4.5.2-17.4.1"><code>plaintext_input_share</code> is the Aggregator's <code>PlaintextInputShare</code>.<a href="#section-4.5.2-17.4.1" class="pilcrow">¶</a></p>
+              <li class="normal" id="section-4.5.2.1-10.4">
+                <p id="section-4.5.2.1-10.4.1"><code>plaintext_input_share</code> is the Aggregator's <code>PlaintextInputShare</code>.<a href="#section-4.5.2.1-10.4.1" class="pilcrow">¶</a></p>
 </li>
-            <li class="normal" id="section-4.5.2-17.5">
-              <p id="section-4.5.2-17.5.1"><code>input_share_aad</code> is an encoded <code>InputShareAad</code>, constructed from the
-corresponding fields in the report per the definition below.<a href="#section-4.5.2-17.5.1" class="pilcrow">¶</a></p>
+              <li class="normal" id="section-4.5.2.1-10.5">
+                <p id="section-4.5.2.1-10.5.1"><code>input_share_aad</code> is an encoded <code>InputShareAad</code>, constructed from the
+corresponding fields in the report per the definition below.<a href="#section-4.5.2.1-10.5.1" class="pilcrow">¶</a></p>
 </li>
-          </ul>
-<p id="section-4.5.2-18">The <code>SealBase()</code> function is as specified in <span>[<a href="#HPKE" class="cite xref">HPKE</a>], <a href="https://rfc-editor.org/rfc/rfc9180#section-6.1" class="relref">Section 6.1</a></span> for the
-ciphersuite indicated by the Aggregator's HPKE configuration.<a href="#section-4.5.2-18" class="pilcrow">¶</a></p>
-<div class="lang-tls-presentation sourcecode" id="section-4.5.2-19">
+            </ul>
+<p id="section-4.5.2.1-11">The <code>SealBase()</code> function is as specified in <span>[<a href="#HPKE" class="cite xref">HPKE</a>], <a href="https://rfc-editor.org/rfc/rfc9180#section-6.1" class="relref">Section 6.1</a></span> for the
+ciphersuite indicated by the Aggregator's HPKE configuration.<a href="#section-4.5.2.1-11" class="pilcrow">¶</a></p>
+<div class="lang-tls-presentation sourcecode" id="section-4.5.2.1-12">
 <pre>
 struct {
   TaskID task_id;
   ReportMetadata report_metadata;
   opaque public_share&lt;0..2^32-1&gt;;
 } InputShareAad;
-</pre><a href="#section-4.5.2-19" class="pilcrow">¶</a>
+</pre><a href="#section-4.5.2.1-12" class="pilcrow">¶</a>
 </div>
-<p id="section-4.5.2-20">If the upload request is malformed, the Leader aborts with error
-<code>invalidMessage</code>.<a href="#section-4.5.2-20" class="pilcrow">¶</a></p>
-<p id="section-4.5.2-21">If the Leader does not recognize the task ID, then it aborts with error
-<code>unrecognizedTask</code>.<a href="#section-4.5.2-21" class="pilcrow">¶</a></p>
-<p id="section-4.5.2-22">Otherwise, the Leader responds with a body consisting of an <code>UploadResponse</code>
-with the media type <code>application/dap-upload-resp</code>. The structure of the response
-is as follows:<a href="#section-4.5.2-22" class="pilcrow">¶</a></p>
-<div class="lang-tls-presentation sourcecode" id="section-4.5.2-23">
+<p id="section-4.5.2.1-13">Clients upload reports by sending an <code>UploadRequest</code> as the body of a POST to
+the Leader's reports resource.<a href="#section-4.5.2.1-13" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="leader-behavior">
+<section id="section-4.5.2.2">
+            <h5 id="name-leader-behavior">
+<a href="#section-4.5.2.2" class="section-number selfRef">4.5.2.2. </a><a href="#name-leader-behavior" class="section-name selfRef">Leader Behavior</a>
+            </h5>
+<p id="section-4.5.2.2-1">The handling of the upload request by the Leader <span class="bcp14">MUST</span> be idempotent as discussed
+in <span><a href="https://rfc-editor.org/rfc/rfc9110#section-9.2.2" class="relref">Section 9.2.2</a> of [<a href="#RFC9110" class="cite xref">RFC9110</a>]</span>.<a href="#section-4.5.2.2-1" class="pilcrow">¶</a></p>
+<p id="section-4.5.2.2-2">If the upload request is malformed, the Leader aborts with error
+<code>invalidMessage</code>.<a href="#section-4.5.2.2-2" class="pilcrow">¶</a></p>
+<p id="section-4.5.2.2-3">If the Leader does not recognize the task ID, then it aborts with error
+<code>unrecognizedTask</code>.<a href="#section-4.5.2.2-3" class="pilcrow">¶</a></p>
+<p id="section-4.5.2.2-4">If all the reports in the request are accepted, then the Leader sends a response
+with an empty body.<a href="#section-4.5.2.2-4" class="pilcrow">¶</a></p>
+<p id="section-4.5.2.2-5">If some or all of the reports fail to upload for one of the reasons described in
+the remainder of this section, the Leader responds with a body consisting of an
+<code>UploadErrors</code> with the media type <code>application/dap-upload-errors</code>. The
+structure of the response is as follows:<a href="#section-4.5.2.2-5" class="pilcrow">¶</a></p>
+<div class="lang-tls-presentation sourcecode" id="section-4.5.2.2-6">
 <pre>
 struct {
   ReportID id;
@@ -3642,41 +3661,41 @@ struct {
 
 struct {
   ReportUploadStatus status[message_length];
-} UploadResponse;
-</pre><a href="#section-4.5.2-23" class="pilcrow">¶</a>
+} UploadErrors;
+</pre><a href="#section-4.5.2.2-6" class="pilcrow">¶</a>
 </div>
-<p id="section-4.5.2-24">Here <code>message_length</code> denotes the length in bytes of the concatenated
-<code>ReportUploadStatus</code> objects.<a href="#section-4.5.2-24" class="pilcrow">¶</a></p>
-<p id="section-4.5.2-25">The Leader only includes reports that failed processing in the response. Reports
-that are accepted do not have a response.<a href="#section-4.5.2-25" class="pilcrow">¶</a></p>
-<p id="section-4.5.2-26">Reports in the response <span class="bcp14">MUST</span> appear in the same order as in the request.<a href="#section-4.5.2-26" class="pilcrow">¶</a></p>
-<p id="section-4.5.2-27">For each report that failed to upload, the Leader creates a <code>ReportUploadStatus</code>
+<p id="section-4.5.2.2-7">Here <code>message_length</code> denotes the length in bytes of the concatenated
+<code>ReportUploadStatus</code> objects.<a href="#section-4.5.2.2-7" class="pilcrow">¶</a></p>
+<p id="section-4.5.2.2-8">The Leader only includes reports that failed processing in the response. Reports
+that are accepted do not have a response.<a href="#section-4.5.2.2-8" class="pilcrow">¶</a></p>
+<p id="section-4.5.2.2-9">Reports in the response <span class="bcp14">MUST</span> appear in the same order as in the request.<a href="#section-4.5.2.2-9" class="pilcrow">¶</a></p>
+<p id="section-4.5.2.2-10">For each report that failed to upload, the Leader creates a <code>ReportUploadStatus</code>
 and includes the <code>ReportId</code> from the input and a <code>ReportError</code>
 (<a href="#basic-definitions" class="auto internal xref">Section 4.1</a>) that describes the failure. The length of this sequence
-is always less than or equal to the length of the upload sequence.<a href="#section-4.5.2-27" class="pilcrow">¶</a></p>
-<p id="section-4.5.2-28">If the Leader does not recognize the <code>config_id</code> in the encrypted input share,
+is always less than or equal to the length of the upload sequence.<a href="#section-4.5.2.2-10" class="pilcrow">¶</a></p>
+<p id="section-4.5.2.2-11">If the Leader does not recognize the <code>config_id</code> in the encrypted input share,
 it sets the corresponding error field to <code>outdated_config</code>. When the Client
 receives an <code>outdated_config</code> error, it <span class="bcp14">SHOULD</span> invalidate any cached
 <code>HpkeConfigList</code> and retry with a freshly generated <code>Report</code>. If this retried
-upload does not succeed, the Client <span class="bcp14">SHOULD</span> abort and discontinue retrying.<a href="#section-4.5.2-28" class="pilcrow">¶</a></p>
-<p id="section-4.5.2-29">If a report's ID matches that of a previously uploaded report, the Leader <span class="bcp14">MUST</span>
+upload does not succeed, the Client <span class="bcp14">SHOULD</span> abort and discontinue retrying.<a href="#section-4.5.2.2-11" class="pilcrow">¶</a></p>
+<p id="section-4.5.2.2-12">If a report's ID matches that of a previously uploaded report, the Leader <span class="bcp14">MUST</span>
 discard it. In addition, it <span class="bcp14">MAY</span> set the corresponding error field to
-<code>report_replayed</code>.<a href="#section-4.5.2-29" class="pilcrow">¶</a></p>
-<p id="section-4.5.2-30">The Leader <span class="bcp14">MUST</span> discard any report pertaining to a batch that has already been
+<code>report_replayed</code>.<a href="#section-4.5.2.2-12" class="pilcrow">¶</a></p>
+<p id="section-4.5.2.2-13">The Leader <span class="bcp14">MUST</span> discard any report pertaining to a batch that has already been
 collected (see <a href="#replay-protection" class="auto internal xref">Section 2.3</a> for details). The Leader <span class="bcp14">MAY</span> also set the
-corresponding error field to <code>report_replayed</code>.<a href="#section-4.5.2-30" class="pilcrow">¶</a></p>
-<p id="section-4.5.2-31">The Leader <span class="bcp14">MUST</span> discard any report whose timestamp is outside of the task's
+corresponding error field to <code>report_replayed</code>.<a href="#section-4.5.2.2-13" class="pilcrow">¶</a></p>
+<p id="section-4.5.2.2-14">The Leader <span class="bcp14">MUST</span> discard any report whose timestamp is outside of the task's
 <code>time_interval</code>. When it does so, it <span class="bcp14">SHOULD</span> set the corresponding error field to
-<code>report_dropped</code>.<a href="#section-4.5.2-31" class="pilcrow">¶</a></p>
-<p id="section-4.5.2-32">The Leader may need to buffer reports while waiting to aggregate them (e.g.,
+<code>report_dropped</code>.<a href="#section-4.5.2.2-14" class="pilcrow">¶</a></p>
+<p id="section-4.5.2.2-15">The Leader may need to buffer reports while waiting to aggregate them (e.g.,
 while waiting for an aggregation parameter from the Collector; see
 <a href="#collect-flow" class="auto internal xref">Section 4.7</a>). The Leader <span class="bcp14">SHOULD NOT</span> accept reports whose timestamps are too
 far in the future. Implementors <span class="bcp14">MAY</span> provide for some small leeway, usually no
 more than a few minutes, to account for clock skew. If the Leader rejects a
 report for this reason, it <span class="bcp14">SHOULD</span> set the corresponding error field to
 <code>report_too_early</code>. In this situation, the Client <span class="bcp14">MAY</span> re-upload the report later
-on.<a href="#section-4.5.2-32" class="pilcrow">¶</a></p>
-<p id="section-4.5.2-33">If the report contains an unrecognized public report extension, or if the
+on.<a href="#section-4.5.2.2-15" class="pilcrow">¶</a></p>
+<p id="section-4.5.2.2-16">If the report contains an unrecognized public report extension, or if the
 Leader's input share contains an unrecognized private report extension, then the
 Leader <span class="bcp14">MUST</span> discard the report and <span class="bcp14">MAY</span> abort with error <code>unsupportedExtension</code>.
 If the Leader does abort for this reason, it <span class="bcp14">SHOULD</span> indicate the unsupported
@@ -3684,22 +3703,24 @@ extensions in the resulting problem document via an extension member (<span><a h
 <span class="bcp14">MUST</span> contain an array of numbers indicating the extension code points which were
 not recognized. For example, if the report upload contained two unsupported
 extensions with code points <code>23</code> and <code>42</code>, the "unsupported_extensions" member
-would contain the JSON value <code>[23, 42]</code>.<a href="#section-4.5.2-33" class="pilcrow">¶</a></p>
-<p id="section-4.5.2-34">If the same extension type appears more than once among the public extensions
+would contain the JSON value <code>[23, 42]</code>.<a href="#section-4.5.2.2-16" class="pilcrow">¶</a></p>
+<p id="section-4.5.2.2-17">If the same extension type appears more than once among the public extensions
 and the private extensions in the Leader's input share, then the Leader <span class="bcp14">MUST</span>
-discard the report and <span class="bcp14">MAY</span> abort with error <code>invalidMessage</code>.<a href="#section-4.5.2-34" class="pilcrow">¶</a></p>
-<p id="section-4.5.2-35">Validation of anti-replay and extensions is not mandatory during the handling of
+discard the report and <span class="bcp14">MAY</span> abort with error <code>invalidMessage</code>.<a href="#section-4.5.2.2-17" class="pilcrow">¶</a></p>
+<p id="section-4.5.2.2-18">Validation of anti-replay and extensions is not mandatory during the handling of
 upload requests to avoid blocking on storage transactions or decryption of input
 shares. The Leader also cannot validate the Helper's extensions because it
 cannot decrypt the Helper's input share. Validation of report IDs and extensions
-will occur before aggregation.<a href="#section-4.5.2-35" class="pilcrow">¶</a></p>
+will occur before aggregation.<a href="#section-4.5.2.2-18" class="pilcrow">¶</a></p>
+</section>
+</div>
 <div id="example-1">
-<section id="section-4.5.2.1">
+<section id="section-4.5.2.3">
             <h5 id="name-example-2">
-<a href="#section-4.5.2.1" class="section-number selfRef">4.5.2.1. </a><a href="#name-example-2" class="section-name selfRef">Example</a>
+<a href="#section-4.5.2.3" class="section-number selfRef">4.5.2.3. </a><a href="#name-example-2" class="section-name selfRef">Example</a>
             </h5>
-<p id="section-4.5.2.1-1">Successful upload<a href="#section-4.5.2.1-1" class="pilcrow">¶</a></p>
-<div class="lang-http sourcecode" id="section-4.5.2.1-2">
+<p id="section-4.5.2.3-1">Successful upload<a href="#section-4.5.2.3-1" class="pilcrow">¶</a></p>
+<div class="lang-http sourcecode" id="section-4.5.2.3-2">
 <pre>
 POST /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/reports
 Host: example.com
@@ -3730,10 +3751,10 @@ encoded(struct {
 } UploadRequest)
 
 HTTP/1.1 200
-</pre><a href="#section-4.5.2.1-2" class="pilcrow">¶</a>
+</pre><a href="#section-4.5.2.3-2" class="pilcrow">¶</a>
 </div>
-<p id="section-4.5.2.1-3">Failed upload of 1/2 reports submitted in one bulk upload<a href="#section-4.5.2.1-3" class="pilcrow">¶</a></p>
-<div class="breakable lang-http sourcecode" id="section-4.5.2.1-4">
+<p id="section-4.5.2.3-3">Failed upload of 1/2 reports submitted in one bulk upload<a href="#section-4.5.2.3-3" class="pilcrow">¶</a></p>
+<div class="breakable lang-http sourcecode" id="section-4.5.2.3-4">
 <pre>
 POST /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/reports
 Host: example.com
@@ -3792,8 +3813,8 @@ encoded(struct {
       error = report_replayed,
     },
   ],
-} UploadResponse)
-</pre><a href="#section-4.5.2.1-4" class="pilcrow">¶</a>
+} UploadErrors)
+</pre><a href="#section-4.5.2.3-4" class="pilcrow">¶</a>
 </div>
 </section>
 </div>
@@ -6746,7 +6767,7 @@ corresponding media types:<a href="#section-9.1-1" class="pilcrow">¶</a></p>
             <p id="section-9.1-2.2.1">UploadRequest <a href="#upload-request" class="auto internal xref">Section 4.5.2</a>: "application/dap-upload-req"<a href="#section-9.1-2.2.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-9.1-2.3">
-            <p id="section-9.1-2.3.1">UploadResponse <a href="#upload-request" class="auto internal xref">Section 4.5.2</a>: "application/dap-upload-resp"<a href="#section-9.1-2.3.1" class="pilcrow">¶</a></p>
+            <p id="section-9.1-2.3.1">UploadErrors <a href="#upload-request" class="auto internal xref">Section 4.5.2</a>: "application/dap-upload-errors"<a href="#section-9.1-2.3.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-9.1-2.4">
             <p id="section-9.1-2.4.1">AggregationJobInitReq <a href="#leader-init" class="auto internal xref">Section 4.6.2.1</a>: "application/dap-aggregation-job-init-req"<a href="#section-9.1-2.4.1" class="pilcrow">¶</a></p>
