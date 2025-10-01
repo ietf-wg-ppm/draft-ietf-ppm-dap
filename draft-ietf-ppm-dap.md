@@ -1222,9 +1222,10 @@ conveyed from the Leader to the Helper when initializing aggregation jobs
 
 ## Resources {#http-resources}
 
-DAP is defined in terms of HTTP resources, such as HPKE configurations
+DAP is defined in terms of HTTP resources. These are HPKE configurations
 ({{hpke-config}}), reports ({{upload-flow}}), aggregation jobs
-({{aggregate-flow}}), and collection jobs ({{collect-flow}}).
+({{aggregate-flow}}), collection jobs ({{collect-flow}}), and aggregate shares
+({{collect-aggregate}}).
 
 Each resource has a URL. Resource URLs are specified as string literals
 containing variables. Variables are expanded into strings according to the
