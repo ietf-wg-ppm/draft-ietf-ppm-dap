@@ -1480,9 +1480,10 @@ aggregation job 1                   aggregation job 2          aggregation job j
 
 4.5.2.  Upload Request
 
-   Clients upload reports by sending a POST to {leader}/tasks/{task-
-   id}/reports.  The body is an UploadRequest, with media type
-   "application/dap-upload-req", structured as follows:
+   Reports are uploaded using the reports resource, served by the Leader
+   at {leader}/tasks/{task-id}/reports.  An upload is represented as an
+   UploadRequest, with media type "application/dap-upload-req",
+   structured as follows:
 
    struct {
      ReportID report_id;
@@ -1533,8 +1534,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    reports (see Section 8.3).  If it is used, client authentication MUST
    use a scheme that meets the requirements in Section 3.3.
 
-   The handling of the upload request by the Leader MUST be idempotent
-   as discussed in Section 9.2.2 of [RFC9110].
+4.5.2.1.  Client Behavior
 
    To generate a report, the Client begins by sharding its measurement
    into input shares and the public share using the VDAF's sharding
@@ -1600,6 +1600,14 @@ aggregation job 1                   aggregation job 2          aggregation job j
      ReportMetadata report_metadata;
      opaque public_share<0..2^32-1>;
    } InputShareAad;
+
+   Clients upload reports by sending an UploadRequest as the body of a
+   POST to the Leader's reports resource.
+
+4.5.2.2.  Leader Behavior
+
+   The handling of the upload request by the Leader MUST be idempotent
+   as discussed in Section 9.2.2 of [RFC9110].
 
    If the upload request is malformed, the Leader aborts with error
    invalidMessage.
@@ -1692,7 +1700,7 @@ aggregation job 1                   aggregation job 2          aggregation job j
    share.  Validation of report IDs and extensions will occur before
    aggregation.
 
-4.5.2.1.  Example
+4.5.2.3.  Example
 
    Successful upload
 
