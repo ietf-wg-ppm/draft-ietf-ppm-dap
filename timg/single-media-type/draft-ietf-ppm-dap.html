@@ -1059,7 +1059,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
 </tr></thead>
 <tfoot><tr>
 <td class="left">Geoghegan, et al.</td>
-<td class="center">Expires 4 April 2026</td>
+<td class="center">Expires 5 April 2026</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1072,12 +1072,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-ietf-ppm-dap-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2025-10-01" class="published">1 October 2025</time>
+<time datetime="2025-10-02" class="published">2 October 2025</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Standards Track</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2026-04-04">4 April 2026</time></dd>
+<dd class="expires"><time datetime="2026-04-05">5 April 2026</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -1151,7 +1151,7 @@ without revealing any individual contributor's data.<a href="#section-abstract-1
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 4 April 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 5 April 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -3598,10 +3598,10 @@ algorithm choices.<a href="#section-4.5.1-1" class="pilcrow">¶</a></p>
 <p id="section-4.5.1-2">Clients retrieve the HPKE configuration from each Aggregator by sending a GET to
 <code>{aggregator}/hpke_config</code>.<a href="#section-4.5.1-2" class="pilcrow">¶</a></p>
 <p id="section-4.5.1-3">An Aggregator responds with an <code>HpkeConfigList</code>, with media type
-"application/dap;message=hpke-config-list". The <code>HpkeConfigList</code> contains one or
-more <code>HpkeConfig</code>s in decreasing order of preference. This allows an Aggregator
-to support multiple HPKE configurations and multiple sets of algorithms
-simultaneously.<a href="#section-4.5.1-3" class="pilcrow">¶</a></p>
+"application/ppm-dap;message=hpke-config-list". The <code>HpkeConfigList</code> contains
+one or more <code>HpkeConfig</code>s in decreasing order of preference. This allows an
+Aggregator to support multiple HPKE configurations and multiple sets of
+algorithms simultaneously.<a href="#section-4.5.1-3" class="pilcrow">¶</a></p>
 <div class="lang-tls-presentation sourcecode" id="section-4.5.1-4">
 <pre>
 HpkeConfig HpkeConfigList&lt;10..2^16-1&gt;;
@@ -3655,7 +3655,7 @@ GET /leader/hpke_config
 Host: example.com
 
 HTTP/1.1 200
-Content-Type: application/dap;message=hpke-config-list
+Content-Type: application/ppm-dap;message=hpke-config-list
 Cache-Control: max-age=86400
 
 encoded([
@@ -3687,7 +3687,7 @@ encoded([
           </h4>
 <p id="section-4.5.2-1">Reports are uploaded using the reports resource, served by the Leader at
 <code>{leader}/tasks/{task-id}/reports</code>. An upload is represented as an
-<code>UploadRequest</code>, with media type "application/dap;message=upload-req",
+<code>UploadRequest</code>, with media type "application/ppm-dap;message=upload-req",
 structured as follows:<a href="#section-4.5.2-1" class="pilcrow">¶</a></p>
 <div class="lang-tls-presentation sourcecode" id="section-4.5.2-2">
 <pre>
@@ -3856,8 +3856,8 @@ in <span><a href="https://rfc-editor.org/rfc/rfc9110#section-9.2.2" class="relre
 with an empty body.<a href="#section-4.5.2.2-4" class="pilcrow">¶</a></p>
 <p id="section-4.5.2.2-5">If some or all of the reports fail to upload for one of the reasons described in
 the remainder of this section, the Leader responds with a body consisting of an
-<code>UploadErrors</code> with the media type <code>application/dap;message=upload-errors</code>. The
-structure of the response is as follows:<a href="#section-4.5.2.2-5" class="pilcrow">¶</a></p>
+<code>UploadErrors</code> with the media type <code>application/ppm-dap;message=upload-errors</code>.
+The structure of the response is as follows:<a href="#section-4.5.2.2-5" class="pilcrow">¶</a></p>
 <div class="lang-tls-presentation sourcecode" id="section-4.5.2.2-6">
 <pre>
 struct {
@@ -3930,7 +3930,7 @@ will occur before aggregation.<a href="#section-4.5.2.2-18" class="pilcrow">¶</
 <pre>
 POST /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/reports
 Host: example.com
-Content-Type: application/dap;message=upload-req
+Content-Type: application/ppm-dap;message=upload-req
 Content-Length: 100
 
 encoded(struct {
@@ -3964,7 +3964,7 @@ HTTP/1.1 200
 <pre>
 POST /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/reports
 Host: example.com
-Content-Type: application/dap;message=upload-req
+Content-Type: application/ppm-dap;message=upload-req
 Content-Length: 200
 
 encoded(struct {
@@ -4009,7 +4009,7 @@ encoded(struct {
 } UploadRequest)
 
 HTTP/1.1 200
-Content-Type: application/dap;message=upload-errors
+Content-Type: application/ppm-dap;message=upload-errors
 Content-Length: 20
 
 encoded(struct {
@@ -4416,7 +4416,7 @@ of the HTTP message consists of <code>prepare_inits</code>.<a href="#section-4.6
             </ul>
 <p id="section-4.6.2.1-18">The Leader sends the <code>AggregationJobInitReq</code> in the body of a PUT request to the
 aggregation job with a media type of
-"application/dap;message=aggregation-job-init-req". The Leader handles the
+"application/ppm-dap;message=aggregation-job-init-req". The Leader handles the
 response(s) as described in <a href="#http-resources" class="auto internal xref">Section 4.3</a> to obtain an
 <code>AggregationJobResp</code>.<a href="#section-4.6.2.1-18" class="pilcrow">¶</a></p>
 <p id="section-4.6.2.1-19">The <code>AggregationJobResp.prepare_resps</code> field must include exactly the same
@@ -4655,7 +4655,7 @@ struct {
 <p id="section-4.6.2.2-20"><code>prepare_resps</code> is the outbound <code>PrepareResp</code> messages for each report computed
 in the previous step. The order <span class="bcp14">MUST</span> match
 <code>AggregationJobInitReq.prepare_inits</code>. The media type for <code>AggregationJobResp</code>
-is "application/dap;message=aggregation-job-resp".<a href="#section-4.6.2.2-20" class="pilcrow">¶</a></p>
+is "application/ppm-dap;message=aggregation-job-resp".<a href="#section-4.6.2.2-20" class="pilcrow">¶</a></p>
 <p id="section-4.6.2.2-21">The Helper may receive multiple copies of a given initialization request. The
 Helper <span class="bcp14">MUST</span> verify that subsequent requests have the same
 <code>AggregationJobInitReq</code> value and abort with a client error if they do not. It
@@ -4764,7 +4764,7 @@ with error <code>report_dropped</code>.<a href="#section-4.6.2.4-2.7.1" class="p
 <pre>
 PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
-Content-Type: application/dap;message=aggregation-job-init-req
+Content-Type: application/ppm-dap;message=aggregation-job-init-req
 Content-Length: 100
 Authorization: Bearer auth-token
 
@@ -4780,7 +4780,7 @@ encoded(struct {
 } AggregationJobInitReq)
 
 HTTP/1.1 200
-Content-Type: application/dap;message=aggregation-job-resp
+Content-Type: application/ppm-dap;message=aggregation-job-resp
 Content-Length: 100
 
 encoded(struct { prepare_resps } AggregationJobResp)
@@ -4791,7 +4791,7 @@ encoded(struct { prepare_resps } AggregationJobResp)
 <pre>
 PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
-Content-Type: application/dap;message=aggregation-job-init-req
+Content-Type: application/ppm-dap;message=aggregation-job-init-req
 Content-Length: 100
 Authorization: Bearer auth-token
 
@@ -4821,7 +4821,7 @@ Host: example.com
 Authorization: Bearer auth-token
 
 HTTP/1.1 200
-Content-Type: application/dap;message=aggregation-job-resp
+Content-Type: application/ppm-dap;message=aggregation-job-resp
 Content-Length: 100
 
 encoded(struct { prepare_resps } AggregationJobResp)
@@ -4906,7 +4906,8 @@ struct {
 <p id="section-4.6.3.1-5">where <code>report_id</code> is the report ID associated with <code>state</code>, and
 <code>payload</code> is set to <code>state.outbound</code>.<a href="#section-4.6.3.1-5" class="pilcrow">¶</a></p>
 <p id="section-4.6.3.1-6">Next, the Leader sends a POST to the aggregation job with media type
-"application/dap;message=aggregation-job-continue-req" and body structured as:<a href="#section-4.6.3.1-6" class="pilcrow">¶</a></p>
+"application/ppm-dap;message=aggregation-job-continue-req" and body structured
+as:<a href="#section-4.6.3.1-6" class="pilcrow">¶</a></p>
 <div class="lang-tls-presentation sourcecode" id="section-4.6.3.1-7">
 <pre>
 struct {
@@ -5251,7 +5252,7 @@ any).<a href="#section-4.6.3.4-3" class="pilcrow">¶</a></p>
 <pre>
 POST /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
-Content-Type: application/dap;message=aggregation-job-continue-req
+Content-Type: application/ppm-dap;message=aggregation-job-continue-req
 Content-Length: 100
 Authorization: Bearer auth-token
 
@@ -5261,7 +5262,7 @@ encoded(struct {
 } AggregationJobContinueReq)
 
 HTTP/1.1 200
-Content-Type: application/dap;message=aggregation-job-resp
+Content-Type: application/ppm-dap;message=aggregation-job-resp
 Content-Length: 100
 
 encoded(struct { prepare_resps } AggregationJobResp)
@@ -5272,7 +5273,7 @@ encoded(struct { prepare_resps } AggregationJobResp)
 <pre>
 POST /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
-Content-Type: application/dap;message=aggregation-job-continue-req
+Content-Type: application/ppm-dap;message=aggregation-job-continue-req
 Content-Length: 100
 Authorization: Bearer auth-token
 
@@ -5298,7 +5299,7 @@ Host: example.com
 Authorization: Bearer auth-token
 
 HTTP/1.1 200
-Content-Type: application/dap;message=aggregation-job-resp
+Content-Type: application/ppm-dap;message=aggregation-job-resp
 Content-Length: 100
 
 encoded(struct { prepare_resps } AggregationJobResp)
@@ -5381,8 +5382,8 @@ opaque CollectionJobID[16];
 <p id="section-4.7.1-1">First, the Collector chooses a collection job ID, which <span class="bcp14">MUST</span> be unique within
 the scope of the corresponding DAP task.<a href="#section-4.7.1-1" class="pilcrow">¶</a></p>
 <p id="section-4.7.1-2">To initiate the collection job, the Collector issues a PUT request to the
-collection job with media type "application/dap;message=collection-job-req", and
-a body structured as follows:<a href="#section-4.7.1-2" class="pilcrow">¶</a></p>
+collection job with media type "application/ppm-dap;message=collection-job-req",
+and a body structured as follows:<a href="#section-4.7.1-2" class="pilcrow">¶</a></p>
 <div class="lang-tls-presentation sourcecode" id="section-4.7.1-3">
 <pre>
 struct {
@@ -5494,7 +5495,7 @@ struct {
 </pre><a href="#section-4.7.1-15" class="pilcrow">¶</a>
 </div>
 <p id="section-4.7.1-16">A <code>CollectionJobResp</code>'s media type is
-"application/dap;message=collection-job-resp". The structure includes the
+"application/ppm-dap;message=collection-job-resp". The structure includes the
 following:<a href="#section-4.7.1-16" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-4.7.1-17.1">
@@ -5536,7 +5537,7 @@ requests to the collection job with a different <code>CollectionJobReq</code>, t
 <pre>
 PUT /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/collection_jobs/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
-Content-Type: application/dap;message=collection-job-req
+Content-Type: application/ppm-dap;message=collection-job-req
 Authorization: Bearer auth-token
 
 encoded(struct {
@@ -5548,7 +5549,7 @@ encoded(struct {
 } CollectionJobReq)
 
 HTTP/1.1 200
-Content-Type: application/dap;message=collection-job-req
+Content-Type: application/ppm-dap;message=collection-job-req
 
 encoded(struct {
   part_batch_selector = struct {
@@ -5572,7 +5573,7 @@ encoded(struct {
 <pre>
 PUT /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/collection_jobs/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
-Content-Type: application/dap;message=collection-job-req
+Content-Type: application/ppm-dap;message=collection-job-req
 Authorization: Bearer auth-token
 
 encoded(struct {
@@ -5603,7 +5604,7 @@ Host: example.com
 Authorization: Bearer auth-token
 
 HTTP/1.1 200
-Content-Type: application/dap;message=collection-job-req
+Content-Type: application/ppm-dap;message=collection-job-req
 
 encoded(struct {
   part_batch_selector = struct {
@@ -5722,7 +5723,7 @@ struct {
 </pre><a href="#section-4.7.3-10" class="pilcrow">¶</a>
 </div>
 <p id="section-4.7.3-11">The media type of <code>AggregateShareReq</code> is
-"application/dap;message=aggregate-share-req". The structure contains the
+"application/ppm-dap;message=aggregate-share-req". The structure contains the
 following parameters:<a href="#section-4.7.3-11" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-4.7.3-12.1">
@@ -5774,7 +5775,7 @@ Encryption prevents the Leader from learning the actual result, as it only has
 its own aggregate share and cannot compute the Helper's.<a href="#section-4.7.3-22" class="pilcrow">¶</a></p>
 <p id="section-4.7.3-23">Once the Helper has encrypted its aggregate share, the aggregate share job is
 ready. Its results are represented by an <code>AggregateShare</code>, with media type
-"application/dap;message=aggregate-share":<a href="#section-4.7.3-23" class="pilcrow">¶</a></p>
+"application/ppm-dap;message=aggregate-share":<a href="#section-4.7.3-23" class="pilcrow">¶</a></p>
 <div class="lang-tls-presentation sourcecode" id="section-4.7.3-24">
 <pre>
 struct {
@@ -5809,7 +5810,7 @@ under the Collector's HPKE public key as described in
 <pre>
 PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregate_shares/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
-Content-Type: application/dap;message=aggregate-share-req
+Content-Type: application/ppm-dap;message=aggregate-share-req
 Authorization: Bearer auth-token
 
 encoded(struct {
@@ -5828,7 +5829,7 @@ encoded(struct {
 } AggregateShareReq)
 
 HTTP/1.1 200
-Content-Type: application/dap;message=aggregate-share
+Content-Type: application/ppm-dap;message=aggregate-share
 
 encoded(struct {
   encrypted_aggregate_share = struct { ... } HpkeCiphertext,
@@ -5840,7 +5841,7 @@ encoded(struct {
 <pre>
 PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregate_shares/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
-Content-Type: application/dap;message=aggregate-share-req
+Content-Type: application/ppm-dap;message=aggregate-share-req
 Authorization: Bearer auth-token
 
 encoded(struct {
@@ -5873,7 +5874,7 @@ Host: example.com
 Authorization: Bearer auth-token
 
 HTTP/1.1 200
-Content-Type: application/dap;message=aggregate-share
+Content-Type: application/ppm-dap;message=aggregate-share
 
 encoded(struct {
   encrypted_aggregate_share = struct { ... } HpkeCiphertext,
@@ -6967,7 +6968,7 @@ number assigned to this document.)<a href="#section-9-2" class="pilcrow">¶</a><
 <a href="#section-9.1" class="section-number selfRef">9.1. </a><a href="#name-protocol-message-media-type" class="section-name selfRef">Protocol Message Media Type</a>
         </h3>
 <p id="section-9.1-1">This specification defines a new media type used for all protocol messages:
-<code>application/dap</code>. Specific message types are distinguished using a <code>message</code>
+<code>application/ppm-dap</code>. Specific message types are distinguished using a <code>message</code>
 parameter.<a href="#section-9.1-1" class="pilcrow">¶</a></p>
 <p id="section-9.1-2">This specification defines the following protocol messages, along with their
 corresponding <code>message</code> value:<a href="#section-9.1-2" class="pilcrow">¶</a></p>
@@ -7005,7 +7006,7 @@ corresponding <code>message</code> value:<a href="#section-9.1-2" class="pilcrow
         </ul>
 <p id="section-9.1-4">For example, a request whose body consists of an <code>AggregationJobInitReq</code> could
 have the header
-<code>Content-Type: application/dap;message=aggregation-job-init-req</code>.<a href="#section-9.1-4" class="pilcrow">¶</a></p>
+<code>Content-Type: application/ppm-dap;message=aggregation-job-init-req</code>.<a href="#section-9.1-4" class="pilcrow">¶</a></p>
 <p id="section-9.1-5">Protocol message format evolution is supported through the definition of new
 formats that are identified by <code>message</code> values. The messages above are specific
 to this specification. When a new major enhancement is proposed that results in
@@ -7019,10 +7020,10 @@ component is using. This <span class="bcp14">MAY</span> be used as a hint by the
 to do compatibility checks between client and server.
 For example, A report submission to leader from a client that supports
 draft-ietf-ppm-dap-09 could have the header
-<code>Content-Type: application/dap;message=upload-req;version=09</code>.<a href="#section-9.1-6" class="pilcrow">¶</a></p>
+<code>Content-Type: application/ppm-dap;message=upload-req;version=09</code>.<a href="#section-9.1-6" class="pilcrow">¶</a></p>
 <p id="section-9.1-7">The "Media Types" registry at https://www.iana.org/assignments/media-types will
 be (RFC EDITOR: replace "will be" with "has been") updated to include the
-<code>application/dap</code> media type.<a href="#section-9.1-7" class="pilcrow">¶</a></p>
+<code>application/ppm-dap</code> media type.<a href="#section-9.1-7" class="pilcrow">¶</a></p>
 <span class="break"></span><dl class="dlParallel" id="section-9.1-8">
           <dt id="section-9.1-8.1">Type name:</dt>
           <dd style="margin-left: 1.5em" id="section-9.1-8.2">

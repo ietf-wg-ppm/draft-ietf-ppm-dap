@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 4 April 2026                                         Cloudflare
+Expires: 5 April 2026                                         Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                          1 October 2025
+                                                          2 October 2025
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -64,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 4 April 2026.
+   This Internet-Draft will expire on 5 April 2026.
 
 Copyright Notice
 
@@ -1475,7 +1475,7 @@ Table of Contents
    sending a GET to {aggregator}/hpke_config.
 
    An Aggregator responds with an HpkeConfigList, with media type
-   "application/dap;message=hpke-config-list".  The HpkeConfigList
+   "application/ppm-dap;message=hpke-config-list".  The HpkeConfigList
    contains one or more HpkeConfigs in decreasing order of preference.
    This allows an Aggregator to support multiple HPKE configurations and
    multiple sets of algorithms simultaneously.
@@ -1525,7 +1525,7 @@ Table of Contents
    Host: example.com
 
    HTTP/1.1 200
-   Content-Type: application/dap;message=hpke-config-list
+   Content-Type: application/ppm-dap;message=hpke-config-list
    Cache-Control: max-age=86400
 
    encoded([
@@ -1549,8 +1549,8 @@ Table of Contents
 
    Reports are uploaded using the reports resource, served by the Leader
    at {leader}/tasks/{task-id}/reports.  An upload is represented as an
-   UploadRequest, with media type "application/dap;message=upload-req",
-   structured as follows:
+   UploadRequest, with media type "application/ppm-dap;message=upload-
+   req", structured as follows:
 
    struct {
      ReportID report_id;
@@ -1688,7 +1688,7 @@ Table of Contents
    If some or all of the reports fail to upload for one of the reasons
    described in the remainder of this section, the Leader responds with
    a body consisting of an UploadErrors with the media type application/
-   dap;message=upload-errors.  The structure of the response is as
+   ppm-dap;message=upload-errors.  The structure of the response is as
    follows:
 
    struct {
@@ -1774,7 +1774,7 @@ Table of Contents
 
    POST /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/reports
    Host: example.com
-   Content-Type: application/dap;message=upload-req
+   Content-Type: application/ppm-dap;message=upload-req
    Content-Length: 100
 
    encoded(struct {
@@ -1806,7 +1806,7 @@ Table of Contents
 
    POST /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/reports
    Host: example.com
-   Content-Type: application/dap;message=upload-req
+   Content-Type: application/ppm-dap;message=upload-req
    Content-Length: 200
 
    encoded(struct {
@@ -1851,7 +1851,7 @@ Table of Contents
    } UploadRequest)
 
    HTTP/1.1 200
-   Content-Type: application/dap;message=upload-errors
+   Content-Type: application/ppm-dap;message=upload-errors
    Content-Length: 20
 
    encoded(struct {
@@ -2188,7 +2188,7 @@ Table of Contents
       prepare_inits.
 
    The Leader sends the AggregationJobInitReq in the body of a PUT
-   request to the aggregation job with a media type of "application/
+   request to the aggregation job with a media type of "application/ppm-
    dap;message=aggregation-job-init-req".  The Leader handles the
    response(s) as described in Section 4.3 to obtain an
    AggregationJobResp.
@@ -2394,7 +2394,8 @@ Table of Contents
    prepare_resps is the outbound PrepareResp messages for each report
    computed in the previous step.  The order MUST match
    AggregationJobInitReq.prepare_inits.  The media type for
-   AggregationJobResp is "application/dap;message=aggregation-job-resp".
+   AggregationJobResp is "application/ppm-dap;message=aggregation-job-
+   resp".
 
    The Helper may receive multiple copies of a given initialization
    request.  The Helper MUST verify that subsequent requests have the
@@ -2480,7 +2481,7 @@ Table of Contents
 
    PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
    Host: example.com
-   Content-Type: application/dap;message=aggregation-job-init-req
+   Content-Type: application/ppm-dap;message=aggregation-job-init-req
    Content-Length: 100
    Authorization: Bearer auth-token
 
@@ -2496,7 +2497,7 @@ Table of Contents
    } AggregationJobInitReq)
 
    HTTP/1.1 200
-   Content-Type: application/dap;message=aggregation-job-resp
+   Content-Type: application/ppm-dap;message=aggregation-job-resp
    Content-Length: 100
 
    encoded(struct { prepare_resps } AggregationJobResp)
@@ -2505,7 +2506,7 @@ Table of Contents
 
    PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
    Host: example.com
-   Content-Type: application/dap;message=aggregation-job-init-req
+   Content-Type: application/ppm-dap;message=aggregation-job-init-req
    Content-Length: 100
    Authorization: Bearer auth-token
 
@@ -2535,7 +2536,7 @@ Table of Contents
    Authorization: Bearer auth-token
 
    HTTP/1.1 200
-   Content-Type: application/dap;message=aggregation-job-resp
+   Content-Type: application/ppm-dap;message=aggregation-job-resp
    Content-Length: 100
 
    encoded(struct { prepare_resps } AggregationJobResp)
@@ -2590,7 +2591,7 @@ Table of Contents
    is set to state.outbound.
 
    Next, the Leader sends a POST to the aggregation job with media type
-   "application/dap;message=aggregation-job-continue-req" and body
+   "application/ppm-dap;message=aggregation-job-continue-req" and body
    structured as:
 
    struct {
@@ -2899,7 +2900,7 @@ Table of Contents
 
    POST /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
    Host: example.com
-   Content-Type: application/dap;message=aggregation-job-continue-req
+   Content-Type: application/ppm-dap;message=aggregation-job-continue-req
    Content-Length: 100
    Authorization: Bearer auth-token
 
@@ -2909,7 +2910,7 @@ Table of Contents
    } AggregationJobContinueReq)
 
    HTTP/1.1 200
-   Content-Type: application/dap;message=aggregation-job-resp
+   Content-Type: application/ppm-dap;message=aggregation-job-resp
    Content-Length: 100
 
    encoded(struct { prepare_resps } AggregationJobResp)
@@ -2918,7 +2919,7 @@ Table of Contents
 
    POST /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
    Host: example.com
-   Content-Type: application/dap;message=aggregation-job-continue-req
+   Content-Type: application/ppm-dap;message=aggregation-job-continue-req
    Content-Length: 100
    Authorization: Bearer auth-token
 
@@ -2944,7 +2945,7 @@ Table of Contents
    Authorization: Bearer auth-token
 
    HTTP/1.1 200
-   Content-Type: application/dap;message=aggregation-job-resp
+   Content-Type: application/ppm-dap;message=aggregation-job-resp
    Content-Length: 100
 
    encoded(struct { prepare_resps } AggregationJobResp)
@@ -3004,7 +3005,7 @@ Table of Contents
    unique within the scope of the corresponding DAP task.
 
    To initiate the collection job, the Collector issues a PUT request to
-   the collection job with media type "application/
+   the collection job with media type "application/ppm-
    dap;message=collection-job-req", and a body structured as follows:
 
    struct {
@@ -3115,7 +3116,7 @@ Table of Contents
      HpkeCiphertext helper_encrypted_agg_share;
    } CollectionJobResp;
 
-   A CollectionJobResp's media type is "application/
+   A CollectionJobResp's media type is "application/ppm-
    dap;message=collection-job-resp".  The structure includes the
    following:
 
@@ -3152,7 +3153,7 @@ Table of Contents
 
    PUT /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/collection_jobs/lc7aUeGpdSNosNlh-UZhKA
    Host: example.com
-   Content-Type: application/dap;message=collection-job-req
+   Content-Type: application/ppm-dap;message=collection-job-req
    Authorization: Bearer auth-token
 
    encoded(struct {
@@ -3164,7 +3165,7 @@ Table of Contents
    } CollectionJobReq)
 
    HTTP/1.1 200
-   Content-Type: application/dap;message=collection-job-req
+   Content-Type: application/ppm-dap;message=collection-job-req
 
    encoded(struct {
      part_batch_selector = struct {
@@ -3186,7 +3187,7 @@ Table of Contents
 
    PUT /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/collection_jobs/lc7aUeGpdSNosNlh-UZhKA
    Host: example.com
-   Content-Type: application/dap;message=collection-job-req
+   Content-Type: application/ppm-dap;message=collection-job-req
    Authorization: Bearer auth-token
 
    encoded(struct {
@@ -3217,7 +3218,7 @@ Table of Contents
    Authorization: Bearer auth-token
 
    HTTP/1.1 200
-   Content-Type: application/dap;message=collection-job-req
+   Content-Type: application/ppm-dap;message=collection-job-req
 
    encoded(struct {
      part_batch_selector = struct {
@@ -3312,7 +3313,7 @@ Table of Contents
      opaque checksum[32];
    } AggregateShareReq;
 
-   The media type of AggregateShareReq is "application/
+   The media type of AggregateShareReq is "application/ppm-
    dap;message=aggregate-share-req".  The structure contains the
    following parameters:
 
@@ -3372,8 +3373,8 @@ Table of Contents
 
    Once the Helper has encrypted its aggregate share, the aggregate
    share job is ready.  Its results are represented by an
-   AggregateShare, with media type "application/dap;message=aggregate-
-   share":
+   AggregateShare, with media type "application/ppm-
+   dap;message=aggregate-share":
 
    struct {
      HpkeCiphertext encrypted_aggregate_share;
@@ -3409,7 +3410,7 @@ Table of Contents
 
    PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregate_shares/lc7aUeGpdSNosNlh-UZhKA
    Host: example.com
-   Content-Type: application/dap;message=aggregate-share-req
+   Content-Type: application/ppm-dap;message=aggregate-share-req
    Authorization: Bearer auth-token
 
    encoded(struct {
@@ -3428,7 +3429,7 @@ Table of Contents
    } AggregateShareReq)
 
    HTTP/1.1 200
-   Content-Type: application/dap;message=aggregate-share
+   Content-Type: application/ppm-dap;message=aggregate-share
 
    encoded(struct {
      encrypted_aggregate_share = struct { ... } HpkeCiphertext,
@@ -3438,7 +3439,7 @@ Table of Contents
 
    PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregate_shares/lc7aUeGpdSNosNlh-UZhKA
    Host: example.com
-   Content-Type: application/dap;message=aggregate-share-req
+   Content-Type: application/ppm-dap;message=aggregate-share-req
    Authorization: Bearer auth-token
 
    encoded(struct {
@@ -3471,7 +3472,7 @@ Table of Contents
    Authorization: Bearer auth-token
 
    HTTP/1.1 200
-   Content-Type: application/dap;message=aggregate-share
+   Content-Type: application/ppm-dap;message=aggregate-share
 
    encoded(struct {
      encrypted_aggregate_share = struct { ... } HpkeCiphertext,
@@ -4357,8 +4358,8 @@ Table of Contents
 9.1.  Protocol Message Media Type
 
    This specification defines a new media type used for all protocol
-   messages: application/dap.  Specific message types are distinguished
-   using a message parameter.
+   messages: application/ppm-dap.  Specific message types are
+   distinguished using a message parameter.
 
    This specification defines the following protocol messages, along
    with their corresponding message value:
@@ -4386,7 +4387,7 @@ Table of Contents
 
    For example, a request whose body consists of an
    AggregationJobInitReq could have the header Content-Type:
-   application/dap;message=aggregation-job-init-req.
+   application/ppm-dap;message=aggregation-job-init-req.
 
    Protocol message format evolution is supported through the definition
    of new formats that are identified by message values.  The messages
@@ -4403,12 +4404,12 @@ Table of Contents
    used as a hint by the receiver of the request to do compatibility
    checks between client and server.  For example, A report submission
    to leader from a client that supports draft-ietf-ppm-dap-09 could
-   have the header Content-Type: application/dap;message=upload-
+   have the header Content-Type: application/ppm-dap;message=upload-
    req;version=09.
 
    The "Media Types" registry at https://www.iana.org/assignments/media-
    types will be (RFC EDITOR: replace "will be" with "has been") updated
-   to include the application/dap media type.
+   to include the application/ppm-dap media type.
 
    Type name:  application
 
