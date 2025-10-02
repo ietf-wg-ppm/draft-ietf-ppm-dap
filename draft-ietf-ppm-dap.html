@@ -1453,39 +1453,7 @@ without revealing any individual contributor's data.<a href="#section-abstract-1
             <p id="section-toc.1-1.9.1"><a href="#section-9" class="auto internal xref">9</a>.  <a href="#name-iana-considerations" class="internal xref">IANA Considerations</a></p>
 <ul class="compact toc ulBare ulEmpty">
 <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9.2.1">
-                <p id="section-toc.1-1.9.2.1.1"><a href="#section-9.1" class="auto internal xref">9.1</a>.  <a href="#name-protocol-message-media-type" class="internal xref">Protocol Message Media Types</a></p>
-<ul class="compact toc ulBare ulEmpty">
-<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9.2.1.2.1">
-                    <p id="section-toc.1-1.9.2.1.2.1.1"><a href="#section-9.1.1" class="auto internal xref">9.1.1</a>.  <a href="#name-application-dap-hpke-config" class="internal xref">"application/dap-hpke-config-list" media type</a></p>
-</li>
-                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9.2.1.2.2">
-                    <p id="section-toc.1-1.9.2.1.2.2.1"><a href="#section-9.1.2" class="auto internal xref">9.1.2</a>.  <a href="#name-application-dap-upload-req-" class="internal xref">"application/dap-upload-req" media type</a></p>
-</li>
-                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9.2.1.2.3">
-                    <p id="section-toc.1-1.9.2.1.2.3.1"><a href="#section-9.1.3" class="auto internal xref">9.1.3</a>.  <a href="#name-application-dap-upload-resp" class="internal xref">"application/dap-upload-resp" media type</a></p>
-</li>
-                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9.2.1.2.4">
-                    <p id="section-toc.1-1.9.2.1.2.4.1"><a href="#section-9.1.4" class="auto internal xref">9.1.4</a>.  <a href="#name-application-dap-aggregation" class="internal xref">"application/dap-aggregation-job-init-req" media type</a></p>
-</li>
-                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9.2.1.2.5">
-                    <p id="section-toc.1-1.9.2.1.2.5.1"><a href="#section-9.1.5" class="auto internal xref">9.1.5</a>.  <a href="#name-application-dap-aggregation-" class="internal xref">"application/dap-aggregation-job-resp" media type</a></p>
-</li>
-                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9.2.1.2.6">
-                    <p id="section-toc.1-1.9.2.1.2.6.1"><a href="#section-9.1.6" class="auto internal xref">9.1.6</a>.  <a href="#name-application-dap-aggregation-j" class="internal xref">"application/dap-aggregation-job-continue-req" media type</a></p>
-</li>
-                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9.2.1.2.7">
-                    <p id="section-toc.1-1.9.2.1.2.7.1"><a href="#section-9.1.7" class="auto internal xref">9.1.7</a>.  <a href="#name-application-dap-aggregate-s" class="internal xref">"application/dap-aggregate-share-req" media type</a></p>
-</li>
-                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9.2.1.2.8">
-                    <p id="section-toc.1-1.9.2.1.2.8.1"><a href="#section-9.1.8" class="auto internal xref">9.1.8</a>.  <a href="#name-application-dap-aggregate-sh" class="internal xref">"application/dap-aggregate-share" media type</a></p>
-</li>
-                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9.2.1.2.9">
-                    <p id="section-toc.1-1.9.2.1.2.9.1"><a href="#section-9.1.9" class="auto internal xref">9.1.9</a>.  <a href="#name-application-dap-collection-" class="internal xref">"application/dap-collection-job-req" media type</a></p>
-</li>
-                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9.2.1.2.10">
-                    <p id="section-toc.1-1.9.2.1.2.10.1"><a href="#section-9.1.10" class="auto internal xref">9.1.10</a>. <a href="#name-application-dap-collection-j" class="internal xref">"application/dap-collection-job-resp" media type</a></p>
-</li>
-                </ul>
+                <p id="section-toc.1-1.9.2.1.1"><a href="#section-9.1" class="auto internal xref">9.1</a>.  <a href="#name-protocol-message-media-type" class="internal xref">Protocol Message Media Type</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9.2.2">
                 <p id="section-toc.1-1.9.2.2.1"><a href="#section-9.2" class="auto internal xref">9.2</a>.  <a href="#name-dap-type-registries" class="internal xref">DAP Type Registries</a></p>
@@ -3665,10 +3633,10 @@ algorithm choices.<a href="#section-4.5.1-1" class="pilcrow">¶</a></p>
 <p id="section-4.5.1-2">Clients retrieve the HPKE configuration from each Aggregator by sending a GET to
 <code>{aggregator}/hpke_config</code>.<a href="#section-4.5.1-2" class="pilcrow">¶</a></p>
 <p id="section-4.5.1-3">An Aggregator responds with an <code>HpkeConfigList</code>, with media type
-"application/dap-hpke-config-list". The <code>HpkeConfigList</code> contains one or more
-<code>HpkeConfig</code>s in decreasing order of preference. This allows an Aggregator to
-support multiple HPKE configurations and multiple sets of algorithms
-simultaneously.<a href="#section-4.5.1-3" class="pilcrow">¶</a></p>
+"application/ppm-dap;message=hpke-config-list". The <code>HpkeConfigList</code> contains
+one or more <code>HpkeConfig</code>s in decreasing order of preference. This allows an
+Aggregator to support multiple HPKE configurations and multiple sets of
+algorithms simultaneously.<a href="#section-4.5.1-3" class="pilcrow">¶</a></p>
 <div class="lang-tls-presentation sourcecode" id="section-4.5.1-4">
 <pre>
 HpkeConfig HpkeConfigList&lt;10..2^16-1&gt;;
@@ -3722,7 +3690,7 @@ GET /leader/hpke_config
 Host: example.com
 
 HTTP/1.1 200
-Content-Type: application/dap-hpke-config-list
+Content-Type: application/ppm-dap;message=hpke-config-list
 Cache-Control: max-age=86400
 
 encoded([
@@ -3754,8 +3722,8 @@ encoded([
           </h4>
 <p id="section-4.5.2-1">Reports are uploaded using the reports resource, served by the Leader at
 <code>{leader}/tasks/{task-id}/reports</code>. An upload is represented as an
-<code>UploadRequest</code>, with media type "application/dap-upload-req", structured as
-follows:<a href="#section-4.5.2-1" class="pilcrow">¶</a></p>
+<code>UploadRequest</code>, with media type "application/ppm-dap;message=upload-req",
+structured as follows:<a href="#section-4.5.2-1" class="pilcrow">¶</a></p>
 <div class="lang-tls-presentation sourcecode" id="section-4.5.2-2">
 <pre>
 struct {
@@ -3923,8 +3891,8 @@ in <span><a href="https://rfc-editor.org/rfc/rfc9110#section-9.2.2" class="relre
 with an empty body.<a href="#section-4.5.2.2-4" class="pilcrow">¶</a></p>
 <p id="section-4.5.2.2-5">If some or all of the reports fail to upload for one of the reasons described in
 the remainder of this section, the Leader responds with a body consisting of an
-<code>UploadErrors</code> with the media type <code>application/dap-upload-errors</code>. The
-structure of the response is as follows:<a href="#section-4.5.2.2-5" class="pilcrow">¶</a></p>
+<code>UploadErrors</code> with the media type <code>application/ppm-dap;message=upload-errors</code>.
+The structure of the response is as follows:<a href="#section-4.5.2.2-5" class="pilcrow">¶</a></p>
 <div class="lang-tls-presentation sourcecode" id="section-4.5.2.2-6">
 <pre>
 struct {
@@ -3997,7 +3965,7 @@ will occur before aggregation.<a href="#section-4.5.2.2-18" class="pilcrow">¶</
 <pre>
 POST /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/reports
 Host: example.com
-Content-Type: application/dap-upload-req
+Content-Type: application/ppm-dap;message=upload-req
 Content-Length: 100
 
 encoded(struct {
@@ -4031,7 +3999,7 @@ HTTP/1.1 200
 <pre>
 POST /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/reports
 Host: example.com
-Content-Type: application/dap-upload-req
+Content-Type: application/ppm-dap;message=upload-req
 Content-Length: 200
 
 encoded(struct {
@@ -4076,7 +4044,7 @@ encoded(struct {
 } UploadRequest)
 
 HTTP/1.1 200
-Content-Type: application/dap-upload-resp
+Content-Type: application/ppm-dap;message=upload-errors
 Content-Length: 20
 
 encoded(struct {
@@ -4482,9 +4450,10 @@ of the HTTP message consists of <code>prepare_inits</code>.<a href="#section-4.6
 </li>
             </ul>
 <p id="section-4.6.2.1-18">The Leader sends the <code>AggregationJobInitReq</code> in the body of a PUT request to the
-aggregation job with a media type of "application/dap-aggregation-job-init-req".
-The Leader handles the response(s) as described in <a href="#http-resources" class="auto internal xref">Section 4.3</a> to obtain
-an <code>AggregationJobResp</code>.<a href="#section-4.6.2.1-18" class="pilcrow">¶</a></p>
+aggregation job with a media type of
+"application/ppm-dap;message=aggregation-job-init-req". The Leader handles the
+response(s) as described in <a href="#http-resources" class="auto internal xref">Section 4.3</a> to obtain an
+<code>AggregationJobResp</code>.<a href="#section-4.6.2.1-18" class="pilcrow">¶</a></p>
 <p id="section-4.6.2.1-19">The <code>AggregationJobResp.prepare_resps</code> field must include exactly the same
 report IDs in the same order as the Leader's <code>AggregationJobInitReq</code>. Otherwise,
 the Leader <span class="bcp14">MUST</span> abandon the aggregation job.<a href="#section-4.6.2.1-19" class="pilcrow">¶</a></p>
@@ -4721,7 +4690,7 @@ struct {
 <p id="section-4.6.2.2-20"><code>prepare_resps</code> is the outbound <code>PrepareResp</code> messages for each report computed
 in the previous step. The order <span class="bcp14">MUST</span> match
 <code>AggregationJobInitReq.prepare_inits</code>. The media type for <code>AggregationJobResp</code>
-is "application/dap-aggregation-job-resp".<a href="#section-4.6.2.2-20" class="pilcrow">¶</a></p>
+is "application/ppm-dap;message=aggregation-job-resp".<a href="#section-4.6.2.2-20" class="pilcrow">¶</a></p>
 <p id="section-4.6.2.2-21">The Helper may receive multiple copies of a given initialization request. The
 Helper <span class="bcp14">MUST</span> verify that subsequent requests have the same
 <code>AggregationJobInitReq</code> value and abort with a client error if they do not. It
@@ -4830,7 +4799,7 @@ with error <code>report_dropped</code>.<a href="#section-4.6.2.4-2.7.1" class="p
 <pre>
 PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
-Content-Type: application/dap-aggregation-job-init-req
+Content-Type: application/ppm-dap;message=aggregation-job-init-req
 Content-Length: 100
 Authorization: Bearer auth-token
 
@@ -4846,7 +4815,7 @@ encoded(struct {
 } AggregationJobInitReq)
 
 HTTP/1.1 200
-Content-Type: application/dap-aggregation-job-resp
+Content-Type: application/ppm-dap;message=aggregation-job-resp
 Content-Length: 100
 
 encoded(struct { prepare_resps } AggregationJobResp)
@@ -4857,7 +4826,7 @@ encoded(struct { prepare_resps } AggregationJobResp)
 <pre>
 PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
-Content-Type: application/dap-aggregation-job-init-req
+Content-Type: application/ppm-dap;message=aggregation-job-init-req
 Content-Length: 100
 Authorization: Bearer auth-token
 
@@ -4887,7 +4856,7 @@ Host: example.com
 Authorization: Bearer auth-token
 
 HTTP/1.1 200
-Content-Type: application/dap-aggregation-job-resp
+Content-Type: application/ppm-dap;message=aggregation-job-resp
 Content-Length: 100
 
 encoded(struct { prepare_resps } AggregationJobResp)
@@ -4972,7 +4941,8 @@ struct {
 <p id="section-4.6.3.1-5">where <code>report_id</code> is the report ID associated with <code>state</code>, and
 <code>payload</code> is set to <code>state.outbound</code>.<a href="#section-4.6.3.1-5" class="pilcrow">¶</a></p>
 <p id="section-4.6.3.1-6">Next, the Leader sends a POST to the aggregation job with media type
-"application/dap-aggregation-job-continue-req" and body structured as:<a href="#section-4.6.3.1-6" class="pilcrow">¶</a></p>
+"application/ppm-dap;message=aggregation-job-continue-req" and body structured
+as:<a href="#section-4.6.3.1-6" class="pilcrow">¶</a></p>
 <div class="lang-tls-presentation sourcecode" id="section-4.6.3.1-7">
 <pre>
 struct {
@@ -5317,7 +5287,7 @@ any).<a href="#section-4.6.3.4-3" class="pilcrow">¶</a></p>
 <pre>
 POST /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
-Content-Type: application/dap-aggregation-job-continue-req
+Content-Type: application/ppm-dap;message=aggregation-job-continue-req
 Content-Length: 100
 Authorization: Bearer auth-token
 
@@ -5327,7 +5297,7 @@ encoded(struct {
 } AggregationJobContinueReq)
 
 HTTP/1.1 200
-Content-Type: application/dap-aggregation-job-resp
+Content-Type: application/ppm-dap;message=aggregation-job-resp
 Content-Length: 100
 
 encoded(struct { prepare_resps } AggregationJobResp)
@@ -5338,7 +5308,7 @@ encoded(struct { prepare_resps } AggregationJobResp)
 <pre>
 POST /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
-Content-Type: application/dap-aggregation-job-continue-req
+Content-Type: application/ppm-dap;message=aggregation-job-continue-req
 Content-Length: 100
 Authorization: Bearer auth-token
 
@@ -5364,7 +5334,7 @@ Host: example.com
 Authorization: Bearer auth-token
 
 HTTP/1.1 200
-Content-Type: application/dap-aggregation-job-resp
+Content-Type: application/ppm-dap;message=aggregation-job-resp
 Content-Length: 100
 
 encoded(struct { prepare_resps } AggregationJobResp)
@@ -5447,8 +5417,8 @@ opaque CollectionJobID[16];
 <p id="section-4.7.1-1">First, the Collector chooses a collection job ID, which <span class="bcp14">MUST</span> be unique within
 the scope of the corresponding DAP task.<a href="#section-4.7.1-1" class="pilcrow">¶</a></p>
 <p id="section-4.7.1-2">To initiate the collection job, the Collector issues a PUT request to the
-collection job with media type "application/dap-collection-job-req", and a body
-structured as follows:<a href="#section-4.7.1-2" class="pilcrow">¶</a></p>
+collection job with media type "application/ppm-dap;message=collection-job-req",
+and a body structured as follows:<a href="#section-4.7.1-2" class="pilcrow">¶</a></p>
 <div class="lang-tls-presentation sourcecode" id="section-4.7.1-3">
 <pre>
 struct {
@@ -5559,8 +5529,9 @@ struct {
 } CollectionJobResp;
 </pre><a href="#section-4.7.1-15" class="pilcrow">¶</a>
 </div>
-<p id="section-4.7.1-16">A <code>CollectionJobResp</code>'s media type is "application/dap-collection-job-resp". The
-structure includes the following:<a href="#section-4.7.1-16" class="pilcrow">¶</a></p>
+<p id="section-4.7.1-16">A <code>CollectionJobResp</code>'s media type is
+"application/ppm-dap;message=collection-job-resp". The structure includes the
+following:<a href="#section-4.7.1-16" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-4.7.1-17.1">
               <p id="section-4.7.1-17.1.1"><code>part_batch_selector</code>: Information used to bind the aggregate result to the
@@ -5601,7 +5572,7 @@ requests to the collection job with a different <code>CollectionJobReq</code>, t
 <pre>
 PUT /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/collection_jobs/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
-Content-Type: application/dap-collection-job-req
+Content-Type: application/ppm-dap;message=collection-job-req
 Authorization: Bearer auth-token
 
 encoded(struct {
@@ -5613,7 +5584,7 @@ encoded(struct {
 } CollectionJobReq)
 
 HTTP/1.1 200
-Content-Type: application/dap-collection
+Content-Type: application/ppm-dap;message=collection-job-resp
 
 encoded(struct {
   part_batch_selector = struct {
@@ -5637,7 +5608,7 @@ encoded(struct {
 <pre>
 PUT /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/collection_jobs/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
-Content-Type: application/dap-collection-job-req
+Content-Type: application/ppm-dap;message=collection-job-req
 Authorization: Bearer auth-token
 
 encoded(struct {
@@ -5668,7 +5639,7 @@ Host: example.com
 Authorization: Bearer auth-token
 
 HTTP/1.1 200
-Content-Type: application/dap-collection
+Content-Type: application/ppm-dap;message=collection-job-resp
 
 encoded(struct {
   part_batch_selector = struct {
@@ -5786,8 +5757,9 @@ struct {
 } AggregateShareReq;
 </pre><a href="#section-4.7.3-10" class="pilcrow">¶</a>
 </div>
-<p id="section-4.7.3-11">The media type of <code>AggregateShareReq</code> is "application/dap-aggregate-share-req".
-The structure contains the following parameters:<a href="#section-4.7.3-11" class="pilcrow">¶</a></p>
+<p id="section-4.7.3-11">The media type of <code>AggregateShareReq</code> is
+"application/ppm-dap;message=aggregate-share-req". The structure contains the
+following parameters:<a href="#section-4.7.3-11" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-4.7.3-12.1">
               <p id="section-4.7.3-12.1.1"><code>batch_selector</code>: The "batch selector", the contents of which depends on the
@@ -5838,7 +5810,7 @@ Encryption prevents the Leader from learning the actual result, as it only has
 its own aggregate share and cannot compute the Helper's.<a href="#section-4.7.3-22" class="pilcrow">¶</a></p>
 <p id="section-4.7.3-23">Once the Helper has encrypted its aggregate share, the aggregate share job is
 ready. Its results are represented by an <code>AggregateShare</code>, with media type
-"application/dap-aggregate-share":<a href="#section-4.7.3-23" class="pilcrow">¶</a></p>
+"application/ppm-dap;message=aggregate-share":<a href="#section-4.7.3-23" class="pilcrow">¶</a></p>
 <div class="lang-tls-presentation sourcecode" id="section-4.7.3-24">
 <pre>
 struct {
@@ -5873,7 +5845,7 @@ under the Collector's HPKE public key as described in
 <pre>
 PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregate_shares/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
-Content-Type: application/dap-aggregate-share-req
+Content-Type: application/ppm-dap;message=aggregate-share-req
 Authorization: Bearer auth-token
 
 encoded(struct {
@@ -5892,7 +5864,7 @@ encoded(struct {
 } AggregateShareReq)
 
 HTTP/1.1 200
-Content-Type: application/dap-aggregate-share
+Content-Type: application/ppm-dap;message=aggregate-share
 
 encoded(struct {
   encrypted_aggregate_share = struct { ... } HpkeCiphertext,
@@ -5904,7 +5876,7 @@ encoded(struct {
 <pre>
 PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregate_shares/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
-Content-Type: application/dap-aggregate-share-req
+Content-Type: application/ppm-dap;message=aggregate-share-req
 Authorization: Bearer auth-token
 
 encoded(struct {
@@ -5937,7 +5909,7 @@ Host: example.com
 Authorization: Bearer auth-token
 
 HTTP/1.1 200
-Content-Type: application/dap-aggregate-share
+Content-Type: application/ppm-dap;message=aggregate-share
 
 encoded(struct {
   encrypted_aggregate_share = struct { ... } HpkeCiphertext,
@@ -6604,7 +6576,7 @@ between the Helper's collection and aggregation interactions.<a href="#section-6
           </h4>
 <p id="section-6.4.3-1">Most messages in the protocol contain fixed-length or length-prefixed fields
 such that they can be parsed independently of context. The exceptions are the
-<code>UploadReq</code>, <code>UploadResp</code> (<a href="#upload-request" class="auto internal xref">Section 4.5.2</a>), <code>AggregationJobInitReq</code>,
+<code>UploadReq</code>, <code>UploadErrors</code> (<a href="#upload-request" class="auto internal xref">Section 4.5.2</a>), <code>AggregationJobInitReq</code>,
 <code>AggregationJobContinueReq</code>, and <code>AggregationJobResp</code> (<a href="#aggregate-flow" class="auto internal xref">Section 4.6</a>)
 messages, all of which contain vectors whose length is determined by the length
 of the enclosing HTTP message.<a href="#section-6.4.3-1" class="pilcrow">¶</a></p>
@@ -7020,1128 +6992,172 @@ the input shares and defeat privacy.<a href="#section-8.7-1" class="pilcrow">¶<
       <h2 id="name-iana-considerations">
 <a href="#section-9" class="section-number selfRef">9. </a><a href="#name-iana-considerations" class="section-name selfRef">IANA Considerations</a>
       </h2>
-<p id="section-9-1">This document requests registry of new media types (<a href="#iana-media-types" class="auto internal xref">Section 9.1</a>),
+<p id="section-9-1">This document requests registry of a new media type (<a href="#iana-media-type" class="auto internal xref">Section 9.1</a>),
 creation of new codepoint registries (<a href="#iana-codepoints" class="auto internal xref">Section 9.2</a>), and registration of
 an IETF URN sub-namespace (<a href="#urn-space" class="auto internal xref">Section 9.3</a>).<a href="#section-9-1" class="pilcrow">¶</a></p>
 <p id="section-9-2">(RFC EDITOR: In the remainder of this section, replace "RFC XXXX" with the RFC
 number assigned to this document.)<a href="#section-9-2" class="pilcrow">¶</a></p>
-<div id="iana-media-types">
+<div id="iana-media-type">
 <section id="section-9.1">
         <h3 id="name-protocol-message-media-type">
-<a href="#section-9.1" class="section-number selfRef">9.1. </a><a href="#name-protocol-message-media-type" class="section-name selfRef">Protocol Message Media Types</a>
+<a href="#section-9.1" class="section-number selfRef">9.1. </a><a href="#name-protocol-message-media-type" class="section-name selfRef">Protocol Message Media Type</a>
         </h3>
-<p id="section-9.1-1">This specification defines the following protocol messages, along with their
-corresponding media types:<a href="#section-9.1-1" class="pilcrow">¶</a></p>
+<p id="section-9.1-1">This specification defines a new media type used for all protocol messages:
+<code>application/ppm-dap</code>. Specific message types are distinguished using a <code>message</code>
+parameter.<a href="#section-9.1-1" class="pilcrow">¶</a></p>
+<p id="section-9.1-2">This specification defines the following protocol messages, along with their
+corresponding <code>message</code> value:<a href="#section-9.1-2" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-9.1-2.1">
-            <p id="section-9.1-2.1.1">HpkeConfigList <a href="#hpke-config" class="auto internal xref">Section 4.5.1</a>: "application/dap-hpke-config-list"<a href="#section-9.1-2.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="section-9.1-3.1">
+            <p id="section-9.1-3.1.1">HpkeConfigList <a href="#hpke-config" class="auto internal xref">Section 4.5.1</a>: "hpke-config-list"<a href="#section-9.1-3.1.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-9.1-2.2">
-            <p id="section-9.1-2.2.1">UploadRequest <a href="#upload-request" class="auto internal xref">Section 4.5.2</a>: "application/dap-upload-req"<a href="#section-9.1-2.2.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-9.1-3.2">
+            <p id="section-9.1-3.2.1">UploadRequest <a href="#upload-request" class="auto internal xref">Section 4.5.2</a>: "upload-req"<a href="#section-9.1-3.2.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-9.1-2.3">
-            <p id="section-9.1-2.3.1">UploadErrors <a href="#upload-request" class="auto internal xref">Section 4.5.2</a>: "application/dap-upload-errors"<a href="#section-9.1-2.3.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-9.1-3.3">
+            <p id="section-9.1-3.3.1">UploadErrors <a href="#upload-request" class="auto internal xref">Section 4.5.2</a>: "upload-errors"<a href="#section-9.1-3.3.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-9.1-2.4">
-            <p id="section-9.1-2.4.1">AggregationJobInitReq <a href="#leader-init" class="auto internal xref">Section 4.6.2.1</a>: "application/dap-aggregation-job-init-req"<a href="#section-9.1-2.4.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-9.1-3.4">
+            <p id="section-9.1-3.4.1">AggregationJobInitReq <a href="#leader-init" class="auto internal xref">Section 4.6.2.1</a>: "aggregation-job-init-req"<a href="#section-9.1-3.4.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-9.1-2.5">
-            <p id="section-9.1-2.5.1">AggregationJobResp <a href="#aggregation-helper-init" class="auto internal xref">Section 4.6.2.2</a>: "application/dap-aggregation-job-resp"<a href="#section-9.1-2.5.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-9.1-3.5">
+            <p id="section-9.1-3.5.1">AggregationJobResp <a href="#aggregation-helper-init" class="auto internal xref">Section 4.6.2.2</a>: "aggregation-job-resp"<a href="#section-9.1-3.5.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-9.1-2.6">
-            <p id="section-9.1-2.6.1">AggregationJobContinueReq <a href="#aggregation-leader-continuation" class="auto internal xref">Section 4.6.3.1</a>: "application/dap-aggregation-job-continue-req"<a href="#section-9.1-2.6.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-9.1-3.6">
+            <p id="section-9.1-3.6.1">AggregationJobContinueReq <a href="#aggregation-leader-continuation" class="auto internal xref">Section 4.6.3.1</a>: "aggregation-job-continue-req"<a href="#section-9.1-3.6.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-9.1-2.7">
-            <p id="section-9.1-2.7.1">AggregateShareReq <a href="#collect-aggregate" class="auto internal xref">Section 4.7.3</a>: "application/dap-aggregate-share-req"<a href="#section-9.1-2.7.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-9.1-3.7">
+            <p id="section-9.1-3.7.1">AggregateShareReq <a href="#collect-aggregate" class="auto internal xref">Section 4.7.3</a>: "aggregate-share-req"<a href="#section-9.1-3.7.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-9.1-2.8">
-            <p id="section-9.1-2.8.1">AggregateShare <a href="#collect-aggregate" class="auto internal xref">Section 4.7.3</a>: "application/dap-aggregate-share"<a href="#section-9.1-2.8.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-9.1-3.8">
+            <p id="section-9.1-3.8.1">AggregateShare <a href="#collect-aggregate" class="auto internal xref">Section 4.7.3</a>: "aggregate-share"<a href="#section-9.1-3.8.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-9.1-2.9">
-            <p id="section-9.1-2.9.1">CollectionJobReq <a href="#collect-init" class="auto internal xref">Section 4.7.1</a>: "application/dap-collection-job-req"<a href="#section-9.1-2.9.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-9.1-3.9">
+            <p id="section-9.1-3.9.1">CollectionJobReq <a href="#collect-init" class="auto internal xref">Section 4.7.1</a>: "collection-job-req"<a href="#section-9.1-3.9.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-9.1-2.10">
-            <p id="section-9.1-2.10.1">CollectionJobResp <a href="#collect-init" class="auto internal xref">Section 4.7.1</a>: "application/dap-collection-job-resp"<a href="#section-9.1-2.10.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-9.1-3.10">
+            <p id="section-9.1-3.10.1">CollectionJobResp <a href="#collect-init" class="auto internal xref">Section 4.7.1</a>: "collection-job-resp"<a href="#section-9.1-3.10.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
-<p id="section-9.1-3">Protocol message format evolution is supported through the definition of new
-formats that are identified by new media types. The messages above are specific
+<p id="section-9.1-4">For example, a request whose body consists of an <code>AggregationJobInitReq</code> could
+have the header
+<code>Content-Type: application/ppm-dap;message=aggregation-job-init-req</code>.<a href="#section-9.1-4" class="pilcrow">¶</a></p>
+<p id="section-9.1-5">Protocol message format evolution is supported through the definition of new
+formats that are identified by <code>message</code> values. The messages above are specific
 to this specification. When a new major enhancement is proposed that results in
-newer IETF specification for DAP, a new set of media types will be defined. In
-other words, newer versions of DAP will not be backward compatible with this
-version of DAP.<a href="#section-9.1-3" class="pilcrow">¶</a></p>
-<p id="section-9.1-4">(RFC EDITOR: Remove this paragraph.) HTTP requests with DAP media types <span class="bcp14">MAY</span>
+newer IETF specification for DAP, a new media type will be defined. In other
+words, newer versions of DAP will not be backward compatible with this version
+of DAP.<a href="#section-9.1-5" class="pilcrow">¶</a></p>
+<p id="section-9.1-6">(RFC EDITOR: Remove this paragraph.) HTTP requests with DAP media types <span class="bcp14">MAY</span>
 express an optional parameter 'version', following <span><a href="https://rfc-editor.org/rfc/rfc9110#section-8.3" class="relref">Section 8.3</a> of [<a href="#RFC9110" class="cite xref">RFC9110</a>]</span>.
 Value of this parameter indicates current draft version of the protocol the
 component is using. This <span class="bcp14">MAY</span> be used as a hint by the receiver of the request
 to do compatibility checks between client and server.
 For example, A report submission to leader from a client that supports
 draft-ietf-ppm-dap-09 could have the header
-<code>Content-Type: application/dap-upload-req;version=09</code>.<a href="#section-9.1-4" class="pilcrow">¶</a></p>
-<p id="section-9.1-5">The "Media Types" registry at https://www.iana.org/assignments/media-types will
-be (RFC EDITOR: replace "will be" with "has been") updated to include each of
-these media types. The information required for each media type is listed in
-the remaining subsections.<a href="#section-9.1-5" class="pilcrow">¶</a></p>
-<div id="applicationdap-hpke-config-list-media-type">
-<section id="section-9.1.1">
-          <h4 id="name-application-dap-hpke-config">
-<a href="#section-9.1.1" class="section-number selfRef">9.1.1. </a><a href="#name-application-dap-hpke-config" class="section-name selfRef">"application/dap-hpke-config-list" media type</a>
-          </h4>
-<span class="break"></span><dl class="dlParallel" id="section-9.1.1-1">
-            <dt id="section-9.1.1-1.1">Type name:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.1-1.2">
-              <p id="section-9.1.1-1.2.1">application<a href="#section-9.1.1-1.2.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.1-1.3">Subtype name:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.1-1.4">
-              <p id="section-9.1.1-1.4.1">dap-hpke-config-list<a href="#section-9.1.1-1.4.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.1-1.5">Required parameters:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.1-1.6">
-              <p id="section-9.1.1-1.6.1">N/A<a href="#section-9.1.1-1.6.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.1-1.7">Optional parameters:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.1-1.8">
-              <p id="section-9.1.1-1.8.1">None<a href="#section-9.1.1-1.8.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.1-1.9">Encoding considerations:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.1-1.10">
-              <p id="section-9.1.1-1.10.1">only "8bit" or "binary" is permitted<a href="#section-9.1.1-1.10.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.1-1.11">Security considerations:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.1-1.12">
-              <p id="section-9.1.1-1.12.1">see <a href="#upload-flow" class="auto internal xref">Section 4.5</a> of the published specification<a href="#section-9.1.1-1.12.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.1-1.13">Interoperability considerations:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.1-1.14">
-              <p id="section-9.1.1-1.14.1">N/A<a href="#section-9.1.1-1.14.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.1-1.15">Published specification:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.1-1.16">
-              <p id="section-9.1.1-1.16.1">RFC XXXX<a href="#section-9.1.1-1.16.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.1-1.17">Applications that use this media type:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.1-1.18">
-              <p id="section-9.1.1-1.18.1">N/A<a href="#section-9.1.1-1.18.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.1-1.19">Fragment identifier considerations:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.1-1.20">
-              <p id="section-9.1.1-1.20.1">N/A<a href="#section-9.1.1-1.20.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.1-1.21">Additional information:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.1-1.22">
-              <span class="break"></span><dl class="dlParallel" id="section-9.1.1-1.22.1">
-                <dt id="section-9.1.1-1.22.1.1">Magic number(s):</dt>
-                <dd style="margin-left: 1.5em" id="section-9.1.1-1.22.1.2">N/A<a href="#section-9.1.1-1.22.1.2" class="pilcrow">¶</a>
-</dd>
-                <dd class="break"></dd>
-<dt id="section-9.1.1-1.22.1.3">Deprecated alias names for this type:</dt>
-                <dd style="margin-left: 1.5em" id="section-9.1.1-1.22.1.4">N/A<a href="#section-9.1.1-1.22.1.4" class="pilcrow">¶</a>
-</dd>
-                <dd class="break"></dd>
-<dt id="section-9.1.1-1.22.1.5">File extension(s):</dt>
-                <dd style="margin-left: 1.5em" id="section-9.1.1-1.22.1.6">N/A<a href="#section-9.1.1-1.22.1.6" class="pilcrow">¶</a>
-</dd>
-                <dd class="break"></dd>
-<dt id="section-9.1.1-1.22.1.7">Macintosh file type code(s):</dt>
-                <dd style="margin-left: 1.5em" id="section-9.1.1-1.22.1.8">N/A<a href="#section-9.1.1-1.22.1.8" class="pilcrow">¶</a>
-</dd>
-              <dd class="break"></dd>
-</dl>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.1-1.23">Person and email address to contact for further information:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.1-1.24">
-              <p id="section-9.1.1-1.24.1">see Authors' Addresses section of the published specification<a href="#section-9.1.1-1.24.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.1-1.25">Intended usage:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.1-1.26">
-              <p id="section-9.1.1-1.26.1">COMMON<a href="#section-9.1.1-1.26.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.1-1.27">Restrictions on usage:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.1-1.28">
-              <p id="section-9.1.1-1.28.1">N/A<a href="#section-9.1.1-1.28.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.1-1.29">Author:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.1-1.30">
-              <p id="section-9.1.1-1.30.1">see Authors' Addresses section of the published specification<a href="#section-9.1.1-1.30.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.1-1.31">Change controller:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.1-1.32">
-              <p id="section-9.1.1-1.32.1">IESG<a href="#section-9.1.1-1.32.1" class="pilcrow">¶</a></p>
+<code>Content-Type: application/ppm-dap;message=upload-req;version=09</code>.<a href="#section-9.1-6" class="pilcrow">¶</a></p>
+<p id="section-9.1-7">The "Media Types" registry at https://www.iana.org/assignments/media-types will
+be (RFC EDITOR: replace "will be" with "has been") updated to include the
+<code>application/ppm-dap</code> media type.<a href="#section-9.1-7" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlParallel" id="section-9.1-8">
+          <dt id="section-9.1-8.1">Type name:</dt>
+          <dd style="margin-left: 1.5em" id="section-9.1-8.2">
+            <p id="section-9.1-8.2.1">application<a href="#section-9.1-8.2.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
-</dl>
-</section>
-</div>
-<div id="applicationdap-upload-req-media-type">
-<section id="section-9.1.2">
-          <h4 id="name-application-dap-upload-req-">
-<a href="#section-9.1.2" class="section-number selfRef">9.1.2. </a><a href="#name-application-dap-upload-req-" class="section-name selfRef">"application/dap-upload-req" media type</a>
-          </h4>
-<span class="break"></span><dl class="dlParallel" id="section-9.1.2-1">
-            <dt id="section-9.1.2-1.1">Type name:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.2-1.2">
-              <p id="section-9.1.2-1.2.1">application<a href="#section-9.1.2-1.2.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.2-1.3">Subtype name:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.2-1.4">
-              <p id="section-9.1.2-1.4.1">dap-upload-req<a href="#section-9.1.2-1.4.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.2-1.5">Required parameters:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.2-1.6">
-              <p id="section-9.1.2-1.6.1">N/A<a href="#section-9.1.2-1.6.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.2-1.7">Optional parameters:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.2-1.8">
-              <p id="section-9.1.2-1.8.1">None<a href="#section-9.1.2-1.8.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.2-1.9">Encoding considerations:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.2-1.10">
-              <p id="section-9.1.2-1.10.1">only "8bit" or "binary" is permitted<a href="#section-9.1.2-1.10.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.2-1.11">Security considerations:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.2-1.12">
-              <p id="section-9.1.2-1.12.1">see <a href="#upload-flow" class="auto internal xref">Section 4.5</a> of the published specification<a href="#section-9.1.2-1.12.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.2-1.13">Interoperability considerations:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.2-1.14">
-              <p id="section-9.1.2-1.14.1">N/A<a href="#section-9.1.2-1.14.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.2-1.15">Published specification:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.2-1.16">
-              <p id="section-9.1.2-1.16.1">RFC XXXX<a href="#section-9.1.2-1.16.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.2-1.17">Applications that use this media type:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.2-1.18">
-              <p id="section-9.1.2-1.18.1">N/A<a href="#section-9.1.2-1.18.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.2-1.19">Fragment identifier considerations:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.2-1.20">
-              <p id="section-9.1.2-1.20.1">N/A<a href="#section-9.1.2-1.20.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.2-1.21">Additional information:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.2-1.22">
-              <span class="break"></span><dl class="dlParallel" id="section-9.1.2-1.22.1">
-                <dt id="section-9.1.2-1.22.1.1">Magic number(s):</dt>
-                <dd style="margin-left: 1.5em" id="section-9.1.2-1.22.1.2">N/A<a href="#section-9.1.2-1.22.1.2" class="pilcrow">¶</a>
-</dd>
-                <dd class="break"></dd>
-<dt id="section-9.1.2-1.22.1.3">Deprecated alias names for this type:</dt>
-                <dd style="margin-left: 1.5em" id="section-9.1.2-1.22.1.4">N/A<a href="#section-9.1.2-1.22.1.4" class="pilcrow">¶</a>
-</dd>
-                <dd class="break"></dd>
-<dt id="section-9.1.2-1.22.1.5">File extension(s):</dt>
-                <dd style="margin-left: 1.5em" id="section-9.1.2-1.22.1.6">N/A<a href="#section-9.1.2-1.22.1.6" class="pilcrow">¶</a>
-</dd>
-                <dd class="break"></dd>
-<dt id="section-9.1.2-1.22.1.7">Macintosh file type code(s):</dt>
-                <dd style="margin-left: 1.5em" id="section-9.1.2-1.22.1.8">N/A<a href="#section-9.1.2-1.22.1.8" class="pilcrow">¶</a>
-</dd>
-              <dd class="break"></dd>
-</dl>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.2-1.23">Person and email address to contact for further information:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.2-1.24">
-              <p id="section-9.1.2-1.24.1">see Authors' Addresses section of the published specification<a href="#section-9.1.2-1.24.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.2-1.25">Intended usage:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.2-1.26">
-              <p id="section-9.1.2-1.26.1">COMMON<a href="#section-9.1.2-1.26.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.2-1.27">Restrictions on usage:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.2-1.28">
-              <p id="section-9.1.2-1.28.1">N/A<a href="#section-9.1.2-1.28.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.2-1.29">Author:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.2-1.30">
-              <p id="section-9.1.2-1.30.1">see Authors' Addresses section of the published specification<a href="#section-9.1.2-1.30.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.2-1.31">Change controller:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.2-1.32">
-              <p id="section-9.1.2-1.32.1">IESG<a href="#section-9.1.2-1.32.1" class="pilcrow">¶</a></p>
+<dt id="section-9.1-8.3">Subtype name:</dt>
+          <dd style="margin-left: 1.5em" id="section-9.1-8.4">
+            <p id="section-9.1-8.4.1">ppm-dap<a href="#section-9.1-8.4.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
-</dl>
-</section>
-</div>
-<div id="applicationdap-upload-resp-media-type">
-<section id="section-9.1.3">
-          <h4 id="name-application-dap-upload-resp">
-<a href="#section-9.1.3" class="section-number selfRef">9.1.3. </a><a href="#name-application-dap-upload-resp" class="section-name selfRef">"application/dap-upload-resp" media type</a>
-          </h4>
-<span class="break"></span><dl class="dlParallel" id="section-9.1.3-1">
-            <dt id="section-9.1.3-1.1">Type name:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.3-1.2">
-              <p id="section-9.1.3-1.2.1">application<a href="#section-9.1.3-1.2.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.3-1.3">Subtype name:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.3-1.4">
-              <p id="section-9.1.3-1.4.1">dap-upload-resp<a href="#section-9.1.3-1.4.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.3-1.5">Required parameters:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.3-1.6">
-              <p id="section-9.1.3-1.6.1">N/A<a href="#section-9.1.3-1.6.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.3-1.7">Optional parameters:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.3-1.8">
-              <p id="section-9.1.3-1.8.1">None<a href="#section-9.1.3-1.8.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.3-1.9">Encoding considerations:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.3-1.10">
-              <p id="section-9.1.3-1.10.1">only "8bit" or "binary" is permitted<a href="#section-9.1.3-1.10.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.3-1.11">Security considerations:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.3-1.12">
-              <p id="section-9.1.3-1.12.1">see <a href="#upload-flow" class="auto internal xref">Section 4.5</a> of the published specification<a href="#section-9.1.3-1.12.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.3-1.13">Interoperability considerations:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.3-1.14">
-              <p id="section-9.1.3-1.14.1">N/A<a href="#section-9.1.3-1.14.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.3-1.15">Published specification:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.3-1.16">
-              <p id="section-9.1.3-1.16.1">RFC XXXX<a href="#section-9.1.3-1.16.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.3-1.17">Applications that use this media type:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.3-1.18">
-              <p id="section-9.1.3-1.18.1">N/A<a href="#section-9.1.3-1.18.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.3-1.19">Fragment identifier considerations:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.3-1.20">
-              <p id="section-9.1.3-1.20.1">N/A<a href="#section-9.1.3-1.20.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.3-1.21">Additional information:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.3-1.22">
-              <span class="break"></span><dl class="dlParallel" id="section-9.1.3-1.22.1">
-                <dt id="section-9.1.3-1.22.1.1">Magic number(s):</dt>
-                <dd style="margin-left: 1.5em" id="section-9.1.3-1.22.1.2">N/A<a href="#section-9.1.3-1.22.1.2" class="pilcrow">¶</a>
-</dd>
-                <dd class="break"></dd>
-<dt id="section-9.1.3-1.22.1.3">Deprecated alias names for this type:</dt>
-                <dd style="margin-left: 1.5em" id="section-9.1.3-1.22.1.4">N/A<a href="#section-9.1.3-1.22.1.4" class="pilcrow">¶</a>
-</dd>
-                <dd class="break"></dd>
-<dt id="section-9.1.3-1.22.1.5">File extension(s):</dt>
-                <dd style="margin-left: 1.5em" id="section-9.1.3-1.22.1.6">N/A<a href="#section-9.1.3-1.22.1.6" class="pilcrow">¶</a>
-</dd>
-                <dd class="break"></dd>
-<dt id="section-9.1.3-1.22.1.7">Macintosh file type code(s):</dt>
-                <dd style="margin-left: 1.5em" id="section-9.1.3-1.22.1.8">N/A<a href="#section-9.1.3-1.22.1.8" class="pilcrow">¶</a>
-</dd>
-              <dd class="break"></dd>
-</dl>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.3-1.23">Person and email address to contact for further information:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.3-1.24">
-              <p id="section-9.1.3-1.24.1">see Authors' Addresses section of the published specification<a href="#section-9.1.3-1.24.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.3-1.25">Intended usage:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.3-1.26">
-              <p id="section-9.1.3-1.26.1">COMMON<a href="#section-9.1.3-1.26.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.3-1.27">Restrictions on usage:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.3-1.28">
-              <p id="section-9.1.3-1.28.1">N/A<a href="#section-9.1.3-1.28.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.3-1.29">Author:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.3-1.30">
-              <p id="section-9.1.3-1.30.1">see Authors' Addresses section of the published specification<a href="#section-9.1.3-1.30.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.3-1.31">Change controller:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.3-1.32">
-              <p id="section-9.1.3-1.32.1">IESG<a href="#section-9.1.3-1.32.1" class="pilcrow">¶</a></p>
+<dt id="section-9.1-8.5">Required parameters:</dt>
+          <dd style="margin-left: 1.5em" id="section-9.1-8.6">
+            <p id="section-9.1-8.6.1">message<a href="#section-9.1-8.6.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
-</dl>
-</section>
-</div>
-<div id="applicationdap-aggregation-job-init-req-media-type">
-<section id="section-9.1.4">
-          <h4 id="name-application-dap-aggregation">
-<a href="#section-9.1.4" class="section-number selfRef">9.1.4. </a><a href="#name-application-dap-aggregation" class="section-name selfRef">"application/dap-aggregation-job-init-req" media type</a>
-          </h4>
-<span class="break"></span><dl class="dlParallel" id="section-9.1.4-1">
-            <dt id="section-9.1.4-1.1">Type name:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.4-1.2">
-              <p id="section-9.1.4-1.2.1">application<a href="#section-9.1.4-1.2.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.4-1.3">Subtype name:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.4-1.4">
-              <p id="section-9.1.4-1.4.1">dap-aggregation-job-init-req<a href="#section-9.1.4-1.4.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.4-1.5">Required parameters:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.4-1.6">
-              <p id="section-9.1.4-1.6.1">N/A<a href="#section-9.1.4-1.6.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.4-1.7">Optional parameters:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.4-1.8">
-              <p id="section-9.1.4-1.8.1">None<a href="#section-9.1.4-1.8.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.4-1.9">Encoding considerations:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.4-1.10">
-              <p id="section-9.1.4-1.10.1">only "8bit" or "binary" is permitted<a href="#section-9.1.4-1.10.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.4-1.11">Security considerations:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.4-1.12">
-              <p id="section-9.1.4-1.12.1">see <a href="#aggregate-flow" class="auto internal xref">Section 4.6</a> of the published specification<a href="#section-9.1.4-1.12.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.4-1.13">Interoperability considerations:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.4-1.14">
-              <p id="section-9.1.4-1.14.1">N/A<a href="#section-9.1.4-1.14.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.4-1.15">Published specification:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.4-1.16">
-              <p id="section-9.1.4-1.16.1">RFC XXXX<a href="#section-9.1.4-1.16.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.4-1.17">Applications that use this media type:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.4-1.18">
-              <p id="section-9.1.4-1.18.1">N/A<a href="#section-9.1.4-1.18.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.4-1.19">Fragment identifier considerations:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.4-1.20">
-              <p id="section-9.1.4-1.20.1">N/A<a href="#section-9.1.4-1.20.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.4-1.21">Additional information:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.4-1.22">
-              <span class="break"></span><dl class="dlParallel" id="section-9.1.4-1.22.1">
-                <dt id="section-9.1.4-1.22.1.1">Magic number(s):</dt>
-                <dd style="margin-left: 1.5em" id="section-9.1.4-1.22.1.2">N/A<a href="#section-9.1.4-1.22.1.2" class="pilcrow">¶</a>
-</dd>
-                <dd class="break"></dd>
-<dt id="section-9.1.4-1.22.1.3">Deprecated alias names for this type:</dt>
-                <dd style="margin-left: 1.5em" id="section-9.1.4-1.22.1.4">N/A<a href="#section-9.1.4-1.22.1.4" class="pilcrow">¶</a>
-</dd>
-                <dd class="break"></dd>
-<dt id="section-9.1.4-1.22.1.5">File extension(s):</dt>
-                <dd style="margin-left: 1.5em" id="section-9.1.4-1.22.1.6">N/A<a href="#section-9.1.4-1.22.1.6" class="pilcrow">¶</a>
-</dd>
-                <dd class="break"></dd>
-<dt id="section-9.1.4-1.22.1.7">Macintosh file type code(s):</dt>
-                <dd style="margin-left: 1.5em" id="section-9.1.4-1.22.1.8">N/A<a href="#section-9.1.4-1.22.1.8" class="pilcrow">¶</a>
-</dd>
-              <dd class="break"></dd>
-</dl>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.4-1.23">Person and email address to contact for further information:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.4-1.24">
-              <p id="section-9.1.4-1.24.1">see Authors' Addresses section of the published specification<a href="#section-9.1.4-1.24.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.4-1.25">Intended usage:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.4-1.26">
-              <p id="section-9.1.4-1.26.1">COMMON<a href="#section-9.1.4-1.26.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.4-1.27">Restrictions on usage:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.4-1.28">
-              <p id="section-9.1.4-1.28.1">N/A<a href="#section-9.1.4-1.28.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.4-1.29">Author:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.4-1.30">
-              <p id="section-9.1.4-1.30.1">see Authors' Addresses section of the published specification<a href="#section-9.1.4-1.30.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.4-1.31">Change controller:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.4-1.32">
-              <p id="section-9.1.4-1.32.1">IESG<a href="#section-9.1.4-1.32.1" class="pilcrow">¶</a></p>
+<dt id="section-9.1-8.7">Optional parameters:</dt>
+          <dd style="margin-left: 1.5em" id="section-9.1-8.8">
+            <p id="section-9.1-8.8.1">None<a href="#section-9.1-8.8.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
-</dl>
-</section>
-</div>
-<div id="applicationdap-aggregation-job-resp-media-type">
-<section id="section-9.1.5">
-          <h4 id="name-application-dap-aggregation-">
-<a href="#section-9.1.5" class="section-number selfRef">9.1.5. </a><a href="#name-application-dap-aggregation-" class="section-name selfRef">"application/dap-aggregation-job-resp" media type</a>
-          </h4>
-<span class="break"></span><dl class="dlParallel" id="section-9.1.5-1">
-            <dt id="section-9.1.5-1.1">Type name:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.5-1.2">
-              <p id="section-9.1.5-1.2.1">application<a href="#section-9.1.5-1.2.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.5-1.3">Subtype name:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.5-1.4">
-              <p id="section-9.1.5-1.4.1">dap-aggregation-job-resp<a href="#section-9.1.5-1.4.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.5-1.5">Required parameters:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.5-1.6">
-              <p id="section-9.1.5-1.6.1">N/A<a href="#section-9.1.5-1.6.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.5-1.7">Optional parameters:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.5-1.8">
-              <p id="section-9.1.5-1.8.1">None<a href="#section-9.1.5-1.8.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.5-1.9">Encoding considerations:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.5-1.10">
-              <p id="section-9.1.5-1.10.1">only "8bit" or "binary" is permitted<a href="#section-9.1.5-1.10.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.5-1.11">Security considerations:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.5-1.12">
-              <p id="section-9.1.5-1.12.1">see <a href="#aggregate-flow" class="auto internal xref">Section 4.6</a> of the published specification<a href="#section-9.1.5-1.12.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.5-1.13">Interoperability considerations:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.5-1.14">
-              <p id="section-9.1.5-1.14.1">N/A<a href="#section-9.1.5-1.14.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.5-1.15">Published specification:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.5-1.16">
-              <p id="section-9.1.5-1.16.1">RFC XXXX<a href="#section-9.1.5-1.16.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.5-1.17">Applications that use this media type:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.5-1.18">
-              <p id="section-9.1.5-1.18.1">N/A<a href="#section-9.1.5-1.18.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.5-1.19">Fragment identifier considerations:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.5-1.20">
-              <p id="section-9.1.5-1.20.1">N/A<a href="#section-9.1.5-1.20.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.5-1.21">Additional information:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.5-1.22">
-              <span class="break"></span><dl class="dlParallel" id="section-9.1.5-1.22.1">
-                <dt id="section-9.1.5-1.22.1.1">Magic number(s):</dt>
-                <dd style="margin-left: 1.5em" id="section-9.1.5-1.22.1.2">N/A<a href="#section-9.1.5-1.22.1.2" class="pilcrow">¶</a>
-</dd>
-                <dd class="break"></dd>
-<dt id="section-9.1.5-1.22.1.3">Deprecated alias names for this type:</dt>
-                <dd style="margin-left: 1.5em" id="section-9.1.5-1.22.1.4">N/A<a href="#section-9.1.5-1.22.1.4" class="pilcrow">¶</a>
-</dd>
-                <dd class="break"></dd>
-<dt id="section-9.1.5-1.22.1.5">File extension(s):</dt>
-                <dd style="margin-left: 1.5em" id="section-9.1.5-1.22.1.6">N/A<a href="#section-9.1.5-1.22.1.6" class="pilcrow">¶</a>
-</dd>
-                <dd class="break"></dd>
-<dt id="section-9.1.5-1.22.1.7">Macintosh file type code(s):</dt>
-                <dd style="margin-left: 1.5em" id="section-9.1.5-1.22.1.8">N/A<a href="#section-9.1.5-1.22.1.8" class="pilcrow">¶</a>
-</dd>
-              <dd class="break"></dd>
-</dl>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.5-1.23">Person and email address to contact for further information:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.5-1.24">
-              <p id="section-9.1.5-1.24.1">see Authors' Addresses section of the published specification<a href="#section-9.1.5-1.24.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.5-1.25">Intended usage:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.5-1.26">
-              <p id="section-9.1.5-1.26.1">COMMON<a href="#section-9.1.5-1.26.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.5-1.27">Restrictions on usage:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.5-1.28">
-              <p id="section-9.1.5-1.28.1">N/A<a href="#section-9.1.5-1.28.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.5-1.29">Author:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.5-1.30">
-              <p id="section-9.1.5-1.30.1">see Authors' Addresses section of the published specification<a href="#section-9.1.5-1.30.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.5-1.31">Change controller:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.5-1.32">
-              <p id="section-9.1.5-1.32.1">IESG<a href="#section-9.1.5-1.32.1" class="pilcrow">¶</a></p>
+<dt id="section-9.1-8.9">Encoding considerations:</dt>
+          <dd style="margin-left: 1.5em" id="section-9.1-8.10">
+            <p id="section-9.1-8.10.1">only "8bit" or "binary" is permitted<a href="#section-9.1-8.10.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
-</dl>
-</section>
-</div>
-<div id="applicationdap-aggregation-job-continue-req-media-type">
-<section id="section-9.1.6">
-          <h4 id="name-application-dap-aggregation-j">
-<a href="#section-9.1.6" class="section-number selfRef">9.1.6. </a><a href="#name-application-dap-aggregation-j" class="section-name selfRef">"application/dap-aggregation-job-continue-req" media type</a>
-          </h4>
-<span class="break"></span><dl class="dlParallel" id="section-9.1.6-1">
-            <dt id="section-9.1.6-1.1">Type name:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.6-1.2">
-              <p id="section-9.1.6-1.2.1">application<a href="#section-9.1.6-1.2.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.6-1.3">Subtype name:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.6-1.4">
-              <p id="section-9.1.6-1.4.1">dap-aggregation-job-continue-req<a href="#section-9.1.6-1.4.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.6-1.5">Required parameters:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.6-1.6">
-              <p id="section-9.1.6-1.6.1">N/A<a href="#section-9.1.6-1.6.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.6-1.7">Optional parameters:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.6-1.8">
-              <p id="section-9.1.6-1.8.1">None<a href="#section-9.1.6-1.8.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.6-1.9">Encoding considerations:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.6-1.10">
-              <p id="section-9.1.6-1.10.1">only "8bit" or "binary" is permitted<a href="#section-9.1.6-1.10.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.6-1.11">Security considerations:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.6-1.12">
-              <p id="section-9.1.6-1.12.1">see <a href="#aggregate-flow" class="auto internal xref">Section 4.6</a> of the published specification<a href="#section-9.1.6-1.12.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.6-1.13">Interoperability considerations:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.6-1.14">
-              <p id="section-9.1.6-1.14.1">N/A<a href="#section-9.1.6-1.14.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.6-1.15">Published specification:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.6-1.16">
-              <p id="section-9.1.6-1.16.1">RFC XXXX<a href="#section-9.1.6-1.16.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.6-1.17">Applications that use this media type:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.6-1.18">
-              <p id="section-9.1.6-1.18.1">N/A<a href="#section-9.1.6-1.18.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.6-1.19">Fragment identifier considerations:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.6-1.20">
-              <p id="section-9.1.6-1.20.1">N/A<a href="#section-9.1.6-1.20.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.6-1.21">Additional information:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.6-1.22">
-              <span class="break"></span><dl class="dlParallel" id="section-9.1.6-1.22.1">
-                <dt id="section-9.1.6-1.22.1.1">Magic number(s):</dt>
-                <dd style="margin-left: 1.5em" id="section-9.1.6-1.22.1.2">N/A<a href="#section-9.1.6-1.22.1.2" class="pilcrow">¶</a>
-</dd>
-                <dd class="break"></dd>
-<dt id="section-9.1.6-1.22.1.3">Deprecated alias names for this type:</dt>
-                <dd style="margin-left: 1.5em" id="section-9.1.6-1.22.1.4">N/A<a href="#section-9.1.6-1.22.1.4" class="pilcrow">¶</a>
-</dd>
-                <dd class="break"></dd>
-<dt id="section-9.1.6-1.22.1.5">File extension(s):</dt>
-                <dd style="margin-left: 1.5em" id="section-9.1.6-1.22.1.6">N/A<a href="#section-9.1.6-1.22.1.6" class="pilcrow">¶</a>
-</dd>
-                <dd class="break"></dd>
-<dt id="section-9.1.6-1.22.1.7">Macintosh file type code(s):</dt>
-                <dd style="margin-left: 1.5em" id="section-9.1.6-1.22.1.8">N/A<a href="#section-9.1.6-1.22.1.8" class="pilcrow">¶</a>
-</dd>
-              <dd class="break"></dd>
-</dl>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.6-1.23">Person and email address to contact for further information:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.6-1.24">
-              <p id="section-9.1.6-1.24.1">see Authors' Addresses section of the published specification<a href="#section-9.1.6-1.24.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.6-1.25">Intended usage:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.6-1.26">
-              <p id="section-9.1.6-1.26.1">COMMON<a href="#section-9.1.6-1.26.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.6-1.27">Restrictions on usage:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.6-1.28">
-              <p id="section-9.1.6-1.28.1">N/A<a href="#section-9.1.6-1.28.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.6-1.29">Author:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.6-1.30">
-              <p id="section-9.1.6-1.30.1">see Authors' Addresses section of the published specification<a href="#section-9.1.6-1.30.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.6-1.31">Change controller:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.6-1.32">
-              <p id="section-9.1.6-1.32.1">IESG<a href="#section-9.1.6-1.32.1" class="pilcrow">¶</a></p>
+<dt id="section-9.1-8.11">Security considerations:</dt>
+          <dd style="margin-left: 1.5em" id="section-9.1-8.12">
+            <p id="section-9.1-8.12.1">see <a href="#sec-considerations" class="auto internal xref">Section 8</a> of the published specification<a href="#section-9.1-8.12.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
-</dl>
-</section>
-</div>
-<div id="applicationdap-aggregate-share-req-media-type">
-<section id="section-9.1.7">
-          <h4 id="name-application-dap-aggregate-s">
-<a href="#section-9.1.7" class="section-number selfRef">9.1.7. </a><a href="#name-application-dap-aggregate-s" class="section-name selfRef">"application/dap-aggregate-share-req" media type</a>
-          </h4>
-<span class="break"></span><dl class="dlParallel" id="section-9.1.7-1">
-            <dt id="section-9.1.7-1.1">Type name:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.7-1.2">
-              <p id="section-9.1.7-1.2.1">application<a href="#section-9.1.7-1.2.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.7-1.3">Subtype name:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.7-1.4">
-              <p id="section-9.1.7-1.4.1">dap-aggregate-share-req<a href="#section-9.1.7-1.4.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.7-1.5">Required parameters:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.7-1.6">
-              <p id="section-9.1.7-1.6.1">N/A<a href="#section-9.1.7-1.6.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.7-1.7">Optional parameters:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.7-1.8">
-              <p id="section-9.1.7-1.8.1">None<a href="#section-9.1.7-1.8.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.7-1.9">Encoding considerations:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.7-1.10">
-              <p id="section-9.1.7-1.10.1">only "8bit" or "binary" is permitted<a href="#section-9.1.7-1.10.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.7-1.11">Security considerations:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.7-1.12">
-              <p id="section-9.1.7-1.12.1">see <a href="#collect-flow" class="auto internal xref">Section 4.7</a> of the published specification<a href="#section-9.1.7-1.12.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.7-1.13">Interoperability considerations:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.7-1.14">
-              <p id="section-9.1.7-1.14.1">N/A<a href="#section-9.1.7-1.14.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.7-1.15">Published specification:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.7-1.16">
-              <p id="section-9.1.7-1.16.1">RFC XXXX<a href="#section-9.1.7-1.16.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.7-1.17">Applications that use this media type:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.7-1.18">
-              <p id="section-9.1.7-1.18.1">N/A<a href="#section-9.1.7-1.18.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.7-1.19">Fragment identifier considerations:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.7-1.20">
-              <p id="section-9.1.7-1.20.1">N/A<a href="#section-9.1.7-1.20.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.7-1.21">Additional information:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.7-1.22">
-              <span class="break"></span><dl class="dlParallel" id="section-9.1.7-1.22.1">
-                <dt id="section-9.1.7-1.22.1.1">Magic number(s):</dt>
-                <dd style="margin-left: 1.5em" id="section-9.1.7-1.22.1.2">N/A<a href="#section-9.1.7-1.22.1.2" class="pilcrow">¶</a>
-</dd>
-                <dd class="break"></dd>
-<dt id="section-9.1.7-1.22.1.3">Deprecated alias names for this type:</dt>
-                <dd style="margin-left: 1.5em" id="section-9.1.7-1.22.1.4">N/A<a href="#section-9.1.7-1.22.1.4" class="pilcrow">¶</a>
-</dd>
-                <dd class="break"></dd>
-<dt id="section-9.1.7-1.22.1.5">File extension(s):</dt>
-                <dd style="margin-left: 1.5em" id="section-9.1.7-1.22.1.6">N/A<a href="#section-9.1.7-1.22.1.6" class="pilcrow">¶</a>
-</dd>
-                <dd class="break"></dd>
-<dt id="section-9.1.7-1.22.1.7">Macintosh file type code(s):</dt>
-                <dd style="margin-left: 1.5em" id="section-9.1.7-1.22.1.8">N/A<a href="#section-9.1.7-1.22.1.8" class="pilcrow">¶</a>
-</dd>
-              <dd class="break"></dd>
-</dl>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.7-1.23">Person and email address to contact for further information:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.7-1.24">
-              <p id="section-9.1.7-1.24.1">see Authors' Addresses section of the published specification<a href="#section-9.1.7-1.24.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.7-1.25">Intended usage:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.7-1.26">
-              <p id="section-9.1.7-1.26.1">COMMON<a href="#section-9.1.7-1.26.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.7-1.27">Restrictions on usage:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.7-1.28">
-              <p id="section-9.1.7-1.28.1">N/A<a href="#section-9.1.7-1.28.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.7-1.29">Author:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.7-1.30">
-              <p id="section-9.1.7-1.30.1">see Authors' Addresses section of the published specification<a href="#section-9.1.7-1.30.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.7-1.31">Change controller:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.7-1.32">
-              <p id="section-9.1.7-1.32.1">IESG<a href="#section-9.1.7-1.32.1" class="pilcrow">¶</a></p>
+<dt id="section-9.1-8.13">Interoperability considerations:</dt>
+          <dd style="margin-left: 1.5em" id="section-9.1-8.14">
+            <p id="section-9.1-8.14.1">N/A<a href="#section-9.1-8.14.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
-</dl>
-</section>
-</div>
-<div id="applicationdap-aggregate-share-media-type">
-<section id="section-9.1.8">
-          <h4 id="name-application-dap-aggregate-sh">
-<a href="#section-9.1.8" class="section-number selfRef">9.1.8. </a><a href="#name-application-dap-aggregate-sh" class="section-name selfRef">"application/dap-aggregate-share" media type</a>
-          </h4>
-<span class="break"></span><dl class="dlParallel" id="section-9.1.8-1">
-            <dt id="section-9.1.8-1.1">Type name:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.8-1.2">
-              <p id="section-9.1.8-1.2.1">application<a href="#section-9.1.8-1.2.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.8-1.3">Subtype name:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.8-1.4">
-              <p id="section-9.1.8-1.4.1">dap-aggregate-share<a href="#section-9.1.8-1.4.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.8-1.5">Required parameters:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.8-1.6">
-              <p id="section-9.1.8-1.6.1">N/A<a href="#section-9.1.8-1.6.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.8-1.7">Optional parameters:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.8-1.8">
-              <p id="section-9.1.8-1.8.1">None<a href="#section-9.1.8-1.8.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.8-1.9">Encoding considerations:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.8-1.10">
-              <p id="section-9.1.8-1.10.1">only "8bit" or "binary" is permitted<a href="#section-9.1.8-1.10.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.8-1.11">Security considerations:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.8-1.12">
-              <p id="section-9.1.8-1.12.1">see <a href="#collect-flow" class="auto internal xref">Section 4.7</a> of the published specification<a href="#section-9.1.8-1.12.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.8-1.13">Interoperability considerations:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.8-1.14">
-              <p id="section-9.1.8-1.14.1">N/A<a href="#section-9.1.8-1.14.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.8-1.15">Published specification:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.8-1.16">
-              <p id="section-9.1.8-1.16.1">RFC XXXX<a href="#section-9.1.8-1.16.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.8-1.17">Applications that use this media type:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.8-1.18">
-              <p id="section-9.1.8-1.18.1">N/A<a href="#section-9.1.8-1.18.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.8-1.19">Fragment identifier considerations:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.8-1.20">
-              <p id="section-9.1.8-1.20.1">N/A<a href="#section-9.1.8-1.20.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.8-1.21">Additional information:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.8-1.22">
-              <span class="break"></span><dl class="dlParallel" id="section-9.1.8-1.22.1">
-                <dt id="section-9.1.8-1.22.1.1">Magic number(s):</dt>
-                <dd style="margin-left: 1.5em" id="section-9.1.8-1.22.1.2">N/A<a href="#section-9.1.8-1.22.1.2" class="pilcrow">¶</a>
-</dd>
-                <dd class="break"></dd>
-<dt id="section-9.1.8-1.22.1.3">Deprecated alias names for this type:</dt>
-                <dd style="margin-left: 1.5em" id="section-9.1.8-1.22.1.4">N/A<a href="#section-9.1.8-1.22.1.4" class="pilcrow">¶</a>
-</dd>
-                <dd class="break"></dd>
-<dt id="section-9.1.8-1.22.1.5">File extension(s):</dt>
-                <dd style="margin-left: 1.5em" id="section-9.1.8-1.22.1.6">N/A<a href="#section-9.1.8-1.22.1.6" class="pilcrow">¶</a>
-</dd>
-                <dd class="break"></dd>
-<dt id="section-9.1.8-1.22.1.7">Macintosh file type code(s):</dt>
-                <dd style="margin-left: 1.5em" id="section-9.1.8-1.22.1.8">N/A<a href="#section-9.1.8-1.22.1.8" class="pilcrow">¶</a>
-</dd>
-              <dd class="break"></dd>
-</dl>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.8-1.23">Person and email address to contact for further information:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.8-1.24">
-              <p id="section-9.1.8-1.24.1">see Authors' Addresses section of the published specification<a href="#section-9.1.8-1.24.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.8-1.25">Intended usage:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.8-1.26">
-              <p id="section-9.1.8-1.26.1">COMMON<a href="#section-9.1.8-1.26.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.8-1.27">Restrictions on usage:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.8-1.28">
-              <p id="section-9.1.8-1.28.1">N/A<a href="#section-9.1.8-1.28.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.8-1.29">Author:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.8-1.30">
-              <p id="section-9.1.8-1.30.1">see Authors' Addresses section of the published specification<a href="#section-9.1.8-1.30.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.8-1.31">Change controller:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.8-1.32">
-              <p id="section-9.1.8-1.32.1">IESG<a href="#section-9.1.8-1.32.1" class="pilcrow">¶</a></p>
+<dt id="section-9.1-8.15">Published specification:</dt>
+          <dd style="margin-left: 1.5em" id="section-9.1-8.16">
+            <p id="section-9.1-8.16.1">RFC XXXX<a href="#section-9.1-8.16.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
-</dl>
-</section>
-</div>
-<div id="applicationdap-collection-job-req-media-type">
-<section id="section-9.1.9">
-          <h4 id="name-application-dap-collection-">
-<a href="#section-9.1.9" class="section-number selfRef">9.1.9. </a><a href="#name-application-dap-collection-" class="section-name selfRef">"application/dap-collection-job-req" media type</a>
-          </h4>
-<span class="break"></span><dl class="dlParallel" id="section-9.1.9-1">
-            <dt id="section-9.1.9-1.1">Type name:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.9-1.2">
-              <p id="section-9.1.9-1.2.1">application<a href="#section-9.1.9-1.2.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.9-1.3">Subtype name:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.9-1.4">
-              <p id="section-9.1.9-1.4.1">dap-collection-job-req<a href="#section-9.1.9-1.4.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.9-1.5">Required parameters:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.9-1.6">
-              <p id="section-9.1.9-1.6.1">N/A<a href="#section-9.1.9-1.6.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.9-1.7">Optional parameters:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.9-1.8">
-              <p id="section-9.1.9-1.8.1">None<a href="#section-9.1.9-1.8.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.9-1.9">Encoding considerations:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.9-1.10">
-              <p id="section-9.1.9-1.10.1">only "8bit" or "binary" is permitted<a href="#section-9.1.9-1.10.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.9-1.11">Security considerations:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.9-1.12">
-              <p id="section-9.1.9-1.12.1">see <a href="#collect-flow" class="auto internal xref">Section 4.7</a> of the published specification<a href="#section-9.1.9-1.12.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.9-1.13">Interoperability considerations:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.9-1.14">
-              <p id="section-9.1.9-1.14.1">N/A<a href="#section-9.1.9-1.14.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.9-1.15">Published specification:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.9-1.16">
-              <p id="section-9.1.9-1.16.1">RFC XXXX<a href="#section-9.1.9-1.16.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.9-1.17">Applications that use this media type:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.9-1.18">
-              <p id="section-9.1.9-1.18.1">N/A<a href="#section-9.1.9-1.18.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.9-1.19">Fragment identifier considerations:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.9-1.20">
-              <p id="section-9.1.9-1.20.1">N/A<a href="#section-9.1.9-1.20.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.9-1.21">Additional information:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.9-1.22">
-              <span class="break"></span><dl class="dlParallel" id="section-9.1.9-1.22.1">
-                <dt id="section-9.1.9-1.22.1.1">Magic number(s):</dt>
-                <dd style="margin-left: 1.5em" id="section-9.1.9-1.22.1.2">N/A<a href="#section-9.1.9-1.22.1.2" class="pilcrow">¶</a>
-</dd>
-                <dd class="break"></dd>
-<dt id="section-9.1.9-1.22.1.3">Deprecated alias names for this type:</dt>
-                <dd style="margin-left: 1.5em" id="section-9.1.9-1.22.1.4">N/A<a href="#section-9.1.9-1.22.1.4" class="pilcrow">¶</a>
-</dd>
-                <dd class="break"></dd>
-<dt id="section-9.1.9-1.22.1.5">File extension(s):</dt>
-                <dd style="margin-left: 1.5em" id="section-9.1.9-1.22.1.6">N/A<a href="#section-9.1.9-1.22.1.6" class="pilcrow">¶</a>
-</dd>
-                <dd class="break"></dd>
-<dt id="section-9.1.9-1.22.1.7">Macintosh file type code(s):</dt>
-                <dd style="margin-left: 1.5em" id="section-9.1.9-1.22.1.8">N/A<a href="#section-9.1.9-1.22.1.8" class="pilcrow">¶</a>
-</dd>
-              <dd class="break"></dd>
-</dl>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.9-1.23">Person and email address to contact for further information:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.9-1.24">
-              <p id="section-9.1.9-1.24.1">see Authors' Addresses section of the published specification<a href="#section-9.1.9-1.24.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.9-1.25">Intended usage:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.9-1.26">
-              <p id="section-9.1.9-1.26.1">COMMON<a href="#section-9.1.9-1.26.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.9-1.27">Restrictions on usage:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.9-1.28">
-              <p id="section-9.1.9-1.28.1">N/A<a href="#section-9.1.9-1.28.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.9-1.29">Author:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.9-1.30">
-              <p id="section-9.1.9-1.30.1">see Authors' Addresses section of the published specification<a href="#section-9.1.9-1.30.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.9-1.31">Change controller:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.9-1.32">
-              <p id="section-9.1.9-1.32.1">IESG<a href="#section-9.1.9-1.32.1" class="pilcrow">¶</a></p>
+<dt id="section-9.1-8.17">Applications that use this media type:</dt>
+          <dd style="margin-left: 1.5em" id="section-9.1-8.18">
+            <p id="section-9.1-8.18.1">N/A<a href="#section-9.1-8.18.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
-</dl>
-</section>
-</div>
-<div id="applicationdap-collection-job-resp-media-type">
-<section id="section-9.1.10">
-          <h4 id="name-application-dap-collection-j">
-<a href="#section-9.1.10" class="section-number selfRef">9.1.10. </a><a href="#name-application-dap-collection-j" class="section-name selfRef">"application/dap-collection-job-resp" media type</a>
-          </h4>
-<span class="break"></span><dl class="dlParallel" id="section-9.1.10-1">
-            <dt id="section-9.1.10-1.1">Type name:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.10-1.2">
-              <p id="section-9.1.10-1.2.1">application<a href="#section-9.1.10-1.2.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.10-1.3">Subtype name:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.10-1.4">
-              <p id="section-9.1.10-1.4.1">dap-collection-job-resp<a href="#section-9.1.10-1.4.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.10-1.5">Required parameters:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.10-1.6">
-              <p id="section-9.1.10-1.6.1">N/A<a href="#section-9.1.10-1.6.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.10-1.7">Optional parameters:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.10-1.8">
-              <p id="section-9.1.10-1.8.1">None<a href="#section-9.1.10-1.8.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.10-1.9">Encoding considerations:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.10-1.10">
-              <p id="section-9.1.10-1.10.1">only "8bit" or "binary" is permitted<a href="#section-9.1.10-1.10.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.10-1.11">Security considerations:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.10-1.12">
-              <p id="section-9.1.10-1.12.1">see <a href="#collect-flow" class="auto internal xref">Section 4.7</a> of the published specification<a href="#section-9.1.10-1.12.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.10-1.13">Interoperability considerations:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.10-1.14">
-              <p id="section-9.1.10-1.14.1">N/A<a href="#section-9.1.10-1.14.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.10-1.15">Published specification:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.10-1.16">
-              <p id="section-9.1.10-1.16.1">RFC XXXX<a href="#section-9.1.10-1.16.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.10-1.17">Applications that use this media type:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.10-1.18">
-              <p id="section-9.1.10-1.18.1">N/A<a href="#section-9.1.10-1.18.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.10-1.19">Fragment identifier considerations:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.10-1.20">
-              <p id="section-9.1.10-1.20.1">N/A<a href="#section-9.1.10-1.20.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.10-1.21">Additional information:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.10-1.22">
-              <span class="break"></span><dl class="dlParallel" id="section-9.1.10-1.22.1">
-                <dt id="section-9.1.10-1.22.1.1">Magic number(s):</dt>
-                <dd style="margin-left: 1.5em" id="section-9.1.10-1.22.1.2">N/A<a href="#section-9.1.10-1.22.1.2" class="pilcrow">¶</a>
-</dd>
-                <dd class="break"></dd>
-<dt id="section-9.1.10-1.22.1.3">Deprecated alias names for this type:</dt>
-                <dd style="margin-left: 1.5em" id="section-9.1.10-1.22.1.4">N/A<a href="#section-9.1.10-1.22.1.4" class="pilcrow">¶</a>
-</dd>
-                <dd class="break"></dd>
-<dt id="section-9.1.10-1.22.1.5">File extension(s):</dt>
-                <dd style="margin-left: 1.5em" id="section-9.1.10-1.22.1.6">N/A<a href="#section-9.1.10-1.22.1.6" class="pilcrow">¶</a>
-</dd>
-                <dd class="break"></dd>
-<dt id="section-9.1.10-1.22.1.7">Macintosh file type code(s):</dt>
-                <dd style="margin-left: 1.5em" id="section-9.1.10-1.22.1.8">N/A<a href="#section-9.1.10-1.22.1.8" class="pilcrow">¶</a>
-</dd>
-              <dd class="break"></dd>
-</dl>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.10-1.23">Person and email address to contact for further information:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.10-1.24">
-              <p id="section-9.1.10-1.24.1">see Authors' Addresses section of the published specification<a href="#section-9.1.10-1.24.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.10-1.25">Intended usage:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.10-1.26">
-              <p id="section-9.1.10-1.26.1">COMMON<a href="#section-9.1.10-1.26.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.10-1.27">Restrictions on usage:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.10-1.28">
-              <p id="section-9.1.10-1.28.1">N/A<a href="#section-9.1.10-1.28.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.10-1.29">Author:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.10-1.30">
-              <p id="section-9.1.10-1.30.1">see Authors' Addresses section of the published specification<a href="#section-9.1.10-1.30.1" class="pilcrow">¶</a></p>
-</dd>
-            <dd class="break"></dd>
-<dt id="section-9.1.10-1.31">Change controller:</dt>
-            <dd style="margin-left: 1.5em" id="section-9.1.10-1.32">
-              <p id="section-9.1.10-1.32.1">IESG<a href="#section-9.1.10-1.32.1" class="pilcrow">¶</a></p>
+<dt id="section-9.1-8.19">Fragment identifier considerations:</dt>
+          <dd style="margin-left: 1.5em" id="section-9.1-8.20">
+            <p id="section-9.1-8.20.1">N/A<a href="#section-9.1-8.20.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
+<dt id="section-9.1-8.21">Additional information:</dt>
+          <dd style="margin-left: 1.5em" id="section-9.1-8.22">
+            <span class="break"></span><dl class="dlParallel" id="section-9.1-8.22.1">
+              <dt id="section-9.1-8.22.1.1">Magic number(s):</dt>
+              <dd style="margin-left: 1.5em" id="section-9.1-8.22.1.2">N/A<a href="#section-9.1-8.22.1.2" class="pilcrow">¶</a>
+</dd>
+              <dd class="break"></dd>
+<dt id="section-9.1-8.22.1.3">Deprecated alias names for this type:</dt>
+              <dd style="margin-left: 1.5em" id="section-9.1-8.22.1.4">N/A<a href="#section-9.1-8.22.1.4" class="pilcrow">¶</a>
+</dd>
+              <dd class="break"></dd>
+<dt id="section-9.1-8.22.1.5">File extension(s):</dt>
+              <dd style="margin-left: 1.5em" id="section-9.1-8.22.1.6">N/A<a href="#section-9.1-8.22.1.6" class="pilcrow">¶</a>
+</dd>
+              <dd class="break"></dd>
+<dt id="section-9.1-8.22.1.7">Macintosh file type code(s):</dt>
+              <dd style="margin-left: 1.5em" id="section-9.1-8.22.1.8">N/A<a href="#section-9.1-8.22.1.8" class="pilcrow">¶</a>
+</dd>
+            <dd class="break"></dd>
 </dl>
-</section>
-</div>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-9.1-8.23">Person and email address to contact for further information:</dt>
+          <dd style="margin-left: 1.5em" id="section-9.1-8.24">
+            <p id="section-9.1-8.24.1">see Authors' Addresses section of the published specification<a href="#section-9.1-8.24.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-9.1-8.25">Intended usage:</dt>
+          <dd style="margin-left: 1.5em" id="section-9.1-8.26">
+            <p id="section-9.1-8.26.1">COMMON<a href="#section-9.1-8.26.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-9.1-8.27">Restrictions on usage:</dt>
+          <dd style="margin-left: 1.5em" id="section-9.1-8.28">
+            <p id="section-9.1-8.28.1">N/A<a href="#section-9.1-8.28.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-9.1-8.29">Author:</dt>
+          <dd style="margin-left: 1.5em" id="section-9.1-8.30">
+            <p id="section-9.1-8.30.1">see Authors' Addresses section of the published specification<a href="#section-9.1-8.30.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-9.1-8.31">Change controller:</dt>
+          <dd style="margin-left: 1.5em" id="section-9.1-8.32">
+            <p id="section-9.1-8.32.1">IESG<a href="#section-9.1-8.32.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+</dl>
 </section>
 </div>
 <div id="iana-codepoints">
