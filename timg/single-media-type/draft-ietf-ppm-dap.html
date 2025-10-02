@@ -5549,7 +5549,7 @@ encoded(struct {
 } CollectionJobReq)
 
 HTTP/1.1 200
-Content-Type: application/ppm-dap;message=collection-job-req
+Content-Type: application/ppm-dap;message=collection-job-resp
 
 encoded(struct {
   part_batch_selector = struct {
@@ -5604,7 +5604,7 @@ Host: example.com
 Authorization: Bearer auth-token
 
 HTTP/1.1 200
-Content-Type: application/ppm-dap;message=collection-job-req
+Content-Type: application/ppm-dap;message=collection-job-resp
 
 encoded(struct {
   part_batch_selector = struct {
@@ -7010,9 +7010,9 @@ have the header
 <p id="section-9.1-5">Protocol message format evolution is supported through the definition of new
 formats that are identified by <code>message</code> values. The messages above are specific
 to this specification. When a new major enhancement is proposed that results in
-newer IETF specification for DAP, a new set of <code>message</code> values will be defined.
-In other words, newer versions of DAP will not be backward compatible with this
-version of DAP.<a href="#section-9.1-5" class="pilcrow">¶</a></p>
+newer IETF specification for DAP, a new media type will be defined. In other
+words, newer versions of DAP will not be backward compatible with this version
+of DAP.<a href="#section-9.1-5" class="pilcrow">¶</a></p>
 <p id="section-9.1-6">(RFC EDITOR: Remove this paragraph.) HTTP requests with DAP media types <span class="bcp14">MAY</span>
 express an optional parameter 'version', following <span><a href="https://rfc-editor.org/rfc/rfc9110#section-8.3" class="relref">Section 8.3</a> of [<a href="#RFC9110" class="cite xref">RFC9110</a>]</span>.
 Value of this parameter indicates current draft version of the protocol the
@@ -7032,7 +7032,7 @@ be (RFC EDITOR: replace "will be" with "has been") updated to include the
           <dd class="break"></dd>
 <dt id="section-9.1-8.3">Subtype name:</dt>
           <dd style="margin-left: 1.5em" id="section-9.1-8.4">
-            <p id="section-9.1-8.4.1">dap<a href="#section-9.1-8.4.1" class="pilcrow">¶</a></p>
+            <p id="section-9.1-8.4.1">ppm-dap<a href="#section-9.1-8.4.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
 <dt id="section-9.1-8.5">Required parameters:</dt>

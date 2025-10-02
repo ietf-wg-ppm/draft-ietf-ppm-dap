@@ -3165,7 +3165,7 @@ Table of Contents
    } CollectionJobReq)
 
    HTTP/1.1 200
-   Content-Type: application/ppm-dap;message=collection-job-req
+   Content-Type: application/ppm-dap;message=collection-job-resp
 
    encoded(struct {
      part_batch_selector = struct {
@@ -3218,7 +3218,7 @@ Table of Contents
    Authorization: Bearer auth-token
 
    HTTP/1.1 200
-   Content-Type: application/ppm-dap;message=collection-job-req
+   Content-Type: application/ppm-dap;message=collection-job-resp
 
    encoded(struct {
      part_batch_selector = struct {
@@ -4393,9 +4393,9 @@ Table of Contents
    of new formats that are identified by message values.  The messages
    above are specific to this specification.  When a new major
    enhancement is proposed that results in newer IETF specification for
-   DAP, a new set of message values will be defined.  In other words,
-   newer versions of DAP will not be backward compatible with this
-   version of DAP.
+   DAP, a new media type will be defined.  In other words, newer
+   versions of DAP will not be backward compatible with this version of
+   DAP.
 
    (RFC EDITOR: Remove this paragraph.)  HTTP requests with DAP media
    types MAY express an optional parameter 'version', following
@@ -4413,7 +4413,7 @@ Table of Contents
 
    Type name:  application
 
-   Subtype name:  dap
+   Subtype name:  ppm-dap
 
    Required parameters:  message
 
