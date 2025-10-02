@@ -2849,8 +2849,8 @@ replay and double collection checks ({{batch-buckets}}) and MAY be
 included in future aggregation jobs.
 
 If the Leader must abandon an aggregation job, it SHOULD let the Helper know it
-can clean up its state by sending a DELETE request to the job. Deletion of an
-aggregation job MUST NOT delete information needed for replay or double
+can clean up its state by sending a DELETE request to the job. Deletion of a
+completed aggregation job MUST NOT delete information needed for replay or double
 collection checks.
 
 #### Example
