@@ -2971,8 +2971,8 @@ Table of Contents
 
    If the Leader must abandon an aggregation job, it SHOULD let the
    Helper know it can clean up its state by sending a DELETE request to
-   the job.  Deletion of an aggregation job MUST NOT delete information
-   needed for replay or double collection checks.
+   the job.  Deletion of a completed aggregation job MUST NOT delete
+   information needed for replay or double collection checks.
 
 4.6.4.1.  Example
 
