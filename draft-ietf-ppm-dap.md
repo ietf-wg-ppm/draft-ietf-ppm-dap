@@ -1006,11 +1006,74 @@ Leader batch bucket 1            Helper batch bucket 1
   title="Lifecycles of protocol objects in the collection interaction"
 }
 
-# Message Transport {#message-transport}
+# HTTP Usage {#http-usage}
 
-Communications between participants are carried over HTTP {{!RFC9110}}. Use of
-HTTPS is REQUIRED to provide server authentication and confidentiality. TLS
-certificates MUST be checked according to {{!RFC9110, Section 4.3.4}}.
+DAP is defined in terms of HTTP {{!RFC9110}} resources. These are HPKE
+configurations ({{hpke-config}}), reports ({{upload-flow}}), aggregation jobs
+({{aggregate-flow}}), collection jobs ({{collect-flow}}), and aggregate shares
+({{collect-aggregate}}).
+
+Each resource has a URL. Resource URLs are specified as string literals
+containing variables. Variables are expanded into strings according to the
+following rules:
+
+* Variables `{leader}` and `{helper}` are replaced with the base API URL of the
+  Leader and Helper respectively.
+* Variables `{task-id}`, `{aggregation-job-id}`, `{aggregate-share-id}`, and
+  `{collection-job-id}` are replaced with the task ID ({{task-configuration}}),
+  aggregation job ID ({{agg-init}}), aggregate share ID ({{collect-aggregate}})
+  and collection job ID ({{collect-init}}) respectively. The value MUST be
+  encoded in its URL-safe, unpadded Base 64 representation as specified in
+  {{Sections 5 and 3.2 of !RFC4648}}.
+
+For example, given a helper URL "https://example.com/api/dap", task ID "f0 16 34
+47 36 4c cf 1b c0 e3 af fc ca 68 73 c9 c3 81 f6 4a cd f9 02 06 62 f8 3f 46 c0 72
+19 e7" and an aggregation job ID "95 ce da 51 e1 a9 75 23 68 b0 d9 61 f9 46 61
+28" (32 and 16 byte octet strings, represented in hexadecimal), resource URL
+`{helper}/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}` would be
+expanded into
+`https://example.com/api/dap/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA`.
+
+Protocol participants act on resources using HTTP requests, which follow the
+semantics laid out in {{!RFC9110}}, in particular with regard to safety and
+idempotence of HTTP methods ({{Sections 9.2.1 and 9.2.2 of !RFC9110}},
+respectively).
+
+The use of HTTPS is REQUIRED to provide server authentication and
+confidentiality. TLS certificates MUST be checked according to {{!RFC9110,
+Section 4.3.4}}.
+
+## Asynchronous Request Handling
+
+Many of the protocol's interactions may be handled asynchronously so that
+servers can appropriately allocate resources for long-running transactions.
+
+In DAP, an HTTP server indicates that it is deferring the handling of a request
+by immediately sending an empty response body with a successful status code
+({{!RFC9110, Section 15.3}}). The response SHOULD include a Retry-After field
+({{!RFC9110, Section 10.2.3}}) to suggest a polling interval to the HTTP client.
+The HTTP client then polls the state of the resource by sending GET requests to
+the resource URL. In some interactions, the resource's location will be
+indicated by a Location header in the HTTP server's response ({{!RFC9110,
+Section 10.2.2}}). Otherwise the resource URL is the URL to which the HTTP
+client initially sent its request.
+
+The HTTP client SHOULD use each response's Retry-After header field to decide
+when to fetch the resource. The HTTP server responds the same way as it did to
+the initial request until either the resource is ready, from which point it
+responds with the resource's representation ({{!RFC9110, Section 3.2}}), or
+handling the request fails, in which case it MUST abort with the error that
+caused the failure.
+
+The HTTP server may instead handle the request immediately. It waits to respond
+to the HTTP client's request until the resource is ready, in which case it
+responds with the resource's representation, or handling the request fails, in
+which case it MUST abort with the error that caused the failure.
+
+Implementations are not required to support GET on resources if they are served
+synchronously, but they could do so, as a way for other protocol participants to
+retrieve the results of some transaction later on. The retention period for
+job results is an implementation detail.
 
 ## HTTP Status Codes
 
@@ -1025,7 +1088,7 @@ We use the presentation language defined in {{!RFC8446, Section 3}} to define
 messages in the protocol. Encoding and decoding of these messages as byte
 strings also follows {{!RFC8446}}.
 
-## HTTPS Request Authentication {#request-authentication}
+## Request Authentication {#request-authentication}
 
 The protocol is made up of several interactions in which different subsets of
 participants interact with each other.
@@ -1311,64 +1374,6 @@ The query is issued to the Leader by the Collector during the collection
 interaction ({{collect-flow}}). Information used to guide batch selection is
 conveyed from the Leader to the Helper when initializing aggregation jobs
 ({{aggregate-flow}}) and finalizing the aggregate shares.
-
-## Resources {#http-resources}
-
-DAP is defined in terms of HTTP resources. These are HPKE configurations
-({{hpke-config}}), reports ({{upload-flow}}), aggregation jobs
-({{aggregate-flow}}), collection jobs ({{collect-flow}}), and aggregate shares
-({{collect-aggregate}}).
-
-Each resource has a URL. Resource URLs are specified as string literals
-containing variables. Variables are expanded into strings according to the
-following rules:
-
-* Variables `{leader}` and `{helper}` are replaced with the base API URL of the
-  Leader and Helper respectively.
-* Variables `{task-id}`, `{aggregation-job-id}`, `{aggregate-share-id}`, and
-  `{collection-job-id}` are replaced with the task ID ({{task-configuration}}),
-  aggregation job ID ({{agg-init}}), aggregate share ID ({{collect-aggregate}})
-  and collection job ID ({{collect-init}}) respectively. The value MUST be
-  encoded in its URL-safe, unpadded Base 64 representation as specified in
-  {{Sections 5 and 3.2 of !RFC4648}}.
-
-For example, given a helper URL "https://example.com/api/dap", task ID "f0 16 34
-47 36 4c cf 1b c0 e3 af fc ca 68 73 c9 c3 81 f6 4a cd f9 02 06 62 f8 3f 46 c0 72
-19 e7" and an aggregation job ID "95 ce da 51 e1 a9 75 23 68 b0 d9 61 f9 46 61
-28" (32 and 16 byte octet strings, represented in hexadecimal), resource URL
-`{helper}/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}` would be
-expanded into
-`https://example.com/api/dap/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA`.
-
-Protocol participants act on resources using HTTP requests, which follow the
-semantics laid out in {{!RFC9110}}, in particular with regard to safety and
-idempotence of HTTP methods ({{Sections 9.2.1 and 9.2.2 of !RFC9110}},
-respectively).
-
-Many of the protocol's interactions may be handled asynchronously so that
-servers can appropriately allocate resources for long-running transactions.
-
-In DAP, an HTTP server indicates that it is deferring the handling of a request
-by immediately sending an empty response body with a successful status code
-({{!RFC9110, Section 15.3}}). The response SHOULD include a Retry-After field
-({{!RFC9110, Section 10.2.3}}) to suggest a polling interval to the HTTP client.
-The HTTP client then polls the state of the resource by sending GET requests to
-the resource URL. In some interactions, the HTTP server will include a Location
-header field ({{!RFC9110, Section 10.2.2}}) that the HTTP client MUST resolve
-against the HTTP server's base API URL to obtain the resource URL. Otherwise the
-resource URL is the URL to which the HTTP client initially sent its request.
-
-The HTTP client SHOULD use each response's Retry-After header field to decide
-when to try again. The HTTP server responds the same way as it did to the
-initial request until either the resource is ready, from which point it responds
-with the resource's representation ({{!RFC9110, Section 3.2}}), or handling the
-request fails, in which case it MUST abort with the error that caused the
-failure.
-
-The HTTP server may instead handle the request immediately. It waits to respond
-to the HTTP client's request until the resource is ready, in which case it
-responds with the resource's representation, or handling the request fails, in
-which case it MUST abort with the error that caused the failure.
 
 ## Aggregation Parameter Validation {#agg-param-validation}
 
@@ -2106,8 +2111,7 @@ This message consists of:
 The Leader sends the `AggregationJobInitReq` in the body of a PUT request to the
 aggregation job with a media type of
 "application/ppm-dap;message=aggregation-job-init-req". The Leader handles the
-response(s) as described in {{http-resources}} to obtain an
-`AggregationJobResp`.
+response(s) as described in {{http-usage}} to obtain an `AggregationJobResp`.
 
 The `AggregationJobResp.prepare_resps` field must include exactly the same
 report IDs in the same order as the Leader's `AggregationJobInitReq`. Otherwise,
@@ -2184,11 +2188,14 @@ the Leader does. If successful, it includes the result in its response for the
 Leader to use to continue preparing the report.
 
 The initialization request can be handled either asynchronously or synchronously
-as described in {{http-resources}}. When indicating that the job is not yet
+as described in {{http-usage}}. When indicating that the job is not yet
 ready, the response MUST include a Location header field ({{!RFC9110, Section
 10.2.2}}) set to the relative reference
-`/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}?step=0`. When the job is
-ready, the Helper responds with the `AggregationJobResp` (defined below).
+`/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}?step=0`. Subsequent GET
+requests to the aggregation job MUST include the `step` query parameter so that
+the Helper can figure out which step of preparation the Leader is on (see
+{{aggregation-step-skew-recovery}}). When the job is ready, the Helper responds
+with the `AggregationJobResp` (defined below).
 
 Upon receipt of an `AggregationJobInitReq`, the Helper checks the following
 conditions:
@@ -2518,8 +2525,8 @@ preparation continuation messages constructed in the previous step. Here
 the aggregation job, omitting any reports that were previously rejected by
 either Aggregator.
 
-The Leader handles the response(s) as described in {{http-resources}} to obtain
-an `AggregationJobResp`.
+The Leader handles the response(s) as described in {{http-usage}} to obtain an
+`AggregationJobResp`.
 
 The response's `prepare_resps` MUST include exactly the same report IDs in the
 same order as the Leader's `AggregationJobContinueReq`. Otherwise, the Leader
@@ -2598,12 +2605,15 @@ the candidate set, each of which has type `Continued`. The Helper waits for the
 Leader to POST an `AggregationJobContinueReq` to the aggregation job.
 
 The continuation request can be handled either asynchronously or synchronously
-as described in {{http-resources}}. When indicating that the job is not yet
-ready, the response MUST include a Location header field ({{!RFC9110, Section
-10.2.2}}) to the relative reference
+as described in {{http-usage}}. When indicating that the job is not yet ready,
+the response MUST include a Location header field ({{!RFC9110, Section 10.2.2}})
+to the relative reference
 `/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}?step={step}`, where
-`step` is set to `AggregationJobContinueReq.step`. The representation of the
-aggregation job is an `AggregationJobResp`.
+`step` is set to `AggregationJobContinueReq.step`. Subsequent GET requests to
+the aggregation job MUST include the `step` query parameter so that the Helper
+can figure out which step of preparation the Leader is on (see
+{{aggregation-step-skew-recovery}}). The representation of the aggregation job
+is an `AggregationJobResp`.
 
 To begin handling an `AggregationJobContinueReq`, the Helper checks the
 following conditions:
@@ -2926,7 +2936,7 @@ possible to predict the aggregation parameter in advance. For example, for Prio3
 the only valid aggregation parameter is the empty string.
 
 The collection request can be handled either asynchronously or synchronously as
-described in {{http-resources}}. The representation of the collection job is a
+described in {{http-usage}}. The representation of the collection job is a
 `CollectionJobResp` (defined below).
 
 If the job fails with `invalidBatchSize`, then the Collector MAY retry it later,
@@ -3214,8 +3224,8 @@ following parameters:
 * `checksum`: The batch checksum, as computed above.
 
 The aggregate share request can be handled either asynchronously or
-synchronously as described in {{http-resources}}. The representation of the
-share is an `AggregateShare` (defined below).
+synchronously as described in {{http-usage}}. The representation of the share is
+an `AggregateShare` (defined below).
 
 The Helper first ensures that it recognizes the task ID. If not, it MUST fail
 the job with error `unrecognizedTask`.
@@ -3899,8 +3909,8 @@ an attacker that controls a subset of Clients cannot force the Collector to
 compute anything but the aggregate result over the honest Clients'
 measurements.
 
-Since DAP requires HTTPS ({{message-transport}}), the attacker cannot tamper
-with messages delivered by honest parties or forge messages from honest,
+Since DAP requires HTTPS ({{http-usage}}), the attacker cannot tamper with
+messages delivered by honest parties or forge messages from honest,
 authenticated parties; but it can drop messages or forge messages from
 unauthenticated parties. Thus there are some threats that DAP does not defend
 against and which are considered outside of its threat model. These and others
