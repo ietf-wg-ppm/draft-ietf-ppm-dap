@@ -943,7 +943,7 @@ Table of Contents
 
    Report shares, input shares and output shares have a 1 to 1 to 1
    relationship.  Report shares are decrypted into input shares and then
-   processed into output shares during VDAF verification.
+   refined into output shares during VDAF verification.
 
                      report           aggregation parameter
                         |                       |
