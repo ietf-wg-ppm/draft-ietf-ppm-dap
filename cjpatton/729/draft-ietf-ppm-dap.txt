@@ -927,9 +927,9 @@ Table of Contents
      report 1         report 2    ...     report k
         |  .-------------|--+----------------|--+--- aggregation
         |  |             |  |                |  |     parameter
-    .---+--+-----.    .---+--+-----.       .---+--+-----.
-   | Verification |  | Verification | ... | Verification |
-    '---+---+----'    '---+---+----'       '---+---+----'
+    .---+--+-----.    .--+--+------.       .-+--+-------.
+   | verification |  | verification | ... | verification |
+    '---+---+----'    '--+---+-----'       '-+---+------'
         |   |            |   |               |   |
         v   |            v   |               v   |
     leader output    leader output  ...  leader output
