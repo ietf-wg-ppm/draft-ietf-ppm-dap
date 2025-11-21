@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 10 April 2026                                        Cloudflare
+Expires: 25 May 2026                                          Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                          7 October 2025
+                                                        21 November 2025
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -64,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 10 April 2026.
+   This Internet-Draft will expire on 25 May 2026.
 
 Copyright Notice
 
@@ -94,35 +94,35 @@ Table of Contents
        2.4.1.  The Upload Interaction
        2.4.2.  The Aggregation Interaction
        2.4.3.  The Collection Interaction
-   3.  Message Transport
-     3.1.  HTTP Status Codes
-     3.2.  Presentation Language
-     3.3.  HTTPS Request Authentication
-     3.4.  Errors
+   3.  HTTP Usage
+     3.1.  Asynchronous Request Handling
+     3.2.  HTTP Status Codes
+     3.3.  Presentation Language
+     3.4.  Request Authentication
+     3.5.  Errors
    4.  Protocol Definition
      4.1.  Basic Type Definitions
        4.1.1.  Times, Durations and Intervals
        4.1.2.  VDAF Types
      4.2.  Task Configuration
        4.2.1.  Batch Modes, Batches, and Queries
-     4.3.  Resources
-     4.4.  Aggregation Parameter Validation
-     4.5.  Uploading Reports
-       4.5.1.  HPKE Configuration Request
-       4.5.2.  Upload Request
-       4.5.3.  Report Extensions
-     4.6.  Verifying and Aggregating Reports
-       4.6.1.  Eager Aggregation
-       4.6.2.  Aggregate Initialization
-       4.6.3.  Aggregate Continuation
-       4.6.4.  Aggregation Job Abandonment and Deletion
-     4.7.  Collecting Results
-       4.7.1.  Collection Job Initialization
-       4.7.2.  Collection Job Deletion
-       4.7.3.  Obtaining Aggregate Shares
-       4.7.4.  Aggregate Share Deletion
-       4.7.5.  Collection Job Finalization
-       4.7.6.  Aggregate Share Encryption
+     4.3.  Aggregation Parameter Validation
+     4.4.  Uploading Reports
+       4.4.1.  HPKE Configuration Request
+       4.4.2.  Upload Request
+       4.4.3.  Report Extensions
+     4.5.  Verifying and Aggregating Reports
+       4.5.1.  Eager Aggregation
+       4.5.2.  Aggregate Initialization
+       4.5.3.  Aggregate Continuation
+       4.5.4.  Aggregation Job Abandonment and Deletion
+     4.6.  Collecting Results
+       4.6.1.  Collection Job Initialization
+       4.6.2.  Collection Job Deletion
+       4.6.3.  Obtaining Aggregate Shares
+       4.6.4.  Aggregate Share Deletion
+       4.6.5.  Collection Job Finalization
+       4.6.6.  Aggregate Share Encryption
    5.  Batch Modes
      5.1.  Time Interval
        5.1.1.  Query Configuration
@@ -794,7 +794,7 @@ Table of Contents
    can violate the privacy of the added reports.
 
    Aggregators are responsible for refusing new reports if the batch
-   they fall into has been collected (Section 4.7).
+   they fall into has been collected (Section 4.6).
 
 2.4.  Lifecycle of Protocol Objects
 
@@ -813,7 +813,7 @@ Table of Contents
    distinct Clients upload i distinct reports, but a single Client could
    upload multiple reports to a task (see Section 8.1 for some
    implications of this).  The process of sharding measurements,
-   constructing reports and uploading them is specified in Section 4.5.
+   constructing reports and uploading them is specified in Section 4.4.
 
                    measurement 1
                          |
@@ -857,7 +857,7 @@ Table of Contents
    k reports, outputting k output shares. k is roughly i / j, but it is
    not necessary for aggregation jobs to have uniform size.
 
-   See Section 4.6 for the specification of aggregation jobs and
+   See Section 4.5 for the specification of aggregation jobs and
    Section 6 for some discussion of aggregation job scheduling
    strategies and their performance implications.
 
@@ -868,7 +868,7 @@ Table of Contents
    to the same batch bucket.
 
    The assignation of output shares to batch buckets is specified in
-   Section 4.6.3.3.
+   Section 4.5.3.3.
 
                  from upload interaction
                             |
@@ -921,7 +921,7 @@ Table of Contents
    share, Leader report share and Helper report share) into k Leader
    output shares and k Helper output shares.  The aggregation parameter
    is chosen by the Collector (or in some settings it may be known prior
-   to the Collector's involvement, as discussed in Section 4.6.1) and is
+   to the Collector's involvement, as discussed in Section 4.5.1) and is
    used to verify all the reports in one or more aggregation jobs.
 
      report 1         report 2    ...     report k
@@ -980,7 +980,7 @@ Table of Contents
    shares to the Collector to be decrypted and then unsharded into the
    aggregate result.  Since there are always exactly two Aggregators,
    aggregate shares are 2 to 1 with aggregate results.  The collection
-   interaction is specified in Section 4.7.
+   interaction is specified in Section 4.6.
 
    There can be many aggregate results for a single task.  The
    Collection process may occur multiple times for each task, with the
@@ -1037,27 +1037,97 @@ Table of Contents
          Figure 6: Lifecycles of protocol objects in the collection
                                 interaction
 
-3.  Message Transport
+3.  HTTP Usage
 
-   Communications between participants are carried over HTTP [RFC9110].
-   Use of HTTPS is REQUIRED to provide server authentication and
+   DAP is defined in terms of HTTP [RFC9110] resources.  These are HPKE
+   configurations (Section 4.4.1), reports (Section 4.4), aggregation
+   jobs (Section 4.5), collection jobs (Section 4.6), and aggregate
+   shares (Section 4.6.3).
+
+   Each resource has a URL.  Resource URLs are specified as string
+   literals containing variables.  Variables are expanded into strings
+   according to the following rules:
+
+   *  Variables {leader} and {helper} are replaced with the base API URL
+      of the Leader and Helper respectively.
+
+   *  Variables {task-id}, {aggregation-job-id}, {aggregate-share-id},
+      and {collection-job-id} are replaced with the task ID
+      (Section 4.2), aggregation job ID (Section 4.5.2), aggregate share
+      ID (Section 4.6.3) and collection job ID (Section 4.6.1)
+      respectively.  The value MUST be encoded in its URL-safe, unpadded
+      Base 64 representation as specified in Sections 5 and 3.2 of
+      [RFC4648].
+
+   For example, given a helper URL "https://example.com/api/dap", task
+   ID "f0 16 34 47 36 4c cf 1b c0 e3 af fc ca 68 73 c9 c3 81 f6 4a cd f9
+   02 06 62 f8 3f 46 c0 72 19 e7" and an aggregation job ID "95 ce da 51
+   e1 a9 75 23 68 b0 d9 61 f9 46 61 28" (32 and 16 byte octet strings,
+   represented in hexadecimal), resource URL {helper}/tasks/{task-
+   id}/aggregation_jobs/{aggregation-job-id} would be expanded into
+   https://example.com/api/dap/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-
+   QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA.
+
+   Protocol participants act on resources using HTTP requests, which
+   follow the semantics laid out in [RFC9110], in particular with regard
+   to safety and idempotence of HTTP methods (Sections 9.2.1 and 9.2.2
+   of [RFC9110], respectively).
+
+   The use of HTTPS is REQUIRED to provide server authentication and
    confidentiality.  TLS certificates MUST be checked according to
    [RFC9110], Section 4.3.4.
 
-3.1.  HTTP Status Codes
+3.1.  Asynchronous Request Handling
+
+   Many of the protocol's interactions may be handled asynchronously so
+   that servers can appropriately allocate resources for long-running
+   transactions.
+
+   In DAP, an HTTP server indicates that it is deferring the handling of
+   a request by immediately sending an empty response body with a
+   successful status code ([RFC9110], Section 15.3).  The response
+   SHOULD include a Retry-After field ([RFC9110], Section 10.2.3) to
+   suggest a polling interval to the HTTP client.  The HTTP client then
+   polls the state of the resource by sending GET requests to the
+   resource URL.  In some interactions, the resource's location will be
+   indicated by a Location header in the HTTP server's response
+   ([RFC9110], Section 10.2.2).  Otherwise the resource URL is the URL
+   to which the HTTP client initially sent its request.
+
+   The HTTP client SHOULD use each response's Retry-After header field
+   to decide when to fetch the resource.  The HTTP server responds the
+   same way as it did to the initial request until either the resource
+   is ready, from which point it responds with the resource's
+   representation ([RFC9110], Section 3.2), or handling the request
+   fails, in which case it MUST abort with the error that caused the
+   failure.
+
+   The HTTP server may instead handle the request immediately.  It waits
+   to respond to the HTTP client's request until the resource is ready,
+   in which case it responds with the resource's representation, or
+   handling the request fails, in which case it MUST abort with the
+   error that caused the failure.
+
+   Implementations are not required to support GET on resources if they
+   are served synchronously, but they could do so, as a way for other
+   protocol participants to retrieve the results of some transaction
+   later on.  The retention period for job results is an implementation
+   detail.
+
+3.2.  HTTP Status Codes
 
    HTTP servers participating in DAP MAY use any status code from the
    applicable class when constructing HTTP responses, but HTTP clients
    MAY treat any status code as the most general code of that class.
    For example, 202 may be handled as 200, or 499 as 400.
 
-3.2.  Presentation Language
+3.3.  Presentation Language
 
    We use the presentation language defined in [RFC8446], Section 3 to
    define messages in the protocol.  Encoding and decoding of these
    messages as byte strings also follows [RFC8446].
 
-3.3.  HTTPS Request Authentication
+3.4.  Request Authentication
 
    The protocol is made up of several interactions in which different
    subsets of participants interact with each other.
@@ -1089,14 +1159,14 @@ Table of Contents
    Request authentication is REQUIRED in the following interactions:
 
    *  Leaders initializing or continuing aggregation jobs with Helpers
-      (Section 4.6).
+      (Section 4.5).
 
    *  Collectors initializing or polling collection jobs with Leaders
-      (Section 4.7.1).
+      (Section 4.6.1).
 
-   *  Leaders obtaining aggregate shares from Helpers (Section 4.7.3).
+   *  Leaders obtaining aggregate shares from Helpers (Section 4.6.3).
 
-3.4.  Errors
+3.5.  Errors
 
    Errors are reported as HTTP status codes.  Any of the standard client
    or server errors (the 4xx or 5xx classes, respectively, from
@@ -1181,13 +1251,13 @@ Table of Contents
    DAP has three major interactions which need to be defined:
 
    *  Clients upload reports to the Aggregators, specified in
-      Section 4.5
+      Section 4.4
 
    *  Aggregators jointly verify reports and aggregate them together,
-      specified in Section 4.6
+      specified in Section 4.5
 
    *  The Collector collects aggregated results from the Aggregators,
-      specified in Section 4.7
+      specified in Section 4.6
 
    Each of these interactions is defined in terms of HTTP resources.  In
    this section we define these resources and the messages used to act
@@ -1212,7 +1282,7 @@ Table of Contents
 
    HpkeCiphertext is a message encrypted using [HPKE] and metadata
    needed to decrypt it.  HpkeConfigId identifies a server's HPKE
-   configuration (see Section 4.5.1).
+   configuration (see Section 4.4.1).
 
    uint8 HpkeConfigId;
 
@@ -1346,12 +1416,12 @@ Table of Contents
       function.
 
    *  collector_hpke_config (HpkeConfig): The [HPKE] configuration of
-      the Collector (described in Section 4.5.1); see Section 7 for
+      the Collector (described in Section 4.4.1); see Section 7 for
       information about the HPKE configuration algorithms.
 
    *  vdaf_verify_key (opaque byte string): The VDAF verification key
       shared by the Aggregators.  This key is used in the aggregation
-      interaction (Section 4.6).  The security requirements are
+      interaction (Section 4.5).  The security requirements are
       described in Section 8.6.2.
 
    Finally, the Collector is configured with the HPKE secret key
@@ -1378,81 +1448,16 @@ Table of Contents
    and discusses how new batch modes may be defined by future documents.
 
    The query is issued to the Leader by the Collector during the
-   collection interaction (Section 4.7).  Information used to guide
+   collection interaction (Section 4.6).  Information used to guide
    batch selection is conveyed from the Leader to the Helper when
-   initializing aggregation jobs (Section 4.6) and finalizing the
+   initializing aggregation jobs (Section 4.5) and finalizing the
    aggregate shares.
 
-4.3.  Resources
-
-   DAP is defined in terms of HTTP resources.  These are HPKE
-   configurations (Section 4.5.1), reports (Section 4.5), aggregation
-   jobs (Section 4.6), collection jobs (Section 4.7), and aggregate
-   shares (Section 4.7.3).
-
-   Each resource has a URL.  Resource URLs are specified as string
-   literals containing variables.  Variables are expanded into strings
-   according to the following rules:
-
-   *  Variables {leader} and {helper} are replaced with the base API URL
-      of the Leader and Helper respectively.
-
-   *  Variables {task-id}, {aggregation-job-id}, {aggregate-share-id},
-      and {collection-job-id} are replaced with the task ID
-      (Section 4.2), aggregation job ID (Section 4.6.2), aggregate share
-      ID (Section 4.7.3) and collection job ID (Section 4.7.1)
-      respectively.  The value MUST be encoded in its URL-safe, unpadded
-      Base 64 representation as specified in Sections 5 and 3.2 of
-      [RFC4648].
-
-   For example, given a helper URL "https://example.com/api/dap", task
-   ID "f0 16 34 47 36 4c cf 1b c0 e3 af fc ca 68 73 c9 c3 81 f6 4a cd f9
-   02 06 62 f8 3f 46 c0 72 19 e7" and an aggregation job ID "95 ce da 51
-   e1 a9 75 23 68 b0 d9 61 f9 46 61 28" (32 and 16 byte octet strings,
-   represented in hexadecimal), resource URL {helper}/tasks/{task-
-   id}/aggregation_jobs/{aggregation-job-id} would be expanded into
-   https://example.com/api/dap/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-
-   QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA.
-
-   Protocol participants act on resources using HTTP requests, which
-   follow the semantics laid out in [RFC9110], in particular with regard
-   to safety and idempotence of HTTP methods (Sections 9.2.1 and 9.2.2
-   of [RFC9110], respectively).
-
-   Many of the protocol's interactions may be handled asynchronously so
-   that servers can appropriately allocate resources for long-running
-   transactions.
-
-   In DAP, an HTTP server indicates that it is deferring the handling of
-   a request by immediately sending an empty response body with a
-   successful status code ([RFC9110], Section 15.3).  The response
-   SHOULD include a Retry-After field ([RFC9110], Section 10.2.3) to
-   suggest a polling interval to the HTTP client.  The HTTP client then
-   polls the state of the resource by sending GET requests to the
-   resource URL.  In some interactions, the HTTP server will include a
-   Location header field ([RFC9110], Section 10.2.2) that the HTTP
-   client MUST resolve against the HTTP server's base API URL to obtain
-   the resource URL.  Otherwise the resource URL is the URL to which the
-   HTTP client initially sent its request.
-
-   The HTTP client SHOULD use each response's Retry-After header field
-   to decide when to try again.  The HTTP server responds the same way
-   as it did to the initial request until either the resource is ready,
-   from which point it responds with the resource's representation
-   ([RFC9110], Section 3.2), or handling the request fails, in which
-   case it MUST abort with the error that caused the failure.
-
-   The HTTP server may instead handle the request immediately.  It waits
-   to respond to the HTTP client's request until the resource is ready,
-   in which case it responds with the resource's representation, or
-   handling the request fails, in which case it MUST abort with the
-   error that caused the failure.
-
-4.4.  Aggregation Parameter Validation
+4.3.  Aggregation Parameter Validation
 
    For each batch it collects, the Collector chooses an aggregation
    parameter used to verify the measurements before aggregating them.
-   Before accepting a collection job from the Collector (Section 4.7.1),
+   Before accepting a collection job from the Collector (Section 4.6.1),
    the Leader checks that the indicated aggregation parameter is valid
    according to the following procedure.
 
@@ -1467,14 +1472,14 @@ Table of Contents
 
    If both steps succeed, then the aggregation parameter is valid.
 
-4.5.  Uploading Reports
+4.4.  Uploading Reports
 
    Clients periodically upload reports to the Leader.  Each report
    contains two "report shares", one for the Leader and another for the
    Helper.  The Helper's report share is transmitted by the Leader
-   during the aggregation interaction (see Section 4.6).
+   during the aggregation interaction (see Section 4.5).
 
-4.5.1.  HPKE Configuration Request
+4.4.1.  HPKE Configuration Request
 
    Before the Client can upload its report to the Leader, it must know
    the HPKE configuration of each Aggregator.  See Section 7 for
@@ -1528,7 +1533,7 @@ Table of Contents
    Aggregators SHOULD continue to accept reports with old keys for at
    least twice the cache lifetime in order to avoid rejecting reports.
 
-4.5.1.1.  Example
+4.4.1.1.  Example
 
    GET /leader/hpke_config
    Host: example.com
@@ -1554,7 +1559,7 @@ Table of Contents
      } HpkeConfig,
    ])
 
-4.5.2.  Upload Request
+4.4.2.  Upload Request
 
    Reports are uploaded using the reports resource, served by the Leader
    at {leader}/tasks/{task-id}/reports.  An upload is represented as an
@@ -1594,7 +1599,7 @@ Table of Contents
          report was generated.
 
       -  public_extensions is the list of public report extensions; see
-         Section 4.5.3.
+         Section 4.4.3.
 
    *  public_share is the public share output by the VDAF sharding
       algorithm.  The public share might be empty, depending on the
@@ -1608,9 +1613,9 @@ Table of Contents
 
    Aggregators MAY require Clients to authenticate when uploading
    reports (see Section 8.3).  If it is used, client authentication MUST
-   use a scheme that meets the requirements in Section 3.3.
+   use a scheme that meets the requirements in Section 3.4.
 
-4.5.2.1.  Client Behavior
+4.4.2.1.  Client Behavior
 
    To generate a report, the Client begins by sharding its measurement
    into input shares and the public share using the VDAF's sharding
@@ -1646,7 +1651,7 @@ Table of Contents
    } PlaintextInputShare;
 
    *  private_extensions is the list of private report extensions for
-      the given Aggregator (see Section 4.5.3).
+      the given Aggregator (see Section 4.4.3).
 
    *  payload is the Aggregator's input share.
 
@@ -1680,7 +1685,7 @@ Table of Contents
    Clients upload reports by sending an UploadRequest as the body of a
    POST to the Leader's reports resource.
 
-4.5.2.2.  Leader Behavior
+4.4.2.2.  Leader Behavior
 
    The handling of the upload request by the Leader MUST be idempotent
    as discussed in Section 9.2.2 of [RFC9110].
@@ -1745,7 +1750,7 @@ Table of Contents
 
    The Leader may need to buffer reports while waiting to aggregate them
    (e.g., while waiting for an aggregation parameter from the Collector;
-   see Section 4.7).  The Leader SHOULD NOT accept reports whose
+   see Section 4.6).  The Leader SHOULD NOT accept reports whose
    timestamps are too far in the future.  Implementors MAY provide for
    some small leeway, usually no more than a few minutes, to account for
    clock skew.  If the Leader rejects a report for this reason, it
@@ -1777,7 +1782,7 @@ Table of Contents
    share.  Validation of report IDs and extensions will occur before
    aggregation.
 
-4.5.2.3.  Example
+4.4.2.3.  Example
 
    Successful upload
 
@@ -1872,7 +1877,7 @@ Table of Contents
      ],
    } UploadErrors)
 
-4.5.3.  Report Extensions
+4.4.3.  Report Extensions
 
    Clients use report extensions to convey additional information to the
    Aggregators.  Each ReportMetadata contains a list of extensions
@@ -1897,9 +1902,9 @@ Table of Contents
    extension_data contains the opaque encoding of the extension.
 
    Extensions are mandatory to implement.  Unrecognized extensions are
-   handled as specified in Section 4.6.2.4.
+   handled as specified in Section 4.5.2.4.
 
-4.6.  Verifying and Aggregating Reports
+4.5.  Verifying and Aggregating Reports
 
    Once some Clients have uploaded their reports to the Leader, the
    Leader can begin the process of validating and aggregating them with
@@ -2009,7 +2014,7 @@ Table of Contents
    histograms, may be better suited for the asynchronous model.
 
    Aggregation cannot begin until the Collector specifies a query and an
-   aggregation parameter, except where eager aggregation (Section 4.6.1)
+   aggregation parameter, except where eager aggregation (Section 4.5.1)
    is possible.
 
    An aggregation job has three phases:
@@ -2026,9 +2031,9 @@ Table of Contents
    After an aggregation job is completed, each Aggregator commits to the
    output shares by updating running-total aggregate shares and other
    values for each batch bucket associated with a verified output share,
-   as described in Section 4.6.3.3.  These values are stored until a
+   as described in Section 4.5.3.3.  These values are stored until a
    batch that includes the batch bucket is collected as described in
-   Section 4.7.
+   Section 4.6.
 
    The aggregation interaction provides protection against including
    reports in more than one batch and against adding reports to already
@@ -2037,7 +2042,7 @@ Table of Contents
    its report ID has already been aggregated and whether the batch
    bucket being updated has been collected.
 
-4.6.1.  Eager Aggregation
+4.5.1.  Eager Aggregation
 
    In general, aggregation cannot begin until the Collector specifies a
    query and an aggregation parameter.  However, depending on the VDAF
@@ -2064,7 +2069,7 @@ Table of Contents
    therefore ensure they only ever use the aggregation parameter chosen
    by the Collector.
 
-4.6.2.  Aggregate Initialization
+4.5.2.  Aggregate Initialization
 
    Aggregation initialization accomplishes two tasks:
 
@@ -2075,7 +2080,7 @@ Table of Contents
 
    The Leader and Helper initialization behavior is detailed below.
 
-4.6.2.1.  Leader Initialization
+4.5.2.1.  Leader Initialization
 
                         VerifyResp
    Report --> Continued -----+----> Continued
@@ -2094,13 +2099,13 @@ Table of Contents
    unique within the task.
 
    First, the Leader MUST ensure each report in the candidate set can be
-   committed per the criteria detailed in Section 4.6.3.3.  If a report
+   committed per the criteria detailed in Section 4.5.3.3.  If a report
    cannot be committed, then the Leader rejects it and removes it from
    the candidate set.
 
    Next, the Leader decrypts each of its report shares as described in
-   Section 4.6.2.3, then checks input share validity as described in
-   Section 4.6.2.4.  If either step fails, the Leader rejects the report
+   Section 4.5.2.3, then checks input share validity as described in
+   Section 4.5.2.4.  If either step fails, the Leader rejects the report
    and removes it from the candidate set.
 
    For each report the Leader executes the following procedure:
@@ -2121,7 +2126,7 @@ Table of Contents
    *  task_id is the task ID
 
    *  agg_param is the VDAF aggregation parameter provided by the
-      Collector (see Section 4.7)
+      Collector (see Section 4.6)
 
    *  report_id is the report ID, used as the nonce for VDAF sharding
 
@@ -2181,7 +2186,7 @@ Table of Contents
 
    *  agg_param: The VDAF aggregation parameter chosen by the Collector.
       Before initializing an aggregation job, the Leader MUST validate
-      the parameter as described in Section 4.4.
+      the parameter as described in Section 4.3.
 
    *  part_batch_selector: The "partial batch selector" used by the
       Aggregators to determine how to aggregate each report.  Its
@@ -2199,7 +2204,7 @@ Table of Contents
    The Leader sends the AggregationJobInitReq in the body of a PUT
    request to the aggregation job with a media type of "application/ppm-
    dap;message=aggregation-job-init-req".  The Leader handles the
-   response(s) as described in Section 4.3 to obtain an
+   response(s) as described in Section 3 to obtain an
    AggregationJobResp.
 
    The AggregationJobResp.verify_resps field must include exactly the
@@ -2224,7 +2229,7 @@ Table of Contents
        *  task_id is the task ID
 
        *  agg_param is the VDAF aggregation parameter provided by the
-          Collector (see Section 4.7)
+          Collector (see Section 4.6)
 
        *  state is the report's initial verification state
 
@@ -2233,12 +2238,12 @@ Table of Contents
        If the new state has type Continued or FinishedWithOutbound, then
        there is at least one more outbound message to send before
        verification is complete.  The Leader stores state and proceeds
-       as in Section 4.6.3.1.
+       as in Section 4.5.3.1.
 
        Else if the new state has type Finished, then verification is
        complete and the state includes an output share, denoted
        state.out_share.  The Leader commits to state.out_share as
-       described in Section 4.6.3.3.
+       described in Section 4.5.3.3.
 
        Else if state has type Rejected, then the Leader rejects the
        report and removes it from the candidate set.
@@ -2263,7 +2268,7 @@ Table of Contents
    will never be the case that verification is complete for some of the
    reports in an aggregation job but not others.
 
-4.6.2.2.  Helper Initialization
+4.5.2.2.  Helper Initialization
 
    VerifyInit --+--> Continued
                 |
@@ -2282,12 +2287,15 @@ Table of Contents
    continue verifying the report.
 
    The initialization request can be handled either asynchronously or
-   synchronously as described in Section 4.3.  When indicating that the
+   synchronously as described in Section 3.  When indicating that the
    job is not yet ready, the response MUST include a Location header
    field ([RFC9110], Section 10.2.2) set to the relative reference
-   /tasks/{task-id}/aggregation_jobs/{aggregation-job-id}?step=0.  When
-   the job is ready, the Helper responds with the AggregationJobResp
-   (defined below).
+   /tasks/{task-id}/aggregation_jobs/{aggregation-job-id}?step=0.
+   Subsequent GET requests to the aggregation job MUST include the step
+   query parameter so that the Helper can figure out which step of
+   preparation the Leader is on (see Section 4.5.3.4).  When the job is
+   ready, the Helper responds with the AggregationJobResp (defined
+   below).
 
    Upon receipt of an AggregationJobInitReq, the Helper checks the
    following conditions:
@@ -2303,7 +2311,7 @@ Table of Contents
       the job with error invalidMessage.
 
    *  Whether the aggregation parameter is valid as described in
-      Section 4.4.  If the aggregation parameter is invalid, then the
+      Section 4.3.  If the aggregation parameter is invalid, then the
       Helper MUST fail the job with error invalidAggregationParameter.
 
    *  Whether the report IDs in AggregationJobInitReq.verify_inits are
@@ -2336,8 +2344,8 @@ Table of Contents
 
    The Helper processes each of the remaining report shares in turn.
    First, the Helper decrypts each report share as described in
-   Section 4.6.2.3, then checks input share validity as described in
-   Section 4.6.2.4.  If either decryption of validation fails, the
+   Section 4.5.2.3, then checks input share validity as described in
+   Section 4.5.2.4.  If either decryption of validation fails, the
    Helper sets VerifyResp.verify_resp_type to reject and
    VerifyResp.report_error to the indicated error.
 
@@ -2380,10 +2388,10 @@ Table of Contents
    state.outbound.
 
    If state has type Continued, then the Helper stores state for use in
-   the first continuation step in Section 4.6.3.2.
+   the first continuation step in Section 4.5.3.2.
 
    Else if state has type FinishedWithOutbound, then the Helper commits
-   to state.out_share as described in Section 4.6.3.3.  If commitment
+   to state.out_share as described in Section 4.5.3.3.  If commitment
    fails with some report error commit_error (e.g., the report was
    replayed or its batch bucket was collected), then the Helper sets
    VerifyResp.verify_resp_type to reject and VerifyResp.report_error to
@@ -2412,10 +2420,10 @@ Table of Contents
    they do not.  It is illegal to rewind or reset the state of an
    aggregation job.  If the Helper receives requests to initialize an
    aggregation job once it has been continued at least once, confirming
-   that the Leader received the Helper's response (see Section 4.6.3),
+   that the Leader received the Helper's response (see Section 4.5.3),
    it MUST abort with a client error.
 
-4.6.2.3.  Input Share Decryption
+4.5.2.3.  Input Share Decryption
 
    Each report share has a corresponding task ID, report metadata
    (report ID, timestamp, and public extensions), public share, and the
@@ -2447,7 +2455,7 @@ Table of Contents
    hpke_decrypt_error.  Otherwise, the Aggregator outputs the resulting
    PlaintextInputShare plaintext_input_share.
 
-4.6.2.4.  Input Share Validation
+4.5.2.4.  Input Share Validation
 
    Before initialization, Aggregators MUST perform the following checks
    for each input share in the job:
@@ -2484,7 +2492,7 @@ Table of Contents
 
    If all of the above checks succeed, the input share is valid.
 
-4.6.2.5.  Example
+4.5.2.5.  Example
 
    The Helper handles the aggregation job initialization synchronously:
 
@@ -2550,7 +2558,7 @@ Table of Contents
 
    encoded(struct { verify_resps } AggregationJobResp)
 
-4.6.3.  Aggregate Continuation
+4.5.3.  Aggregate Continuation
 
    In the continuation phase, the Leader drives the VDAF verification of
    each report in the candidate set until the underlying VDAF moves into
@@ -2560,7 +2568,7 @@ Table of Contents
    Continuation is only required for VDAFs that require more than one
    round.  Single round VDAFs like Prio3 will never reach this phase.
 
-4.6.3.1.  Leader Continuation
+4.5.3.1.  Leader Continuation
 
               VerifyResp
    Continued -----+----> Continued
@@ -2618,7 +2626,7 @@ Table of Contents
    omitting any reports that were previously rejected by either
    Aggregator.
 
-   The Leader handles the response(s) as described in Section 4.3 to
+   The Leader handles the response(s) as described in Section 3 to
    obtain an AggregationJobResp.
 
    The response's verify_resps MUST include exactly the same report IDs
@@ -2657,12 +2665,12 @@ Table of Contents
           rejection in its response.
 
        *  Else if the new type is Finished, then the Leader commits to
-          state.out_share as described in Section 4.6.3.3.
+          state.out_share as described in Section 4.5.3.3.
 
    2.  Else if state has type FinishedWithOutbound and the inbound
        VerifyResp has type "finish", then verification is complete and
        the Leader commits to state.out_share as described in
-       Section 4.6.3.3.
+       Section 4.5.3.3.
 
    3.  Else if the inbound VerifyResp has type "reject", then the Leader
        rejects the report and removes it from the candidate set.  The
@@ -2679,9 +2687,9 @@ Table of Contents
    example because of a transient failure such as a network connection
    failure or process crash, the Leader SHOULD re-send the original
    request unmodified in order to attempt recovery (see
-   Section 4.6.3.4).
+   Section 4.5.3.4).
 
-4.6.3.2.  Helper Continuation
+4.5.3.2.  Helper Continuation
 
              VerifyContinue
    Continued -----+----> Continued
@@ -2701,12 +2709,15 @@ Table of Contents
    aggregation job.
 
    The continuation request can be handled either asynchronously or
-   synchronously as described in Section 4.3.  When indicating that the
+   synchronously as described in Section 3.  When indicating that the
    job is not yet ready, the response MUST include a Location header
    field ([RFC9110], Section 10.2.2) to the relative reference
    /tasks/{task-id}/aggregation_jobs/{aggregation-job-id}?step={step},
-   where step is set to AggregationJobContinueReq.step.  The
-   representation of the aggregation job is an AggregationJobResp.
+   where step is set to AggregationJobContinueReq.step.  Subsequent GET
+   requests to the aggregation job MUST include the step query parameter
+   so that the Helper can figure out which step of preparation the
+   Leader is on (see Section 4.5.3.4).  The representation of the
+   aggregation job is an AggregationJobResp.
 
    To begin handling an AggregationJobContinueReq, the Helper checks the
    following conditions:
@@ -2745,7 +2756,7 @@ Table of Contents
    illegal to rewind or reset the state of an aggregation job, so in
    this case it MUST verify that the contents of the
    AggregationJobContinueReq are identical to the previous message (see
-   Section 4.6.3.4).
+   Section 4.5.3.4).
 
    If the Helper does not wish to attempt recovery, or if the step has
    some other value, the Helper MUST fail the job with error
@@ -2770,7 +2781,7 @@ Table of Contents
    the next continuation step.
 
    If state has type FinishedWithOutbound or Finished, then the Helper
-   commits to state.out_share as described in Section 4.6.3.3.  If
+   commits to state.out_share as described in Section 4.5.3.3.  If
    commitment fails with some report error commit_error (e.g., the
    report was replayed or its batch bucket was collected), then the
    Helper sets VerifyResp.verify_resp_type to reject and
@@ -2787,17 +2798,17 @@ Table of Contents
 
    Once the Helper has computed a VerifyResp for every report, the
    aggregation job response is ready.  It is represented by an
-   AggregationJobResp message (see Section 4.6.2.2) with each
+   AggregationJobResp message (see Section 4.5.2.2) with each
    verification step.  The order of the verification steps MUST match
    the Leader's AggregationJobContinueReq.
 
-4.6.3.3.  Batch Buckets
+4.5.3.3.  Batch Buckets
 
    When aggregation refines an output share, it must be stored into an
    appropriate "batch bucket", which is defined in this section.  An
    output share cannot be removed from a batch bucket once stored, so we
    say that the Aggregator _commits_ the output share.  The data stored
-   in a batch bucket is kept for eventual use in the Section 4.7.
+   in a batch bucket is kept for eventual use in the Section 4.6.
 
    Batch buckets are indexed by a "batch bucket identifier" as as
    specified by the task's batch mode:
@@ -2876,7 +2887,7 @@ Table of Contents
    easy to determine whether a report pertains to a batch that was
    collected.  See Section 6.4.2 for more information.
 
-4.6.3.4.  Recovering from Aggregation Step Skew
+4.5.3.4.  Recovering from Aggregation Step Skew
 
    AggregationJobContinueReq messages contain a step field, allowing
    Aggregators to ensure that their peer is on an expected step of
@@ -2903,7 +2914,7 @@ Table of Contents
    refuse to service a request for a given aggregation step unless it
    matches the previously seen request (if any).
 
-4.6.3.5.  Example
+4.5.3.5.  Example
 
    The Helper handles the aggregation job continuation synchronously:
 
@@ -2959,14 +2970,14 @@ Table of Contents
 
    encoded(struct { verify_resps } AggregationJobResp)
 
-4.6.4.  Aggregation Job Abandonment and Deletion
+4.5.4.  Aggregation Job Abandonment and Deletion
 
    This document describes various error cases where a Leader is
    required to abandon an aggregation job.  This means the Leader should
    discontinue further processing of the job and the reports included in
    it.  Reports included in an abandoned aggregation job MUST NOT be
    considered collected for purposes of replay and double collection
-   checks (Section 4.6.3.3) and MAY be included in future aggregation
+   checks (Section 4.5.3.3) and MAY be included in future aggregation
    jobs.
 
    If the Leader must abandon an aggregation job, it SHOULD let the
@@ -2974,7 +2985,7 @@ Table of Contents
    the job.  Deletion of a completed aggregation job MUST NOT delete
    information needed for replay or double collection checks.
 
-4.6.4.1.  Example
+4.5.4.1.  Example
 
    DELETE /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
    Host: example.com
@@ -2982,7 +2993,7 @@ Table of Contents
 
    HTTP/1.1 200
 
-4.7.  Collecting Results
+4.6.  Collecting Results
 
    The Collector initiates this phase with a query to the Leader
    (Section 5), which the Aggregators use to select a batch of reports
@@ -2992,13 +3003,13 @@ Table of Contents
    and is composed of two interactions:
 
    1.  Collect request and response between the Collector and Leader,
-       specified in Section 4.7.1
+       specified in Section 4.6.1
 
    2.  Aggregate share request and response between the Leader and the
-       Helper, specified in Section 4.7.3
+       Helper, specified in Section 4.6.3
 
    Once complete, the Collector computes the final aggregate result as
-   specified in Section 4.7.5.
+   specified in Section 4.6.5.
 
    Collection jobs are identified by a 16-byte job ID, chosen by the
    Collector:
@@ -3008,7 +3019,7 @@ Table of Contents
    A collection job is an HTTP resource served by the Leader at the URL
    {leader}/tasks/{task-id}/collection_jobs/{collection-job-id}.
 
-4.7.1.  Collection Job Initialization
+4.6.1.  Collection Job Initialization
 
    First, the Collector chooses a collection job ID, which MUST be
    unique within the scope of the corresponding DAP task.
@@ -3032,22 +3043,22 @@ Table of Contents
 
    *  agg_param, an aggregation parameter for the VDAF being executed.
       This is the same value as in AggregationJobInitReq (see
-      Section 4.6.2.1).
+      Section 4.5.2.1).
 
    Depending on the VDAF scheme and how the Leader is configured, the
    Leader and Helper may already have aggregated a sufficient number of
    reports satisfying the query and be ready to return the aggregate
    shares right away.  However, this is not always the case.  In fact,
    for some VDAFs, it is not be possible to begin running aggregation
-   jobs (Section 4.6) until the Collector initiates a collection job.
-   This is because, in general (see Section 4.6.1), the aggregation
+   jobs (Section 4.5) until the Collector initiates a collection job.
+   This is because, in general (see Section 4.5.1), the aggregation
    parameter is not known until this point.  In certain situations it is
    possible to predict the aggregation parameter in advance.  For
    example, for Prio3 the only valid aggregation parameter is the empty
    string.
 
    The collection request can be handled either asynchronously or
-   synchronously as described in Section 4.3.  The representation of the
+   synchronously as described in Section 3.  The representation of the
    collection job is a CollectionJobResp (defined below).
 
    If the job fails with invalidBatchSize, then the Collector MAY retry
@@ -3067,7 +3078,7 @@ Table of Contents
       MUST fail the job with error invalidMessage.
 
    *  Whether the aggregation parameter is valid as described in
-      Section 4.4.  If not, the Leader MUST fail the job with error
+      Section 4.3.  If not, the Leader MUST fail the job with error
       invalidAggregationParameter.
 
    *  Whether the Query in the Collector's request determines a batch
@@ -3080,7 +3091,7 @@ Table of Contents
       already been collected, then the Leader MUST fail the job with
       error batchOverlap.
 
-   *  If aggregation was performed eagerly (Section 4.6.1), then the
+   *  If aggregation was performed eagerly (Section 4.5.1), then the
       Leader checks that the aggregation parameter received in the
       CollectionJobReq matches the aggregation parameter used in each
       aggregation job pertaining to the batch.  If not, the Leader MUST
@@ -3089,7 +3100,7 @@ Table of Contents
    Having validated the CollectionJobReq, the Leader begins working with
    the Helper to aggregate the reports satisfying the query (or
    continues this process, depending on whether the Leader is
-   aggregating eagerly; Section 4.6.1) as described in Section 4.6.
+   aggregating eagerly; Section 4.5.1) as described in Section 4.5.
 
    If the Leader has a pending aggregation job that overlaps with the
    batch for the collection job, the Leader MUST first complete the
@@ -3109,7 +3120,7 @@ Table of Contents
    Once the Leader has validated the collection job and run to
    completion all the aggregation jobs that pertain to it, it obtains
    the Helper's aggregate share following the aggregate-share request
-   flow described in Section 4.7.3.  If obtaining the aggregate share
+   flow described in Section 4.6.3.  If obtaining the aggregate share
    fails, then the Leader MUST fail the collection job with the error
    that caused the failure.
 
@@ -3142,21 +3153,21 @@ Table of Contents
       than the one in the corresponding CollectionJobReq.query.
 
    *  leader_encrypted_agg_share: The Leader's aggregate share,
-      encrypted to the Collector (see Section 4.7.6).
+      encrypted to the Collector (see Section 4.6.6).
 
    *  helper_encrypted_agg_share: The Helper's aggregate share,
-      encrypted to the Collector (see Section 4.7.6).
+      encrypted to the Collector (see Section 4.6.6).
 
    Once the Leader has constructed a CollectionJobResp for the
    Collector, the Leader considers the batch to be collected, and
    further aggregation jobs MUST NOT commit more reports to the batch
-   (see Section 4.6.3.3).
+   (see Section 4.5.3.3).
 
    Changing a collection job's parameters is illegal, so if there are
    further PUT requests to the collection job with a different
    CollectionJobReq, the Leader MUST abort with error invalidMessage.
 
-4.7.1.1.  Example
+4.6.1.1.  Example
 
    The Leader handles the collection job request synchronously:
 
@@ -3248,16 +3259,16 @@ Table of Contents
      helper_encrypted_agg_share = struct { ... } HpkeCiphertext,
    } CollectionJobResp)
 
-4.7.2.  Collection Job Deletion
+4.6.2.  Collection Job Deletion
 
    The Collector can send a DELETE request to the collection job, which
    indicates to the Leader that it can abandon the collection job and
    discard state related to it.
 
    Aggregators MUST NOT delete information needed for replay or double
-   collection checks (Section 4.6.3.3).
+   collection checks (Section 4.5.3.3).
 
-4.7.2.1.  Example
+4.6.2.1.  Example
 
    DELETE /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/collection_jobs/lc7aUeGpdSNosNlh-UZhKA
    Host: example.com
@@ -3265,13 +3276,13 @@ Table of Contents
 
    HTTP/1.1 200
 
-4.7.3.  Obtaining Aggregate Shares
+4.6.3.  Obtaining Aggregate Shares
 
    The Leader must compute its own aggregate share and obtain the
    Helper's encrypted aggregate share before it can complete a
    collection job.
 
-   First, the Leader retrieves all batch buckets (Section 4.6.3.3)
+   First, the Leader retrieves all batch buckets (Section 4.5.3.3)
    associated with this collection job.  The batch buckets to retrieve
    depend on the batch mode of this task:
 
@@ -3338,7 +3349,7 @@ Table of Contents
    *  checksum: The batch checksum, as computed above.
 
    The aggregate share request can be handled either asynchronously or
-   synchronously as described in Section 4.3.  The representation of the
+   synchronously as described in Section 3.  The representation of the
    share is an AggregateShare (defined below).
 
    The Helper first ensures that it recognizes the task ID.  If not, it
@@ -3376,7 +3387,7 @@ Table of Contents
    AggregateShareReq, it MUST fail the job with error batchMismatch.
 
    The Helper then encrypts agg_share under the Collector's HPKE public
-   key as described in Section 4.7.6, yielding encrypted_agg_share.
+   key as described in Section 4.6.6, yielding encrypted_agg_share.
    Encryption prevents the Leader from learning the actual result, as it
    only has its own aggregate share and cannot compute the Helper's.
 
@@ -3396,14 +3407,14 @@ Table of Contents
    encrypted_agg_share computed above.
 
    After receiving the Helper's response, the Leader includes the
-   HpkeCiphertext in its response to the Collector (see Section 4.7.5).
+   HpkeCiphertext in its response to the Collector (see Section 4.6.5).
 
    Once an AggregateShareReq has been constructed for the batch
    determined by a given query, the Helper considers the batch to be
    collected.  The Helper MUST NOT commit any more output shares to the
    batch.  It is an error for the Leader to issue any more aggregation
    jobs for additional reports that satisfy the query.  These reports
-   MUST be rejected by the Helper as described in Section 4.6.3.3.
+   MUST be rejected by the Helper as described in Section 4.5.3.3.
 
    Changing an aggregate share's parameters is illegal, so if there are
    further PUT requests to the aggregate share with a different
@@ -3411,9 +3422,9 @@ Table of Contents
 
    Before completing the collection job, the Leader encrypts its
    aggregate share under the Collector's HPKE public key as described in
-   Section 4.7.6.
+   Section 4.6.6.
 
-4.7.3.1.  Example
+4.6.3.1.  Example
 
    The Helper handles the aggregate share request synchronously:
 
@@ -3487,16 +3498,16 @@ Table of Contents
      encrypted_aggregate_share = struct { ... } HpkeCiphertext,
    } AggregateShare)
 
-4.7.4.  Aggregate Share Deletion
+4.6.4.  Aggregate Share Deletion
 
    The Leader can send a DELETE request to the aggregate share, which
    indicates to the Helper that it can abandon the aggregate share and
    discard state related to it.
 
    Aggregators MUST NOT delete information needed for replay or double
-   collection checks (Section 4.6.3.3).
+   collection checks (Section 4.5.3.3).
 
-4.7.4.1.  Example
+4.6.4.1.  Example
 
    DELETE /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregate_shares/lc7aUeGpdSNosNlh-UZhKA
    Host: example.com
@@ -3504,12 +3515,12 @@ Table of Contents
 
    HTTP/1.1 200
 
-4.7.5.  Collection Job Finalization
+4.6.5.  Collection Job Finalization
 
    Once the Collector has received a collection job from the Leader, it
    can decrypt the aggregate shares and produce an aggregate result.
    The Collector decrypts each aggregate share as described in
-   Section 4.7.6.  Once the Collector successfully decrypts all
+   Section 4.6.6.  Once the Collector successfully decrypts all
    aggregate shares, it unshards the aggregate shares into an aggregate
    result using the VDAF's unshard algorithm.
 
@@ -3523,7 +3534,7 @@ Table of Contents
                              [leader_agg_share, helper_agg_share],
                              report_count)
 
-4.7.6.  Aggregate Share Encryption
+4.6.6.  Aggregate Share Encryption
 
    Encrypting an aggregate share agg_share for a given AggregateShareReq
    is done as follows:
@@ -3614,7 +3625,7 @@ Table of Contents
    1.  The value of the config field of Query, PartialBatchSelector, and
        BatchSelector
 
-   2.  Batch buckets (Section 4.6.3.3): how reports are assigned to
+   2.  Batch buckets (Section 4.5.3.3): how reports are assigned to
        batch buckets; how each bucket is identified; and how batch
        buckets are mapped to batches
 
@@ -3738,7 +3749,7 @@ Table of Contents
    the minimum batch size.  Deciding how soon batches should be output
    is also implementation-specific.  Exactly sizing batches may be
    challenging for Leader deployments in which multiple, independent
-   nodes running the aggregate interaction (see Section 4.6) need to be
+   nodes running the aggregate interaction (see Section 4.5) need to be
    coordinated.
 
 5.2.1.  Query Configuration
@@ -3816,7 +3827,7 @@ Table of Contents
       and intra-batch replay mitigation storage, which includes some way
       of tracking batch report size.  Some of this state may be used for
       replay attack mitigation.  The replay mitigation strategy is
-      described in Section 4.6.2.4.
+      described in Section 4.5.2.4.
 
    Beyond the minimal capabilities required of Helpers, Leaders are
    generally required to:
@@ -3929,7 +3940,7 @@ Table of Contents
    report upload rate, this can result in high storage costs.  To
    alleviate this burden, DAP allows Aggregators to drop this state as
    needed, so long as reports are dropped properly as described in
-   Section 4.6.2.4.  Aggregators SHOULD take steps to mitigate the risk
+   Section 4.5.2.4.  Aggregators SHOULD take steps to mitigate the risk
    of dropping reports (e.g., by evicting the oldest data first).
 
    Furthermore, the Aggregators must store data related to a task as
@@ -4010,9 +4021,9 @@ Table of Contents
 
    Most messages in the protocol contain fixed-length or length-prefixed
    fields such that they can be parsed independently of context.  The
-   exceptions are the UploadReq, UploadErrors (Section 4.5.2),
+   exceptions are the UploadReq, UploadErrors (Section 4.4.2),
    AggregationJobInitReq, AggregationJobContinueReq, and
-   AggregationJobResp (Section 4.6) messages, all of which contain
+   AggregationJobResp (Section 4.5) messages, all of which contain
    vectors whose length is determined by the length of the enclosing
    HTTP message.
 
@@ -4183,7 +4194,7 @@ Table of Contents
    the Aggregators; see Section 8.4) ensure that all reports come from
    authentic Clients.  Note that because the Helper never handles
    messages directly from the Clients, reports would need to include an
-   extension (Section 4.5.3) to convey authentication information to the
+   extension (Section 4.4.3) to convey authentication information to the
    Helper.  For example, a deployment might include a Privacy Pass token
    ([RFC9576]) in a report extension to allow both Aggregators to
    independently verify the Client's identity.
@@ -4307,13 +4318,13 @@ Table of Contents
    DAP Aggregators enforce several rules for report processing related
    to the privacy of individual measurements:
 
-   1.  Each report may be aggregated at most once (Section 4.6.3.3)
+   1.  Each report may be aggregated at most once (Section 4.5.3.3)
 
    2.  A batch bucket may be collected at most once (reports pertaining
-       to collected buckets are rejected; see Section 4.6.3.3)
+       to collected buckets are rejected; see Section 4.5.3.3)
 
    3.  A batch may only be collected if the number of reports aggregated
-       exceeds the minimum batch size (Section 4.7)
+       exceeds the minimum batch size (Section 4.6)
 
    It may be desirable to relax these rules in some applications.  It
    may also be safe to do so when DAP is combined with other privacy
@@ -4325,7 +4336,7 @@ Table of Contents
 
    2.  SHOULD define a mechanism by which each party explicitly opts
        into the change in report processing rules, e.g., via a report
-       extension (Section 4.5.3).  This helps prevent an implementation
+       extension (Section 4.4.3).  This helps prevent an implementation
        from relaxing the rules by mistake.
 
 8.6.5.  Task Configuration Agreement and Consistency
@@ -4334,14 +4345,14 @@ Table of Contents
    ensure they agree on the configuration of the task.  However, it is
    possible for a party to participate in the execution of DAP without
    knowing all of the task's parameters.  For example, a Client can
-   upload a report (Section 4.5) without knowing the minimum batch size
-   that is enforced by the Aggregators during collection (Section 4.7).
+   upload a report (Section 4.4) without knowing the minimum batch size
+   that is enforced by the Aggregators during collection (Section 4.6).
 
    Depending on the deployment model, agreement can require that task
    parameters are visible to all parties such that each party can choose
    whether to participate based on the value of any parameter.  This
    includes the parameters enumerated in Section 4.2 and any additional
-   parameters implied by report extensions Section 4.5.3 used by the
+   parameters implied by report extensions Section 4.4.3 used by the
    task.  Since meaningful privacy requires that multiple Clients
    contribute to a task, they should also share a consistent view of the
    task configuration.
@@ -4373,26 +4384,26 @@ Table of Contents
    This specification defines the following protocol messages, along
    with their corresponding message value:
 
-   *  HpkeConfigList Section 4.5.1: "hpke-config-list"
+   *  HpkeConfigList Section 4.4.1: "hpke-config-list"
 
-   *  UploadRequest Section 4.5.2: "upload-req"
+   *  UploadRequest Section 4.4.2: "upload-req"
 
-   *  UploadErrors Section 4.5.2: "upload-errors"
+   *  UploadErrors Section 4.4.2: "upload-errors"
 
-   *  AggregationJobInitReq Section 4.6.2.1: "aggregation-job-init-req"
+   *  AggregationJobInitReq Section 4.5.2.1: "aggregation-job-init-req"
 
-   *  AggregationJobResp Section 4.6.2.2: "aggregation-job-resp"
+   *  AggregationJobResp Section 4.5.2.2: "aggregation-job-resp"
 
-   *  AggregationJobContinueReq Section 4.6.3.1: "aggregation-job-
+   *  AggregationJobContinueReq Section 4.5.3.1: "aggregation-job-
       continue-req"
 
-   *  AggregateShareReq Section 4.7.3: "aggregate-share-req"
+   *  AggregateShareReq Section 4.6.3: "aggregate-share-req"
 
-   *  AggregateShare Section 4.7.3: "aggregate-share"
+   *  AggregateShare Section 4.6.3: "aggregate-share"
 
-   *  CollectionJobReq Section 4.7.1: "collection-job-req"
+   *  CollectionJobReq Section 4.6.1: "collection-job-req"
 
-   *  CollectionJobResp Section 4.7.1: "collection-job-resp"
+   *  CollectionJobResp Section 4.6.1: "collection-job-resp"
 
    For example, a request whose body consists of an
    AggregationJobInitReq could have the header Content-Type:
@@ -4499,7 +4510,7 @@ Table of Contents
 
    A new registry will be (RFC EDITOR: change "will be" to "has been")
    created called "Report Extension Identifiers" for extensions to the
-   upload interaction (Section 4.5).  This registry should contain the
+   upload interaction (Section 4.4).  This registry should contain the
    following columns:
 
    Value:  The two-byte identifier for the upload extension
@@ -4524,7 +4535,7 @@ Table of Contents
 
    A new registry will be (RFC EDITOR: change "will be" to "has been")
    created called "Report Error Identifiers" for reasons for rejecting
-   reports during the aggregation interaction (Section 4.6.2.2).
+   reports during the aggregation interaction (Section 4.5.2.2).
 
    Value:  The one-byte identifier of the report error
 
@@ -4590,9 +4601,9 @@ Table of Contents
 
    1.  a new batch mode (Section 5)
 
-   2.  a new report extension (Section 4.5.3)
+   2.  a new report extension (Section 4.4.3)
 
-   3.  a new report error (Section 4.6.2.2)
+   3.  a new report error (Section 4.5.2.2)
 
    4.  a new entry in the URN sub-namespace for DAP (Table 1)
 
@@ -4607,7 +4618,7 @@ Table of Contents
       -  The value of the config field of Query, PartialBatchSelector,
          and BatchSelector
 
-      -  Batch buckets (Section 4.6.3.3): how reports are assigned to
+      -  Batch buckets (Section 4.5.3.3): how reports are assigned to
          batch buckets; how each bucket is identified; and how batch
          buckets are mapped to batches.
 
@@ -4754,7 +4765,7 @@ A.1.1.  HPKE Configurations
 
    Response media-type message values: hpke-config-list
 
-   Reference: Section 4.5.1
+   Reference: Section 4.4.1
 
 A.2.  Leader
 
@@ -4770,7 +4781,7 @@ A.2.1.  Reports
 
    Response media-type message values: upload-errors
 
-   Reference: Section 4.5.2
+   Reference: Section 4.4.2
 
 A.2.2.  Collection Jobs
 
@@ -4785,7 +4796,7 @@ A.2.2.  Collection Jobs
 
    Response media-type message values: collection-job-resp
 
-   Reference: Section 4.7
+   Reference: Section 4.6
 
 A.3.  Helper
 
@@ -4802,7 +4813,7 @@ A.3.1.  Aggregation Jobs
 
    Response media-type message values: aggregation-job-resp
 
-   Reference: Section 4.6
+   Reference: Section 4.5
 
 A.3.2.  Aggregate Shares
 
@@ -4818,7 +4829,7 @@ A.3.2.  Aggregate Shares
 
    Response media-type message values: aggregate-share
 
-   Reference: Section 4.7.3
+   Reference: Section 4.6.3
 
 Contributors
 
