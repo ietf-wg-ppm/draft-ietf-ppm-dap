@@ -168,6 +168,18 @@ aggregator.
 
 (\*) Indicates a change that breaks wire compatibility with the previous draft.
 
+17:
+
+- Bump version tag from "dap-16" to "dap-17". (\*)
+
+- Align IANA considerations with RFC 8126 and
+  https://www.iana.org/help/protocol-registration.
+
+- Adopt the "Expert Review" policy for extending DAP registries.
+
+- Add RFC Editor notes to change domain separation tags from "dap-17" to "dap"
+  on RFC publication.
+
 16:
 
 - Bump draft-irtf-cfrg-vdaf-13 to 15 {{!VDAF}} and adopt changes to the
@@ -596,6 +608,10 @@ e.g., counts of some user behavior). Given a set of measurements
 `agg_result = F(agg_param, meas_1, ..., meas_N)` for some function `F` while
 revealing nothing else about the measurements. We call `F` the "aggregation
 function" and `agg_result` the "aggregate result".
+
+(RFC EDITOR: Please update the normative reference to VDAF in the next paragraph
+to the VDAF RFC during AUTH48. We hope that VDAF will have been published by
+then.)
 
 DAP is extensible in that it allows for the addition of new cryptographic
 schemes that compute different aggregation functions, determined by the
@@ -1581,9 +1597,13 @@ struct {
 
 Next, the Client encrypts each `PlaintextInputShare` as follows:
 
+(RFC EDITOR: Once the document becomes an RFC, we will stop including the draft
+version in domain separation tags. In the remainder of this section, replace
+"dap-17" with "dap".)
+
 ~~~ pseudocode
 enc, payload = SealBase(pk,
-  "dap-16 input share" || 0x01 || server_role,
+  "dap-17 input share" || 0x01 || server_role,
   input_share_aad, plaintext_input_share)
 ~~~
 
@@ -2022,7 +2042,7 @@ For each report the Leader executes the following procedure:
 ~~~ pseudocode
 state = Vdaf.ping_pong_leader_init(
     vdaf_verify_key,
-    "dap-16" || task_id,
+    "dap-17" || task_id,
     agg_param,
     report_id,
     public_share,
@@ -2124,7 +2144,7 @@ The Leader proceeds as follows with each report:
 
    ~~~ pseudocode
    state = Vdaf.ping_pong_leader_continued(
-       "dap-16" || task_id,
+       "dap-17" || task_id,
        agg_param,
        state,
        inbound,
@@ -2257,7 +2277,7 @@ For all other reports it initializes the VDAF verification state as follows:
 ~~~ pseudocode
 state = Vdaf.ping_pong_helper_init(
     vdaf_verify_key,
-    "dap-16" || task_id,
+    "dap-17" || task_id,
     agg_param,
     report_id,
     public_share,
@@ -2332,7 +2352,7 @@ decryption of the payload with the following procedure:
 
 ~~~ pseudocode
 plaintext_input_share = OpenBase(encrypted_input_share.enc, sk,
-  "dap-16 input share" || 0x01 || server_role,
+  "dap-17 input share" || 0x01 || server_role,
   input_share_aad, encrypted_input_share.payload)
 ~~~
 
@@ -2540,7 +2560,7 @@ Otherwise, the Leader proceeds as follows with each report:
 
    ~~~ pseudocode
    state = Vdaf.ping_pong_leader_continued(
-       "dap-16" || task_id,
+       "dap-17" || task_id,
        agg_param,
        state,
        inbound,
@@ -2659,7 +2679,7 @@ For each report, the Helper does the following:
 
 ~~~ pseudocode
 state = Vdaf.ping_pong_helper_continued(
-    "dap-16" || task_id,
+    "dap-17" || task_id,
     agg_param,
     state,
     inbound,
@@ -3422,7 +3442,7 @@ done as follows:
 ~~~ pseudocode
 (enc, payload) = SealBase(
     pk,
-    "dap-16 aggregate share" || server_role || 0x00,
+    "dap-17 aggregate share" || server_role || 0x00,
     agg_share_aad,
     agg_share)
 ~~~
@@ -3458,7 +3478,7 @@ batch selector, decryption works as follows:
 agg_share = OpenBase(
     enc_share.enc,
     sk,
-    "dap-16 aggregate share" || server_role || 0x00,
+    "dap-17 aggregate share" || server_role || 0x00,
     agg_share_aad,
     enc_share.payload)
 ~~~
@@ -4203,8 +4223,8 @@ number assigned to this document.)
 ## Protocol Message Media Type {#iana-media-type}
 
 This specification defines a new media type used for all protocol messages:
-`application/ppm-dap`. Specific message types are distinguished using a `message`
-parameter.
+`application/ppm-dap`. Specific message types are distinguished using a
+`message` parameter.
 
 This specification defines the following protocol messages, along with their
 corresponding `message` value:
@@ -4295,7 +4315,7 @@ Additional information:
 
 Person and email address to contact for further information:
 
-: see Authors' Addresses section of the published specification
+: PPM WG mailing list (ppm@ietf.org)
 
 Intended usage:
 
@@ -4311,20 +4331,20 @@ Author:
 
 Change controller:
 
-: IESG
+: IETF
 
 ## DAP Type Registries {#iana-codepoints}
 
 This document also requests creation of a new "Distributed Aggregation Protocol
 (DAP)" page. This page will contain several new registries, described in the
-following sections. All registries are administered under the Specification
-Required policy {{!RFC8126}}.
+following sections. All registries are administered under the Expert Review
+policy {{!RFC8126}}.
 
 ### Batch Modes Registry {#batch-mode-reg}
 
 A new registry will be (RFC EDITOR: change "will be" to "has been") created
-called "Batch Mode Identifiers" for DAP batch modes ({{batch-modes}}). This
-registry should contain the following columns:
+called "DAP Batch Mode Identifiers" ({{batch-modes}}). This registry should
+contain the following columns:
 
 Value:
 : The one-byte identifier for the batch mode
@@ -4342,14 +4362,14 @@ The initial contents of this registry listed in {{batch-mode-id}}.
 | `0x00` | `reserved`        | {{batch-modes}} of RFC XXXX                |
 | `0x01` | `time_interval`   | {{time-interval-batch-mode}} of RFC XXXX   |
 | `0x02` | `leader_selected` | {{leader-selected-batch-mode}} of RFC XXXX |
-{: #batch-mode-id title="Initial contents of the Batch Mode Identifiers
+{: #batch-mode-id title="Initial contents of the DAP Batch Mode Identifiers
 registry."}
 
 ### Report Extension Registry
 
 A new registry will be (RFC EDITOR: change "will be" to "has been") created
-called "Report Extension Identifiers" for extensions to the upload interaction
-({{upload-flow}}). This registry should contain the following columns:
+called "DAP Report Extension Identifiers" for extensions to the report structure
+({{report-extensions}}). This registry should contain the following columns:
 
 Value:
 : The two-byte identifier for the upload extension
@@ -4365,14 +4385,14 @@ The initial contents of this registry are listed in {{upload-extension-id}}.
 | Value    | Name              | Reference |
 |:---------|:------------------|:----------|
 | `0x0000` | `reserved`        | RFC XXXX  |
-{: #upload-extension-id title="Initial contents of the Report Extension
+{: #upload-extension-id title="Initial contents of the DAP Report Extension
 Identifiers registry."}
 
 ### Report Error Registry {#report-error-reg}
 
 A new registry will be (RFC EDITOR: change "will be" to "has been") created
-called "Report Error Identifiers" for reasons for rejecting reports during the
-aggregation interaction ({{aggregation-helper-init}}).
+called "DAP Report Error Identifiers" for reasons for rejecting reports during
+the aggregation interaction ({{aggregation-helper-init}}).
 
 Value:
 : The one-byte identifier of the report error
@@ -4399,7 +4419,13 @@ The initial contents of this registry are listed below in {{report-error-id}}.
 | `0x09` | `report_too_early`       | {{basic-definitions}} of RFX XXXX |
 | `0x0A` | `task_not_started`       | {{basic-definitions}} of RFX XXXX |
 | `0x0B` | `outdated_config`        | {{basic-definitions}} of RFX XXXX |
-{: #report-error-id title="Initial contents of the Report Error Identifiers registry."}
+{: #report-error-id title="Initial contents of the DAP Report Error Identifiers
+registry."}
+
+### Guidance for Designated Experts
+
+When reviewing requests to extend a DAP registry, experts should ensure that the
+TODO: what should designated experts check? That it's not spam?
 
 ## URN Sub-namespace for DAP (urn:ietf:params:ppm:dap) {#urn-space}
 
