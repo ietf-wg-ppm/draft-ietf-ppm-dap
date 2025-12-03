@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 5 June 2026                                          Cloudflare
+Expires: 6 June 2026                                          Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                         2 December 2025
+                                                         3 December 2025
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -64,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 5 June 2026.
+   This Internet-Draft will expire on 6 June 2026.
 
 Copyright Notice
 
@@ -208,8 +208,6 @@ Table of Contents
 
    *  Align IANA considerations with RFC 8126 and
       https://www.iana.org/help/protocol-registration.
-
-   *  Adopt the "Expert Review" policy for extending DAP registries.
 
    *  Add RFC Editor notes to change domain separation tags from "dap-
       17" to "dap" on RFC publication.
@@ -4498,7 +4496,7 @@ Table of Contents
    This document also requests creation of a new "Distributed
    Aggregation Protocol (DAP)" page.  This page will contain several new
    registries, described in the following sections.  All registries are
-   administered under the Expert Review policy [RFC8126].
+   administered under the Specification Required policy [RFC8126].
 
 9.2.1.  Batch Modes Registry
 
