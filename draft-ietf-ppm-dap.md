@@ -175,8 +175,6 @@ aggregator.
 - Align IANA considerations with RFC 8126 and
   https://www.iana.org/help/protocol-registration.
 
-- Adopt the "Expert Review" policy for extending DAP registries.
-
 - Add RFC Editor notes to change domain separation tags from "dap-17" to "dap"
   on RFC publication.
 
@@ -4337,8 +4335,8 @@ Change controller:
 
 This document also requests creation of a new "Distributed Aggregation Protocol
 (DAP)" page. This page will contain several new registries, described in the
-following sections. All registries are administered under the Expert Review
-policy {{!RFC8126}}.
+following sections. All registries are administered under the Specification
+Required policy {{!RFC8126}}.
 
 ### Batch Modes Registry {#batch-mode-reg}
 
