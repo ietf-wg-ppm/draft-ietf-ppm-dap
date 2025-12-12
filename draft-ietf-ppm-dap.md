@@ -4422,8 +4422,9 @@ registry."}
 
 ### Guidance for Designated Experts
 
-When reviewing requests to extend a DAP registry, experts should ensure that the
-TODO: what should designated experts check? That it's not spam?
+When reviewing requests to extend a DAP registry, experts should ensure a document
+exists that defines the newly registered items and review the document to ensure it 
+meets the criteria for extending DAP specified in {{extending-this-doc}}.
 
 ## URN Sub-namespace for DAP (urn:ietf:params:ppm:dap) {#urn-space}
 
