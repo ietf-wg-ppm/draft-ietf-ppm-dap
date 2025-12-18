@@ -1274,22 +1274,33 @@ enum {
 ### Times, Durations and Intervals {#timestamps}
 
 ~~~ tls-presentation
+uint64 TimePrecision;
+
 uint64 Time;
 ~~~
 
-Times are represented by POSIX timestamps, defined to be integers representing
-a number of `time_precision`s since the Epoch ({{task-configuration}}), defined
-in section 4.16 of {{POSIX}}. That is, the number of seconds after 1970-01-01
-00:00:00 UTC, excluding leap seconds, divided by the task's `time_precision`.
+A `TimePrecision` is an integer number of seconds, used to compute times and
+durations in DAP. The time precision is a parameter of a task
+({{task-configuration}}).
+
+Times are integers, representing a number of `TimePrecision`s since the Epoch,
+defined in section 4.16 of {{POSIX}}. That is, the number of seconds after
+1970-01-01 00:00:00 UTC, excluding leap seconds, divided by the task's
+`time_precision`.
+
 One POSIX timestamp is said to be before (respectively, after) another POSIX
 timestamp if it is less than (respectively, greater than) the other value.
+
+Times can only be meaningfully compared to one another if they use the same time
+precision.
 
 ~~~ tls-presentation
 uint64 Duration;
 ~~~
 
-Durations of time are integers, representing a number of `time_precision`s.
-They can be added to times to produce other times.
+Durations of time are integers, representing a number of `TimePrecision`s. That
+is, a number of seconds divided by the task's `time_precision`. A duration can
+be added to a time to produce another time.
 
 ~~~ tls-presentation
 struct {
@@ -1305,6 +1316,19 @@ interval. A time that is equal to or after `Interval.start + Interval.duration`
 is said to be after the interval. A time that is either before or after an
 interval is said to be outside the interval. A time that is neither before nor
 after an interval is said to be inside or fall within the interval.
+
+Intervals can only be meaningfully compared to one another if they use the same
+time precision.
+
+#### Examples
+
+Suppose a task's `time_precision` is 10 seconds. A `Time` whose value is
+123456789 represents the POSIX timestamp `1234567890`, or 2009-02-13 23:31:30
+UTC. A `Duration` whose value is `11` represents a duration of 110 seconds.
+
+An `Interval` whose `start` is 123456789 and whose `duration` is 11 represents
+the interval from time from POSIX timestamp `1234567890` to `1234568000`, or
+2009-02-13 23:31:30 UTC to 2009-02-13 23:33:20 UTC.
 
 ### VDAF Types
 
@@ -1347,7 +1371,7 @@ following parameters associated with it:
   how reports are grouped into batches.
 * `task_interval` (`Interval`): Reports whose timestamp is outside of this
   interval will be rejected by the Aggregators.
-* `time_precision` (`Duration`): Used to compute timestamps in DAP. See
+* `time_precision` (`TimePrecision`): The time precision used in this task. See
   {{timestamps}}.
 
 The Leader and Helper API URLs MAY include arbitrary path components.
@@ -1535,8 +1559,7 @@ Each upload request contains a sequence of `Report` with the following fields:
       by sampling 16 random bytes from a cryptographically secure random number
       generator.
 
-    * `time` is the truncated (see {{timestamps}}) time at which the report was
-      generated.
+    * `time` is the time at which the report was generated.
 
     * `public_extensions` is the list of public report extensions; see
       {{report-extensions}}.
