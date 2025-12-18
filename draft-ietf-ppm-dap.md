@@ -493,6 +493,9 @@ aggregator.
 
 {::boilerplate bcp14-tagged}
 
+All examples in this document wrap long lines using the Single Backslash
+Strategy of {{!RFC8792, Section 7}}.
+
 ### Glossary of Terms
 
 Aggregate result:
@@ -2144,8 +2147,8 @@ The Leader proceeds as follows with each report:
    is complete. The Leader stores `state` and proceeds as in
    {{aggregation-leader-continuation}}.
 
-   Else if the new `state` has type `Finished`, then verification is complete and
-   the state includes an output share, denoted `state.out_share`. The Leader
+   Else if the new `state` has type `Finished`, then verification is complete
+   and the state includes an output share, denoted `state.out_share`. The Leader
    commits to `state.out_share` as described in {{batch-buckets}}.
 
    Else if `state` has type `Rejected`, then the Leader rejects the
@@ -2391,7 +2394,8 @@ If all of the above checks succeed, the input share is valid.
 The Helper handles the aggregation job initialization synchronously:
 
 ~~~ http
-PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
+PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+  aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
 Content-Type: application/ppm-dap;message=aggregation-job-init-req
 Content-Length: 100
@@ -2418,7 +2422,8 @@ encoded(struct { verify_resps } AggregationJobResp)
 Or asynchronously:
 
 ~~~ http
-PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
+PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+  aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
 Content-Type: application/ppm-dap;message=aggregation-job-init-req
 Content-Length: 100
@@ -2434,18 +2439,22 @@ encoded(struct {
 } AggregationJobInitReq)
 
 HTTP/1.1 200
-Location: /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA?step=0
+Location: /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+  aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA?step=0
 Retry-After: 300
 
-GET /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA?step=0
+GET /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+  aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA?step=0
 Host: example.com
 Authorization: Bearer auth-token
 
 HTTP/1.1 200
-Location: /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA?step=0
+Location: /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+  aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA?step=0
 Retry-After: 300
 
-GET /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA?step=0
+GET /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+  aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA?step=0
 Host: example.com
 Authorization: Bearer auth-token
 
@@ -2795,7 +2804,8 @@ any).
 The Helper handles the aggregation job continuation synchronously:
 
 ~~~ http
-POST /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
+POST /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+  aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
 Content-Type: application/ppm-dap;message=aggregation-job-continue-req
 Content-Length: 100
@@ -2816,7 +2826,8 @@ encoded(struct { verify_resps } AggregationJobResp)
 Or asynchronously:
 
 ~~~ http
-POST /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
+POST /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+  aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
 Content-Type: application/ppm-dap;message=aggregation-job-continue-req
 Content-Length: 100
@@ -2828,18 +2839,22 @@ encoded(struct {
 } AggregationJobContinueReq)
 
 HTTP/1.1 200
-Location: /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA?step=1
+Location: /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+  aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA?step=1
 Retry-After: 300
 
-GET /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA?step=1
+GET /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+  aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA?step=1
 Host: example.com
 Authorization: Bearer auth-token
 
 HTTP/1.1 200
-Location: /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA?step=1
+Location: /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+  aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA?step=1
 Retry-After: 300
 
-GET /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA?step=1
+GET /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+  aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA?step=1
 Host: example.com
 Authorization: Bearer auth-token
 
@@ -2867,7 +2882,8 @@ collection checks.
 #### Example
 
 ~~~ http
-DELETE /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
+DELETE /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+  aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
 Authorization: Bearer auth-token
 
@@ -2987,10 +3003,10 @@ errors.
 If the number of validated reports in the batch is not equal to or greater than
 the task's minimum batch size, then the Leader SHOULD wait for more reports to
 be uploaded and aggregated and try the collection job again later. Alternately,
-the Leader MAY give up on the collection job (for example, if it decides that no new
-reports satisfying the query are likely to ever arrive), in which case it MUST
-fail the job with error `invalidBatchSize`. It MUST NOT fulfill any jobs with an
-insufficient number of validated reports.
+the Leader MAY give up on the collection job (for example, if it decides that no
+new reports satisfying the query are likely to ever arrive), in which case it
+MUST fail the job with error `invalidBatchSize`. It MUST NOT fulfill any jobs
+with an insufficient number of validated reports.
 
 Once the Leader has validated the collection job and run to completion all the
 aggregation jobs that pertain to it, it obtains the Helper's aggregate share
@@ -3047,7 +3063,8 @@ MUST abort with error `invalidMessage`.
 The Leader handles the collection job request synchronously:
 
 ~~~ http
-PUT /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/collection_jobs/lc7aUeGpdSNosNlh-UZhKA
+PUT /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+  collection_jobs/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
 Content-Type: application/ppm-dap;message=collection-job-req
 Authorization: Bearer auth-token
@@ -3083,7 +3100,8 @@ encoded(struct {
 Or asynchronously:
 
 ~~~ http
-PUT /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/collection_jobs/lc7aUeGpdSNosNlh-UZhKA
+PUT /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+  collection_jobs/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
 Content-Type: application/ppm-dap;message=collection-job-req
 Authorization: Bearer auth-token
@@ -3104,14 +3122,16 @@ encoded(struct {
 HTTP/1.1 200
 Retry-After: 300
 
-GET /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/collection_jobs/lc7aUeGpdSNosNlh-UZhKA
+GET /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+  collection_jobs/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
 Authorization: Bearer auth-token
 
 HTTP/1.1 200
 Retry-After: 300
 
-GET /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/collection_jobs/lc7aUeGpdSNosNlh-UZhKA
+GET /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+  collection_jobs/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
 Authorization: Bearer auth-token
 
@@ -3150,7 +3170,8 @@ checks ({{batch-buckets}}).
 #### Example
 
 ~~~ http
-DELETE /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/collection_jobs/lc7aUeGpdSNosNlh-UZhKA
+DELETE /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+  collection_jobs/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
 Authorization: Bearer auth-token
 
@@ -3303,7 +3324,8 @@ under the Collector's HPKE public key as described in
 The Helper handles the aggregate share request synchronously:
 
 ~~~ http
-PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregate_shares/lc7aUeGpdSNosNlh-UZhKA
+PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+  aggregate_shares/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
 Content-Type: application/ppm-dap;message=aggregate-share-req
 Authorization: Bearer auth-token
@@ -3334,7 +3356,8 @@ encoded(struct {
 Or asynchronously:
 
 ~~~ http
-PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregate_shares/lc7aUeGpdSNosNlh-UZhKA
+PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+  aggregate_shares/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
 Content-Type: application/ppm-dap;message=aggregate-share-req
 Authorization: Bearer auth-token
@@ -3357,14 +3380,16 @@ encoded(struct {
 HTTP/1.1 200
 Retry-After: 300
 
-GET /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregate_shares/lc7aUeGpdSNosNlh-UZhKA
+GET /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+  aggregate_shares/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
 Authorization: Bearer auth-token
 
 HTTP/1.1 200
 Retry-After: 300
 
-GET /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregate_shares/lc7aUeGpdSNosNlh-UZhKA
+GET /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+  aggregate_shares/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
 Authorization: Bearer auth-token
 
@@ -3388,7 +3413,8 @@ checks ({{batch-buckets}}).
 #### Example
 
 ~~~ http
-DELETE /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregate_shares/lc7aUeGpdSNosNlh-UZhKA
+DELETE /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+  aggregate_shares/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
 Authorization: Bearer auth-token
 
@@ -4203,8 +4229,8 @@ number assigned to this document.)
 ## Protocol Message Media Type {#iana-media-type}
 
 This specification defines a new media type used for all protocol messages:
-`application/ppm-dap`. Specific message types are distinguished using a `message`
-parameter.
+`application/ppm-dap`. Specific message types are distinguished using a
+`message` parameter.
 
 This specification defines the following protocol messages, along with their
 corresponding `message` value:
@@ -4440,8 +4466,8 @@ Each of these requires registration of a codepoint or other value; see
       `BatchSelector`
 
     * Batch buckets ({{batch-buckets}}): how reports are assigned to batch
-      buckets; how each bucket is identified; and how batch buckets are mapped to
-      batches.
+      buckets; how each bucket is identified; and how batch buckets are mapped
+      to batches.
 
   See {{batch-modes}} for examples.
 
