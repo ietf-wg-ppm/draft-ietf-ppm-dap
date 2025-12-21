@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 25 May 2026                                          Cloudflare
+Expires: 24 June 2026                                         Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                        21 November 2025
+                                                        21 December 2025
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -64,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 25 May 2026.
+   This Internet-Draft will expire on 24 June 2026.
 
 Copyright Notice
 
@@ -165,6 +165,7 @@ Table of Contents
        9.2.1.  Batch Modes Registry
        9.2.2.  Report Extension Registry
        9.2.3.  Report Error Registry
+       9.2.4.  Guidance for Designated Experts
      9.3.  URN Sub-namespace for DAP (urn:ietf:params:ppm:dap)
    10. Extending this Document
    11. References
@@ -200,6 +201,16 @@ Table of Contents
 
    (*) Indicates a change that breaks wire compatibility with the
    previous draft.
+
+   17:
+
+   *  Bump version tag from "dap-16" to "dap-17". (*)
+
+   *  Align IANA considerations with RFC 8126 and
+      https://www.iana.org/help/protocol-registration.
+
+   *  Add RFC Editor notes to change domain separation tags from "dap-
+      17" to "dap" on RFC publication.
 
    16:
 
@@ -639,6 +650,10 @@ Table of Contents
    for some function F while revealing nothing else about the
    measurements.  We call F the "aggregation function" and agg_result
    the "aggregate result".
+
+   (RFC EDITOR: Please update the normative reference to VDAF in the
+   next paragraph to the VDAF RFC during AUTH48.  We hope that VDAF will
+   have been published by then.)
 
    DAP is extensible in that it allows for the addition of new
    cryptographic schemes that compute different aggregation functions,
@@ -1657,8 +1672,12 @@ Table of Contents
 
    Next, the Client encrypts each PlaintextInputShare as follows:
 
+   (RFC EDITOR: Once the document becomes an RFC, we will stop including
+   the draft version in domain separation tags.  In the remainder of
+   this section, replace "dap-17" with "dap".)
+
    enc, payload = SealBase(pk,
-     "dap-16 input share" || 0x01 || server_role,
+     "dap-17 input share" || 0x01 || server_role,
      input_share_aad, plaintext_input_share)
 
    *  pk is the public key from the Aggregator's HPKE configuration.
@@ -2112,7 +2131,7 @@ Table of Contents
 
    state = Vdaf.ping_pong_leader_init(
        vdaf_verify_key,
-       "dap-16" || task_id,
+       "dap-17" || task_id,
        agg_param,
        report_id,
        public_share,
@@ -2218,7 +2237,7 @@ Table of Contents
        the Leader computes
 
       state = Vdaf.ping_pong_leader_continued(
-          "dap-16" || task_id,
+          "dap-17" || task_id,
           agg_param,
           state,
           inbound,
@@ -2354,7 +2373,7 @@ Table of Contents
 
    state = Vdaf.ping_pong_helper_init(
        vdaf_verify_key,
-       "dap-16" || task_id,
+       "dap-17" || task_id,
        agg_param,
        report_id,
        public_share,
@@ -2436,7 +2455,7 @@ Table of Contents
    payload with the following procedure:
 
    plaintext_input_share = OpenBase(encrypted_input_share.enc, sk,
-     "dap-16 input share" || 0x01 || server_role,
+     "dap-17 input share" || 0x01 || server_role,
      input_share_aad, encrypted_input_share.payload)
 
    *  sk is the secret key from the HPKE configuration indicated by
@@ -2639,7 +2658,7 @@ Table of Contents
        "continue", then the Leader computes
 
       state = Vdaf.ping_pong_leader_continued(
-          "dap-16" || task_id,
+          "dap-17" || task_id,
           agg_param,
           state,
           inbound,
@@ -2765,7 +2784,7 @@ Table of Contents
    For each report, the Helper does the following:
 
    state = Vdaf.ping_pong_helper_continued(
-       "dap-16" || task_id,
+       "dap-17" || task_id,
        agg_param,
        state,
        inbound,
@@ -3541,7 +3560,7 @@ Table of Contents
 
    (enc, payload) = SealBase(
        pk,
-       "dap-16 aggregate share" || server_role || 0x00,
+       "dap-17 aggregate share" || server_role || 0x00,
        agg_share_aad,
        agg_share)
 
@@ -3579,7 +3598,7 @@ Table of Contents
    agg_share = OpenBase(
        enc_share.enc,
        sk,
-       "dap-16 aggregate share" || server_role || 0x00,
+       "dap-17 aggregate share" || server_role || 0x00,
        agg_share_aad,
        enc_share.payload)
 
@@ -4460,8 +4479,8 @@ Table of Contents
 
                             Macintosh file type code(s):  N/A
 
-   Person and email address to contact for further information:  see Aut
-      hors' Addresses section of the published specification
+   Person and email address to contact for further information:  PPM WG
+      mailing list (ppm@ietf.org)
 
    Intended usage:  COMMON
 
@@ -4470,7 +4489,7 @@ Table of Contents
    Author:  see Authors' Addresses section of the published
       specification
 
-   Change controller:  IESG
+   Change controller:  IETF
 
 9.2.  DAP Type Registries
 
@@ -4482,8 +4501,8 @@ Table of Contents
 9.2.1.  Batch Modes Registry
 
    A new registry will be (RFC EDITOR: change "will be" to "has been")
-   created called "Batch Mode Identifiers" for DAP batch modes
-   (Section 5).  This registry should contain the following columns:
+   created called "DAP Batch Mode Identifiers" (Section 5).  This
+   registry should contain the following columns:
 
    Value:  The one-byte identifier for the batch mode
 
@@ -4503,15 +4522,15 @@ Table of Contents
            | 0x02  | leader_selected | Section 5.2 of RFC XXXX |
            +-------+-----------------+-------------------------+
 
-                Table 2: Initial contents of the Batch Mode
+              Table 2: Initial contents of the DAP Batch Mode
                            Identifiers registry.
 
 9.2.2.  Report Extension Registry
 
    A new registry will be (RFC EDITOR: change "will be" to "has been")
-   created called "Report Extension Identifiers" for extensions to the
-   upload interaction (Section 4.4).  This registry should contain the
-   following columns:
+   created called "DAP Report Extension Identifiers" for extensions to
+   the report structure (Section 4.4.3).  This registry should contain
+   the following columns:
 
    Value:  The two-byte identifier for the upload extension
 
@@ -4528,14 +4547,15 @@ Table of Contents
                      +--------+----------+-----------+
 
                         Table 3: Initial contents of
-                            the Report Extension
+                          the DAP Report Extension
                            Identifiers registry.
 
 9.2.3.  Report Error Registry
 
    A new registry will be (RFC EDITOR: change "will be" to "has been")
-   created called "Report Error Identifiers" for reasons for rejecting
-   reports during the aggregation interaction (Section 4.5.2.2).
+   created called "DAP Report Error Identifiers" for reasons for
+   rejecting reports during the aggregation interaction
+   (Section 4.5.2.2).
 
    Value:  The one-byte identifier of the report error
 
@@ -4573,8 +4593,15 @@ Table of Contents
        | 0x0B  | outdated_config        | Section 4.1 of RFX XXXX |
        +-------+------------------------+-------------------------+
 
-              Table 4: Initial contents of the Report Error
+            Table 4: Initial contents of the DAP Report Error
                           Identifiers registry.
+
+9.2.4.  Guidance for Designated Experts
+
+   When reviewing requests to extend a DAP registry, experts should
+   ensure that a document exists that defines the newly registered items
+   and review the document to ensure it meets the criteria for extending
+   DAP specified in Section 10.
 
 9.3.  URN Sub-namespace for DAP (urn:ietf:params:ppm:dap)
 
