@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 21 June 2026                                         Cloudflare
+Expires: 9 July 2026                                          Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                        18 December 2025
+                                                          5 January 2026
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -64,11 +64,11 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 21 June 2026.
+   This Internet-Draft will expire on 9 July 2026.
 
 Copyright Notice
 
-   Copyright (c) 2025 IETF Trust and the persons identified as the
+   Copyright (c) 2026 IETF Trust and the persons identified as the
    document authors.  All rights reserved.
 
    This document is subject to BCP 78 and the IETF Trust's Legal
@@ -1322,22 +1322,32 @@ Table of Contents
 
 4.1.1.  Times, Durations and Intervals
 
+   uint64 TimePrecision;
+
    uint64 Time;
 
-   Times are integers, representing a number of time_precisions
-   (Section 4.2) since the Epoch, defined in section 4.16 of [POSIX].
-   That is, the number of seconds after 1970-01-01 00:00:00 UTC,
-   excluding leap seconds, divided by the task's time_precision.
+   A TimePrecision is an integer number of seconds, used to compute
+   times and durations in DAP.  The time precision is a parameter of a
+   task (Section 4.2).
+
+   Times are integers, representing a number of TimePrecisions since the
+   Epoch, defined in section 4.16 of [POSIX].  That is, the number of
+   seconds after 1970-01-01 00:00:00 UTC, excluding leap seconds,
+   divided by the task's time_precision.
 
    One POSIX timestamp is said to be before (respectively, after)
    another POSIX timestamp if it is less than (respectively, greater
    than) the other value.
 
+   Times can only be meaningfully compared to one another if they use
+   the same time precision.
+
    uint64 Duration;
 
    Durations of time are integers, representing a number of
-   time_precisions.  They can be added to a Time to produce another
-   Time.
+   TimePrecisions.  That is, a number of seconds divided by the task's
+   time_precision.  A duration can be added to a time to produce another
+   time.
 
    struct {
      Time start;
@@ -1352,6 +1362,9 @@ Table of Contents
    A time that is either before or after an interval is said to be
    outside the interval.  A time that is neither before nor after an
    interval is said to be inside or fall within the interval.
+
+   Intervals can only be meaningfully compared to one another if they
+   use the same time precision.
 
 4.1.1.1.  Examples
 
@@ -1414,8 +1427,8 @@ Table of Contents
    *  task_interval (Interval): Reports whose timestamp is outside of
       this interval will be rejected by the Aggregators.
 
-   *  time_precision: An integer number of seconds, used to compute
-      timestamps in DAP.  See Section 4.1.1.
+   *  time_precision (TimePrecision): The time precision used in this
+      task.  See Section 4.1.1.
 
    The Leader and Helper API URLs MAY include arbitrary path components.
 
