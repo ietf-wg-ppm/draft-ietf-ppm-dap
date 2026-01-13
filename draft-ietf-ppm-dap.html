@@ -28,7 +28,7 @@ without revealing any individual contributor's data.
     Python 3.12.12
     ConfigArgParse 1.7
     google-i18n-address 3.1.1
-    intervaltree 3.1.0
+    intervaltree 3.2.1
     Jinja2 3.1.6
     lxml 6.0.2
     platformdirs 4.5.1
@@ -1054,11 +1054,11 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <thead><tr>
 <td class="left">Internet-Draft</td>
 <td class="center">DAP</td>
-<td class="right">December 2025</td>
+<td class="right">January 2026</td>
 </tr></thead>
 <tfoot><tr>
 <td class="left">Geoghegan, et al.</td>
-<td class="center">Expires 24 June 2026</td>
+<td class="center">Expires 17 July 2026</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1071,12 +1071,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-ietf-ppm-dap-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2025-12-21" class="published">21 December 2025</time>
+<time datetime="2026-01-13" class="published">13 January 2026</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Standards Track</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2026-06-24">24 June 2026</time></dd>
+<dd class="expires"><time datetime="2026-07-17">17 July 2026</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -1150,7 +1150,7 @@ without revealing any individual contributor's data.<a href="#section-abstract-1
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 24 June 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 17 July 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1159,7 +1159,7 @@ without revealing any individual contributor's data.<a href="#section-abstract-1
 <a href="#name-copyright-notice" class="section-name selfRef">Copyright Notice</a>
         </h2>
 <p id="section-boilerplate.2-1">
-            Copyright (c) 2025 IETF Trust and the persons identified as the
+            Copyright (c) 2026 IETF Trust and the persons identified as the
             document authors. All rights reserved.<a href="#section-boilerplate.2-1" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.2-2">
             This document is subject to BCP 78 and the IETF Trust's Legal
@@ -2024,6 +2024,8 @@ long-term storage.<a href="#section-1.1-34.10.1" class="pilcrow">¶</a></p>
 "<span class="bcp14">MAY</span>", and "<span class="bcp14">OPTIONAL</span>" in this document are to be interpreted as
 described in BCP 14 <span>[<a href="#RFC2119" class="cite xref">RFC2119</a>]</span> <span>[<a href="#RFC8174" class="cite xref">RFC8174</a>]</span> when, and only when, they
 appear in all capitals, as shown here.<a href="#section-1.2-1" class="pilcrow">¶</a></p>
+<p id="section-1.2-2">All examples in this document wrap long lines using the Single Backslash
+Strategy of <span>[<a href="#RFC8792" class="cite xref">RFC8792</a>], <a href="https://rfc-editor.org/rfc/rfc8792#section-7" class="relref">Section 7</a></span>.<a href="#section-1.2-2" class="pilcrow">¶</a></p>
 <div id="glossary-of-terms">
 <section id="section-1.2.1">
           <h4 id="name-glossary-of-terms">
@@ -4518,8 +4520,8 @@ then there is at least one more outbound message to send before verification
 is complete. The Leader stores <code>state</code> and proceeds as in
 <a href="#aggregation-leader-continuation" class="auto internal xref">Section 4.5.3.1</a>.<a href="#section-4.5.2.1-21.1.5" class="pilcrow">¶</a></p>
 <p id="section-4.5.2.1-21.1.6">
-Else if the new <code>state</code> has type <code>Finished</code>, then verification is complete and
-the state includes an output share, denoted <code>state.out_share</code>. The Leader
+Else if the new <code>state</code> has type <code>Finished</code>, then verification is complete
+and the state includes an output share, denoted <code>state.out_share</code>. The Leader
 commits to <code>state.out_share</code> as described in <a href="#batch-buckets" class="auto internal xref">Section 4.5.3.3</a>.<a href="#section-4.5.2.1-21.1.6" class="pilcrow">¶</a></p>
 <p id="section-4.5.2.1-21.1.7">
 Else if <code>state</code> has type <code>Rejected</code>, then the Leader rejects the
@@ -4824,7 +4826,8 @@ with error <code>report_dropped</code>.<a href="#section-4.5.2.4-2.7.1" class="p
 <p id="section-4.5.2.5-1">The Helper handles the aggregation job initialization synchronously:<a href="#section-4.5.2.5-1" class="pilcrow">¶</a></p>
 <div class="lang-http sourcecode" id="section-4.5.2.5-2">
 <pre>
-PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
+PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+  aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
 Content-Type: application/ppm-dap;message=aggregation-job-init-req
 Content-Length: 100
@@ -4851,7 +4854,8 @@ encoded(struct { verify_resps } AggregationJobResp)
 <p id="section-4.5.2.5-3">Or asynchronously:<a href="#section-4.5.2.5-3" class="pilcrow">¶</a></p>
 <div class="lang-http sourcecode" id="section-4.5.2.5-4">
 <pre>
-PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
+PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+  aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
 Content-Type: application/ppm-dap;message=aggregation-job-init-req
 Content-Length: 100
@@ -4867,18 +4871,22 @@ encoded(struct {
 } AggregationJobInitReq)
 
 HTTP/1.1 200
-Location: /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA?step=0
+Location: /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+  aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA?step=0
 Retry-After: 300
 
-GET /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA?step=0
+GET /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+  aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA?step=0
 Host: example.com
 Authorization: Bearer auth-token
 
 HTTP/1.1 200
-Location: /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA?step=0
+Location: /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+  aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA?step=0
 Retry-After: 300
 
-GET /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA?step=0
+GET /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+  aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA?step=0
 Host: example.com
 Authorization: Bearer auth-token
 
@@ -5316,7 +5324,8 @@ any).<a href="#section-4.5.3.4-3" class="pilcrow">¶</a></p>
 <p id="section-4.5.3.5-1">The Helper handles the aggregation job continuation synchronously:<a href="#section-4.5.3.5-1" class="pilcrow">¶</a></p>
 <div class="lang-http sourcecode" id="section-4.5.3.5-2">
 <pre>
-POST /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
+POST /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+  aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
 Content-Type: application/ppm-dap;message=aggregation-job-continue-req
 Content-Length: 100
@@ -5337,7 +5346,8 @@ encoded(struct { verify_resps } AggregationJobResp)
 <p id="section-4.5.3.5-3">Or asynchronously:<a href="#section-4.5.3.5-3" class="pilcrow">¶</a></p>
 <div class="lang-http sourcecode" id="section-4.5.3.5-4">
 <pre>
-POST /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
+POST /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+  aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
 Content-Type: application/ppm-dap;message=aggregation-job-continue-req
 Content-Length: 100
@@ -5349,18 +5359,22 @@ encoded(struct {
 } AggregationJobContinueReq)
 
 HTTP/1.1 200
-Location: /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA?step=1
+Location: /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+  aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA?step=1
 Retry-After: 300
 
-GET /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA?step=1
+GET /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+  aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA?step=1
 Host: example.com
 Authorization: Bearer auth-token
 
 HTTP/1.1 200
-Location: /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA?step=1
+Location: /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+  aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA?step=1
 Retry-After: 300
 
-GET /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA?step=1
+GET /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+  aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA?step=1
 Host: example.com
 Authorization: Bearer auth-token
 
@@ -5397,7 +5411,8 @@ collection checks.<a href="#section-4.5.4-2" class="pilcrow">¶</a></p>
             </h5>
 <div class="lang-http sourcecode" id="section-4.5.4.1-1">
 <pre>
-DELETE /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
+DELETE /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+  aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
 Authorization: Bearer auth-token
 
@@ -5537,10 +5552,10 @@ errors.<a href="#section-4.6.1-11" class="pilcrow">¶</a></p>
 <p id="section-4.6.1-12">If the number of validated reports in the batch is not equal to or greater than
 the task's minimum batch size, then the Leader <span class="bcp14">SHOULD</span> wait for more reports to
 be uploaded and aggregated and try the collection job again later. Alternately,
-the Leader <span class="bcp14">MAY</span> give up on the collection job (for example, if it decides that no new
-reports satisfying the query are likely to ever arrive), in which case it <span class="bcp14">MUST</span>
-fail the job with error <code>invalidBatchSize</code>. It <span class="bcp14">MUST NOT</span> fulfill any jobs with an
-insufficient number of validated reports.<a href="#section-4.6.1-12" class="pilcrow">¶</a></p>
+the Leader <span class="bcp14">MAY</span> give up on the collection job (for example, if it decides that no
+new reports satisfying the query are likely to ever arrive), in which case it
+<span class="bcp14">MUST</span> fail the job with error <code>invalidBatchSize</code>. It <span class="bcp14">MUST NOT</span> fulfill any jobs
+with an insufficient number of validated reports.<a href="#section-4.6.1-12" class="pilcrow">¶</a></p>
 <p id="section-4.6.1-13">Once the Leader has validated the collection job and run to completion all the
 aggregation jobs that pertain to it, it obtains the Helper's aggregate share
 following the aggregate-share request flow described in <a href="#collect-aggregate" class="auto internal xref">Section 4.6.3</a>.
@@ -5601,7 +5616,8 @@ requests to the collection job with a different <code>CollectionJobReq</code>, t
 <p id="section-4.6.1.1-1">The Leader handles the collection job request synchronously:<a href="#section-4.6.1.1-1" class="pilcrow">¶</a></p>
 <div class="lang-http sourcecode" id="section-4.6.1.1-2">
 <pre>
-PUT /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/collection_jobs/lc7aUeGpdSNosNlh-UZhKA
+PUT /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+  collection_jobs/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
 Content-Type: application/ppm-dap;message=collection-job-req
 Authorization: Bearer auth-token
@@ -5637,7 +5653,8 @@ encoded(struct {
 <p id="section-4.6.1.1-3">Or asynchronously:<a href="#section-4.6.1.1-3" class="pilcrow">¶</a></p>
 <div class="breakable lang-http sourcecode" id="section-4.6.1.1-4">
 <pre>
-PUT /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/collection_jobs/lc7aUeGpdSNosNlh-UZhKA
+PUT /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+  collection_jobs/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
 Content-Type: application/ppm-dap;message=collection-job-req
 Authorization: Bearer auth-token
@@ -5658,14 +5675,16 @@ encoded(struct {
 HTTP/1.1 200
 Retry-After: 300
 
-GET /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/collection_jobs/lc7aUeGpdSNosNlh-UZhKA
+GET /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+  collection_jobs/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
 Authorization: Bearer auth-token
 
 HTTP/1.1 200
 Retry-After: 300
 
-GET /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/collection_jobs/lc7aUeGpdSNosNlh-UZhKA
+GET /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+  collection_jobs/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
 Authorization: Bearer auth-token
 
@@ -5713,7 +5732,8 @@ checks (<a href="#batch-buckets" class="auto internal xref">Section 4.5.3.3</a>)
             </h5>
 <div class="lang-http sourcecode" id="section-4.6.2.1-1">
 <pre>
-DELETE /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/collection_jobs/lc7aUeGpdSNosNlh-UZhKA
+DELETE /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+  collection_jobs/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
 Authorization: Bearer auth-token
 
@@ -5874,7 +5894,8 @@ under the Collector's HPKE public key as described in
 <p id="section-4.6.3.1-1">The Helper handles the aggregate share request synchronously:<a href="#section-4.6.3.1-1" class="pilcrow">¶</a></p>
 <div class="lang-http sourcecode" id="section-4.6.3.1-2">
 <pre>
-PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregate_shares/lc7aUeGpdSNosNlh-UZhKA
+PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+  aggregate_shares/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
 Content-Type: application/ppm-dap;message=aggregate-share-req
 Authorization: Bearer auth-token
@@ -5905,7 +5926,8 @@ encoded(struct {
 <p id="section-4.6.3.1-3">Or asynchronously:<a href="#section-4.6.3.1-3" class="pilcrow">¶</a></p>
 <div class="lang-http sourcecode" id="section-4.6.3.1-4">
 <pre>
-PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregate_shares/lc7aUeGpdSNosNlh-UZhKA
+PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+  aggregate_shares/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
 Content-Type: application/ppm-dap;message=aggregate-share-req
 Authorization: Bearer auth-token
@@ -5928,14 +5950,16 @@ encoded(struct {
 HTTP/1.1 200
 Retry-After: 300
 
-GET /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregate_shares/lc7aUeGpdSNosNlh-UZhKA
+GET /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+  aggregate_shares/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
 Authorization: Bearer auth-token
 
 HTTP/1.1 200
 Retry-After: 300
 
-GET /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregate_shares/lc7aUeGpdSNosNlh-UZhKA
+GET /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+  aggregate_shares/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
 Authorization: Bearer auth-token
 
@@ -5968,7 +5992,8 @@ checks (<a href="#batch-buckets" class="auto internal xref">Section 4.5.3.3</a>)
             </h5>
 <div class="lang-http sourcecode" id="section-4.6.4.1-1">
 <pre>
-DELETE /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregate_shares/lc7aUeGpdSNosNlh-UZhKA
+DELETE /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+  aggregate_shares/lc7aUeGpdSNosNlh-UZhKA
 Host: example.com
 Authorization: Bearer auth-token
 
@@ -7566,8 +7591,8 @@ one or more of the following:<a href="#section-10-1" class="pilcrow">¶</a></p>
 </li>
             <li class="normal" id="section-10-4.1.2.2">
               <p id="section-10-4.1.2.2.1">Batch buckets (<a href="#batch-buckets" class="auto internal xref">Section 4.5.3.3</a>): how reports are assigned to batch
-buckets; how each bucket is identified; and how batch buckets are mapped to
-batches.<a href="#section-10-4.1.2.2.1" class="pilcrow">¶</a></p>
+buckets; how each bucket is identified; and how batch buckets are mapped
+to batches.<a href="#section-10-4.1.2.2.1" class="pilcrow">¶</a></p>
 </li>
           </ul>
 <p id="section-10-4.1.3">
@@ -7628,6 +7653,10 @@ impacts the security of DAP with respect to the threat model in
 <dt id="RFC8446">[RFC8446]</dt>
         <dd>
 <span class="refAuthor">Rescorla, E.</span>, <span class="refTitle">"The Transport Layer Security (TLS) Protocol Version 1.3"</span>, <span class="seriesInfo">RFC 8446</span>, <span class="seriesInfo">DOI 10.17487/RFC8446</span>, <time datetime="2018-08" class="refDate">August 2018</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8446">https://www.rfc-editor.org/rfc/rfc8446</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC8792">[RFC8792]</dt>
+        <dd>
+<span class="refAuthor">Watsen, K.</span>, <span class="refAuthor">Auerswald, E.</span>, <span class="refAuthor">Farrel, A.</span>, and <span class="refAuthor">Q. Wu</span>, <span class="refTitle">"Handling Long Lines in Content of Internet-Drafts and RFCs"</span>, <span class="seriesInfo">RFC 8792</span>, <span class="seriesInfo">DOI 10.17487/RFC8792</span>, <time datetime="2020-06" class="refDate">June 2020</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8792">https://www.rfc-editor.org/rfc/rfc8792</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="RFC9110">[RFC9110]</dt>
         <dd>
