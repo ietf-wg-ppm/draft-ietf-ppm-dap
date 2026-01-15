@@ -3947,15 +3947,15 @@ tradeoffs.
 ### Streaming Messages
 
 Most messages in the protocol contain fixed-length or length-prefixed fields
-such that they can be parsed independently of context. The exceptions are the
-`UploadReq`, `UploadErrors` ({{upload-request}}), `AggregationJobInitReq`,
-`AggregationJobContinueReq`, and `AggregationJobResp` ({{aggregate-flow}})
-messages, all of which contain vectors whose length is determined by the length
-of the enclosing HTTP message.
+such that they can be parsed independently of context. The messages without,
+namely `UploadReq`, `UploadErrors` ({{upload-request}}), `AggregationJobInitReq`,
+`AggregationJobContinueReq`, and `AggregationJobResp` ({{aggregate-flow}}),
+contain vectors whose length is determined by the length of the enclosing HTTP
+message.
 
-This allows implementations to begin transmitting these messages before knowing
-how long the message will ultimately be. This is useful if implementations wish
-to avoid buffering exceptionally large messages in memory.
+These two aproaches allow implementations to begin transmitting these messages
+before knowing how long the message will ultimately be. This is useful if
+implementations wish to avoid buffering exceptionally large messages in memory.
 
 # Compliance Requirements {#compliance}
 
