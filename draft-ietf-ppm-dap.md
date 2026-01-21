@@ -183,6 +183,8 @@ aggregator.
 - Add verification key ID to aggregation jobs to enable but not require
   verification key management. (\*) (#766)
 
+- Define colleciton job extensions. (\*) (#769)
+
 17:
 
 - Bump version tag from "dap-16" to "dap-17". (\*)
@@ -1893,7 +1895,7 @@ enum {
 Field `extension_type` indicates the type of extension, and `extension_data`
 contains the opaque encoding of the extension.
 
-Extensions are mandatory to implement. Unrecognized extensions are handled as
+Extensions are mandatory to support. Unrecognized extensions are handled as
 specified in {{input-share-validation}}.
 
 ## Verifying and Aggregating Reports {#aggregate-flow}
@@ -3084,6 +3086,9 @@ conditions:
   If not, the Leader MUST fail the collection job
   with the error indicated by the processing model for the extension.
 
+The Leader then performs any configuration changes or processing
+defined in the included extensions; see {{collect-ext}}.
+
 Having validated the `CollectionJobReq`, the Leader begins working with the
 Helper to aggregate the reports satisfying the query (or continues this process,
 depending on whether the Leader is aggregating eagerly; {{eager-aggregation}})
@@ -3170,7 +3175,7 @@ encoded(struct {
     query = encoded(Empty),
   } Query,
   agg_param = [0x00, 0x01, ...],
-  extensions = encoded(Empty)
+  extensions = [],
 } CollectionJobReq)
 
 HTTP/1.1 200
@@ -3213,7 +3218,7 @@ encoded(struct {
     } TimeIntervalQueryConfig),
   },
   agg_param = encoded(Empty),
-  extensions = encoded(Empty)
+  extensions = [],
 } CollectionJobReq)
 
 HTTP/1.1 200
@@ -3279,13 +3284,25 @@ a type identifier (`extension_type`)
 and arbitrary data (`extension_data`).
 The data is structured according to the definition of the extension.
 
-Extensions are mandatory to understand and support by both Aggregators.
+Extensions are mandatory to support by both Aggregators.
 A collection job that contains an unrecognized or unsupported extension
-MUST be failed with an `unsupportedExtension` error; see {{errors}}.
+MUST be aborted with an `unsupportedExtension` error; see {{errors}}.
 
 Extensions MUST be encoded in strictly increasing order.
-If any `extension_type` value is equal to or less than the extension that precedes it,
+If any `extension_type` value is equal to or less than that of the extension that precedes it,
 the job MUST be failed with an `invalidExtension` error; see {{errors}}.
+
+Each collection job extension MUST define how Aggregators
+alter their handling of collection jobs
+when the extension is present,
+including any validation of the included `extension_data`.
+
+An extension could limit its compatibility
+to specific VDAFs, batch modes, or those with certain properties.
+For instance, an extension might only apply
+if the VDAF supports eager aggregation; see {{eager-aggregation}}.
+In that case, jobs can be failed with an `invalidExtension` error
+if the extension is incompatible.
 
 Collection job extensions are distinct from report and task extensions.
 Collection job extensions are only agreed between Collector, Leader, and Helper;
@@ -3359,8 +3376,8 @@ struct {
 } BatchSelector;
 
 struct {
+  CollectionJobReq collection_job_req;
   BatchSelector batch_selector;
-  opaque agg_param<0..2^32-1>;
   uint64 report_count;
   opaque checksum[32];
 } AggregateShareReq;
@@ -3370,10 +3387,11 @@ The media type of `AggregateShareReq` is
 "application/ppm-dap;message=aggregate-share-req". The structure contains the
 following parameters:
 
-* `batch_selector`: The "batch selector", the contents of which depends on the
-  indicated batch mode (see {{batch-modes}}.
+* `collection_job_req`: The details of the collection job,
+  as provided by the Collector when initiating the job; see {{collect-init}}.
 
-* `agg_param`: The encoded aggregation parameter for the VDAF being executed.
+* `batch_selector`: The "batch selector", the contents of which depends on the
+  indicated batch mode; see {{batch-modes}}.
 
 * `report_count`: The number number of reports included in the batch, as
   computed above.
@@ -3393,8 +3411,11 @@ MUST fail the job with error `invalidMessage`.
 If the `AggregateShareReq` is malformed, the Helper MUST fail the job with error
 `invalidMessage`.
 
-The Helper then verifies that the `BatchSelector` in the Leader's request
-determines a batch that can be collected. If the selector does not identify a
+The Helper then verifies that the `batch_selector` in the Leader's request
+is consistent with the `collection_job_req.query`.
+Each batch mode needs to define any consistency checks necessary.
+The Helper also determines whether `batch_selector` identifies a set of batch buckets
+that can be collected. If the selector does not identify a
 valid set of batch buckets according to the criteria defined by the batch mode
 in use ({{batch-modes}}), then the Helper MUST fail the job with error
 `batchInvalid`.
@@ -3406,9 +3427,19 @@ If the number of validated reports in the batch is not equal to or greater than
 the task's minimum batch size, then the Helper MUST abort with
 `invalidBatchSize`.
 
-The aggregation parameter MUST match the aggregation parameter used in
+The aggregation parameter in `collection_job_req.agg_param`
+MUST match the aggregation parameter used in
 aggregation jobs pertaining to this batch. If not, the Helper MUST fail the job
 with error `invalidMessage`.
+
+The Helper then validates any extensions in `collection_job_req.extensions`,
+following the same logic as the Leader; see {{collect-ext}}.
+Though invalid extension encoding should have been detected by the Leader,
+the Helper MUST independently validate extensions
+and fail the job if necessary.
+
+The Helper performs any configuration changes or processing
+that are dictated by the extensions that are included; see {{collect-ext}}.
 
 Next, the Helper retrieves and combines the batch buckets associated with the
 request using the same process used by the Leader (described at the beginning of
@@ -3466,6 +3497,19 @@ Content-Type: application/ppm-dap;message=aggregate-share-req
 Authorization: Bearer auth-token
 
 encoded(struct {
+  collection_job_req = struct {
+    query = struct {
+      batch_mode = BatchMode.time_interval,
+      query = encoded(struct {
+        batch_interval = struct {
+          start = 1659540,
+          duration = 100,
+        } Interval,
+      } TimeIntervalQueryConfig),
+    } Query,
+    agg_param = [0x00, 0x01, ...],
+    extensions = encoded(Empty)
+  } CollectionJobReq,
   batch_selector = struct {
     batch_mode = BatchMode.time_interval,
     config = encoded(struct {
@@ -3475,7 +3519,6 @@ encoded(struct {
       } Interval,
     } TimeIntervalBatchSelectorConfig),
   } BatchSelector,
-  agg_param = [0x00, 0x01, ...],
   report_count = 1000,
   checksum = [0x0a, 0x0b, ..., 0x0f],
 } AggregateShareReq)
@@ -3498,6 +3541,19 @@ Content-Type: application/ppm-dap;message=aggregate-share-req
 Authorization: Bearer auth-token
 
 encoded(struct {
+  collection_job_req = struct {
+    query = struct {
+      batch_mode = BatchMode.time_interval,
+      query = encoded(struct {
+        batch_interval = struct {
+          start = 1659540,
+          duration = 100,
+        } Interval,
+      } TimeIntervalQueryConfig),
+    } Query,
+    agg_param = [0x00, 0x01, ...],
+    extensions = encoded(Empty)
+  } CollectionJobReq,
   batch_selector = struct {
     batch_mode = BatchMode.time_interval,
     config = encoded(struct {
@@ -3507,7 +3563,6 @@ encoded(struct {
       } Interval,
     } TimeIntervalBatchSelectorConfig),
   } BatchSelector,
-  agg_param = [0x00, 0x01, ...],
   report_count = 1000,
   checksum = [0x0a, 0x0b, ..., 0x0f],
 } AggregateShareReq)
@@ -3600,16 +3655,15 @@ ciphersuite indicated by the HPKE configuration.
 ~~~ tls-presentation
 struct {
   TaskID task_id;
-  opaque agg_param<0..2^32-1>;
-  BatchSelector batch_selector;
+  CollectionJobReq collection_job_req;
 } AggregateShareAad;
 ~~~
 
 * `task_id` is the ID of the task the aggregate share was computed in.
-* `agg_param` is the aggregation parameter used to compute the aggregate share.
-* `batch_selector` is the is the batch selector from the `AggregateShareReq`
-  (for the Helper) or the batch selector computed from the Collector's query
-  (for the Leader).
+* `collection_job_req` is the message that the Collector used
+  to initiate the associated collection job (see {{collect-init}}),
+  the value of which is passed by the Leader to the Helper
+  in `AggregateShareReq` (see {{collect-aggregate}}).
 
 The Collector decrypts these aggregate shares using the opposite process.
 Specifically, given an encrypted input share, denoted `enc_share`, for a given
@@ -3629,15 +3683,7 @@ agg_share = OpenBase(
   for the Leader and `0x03` for the Helper)
 * `0x00` represents the Role of the recipient (always the Collector)
 * `agg_share_aad` is an `AggregateShareAad` message constructed from the task ID
-  and the aggregation parameter in the collect request, and a batch selector.
-  The value of the batch selector used in `agg_share_aad` is determined by the
-  batch mode:
-
-  * For time-interval ({{time-interval-batch-mode}}), the batch selector is the
-    batch interval specified in the query.
-
-  * For leader-selected ({{leader-selected-batch-mode}}), the batch selector is
-    the batch ID sent in the response.
+  and the collection job request (see {{collect-init}}).
 
 The `OpenBase()` function is as specified in {{!HPKE, Section 6.1}} for the
 ciphersuite indicated by the HPKE configuration.
@@ -3733,6 +3779,17 @@ struct {
 
 where `batch_interval` is the batch interval requested by the Collector.
 
+A `TimeIntervalBatchSelectorConfig.config` is consistent with `Query.config`
+for this batch mode if the batch selector's interval is within the queried time
+interval. That is, the values are consistent if:
+
+* The start time from the batch selector
+  (`TimeIntervalBatchSelectorConfig.batch_interval.start`) is not before the
+  query (`TimeIntervalQueryConfig.batch_interval`), and
+* The end time from the batch selector
+  (`TimeIntervalBatchSelectorConfig.batch_interval.{start+duration}`)
+  is not after the query (`TimeIntervalQueryConfig.batch_interval`).
+
 ### Batch Buckets {#time-interval-batch-buckets}
 
 Each batch bucket is identified by an `Interval` whose duration is equal to the
@@ -3813,6 +3870,9 @@ struct {
 ~~~
 
 where `batch_id` is the batch ID selected by the Leader.
+
+It is impossible for a `BatchSelector.config` to be inconsistent
+with `Query.config` for this batch mode.
 
 ### Batch Selector Configuration
 
@@ -4515,21 +4575,47 @@ called "DAP Report Extension Identifiers" for extensions to the report structure
 ({{report-extensions}}). This registry should contain the following columns:
 
 Value:
-: The two-byte identifier for the upload extension
+: The two-byte identifier for the report extension
 
 Name:
-: The name of the upload extension
+: The name of the report extension
 
 Reference:
-: Where the upload extension is defined
+: Where the report extension is defined
 
-The initial contents of this registry are listed in {{upload-extension-id}}.
+The initial contents of this registry are listed in {{report-extension-id}}.
 
 | Value    | Name              | Reference |
 |:---------|:------------------|:----------|
 | `0x0000` | `reserved`        | RFC XXXX  |
-{: #upload-extension-id title="Initial contents of the DAP Report Extension
+{: #report-extension-id title="Initial contents of the DAP Report Extension
 Identifiers registry."}
+
+
+### Collection Job Extension Registry
+
+A new registry will be (RFC EDITOR: change "will be" to "has been") created
+called "DAP Collection Job Extension Identifiers" for extensions included in the
+creation of collection jobs ({{collect-ext}}). This registry should contain the
+following columns:
+
+Value:
+: The two-byte identifier for the collection job extension
+
+Name:
+: The name of the collection job extension
+
+Reference:
+: Where the extension is defined
+
+The initial contents of this registry are listed in {{collect-extension-id}}.
+
+| Value    | Name              | Reference |
+|:---------|:------------------|:----------|
+| `0x0000` | `reserved`        | RFC XXXX  |
+{: #collect-extension-id title="Initial contents of the DAP Collection Job Extension
+Identifiers registry."}
+
 
 ### Report Error Registry {#report-error-reg}
 
@@ -4598,6 +4684,7 @@ one or more of the following:
 
 1. a new batch mode ({{batch-modes}})
 1. a new report extension ({{report-extensions}})
+1. a new collection job extension ({{collect-ext}})
 1. a new report error ({{aggregation-helper-init}})
 1. a new entry in the URN sub-namespace for DAP ({{urn-space-errors}})
 
