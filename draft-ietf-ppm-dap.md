@@ -137,6 +137,17 @@ informative:
     date: 2016
     target: "https://privacytools.seas.harvard.edu/files/privacytools/files/complexityprivacy_1.pdf"
 
+  DPRS23:
+    title: "Verifiable Distributed Aggregation Functions"
+    author:
+      - name: Hannah Davis
+      - name: Christopher Patton
+      - name: Mike Rosulek
+      - name: Phillipp Schoppmann
+    date: 2024-09-25
+    refcontent: "Privacy Enhancing Technologies Symposium (PETS)"
+    target: https://ia.cr/2023/130/20240925:184929
+
 --- abstract
 
 There are many situations in which it is desirable to take measurements of data
@@ -166,7 +177,11 @@ aggregator.
 
 (RFC EDITOR: Remove this section.)
 
-(\*) Indicates a change that breaks wire compatibility with the previous draft.
+
+18:
+
+- Add verification key ID to aggregation jobs to enable but not require
+  verification key management. (\*) (#766)
 
 17:
 
@@ -1386,8 +1401,8 @@ Aggregators is configured with the following parameters:
 * `collector_hpke_config` (`HpkeConfig`): The {{!HPKE=RFC9180}} configuration of
   the Collector (described in {{hpke-config}}); see {{compliance}} for
   information about the HPKE configuration algorithms.
-* `vdaf_verify_key` (opaque byte string): The VDAF verification key shared by
-  the Aggregators. This key is used in the aggregation interaction
+* `vdaf_verify_key` (opaque byte string): The VDAF verification key (or keys)
+  shared by the Aggregators. This key is used in the aggregation interaction
   ({{aggregate-flow}}). The security requirements are described in
   {{verification-key}}.
 
@@ -2128,6 +2143,7 @@ struct {
 } PartialBatchSelector;
 
 struct {
+  uint8 verification_key_id;
   opaque agg_param<0..2^32-1>;
   PartialBatchSelector part_batch_selector;
   VerifyInit verify_inits[verify_inits_length];
@@ -2135,6 +2151,13 @@ struct {
 ~~~
 
 This message consists of:
+
+* `verification_key_id`: An identifier for the shared VDAF verification key
+  that Aggregators use to verify report integrity;
+  see {{Section 5.2 of VDAF}} and {{verification-key}}.
+  This allows a Leader to nominate a verification key
+  from a set of prearranged keys.
+  This might also allow for verification keys to be updated by Aggregators.
 
 * `agg_param`: The VDAF aggregation parameter chosen by the Collector. Before
   initializing an aggregation job, the Leader MUST validate the parameter as
@@ -2151,6 +2174,14 @@ This message consists of:
   content ({{!RFC9110, Section 6.4}}), minus the lengths in octets of the
   encoded `agg_param` and `part_batch_selector` fields. That is, the remainder
   of the HTTP message consists of `verify_inits`.
+
+{:aside}
+> IMPORTANT: this this does not change the security requirements
+> for verification keys; see {{verification-key}}.
+> The analysis in {{DPRS23}} depends on an assumption
+> that verification keys are selected prior to a report being generated;
+> a different analysis would be required
+> to enable selecting a verification key after a task has started.
 
 The Leader sends the `AggregationJobInitReq` in the body of a PUT request to the
 aggregation job with a media type of
@@ -2312,8 +2343,10 @@ state = Vdaf.ping_pong_helper_init(
 
 * `vdaf_verify_key` is the VDAF verification key for the task
 * `task_id` is the task ID
+* `verification_key_id` is the key identifier for the verification key
+  chosen by the Leader and included in the `AggregationJobInitReq` message
 * `agg_param` is the VDAF aggregation parameter sent in the
-  `AggregationJobInitReq`
+  `AggregationJobInitReq` message
 * `report_id` is the report ID
 * `public_share` is the report's public share
 * `plaintext_input_share` is the Helper's `PlaintextInputShare`
@@ -4172,14 +4205,15 @@ verification key must be kept secret from Clients.
 Furthermore, for a given report, it may be possible to craft a verification key
 which leaks information about that report's measurement during verification.
 Therefore, the verification key for a task SHOULD be chosen before any reports
-are generated. Moreover, it SHOULD be fixed for the lifetime of the task and
-not be rotated. One way to ensure that the verification key is generated
+are generated. To achieve this, the current design and analysis assume that
+the verification key is fixed for the lifetime of the task.
+One way to ensure that the verification key is generated
 independently from any given report is to derive the key based on the task ID
 and some previously agreed upon secret (verify_key_seed) between Aggregators,
 as follows:
 
 ~~~ pseudocode
-verify_key = HKDF-Expand(
+vdaf_verify_key = HKDF-Expand(
     HKDF-Extract(
         "verify_key",    # salt
         verify_key_seed, # IKM
