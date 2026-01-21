@@ -1188,7 +1188,8 @@ standard tokens for use in the "type" field:
 | batchMismatch               | Aggregators disagree on the report shares that were aggregated in a batch. |
 | stepMismatch                | The Aggregators disagree on the current step of the DAP aggregation protocol. |
 | batchOverlap                | A request's query includes reports that were previously collected in a different batch. |
-| unsupportedExtension        | An upload request's extensions list includes an unknown extension. |
+| unsupportedExtension        | An extensions list includes an unknown extension. |
+| invalidExtension            | An extensions list is out of order or contains an invalid extension encoding. |
 {: #urn-space-errors title = "DAP errors"}
 
 These types are scoped to the errors sub-namespace of the DAP URN namespace,
@@ -3015,6 +3016,7 @@ struct {
 struct {
   Query query;
   opaque agg_param<0..2^32-1>;
+  CollectionJobExtension extensions<0..2^16-1>;
 } CollectionJobReq;
 ~~~
 
@@ -3023,6 +3025,8 @@ struct {
 
 * `agg_param`, an aggregation parameter for the VDAF being executed. This is
   the same value as in `AggregationJobInitReq` (see {{leader-init}}).
+
+* `extensions`, a set of extensions (see {{collect-ext}}).
 
 Depending on the VDAF scheme and how the Leader is configured, the Leader and
 Helper may already have aggregated a sufficient number of reports satisfying the
@@ -3070,6 +3074,15 @@ conditions:
   checks that the aggregation parameter received in the `CollectionJobReq`
   matches the aggregation parameter used in each aggregation job pertaining to
   the batch. If not, the Leader MUST fail the job with error `invalidMessage`.
+
+* Whether all of the collection job extensions listed are supported.
+  If not, the Leader MUST fail the collection job
+  with the error `unsupportedExtension`.
+
+* Whether each included collection job extension is valid
+  according to the definition of that extension.
+  If not, the Leader MUST fail the collection job
+  with the error indicated by the processing model for the extension.
 
 Having validated the `CollectionJobReq`, the Leader begins working with the
 Helper to aggregate the reports satisfying the query (or continues this process,
@@ -3157,6 +3170,7 @@ encoded(struct {
     query = encoded(Empty),
   } Query,
   agg_param = [0x00, 0x01, ...],
+  extensions = encoded(Empty)
 } CollectionJobReq)
 
 HTTP/1.1 200
@@ -3199,6 +3213,7 @@ encoded(struct {
     } TimeIntervalQueryConfig),
   },
   agg_param = encoded(Empty),
+  extensions = encoded(Empty)
 } CollectionJobReq)
 
 HTTP/1.1 200
@@ -3239,6 +3254,44 @@ encoded(struct {
   helper_encrypted_agg_share = struct { ... } HpkeCiphertext,
 } CollectionJobResp)
 ~~~
+
+### Collection Job Extensions {#collect-ext}
+
+A Collector can add extensions to the creation of a collection job
+to pass additional information to Aggregators (primarily the Leader)
+about how to handle the collection job.
+
+~~~ tls-syntax
+struct {
+  CollectionJobExtensionType extension_type;
+  opaque extension_data<0..2^16-1>;
+} CollectionJobExtension;
+
+enum {
+  reserved(0),
+  (2^16-1)
+} CollectionJobExtensionType;
+~~~
+{: #f-collect-ext title="Collection Job Extensions"}
+
+These extensions (shown in {{f-collect-ext}}) contain
+a type identifier (`extension_type`)
+and arbitrary data (`extension_data`).
+The data is structured according to the definition of the extension.
+
+Extensions are mandatory to understand and support by both Aggregators.
+A collection job that contains an unrecognized or unsupported extension
+MUST be failed with an `unsupportedExtension` error; see {{errors}}.
+
+Extensions MUST be encoded in strictly increasing order.
+If any `extension_type` value is equal to or less than the extension that precedes it,
+the job MUST be failed with an `invalidExtension` error; see {{errors}}.
+
+Collection job extensions are distinct from report and task extensions.
+Collection job extensions are only agreed between Collector, Leader, and Helper;
+they are not appropriate for use where the adjustment to protocol behavior
+might also need to be agreed by Clients.
+
 
 ### Collection Job Deletion
 
