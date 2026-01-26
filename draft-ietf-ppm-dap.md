@@ -2397,7 +2397,7 @@ Otherwise, the Aggregator outputs the resulting PlaintextInputShare
 #### Input Share Validation {#input-share-validation}
 
 Before initialization, Aggregators MUST perform the following checks for each
-input share in the job:
+input share in the job, in any order:
 
 1. Check that the input share can be decoded as specified by the VDAF. If not,
    the input share MUST be marked as invalid with the error `invalid_message`.
