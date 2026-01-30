@@ -212,6 +212,14 @@ Table of Contents
    *  Add RFC Editor notes to change domain separation tags from "dap-
       17" to "dap" on RFC publication.
 
+   *  Fix definitions of time types. (#759)
+
+   *  Rename VDAF preparation to verification. (#752)
+
+   *  Simplify media types. (*) (#748)
+
+   *  Bump draft-irtf-cfrg-vdaf to -18 ([VDAF]).
+
    16:
 
    *  Bump draft-irtf-cfrg-vdaf-13 to 15 [VDAF] and adopt changes to the
@@ -1665,7 +1673,7 @@ Table of Contents
    algorithm (Section 5.1 of [VDAF]), using the report ID as the nonce:
 
    (public_share, input_shares) = Vdaf.shard(
-       "dap-16" || task_id,
+       "dap-17" || task_id,
        measurement,
        report_id,
        rand,
@@ -4782,9 +4790,9 @@ Table of Contents
 
    [VDAF]     Barnes, R., Cook, D., Patton, C., and P. Schoppmann,
               "Verifiable Distributed Aggregation Functions", Work in
-              Progress, Internet-Draft, draft-irtf-cfrg-vdaf-16, 22
-              September 2025, <https://datatracker.ietf.org/doc/html/
-              draft-irtf-cfrg-vdaf-16>.
+              Progress, Internet-Draft, draft-irtf-cfrg-vdaf-18, 30
+              January 2026, <https://datatracker.ietf.org/doc/html/
+              draft-irtf-cfrg-vdaf-18>.
 
 11.2.  Informative References
 
