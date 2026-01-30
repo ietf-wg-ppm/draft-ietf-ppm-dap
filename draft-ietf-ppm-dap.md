@@ -178,6 +178,8 @@ aggregator.
 - Add RFC Editor notes to change domain separation tags from "dap-17" to "dap"
   on RFC publication.
 
+- Bump draft-irtf-cfrg-vdaf to -18 ({{!VDAF}}).
+
 16:
 
 - Bump draft-irtf-cfrg-vdaf-13 to 15 {{!VDAF}} and adopt changes to the
@@ -617,7 +619,7 @@ then.)
 DAP is extensible in that it allows for the addition of new cryptographic
 schemes that compute different aggregation functions, determined by the
 Verifiable Distributed Aggregation Function, or
-{{!VDAF=I-D.draft-irtf-cfrg-vdaf-16}}, used to compute it.
+{{!VDAF=I-D.draft-irtf-cfrg-vdaf-18}}, used to compute it.
 
 VDAFs rely on secret sharing to protect the privacy of the measurements. Rather
 than sending its measurement in the clear, each Client shards its measurement
@@ -1583,7 +1585,7 @@ of !VDAF}}), using the report ID as the nonce:
 
 ~~~ pseudocode
 (public_share, input_shares) = Vdaf.shard(
-    "dap-16" || task_id,
+    "dap-17" || task_id,
     measurement,
     report_id,
     rand,
