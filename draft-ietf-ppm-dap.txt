@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 17 July 2026                                         Cloudflare
+Expires: 3 August 2026                                        Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                         13 January 2026
+                                                         30 January 2026
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -64,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 17 July 2026.
+   This Internet-Draft will expire on 3 August 2026.
 
 Copyright Notice
 
@@ -2505,7 +2505,7 @@ Table of Contents
 4.5.2.4.  Input Share Validation
 
    Before initialization, Aggregators MUST perform the following checks
-   for each input share in the job:
+   for each input share in the job, in any order:
 
    1.  Check that the input share can be decoded as specified by the
        VDAF.  If not, the input share MUST be marked as invalid with the
