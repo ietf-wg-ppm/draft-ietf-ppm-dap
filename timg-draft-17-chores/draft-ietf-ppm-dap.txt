@@ -212,6 +212,12 @@ Table of Contents
    *  Add RFC Editor notes to change domain separation tags from "dap-
       17" to "dap" on RFC publication.
 
+   *  Fix definitions of time types. (#759)
+
+   *  Rename VDAF preparation to verification. (#752)
+
+   *  Simplify media types. (*) (#748)
+
    *  Bump draft-irtf-cfrg-vdaf to -18 ([VDAF]).
 
    16:
