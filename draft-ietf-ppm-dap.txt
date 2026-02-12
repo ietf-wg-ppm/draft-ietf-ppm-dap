@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 3 August 2026                                        Cloudflare
+Expires: 16 August 2026                                       Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                         30 January 2026
+                                                        12 February 2026
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -64,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 3 August 2026.
+   This Internet-Draft will expire on 16 August 2026.
 
 Copyright Notice
 
@@ -4097,18 +4097,19 @@ Table of Contents
 
 6.4.3.  Streaming Messages
 
-   Most messages in the protocol contain fixed-length or length-prefixed
-   fields such that they can be parsed independently of context.  The
-   exceptions are the UploadReq, UploadErrors (Section 4.4.2),
-   AggregationJobInitReq, AggregationJobContinueReq, and
-   AggregationJobResp (Section 4.5) messages, all of which contain
+   Most messages in the protocol contain only fixed-length or length-
+   prefixed fields such that they can be parsed independently of
+   context.  The exceptions are the UploadReq, UploadErrors
+   (Section 4.4.2), AggregationJobInitReq, AggregationJobContinueReq,
+   and AggregationJobResp (Section 4.5) messages, all of which contain
    vectors whose length is determined by the length of the enclosing
    HTTP message.
 
-   This allows implementations to begin transmitting these messages
-   before knowing how long the message will ultimately be.  This is
-   useful if implementations wish to avoid buffering exceptionally large
-   messages in memory.
+   This allows implementations to stream these messages, that is, to
+   begin sending them before knowing how long they will ultimately be.
+   This is useful if implementations wish to avoid buffering
+   exceptionally large messages in memory, or do not know how long a
+   vector will be when they start sending.
 
 7.  Compliance Requirements
 

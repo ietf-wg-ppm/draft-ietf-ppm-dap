@@ -176,7 +176,7 @@ without revealing any individual contributor's data.
   font-weight: 400;
   font-display: swap;
   src: local('Oxygen Mono'), local('OxygenMono-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/oxygenmono-regular-latin-ext.woff2') format('woff2');
-  unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
 @font-face {
   font-family: 'Oxygen Mono';
@@ -184,7 +184,8 @@ without revealing any individual contributor's data.
   font-weight: 400;
   font-display: swap;
   src: local('Oxygen Mono'), local('OxygenMono-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/oxygenmono-regular-latin.woff2') format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
 }
 
 @font-face {
@@ -1055,11 +1056,11 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <thead><tr>
 <td class="left">Internet-Draft</td>
 <td class="center">DAP</td>
-<td class="right">January 2026</td>
+<td class="right">February 2026</td>
 </tr></thead>
 <tfoot><tr>
 <td class="left">Geoghegan, et al.</td>
-<td class="center">Expires 3 August 2026</td>
+<td class="center">Expires 16 August 2026</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1072,12 +1073,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-ietf-ppm-dap-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2026-01-30" class="published">30 January 2026</time>
+<time datetime="2026-02-12" class="published">12 February 2026</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Standards Track</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2026-08-03">3 August 2026</time></dd>
+<dd class="expires"><time datetime="2026-08-16">16 August 2026</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -1151,7 +1152,7 @@ without revealing any individual contributor's data.<a href="#section-abstract-1
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 3 August 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 16 August 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -6665,15 +6666,16 @@ between the Helper's collection and aggregation interactions.<a href="#section-6
           <h4 id="name-streaming-messages">
 <a href="#section-6.4.3" class="section-number selfRef">6.4.3. </a><a href="#name-streaming-messages" class="section-name selfRef">Streaming Messages</a>
           </h4>
-<p id="section-6.4.3-1">Most messages in the protocol contain fixed-length or length-prefixed fields
-such that they can be parsed independently of context. The exceptions are the
-<code>UploadReq</code>, <code>UploadErrors</code> (<a href="#upload-request" class="auto internal xref">Section 4.4.2</a>), <code>AggregationJobInitReq</code>,
+<p id="section-6.4.3-1">Most messages in the protocol contain only fixed-length or length-prefixed
+fields such that they can be parsed independently of context. The exceptions are
+the <code>UploadReq</code>, <code>UploadErrors</code> (<a href="#upload-request" class="auto internal xref">Section 4.4.2</a>), <code>AggregationJobInitReq</code>,
 <code>AggregationJobContinueReq</code>, and <code>AggregationJobResp</code> (<a href="#aggregate-flow" class="auto internal xref">Section 4.5</a>)
 messages, all of which contain vectors whose length is determined by the length
 of the enclosing HTTP message.<a href="#section-6.4.3-1" class="pilcrow">¶</a></p>
-<p id="section-6.4.3-2">This allows implementations to begin transmitting these messages before knowing
-how long the message will ultimately be. This is useful if implementations wish
-to avoid buffering exceptionally large messages in memory.<a href="#section-6.4.3-2" class="pilcrow">¶</a></p>
+<p id="section-6.4.3-2">This allows implementations to stream these messages, that is, to begin sending
+them before knowing how long they will ultimately be. This is useful if
+implementations wish to avoid buffering exceptionally large messages in memory,
+or do not know how long a vector will be when they start sending.<a href="#section-6.4.3-2" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
