@@ -1392,11 +1392,12 @@ is included into the task configuration to prevent cross-VDAF confusion attacks
 A task represents a single measurement process, though potentially aggregating
 multiple, non-overlapping batches of measurements. Each participant in a task
 must agree on its configuration prior to its execution. This document does not
-specify a mechanism for distributing task parameters among participants.
-However, protocol participants incorporate the encoding of agreed-upon task
-parameters into {{!HPKE}} authenticated data, to ensure that reports are only
-aggregated if the Client, Aggregators and Collector agree on the parameters in
-use.
+specify a mechanism for distributing task parameters among participants. See
+{{sec-considerations}} for some discussion of task parameter choices.
+
+To ensure that reports are only aggregated if the Client, Aggregators and
+Collector agree on the parameters in use, protocol participants incorporate the
+encoding of agreed-upon task parameters into {{!HPKE}} authenticated data.
 
 A task is uniquely identified by its task ID:
 
@@ -1426,23 +1427,23 @@ struct {
 ~~~
 
 * `task_info` is an opaque sequence of bytes. Deployments may use it to
-  differentiate two tasks that otherwise would have identical
-  `TaskConfiguration`s.
+  differentiate two tasks that otherwise would have identical configurations.
 * `leader_aggregator_endpoint` is the URL relative to which the Leader's API
   resources can be found.
 * `helper_aggregator_endpoint` is the URL relative to which the Helper's API
   resources can be found.
-* `time_precision` is the time precision used in this task. See {{timestamps}}.
+* `time_precision` is the time precision used in this task; see {{timestamps}}.
 * `min_batch_size` is the smallest number of reports a batch is allowed to
-  include. A larger minimum batch size will yield a higher degree of privacy.
-  However, this ultimately depends on the application and the nature of the
-  measurements and aggregation function.
+  include.
 * `batch_mode` indicates the DAP batch mode and corresponds to a codepoint in
   the Batch Modes Registry.
 * `batch_config` contains any parameters that are required for configuring the
   batch mode. For the time-interval and leader-selected batch modes, the payload
   is empty. Batch modes defined by future documents may specify a non-empty
   payload; see ({{batch-modes}}) for details.
+
+> TODO: move `task_interval` to a task extension
+
 * `task_interval` is an interval of time that the timestamps of all reports in
   the task must fall into. That is, reports whose timestamp is outside of this
   interval will be rejected by the Aggregators.
@@ -1451,7 +1452,7 @@ struct {
 * `vdaf_configuration` is the encoding of the VDAF's configuration. Encodings
   for several VDAFs are specified in {{vdaf-configuration-encodings}}. Other
   VDAFs will provide encodings of their configuration ({{extending-this-doc}}).
-* `extensions` is the extensions in use for this task, if any. See
+* `extensions` is the extensions in use for this task, if any; see
   {{task-extensions}}.
 
 The Leader and Helper API URLs MAY include arbitrary path components.
@@ -1520,7 +1521,10 @@ structured as specified by the extension. Extension type values are defined in
 Extensions are mandatory to support. Protocol participants MUST NOT participate
 in tasks containing unrecognized extensions.
 
-Extensions MUST be encoded in strictly increasing order of `extension_type`.
+Extensions MUST be encoded in strictly increasing order of `extension_type`. If
+any `extension_type` value is equal or less than that of the extension that
+precedes it, the job MUST be failed with an `invalidExtension` error; see
+{{errors}}.
 
 ## Aggregation Parameter Validation {#agg-param-validation}
 
@@ -1747,7 +1751,6 @@ enc, payload = SealBase(pk,
 The `SealBase()` function is as specified in {{!HPKE, Section 6.1}} for the
 ciphersuite indicated by the Aggregator's HPKE configuration.
 
-
 ~~~ tls-presentation
 struct {
   TaskID task_id;
@@ -1759,8 +1762,8 @@ struct {
 
 * `task_id`, `report_metadata` and `public_share` are the corresponding fields
   from the `Report` structure.
-* `task_configuration` is the configuration of the task (see
-  {{task-configuration}}).
+* `task_configuration` is the configuration of the task; see
+  {{task-configuration}}.
 
 Clients upload reports by sending an `UploadRequest` as the body of a POST to
 the Leader's reports resource.
@@ -2502,7 +2505,7 @@ input share. Let `task_id`, `report_metadata`, `public_share`, and
 `encrypted_input_share` denote these values, respectively. Given these values,
 an Aggregator decrypts the input share as follows. First, it constructs an
 `InputShareAad` message from `task_id`, `report_metadata`, `public_share` and
-the task configuration (see {{task-configuration}}). Let this be denoted by
+the task configuration; see {{task-configuration}}. Let this be denoted by
 `input_share_aad`. Then, the Aggregator attempts decryption of the payload with
 the following procedure:
 
@@ -3752,8 +3755,8 @@ struct {
 * `collection_job_req` is the message that the Collector used
   to initiate the associated collection job (see {{collect-init}}),
   the value of which is passed by the Leader to the Helper
-* `task_configuration` is the configuration of the task (see
-  {{task-configuration}}).
+* `task_configuration` is the configuration of the task; see
+  {{task-configuration}}.
 
 The Collector decrypts these aggregate shares using the opposite process.
 Specifically, given an encrypted input share, denoted `enc_share`, for a given
@@ -4453,10 +4456,12 @@ An important parameter of a DAP deployment is the minimum batch size. If a batch
 includes too few reports, then the aggregate result can reveal information
 about individual measurements. Aggregators enforce the agreed-upon minimum
 batch size during collection, but implementations SHOULD also opt out of
-participating in a DAP task if the minimum batch size is too small. This
-document does not specify how to choose an appropriate minimum batch size, but
-an appropriate value may be determined from the differential privacy ({{dp}})
-parameters in use, if any.
+participating in a DAP task if the minimum batch size is too small.
+
+A larger minimum batch size will yield a higher degree of privacy, but since
+this ultimately depends on the application, the nature of the measurements, the
+aggregation function and whether and how differential privacy ({{dp}}) is used,
+this document does not specify how to choose an appropriate minimum batch size.
 
 ### Relaxing Report Processing Rules
 
@@ -4708,6 +4713,7 @@ The initial contents of this registry are listed in {{report-extension-id}}.
 |:---------|:------------------|:----------|
 | `0x0000` | `reserved`        | {{report-extension-registry}} of RFC XXXX  |
 {: #report-extension-id title="Initial contents of the DAP Report Extension
+Identifiers registry."}
 
 ### Collection Job Extension Registry
 
@@ -4945,9 +4951,9 @@ struct {
 
 ~~~ tls-presentation
 struct {
-    uint32 length;       /* length of the vector */
-    uint8 bits;          /* bit length of each summand */
-    uint32 chunk_length; /* size of each proof chunk */
+    uint32 length;          /* length of the vector */
+    uint32 max_measurement; /* maximum value of each summand */
+    uint32 chunk_length;    /* size of each proof chunk */
 } Prio3SumVecConfig;
 ~~~
 
