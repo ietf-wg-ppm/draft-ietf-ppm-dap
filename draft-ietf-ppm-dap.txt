@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 16 August 2026                                       Cloudflare
+Expires: 17 August 2026                                       Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                        12 February 2026
+                                                        13 February 2026
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -64,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 16 August 2026.
+   This Internet-Draft will expire on 17 August 2026.
 
 Copyright Notice
 
@@ -199,8 +199,10 @@ Table of Contents
 
    (RFC EDITOR: Remove this section.)
 
-   (*) Indicates a change that breaks wire compatibility with the
-   previous draft.
+   18:
+
+   *  Add verification key ID to aggregation jobs to enable but not
+      require verification key management. (*) (#766)
 
    17:
 
@@ -1472,9 +1474,9 @@ Table of Contents
       information about the HPKE configuration algorithms.
 
    *  vdaf_verify_key (opaque byte string): The VDAF verification key
-      shared by the Aggregators.  This key is used in the aggregation
-      interaction (Section 4.5).  The security requirements are
-      described in Section 8.6.2.
+      (or keys) shared by the Aggregators.  This key is used in the
+      aggregation interaction (Section 4.5).  The security requirements
+      are described in Section 8.6.2.
 
    Finally, the Collector is configured with the HPKE secret key
    corresponding to collector_hpke_config.
@@ -2232,12 +2234,20 @@ Table of Contents
    } PartialBatchSelector;
 
    struct {
+     uint8 verification_key_id;
      opaque agg_param<0..2^32-1>;
      PartialBatchSelector part_batch_selector;
      VerifyInit verify_inits[verify_inits_length];
    } AggregationJobInitReq;
 
    This message consists of:
+
+   *  verification_key_id: An identifier for the shared VDAF
+      verification key that Aggregators use to verify report integrity;
+      see Section 5.2 of [VDAF] and Section 8.6.2.  This allows a Leader
+      to nominate a verification key from a set of prearranged keys.
+      This might also allow for verification keys to be updated by
+      Aggregators.
 
    *  agg_param: The VDAF aggregation parameter chosen by the Collector.
       Before initializing an aggregation job, the Leader MUST validate
@@ -2255,6 +2265,13 @@ Table of Contents
       in octets of the encoded agg_param and part_batch_selector fields.
       That is, the remainder of the HTTP message consists of
       verify_inits.
+
+      |  IMPORTANT: this this does not change the security requirements
+      |  for verification keys; see Section 8.6.2.  The analysis in
+      |  [DPRS23] depends on an assumption that verification keys are
+      |  selected prior to a report being generated; a different
+      |  analysis would be required to enable selecting a verification
+      |  key after a task has started.
 
    The Leader sends the AggregationJobInitReq in the body of a PUT
    request to the aggregation job with a media type of "application/ppm-
@@ -2421,8 +2438,12 @@ Table of Contents
 
    *  task_id is the task ID
 
+   *  verification_key_id is the key identifier for the verification key
+      chosen by the Leader and included in the AggregationJobInitReq
+      message
+
    *  agg_param is the VDAF aggregation parameter sent in the
-      AggregationJobInitReq
+      AggregationJobInitReq message
 
    *  report_id is the report ID
 
@@ -4357,14 +4378,14 @@ Table of Contents
    Furthermore, for a given report, it may be possible to craft a
    verification key which leaks information about that report's
    measurement during verification.  Therefore, the verification key for
-   a task SHOULD be chosen before any reports are generated.  Moreover,
-   it SHOULD be fixed for the lifetime of the task and not be rotated.
-   One way to ensure that the verification key is generated
-   independently from any given report is to derive the key based on the
-   task ID and some previously agreed upon secret (verify_key_seed)
-   between Aggregators, as follows:
+   a task SHOULD be chosen before any reports are generated.  To achieve
+   this, the current design and analysis assume that the verification
+   key is fixed for the lifetime of the task.  One way to ensure that
+   the verification key is generated independently from any given report
+   is to derive the key based on the task ID and some previously agreed
+   upon secret (verify_key_seed) between Aggregators, as follows:
 
-   verify_key = HKDF-Expand(
+   vdaf_verify_key = HKDF-Expand(
        HKDF-Extract(
            "verify_key",    # salt
            verify_key_seed, # IKM
@@ -4800,6 +4821,11 @@ Table of Contents
    [Dou02]    Douceur, J. R., "The Sybil Attack", International Workshop
               on Peer-to-Peer Systems (IPTPS), 2002,
               <https://doi.org/10.1007/3-540-45748-8_24>.
+
+   [DPRS23]   Davis, H., Patton, C., Rosulek, M., and P. Schoppmann,
+              "Verifiable Distributed Aggregation Functions", Privacy
+              Enhancing Technologies Symposium (PETS), 25 September
+              2024, <https://ia.cr/2023/130/20240925:184929>.
 
    [I-D.draft-ietf-ppm-dap-taskprov-03]
               Wang, S. and C. Patton, "Task Binding and In-Band
