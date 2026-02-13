@@ -118,11 +118,12 @@ Table of Contents
        4.5.4.  Aggregation Job Abandonment and Deletion
      4.6.  Collecting Results
        4.6.1.  Collection Job Initialization
-       4.6.2.  Collection Job Deletion
-       4.6.3.  Obtaining Aggregate Shares
-       4.6.4.  Aggregate Share Deletion
-       4.6.5.  Collection Job Finalization
-       4.6.6.  Aggregate Share Encryption
+       4.6.2.  Collection Job Extensions
+       4.6.3.  Collection Job Deletion
+       4.6.4.  Obtaining Aggregate Shares
+       4.6.5.  Aggregate Share Deletion
+       4.6.6.  Collection Job Finalization
+       4.6.7.  Aggregate Share Encryption
    5.  Batch Modes
      5.1.  Time Interval
        5.1.1.  Query Configuration
@@ -164,8 +165,9 @@ Table of Contents
      9.2.  DAP Type Registries
        9.2.1.  Batch Modes Registry
        9.2.2.  Report Extension Registry
-       9.2.3.  Report Error Registry
-       9.2.4.  Guidance for Designated Experts
+       9.2.3.  Collection Job Extension Registry
+       9.2.4.  Report Error Registry
+       9.2.5.  Guidance for Designated Experts
      9.3.  URN Sub-namespace for DAP (urn:ietf:params:ppm:dap)
    10. Extending this Document
    11. References
@@ -203,6 +205,8 @@ Table of Contents
 
    *  Add verification key ID to aggregation jobs to enable but not
       require verification key management. (*) (#766)
+
+   *  Define colleciton job extensions. (*) (#769)
 
    17:
 
@@ -1070,7 +1074,7 @@ Table of Contents
    DAP is defined in terms of HTTP [RFC9110] resources.  These are HPKE
    configurations (Section 4.4.1), reports (Section 4.4), aggregation
    jobs (Section 4.5), collection jobs (Section 4.6), and aggregate
-   shares (Section 4.6.3).
+   shares (Section 4.6.4).
 
    Each resource has a URL.  Resource URLs are specified as string
    literals containing variables.  Variables are expanded into strings
@@ -1082,7 +1086,7 @@ Table of Contents
    *  Variables {task-id}, {aggregation-job-id}, {aggregate-share-id},
       and {collection-job-id} are replaced with the task ID
       (Section 4.2), aggregation job ID (Section 4.5.2), aggregate share
-      ID (Section 4.6.3) and collection job ID (Section 4.6.1)
+      ID (Section 4.6.4) and collection job ID (Section 4.6.1)
       respectively.  The value MUST be encoded in its URL-safe, unpadded
       Base 64 representation as specified in Sections 5 and 3.2 of
       [RFC4648].
@@ -1192,7 +1196,7 @@ Table of Contents
    *  Collectors initializing or polling collection jobs with Leaders
       (Section 4.6.1).
 
-   *  Leaders obtaining aggregate shares from Helpers (Section 4.6.3).
+   *  Leaders obtaining aggregate shares from Helpers (Section 4.6.4).
 
 3.5.  Errors
 
@@ -1242,9 +1246,12 @@ Table of Contents
     |                             | reports that were previously     |
     |                             | collected in a different batch.  |
     +-----------------------------+----------------------------------+
-    | unsupportedExtension        | An upload request's extensions   |
-    |                             | list includes an unknown         |
-    |                             | extension.                       |
+    | unsupportedExtension        | An extensions list includes an   |
+    |                             | unknown extension.               |
+    +-----------------------------+----------------------------------+
+    | invalidExtension            | An extensions list is out of     |
+    |                             | order or contains an invalid     |
+    |                             | extension encoding.              |
     +-----------------------------+----------------------------------+
 
                                  Table 1
@@ -1958,7 +1965,7 @@ Table of Contents
    Field extension_type indicates the type of extension, and
    extension_data contains the opaque encoding of the extension.
 
-   Extensions are mandatory to implement.  Unrecognized extensions are
+   Extensions are mandatory to support.  Unrecognized extensions are
    handled as specified in Section 4.5.2.4.
 
 4.5.  Verifying and Aggregating Reports
@@ -3095,10 +3102,10 @@ Table of Contents
        specified in Section 4.6.1
 
    2.  Aggregate share request and response between the Leader and the
-       Helper, specified in Section 4.6.3
+       Helper, specified in Section 4.6.4
 
    Once complete, the Collector computes the final aggregate result as
-   specified in Section 4.6.5.
+   specified in Section 4.6.6.
 
    Collection jobs are identified by a 16-byte job ID, chosen by the
    Collector:
@@ -3125,6 +3132,7 @@ Table of Contents
    struct {
      Query query;
      opaque agg_param<0..2^32-1>;
+     CollectionJobExtension extensions<0..2^16-1>;
    } CollectionJobReq;
 
    *  query, the Collector's query.  The content of this field depends
@@ -3133,6 +3141,8 @@ Table of Contents
    *  agg_param, an aggregation parameter for the VDAF being executed.
       This is the same value as in AggregationJobInitReq (see
       Section 4.5.2.1).
+
+   *  extensions, a set of extensions (see Section 4.6.2).
 
    Depending on the VDAF scheme and how the Leader is configured, the
    Leader and Helper may already have aggregated a sufficient number of
@@ -3186,6 +3196,18 @@ Table of Contents
       aggregation job pertaining to the batch.  If not, the Leader MUST
       fail the job with error invalidMessage.
 
+   *  Whether all of the collection job extensions listed are supported.
+      If not, the Leader MUST fail the collection job with the error
+      unsupportedExtension.
+
+   *  Whether each included collection job extension is valid according
+      to the definition of that extension.  If not, the Leader MUST fail
+      the collection job with the error indicated by the processing
+      model for the extension.
+
+   The Leader then performs any configuration changes or processing
+   defined in the included extensions; see Section 4.6.2.
+
    Having validated the CollectionJobReq, the Leader begins working with
    the Helper to aggregate the reports satisfying the query (or
    continues this process, depending on whether the Leader is
@@ -3209,7 +3231,7 @@ Table of Contents
    Once the Leader has validated the collection job and run to
    completion all the aggregation jobs that pertain to it, it obtains
    the Helper's aggregate share following the aggregate-share request
-   flow described in Section 4.6.3.  If obtaining the aggregate share
+   flow described in Section 4.6.4.  If obtaining the aggregate share
    fails, then the Leader MUST fail the collection job with the error
    that caused the failure.
 
@@ -3242,10 +3264,10 @@ Table of Contents
       than the one in the corresponding CollectionJobReq.query.
 
    *  leader_encrypted_agg_share: The Leader's aggregate share,
-      encrypted to the Collector (see Section 4.6.6).
+      encrypted to the Collector (see Section 4.6.7).
 
    *  helper_encrypted_agg_share: The Helper's aggregate share,
-      encrypted to the Collector (see Section 4.6.6).
+      encrypted to the Collector (see Section 4.6.7).
 
    Once the Leader has constructed a CollectionJobResp for the
    Collector, the Leader considers the batch to be collected, and
@@ -3272,6 +3294,7 @@ Table of Contents
        query = encoded(Empty),
      } Query,
      agg_param = [0x00, 0x01, ...],
+     extensions = [],
    } CollectionJobReq)
 
    HTTP/1.1 200
@@ -3312,6 +3335,7 @@ Table of Contents
        } TimeIntervalQueryConfig),
      },
      agg_param = encoded(Empty),
+     extensions = [],
    } CollectionJobReq)
 
    HTTP/1.1 200
@@ -3352,7 +3376,54 @@ Table of Contents
      helper_encrypted_agg_share = struct { ... } HpkeCiphertext,
    } CollectionJobResp)
 
-4.6.2.  Collection Job Deletion
+4.6.2.  Collection Job Extensions
+
+   A Collector can add extensions to the creation of a collection job to
+   pass additional information to Aggregators (primarily the Leader)
+   about how to handle the collection job.
+
+   struct {
+     CollectionJobExtensionType extension_type;
+     opaque extension_data<0..2^16-1>;
+   } CollectionJobExtension;
+
+   enum {
+     reserved(0),
+     (2^16-1)
+   } CollectionJobExtensionType;
+
+                    Figure 12: Collection Job Extensions
+
+   These extensions (shown in Figure 12) contain a type identifier
+   (extension_type) and arbitrary data (extension_data).  The data is
+   structured according to the definition of the extension.
+
+   Extensions are mandatory to support by both Aggregators.  A
+   collection job that contains an unrecognized or unsupported extension
+   MUST be aborted with an unsupportedExtension error; see Section 3.5.
+
+   Extensions MUST be encoded in strictly increasing order.  If any
+   extension_type value is equal to or less than that of the extension
+   that precedes it, the job MUST be failed with an invalidExtension
+   error; see Section 3.5.
+
+   Each collection job extension MUST define how Aggregators alter their
+   handling of collection jobs when the extension is present, including
+   any validation of the included extension_data.
+
+   An extension could limit its compatibility to specific VDAFs, batch
+   modes, or those with certain properties.  For instance, an extension
+   might only apply if the VDAF supports eager aggregation; see
+   Section 4.5.1.  In that case, jobs can be failed with an
+   invalidExtension error if the extension is incompatible.
+
+   Collection job extensions are distinct from report and task
+   extensions.  Collection job extensions are only agreed between
+   Collector, Leader, and Helper; they are not appropriate for use where
+   the adjustment to protocol behavior might also need to be agreed by
+   Clients.
+
+4.6.3.  Collection Job Deletion
 
    The Collector can send a DELETE request to the collection job, which
    indicates to the Leader that it can abandon the collection job and
@@ -3361,7 +3432,7 @@ Table of Contents
    Aggregators MUST NOT delete information needed for replay or double
    collection checks (Section 4.5.3.3).
 
-4.6.2.1.  Example
+4.6.3.1.  Example
 
    DELETE /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
      collection_jobs/lc7aUeGpdSNosNlh-UZhKA
@@ -3370,7 +3441,7 @@ Table of Contents
 
    HTTP/1.1 200
 
-4.6.3.  Obtaining Aggregate Shares
+4.6.4.  Obtaining Aggregate Shares
 
    The Leader must compute its own aggregate share and obtain the
    Helper's encrypted aggregate share before it can complete a
@@ -3421,8 +3492,8 @@ Table of Contents
    } BatchSelector;
 
    struct {
+     CollectionJobReq collection_job_req;
      BatchSelector batch_selector;
-     opaque agg_param<0..2^32-1>;
      uint64 report_count;
      opaque checksum[32];
    } AggregateShareReq;
@@ -3431,11 +3502,11 @@ Table of Contents
    dap;message=aggregate-share-req".  The structure contains the
    following parameters:
 
-   *  batch_selector: The "batch selector", the contents of which
-      depends on the indicated batch mode (see Section 5.
+   *  collection_job_req: The details of the collection job, as provided
+      by the Collector when initiating the job; see Section 4.6.1.
 
-   *  agg_param: The encoded aggregation parameter for the VDAF being
-      executed.
+   *  batch_selector: The "batch selector", the contents of which
+      depends on the indicated batch mode; see Section 5.
 
    *  report_count: The number number of reports included in the batch,
       as computed above.
@@ -3455,11 +3526,14 @@ Table of Contents
    If the AggregateShareReq is malformed, the Helper MUST fail the job
    with error invalidMessage.
 
-   The Helper then verifies that the BatchSelector in the Leader's
-   request determines a batch that can be collected.  If the selector
-   does not identify a valid set of batch buckets according to the
-   criteria defined by the batch mode in use (Section 5), then the
-   Helper MUST fail the job with error batchInvalid.
+   The Helper then verifies that the batch_selector in the Leader's
+   request is consistent with the collection_job_req.query.  Each batch
+   mode needs to define any consistency checks necessary.  The Helper
+   also determines whether batch_selector identifies a set of batch
+   buckets that can be collected.  If the selector does not identify a
+   valid set of batch buckets according to the criteria defined by the
+   batch mode in use (Section 5), then the Helper MUST fail the job with
+   error batchInvalid.
 
    If any of the batch buckets identified by the selector have already
    been collected, then the Helper MUST fail the job with error
@@ -3469,9 +3543,19 @@ Table of Contents
    greater than the task's minimum batch size, then the Helper MUST
    abort with invalidBatchSize.
 
-   The aggregation parameter MUST match the aggregation parameter used
-   in aggregation jobs pertaining to this batch.  If not, the Helper
-   MUST fail the job with error invalidMessage.
+   The aggregation parameter in collection_job_req.agg_param MUST match
+   the aggregation parameter used in aggregation jobs pertaining to this
+   batch.  If not, the Helper MUST fail the job with error
+   invalidMessage.
+
+   The Helper then validates any extensions in
+   collection_job_req.extensions, following the same logic as the
+   Leader; see Section 4.6.2.  Though invalid extension encoding should
+   have been detected by the Leader, the Helper MUST independently
+   validate extensions and fail the job if necessary.
+
+   The Helper performs any configuration changes or processing that are
+   dictated by the extensions that are included; see Section 4.6.2.
 
    Next, the Helper retrieves and combines the batch buckets associated
    with the request using the same process used by the Leader (described
@@ -3481,7 +3565,7 @@ Table of Contents
    AggregateShareReq, it MUST fail the job with error batchMismatch.
 
    The Helper then encrypts agg_share under the Collector's HPKE public
-   key as described in Section 4.6.6, yielding encrypted_agg_share.
+   key as described in Section 4.6.7, yielding encrypted_agg_share.
    Encryption prevents the Leader from learning the actual result, as it
    only has its own aggregate share and cannot compute the Helper's.
 
@@ -3501,7 +3585,7 @@ Table of Contents
    encrypted_agg_share computed above.
 
    After receiving the Helper's response, the Leader includes the
-   HpkeCiphertext in its response to the Collector (see Section 4.6.5).
+   HpkeCiphertext in its response to the Collector (see Section 4.6.6).
 
    Once an AggregateShareReq has been constructed for the batch
    determined by a given query, the Helper considers the batch to be
@@ -3516,9 +3600,9 @@ Table of Contents
 
    Before completing the collection job, the Leader encrypts its
    aggregate share under the Collector's HPKE public key as described in
-   Section 4.6.6.
+   Section 4.6.7.
 
-4.6.3.1.  Example
+4.6.4.1.  Example
 
    The Helper handles the aggregate share request synchronously:
 
@@ -3529,6 +3613,19 @@ Table of Contents
    Authorization: Bearer auth-token
 
    encoded(struct {
+     collection_job_req = struct {
+       query = struct {
+         batch_mode = BatchMode.time_interval,
+         query = encoded(struct {
+           batch_interval = struct {
+             start = 1659540,
+             duration = 100,
+           } Interval,
+         } TimeIntervalQueryConfig),
+       } Query,
+       agg_param = [0x00, 0x01, ...],
+       extensions = encoded(Empty)
+     } CollectionJobReq,
      batch_selector = struct {
        batch_mode = BatchMode.time_interval,
        config = encoded(struct {
@@ -3538,7 +3635,6 @@ Table of Contents
          } Interval,
        } TimeIntervalBatchSelectorConfig),
      } BatchSelector,
-     agg_param = [0x00, 0x01, ...],
      report_count = 1000,
      checksum = [0x0a, 0x0b, ..., 0x0f],
    } AggregateShareReq)
@@ -3559,6 +3655,19 @@ Table of Contents
    Authorization: Bearer auth-token
 
    encoded(struct {
+     collection_job_req = struct {
+       query = struct {
+         batch_mode = BatchMode.time_interval,
+         query = encoded(struct {
+           batch_interval = struct {
+             start = 1659540,
+             duration = 100,
+           } Interval,
+         } TimeIntervalQueryConfig),
+       } Query,
+       agg_param = [0x00, 0x01, ...],
+       extensions = encoded(Empty)
+     } CollectionJobReq,
      batch_selector = struct {
        batch_mode = BatchMode.time_interval,
        config = encoded(struct {
@@ -3568,7 +3677,6 @@ Table of Contents
          } Interval,
        } TimeIntervalBatchSelectorConfig),
      } BatchSelector,
-     agg_param = [0x00, 0x01, ...],
      report_count = 1000,
      checksum = [0x0a, 0x0b, ..., 0x0f],
    } AggregateShareReq)
@@ -3596,7 +3704,7 @@ Table of Contents
      encrypted_aggregate_share = struct { ... } HpkeCiphertext,
    } AggregateShare)
 
-4.6.4.  Aggregate Share Deletion
+4.6.5.  Aggregate Share Deletion
 
    The Leader can send a DELETE request to the aggregate share, which
    indicates to the Helper that it can abandon the aggregate share and
@@ -3605,7 +3713,7 @@ Table of Contents
    Aggregators MUST NOT delete information needed for replay or double
    collection checks (Section 4.5.3.3).
 
-4.6.4.1.  Example
+4.6.5.1.  Example
 
    DELETE /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
      aggregate_shares/lc7aUeGpdSNosNlh-UZhKA
@@ -3614,12 +3722,12 @@ Table of Contents
 
    HTTP/1.1 200
 
-4.6.5.  Collection Job Finalization
+4.6.6.  Collection Job Finalization
 
    Once the Collector has received a collection job from the Leader, it
    can decrypt the aggregate shares and produce an aggregate result.
    The Collector decrypts each aggregate share as described in
-   Section 4.6.6.  Once the Collector successfully decrypts all
+   Section 4.6.7.  Once the Collector successfully decrypts all
    aggregate shares, it unshards the aggregate shares into an aggregate
    result using the VDAF's unshard algorithm.
 
@@ -3633,7 +3741,7 @@ Table of Contents
                              [leader_agg_share, helper_agg_share],
                              report_count)
 
-4.6.6.  Aggregate Share Encryption
+4.6.7.  Aggregate Share Encryption
 
    Encrypting an aggregate share agg_share for a given AggregateShareReq
    is done as follows:
@@ -3658,18 +3766,15 @@ Table of Contents
 
    struct {
      TaskID task_id;
-     opaque agg_param<0..2^32-1>;
-     BatchSelector batch_selector;
+     CollectionJobReq collection_job_req;
    } AggregateShareAad;
 
    *  task_id is the ID of the task the aggregate share was computed in.
 
-   *  agg_param is the aggregation parameter used to compute the
-      aggregate share.
-
-   *  batch_selector is the is the batch selector from the
-      AggregateShareReq (for the Helper) or the batch selector computed
-      from the Collector's query (for the Leader).
+   *  collection_job_req is the message that the Collector used to
+      initiate the associated collection job (see Section 4.6.1), the
+      value of which is passed by the Leader to the Helper in
+      AggregateShareReq (see Section 4.6.4).
 
    The Collector decrypts these aggregate shares using the opposite
    process.  Specifically, given an encrypted input share, denoted
@@ -3690,15 +3795,7 @@ Table of Contents
    *  0x00 represents the Role of the recipient (always the Collector)
 
    *  agg_share_aad is an AggregateShareAad message constructed from the
-      task ID and the aggregation parameter in the collect request, and
-      a batch selector.  The value of the batch selector used in
-      agg_share_aad is determined by the batch mode:
-
-      -  For time-interval (Section 5.1), the batch selector is the
-         batch interval specified in the query.
-
-      -  For leader-selected (Section 5.2), the batch selector is the
-         batch ID sent in the response.
+      task ID and the collection job request (see Section 4.6.1).
 
    The OpenBase() function is as specified in [HPKE], Section 6.1 for
    the ciphersuite indicated by the HPKE configuration.
@@ -3789,6 +3886,19 @@ Table of Contents
    where batch_interval is the batch interval requested by the
    Collector.
 
+   A TimeIntervalBatchSelectorConfig.config is consistent with
+   Query.config for this batch mode if the batch selector's interval is
+   within the queried time interval.  That is, the values are consistent
+   if:
+
+   *  The start time from the batch selector
+      (TimeIntervalBatchSelectorConfig.batch_interval.start) is not
+      before the query (TimeIntervalQueryConfig.batch_interval), and
+
+   *  The end time from the batch selector
+      (TimeIntervalBatchSelectorConfig.batch_interval.{start+duration})
+      is not after the query (TimeIntervalQueryConfig.batch_interval).
+
 5.1.4.  Batch Buckets
 
    Each batch bucket is identified by an Interval whose duration is
@@ -3865,6 +3975,9 @@ Table of Contents
    } LeaderSelectedPartialBatchSelectorConfig;
 
    where batch_id is the batch ID selected by the Leader.
+
+   It is impossible for a BatchSelector.config to be inconsistent with
+   Query.config for this batch mode.
 
 5.2.3.  Batch Selector Configuration
 
@@ -4497,9 +4610,9 @@ Table of Contents
    *  AggregationJobContinueReq Section 4.5.3.1: "aggregation-job-
       continue-req"
 
-   *  AggregateShareReq Section 4.6.3: "aggregate-share-req"
+   *  AggregateShareReq Section 4.6.4: "aggregate-share-req"
 
-   *  AggregateShare Section 4.6.3: "aggregate-share"
+   *  AggregateShare Section 4.6.4: "aggregate-share"
 
    *  CollectionJobReq Section 4.6.1: "collection-job-req"
 
@@ -4613,11 +4726,11 @@ Table of Contents
    the report structure (Section 4.4.3).  This registry should contain
    the following columns:
 
-   Value:  The two-byte identifier for the upload extension
+   Value:  The two-byte identifier for the report extension
 
-   Name:  The name of the upload extension
+   Name:  The name of the report extension
 
-   Reference:  Where the upload extension is defined
+   Reference:  Where the report extension is defined
 
    The initial contents of this registry are listed in Table 3.
 
@@ -4631,7 +4744,33 @@ Table of Contents
                           the DAP Report Extension
                            Identifiers registry.
 
-9.2.3.  Report Error Registry
+9.2.3.  Collection Job Extension Registry
+
+   A new registry will be (RFC EDITOR: change "will be" to "has been")
+   created called "DAP Collection Job Extension Identifiers" for
+   extensions included in the creation of collection jobs
+   (Section 4.6.2).  This registry should contain the following columns:
+
+   Value:  The two-byte identifier for the collection job extension
+
+   Name:  The name of the collection job extension
+
+   Reference:  Where the extension is defined
+
+   The initial contents of this registry are listed in Table 4.
+
+                     +========+==========+===========+
+                     | Value  | Name     | Reference |
+                     +========+==========+===========+
+                     | 0x0000 | reserved | RFC XXXX  |
+                     +--------+----------+-----------+
+
+                        Table 4: Initial contents of
+                           the DAP Collection Job
+                           Extension Identifiers
+                                 registry.
+
+9.2.4.  Report Error Registry
 
    A new registry will be (RFC EDITOR: change "will be" to "has been")
    created called "DAP Report Error Identifiers" for reasons for
@@ -4644,7 +4783,7 @@ Table of Contents
 
    Reference:  Where the report error is defined
 
-   The initial contents of this registry are listed below in Table 4.
+   The initial contents of this registry are listed below in Table 5.
 
        +=======+========================+=========================+
        | Value | Name                   | Reference               |
@@ -4674,10 +4813,10 @@ Table of Contents
        | 0x0B  | outdated_config        | Section 4.1 of RFX XXXX |
        +-------+------------------------+-------------------------+
 
-            Table 4: Initial contents of the DAP Report Error
+            Table 5: Initial contents of the DAP Report Error
                           Identifiers registry.
 
-9.2.4.  Guidance for Designated Experts
+9.2.5.  Guidance for Designated Experts
 
    When reviewing requests to extend a DAP registry, experts should
    ensure that a document exists that defines the newly registered items
@@ -4711,9 +4850,11 @@ Table of Contents
 
    2.  a new report extension (Section 4.4.3)
 
-   3.  a new report error (Section 4.5.2.2)
+   3.  a new collection job extension (Section 4.6.2)
 
-   4.  a new entry in the URN sub-namespace for DAP (Table 1)
+   4.  a new report error (Section 4.5.2.2)
+
+   5.  a new entry in the URN sub-namespace for DAP (Table 1)
 
    Each of these requires registration of a codepoint or other value;
    see Section 9.  No other considerations are required except in the
@@ -4947,7 +5088,7 @@ A.3.2.  Aggregate Shares
 
    Response media-type message values: aggregate-share
 
-   Reference: Section 4.6.3
+   Reference: Section 4.6.4
 
 Contributors
 
