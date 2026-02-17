@@ -190,6 +190,8 @@ aggregator.
 
 - Make task interval an optional part of task configuration. (\*) (#776)
 
+- Require report extensions to be sorted by type. (\*) (#775)
+
 17:
 
 - Bump version tag from "dap-16" to "dap-17". (\*)
@@ -2577,6 +2579,11 @@ input share in the job, in any order:
 1. Check if any two extensions have the same extension type across public and
    private extension fields. If so, the Aggregator MUST mark the input share as
    invalid with error `invalid_message`.
+
+1. Check that the public and private extension vectors are each encoded in
+   strictly increasing order. If any `extension_type` value is equal to or less
+   than that of the extension that precedes it, the Aggregator MUST mark the
+   input share as invalid with error `invalid_message`.
 
 1. If an Aggregator cannot determine if an input share is valid--for example,
    the report timestamp may be so far in the past that the state required to
