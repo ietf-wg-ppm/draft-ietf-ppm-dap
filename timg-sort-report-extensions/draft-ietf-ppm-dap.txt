@@ -208,7 +208,7 @@ Table of Contents
 
    *  Define colleciton job extensions. (*) (#769)
 
-   *  Require report extensions to be sorted by type. (*) (#774)
+   *  Require report extensions to be sorted by type. (*) (#775)
 
    17:
 
