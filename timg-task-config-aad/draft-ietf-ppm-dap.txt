@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 17 August 2026                                       Cloudflare
+Expires: 21 August 2026                                       Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                        13 February 2026
+                                                        17 February 2026
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -64,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 17 August 2026.
+   This Internet-Draft will expire on 21 August 2026.
 
 Copyright Notice
 
@@ -1367,10 +1367,13 @@ Table of Contents
      (255)
    } ReportError;
 
-   A Url is the encoding of a URL as ASCII bytes, using Punycode per
-   [RFC4891].
+   A Url is the encoding of a URL ([RFC3986]) as ASCII bytes.  The
+   encoding of any particular URL into ASCII is agreed upon by
+   participants out of band from the protocol.  Protocol participants
+   MUST NOT re-encode or otherwise alter a Url when including it in a
+   network message or cryptographic digest.
 
-   opaque Url<1..2^32-1>;
+   opaque Url<1..2^16-1>;
 
 4.1.1.  Times, Durations and Intervals
 
@@ -5049,14 +5052,14 @@ Table of Contents
               Parameters", BCP 73, RFC 3553, DOI 10.17487/RFC3553, June
               2003, <https://www.rfc-editor.org/rfc/rfc3553>.
 
+   [RFC3986]  Berners-Lee, T., Fielding, R., and L. Masinter, "Uniform
+              Resource Identifier (URI): Generic Syntax", STD 66,
+              RFC 3986, DOI 10.17487/RFC3986, January 2005,
+              <https://www.rfc-editor.org/rfc/rfc3986>.
+
    [RFC4648]  Josefsson, S., "The Base16, Base32, and Base64 Data
               Encodings", RFC 4648, DOI 10.17487/RFC4648, October 2006,
               <https://www.rfc-editor.org/rfc/rfc4648>.
-
-   [RFC4891]  Graveman, R., Parthasarathy, M., Savola, P., and H.
-              Tschofenig, "Using IPsec to Secure IPv6-in-IPv4 Tunnels",
-              RFC 4891, DOI 10.17487/RFC4891, May 2007,
-              <https://www.rfc-editor.org/rfc/rfc4891>.
 
    [RFC7807]  Nottingham, M. and E. Wilde, "Problem Details for HTTP
               APIs", RFC 7807, DOI 10.17487/RFC7807, March 2016,
