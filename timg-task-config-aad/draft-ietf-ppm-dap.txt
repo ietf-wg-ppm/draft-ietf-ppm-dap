@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 21 August 2026                                       Cloudflare
+Expires: 22 August 2026                                       Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                        17 February 2026
+                                                        18 February 2026
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -64,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 21 August 2026.
+   This Internet-Draft will expire on 22 August 2026.
 
 Copyright Notice
 
@@ -165,10 +165,10 @@ Table of Contents
      9.1.  Protocol Message Media Type
      9.2.  DAP Type Registries
        9.2.1.  Batch Modes Registry
-       9.2.2.  Task Extension Registry
-       9.2.3.  Report Extension Registry
-       9.2.4.  Collection Job Extension Registry
-       9.2.5.  Report Error Registry
+       9.2.2.  Task Extensions Registry
+       9.2.3.  Report Extensions Registry
+       9.2.4.  Collection Job Extensions Registry
+       9.2.5.  Report Errors Registry
        9.2.6.  Guidance for Designated Experts
      9.3.  URN Sub-namespace for DAP (urn:ietf:params:ppm:dap)
    10. Extending this Document
@@ -215,10 +215,10 @@ Table of Contents
    *  Add verification key ID to aggregation jobs to enable but not
       require verification key management. (*) (#766)
 
-   *  Define colleciton job extensions. (*) (#769)
+   *  Define collection job extensions. (*) (#769)
 
-   *  Formally define extensible task configuration as a structure and
-      include it in InputShareAad and AggregateShareAad. (*) (#774)
+   *  Define extensible task configuration as a structure and include it
+      in InputShareAad and AggregateShareAad. (*) (#774)
 
    17:
 
@@ -4816,7 +4816,7 @@ Table of Contents
 
    A new registry will be (RFC EDITOR: change "will be" to "has been")
    created called "DAP Batch Mode Identifiers" (Section 5).  This
-   registry should contain the following columns:
+   registry contains the following columns:
 
    Value:  The one-byte identifier for the batch mode
 
@@ -4839,11 +4839,11 @@ Table of Contents
               Table 2: Initial contents of the DAP Batch Mode
                            Identifiers registry.
 
-9.2.2.  Task Extension Registry
+9.2.2.  Task Extensions Registry
 
    A new registry will be (RFC EDITOR: change "will be" to "has been")
-   created for the "Distributed Aggregation Protocol (DAP)" page called
-   "DAP Task Extensions".  This registry contains the following columns:
+   created called "DAP Task Extension Identifiers".  This registry
+   contains the following columns:
 
    Value:  The two-byte identifier for the task extension
 
@@ -4860,9 +4860,9 @@ Table of Contents
              +--------+----------+---------------------------+
 
                    Table 3: Initial contents of the Task
-                            Extensions registry.
+                      Extensions Identifiers registry.
 
-9.2.3.  Report Extension Registry
+9.2.3.  Report Extensions Registry
 
    A new registry will be (RFC EDITOR: change "will be" to "has been")
    created called "DAP Report Extension Identifiers" for extensions to
@@ -4886,7 +4886,7 @@ Table of Contents
                 Table 4: Initial contents of the DAP Report
                       Extension Identifiers registry.
 
-9.2.4.  Collection Job Extension Registry
+9.2.4.  Collection Job Extensions Registry
 
    A new registry will be (RFC EDITOR: change "will be" to "has been")
    created called "DAP Collection Job Extension Identifiers" for
@@ -4912,12 +4912,10 @@ Table of Contents
                            Extension Identifiers
                                  registry.
 
-9.2.5.  Report Error Registry
+9.2.5.  Report Errors Registry
 
    A new registry will be (RFC EDITOR: change "will be" to "has been")
-   created called "DAP Report Error Identifiers" for reasons for
-   rejecting reports during the aggregation interaction
-   (Section 4.5.2.2).
+   created called "DAP Report Error Identifiers".
 
    Value:  The one-byte identifier of the report error
 
