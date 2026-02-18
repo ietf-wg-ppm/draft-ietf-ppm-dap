@@ -188,6 +188,8 @@ aggregator.
 - Define extensible task configuration as a structure and include it in
   InputShareAad and AggregateShareAad. (\*) (#774)
 
+- Make task interval an optional part of task configuration. (\*) (#776)
+
 17:
 
 - Bump version tag from "dap-16" to "dap-17". (\*)
@@ -1422,7 +1424,6 @@ struct {
     uint64 min_batch_size;
     BatchMode batch_mode;
     opaque batch_config<0..2^16-1>;
-    Interval task_interval;
     VdafType vdaf_type;
     opaque vdaf_configuration<0..2^16-1>;
     TaskExtension extensions<0..2^16-1>;
@@ -1445,12 +1446,6 @@ struct {
   batch mode. For the time-interval and leader-selected batch modes, the payload
   is empty. Batch modes defined by future documents may specify a non-empty
   payload; see {{batch-modes}} for details.
-
-> TODO: move `task_interval` to a task extension
-
-* `task_interval` is an interval of time that the timestamps of all reports in
-  the task must fall into. That is, reports whose timestamp is outside of this
-  interval will be rejected by the Aggregators.
 * `vdaf_type` indicates which VDAF the task is using and corresponds to a
   codepoint in the VDAF Identifiers registry ({{Section 10 of !VDAF}}).
 * `vdaf_configuration` is the encoding of the VDAF's configuration. Encodings
@@ -1514,6 +1509,7 @@ struct {
 
 enum {
   reserved(0),
+  task_interval(1),
   (2^16-1)
 } TaskExtensionType;
 ~~~
@@ -1528,6 +1524,26 @@ in tasks containing unrecognized extensions.
 Extensions MUST be encoded in strictly increasing order of `extension_type`.
 That is, each `extension_type` value must be greater than that of the extension
 that precedes it.
+
+### Task Interval Task Extension {#task-interval-extension}
+
+The `task_interval` task extension (codepoint: 0x01)
+constrains the period of time
+over which reports can be generated for a task.
+This extension can be included in task configuration
+to ensure that tasks only run over a fixed period of time.
+
+~~~ tls-presentation
+struct {
+  Interval task_interval;
+} TaskIntervalTaskExtension;
+~~~
+
+The encoded value of this extension consists of a single `Interval`;
+see {{timestamps}} for details.
+
+Reports with a timestamp that are outside of this interval
+MUST be rejected by the Aggregators; see {{input-share-validation}}.
 
 ## Aggregation Parameter Validation {#agg-param-validation}
 
@@ -2544,11 +2560,13 @@ input share in the job, in any order:
    current time. If so, then the Aggregator SHOULD mark the input share as
    invalid with error `report_too_early`.
 
-1. Check if the report's timestamp is before the task's `task_interval`. If so,
+1. If the `task_interval` task extension ({{task-interval-extension}}) is configured,
+   check if the report's timestamp is before the task's `task_interval`. If so,
    the Aggregator MUST mark the input share as invalid with the error
    `task_not_started`.
 
-1. Check if the report's timestamp is after the task's `task_interval`. If so,
+1. If the `task_interval` task extension ({{task-interval-extension}}) is configured,
+   check if the report's timestamp is after the task's `task_interval`. If so,
    the Aggregator MUST mark the input share as invalid with the error
    `task_expired`.
 
@@ -4134,11 +4152,11 @@ long as reports are dropped properly as described in {{input-share-validation}}.
 Aggregators SHOULD take steps to mitigate the risk of dropping reports (e.g., by
 evicting the oldest data first).
 
-Furthermore, the Aggregators must store data related to a task as long as the
-current time is not after this task's `task_interval`. Aggregators MAY delete
-the task and all data pertaining to this task after the `task_interval`.
-Implementors SHOULD provide for some leeway so the Collector can collect the
-batch after some delay.
+Furthermore, the Aggregators MUST store data related to a task.
+Where the `task_interval` extension is configured, Aggregators MAY delete
+all data for a task after the `task_interval`.
+Aggregators that delete data SHOULD allow the Collector adequate time
+to retrieve data from any final batches.
 
 ### Distributed Systems and Synchronization Concerns {#distributed-systems}
 
@@ -4695,11 +4713,11 @@ Reference:
 
 The initial contents of this registry are listed in {{task-extension-id}}.
 
-| Value    | Name       | Reference                     |
-|:---------|:-----------|:------------------------------|
-| `0x0000` | `reserved` | {{task-extensions-registry}} of RFC XXXX |
-{: #task-extension-id title="Initial contents of the Task Extensions Identifiers
-registry."}
+| Value    | Name            | Reference                                |
+|:---------|:----------------|:-----------------------------------------|
+| `0x0000` | `reserved`      | {{task-extensions-registry}} of RFC XXXX |
+| `0x0001` | `task_interval` | {{task-interval-extension}} of RFC XXXX  |
+{: #task-extension-id title="Initial contents of the Task Extensions registry."}
 
 ### Report Extensions Registry
 
@@ -4720,7 +4738,7 @@ The initial contents of this registry are listed in {{report-extension-id}}.
 
 | Value    | Name              | Reference |
 |:---------|:------------------|:----------|
-| `0x0000` | `reserved`        | {{report-extensions-registry}} of RFC XXXX  |
+| `0x0000` | `reserved`        | {{report-extensions-registry}} of RFC XXXX |
 {: #report-extension-id title="Initial contents of the DAP Report Extension
 Identifiers registry."}
 
