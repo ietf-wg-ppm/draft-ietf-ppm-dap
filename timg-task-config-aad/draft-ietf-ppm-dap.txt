@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 23 August 2026                                       Cloudflare
+Expires: 27 August 2026                                       Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                        19 February 2026
+                                                        23 February 2026
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -64,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 23 August 2026.
+   This Internet-Draft will expire on 27 August 2026.
 
 Copyright Notice
 
@@ -1455,8 +1455,9 @@ Table of Contents
 
    VDAFs compatible with DAP MUST specify an encoding of their
    configuration, which is included into the task configuration to
-   prevent cross-VDAF confusion attacks (Section 4.2).  Encodings for
-   several VDAFs are provided in Appendix B.
+   prevent cross protocol attacks or parameter disagreement; see
+   Section 4.2 and Section 8.6.5.  Encodings for the VDAFs defined in
+   [VDAF] are provided in Appendix B.
 
 4.2.  Task Configuration
 
@@ -1511,14 +1512,15 @@ Table of Contents
    *  min_batch_size is the smallest number of reports a batch is
       allowed to include.
 
-   *  batch_mode indicates the DAP batch mode and corresponds to a
-      codepoint in the Batch Modes Registry.
+   *  batch_mode is the codepoint from the Batch Modes Registry
+      (Section 9.2.1) corresponding to the DAP batch mode the task uses;
+      see Section 4.2.1.
 
    *  batch_config contains any parameters that are required for
       configuring the batch mode.  For the time-interval and leader-
       selected batch modes, the payload is empty.  Batch modes defined
-      by future documents may specify a non-empty payload; see
-      (Section 5) for details.
+      by future documents may specify a non-empty payload; see Section 5
+      for details.
 
       TODO: move task_interval to a task extension
 
@@ -1609,9 +1611,8 @@ Table of Contents
    participate in tasks containing unrecognized extensions.
 
    Extensions MUST be encoded in strictly increasing order of
-   extension_type.  If any extension_type value is equal or less than
-   that of the extension that precedes it, the job MUST be failed with
-   an invalidExtension error; see Section 3.5.
+   extension_type.  That is, each extension_type value must be greater
+   than that of the extension that precedes it.
 
 4.3.  Aggregation Parameter Validation
 
@@ -1840,9 +1841,9 @@ Table of Contents
 
    struct {
      TaskID task_id;
+     TaskConfiguration task_configuration;
      ReportMetadata report_metadata;
      opaque public_share<0..2^32-1>;
-     TaskConfiguration task_configuration;
    } InputShareAad;
 
    *  task_id, report_metadata and public_share are the corresponding
@@ -3873,18 +3874,18 @@ Table of Contents
 
    struct {
      TaskID task_id;
-     CollectionJobReq collection_job_req;
      TaskConfiguration task_configuration;
+     CollectionJobReq collection_job_req;
    } AggregateShareAad;
 
    *  task_id is the ID of the task the aggregate share was computed in.
 
-   *  collection_job_req is the message that the Collector used to
-      initiate the associated collection job (see Section 4.6.1), the
-      value of which is passed by the Leader to the Helper
-
    *  task_configuration is the configuration of the task; see
       Section 4.2.
+
+   *  collection_job_req is the message that the Collector used to
+      initiate the associated collection job (see Section 4.6.1), the
+      value of which is passed by the Leader to the Helper.
 
    The Collector decrypts these aggregate shares using the opposite
    process.  Specifically, given an encrypted input share, denoted
@@ -4672,14 +4673,29 @@ Table of Contents
 
 8.6.5.  Task Configuration Agreement and Consistency
 
-   DAP ensures that protocol participants have a consistent view of
-   essential task configuration parameters by incorporating them into
-   HPKE authenticated data (Section 4.2).  Besides ensuring that no
-   individual participant has been tricked into using the wrong
-   parameters, this also gives participants an opportunity to refuse to
-   participate in a task if the parameters are not acceptable.  For
-   example, a Client could present the task parameters to a user and
-   request consent before uploading reports.
+   Section 9.9 of [VDAF] warns of cross protocol attacks, in which a
+   message recipient can be manipulated into handling a message intended
+   for use in one protocol as a message from another (i.e., evaluating a
+   Prio3Count input share as though it was a Prio3Sum input share).
+
+   VDAF also calls out the risk of parameter disagreement, where both
+   parties can be running the same VDAF but with different parameters.
+   For example, a malicious Leader could manipulate the Helper into
+   enforcing a minimum batch size that is too small for the aggregates
+   to protect client privacy.
+
+   To rule out these attacks, DAP sets the goal of ensuring that
+   protocol participants have a consistent view of essential task
+   configuration parameters.  This is achieved by including them into
+   HPKE authenticated data when Clients upload reports and when
+   Aggregators deliver aggregate shares.
+
+   Besides ensuring that no participant has been tricked into using the
+   wrong parameters, this also gives participants an opportunity to
+   refuse to participate in a task if the parameters are not acceptable.
+   For example, a Client could present the task parameters to a user and
+   request consent before uploading reports, allowing the user to decide
+   whether they find the task's Aggregators trustworthy.
 
 8.7.  Infrastructure Diversity
 
@@ -5013,8 +5029,8 @@ Table of Contents
 
    *  When a document defines a new VDAF ([VDAF], Section 5), it MUST
       specify an encoding of that VDAF's configuration like the ones in
-      Appendix B.  The encoding MUST be sufficient to prevent cross-VDAF
-      confusion attacks.
+      Appendix B.  The encoding MUST be sufficient to prevent attacks
+      described in Section 8.6.5.
 
 11.  References
 
@@ -5237,8 +5253,8 @@ Appendix B.  VDAF Configuration Encodings
 
    This section provides encodings of configuration of the Prio3 family
    of VDAFs.  These are included in InputShareAad (Section 4.4.2) and
-   AggregateShareAad (Section 4.6.7) structures to prevent cross-VDAF
-   confusion attacks.
+   AggregateShareAad (Section 4.6.7) structures to prevent attacks
+   described in Section 8.6.5.
 
 B.1.  Prio3Count
 
