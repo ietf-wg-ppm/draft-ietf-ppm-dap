@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 22 August 2026                                       Cloudflare
+Expires: 27 August 2026                                       Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                        18 February 2026
+                                                        23 February 2026
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -64,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 22 August 2026.
+   This Internet-Draft will expire on 27 August 2026.
 
 Copyright Notice
 
@@ -2569,10 +2569,11 @@ Table of Contents
        public and private extension fields.  If so, the Aggregator MUST
        mark the input share as invalid with error invalid_message.
 
-   7.  Check that public and private extensions are encoded in strictly
-       increasing order.  If any extension_type value is equal to or
-       less than that of the extension that precedes it, the Aggregator
-       MUST mark the input share as invalid with error invalid_message.
+   7.  Check that the public and private extension vectors are each
+       encoded in strictly increasing order.  If any extension_type
+       value is equal to or less than that of the extension that
+       precedes it, the Aggregator MUST mark the input share as invalid
+       with error invalid_message.
 
    8.  If an Aggregator cannot determine if an input share is valid--for
        example, the report timestamp may be so far in the past that the
