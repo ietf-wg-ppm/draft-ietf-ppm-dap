@@ -107,6 +107,7 @@ Table of Contents
      4.2.  Task Configuration
        4.2.1.  Batch Modes, Batches, and Queries
        4.2.2.  Task Extensions
+       4.2.3.  Task Interval Task Extension
      4.3.  Aggregation Parameter Validation
      4.4.  Uploading Reports
        4.4.1.  HPKE Configuration Request
@@ -219,6 +220,9 @@ Table of Contents
 
    *  Define extensible task configuration as a structure and include it
       in InputShareAad and AggregateShareAad. (*) (#774)
+
+   *  Make task interval an optional part of task configuration. (*)
+      (#776)
 
    17:
 
@@ -1490,7 +1494,6 @@ Table of Contents
        uint64 min_batch_size;
        BatchMode batch_mode;
        opaque batch_config<0..2^16-1>;
-       Interval task_interval;
        VdafType vdaf_type;
        opaque vdaf_configuration<0..2^16-1>;
        TaskExtension extensions<0..2^16-1>;
@@ -1521,13 +1524,6 @@ Table of Contents
       selected batch modes, the payload is empty.  Batch modes defined
       by future documents may specify a non-empty payload; see Section 5
       for details.
-
-      TODO: move task_interval to a task extension
-
-   *  task_interval is an interval of time that the timestamps of all
-      reports in the task must fall into.  That is, reports whose
-      timestamp is outside of this interval will be rejected by the
-      Aggregators.
 
    *  vdaf_type indicates which VDAF the task is using and corresponds
       to a codepoint in the VDAF Identifiers registry (Section 10 of
@@ -1600,6 +1596,7 @@ Table of Contents
 
    enum {
      reserved(0),
+     task_interval(1),
      (2^16-1)
    } TaskExtensionType;
 
@@ -1613,6 +1610,23 @@ Table of Contents
    Extensions MUST be encoded in strictly increasing order of
    extension_type.  That is, each extension_type value must be greater
    than that of the extension that precedes it.
+
+4.2.3.  Task Interval Task Extension
+
+   The task_interval task extension (codepoint: 0x01) constrains the
+   period of time over which reports can be generated for a task.  This
+   extension can be included in task configuration to ensure that tasks
+   only run over a fixed period of time.
+
+   struct {
+     Interval task_interval;
+   } TaskIntervalTaskExtension;
+
+   The encoded value of this extension consists of a single Interval;
+   see Section 4.1.1 for details.
+
+   Reports with a timestamp that are outside of this interval MUST be
+   rejected by the Aggregators; see Section 4.5.2.4.
 
 4.3.  Aggregation Parameter Validation
 
@@ -2659,11 +2673,13 @@ Table of Contents
        of the current time.  If so, then the Aggregator SHOULD mark the
        input share as invalid with error report_too_early.
 
-   3.  Check if the report's timestamp is before the task's
+   3.  If the task_interval task extension (Section 4.2.3) is
+       configured, check if the report's timestamp is before the task's
        task_interval.  If so, the Aggregator MUST mark the input share
        as invalid with the error task_not_started.
 
-   4.  Check if the report's timestamp is after the task's
+   4.  If the task_interval task extension (Section 4.2.3) is
+       configured, check if the report's timestamp is after the task's
        task_interval.  If so, the Aggregator MUST mark the input share
        as invalid with the error task_expired.
 
@@ -4271,11 +4287,11 @@ Table of Contents
    Section 4.5.2.4.  Aggregators SHOULD take steps to mitigate the risk
    of dropping reports (e.g., by evicting the oldest data first).
 
-   Furthermore, the Aggregators must store data related to a task as
-   long as the current time is not after this task's task_interval.
-   Aggregators MAY delete the task and all data pertaining to this task
-   after the task_interval.  Implementors SHOULD provide for some leeway
-   so the Collector can collect the batch after some delay.
+   Furthermore, the Aggregators MUST store data related to a task.
+   Where the task_interval extension is configured, Aggregators MAY
+   delete all data for a task after the task_interval.  Aggregators that
+   delete data SHOULD allow the Collector adequate time to retrieve data
+   from any final batches.
 
 6.4.2.  Distributed Systems and Synchronization Concerns
 
@@ -4860,14 +4876,16 @@ Table of Contents
 
    The initial contents of this registry are listed in Table 3.
 
-             +========+==========+===========================+
-             | Value  | Name     | Reference                 |
-             +========+==========+===========================+
-             | 0x0000 | reserved | Section 9.2.2 of RFC XXXX |
-             +--------+----------+---------------------------+
+          +========+===============+===========================+
+          | Value  | Name          | Reference                 |
+          +========+===============+===========================+
+          | 0x0000 | reserved      | Section 9.2.2 of RFC XXXX |
+          +--------+---------------+---------------------------+
+          | 0x0001 | task_interval | Section 4.2.3 of RFC XXXX |
+          +--------+---------------+---------------------------+
 
-                   Table 3: Initial contents of the Task
-                      Extensions Identifiers registry.
+             Table 3: Initial contents of the Task Extensions
+                                registry.
 
 9.2.3.  Report Extensions Registry
 

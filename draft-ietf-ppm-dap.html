@@ -1268,6 +1268,9 @@ without revealing any individual contributor's data.<a href="#section-abstract-1
                   <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.2.2.2">
                     <p id="section-toc.1-1.4.2.2.2.2.1"><a href="#section-4.2.2" class="auto internal xref">4.2.2</a>.  <a href="#name-task-extensions" class="internal xref">Task Extensions</a></p>
 </li>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.2.2.3">
+                    <p id="section-toc.1-1.4.2.2.2.3.1"><a href="#section-4.2.3" class="auto internal xref">4.2.3</a>.  <a href="#name-task-interval-task-extensio" class="internal xref">Task Interval Task Extension</a></p>
+</li>
                 </ul>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.3">
@@ -1603,6 +1606,9 @@ verification key management. (*) (#766)<a href="#section-1.1-3.1.1" class="pilcr
           <li class="normal" id="section-1.1-3.3">
             <p id="section-1.1-3.3.1">Define extensible task configuration as a structure and include it in
 InputShareAad and AggregateShareAad. (*) (#774)<a href="#section-1.1-3.3.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-1.1-3.4">
+            <p id="section-1.1-3.4.1">Make task interval an optional part of task configuration. (*) (#776)<a href="#section-1.1-3.4.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 <p id="section-1.1-4">17:<a href="#section-1.1-4" class="pilcrow">¶</a></p>
@@ -3659,7 +3665,6 @@ struct {
     uint64 min_batch_size;
     BatchMode batch_mode;
     opaque batch_config&lt;0..2^16-1&gt;;
-    Interval task_interval;
     VdafType vdaf_type;
     opaque vdaf_configuration&lt;0..2^16-1&gt;;
     TaskExtension extensions&lt;0..2^16-1&gt;;
@@ -3697,54 +3702,42 @@ batch mode. For the time-interval and leader-selected batch modes, the payload
 is empty. Batch modes defined by future documents may specify a non-empty
 payload; see <a href="#batch-modes" class="auto internal xref">Section 5</a> for details.<a href="#section-4.2-7.7.1" class="pilcrow">¶</a></p>
 </li>
-        </ul>
-<ul class="normal ulEmpty">
-<li class="normal ulEmpty" id="section-4.2-8.1">
-            <p id="section-4.2-8.1.1">TODO: move <code>task_interval</code> to a task extension<a href="#section-4.2-8.1.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-4.2-7.8">
+            <p id="section-4.2-7.8.1"><code>vdaf_type</code> indicates which VDAF the task is using and corresponds to a
+codepoint in the VDAF Identifiers registry (<span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-18#section-10" class="relref">Section 10</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>).<a href="#section-4.2-7.8.1" class="pilcrow">¶</a></p>
 </li>
-        </ul>
-<ul class="normal">
-<li class="normal" id="section-4.2-9.1">
-            <p id="section-4.2-9.1.1"><code>task_interval</code> is an interval of time that the timestamps of all reports in
-the task must fall into. That is, reports whose timestamp is outside of this
-interval will be rejected by the Aggregators.<a href="#section-4.2-9.1.1" class="pilcrow">¶</a></p>
-</li>
-          <li class="normal" id="section-4.2-9.2">
-            <p id="section-4.2-9.2.1"><code>vdaf_type</code> indicates which VDAF the task is using and corresponds to a
-codepoint in the VDAF Identifiers registry (<span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-18#section-10" class="relref">Section 10</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>).<a href="#section-4.2-9.2.1" class="pilcrow">¶</a></p>
-</li>
-          <li class="normal" id="section-4.2-9.3">
-            <p id="section-4.2-9.3.1"><code>vdaf_configuration</code> is the encoding of the VDAF's configuration. Encodings
+          <li class="normal" id="section-4.2-7.9">
+            <p id="section-4.2-7.9.1"><code>vdaf_configuration</code> is the encoding of the VDAF's configuration. Encodings
 for several VDAFs are specified in <a href="#vdaf-configuration-encodings" class="auto internal xref">Appendix B</a>. Other
-VDAFs will provide encodings of their configuration (<a href="#extending-this-doc" class="auto internal xref">Section 10</a>).<a href="#section-4.2-9.3.1" class="pilcrow">¶</a></p>
+VDAFs will provide encodings of their configuration (<a href="#extending-this-doc" class="auto internal xref">Section 10</a>).<a href="#section-4.2-7.9.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-4.2-9.4">
-            <p id="section-4.2-9.4.1"><code>extensions</code> is the extensions in use for this task, if any; see
-<a href="#task-extensions" class="auto internal xref">Section 4.2.2</a>.<a href="#section-4.2-9.4.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-4.2-7.10">
+            <p id="section-4.2-7.10.1"><code>extensions</code> is the extensions in use for this task, if any; see
+<a href="#task-extensions" class="auto internal xref">Section 4.2.2</a>.<a href="#section-4.2-7.10.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
-<p id="section-4.2-10">The Leader and Helper API URLs <span class="bcp14">MAY</span> include arbitrary path components.<a href="#section-4.2-10" class="pilcrow">¶</a></p>
-<p id="section-4.2-11">In order to facilitate the aggregation and collection interactions, each of the
+<p id="section-4.2-8">The Leader and Helper API URLs <span class="bcp14">MAY</span> include arbitrary path components.<a href="#section-4.2-8" class="pilcrow">¶</a></p>
+<p id="section-4.2-9">In order to facilitate the aggregation and collection interactions, each of the
 Aggregators is configured with the following parameters, but not necessarily to
-Clients or the Collector:<a href="#section-4.2-11" class="pilcrow">¶</a></p>
+Clients or the Collector:<a href="#section-4.2-9" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-4.2-12.1">
-            <p id="section-4.2-12.1.1"><code>collector_hpke_config</code> (<code>HpkeConfig</code>): The <span>[<a href="#HPKE" class="cite xref">HPKE</a>]</span> configuration of
+<li class="normal" id="section-4.2-10.1">
+            <p id="section-4.2-10.1.1"><code>collector_hpke_config</code> (<code>HpkeConfig</code>): The <span>[<a href="#HPKE" class="cite xref">HPKE</a>]</span> configuration of
 the Collector (described in <a href="#hpke-config" class="auto internal xref">Section 4.4.1</a>); see <a href="#compliance" class="auto internal xref">Section 7</a> for
-information about the HPKE configuration algorithms.<a href="#section-4.2-12.1.1" class="pilcrow">¶</a></p>
+information about the HPKE configuration algorithms.<a href="#section-4.2-10.1.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-4.2-12.2">
-            <p id="section-4.2-12.2.1"><code>vdaf_verify_key</code> (opaque byte string): The VDAF verification key (or keys)
+          <li class="normal" id="section-4.2-10.2">
+            <p id="section-4.2-10.2.1"><code>vdaf_verify_key</code> (opaque byte string): The VDAF verification key (or keys)
 shared by the Aggregators. This key is used in the aggregation interaction
 (<a href="#aggregate-flow" class="auto internal xref">Section 4.5</a>). The security requirements are described in
-<a href="#verification-key" class="auto internal xref">Section 8.6.2</a>.<a href="#section-4.2-12.2.1" class="pilcrow">¶</a></p>
+<a href="#verification-key" class="auto internal xref">Section 8.6.2</a>.<a href="#section-4.2-10.2.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
-<p id="section-4.2-13">Finally, the Collector is configured with the HPKE secret key corresponding to
-<code>collector_hpke_config</code>.<a href="#section-4.2-13" class="pilcrow">¶</a></p>
-<p id="section-4.2-14">A task's parameters are immutable for the lifetime of that task. The only way to
+<p id="section-4.2-11">Finally, the Collector is configured with the HPKE secret key corresponding to
+<code>collector_hpke_config</code>.<a href="#section-4.2-11" class="pilcrow">¶</a></p>
+<p id="section-4.2-12">A task's parameters are immutable for the lifetime of that task. The only way to
 change parameters or to rotate secret values like Collector HPKE configuration
-or the VDAF verification key is to configure a new task.<a href="#section-4.2-14" class="pilcrow">¶</a></p>
+or the VDAF verification key is to configure a new task.<a href="#section-4.2-12" class="pilcrow">¶</a></p>
 <div id="batch-modes-overview">
 <section id="section-4.2.1">
           <h4 id="name-batch-modes-batches-and-que">
@@ -3782,6 +3775,7 @@ struct {
 
 enum {
   reserved(0),
+  task_interval(1),
   (2^16-1)
 } TaskExtensionType;
 </pre><a href="#section-4.2.2-3" class="pilcrow">¶</a>
@@ -3794,6 +3788,29 @@ in tasks containing unrecognized extensions.<a href="#section-4.2.2-5" class="pi
 <p id="section-4.2.2-6">Extensions <span class="bcp14">MUST</span> be encoded in strictly increasing order of <code>extension_type</code>.
 That is, each <code>extension_type</code> value must be greater than that of the extension
 that precedes it.<a href="#section-4.2.2-6" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="task-interval-extension">
+<section id="section-4.2.3">
+          <h4 id="name-task-interval-task-extensio">
+<a href="#section-4.2.3" class="section-number selfRef">4.2.3. </a><a href="#name-task-interval-task-extensio" class="section-name selfRef">Task Interval Task Extension</a>
+          </h4>
+<p id="section-4.2.3-1">The <code>task_interval</code> task extension (codepoint: 0x01)
+constrains the period of time
+over which reports can be generated for a task.
+This extension can be included in task configuration
+to ensure that tasks only run over a fixed period of time.<a href="#section-4.2.3-1" class="pilcrow">¶</a></p>
+<div class="lang-tls-presentation sourcecode" id="section-4.2.3-2">
+<pre>
+struct {
+  Interval task_interval;
+} TaskIntervalTaskExtension;
+</pre><a href="#section-4.2.3-2" class="pilcrow">¶</a>
+</div>
+<p id="section-4.2.3-3">The encoded value of this extension consists of a single <code>Interval</code>;
+see <a href="#timestamps" class="auto internal xref">Section 4.1.1</a> for details.<a href="#section-4.2.3-3" class="pilcrow">¶</a></p>
+<p id="section-4.2.3-4">Reports with a timestamp that are outside of this interval
+<span class="bcp14">MUST</span> be rejected by the Aggregators; see <a href="#input-share-validation" class="auto internal xref">Section 4.5.2.4</a>.<a href="#section-4.2.3-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -5005,12 +5022,14 @@ current time. If so, then the Aggregator <span class="bcp14">SHOULD</span> mark 
 invalid with error <code>report_too_early</code>.<a href="#section-4.5.2.4-2.2.1" class="pilcrow">¶</a></p>
 </li>
               <li id="section-4.5.2.4-2.3">
-                <p id="section-4.5.2.4-2.3.1">Check if the report's timestamp is before the task's <code>task_interval</code>. If so,
+                <p id="section-4.5.2.4-2.3.1">If the <code>task_interval</code> task extension (<a href="#task-interval-extension" class="auto internal xref">Section 4.2.3</a>) is configured,
+check if the report's timestamp is before the task's <code>task_interval</code>. If so,
 the Aggregator <span class="bcp14">MUST</span> mark the input share as invalid with the error
 <code>task_not_started</code>.<a href="#section-4.5.2.4-2.3.1" class="pilcrow">¶</a></p>
 </li>
               <li id="section-4.5.2.4-2.4">
-                <p id="section-4.5.2.4-2.4.1">Check if the report's timestamp is after the task's <code>task_interval</code>. If so,
+                <p id="section-4.5.2.4-2.4.1">If the <code>task_interval</code> task extension (<a href="#task-interval-extension" class="auto internal xref">Section 4.2.3</a>) is configured,
+check if the report's timestamp is after the task's <code>task_interval</code>. If so,
 the Aggregator <span class="bcp14">MUST</span> mark the input share as invalid with the error
 <code>task_expired</code>.<a href="#section-4.5.2.4-2.4.1" class="pilcrow">¶</a></p>
 </li>
@@ -6885,11 +6904,11 @@ alleviate this burden, DAP allows Aggregators to drop this state as needed, so
 long as reports are dropped properly as described in <a href="#input-share-validation" class="auto internal xref">Section 4.5.2.4</a>.
 Aggregators <span class="bcp14">SHOULD</span> take steps to mitigate the risk of dropping reports (e.g., by
 evicting the oldest data first).<a href="#section-6.4.1-2" class="pilcrow">¶</a></p>
-<p id="section-6.4.1-3">Furthermore, the Aggregators must store data related to a task as long as the
-current time is not after this task's <code>task_interval</code>. Aggregators <span class="bcp14">MAY</span> delete
-the task and all data pertaining to this task after the <code>task_interval</code>.
-Implementors <span class="bcp14">SHOULD</span> provide for some leeway so the Collector can collect the
-batch after some delay.<a href="#section-6.4.1-3" class="pilcrow">¶</a></p>
+<p id="section-6.4.1-3">Furthermore, the Aggregators <span class="bcp14">MUST</span> store data related to a task.
+Where the <code>task_interval</code> extension is configured, Aggregators <span class="bcp14">MAY</span> delete
+all data for a task after the <code>task_interval</code>.
+Aggregators that delete data <span class="bcp14">SHOULD</span> allow the Collector adequate time
+to retrieve data from any final batches.<a href="#section-6.4.1-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="distributed-systems">
@@ -7675,7 +7694,7 @@ columns:<a href="#section-9.2.2-1" class="pilcrow">¶</a></p>
 <table class="center" id="table-3">
             <caption>
 <a href="#table-3" class="selfRef">Table 3</a>:
-<a href="#name-initial-contents-of-the-tas" class="selfRef">Initial contents of the Task Extensions Identifiers registry.</a>
+<a href="#name-initial-contents-of-the-tas" class="selfRef">Initial contents of the Task Extensions registry.</a>
             </caption>
 <thead>
               <tr>
@@ -7694,6 +7713,16 @@ columns:<a href="#section-9.2.2-1" class="pilcrow">¶</a></p>
 </td>
                 <td class="text-left" rowspan="1" colspan="1">
                   <a href="#task-extensions-registry" class="auto internal xref">Section 9.2.2</a> of RFC XXXX</td>
+              </tr>
+              <tr>
+                <td class="text-left" rowspan="1" colspan="1">
+                  <code>0x0001</code>
+</td>
+                <td class="text-left" rowspan="1" colspan="1">
+                  <code>task_interval</code>
+</td>
+                <td class="text-left" rowspan="1" colspan="1">
+                  <a href="#task-interval-extension" class="auto internal xref">Section 4.2.3</a> of RFC XXXX</td>
               </tr>
             </tbody>
           </table>
