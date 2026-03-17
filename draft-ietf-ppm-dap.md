@@ -1239,6 +1239,12 @@ Each of these interactions is defined in terms of HTTP resources. In this
 section we define these resources and the messages used to act on them.
 
 ## Basic Type Definitions {#basic-definitions}
+`uint128` is a 128 bit integer. Besides its width, its encoding follows the same
+rules as other numeric types in {{!RFC8446, Section 3.3}}.
+
+~~~ tls-presentation
+uint8 uint128[16];
+~~~
 
 A `ReportID` is used to uniquely identify a report in the context of a DAP task.
 
@@ -4976,43 +4982,63 @@ used.
 
 ~~~ tls-presentation
 struct {
-    uint32 max_measurement; /* largest summand */
+    uint64 max_measurement;
 } Prio3SumConfig;
 ~~~
+
+`max_measurement` is the largest summand permitted in this instantiation of the
+VDAF. The value MUST not exceed the modulus of `Field64`; see {{!VDAF, Section
+6.1.4}}.
 
 ## Prio3SumVec
 
 ~~~ tls-presentation
 struct {
-    uint32 length;          /* length of the vector */
-    uint32 max_measurement; /* maximum value of each summand */
-    uint32 chunk_length;    /* size of each proof chunk */
+    uint64 length;
+    uint128 max_measurement;
+    uint64 chunk_length;
 } Prio3SumVecConfig;
 ~~~
+
+- `length` is the length of the vectors being summed.
+- `max_measurement` is the largest summand permitted in this instantiation of
+  the VDAF. The value MUST not exceed the modulus of `Field128`; see {{!VDAF,
+  Section 6.1.4}}.
+- `chunk_length` is the size of each proof chunk.
 
 ## Prio3Histogram
 
 ~~~ tls-presentation
 struct {
-    uint32 length;       /* number of buckets */
-    uint32 chunk_length; /* size of each proof chunk */
+    uint64 length;
+    uint64 chunk_length;
 } Prio3HistogramConfig;
 ~~~
+
+- `length` is the number of buckets in the histogram.
+- `chunk_length` is the size of each proof chunk.
 
 ## Prio3MultihotCountVec
 
 ~~~ tls-presentation
 struct {
-    uint32 length;       /* length of the vector */
-    uint32 chunk_length; /* size of each proof chunk */
-    uint32 max_weight;   /* largest vector weight */
+    uint64 length;
+    uint64 chunk_length;
+    uint64 max_weight;
 } Prio3MultihotCountVecConfig;
 ~~~
+
+- `length` is the length of the vectors being summed.
+- `chunk_length` is the size of each proof chunk.
+- `max_weight` is the largest weight allowed for measurments; the maximum number
+  of true entries in the bit vector.
 
 ## Poplar1
 
 ~~~ tls-presentation
 struct {
-    uint16 bits; /* bit length of the input string */
+    uint16 bits;
 } Poplar1Config;
 ~~~
+
+`bits` is the number of bits in input strings.
