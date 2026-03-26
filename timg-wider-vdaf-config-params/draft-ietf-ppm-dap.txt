@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 18 September 2026                                    Cloudflare
+Expires: 27 September 2026                                    Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                           17 March 2026
+                                                           26 March 2026
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -64,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 18 September 2026.
+   This Internet-Draft will expire on 27 September 2026.
 
 Copyright Notice
 
@@ -1317,12 +1317,6 @@ Table of Contents
    on them.
 
 4.1.  Basic Type Definitions
-
-   uint128 is a 128 bit integer.  Besides its width, its encoding
-   follows the same rules as other numeric types in [RFC8446],
-   Section 3.3.
-
-   uint8 uint128[16];
 
    A ReportID is used to uniquely identify a report in the context of a
    DAP task.
@@ -5305,9 +5299,9 @@ B.2.  Prio3Sum
 B.3.  Prio3SumVec
 
    struct {
-       uint64 length;
-       uint128 max_measurement;
-       uint64 chunk_length;
+       uint32 length;
+       uint64 max_measurement;
+       uint32 chunk_length;
    } Prio3SumVecConfig;
 
    *  length is the length of the vectors being summed.
@@ -5321,8 +5315,8 @@ B.3.  Prio3SumVec
 B.4.  Prio3Histogram
 
    struct {
-       uint64 length;
-       uint64 chunk_length;
+       uint32 length;
+       uint32 chunk_length;
    } Prio3HistogramConfig;
 
    *  length is the number of buckets in the histogram.
@@ -5332,9 +5326,9 @@ B.4.  Prio3Histogram
 B.5.  Prio3MultihotCountVec
 
    struct {
-       uint64 length;
-       uint64 chunk_length;
-       uint64 max_weight;
+       uint32 length;
+       uint32 chunk_length;
+       uint32 max_weight;
    } Prio3MultihotCountVecConfig;
 
    *  length is the length of the vectors being summed.
