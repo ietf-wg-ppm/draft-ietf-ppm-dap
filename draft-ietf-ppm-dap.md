@@ -1239,12 +1239,6 @@ Each of these interactions is defined in terms of HTTP resources. In this
 section we define these resources and the messages used to act on them.
 
 ## Basic Type Definitions {#basic-definitions}
-`uint128` is a 128 bit integer. Besides its width, its encoding follows the same
-rules as other numeric types in {{!RFC8446, Section 3.3}}.
-
-~~~ tls-presentation
-uint8 uint128[16];
-~~~
 
 A `ReportID` is used to uniquely identify a report in the context of a DAP task.
 
@@ -4994,9 +4988,9 @@ VDAF. The value MUST not exceed the modulus of `Field64`; see {{!VDAF, Section
 
 ~~~ tls-presentation
 struct {
-    uint64 length;
-    uint128 max_measurement;
-    uint64 chunk_length;
+    uint32 length;
+    uint64 max_measurement;
+    uint32 chunk_length;
 } Prio3SumVecConfig;
 ~~~
 
@@ -5010,8 +5004,8 @@ struct {
 
 ~~~ tls-presentation
 struct {
-    uint64 length;
-    uint64 chunk_length;
+    uint32 length;
+    uint32 chunk_length;
 } Prio3HistogramConfig;
 ~~~
 
@@ -5022,9 +5016,9 @@ struct {
 
 ~~~ tls-presentation
 struct {
-    uint64 length;
-    uint64 chunk_length;
-    uint64 max_weight;
+    uint32 length;
+    uint32 chunk_length;
+    uint32 max_weight;
 } Prio3MultihotCountVecConfig;
 ~~~
 
