@@ -4996,8 +4996,7 @@ struct {
 
 - `length` is the length of the vectors being summed.
 - `max_measurement` is the largest summand permitted in this instantiation of
-  the VDAF. The value MUST not exceed the modulus of `Field128`; see {{!VDAF,
-  Section 6.1.4}}.
+  the VDAF.
 - `chunk_length` is the size of each proof chunk.
 
 ## Prio3Histogram
