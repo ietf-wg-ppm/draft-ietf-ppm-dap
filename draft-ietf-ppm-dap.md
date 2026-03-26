@@ -192,6 +192,9 @@ aggregator.
 
 - Require report extensions to be sorted by type. (\*) (#775)
 
+- Remove the partial batch selector from the collection job response. (\*)
+  (#778)
+
 17:
 
 - Bump version tag from "dap-16" to "dap-17". (\*)
@@ -3239,7 +3242,6 @@ which is structured as follows:
 
 ~~~ tls-presentation
 struct {
-  PartialBatchSelector part_batch_selector;
   uint64 report_count;
   Interval interval;
   HpkeCiphertext leader_encrypted_agg_share;
@@ -3250,11 +3252,6 @@ struct {
 A `CollectionJobResp`'s media type is
 "application/ppm-dap;message=collection-job-resp". The structure includes the
 following:
-
-* `part_batch_selector`: Information used to bind the aggregate result to the
-  query. For leader-selected tasks, this includes the batch ID assigned to the
-  batch by the Leader. The indicated batch mode MUST match the task's batch
-  mode.
 
 * `report_count`: The number of reports included in the batch.
 
@@ -3301,12 +3298,6 @@ HTTP/1.1 200
 Content-Type: application/ppm-dap;message=collection-job-resp
 
 encoded(struct {
-  part_batch_selector = struct {
-    batch_mode = BatchMode.leader_selected,
-    config = encoded(struct {
-      batch_id = [0x1f, 0x1e, ..., 0x00],
-    } LeaderSelectedPartialBatchSelectorConfig),
-  } PartialBatchSelector,
   report_count = 1000,
   interval = struct {
     start = 16595440,
@@ -3360,15 +3351,6 @@ HTTP/1.1 200
 Content-Type: application/ppm-dap;message=collection-job-resp
 
 encoded(struct {
-  part_batch_selector = struct {
-    batch_mode = BatchMode.time_interval,
-    config = encoded(struct {
-      interval = struct {
-        start = 1659544,
-        duration = 10,
-      } Interval,
-    } TimeIntervalBatchSelectorConfig)
-  },
   report_count = 4000,
   interval = struct {
     start = 1659547,
