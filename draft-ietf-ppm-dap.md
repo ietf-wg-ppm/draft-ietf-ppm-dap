@@ -4976,43 +4976,64 @@ used.
 
 ~~~ tls-presentation
 struct {
-    uint32 max_measurement; /* largest summand */
+    uint64 max_measurement;
 } Prio3SumConfig;
 ~~~
+
+`max_measurement` is the largest summand permitted in this instantiation of the
+VDAF. The value MUST be less than the modulus of the field associated with the
+circuit; see {{!VDAF, Section 6.1.4}}.
 
 ## Prio3SumVec
 
 ~~~ tls-presentation
 struct {
-    uint32 length;          /* length of the vector */
-    uint32 max_measurement; /* maximum value of each summand */
-    uint32 chunk_length;    /* size of each proof chunk */
+    uint32 length;
+    uint64 max_measurement;
+    uint32 chunk_length;
 } Prio3SumVecConfig;
 ~~~
+
+- `length` is the length of the vectors being summed.
+- `max_measurement` is the largest summand permitted in this instantiation of
+  the VDAF.
+- `chunk_length` is the size of each proof chunk.
 
 ## Prio3Histogram
 
 ~~~ tls-presentation
 struct {
-    uint32 length;       /* number of buckets */
-    uint32 chunk_length; /* size of each proof chunk */
+    uint32 length;
+    uint32 chunk_length;
 } Prio3HistogramConfig;
 ~~~
+
+- `length` is the number of buckets in the histogram.
+- `chunk_length` is the size of each proof chunk.
 
 ## Prio3MultihotCountVec
 
 ~~~ tls-presentation
 struct {
-    uint32 length;       /* length of the vector */
-    uint32 chunk_length; /* size of each proof chunk */
-    uint32 max_weight;   /* largest vector weight */
+    uint32 length;
+    uint32 chunk_length;
+    uint64 max_weight;
 } Prio3MultihotCountVecConfig;
 ~~~
+
+- `length` is the length of the vectors being summed.
+- `chunk_length` is the size of each proof chunk.
+- `max_weight` is the largest weight allowed for measurements; the maximum
+  number of true entries in the bit vector. The value MUST be less than the
+  modulus of the field associated with the circuit; see {{!VDAF, Section
+  6.1.4}}.
 
 ## Poplar1
 
 ~~~ tls-presentation
 struct {
-    uint16 bits; /* bit length of the input string */
+    uint16 bits;
 } Poplar1Config;
 ~~~
+
+`bits` is the number of bits in input strings.
