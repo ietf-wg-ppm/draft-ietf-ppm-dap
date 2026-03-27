@@ -3484,7 +3484,9 @@ opaque AggregateShareID[16];
 The Helper's aggregate share is an HTTP resource served by the Helper at the URL
 `{helper}/tasks/{task-id}/aggregate_shares/{aggregate-share-id}`. To obtain it,
 the Leader first chooses an aggregate share ID, which MUST be unique within the
-scope of the corresponding DAP task.
+scope of the corresponding DAP task. Since this resource corresponds to
+exactly one collection job, the Leader might use the collection job ID as the
+aggregate share ID.
 
 Then the Leader sends a PUT request to the aggregate share with the body:
 
