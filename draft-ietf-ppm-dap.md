@@ -4981,8 +4981,8 @@ struct {
 ~~~
 
 `max_measurement` is the largest summand permitted in this instantiation of the
-VDAF. The value MUST not exceed the modulus of `Field64`; see {{!VDAF, Section
-6.1.4}}.
+VDAF. The value MUST be less than the modulus of the field associated with the
+circuit; see {{!VDAF, Section 6.1.4}}.
 
 ## Prio3SumVec
 
@@ -5017,14 +5017,16 @@ struct {
 struct {
     uint32 length;
     uint32 chunk_length;
-    uint32 max_weight;
+    uint64 max_weight;
 } Prio3MultihotCountVecConfig;
 ~~~
 
 - `length` is the length of the vectors being summed.
 - `chunk_length` is the size of each proof chunk.
-- `max_weight` is the largest weight allowed for measurments; the maximum number
-  of true entries in the bit vector.
+- `max_weight` is the largest weight allowed for measurements; the maximum
+  number of true entries in the bit vector. The value MUST be less than the
+  modulus of the field associated with the circuit; see {{!VDAF, Section
+  6.1.4}}.
 
 ## Poplar1
 
