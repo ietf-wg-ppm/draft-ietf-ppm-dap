@@ -215,11 +215,6 @@ Table of Contents
 
    18:
 
-   *  Replace PartialBatchSelector in AggregationJobInitReq with an
-      aggregation job extensions mechanism.  Define the
-      leader_selected_batch_id extension for the leader-selected batch
-      mode. (*) (#762)
-
    *  Add verification key ID to aggregation jobs to enable but not
       require verification key management. (*) (#766)
 
@@ -233,8 +228,11 @@ Table of Contents
 
    *  Require report extensions to be sorted by type. (*) (#775)
 
-   *  Remove the partial batch selector from the collection job
-      response. (*) (#778)
+   *  Replace the partial batch selector with aggregation job
+      extensions.  If a batch mode needs to convey information to the
+      Helper during aggregation, it defines an aggregation job
+      extension.  For example, the leader-selected batch mode defines an
+      extension that conveys the batch ID. (*) (#762)
 
    17:
 
@@ -2257,24 +2255,6 @@ Table of Contents
    recognize an extension type, it MUST abort with error
    unsupportedExtension.
 
-4.5.1.1.  Leader-Selected Batch ID
-
-   The leader_selected_batch_id aggregation job extension (codepoint:
-   0x0001) is used with the leader-selected batch mode (Section 5.2).
-   It conveys the batch ID selected by the Leader for this aggregation
-   job.
-
-   struct {
-     BatchID batch_id;
-   } LeaderSelectedBatchIDExtension;
-
-   The encoded value of this extension consists of a single BatchID.
-   The batch ID is chosen by the Leader and MUST be unique in the scope
-   of the task.  The Leader MUST include this extension in every
-   AggregationJobInitReq for tasks using the leader-selected batch mode.
-   The Helper MUST abort with error invalidMessage if this extension is
-   absent for a leader-selected task.
-
 4.5.2.  Eager Aggregation
 
    In general, aggregation cannot begin until the Collector specifies a
@@ -2566,10 +2546,6 @@ Table of Contents
          of extension_type, the Helper MUST fail the job with error
          invalidMessage.
 
-      -  For the leader-selected batch mode, if the
-         leader_selected_batch_id extension (Section 4.5.1.1) is absent,
-         the Helper MUST fail the job with error invalidMessage.
-
    *  Whether the aggregation parameter is valid as described in
       Section 4.3.  If the aggregation parameter is invalid, then the
       Helper MUST fail the job with error invalidAggregationParameter.
@@ -2781,9 +2757,7 @@ Table of Contents
      extensions = [
        struct {
          extension_type = AggregationJobExtensionType.leader_selected_batch_id,
-         extension_data = encoded(struct {
-           batch_id = [0x1f, 0x1e, ..., 0x00],
-         } LeaderSelectedBatchIDExtension),
+         extension_data = encoded([0x1f, 0x1e, ..., 0x00] BatchID),
        } AggregationJobExtension,
      ],
      verify_inits,
@@ -3097,7 +3071,7 @@ Table of Contents
 
    *  For the leader-selected batch mode (Section 5.2), the batch bucket
       identifier is the batch ID carried in the leader_selected_batch_id
-      aggregation job extension (Section 4.5.1.1).
+      aggregation job extension (Section 5.2.2).
 
    A few different pieces of information are associated with each batch
    bucket:
@@ -3992,18 +3966,21 @@ Table of Contents
 
    1.  The value of the config field of Query and BatchSelector
 
-   2.  Any aggregation job extension (Section 4.5.1) defined for the
-       batch mode, used to convey batch assignment information in
-       AggregationJobInitReq
-
-   3.  Batch buckets (Section 4.5.4.3): how reports are assigned to
+   2.  Batch buckets (Section 4.5.4.3): how reports are assigned to
        batch buckets; how each bucket is identified; and how batch
        buckets are mapped to batches
 
-   4.  Batch mode configuration: any configuration needed for the batch
+   3.  Batch mode configuration: any configuration needed for the batch
        mode.  New batch modes MUST define a deterministic encoding of
        their configuration so it can be incorporated into
        TaskConfiguration (Section 4.2) structures.
+
+   It may be necessary for the Leader to convey additional information
+   to the Helper during aggregation in order to map reports to batch
+   buckets.  This may be done with the aggregation job extension
+   mechanism (see Section 4.5.1).  A batch mode that defines such an
+   extension should specify how it is used to assign reports to batch
+   buckets.  See the leader-selected mode (Section 5.2) for an example.
 
 5.1.  Time Interval
 
@@ -4055,7 +4032,7 @@ Table of Contents
 
    The time-interval batch mode does not define any aggregation job
    extensions.  The Leader MUST NOT include the leader_selected_batch_id
-   extension (Section 4.5.1.1) in aggregation jobs for tasks using this
+   extension (Section 5.2.2) in aggregation jobs for tasks using this
    batch mode.  Batch bucket assignment is determined by each report's
    timestamp (see Section 5.1.4).
 
@@ -4152,13 +4129,18 @@ Table of Contents
 
 5.2.2.  Aggregation Job Extension
 
-   The Leader MUST include the leader_selected_batch_id aggregation job
-   extension (Section 4.5.1.1) in every AggregationJobInitReq for tasks
-   using this batch mode.  This extension carries the batch ID the
-   Leader has assigned to the aggregation job.
+   During aggregation, the Leader needs to convey the batch ID of the
+   reports being aggregated to the Helper.  An aggregation job extension
+   is defined for this purpose:
 
-   It is impossible for a BatchSelector.config to be inconsistent with
-   Query.config for this batch mode.
+   enum {
+     leader_selected_batch_id(1),
+     (65535)
+   } AggregationJobExtensionType;
+
+   The payload of this extension is a BatchID selected by the Leader.
+   The Helper MUST abort with error invalidMessage if this extension is
+   absent or the payload is not a valid batch ID.
 
 5.2.3.  Batch Selector Configuration
 
@@ -4174,7 +4156,7 @@ Table of Contents
 
    Each batch consists of a single bucket and is identified by the batch
    ID.  A report is assigned to the batch indicated by the
-   leader_selected_batch_id aggregation job extension (Section 4.5.1.1)
+   leader_selected_batch_id aggregation job extension (Section 5.2.2)
    during aggregation.
 
 6.  Operational Considerations
@@ -4952,16 +4934,16 @@ Table of Contents
 
    The initial contents of this registry are listed in Table 4.
 
-    +========+==========================+=============================+
-    | Value  | Name                     | Reference                   |
-    +========+==========================+=============================+
-    | 0x0000 | reserved                 | Section 9.2.3 of RFC XXXX   |
-    +--------+--------------------------+-----------------------------+
-    | 0x0001 | leader_selected_batch_id | Section 4.5.1.1 of RFC XXXX |
-    +--------+--------------------------+-----------------------------+
+     +========+==========================+===========================+
+     | Value  | Name                     | Reference                 |
+     +========+==========================+===========================+
+     | 0x0000 | reserved                 | Section 9.2.3 of RFC XXXX |
+     +--------+--------------------------+---------------------------+
+     | 0x0001 | leader_selected_batch_id | Section 5.2.2 of RFC XXXX |
+     +--------+--------------------------+---------------------------+
 
-       Table 4: Initial contents of the DAP Aggregation Job Extension
-                           Identifiers registry.
+            Table 4: Initial contents of the DAP Aggregation Job
+                      Extension Identifiers registry.
 
 9.2.4.  Report Extensions Registry
 
