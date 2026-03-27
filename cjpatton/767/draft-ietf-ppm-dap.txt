@@ -227,7 +227,7 @@ Table of Contents
    *  Require report extensions to be sorted by type. (*) (#775)
 
    *  Remove the partial batch selector from the collection job
-      response. (*)
+      response. (*) (#778)
 
    17:
 
