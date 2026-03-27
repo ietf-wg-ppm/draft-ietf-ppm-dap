@@ -192,8 +192,10 @@ aggregator.
 
 - Require report extensions to be sorted by type. (\*) (#775)
 
-- Remove the partial batch selector from the collection job response. (\*)
-  (#778)
+- Replace the partial batch selector with aggregation job extensions. If a
+  batch mode needs to convey information to the Helper during aggregation, it
+  defines an aggregation job extension. For example, the leader-selected batch
+  mode defines an extension that conveys the batch ID. (\*) (#762)
 
 17:
 
@@ -2141,6 +2143,25 @@ both of which can violate privacy ({{replay-protection}}). Before committing to
 an output share, the Aggregators check whether its report ID has already been
 aggregated and whether the batch bucket being updated has been collected.
 
+### Aggregation Job Extensions {#agg-job-extensions}
+
+The Leader may include extensions in the `AggregationJobInitReq` to convey
+additional parameters for the aggregation job to the Helper. Extensions use
+the following types:
+
+~~~ tls-presentation
+enum {
+  reserved(0),
+  (65535)
+} AggregationJobExtensionType;
+~~~
+
+Each extension is identified by an `AggregationJobExtensionType` codepoint.
+Extension type values are defined in {{agg-job-extensions-registry}}.
+
+Extensions are mandatory to support. If the Helper does not recognize an
+extension type, it MUST abort with error `unsupportedExtension`.
+
 ### Eager Aggregation {#eager-aggregation}
 
 In general, aggregation cannot begin until the Collector specifies a query and
@@ -2263,14 +2284,14 @@ for the relevant reports.
 
 ~~~ tls-presentation
 struct {
-  BatchMode batch_mode;
-  opaque config<0..2^16-1>;
-} PartialBatchSelector;
+  AggregationJobExtensionType extension_type;
+  opaque extension_data<0..2^16-1>;
+} AggregationJobExtension;
 
 struct {
   uint8 verification_key_id;
   opaque agg_param<0..2^32-1>;
-  PartialBatchSelector part_batch_selector;
+  AggregationJobExtension extensions<0..2^16-1>;
   VerifyInit verify_inits[verify_inits_length];
 } AggregationJobInitReq;
 ~~~
@@ -2288,16 +2309,14 @@ This message consists of:
   initializing an aggregation job, the Leader MUST validate the parameter as
   described in {{agg-param-validation}}.
 
-* `part_batch_selector`: The "partial batch selector" used by the Aggregators to
-  determine how to aggregate each report. Its contents depends on the indicated
-  batch mode. This field is called the "partial" batch selector because
-  depending on the batch mode, it may only partially determine a batch. See
-  {{batch-modes}}.
+* `extensions`: A list of aggregation job extensions ({{agg-job-extensions}})
+  providing additional parameters for the aggregation job. Extensions are
+  mandatory to support.
 
 * `verify_inits`: the sequence of `VerifyInit` messages constructed in the
   previous step. Here `verify_inits_length` is the length of the HTTP message
   content ({{!RFC9110, Section 6.4}}), minus the lengths in octets of the
-  encoded `agg_param` and `part_batch_selector` fields. That is, the remainder
+  encoded `agg_param` and `extensions` fields. That is, the remainder
   of the HTTP message consists of `verify_inits`.
 
 {:aside}
@@ -2407,9 +2426,11 @@ conditions:
 * Whether the `AggregationJobInitReq` is malformed. If so, the the Helper MUST
   fail the job with error `invalidMessage`.
 
-* Whether the batch mode indicated by `part_batch_selector.batch_mode` matches
-  the task's batch mode. If not, then the Helper MUST fail the job with error
-  `invalidMessage`.
+* Whether the extensions in `AggregationJobInitReq.extensions` are valid:
+  - If any extension type is unrecognized, the Helper MUST fail the job with
+    error `unsupportedExtension`.
+  - If the extensions are not encoded in strictly increasing order of
+    `extension_type`, the Helper MUST fail the job with error `invalidMessage`.
 
 * Whether the aggregation parameter is valid as described in
   {{agg-param-validation}}. If the aggregation parameter is invalid, then the
@@ -2610,12 +2631,12 @@ Authorization: Bearer auth-token
 
 encoded(struct {
   agg_param = [0x00, 0x01, 0x02, 0x04, ...],
-  part_batch_selector = struct {
-    batch_mode = BatchMode.leader_selected,
-    config = encoded(struct {
-      batch_id = [0x1f, 0x1e, ..., 0x00],
-    } LeaderSelectedPartialBatchSelectorConfig),
-  } PartialBatchSelector,
+  extensions = [
+    struct {
+      extension_type = AggregationJobExtensionType.leader_selected_batch_id,
+      extension_data = encoded([0x1f, 0x1e, ..., 0x00] BatchID),
+    } AggregationJobExtension,
+  ],
   verify_inits,
 } AggregationJobInitReq)
 
@@ -2638,10 +2659,7 @@ Authorization: Bearer auth-token
 
 encoded(struct {
   agg_param = [0x00, 0x01, 0x02, 0x04, ...],
-  part_batch_selector = struct {
-    batch_mode = BatchMode.time_interval,
-    config = encoded(Empty),
-  },
+  extensions = [],
   verify_inits,
 } AggregationJobInitReq)
 
@@ -2920,14 +2938,16 @@ removed from a batch bucket once stored, so we say that the Aggregator _commits_
 the output share. The data stored in a batch bucket is kept for eventual use in
 the {{collect-flow}}.
 
-Batch buckets are indexed by a "batch bucket identifier" as as specified by the
+Batch buckets are indexed by a "batch bucket identifier" as specified by the
 task's batch mode:
 
-* For the time-interval batch mode ({{time-interval-batch-mode}}, the batch
+* For the time-interval batch mode ({{time-interval-batch-mode}}), the batch
   bucket identifier is an interval of time and is determined by the report's
   timestamp.
 * For the leader-selected batch mode ({{leader-selected-batch-mode}}), the
-  batch bucket identifier is the batch ID and indicated in the aggregation job.
+  batch bucket identifier is the batch ID carried in the
+  `leader_selected_batch_id` aggregation job extension
+  ({{leader-selected-batch-id-extension}}).
 
 A few different pieces of information are associated with each batch bucket:
 
@@ -3810,8 +3830,7 @@ enum {
 
 Each batch mode specifies the following:
 
-1. The value of the `config` field of `Query`, `PartialBatchSelector`, and
-   `BatchSelector`
+1. The value of the `config` field of `Query` and `BatchSelector`
 
 1. Batch buckets ({{batch-buckets}}): how reports are assigned to batch
    buckets; how each bucket is identified; and how batch buckets are mapped to
@@ -3821,6 +3840,13 @@ Each batch mode specifies the following:
    batch modes MUST define a deterministic encoding of their configuration so it
    can be incorporated into `TaskConfiguration` ({{task-configuration}})
    structures.
+
+It may be necessary for the Leader to convey additional information to the
+Helper during aggregation in order to map reports to batch buckets. This may be
+done with the aggregation job extension mechanism (see {{agg-job-extensions}}).
+A batch mode that defines such an extension should specify how it is used to
+assign reports to batch buckets. See the leader-selected mode
+({{leader-selected-batch-mode}}) for an example.
 
 ## Time Interval {#time-interval-batch-mode}
 
@@ -3870,10 +3896,6 @@ struct {
 where `batch_interval` is the batch interval requested by the Collector. The
 interval MUST be well-formed as specified in {{timestamps}}. Otherwise, the
 query does not specify a set of valid batch buckets.
-
-### Partial Batch Selector Configuration
-
-The payload of `PartialBatchSelector.config` is empty.
 
 ### Batch Selector Configuration
 
@@ -3967,20 +3989,22 @@ interaction (see {{aggregate-flow}}) need to be coordinated.
 They payload of `Query.config` is empty. The request merely indicates the
 Collector would like the next batch selected by the Leader.
 
-### Partial Batch Selector Configuration
+### Aggregation Job Extension {#leader-selected-batch-id-extension}
 
-The payload of `PartialBatchSelector.config` is:
+During aggregation, the Leader needs to convey the batch ID of the reports
+being aggregated to the Helper. An aggregation job extension is defined for
+this purpose:
 
 ~~~ tls-presentation
-struct {
-  BatchID batch_id;
-} LeaderSelectedPartialBatchSelectorConfig;
+enum {
+  leader_selected_batch_id(1),
+  (65535)
+} AggregationJobExtensionType;
 ~~~
 
-where `batch_id` is the batch ID selected by the Leader.
-
-It is impossible for a `BatchSelector.config` to be inconsistent
-with `Query.config` for this batch mode.
+The payload of this extension is a `BatchID` selected by the Leader. The
+Helper MUST abort with error `invalidMessage` if this extension is absent or
+the payload is not a valid batch ID.
 
 ### Batch Selector Configuration
 
@@ -3997,7 +4021,8 @@ where `batch_id` is the batch ID selected by the Leader.
 ### Batch Buckets {#leader-selected-batch-buckets}
 
 Each batch consists of a single bucket and is identified by the batch ID. A
-report is assigned to the batch indicated by the `PartialBatchSelector` during
+report is assigned to the batch indicated by the `leader_selected_batch_id`
+aggregation job extension ({{leader-selected-batch-id-extension}}) during
 aggregation.
 
 # Operational Considerations {#operational-capabilities}
@@ -4708,6 +4733,31 @@ The initial contents of this registry are listed in {{task-extension-id}}.
 | `0x0001` | `task_interval` | {{task-interval-extension}} of RFC XXXX  |
 {: #task-extension-id title="Initial contents of the Task Extensions registry."}
 
+### Aggregation Job Extensions Registry {#agg-job-extensions-registry}
+
+A new registry will be (RFC EDITOR: change "will be" to "has been") created
+called "DAP Aggregation Job Extension Identifiers" for extensions included in
+aggregation job initialization requests ({{agg-job-extensions}}). This registry
+should contain the following columns:
+
+Value:
+: The two-byte identifier for the aggregation job extension
+
+Name:
+: The name of the aggregation job extension
+
+Reference:
+: Where the extension is defined
+
+The initial contents of this registry are listed in {{agg-job-extension-id}}.
+
+| Value    | Name                        | Reference                                             |
+|:---------|:----------------------------|:------------------------------------------------------|
+| `0x0000` | `reserved`                  | {{agg-job-extensions-registry}} of RFC XXXX           |
+| `0x0001` | `leader_selected_batch_id`  | {{leader-selected-batch-id-extension}} of RFC XXXX    |
+{: #agg-job-extension-id title="Initial contents of the DAP Aggregation Job Extension
+Identifiers registry."}
+
 ### Report Extensions Registry
 
 A new registry will be (RFC EDITOR: change "will be" to "has been") created
@@ -4822,6 +4872,7 @@ one or more of the following:
 1. a new batch mode ({{batch-modes}})
 1. a new task extension ({{task-extensions}})
 1. a new report extension ({{report-extensions}})
+1. a new aggregation job extension ({{agg-job-extensions}})
 1. a new collection job extension ({{collect-ext}})
 1. a new report error ({{aggregation-helper-init}})
 1. a new entry in the URN sub-namespace for DAP ({{urn-space-errors}})
@@ -4832,8 +4883,11 @@ Each of these requires registration of a codepoint or other value; see
 * When a document defines a new batch mode, it MUST include a section titled
   "DAP Batch Mode Considerations" specifying the following:
 
-    * The value of the `config` field of `Query`, `PartialBatchSelector`, and
-      `BatchSelector`
+    * The value of the `config` field of `Query` and `BatchSelector`
+
+    * Any aggregation job extension defined for the batch mode
+      ({{agg-job-extensions}}), including how the extension is used to assign
+      reports to batch buckets.
 
     * Batch buckets ({{batch-buckets}}): how reports are assigned to batch
       buckets; how each bucket is identified; and how batch buckets are mapped
