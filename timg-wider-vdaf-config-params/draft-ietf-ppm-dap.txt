@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 27 September 2026                                    Cloudflare
+Expires: 28 September 2026                                    Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                           26 March 2026
+                                                           27 March 2026
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -64,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 27 September 2026.
+   This Internet-Draft will expire on 28 September 2026.
 
 Copyright Notice
 
@@ -5293,8 +5293,8 @@ B.2.  Prio3Sum
    } Prio3SumConfig;
 
    max_measurement is the largest summand permitted in this
-   instantiation of the VDAF.  The value MUST not exceed the modulus of
-   Field64; see [VDAF], Section 6.1.4.
+   instantiation of the VDAF.  The value MUST be less than the modulus
+   of the field associated with the circuit; see [VDAF], Section 6.1.4.
 
 B.3.  Prio3SumVec
 
@@ -5327,15 +5327,17 @@ B.5.  Prio3MultihotCountVec
    struct {
        uint32 length;
        uint32 chunk_length;
-       uint32 max_weight;
+       uint64 max_weight;
    } Prio3MultihotCountVecConfig;
 
    *  length is the length of the vectors being summed.
 
    *  chunk_length is the size of each proof chunk.
 
-   *  max_weight is the largest weight allowed for measurments; the
-      maximum number of true entries in the bit vector.
+   *  max_weight is the largest weight allowed for measurements; the
+      maximum number of true entries in the bit vector.  The value MUST
+      be less than the modulus of the field associated with the circuit;
+      see [VDAF], Section 6.1.4.
 
 B.6.  Poplar1
 
