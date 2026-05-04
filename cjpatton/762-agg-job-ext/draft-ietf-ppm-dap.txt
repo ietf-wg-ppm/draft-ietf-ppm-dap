@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 4 October 2026                                       Cloudflare
+Expires: 5 November 2026                                      Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                            2 April 2026
+                                                              4 May 2026
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -64,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 4 October 2026.
+   This Internet-Draft will expire on 5 November 2026.
 
 Copyright Notice
 
@@ -3618,7 +3618,8 @@ Table of Contents
    at the URL {helper}/tasks/{task-id}/aggregate_shares/{aggregate-
    share-id}. To obtain it, the Leader first chooses an aggregate share
    ID, which MUST be unique within the scope of the corresponding DAP
-   task.
+   task.  Since this resource corresponds to exactly one collection job,
+   the Leader might use the collection job ID as the aggregate share ID.
 
    Then the Leader sends a PUT request to the aggregate share with the
    body:
@@ -5330,37 +5331,63 @@ B.1.  Prio3Count
 B.2.  Prio3Sum
 
    struct {
-       uint32 max_measurement; /* largest summand */
+       uint64 max_measurement;
    } Prio3SumConfig;
+
+   max_measurement is the largest summand permitted in this
+   instantiation of the VDAF.  The value MUST be less than the modulus
+   of the field associated with the circuit; see [VDAF], Section 6.1.4.
 
 B.3.  Prio3SumVec
 
    struct {
-       uint32 length;          /* length of the vector */
-       uint32 max_measurement; /* maximum value of each summand */
-       uint32 chunk_length;    /* size of each proof chunk */
+       uint32 length;
+       uint64 max_measurement;
+       uint32 chunk_length;
    } Prio3SumVecConfig;
+
+   *  length is the length of the vectors being summed.
+
+   *  max_measurement is the largest summand permitted in this
+      instantiation of the VDAF.
+
+   *  chunk_length is the size of each proof chunk.
 
 B.4.  Prio3Histogram
 
    struct {
-       uint32 length;       /* number of buckets */
-       uint32 chunk_length; /* size of each proof chunk */
+       uint32 length;
+       uint32 chunk_length;
    } Prio3HistogramConfig;
+
+   *  length is the number of buckets in the histogram.
+
+   *  chunk_length is the size of each proof chunk.
 
 B.5.  Prio3MultihotCountVec
 
    struct {
-       uint32 length;       /* length of the vector */
-       uint32 chunk_length; /* size of each proof chunk */
-       uint32 max_weight;   /* largest vector weight */
+       uint32 length;
+       uint32 chunk_length;
+       uint64 max_weight;
    } Prio3MultihotCountVecConfig;
+
+   *  length is the length of the vectors being summed.
+
+   *  chunk_length is the size of each proof chunk.
+
+   *  max_weight is the largest weight allowed for measurements; the
+      maximum number of true entries in the bit vector.  The value MUST
+      be less than the modulus of the field associated with the circuit;
+      see [VDAF], Section 6.1.4.
 
 B.6.  Poplar1
 
    struct {
-       uint16 bits; /* bit length of the input string */
+       uint16 bits;
    } Poplar1Config;
+
+   bits is the number of bits in input strings.
 
 Contributors
 
