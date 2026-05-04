@@ -2242,6 +2242,11 @@ Table of Contents
    convey additional parameters for the aggregation job to the Helper.
    Extensions use the following types:
 
+   struct {
+     AggregationJobExtensionType extension_type;
+     opaque extension_data<0..2^16-1>;
+   } AggregationJobExtension;
+
    enum {
      reserved(0),
      (65535)
@@ -2253,6 +2258,10 @@ Table of Contents
    Extensions are mandatory to support.  If the Helper does not
    recognize an extension type, it MUST abort with error
    unsupportedExtension.
+
+   Extensions MUST be encoded in strictly increasing order of
+   extension_type.  That is, each extension_type value must be greater
+   than that of the extension that precedes it.
 
 4.5.2.  Eager Aggregation
 
@@ -2384,11 +2393,6 @@ Table of Contents
    for the relevant reports.
 
    struct {
-     AggregationJobExtensionType extension_type;
-     opaque extension_data<0..2^16-1>;
-   } AggregationJobExtension;
-
-   struct {
      uint8 verification_key_id;
      opaque agg_param<0..2^32-1>;
      AggregationJobExtension extensions<0..2^16-1>;
@@ -2410,7 +2414,6 @@ Table of Contents
 
    *  extensions: A list of aggregation job extensions (Section 4.5.1)
       providing additional parameters for the aggregation job.
-      Extensions are mandatory to support.
 
    *  verify_inits: the sequence of VerifyInit messages constructed in
       the previous step.  Here verify_inits_length is the length of the
@@ -3971,7 +3974,7 @@ Table of Contents
        TaskConfiguration (Section 4.2) structures.
 
    It may be necessary for the Leader to convey additional information
-   to the Helper during aggregation in order to map reports to batch
+   to the Helper during aggregation in order to assign reports to batch
    buckets.  This may be done with the aggregation job extension
    mechanism (see Section 4.5.1).  A batch mode that defines such an
    extension should specify how it is used to assign reports to batch
