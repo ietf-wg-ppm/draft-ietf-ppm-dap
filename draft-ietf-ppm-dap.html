@@ -6090,7 +6090,9 @@ opaque AggregateShareID[16];
 <p id="section-4.6.4-8">The Helper's aggregate share is an HTTP resource served by the Helper at the URL
 <code>{helper}/tasks/{task-id}/aggregate_shares/{aggregate-share-id}</code>. To obtain it,
 the Leader first chooses an aggregate share ID, which <span class="bcp14">MUST</span> be unique within the
-scope of the corresponding DAP task.<a href="#section-4.6.4-8" class="pilcrow">¶</a></p>
+scope of the corresponding DAP task. Since this resource corresponds to
+exactly one collection job, the Leader might use the collection job ID as the
+aggregate share ID.<a href="#section-4.6.4-8" class="pilcrow">¶</a></p>
 <p id="section-4.6.4-9">Then the Leader sends a PUT request to the aggregate share with the body:<a href="#section-4.6.4-9" class="pilcrow">¶</a></p>
 <div class="lang-tls-presentation sourcecode" id="section-4.6.4-10">
 <pre>
