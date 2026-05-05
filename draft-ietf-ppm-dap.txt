@@ -96,10 +96,11 @@ Table of Contents
        2.4.3.  The Collection Interaction
    3.  HTTP Usage
      3.1.  Asynchronous Request Handling
-     3.2.  HTTP Status Codes
-     3.3.  Presentation Language
-     3.4.  Request Authentication
-     3.5.  Errors
+     3.2.  Resource Creation
+     3.3.  HTTP Status Codes
+     3.4.  Presentation Language
+     3.5.  Request Authentication
+     3.6.  Errors
    4.  Protocol Definition
      4.1.  Basic Type Definitions
        4.1.1.  Times, Durations and Intervals
@@ -235,6 +236,10 @@ Table of Contents
       Helper during aggregation, it defines an aggregation job
       extension.  For example, the leader-selected batch mode defines an
       extension that conveys the batch ID. (*) (#762)
+
+   *  Move resource creation from PUT to POST with server-selected
+      identifiers for aggregation jobs, collection jobs, and aggregate
+      shares. (*) (#781)
 
    17:
 
@@ -1151,8 +1156,8 @@ Table of Contents
    polls the state of the resource by sending GET requests to the
    resource URL.  In some interactions, the resource's location will be
    indicated by a Location header in the HTTP server's response
-   ([RFC9110], Section 10.2.2).  Otherwise the resource URL is the URL
-   to which the HTTP client initially sent its request.
+   ([RFC9110], Section 10.2.2); see Section 3.2.  Otherwise the resource
+   URL is the URL to which the HTTP client initially sent its request.
 
    The HTTP client SHOULD use each response's Retry-After header field
    to decide when to fetch the resource.  The HTTP server responds the
@@ -1174,20 +1179,46 @@ Table of Contents
    later on.  The retention period for job results is an implementation
    detail.
 
-3.2.  HTTP Status Codes
+3.2.  Resource Creation
+
+   Several DAP interactions involve creating new resources on an HTTP
+   server: aggregation jobs (Section 4.5.3), collection jobs
+   (Section 4.6.1), and aggregate shares (Section 4.6.4).  In each case,
+   the HTTP client sends a POST request to a creation URL and the HTTP
+   server assigns the new resource a unique identifier.
+
+   The server responds with a successful status code and a Location
+   header field ([RFC9110], Section 10.2.2) indicating the location of
+   the newly created resource.  If the server handles the request
+   synchronously, the response also includes the resource's
+   representation in the body.  If the server defers handling, the
+   response body is empty and the HTTP client polls the resource at the
+   location indicated by the Location header, as described in Section 3.
+
+   Resource creation MUST be idempotent: if the server receives a POST
+   request identical to one that created an existing resource (as
+   defined by the interaction- specific criteria below), it MUST
+   indicate the existing resource's location in the Location header
+   rather than creating a duplicate.  This allows HTTP clients to safely
+   retry requests without risking side effects.
+
+   One way to achieve this is to derive the resource identifier
+   deterministically from the request content.
+
+3.3.  HTTP Status Codes
 
    HTTP servers participating in DAP MAY use any status code from the
    applicable class when constructing HTTP responses, but HTTP clients
    MAY treat any status code as the most general code of that class.
    For example, 202 may be handled as 200, or 499 as 400.
 
-3.3.  Presentation Language
+3.4.  Presentation Language
 
    We use the presentation language defined in [RFC8446], Section 3 to
    define messages in the protocol.  Encoding and decoding of these
    messages as byte strings also follows [RFC8446].
 
-3.4.  Request Authentication
+3.5.  Request Authentication
 
    The protocol is made up of several interactions in which different
    subsets of participants interact with each other.
@@ -1226,7 +1257,7 @@ Table of Contents
 
    *  Leaders obtaining aggregate shares from Helpers (Section 4.6.4).
 
-3.5.  Errors
+3.6.  Errors
 
    Errors are reported as HTTP status codes.  Any of the standard client
    or server errors (the 4xx or 5xx classes, respectively, from
@@ -1799,7 +1830,7 @@ Table of Contents
 
    Aggregators MAY require Clients to authenticate when uploading
    reports (see Section 8.3).  If it is used, client authentication MUST
-   use a scheme that meets the requirements in Section 3.4.
+   use a scheme that meets the requirements in Section 3.5.
 
 4.4.2.1.  Client Behavior
 
@@ -2137,14 +2168,15 @@ Table of Contents
    verification succeeds, then the resulting output shares are
    guaranteed to combine into a valid, refined measurement.
 
-   Aggregation jobs are identified by 16-byte job ID, chosen by the
-   Leader:
+   Aggregation jobs are identified by a server-selected identifier,
+   unique within the scope of the task, assigned during resource
+   creation (Section 3.2).
 
-   opaque AggregationJobID[16];
-
-   An aggregation job is an HTTP resource served by the Helper at the
-   URL {helper}/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}.
-   VDAF verification is mapped onto an aggregation job as illustrated in
+   Aggregation jobs are created by POSTing to the creation URL served by
+   the Helper at {helper}/tasks/{task-id}/aggregation_jobs.  An existing
+   aggregation job is an HTTP resource served by the Helper at the URL
+   {helper}/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}. VDAF
+   verification is mapped onto an aggregation job as illustrated in
    Figure 7.  The first request from the Leader to the Helper includes
    the aggregation parameter, the Helper's report share for each report
    in the job, and for each report the initialization step for
@@ -2319,8 +2351,7 @@ Table of Contents
               initialization. (*) indicates a terminal state.
 
    The Leader begins an aggregation job by choosing a set of candidate
-   reports that belong to the same task and a job ID which MUST be
-   unique within the task.
+   reports that belong to the same task.
 
    First, the Leader MUST ensure each report in the candidate set can be
    committed per the criteria detailed in Section 4.5.4.3.  If a report
@@ -2431,11 +2462,18 @@ Table of Contents
       |  analysis would be required to enable selecting a verification
       |  key after a task has started.
 
-   The Leader sends the AggregationJobInitReq in the body of a PUT
-   request to the aggregation job with a media type of "application/ppm-
-   dap;message=aggregation-job-init-req".  The Leader handles the
-   response(s) as described in Section 3 to obtain an
+   The Leader sends the AggregationJobInitReq in the body of a POST
+   request to {helper}/tasks/{task-id}/aggregation_jobs with a media
+   type of "application/ppm-dap;message=aggregation-job-init-req".  The
+   Helper creates the aggregation job resource and indicates its
+   location in the Location header, as described in Section 3.2.  The
+   Leader handles the response(s) as described in Section 3 to obtain an
    AggregationJobResp.
+
+   Two AggregationJobInitReq messages are considered identical if they
+   are byte-for-byte identical when serialized.  The Helper uses this to
+   provide the idempotency guarantee described in Section 3.2.  A Leader
+   that retries a request MUST replay the identical serialized body.
 
    The AggregationJobResp.verify_resps field must include exactly the
    same report IDs in the same order as the Leader's
@@ -2517,15 +2555,15 @@ Table of Contents
    continue verifying the report.
 
    The initialization request can be handled either asynchronously or
-   synchronously as described in Section 3.  When indicating that the
-   job is not yet ready, the response MUST include a Location header
-   field ([RFC9110], Section 10.2.2) set to the relative reference
-   /tasks/{task-id}/aggregation_jobs/{aggregation-job-id}?step=0.
-   Subsequent GET requests to the aggregation job MUST include the step
-   query parameter so that the Helper can figure out which step of
-   preparation the Leader is on (see Section 4.5.4.4).  When the job is
-   ready, the Helper responds with the AggregationJobResp (defined
-   below).
+   synchronously as described in Section 3.  The response MUST include a
+   Location header field ([RFC9110], Section 10.2.2) indicating the
+   location of the aggregation job resource.  When indicating that the
+   job is not yet ready, the Location header MUST include the query
+   parameter step=0.  Subsequent GET requests to the aggregation job
+   MUST include the step query parameter so that the Helper can figure
+   out which step of preparation the Leader is on (see Section 4.5.4.4).
+   When the job is ready, the Helper responds with the
+   AggregationJobResp (defined below).
 
    Upon receipt of an AggregationJobInitReq, the Helper checks the
    following conditions:
@@ -2654,14 +2692,15 @@ Table of Contents
    AggregationJobResp is "application/ppm-dap;message=aggregation-job-
    resp".
 
-   The Helper may receive multiple copies of a given initialization
-   request.  The Helper MUST verify that subsequent requests have the
-   same AggregationJobInitReq value and abort with a client error if
-   they do not.  It is illegal to rewind or reset the state of an
-   aggregation job.  If the Helper receives requests to initialize an
-   aggregation job once it has been continued at least once, confirming
+   If the Helper receives a POST whose content matches an existing
+   aggregation job (per the identity criteria in Section 4.5.3.1), it
+   MUST return the existing job's location and current state as
+   described in Section 3.2.  It is illegal to rewind or reset the state
+   of an aggregation job.  If the Helper receives a POST that matches an
+   aggregation job which has been continued at least once, confirming
    that the Leader received the Helper's response (see Section 4.5.4),
-   it MUST abort with a client error.
+   it MUST return the existing job's location and current state rather
+   than reinitializing the job.
 
 4.5.3.3.  Input Share Decryption
 
@@ -2745,8 +2784,8 @@ Table of Contents
 
    The Helper handles the aggregation job initialization synchronously:
 
-   PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
-     aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
+   POST /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+     aggregation_jobs
    Host: example.com
    Content-Type: application/ppm-dap;message=aggregation-job-init-req
    Content-Length: 100
@@ -2764,6 +2803,8 @@ Table of Contents
    } AggregationJobInitReq)
 
    HTTP/1.1 200
+   Location: /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+     aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
    Content-Type: application/ppm-dap;message=aggregation-job-resp
    Content-Length: 100
 
@@ -2771,8 +2812,8 @@ Table of Contents
 
    Or asynchronously:
 
-   PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
-     aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
+   POST /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+     aggregation_jobs
    Host: example.com
    Content-Type: application/ppm-dap;message=aggregation-job-init-req
    Content-Length: 100
@@ -3271,22 +3312,21 @@ Table of Contents
    Once complete, the Collector computes the final aggregate result as
    specified in Section 4.6.6.
 
-   Collection jobs are identified by a 16-byte job ID, chosen by the
-   Collector:
-
-   opaque CollectionJobID[16];
+   Collection jobs are identified by a server-selected identifier,
+   unique within the scope of the task, assigned during resource
+   creation (Section 3.2).
 
    A collection job is an HTTP resource served by the Leader at the URL
    {leader}/tasks/{task-id}/collection_jobs/{collection-job-id}.
+   Collection jobs are created by POSTing to the creation URL
+   {leader}/tasks/{task-id}/collection_jobs.
 
 4.6.1.  Collection Job Initialization
 
-   First, the Collector chooses a collection job ID, which MUST be
-   unique within the scope of the corresponding DAP task.
-
-   To initiate the collection job, the Collector issues a PUT request to
-   the collection job with media type "application/ppm-
-   dap;message=collection-job-req", and a body structured as follows:
+   To initiate a collection job, the Collector issues a POST request to
+   {leader}/tasks/{task-id}/collection_jobs with media type
+   "application/ppm-dap;message=collection-job-req", and a body
+   structured as follows:
 
    struct {
      BatchMode batch_mode;
@@ -3321,8 +3361,10 @@ Table of Contents
    string.
 
    The collection request can be handled either asynchronously or
-   synchronously as described in Section 3.  The representation of the
-   collection job is a CollectionJobResp (defined below).
+   synchronously as described in Section 3.2 and Section 3.  The
+   response includes a Location header indicating the location of the
+   new collection job resource.  The representation of the collection
+   job is a CollectionJobResp (defined below).
 
    If the job fails with invalidBatchSize, then the Collector MAY retry
    it later, once it believes enough new reports have been uploaded and
@@ -3432,16 +3474,18 @@ Table of Contents
    further aggregation jobs MUST NOT commit more reports to the batch
    (see Section 4.5.4.3).
 
-   Changing a collection job's parameters is illegal, so if there are
-   further PUT requests to the collection job with a different
-   CollectionJobReq, the Leader MUST abort with error invalidMessage.
+   Two CollectionJobReq messages are considered identical if their
+   encodings are byte-for-byte identical.  If the Leader receives a POST
+   whose content matches an existing collection job, it MUST return the
+   existing job's location and current state as described in
+   Section 3.2.
 
 4.6.1.1.  Example
 
    The Leader handles the collection job request synchronously:
 
-   PUT /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
-     collection_jobs/lc7aUeGpdSNosNlh-UZhKA
+   POST /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+     collection_jobs
    Host: example.com
    Content-Type: application/ppm-dap;message=collection-job-req
    Authorization: Bearer auth-token
@@ -3456,6 +3500,8 @@ Table of Contents
    } CollectionJobReq)
 
    HTTP/1.1 200
+   Location: /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+     collection_jobs/lc7aUeGpdSNosNlh-UZhKA
    Content-Type: application/ppm-dap;message=collection-job-resp
 
    encoded(struct {
@@ -3470,8 +3516,8 @@ Table of Contents
 
    Or asynchronously:
 
-   PUT /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
-     collection_jobs/lc7aUeGpdSNosNlh-UZhKA
+   POST /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+     collection_jobs
    Host: example.com
    Content-Type: application/ppm-dap;message=collection-job-req
    Authorization: Bearer auth-token
@@ -3491,6 +3537,8 @@ Table of Contents
    } CollectionJobReq)
 
    HTTP/1.1 200
+   Location: /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+     collection_jobs/lc7aUeGpdSNosNlh-UZhKA
    Retry-After: 300
 
    GET /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
@@ -3543,12 +3591,12 @@ Table of Contents
 
    Extensions are mandatory to support by both Aggregators.  A
    collection job that contains an unrecognized or unsupported extension
-   MUST be aborted with an unsupportedExtension error; see Section 3.5.
+   MUST be aborted with an unsupportedExtension error; see Section 3.6.
 
    Extensions MUST be encoded in strictly increasing order.  If any
    extension_type value is equal to or less than that of the extension
    that precedes it, the job MUST be failed with an invalidExtension
-   error; see Section 3.5.
+   error; see Section 3.6.
 
    Each collection job extension MUST define how Aggregators alter their
    handling of collection jobs when the extension is present, including
@@ -3616,19 +3664,16 @@ Table of Contents
 
    *  Checksums are combined via bitwise XOR.
 
-   A Helper aggregate share is identified by a 16-byte ID:
-
-   opaque AggregateShareID[16];
+   A Helper aggregate share is identified by a server-selected
+   identifier, unique within the scope of the task, assigned during
+   resource creation (Section 3.2).  Since this resource corresponds to
+   exactly one collection job, the Leader might use the collection job
+   ID as the aggregate share ID.
 
    The Helper's aggregate share is an HTTP resource served by the Helper
    at the URL {helper}/tasks/{task-id}/aggregate_shares/{aggregate-
-   share-id}. To obtain it, the Leader first chooses an aggregate share
-   ID, which MUST be unique within the scope of the corresponding DAP
-   task.  Since this resource corresponds to exactly one collection job,
-   the Leader might use the collection job ID as the aggregate share ID.
-
-   Then the Leader sends a PUT request to the aggregate share with the
-   body:
+   share-id}. To obtain an aggregate share, the Leader sends a POST
+   request to {helper}/tasks/{task-id}/aggregate_shares with the body:
 
    struct {
      BatchMode batch_mode;
@@ -3738,9 +3783,12 @@ Table of Contents
    jobs for additional reports that satisfy the query.  These reports
    MUST be rejected by the Helper as described in Section 4.5.4.3.
 
-   Changing an aggregate share's parameters is illegal, so if there are
-   further PUT requests to the aggregate share with a different
-   AggregateShareReq, the Helper MUST abort with error invalidMessage.
+   Two AggregateShareReq messages are considered identical if their
+   encodings are byte-for-byte identical.  Note that, within a task, a
+   given batch can only be collected once, so the batch selector is a
+   natural key.  If the Helper receives a POST whose content matches an
+   existing aggregate share, it MUST return the existing resource's
+   location and current state as described in Section 3.2.
 
    Before completing the collection job, the Leader encrypts its
    aggregate share under the Collector's HPKE public key as described in
@@ -3750,8 +3798,8 @@ Table of Contents
 
    The Helper handles the aggregate share request synchronously:
 
-   PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
-     aggregate_shares/lc7aUeGpdSNosNlh-UZhKA
+   POST /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+     aggregate_shares
    Host: example.com
    Content-Type: application/ppm-dap;message=aggregate-share-req
    Authorization: Bearer auth-token
@@ -3784,6 +3832,8 @@ Table of Contents
    } AggregateShareReq)
 
    HTTP/1.1 200
+   Location: /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+     aggregate_shares/lc7aUeGpdSNosNlh-UZhKA
    Content-Type: application/ppm-dap;message=aggregate-share
 
    encoded(struct {
@@ -3792,8 +3842,8 @@ Table of Contents
 
    Or asynchronously:
 
-   PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
-     aggregate_shares/lc7aUeGpdSNosNlh-UZhKA
+   POST /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+     aggregate_shares
    Host: example.com
    Content-Type: application/ppm-dap;message=aggregate-share-req
    Authorization: Bearer auth-token
@@ -3826,6 +3876,8 @@ Table of Contents
    } AggregateShareReq)
 
    HTTP/1.1 200
+   Location: /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+     aggregate_shares/lc7aUeGpdSNosNlh-UZhKA
    Retry-After: 300
 
    GET /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
@@ -5279,10 +5331,12 @@ A.2.2.  Collection Jobs
 
    A Collector's request to collect reports identified by some query.
 
+   Creation URL: {leader}/tasks/{task-id}/collection_jobs
+
    Resource URL: {leader}/tasks/{task-id}/collection_jobs/{collection-
    job-id}
 
-   HTTP methods: PUT, GET
+   HTTP methods: POST (creation URL), GET, DELETE (resource URL)
 
    Request media-type message values: collection-job-req
 
@@ -5296,9 +5350,12 @@ A.3.1.  Aggregation Jobs
 
    An aggregation job created by the Leader.
 
-   Resource URL: /tasks/{task-id}/aggregation_jobs/{aggregation-job-id}
+   Creation URL: {helper}/tasks/{task-id}/aggregation_jobs
 
-   HTTP methods: PUT, POST, GET
+   Resource URL: {helper}/tasks/{task-id}/aggregation_jobs/{aggregation-
+   job-id}
+
+   HTTP methods: POST (creation URL), POST, GET, DELETE (resource URL)
 
    Request media-type message values: aggregation-job-init-req,
    aggregation-job-continue-req
@@ -5312,10 +5369,12 @@ A.3.2.  Aggregate Shares
    The Helper's share of an aggregation over the reports identified by
    the Collector's query.
 
+   Creation URL: {helper}/tasks/{task-id}/aggregate_shares
+
    Resource URL: {helper}/tasks/{task-id}/aggregate_shares/{aggregate-
    share-id}
 
-   HTTP methods: PUT, GET
+   HTTP methods: POST (creation URL), GET, DELETE (resource URL)
 
    Request media-type message values: aggregate-share-req
 

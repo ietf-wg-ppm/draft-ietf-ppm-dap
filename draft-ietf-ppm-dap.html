@@ -1232,16 +1232,19 @@ without revealing any individual contributor's data.<a href="#section-abstract-1
                 <p id="section-toc.1-1.3.2.1.1"><a href="#section-3.1" class="auto internal xref">3.1</a>.  <a href="#name-asynchronous-request-handli" class="internal xref">Asynchronous Request Handling</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.2">
-                <p id="section-toc.1-1.3.2.2.1"><a href="#section-3.2" class="auto internal xref">3.2</a>.  <a href="#name-http-status-codes" class="internal xref">HTTP Status Codes</a></p>
+                <p id="section-toc.1-1.3.2.2.1"><a href="#section-3.2" class="auto internal xref">3.2</a>.  <a href="#name-resource-creation" class="internal xref">Resource Creation</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.3">
-                <p id="section-toc.1-1.3.2.3.1"><a href="#section-3.3" class="auto internal xref">3.3</a>.  <a href="#name-presentation-language" class="internal xref">Presentation Language</a></p>
+                <p id="section-toc.1-1.3.2.3.1"><a href="#section-3.3" class="auto internal xref">3.3</a>.  <a href="#name-http-status-codes" class="internal xref">HTTP Status Codes</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.4">
-                <p id="section-toc.1-1.3.2.4.1"><a href="#section-3.4" class="auto internal xref">3.4</a>.  <a href="#name-request-authentication" class="internal xref">Request Authentication</a></p>
+                <p id="section-toc.1-1.3.2.4.1"><a href="#section-3.4" class="auto internal xref">3.4</a>.  <a href="#name-presentation-language" class="internal xref">Presentation Language</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.5">
-                <p id="section-toc.1-1.3.2.5.1"><a href="#section-3.5" class="auto internal xref">3.5</a>.  <a href="#name-errors" class="internal xref">Errors</a></p>
+                <p id="section-toc.1-1.3.2.5.1"><a href="#section-3.5" class="auto internal xref">3.5</a>.  <a href="#name-request-authentication" class="internal xref">Request Authentication</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.6">
+                <p id="section-toc.1-1.3.2.6.1"><a href="#section-3.6" class="auto internal xref">3.6</a>.  <a href="#name-errors" class="internal xref">Errors</a></p>
 </li>
             </ul>
 </li>
@@ -1625,6 +1628,10 @@ InputShareAad and AggregateShareAad. (*) (#774)<a href="#section-1.1-3.3.1" clas
 batch mode needs to convey information to the Helper during aggregation, it
 defines an aggregation job extension. For example, the leader-selected batch
 mode defines an extension that conveys the batch ID. (*) (#762)<a href="#section-1.1-3.7.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-1.1-3.8">
+            <p id="section-1.1-3.8.1">Move resource creation from PUT to POST with server-selected identifiers for
+aggregation jobs, collection jobs, and aggregate shares. (*) (#781)<a href="#section-1.1-3.8.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 <p id="section-1.1-4">17:<a href="#section-1.1-4" class="pilcrow">¶</a></p>
@@ -3269,8 +3276,8 @@ by immediately sending an empty response body with a successful status code
 (<span>[<a href="#RFC9110" class="cite xref">RFC9110</a>], <a href="https://rfc-editor.org/rfc/rfc9110#section-10.2.3" class="relref">Section 10.2.3</a></span>) to suggest a polling interval to the HTTP client.
 The HTTP client then polls the state of the resource by sending GET requests to
 the resource URL. In some interactions, the resource's location will be
-indicated by a Location header in the HTTP server's response (<span>[<a href="#RFC9110" class="cite xref">RFC9110</a>], <a href="https://rfc-editor.org/rfc/rfc9110#section-10.2.2" class="relref">Section 10.2.2</a></span>). Otherwise the resource URL is the URL to which the HTTP
-client initially sent its request.<a href="#section-3.1-2" class="pilcrow">¶</a></p>
+indicated by a Location header in the HTTP server's response (<span>[<a href="#RFC9110" class="cite xref">RFC9110</a>], <a href="https://rfc-editor.org/rfc/rfc9110#section-10.2.2" class="relref">Section 10.2.2</a></span>); see <a href="#resource-creation" class="auto internal xref">Section 3.2</a>. Otherwise the resource URL is the
+URL to which the HTTP client initially sent its request.<a href="#section-3.1-2" class="pilcrow">¶</a></p>
 <p id="section-3.1-3">The HTTP client <span class="bcp14">SHOULD</span> use each response's Retry-After header field to decide
 when to fetch the resource. The HTTP server responds the same way as it did to
 the initial request until either the resource is ready, from which point it
@@ -3287,86 +3294,111 @@ retrieve the results of some transaction later on. The retention period for
 job results is an implementation detail.<a href="#section-3.1-5" class="pilcrow">¶</a></p>
 </section>
 </div>
-<div id="http-status-codes">
+<div id="resource-creation">
 <section id="section-3.2">
-        <h3 id="name-http-status-codes">
-<a href="#section-3.2" class="section-number selfRef">3.2. </a><a href="#name-http-status-codes" class="section-name selfRef">HTTP Status Codes</a>
+        <h3 id="name-resource-creation">
+<a href="#section-3.2" class="section-number selfRef">3.2. </a><a href="#name-resource-creation" class="section-name selfRef">Resource Creation</a>
         </h3>
-<p id="section-3.2-1">HTTP servers participating in DAP <span class="bcp14">MAY</span> use any status code from the applicable
+<p id="section-3.2-1">Several DAP interactions involve creating new resources on an HTTP server:
+aggregation jobs (<a href="#agg-init" class="auto internal xref">Section 4.5.3</a>), collection jobs (<a href="#collect-init" class="auto internal xref">Section 4.6.1</a>), and
+aggregate shares (<a href="#collect-aggregate" class="auto internal xref">Section 4.6.4</a>). In each case, the HTTP client sends a
+POST request to a creation URL and the HTTP server assigns the new resource a
+unique identifier.<a href="#section-3.2-1" class="pilcrow">¶</a></p>
+<p id="section-3.2-2">The server responds with a successful status code and a Location header field
+(<span>[<a href="#RFC9110" class="cite xref">RFC9110</a>], <a href="https://rfc-editor.org/rfc/rfc9110#section-10.2.2" class="relref">Section 10.2.2</a></span>) indicating the location of the newly created
+resource. If the server handles the request synchronously, the response also
+includes the resource's representation in the body. If the server defers
+handling, the response body is empty and the HTTP client polls the resource at
+the location indicated by the Location header, as described in <a href="#http-usage" class="auto internal xref">Section 3</a>.<a href="#section-3.2-2" class="pilcrow">¶</a></p>
+<p id="section-3.2-3">Resource creation <span class="bcp14">MUST</span> be idempotent: if the server receives a POST request
+identical to one that created an existing resource (as defined by the interaction-
+specific criteria below), it <span class="bcp14">MUST</span> indicate the existing resource's location
+in the Location header rather than creating a duplicate. This allows HTTP clients
+to safely retry requests without risking side effects.<a href="#section-3.2-3" class="pilcrow">¶</a></p>
+<p id="section-3.2-4">One way to achieve this is to derive the resource identifier deterministically
+from the request content.<a href="#section-3.2-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="http-status-codes">
+<section id="section-3.3">
+        <h3 id="name-http-status-codes">
+<a href="#section-3.3" class="section-number selfRef">3.3. </a><a href="#name-http-status-codes" class="section-name selfRef">HTTP Status Codes</a>
+        </h3>
+<p id="section-3.3-1">HTTP servers participating in DAP <span class="bcp14">MAY</span> use any status code from the applicable
 class when constructing HTTP responses, but HTTP clients <span class="bcp14">MAY</span> treat any status
 code as the most general code of that class. For example, 202 may be handled as
-200, or 499 as 400.<a href="#section-3.2-1" class="pilcrow">¶</a></p>
+200, or 499 as 400.<a href="#section-3.3-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="presentation-language">
-<section id="section-3.3">
+<section id="section-3.4">
         <h3 id="name-presentation-language">
-<a href="#section-3.3" class="section-number selfRef">3.3. </a><a href="#name-presentation-language" class="section-name selfRef">Presentation Language</a>
+<a href="#section-3.4" class="section-number selfRef">3.4. </a><a href="#name-presentation-language" class="section-name selfRef">Presentation Language</a>
         </h3>
-<p id="section-3.3-1">We use the presentation language defined in <span>[<a href="#RFC8446" class="cite xref">RFC8446</a>], <a href="https://rfc-editor.org/rfc/rfc8446#section-3" class="relref">Section 3</a></span> to define
+<p id="section-3.4-1">We use the presentation language defined in <span>[<a href="#RFC8446" class="cite xref">RFC8446</a>], <a href="https://rfc-editor.org/rfc/rfc8446#section-3" class="relref">Section 3</a></span> to define
 messages in the protocol. Encoding and decoding of these messages as byte
-strings also follows <span>[<a href="#RFC8446" class="cite xref">RFC8446</a>]</span>.<a href="#section-3.3-1" class="pilcrow">¶</a></p>
+strings also follows <span>[<a href="#RFC8446" class="cite xref">RFC8446</a>]</span>.<a href="#section-3.4-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="request-authentication">
-<section id="section-3.4">
+<section id="section-3.5">
         <h3 id="name-request-authentication">
-<a href="#section-3.4" class="section-number selfRef">3.4. </a><a href="#name-request-authentication" class="section-name selfRef">Request Authentication</a>
+<a href="#section-3.5" class="section-number selfRef">3.5. </a><a href="#name-request-authentication" class="section-name selfRef">Request Authentication</a>
         </h3>
-<p id="section-3.4-1">The protocol is made up of several interactions in which different subsets of
-participants interact with each other.<a href="#section-3.4-1" class="pilcrow">¶</a></p>
-<p id="section-3.4-2">In those cases where a channel between two participants is tunneled through
+<p id="section-3.5-1">The protocol is made up of several interactions in which different subsets of
+participants interact with each other.<a href="#section-3.5-1" class="pilcrow">¶</a></p>
+<p id="section-3.5-2">In those cases where a channel between two participants is tunneled through
 another protocol participant, Hybrid Public Key Encryption (<span>[<a href="#HPKE" class="cite xref">HPKE</a>]</span>)
-ensures that only the intended recipient can see a message in the clear.<a href="#section-3.4-2" class="pilcrow">¶</a></p>
-<p id="section-3.4-3">In other cases, HTTP client authentication is required as well as server
+ensures that only the intended recipient can see a message in the clear.<a href="#section-3.5-2" class="pilcrow">¶</a></p>
+<p id="section-3.5-3">In other cases, HTTP client authentication is required as well as server
 authentication. Any authentication scheme that is composable with HTTP is
-allowed. For example:<a href="#section-3.4-3" class="pilcrow">¶</a></p>
+allowed. For example:<a href="#section-3.5-3" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-3.4-4.1">
-            <p id="section-3.4-4.1.1"><span>[<a href="#OAuth2" class="cite xref">OAuth2</a>]</span> credentials are presented in an Authorization HTTP header
-(<span>[<a href="#RFC9110" class="cite xref">RFC9110</a>], <a href="https://rfc-editor.org/rfc/rfc9110#section-11.6.2" class="relref">Section 11.6.2</a></span>), which can be added to any protocol message.<a href="#section-3.4-4.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="section-3.5-4.1">
+            <p id="section-3.5-4.1.1"><span>[<a href="#OAuth2" class="cite xref">OAuth2</a>]</span> credentials are presented in an Authorization HTTP header
+(<span>[<a href="#RFC9110" class="cite xref">RFC9110</a>], <a href="https://rfc-editor.org/rfc/rfc9110#section-11.6.2" class="relref">Section 11.6.2</a></span>), which can be added to any protocol message.<a href="#section-3.5-4.1.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-3.4-4.2">
-            <p id="section-3.4-4.2.1">TLS client certificates can be used to authenticate the underlying transport.<a href="#section-3.4-4.2.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-3.5-4.2">
+            <p id="section-3.5-4.2.1">TLS client certificates can be used to authenticate the underlying transport.<a href="#section-3.5-4.2.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-3.4-4.3">
-            <p id="section-3.4-4.3.1"><span>[<a href="#RFC9421" class="cite xref">RFC9421</a>]</span> HTTP message signatures authenticate messages without
-transmitting a secret.<a href="#section-3.4-4.3.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-3.5-4.3">
+            <p id="section-3.5-4.3.1"><span>[<a href="#RFC9421" class="cite xref">RFC9421</a>]</span> HTTP message signatures authenticate messages without
+transmitting a secret.<a href="#section-3.5-4.3.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
-<p id="section-3.4-5">This flexibility allows organizations deploying DAP to use authentication
+<p id="section-3.5-5">This flexibility allows organizations deploying DAP to use authentication
 mechanisms that they already support. Discovering what authentication mechanisms
-are supported by a participant is outside of this document's scope.<a href="#section-3.4-5" class="pilcrow">¶</a></p>
-<p id="section-3.4-6">Request authentication is <span class="bcp14">REQUIRED</span> in the following interactions:<a href="#section-3.4-6" class="pilcrow">¶</a></p>
+are supported by a participant is outside of this document's scope.<a href="#section-3.5-5" class="pilcrow">¶</a></p>
+<p id="section-3.5-6">Request authentication is <span class="bcp14">REQUIRED</span> in the following interactions:<a href="#section-3.5-6" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-3.4-7.1">
-            <p id="section-3.4-7.1.1">Leaders initializing or continuing aggregation jobs with Helpers
-(<a href="#aggregate-flow" class="auto internal xref">Section 4.5</a>).<a href="#section-3.4-7.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="section-3.5-7.1">
+            <p id="section-3.5-7.1.1">Leaders initializing or continuing aggregation jobs with Helpers
+(<a href="#aggregate-flow" class="auto internal xref">Section 4.5</a>).<a href="#section-3.5-7.1.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-3.4-7.2">
-            <p id="section-3.4-7.2.1">Collectors initializing or polling collection jobs with Leaders
-(<a href="#collect-init" class="auto internal xref">Section 4.6.1</a>).<a href="#section-3.4-7.2.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-3.5-7.2">
+            <p id="section-3.5-7.2.1">Collectors initializing or polling collection jobs with Leaders
+(<a href="#collect-init" class="auto internal xref">Section 4.6.1</a>).<a href="#section-3.5-7.2.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-3.4-7.3">
-            <p id="section-3.4-7.3.1">Leaders obtaining aggregate shares from Helpers (<a href="#collect-aggregate" class="auto internal xref">Section 4.6.4</a>).<a href="#section-3.4-7.3.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-3.5-7.3">
+            <p id="section-3.5-7.3.1">Leaders obtaining aggregate shares from Helpers (<a href="#collect-aggregate" class="auto internal xref">Section 4.6.4</a>).<a href="#section-3.5-7.3.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 </section>
 </div>
 <div id="errors">
-<section id="section-3.5">
+<section id="section-3.6">
         <h3 id="name-errors">
-<a href="#section-3.5" class="section-number selfRef">3.5. </a><a href="#name-errors" class="section-name selfRef">Errors</a>
+<a href="#section-3.6" class="section-number selfRef">3.6. </a><a href="#name-errors" class="section-name selfRef">Errors</a>
         </h3>
-<p id="section-3.5-1">Errors are reported as HTTP status codes. Any of the standard client or server
+<p id="section-3.6-1">Errors are reported as HTTP status codes. Any of the standard client or server
 errors (the 4xx or 5xx classes, respectively, from <span><a href="https://rfc-editor.org/rfc/rfc9110#section-15" class="relref">Section 15</a> of [<a href="#RFC9110" class="cite xref">RFC9110</a>]</span>)
-are permitted.<a href="#section-3.5-1" class="pilcrow">¶</a></p>
-<p id="section-3.5-2">When the server responds with an error status code, it <span class="bcp14">SHOULD</span> provide additional
+are permitted.<a href="#section-3.6-1" class="pilcrow">¶</a></p>
+<p id="section-3.6-2">When the server responds with an error status code, it <span class="bcp14">SHOULD</span> provide additional
 information using a problem detail object <span>[<a href="#RFC9457" class="cite xref">RFC9457</a>]</span> in the response body. If
 the response body does consist of a problem detail object, the status code <span class="bcp14">MUST</span>
-indicate a client or server error.<a href="#section-3.5-2" class="pilcrow">¶</a></p>
-<p id="section-3.5-3">To facilitate automatic response to errors, this document defines the following
-standard tokens for use in the "type" field:<a href="#section-3.5-3" class="pilcrow">¶</a></p>
+indicate a client or server error.<a href="#section-3.6-2" class="pilcrow">¶</a></p>
+<p id="section-3.6-3">To facilitate automatic response to errors, this document defines the following
+standard tokens for use in the "type" field:<a href="#section-3.6-3" class="pilcrow">¶</a></p>
 <div id="urn-space-errors">
 <table class="center" id="table-1">
           <caption><a href="#table-1" class="selfRef">Table 1</a></caption>
@@ -3424,25 +3456,25 @@ standard tokens for use in the "type" field:<a href="#section-3.5-3" class="pilc
           </tbody>
         </table>
 </div>
-<p id="section-3.5-5">These types are scoped to the errors sub-namespace of the DAP URN namespace,
-e.g., urn:ietf:params:ppm:dap:error:invalidMessage.<a href="#section-3.5-5" class="pilcrow">¶</a></p>
-<p id="section-3.5-6">This list is not exhaustive. The server <span class="bcp14">MAY</span> return errors set to a URI other
+<p id="section-3.6-5">These types are scoped to the errors sub-namespace of the DAP URN namespace,
+e.g., urn:ietf:params:ppm:dap:error:invalidMessage.<a href="#section-3.6-5" class="pilcrow">¶</a></p>
+<p id="section-3.6-6">This list is not exhaustive. The server <span class="bcp14">MAY</span> return errors set to a URI other
 than those defined above. Servers <span class="bcp14">MUST NOT</span> use the DAP URN namespace for errors
 not listed in the appropriate IANA registry (see <a href="#urn-space" class="auto internal xref">Section 9.3</a>). The "detail"
 member of the Problem Details document includes additional diagnostic
-information.<a href="#section-3.5-6" class="pilcrow">¶</a></p>
-<p id="section-3.5-7">When the task ID is known (see <a href="#task-configuration" class="auto internal xref">Section 4.2</a>), the problem document
+information.<a href="#section-3.6-6" class="pilcrow">¶</a></p>
+<p id="section-3.6-7">When the task ID is known (see <a href="#task-configuration" class="auto internal xref">Section 4.2</a>), the problem document
 <span class="bcp14">SHOULD</span> include an additional "taskid" member containing the ID encoded in Base
 64 using the URL and filename safe alphabet with no padding defined in
-Sections <a href="https://rfc-editor.org/rfc/rfc4648#section-5" class="relref">5</a> and <a href="https://rfc-editor.org/rfc/rfc4648#section-3.2" class="relref">3.2</a> of <span>[<a href="#RFC4648" class="cite xref">RFC4648</a>]</span>.<a href="#section-3.5-7" class="pilcrow">¶</a></p>
-<p id="section-3.5-8">In the remainder of this document, the tokens in the table above are used to
+Sections <a href="https://rfc-editor.org/rfc/rfc4648#section-5" class="relref">5</a> and <a href="https://rfc-editor.org/rfc/rfc4648#section-3.2" class="relref">3.2</a> of <span>[<a href="#RFC4648" class="cite xref">RFC4648</a>]</span>.<a href="#section-3.6-7" class="pilcrow">¶</a></p>
+<p id="section-3.6-8">In the remainder of this document, the tokens in the table above are used to
 refer to error types, rather than the full URNs. For example, an "error of type
 'invalidMessage'" refers to an error document with "type" value
-"urn:ietf:params:ppm:dap:error:invalidMessage".<a href="#section-3.5-8" class="pilcrow">¶</a></p>
-<p id="section-3.5-9">This document uses the verbs "abort" and "alert with [some error message]" to
+"urn:ietf:params:ppm:dap:error:invalidMessage".<a href="#section-3.6-8" class="pilcrow">¶</a></p>
+<p id="section-3.6-9">This document uses the verbs "abort" and "alert with [some error message]" to
 describe how protocol participants react to various error conditions. This
 implies that the response's status code will indicate a client error unless
-specified otherwise.<a href="#section-3.5-9" class="pilcrow">¶</a></p>
+specified otherwise.<a href="#section-3.6-9" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -4018,7 +4050,7 @@ public share might be empty, depending on the VDAF.<a href="#section-4.4.2-5.2.1
           </ul>
 <p id="section-4.4.2-6">Aggregators <span class="bcp14">MAY</span> require Clients to authenticate when uploading reports (see
 <a href="#client-auth" class="auto internal xref">Section 8.3</a>). If it is used, client authentication <span class="bcp14">MUST</span> use a scheme that
-meets the requirements in <a href="#request-authentication" class="auto internal xref">Section 3.4</a>.<a href="#section-4.4.2-6" class="pilcrow">¶</a></p>
+meets the requirements in <a href="#request-authentication" class="auto internal xref">Section 3.5</a>.<a href="#section-4.4.2-6" class="pilcrow">¶</a></p>
 <div id="client-behavior">
 <section id="section-4.4.2.1">
             <h5 id="name-client-behavior">
@@ -4383,24 +4415,22 @@ some VDAFs, verification may only be achieved implicitly as a result of the
 refinement process. We instead think of these as properties of the output shares
 themselves: if verification succeeds, then the resulting output shares are
 guaranteed to combine into a valid, refined measurement.<a href="#section-4.5-4" class="pilcrow">¶</a></p>
-<p id="section-4.5-5">Aggregation jobs are identified by 16-byte job ID, chosen by the Leader:<a href="#section-4.5-5" class="pilcrow">¶</a></p>
-<div class="lang-tls-presentation sourcecode" id="section-4.5-6">
-<pre>
-opaque AggregationJobID[16];
-</pre><a href="#section-4.5-6" class="pilcrow">¶</a>
-</div>
-<p id="section-4.5-7">An aggregation job is an HTTP resource served by the Helper at the
-URL <code>{helper}/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}</code>. VDAF
+<p id="section-4.5-5">Aggregation jobs are identified by a server-selected identifier, unique within the
+scope of the task, assigned during resource creation (<a href="#resource-creation" class="auto internal xref">Section 3.2</a>).<a href="#section-4.5-5" class="pilcrow">¶</a></p>
+<p id="section-4.5-6">Aggregation jobs are created by POSTing to the creation URL served by the Helper at
+<code>{helper}/tasks/{task-id}/aggregation_jobs</code>. An existing aggregation job is an
+HTTP resource served by the Helper at the URL
+<code>{helper}/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}</code>. VDAF
 verification is mapped onto an aggregation job as illustrated in <a href="#agg-flow" class="auto internal xref">Figure 7</a>.
 The first request from the Leader to the Helper includes the aggregation
 parameter, the Helper's report share for each report in the job, and for each
 report the initialization step for verification. The Helper's response, along
 with each subsequent request and response, carries the remaining messages
-exchanged during verification.<a href="#section-4.5-7" class="pilcrow">¶</a></p>
+exchanged during verification.<a href="#section-4.5-6" class="pilcrow">¶</a></p>
 <span id="name-overview-of-the-dap-aggrega"></span><div id="agg-flow">
 <figure id="figure-7">
-          <div id="section-4.5-8.1">
-            <div class="alignLeft art-svg artwork" id="section-4.5-8.1.1">
+          <div id="section-4.5-7.1">
+            <div class="alignLeft art-svg artwork" id="section-4.5-7.1.1">
 <svg xmlns="http://www.w3.org/2000/svg" version="1.1" height="544" width="496" viewBox="0 0 496 544" class="diagram" text-anchor="middle" font-family="monospace" font-size="13px" stroke-linecap="round">
                 <path d="M 8,80 L 8,112" fill="none" stroke="black"></path>
                 <path d="M 32,48 L 32,72" fill="none" stroke="black"></path>
@@ -4453,58 +4483,58 @@ exchanged during verification.<a href="#section-4.5-7" class="pilcrow">¶</a></p
                   <text x="84" y="532">leader_out_share</text>
                   <text x="412" y="532">helper_out_share</text>
                 </g>
-              </svg><a href="#section-4.5-8.1.1" class="pilcrow">¶</a>
+              </svg><a href="#section-4.5-7.1.1" class="pilcrow">¶</a>
 </div>
 </div>
 <figcaption><a href="#figure-7" class="selfRef">Figure 7</a>:
 <a href="#name-overview-of-the-dap-aggrega" class="selfRef">Overview of the DAP aggregation interaction.</a>
           </figcaption></figure>
 </div>
-<p id="section-4.5-9">The number of steps, and the type of the responses, depends on the VDAF. The
+<p id="section-4.5-8">The number of steps, and the type of the responses, depends on the VDAF. The
 message structures and processing rules are specified in the following
-subsections.<a href="#section-4.5-9" class="pilcrow">¶</a></p>
-<p id="section-4.5-10">Each Aggregator maintains some state for each report. A state transition is
+subsections.<a href="#section-4.5-8" class="pilcrow">¶</a></p>
+<p id="section-4.5-9">Each Aggregator maintains some state for each report. A state transition is
 triggered by receiving a message from the Aggregator's peer. Eventually this
 process results in a terminal state, either rejecting the report or recovering
 an output share. Once a report has reached a terminal state, no more messages
 will be processed for it. There are four possible states (see <span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-18#section-5.7" class="relref">Section 5.7</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>: <code>Continued</code>, <code>FinishedWithOutbound</code>, <code>Finished</code> and <code>Rejected</code>. The
-first two states include an outbound message to be processed by the peer.<a href="#section-4.5-10" class="pilcrow">¶</a></p>
-<p id="section-4.5-11">The Helper can either process each step synchronously, meaning it computes each
+first two states include an outbound message to be processed by the peer.<a href="#section-4.5-9" class="pilcrow">¶</a></p>
+<p id="section-4.5-10">The Helper can either process each step synchronously, meaning it computes each
 verification step before producing a response to the Leader's HTTP request, or
 asynchronously, meaning it responds immediately and defers processing to a
 background worker. To continue, the Leader polls the Helper until it responds
 with the next step. This choice allows a Helper implementation to choose a
 model that best fits its architecture and use case. For instance replay checks
 across vast numbers of reports and verification of large histograms, may be
-better suited for the asynchronous model.<a href="#section-4.5-11" class="pilcrow">¶</a></p>
-<p id="section-4.5-12">Aggregation cannot begin until the Collector specifies a query and an
+better suited for the asynchronous model.<a href="#section-4.5-10" class="pilcrow">¶</a></p>
+<p id="section-4.5-11">Aggregation cannot begin until the Collector specifies a query and an
 aggregation parameter, except where eager aggregation (<a href="#eager-aggregation" class="auto internal xref">Section 4.5.2</a>) is
-possible.<a href="#section-4.5-12" class="pilcrow">¶</a></p>
-<p id="section-4.5-13">An aggregation job has three phases:<a href="#section-4.5-13" class="pilcrow">¶</a></p>
+possible.<a href="#section-4.5-11" class="pilcrow">¶</a></p>
+<p id="section-4.5-12">An aggregation job has three phases:<a href="#section-4.5-12" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-4.5-14.1">
-            <p id="section-4.5-14.1.1">Initialization: Disseminate report shares and initialize the VDAF
-verification state for each report.<a href="#section-4.5-14.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="section-4.5-13.1">
+            <p id="section-4.5-13.1.1">Initialization: Disseminate report shares and initialize the VDAF
+verification state for each report.<a href="#section-4.5-13.1.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-4.5-14.2">
-            <p id="section-4.5-14.2.1">Continuation: Exchange verifier shares and messages until verification
-completes or an error occurs.<a href="#section-4.5-14.2.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-4.5-13.2">
+            <p id="section-4.5-13.2.1">Continuation: Exchange verifier shares and messages until verification
+completes or an error occurs.<a href="#section-4.5-13.2.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-4.5-14.3">
-            <p id="section-4.5-14.3.1">Completion: Yield an output share for each report share in the aggregation
-job.<a href="#section-4.5-14.3.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-4.5-13.3">
+            <p id="section-4.5-13.3.1">Completion: Yield an output share for each report share in the aggregation
+job.<a href="#section-4.5-13.3.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
-<p id="section-4.5-15">After an aggregation job is completed, each Aggregator commits to the output
+<p id="section-4.5-14">After an aggregation job is completed, each Aggregator commits to the output
 shares by updating running-total aggregate shares and other values for each
 batch bucket associated with a verified output share, as described in
 <a href="#batch-buckets" class="auto internal xref">Section 4.5.4.3</a>. These values are stored until a batch that includes the batch
-bucket is collected as described in <a href="#collect-flow" class="auto internal xref">Section 4.6</a>.<a href="#section-4.5-15" class="pilcrow">¶</a></p>
-<p id="section-4.5-16">The aggregation interaction provides protection against including reports in
+bucket is collected as described in <a href="#collect-flow" class="auto internal xref">Section 4.6</a>.<a href="#section-4.5-14" class="pilcrow">¶</a></p>
+<p id="section-4.5-15">The aggregation interaction provides protection against including reports in
 more than one batch and against adding reports to already collected batches,
 both of which can violate privacy (<a href="#replay-protection" class="auto internal xref">Section 2.3</a>). Before committing to
 an output share, the Aggregators check whether its report ID has already been
-aggregated and whether the batch bucket being updated has been collected.<a href="#section-4.5-16" class="pilcrow">¶</a></p>
+aggregated and whether the batch bucket being updated has been collected.<a href="#section-4.5-15" class="pilcrow">¶</a></p>
 <div id="agg-job-extensions">
 <section id="section-4.5.1">
           <h4 id="name-aggregation-job-extensions">
@@ -4614,7 +4644,7 @@ parameter chosen by the Collector.<a href="#section-4.5.2-4" class="pilcrow">¶<
               </figcaption></figure>
 </div>
 <p id="section-4.5.3.1-2">The Leader begins an aggregation job by choosing a set of candidate reports that
-belong to the same task and a job ID which <span class="bcp14">MUST</span> be unique within the task.<a href="#section-4.5.3.1-2" class="pilcrow">¶</a></p>
+belong to the same task.<a href="#section-4.5.3.1-2" class="pilcrow">¶</a></p>
 <p id="section-4.5.3.1-3">First, the Leader <span class="bcp14">MUST</span> ensure each report in the candidate set can be committed
 per the criteria detailed in <a href="#batch-buckets" class="auto internal xref">Section 4.5.4.3</a>. If a report cannot be committed,
 then the Leader rejects it and removes it from the candidate set.<a href="#section-4.5.3.1-3" class="pilcrow">¶</a></p>
@@ -4742,19 +4772,25 @@ that verification keys are selected prior to a report being generated;
 a different analysis would be required
 to enable selecting a verification key after a task has started.<a href="#section-4.5.3.1-18.1" class="pilcrow">¶</a></p>
 </aside>
-<p id="section-4.5.3.1-19">The Leader sends the <code>AggregationJobInitReq</code> in the body of a PUT request to the
-aggregation job with a media type of
-"application/ppm-dap;message=aggregation-job-init-req". The Leader handles the
-response(s) as described in <a href="#http-usage" class="auto internal xref">Section 3</a> to obtain an <code>AggregationJobResp</code>.<a href="#section-4.5.3.1-19" class="pilcrow">¶</a></p>
-<p id="section-4.5.3.1-20">The <code>AggregationJobResp.verify_resps</code> field must include exactly the same
+<p id="section-4.5.3.1-19">The Leader sends the <code>AggregationJobInitReq</code> in the body of a POST request to
+<code>{helper}/tasks/{task-id}/aggregation_jobs</code> with a media type of
+"application/ppm-dap;message=aggregation-job-init-req". The Helper creates the
+aggregation job resource and indicates its location in the Location header, as
+described in <a href="#resource-creation" class="auto internal xref">Section 3.2</a>. The Leader handles the response(s) as
+described in <a href="#http-usage" class="auto internal xref">Section 3</a> to obtain an <code>AggregationJobResp</code>.<a href="#section-4.5.3.1-19" class="pilcrow">¶</a></p>
+<p id="section-4.5.3.1-20">Two <code>AggregationJobInitReq</code> messages are considered identical if they are
+byte-for-byte identical when serialized. The Helper uses this to provide the
+idempotency guarantee described in <a href="#resource-creation" class="auto internal xref">Section 3.2</a>. A Leader that retries a
+request <span class="bcp14">MUST</span> replay the identical serialized body.<a href="#section-4.5.3.1-20" class="pilcrow">¶</a></p>
+<p id="section-4.5.3.1-21">The <code>AggregationJobResp.verify_resps</code> field must include exactly the same
 report IDs in the same order as the Leader's <code>AggregationJobInitReq</code>. Otherwise,
-the Leader <span class="bcp14">MUST</span> abandon the aggregation job.<a href="#section-4.5.3.1-20" class="pilcrow">¶</a></p>
-<p id="section-4.5.3.1-21">The Leader proceeds as follows with each report:<a href="#section-4.5.3.1-21" class="pilcrow">¶</a></p>
-<ol start="1" type="1" class="normal type-1" id="section-4.5.3.1-22">
-<li id="section-4.5.3.1-22.1">
-                <p id="section-4.5.3.1-22.1.1">If the inbound verification response has type "continue", then the Leader
-computes<a href="#section-4.5.3.1-22.1.1" class="pilcrow">¶</a></p>
-<div class="lang-pseudocode sourcecode" id="section-4.5.3.1-22.1.2">
+the Leader <span class="bcp14">MUST</span> abandon the aggregation job.<a href="#section-4.5.3.1-21" class="pilcrow">¶</a></p>
+<p id="section-4.5.3.1-22">The Leader proceeds as follows with each report:<a href="#section-4.5.3.1-22" class="pilcrow">¶</a></p>
+<ol start="1" type="1" class="normal type-1" id="section-4.5.3.1-23">
+<li id="section-4.5.3.1-23.1">
+                <p id="section-4.5.3.1-23.1.1">If the inbound verification response has type "continue", then the Leader
+computes<a href="#section-4.5.3.1-23.1.1" class="pilcrow">¶</a></p>
+<div class="lang-pseudocode sourcecode" id="section-4.5.3.1-23.1.2">
 <pre>
 state = Vdaf.ping_pong_leader_continued(
     "dap-17" || task_id,
@@ -4762,59 +4798,59 @@ state = Vdaf.ping_pong_leader_continued(
     state,
     inbound,
 )
-</pre><a href="#section-4.5.3.1-22.1.2" class="pilcrow">¶</a>
+</pre><a href="#section-4.5.3.1-23.1.2" class="pilcrow">¶</a>
 </div>
-<p id="section-4.5.3.1-22.1.3">
-where:<a href="#section-4.5.3.1-22.1.3" class="pilcrow">¶</a></p>
+<p id="section-4.5.3.1-23.1.3">
+where:<a href="#section-4.5.3.1-23.1.3" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-4.5.3.1-22.1.4.1">
-                    <p id="section-4.5.3.1-22.1.4.1.1"><code>task_id</code> is the task ID<a href="#section-4.5.3.1-22.1.4.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="section-4.5.3.1-23.1.4.1">
+                    <p id="section-4.5.3.1-23.1.4.1.1"><code>task_id</code> is the task ID<a href="#section-4.5.3.1-23.1.4.1.1" class="pilcrow">¶</a></p>
 </li>
-                  <li class="normal" id="section-4.5.3.1-22.1.4.2">
-                    <p id="section-4.5.3.1-22.1.4.2.1"><code>agg_param</code> is the VDAF aggregation parameter provided by the Collector
-(see <a href="#collect-flow" class="auto internal xref">Section 4.6</a>)<a href="#section-4.5.3.1-22.1.4.2.1" class="pilcrow">¶</a></p>
+                  <li class="normal" id="section-4.5.3.1-23.1.4.2">
+                    <p id="section-4.5.3.1-23.1.4.2.1"><code>agg_param</code> is the VDAF aggregation parameter provided by the Collector
+(see <a href="#collect-flow" class="auto internal xref">Section 4.6</a>)<a href="#section-4.5.3.1-23.1.4.2.1" class="pilcrow">¶</a></p>
 </li>
-                  <li class="normal" id="section-4.5.3.1-22.1.4.3">
-                    <p id="section-4.5.3.1-22.1.4.3.1"><code>state</code> is the report's initial verification state<a href="#section-4.5.3.1-22.1.4.3.1" class="pilcrow">¶</a></p>
+                  <li class="normal" id="section-4.5.3.1-23.1.4.3">
+                    <p id="section-4.5.3.1-23.1.4.3.1"><code>state</code> is the report's initial verification state<a href="#section-4.5.3.1-23.1.4.3.1" class="pilcrow">¶</a></p>
 </li>
-                  <li class="normal" id="section-4.5.3.1-22.1.4.4">
-                    <p id="section-4.5.3.1-22.1.4.4.1"><code>inbound</code> is the payload of the <code>VerifyResp</code><a href="#section-4.5.3.1-22.1.4.4.1" class="pilcrow">¶</a></p>
+                  <li class="normal" id="section-4.5.3.1-23.1.4.4">
+                    <p id="section-4.5.3.1-23.1.4.4.1"><code>inbound</code> is the payload of the <code>VerifyResp</code><a href="#section-4.5.3.1-23.1.4.4.1" class="pilcrow">¶</a></p>
 </li>
                 </ul>
-<p id="section-4.5.3.1-22.1.5">
+<p id="section-4.5.3.1-23.1.5">
 If the new <code>state</code> has type <code>Continued</code> or <code>FinishedWithOutbound</code>,
 then there is at least one more outbound message to send before verification
 is complete. The Leader stores <code>state</code> and proceeds as in
-<a href="#aggregation-leader-continuation" class="auto internal xref">Section 4.5.4.1</a>.<a href="#section-4.5.3.1-22.1.5" class="pilcrow">¶</a></p>
-<p id="section-4.5.3.1-22.1.6">
+<a href="#aggregation-leader-continuation" class="auto internal xref">Section 4.5.4.1</a>.<a href="#section-4.5.3.1-23.1.5" class="pilcrow">¶</a></p>
+<p id="section-4.5.3.1-23.1.6">
 Else if the new <code>state</code> has type <code>Finished</code>, then verification is complete
 and the state includes an output share, denoted <code>state.out_share</code>. The Leader
-commits to <code>state.out_share</code> as described in <a href="#batch-buckets" class="auto internal xref">Section 4.5.4.3</a>.<a href="#section-4.5.3.1-22.1.6" class="pilcrow">¶</a></p>
-<p id="section-4.5.3.1-22.1.7">
+commits to <code>state.out_share</code> as described in <a href="#batch-buckets" class="auto internal xref">Section 4.5.4.3</a>.<a href="#section-4.5.3.1-23.1.6" class="pilcrow">¶</a></p>
+<p id="section-4.5.3.1-23.1.7">
 Else if <code>state</code> has type <code>Rejected</code>, then the Leader rejects the
-report and removes it from the candidate set.<a href="#section-4.5.3.1-22.1.7" class="pilcrow">¶</a></p>
-<p id="section-4.5.3.1-22.1.8">
+report and removes it from the candidate set.<a href="#section-4.5.3.1-23.1.7" class="pilcrow">¶</a></p>
+<p id="section-4.5.3.1-23.1.8">
 Note on rejection agreement: rejecting at this point would result in a batch
 mismatch if the Helper had already committed to its output share. This is
 impossible due to the verifiability property of the VDAF: if the underlying
 measurement were invalid, then the Helper would have indicated rejection in
-its response.<a href="#section-4.5.3.1-22.1.8" class="pilcrow">¶</a></p>
+its response.<a href="#section-4.5.3.1-23.1.8" class="pilcrow">¶</a></p>
 </li>
-              <li id="section-4.5.3.1-22.2">
-                <p id="section-4.5.3.1-22.2.1">Else if the <code>VerifyResp</code> has type "reject", then the Leader rejects the
+              <li id="section-4.5.3.1-23.2">
+                <p id="section-4.5.3.1-23.2.1">Else if the <code>VerifyResp</code> has type "reject", then the Leader rejects the
 report and removes it from the candidate set. The Leader <span class="bcp14">MUST NOT</span> include
 the report in a subsequent aggregation job, unless the report error is
 <code>report_too_early</code>, in which case the Leader <span class="bcp14">MAY</span> include the report in a
-subsequent aggregation job.<a href="#section-4.5.3.1-22.2.1" class="pilcrow">¶</a></p>
+subsequent aggregation job.<a href="#section-4.5.3.1-23.2.1" class="pilcrow">¶</a></p>
 </li>
-              <li id="section-4.5.3.1-22.3">
-                <p id="section-4.5.3.1-22.3.1">Otherwise the inbound message type is invalid for the Leader's current
-state, in which case the Leader <span class="bcp14">MUST</span> abandon the aggregation job.<a href="#section-4.5.3.1-22.3.1" class="pilcrow">¶</a></p>
+              <li id="section-4.5.3.1-23.3">
+                <p id="section-4.5.3.1-23.3.1">Otherwise the inbound message type is invalid for the Leader's current
+state, in which case the Leader <span class="bcp14">MUST</span> abandon the aggregation job.<a href="#section-4.5.3.1-23.3.1" class="pilcrow">¶</a></p>
 </li>
             </ol>
-<p id="section-4.5.3.1-23">Since VDAF verification completes in a constant number of rounds, it will never
+<p id="section-4.5.3.1-24">Since VDAF verification completes in a constant number of rounds, it will never
 be the case that verification is complete for some of the reports in an
-aggregation job but not others.<a href="#section-4.5.3.1-23" class="pilcrow">¶</a></p>
+aggregation job but not others.<a href="#section-4.5.3.1-24" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="aggregation-helper-init">
@@ -4855,11 +4891,12 @@ attempts to initialize VDAF verification (see <span><a href="https://datatracker
 the Leader does. If successful, it includes the result in its response for the
 Leader to use to continue verifying the report.<a href="#section-4.5.3.2-2" class="pilcrow">¶</a></p>
 <p id="section-4.5.3.2-3">The initialization request can be handled either asynchronously or synchronously
-as described in <a href="#http-usage" class="auto internal xref">Section 3</a>. When indicating that the job is not yet
-ready, the response <span class="bcp14">MUST</span> include a Location header field (<span>[<a href="#RFC9110" class="cite xref">RFC9110</a>], <a href="https://rfc-editor.org/rfc/rfc9110#section-10.2.2" class="relref">Section 10.2.2</a></span>) set to the relative reference
-<code>/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}?step=0</code>. Subsequent GET
-requests to the aggregation job <span class="bcp14">MUST</span> include the <code>step</code> query parameter so that
-the Helper can figure out which step of preparation the Leader is on (see
+as described in <a href="#http-usage" class="auto internal xref">Section 3</a>. The response <span class="bcp14">MUST</span> include a Location header
+field (<span>[<a href="#RFC9110" class="cite xref">RFC9110</a>], <a href="https://rfc-editor.org/rfc/rfc9110#section-10.2.2" class="relref">Section 10.2.2</a></span>) indicating the location of the aggregation
+job resource. When indicating that the job is not yet ready, the Location header
+<span class="bcp14">MUST</span> include the query parameter <code>step=0</code>. Subsequent GET requests to the
+aggregation job <span class="bcp14">MUST</span> include the <code>step</code> query parameter so that the Helper can
+figure out which step of preparation the Leader is on (see
 <a href="#aggregation-step-skew-recovery" class="auto internal xref">Section 4.5.4.4</a>). When the job is ready, the Helper responds
 with the <code>AggregationJobResp</code> (defined below).<a href="#section-4.5.3.2-3" class="pilcrow">¶</a></p>
 <p id="section-4.5.3.2-4">Upon receipt of an <code>AggregationJobInitReq</code>, the Helper checks the following
@@ -4999,13 +5036,14 @@ struct {
 in the previous step. The order <span class="bcp14">MUST</span> match
 <code>AggregationJobInitReq.verify_inits</code>. The media type for <code>AggregationJobResp</code>
 is "application/ppm-dap;message=aggregation-job-resp".<a href="#section-4.5.3.2-20" class="pilcrow">¶</a></p>
-<p id="section-4.5.3.2-21">The Helper may receive multiple copies of a given initialization request. The
-Helper <span class="bcp14">MUST</span> verify that subsequent requests have the same
-<code>AggregationJobInitReq</code> value and abort with a client error if they do not. It
-is illegal to rewind or reset the state of an aggregation job. If the Helper
-receives requests to initialize an aggregation job once it has been continued at
+<p id="section-4.5.3.2-21">If the Helper receives a POST whose content matches an existing aggregation
+job (per the identity criteria in <a href="#leader-init" class="auto internal xref">Section 4.5.3.1</a>), it <span class="bcp14">MUST</span> return the existing
+job's location and current state as described in <a href="#resource-creation" class="auto internal xref">Section 3.2</a>. It is
+illegal to rewind or reset the state of an aggregation job. If the Helper
+receives a POST that matches an aggregation job which has been continued at
 least once, confirming that the Leader received the Helper's response (see
-<a href="#agg-continue-flow" class="auto internal xref">Section 4.5.4</a>), it <span class="bcp14">MUST</span> abort with a client error.<a href="#section-4.5.3.2-21" class="pilcrow">¶</a></p>
+<a href="#agg-continue-flow" class="auto internal xref">Section 4.5.4</a>), it <span class="bcp14">MUST</span> return the existing job's location and current
+state rather than reinitializing the job.<a href="#section-4.5.3.2-21" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="input-share-decryption">
@@ -5114,8 +5152,8 @@ with error <code>report_dropped</code>.<a href="#section-4.5.3.4-2.8.1" class="p
 <p id="section-4.5.3.5-1">The Helper handles the aggregation job initialization synchronously:<a href="#section-4.5.3.5-1" class="pilcrow">¶</a></p>
 <div class="lang-http sourcecode" id="section-4.5.3.5-2">
 <pre>
-PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
-  aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
+POST /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+  aggregation_jobs
 Host: example.com
 Content-Type: application/ppm-dap;message=aggregation-job-init-req
 Content-Length: 100
@@ -5133,6 +5171,8 @@ encoded(struct {
 } AggregationJobInitReq)
 
 HTTP/1.1 200
+Location: /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+  aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
 Content-Type: application/ppm-dap;message=aggregation-job-resp
 Content-Length: 100
 
@@ -5142,8 +5182,8 @@ encoded(struct { verify_resps } AggregationJobResp)
 <p id="section-4.5.3.5-3">Or asynchronously:<a href="#section-4.5.3.5-3" class="pilcrow">¶</a></p>
 <div class="lang-http sourcecode" id="section-4.5.3.5-4">
 <pre>
-PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
-  aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
+POST /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+  aggregation_jobs
 Host: example.com
 Content-Type: application/ppm-dap;message=aggregation-job-init-req
 Content-Length: 100
@@ -5734,25 +5774,22 @@ specified in <a href="#collect-aggregate" class="auto internal xref">Section 4.6
         </ol>
 <p id="section-4.6-3">Once complete, the Collector computes the final aggregate result as specified in
 <a href="#collect-finalization" class="auto internal xref">Section 4.6.6</a>.<a href="#section-4.6-3" class="pilcrow">¶</a></p>
-<p id="section-4.6-4">Collection jobs are identified by a 16-byte job ID, chosen by the Collector:<a href="#section-4.6-4" class="pilcrow">¶</a></p>
-<div class="lang-tls-presentation sourcecode" id="section-4.6-5">
-<pre>
-opaque CollectionJobID[16];
-</pre><a href="#section-4.6-5" class="pilcrow">¶</a>
-</div>
-<p id="section-4.6-6">A collection job is an HTTP resource served by the Leader at the URL
-<code>{leader}/tasks/{task-id}/collection_jobs/{collection-job-id}</code>.<a href="#section-4.6-6" class="pilcrow">¶</a></p>
+<p id="section-4.6-4">Collection jobs are identified by a server-selected identifier, unique within the
+scope of the task, assigned during resource creation (<a href="#resource-creation" class="auto internal xref">Section 3.2</a>).<a href="#section-4.6-4" class="pilcrow">¶</a></p>
+<p id="section-4.6-5">A collection job is an HTTP resource served by the Leader at the URL
+<code>{leader}/tasks/{task-id}/collection_jobs/{collection-job-id}</code>. Collection jobs
+are created by POSTing to the creation URL
+<code>{leader}/tasks/{task-id}/collection_jobs</code>.<a href="#section-4.6-5" class="pilcrow">¶</a></p>
 <div id="collect-init">
 <section id="section-4.6.1">
           <h4 id="name-collection-job-initializati">
 <a href="#section-4.6.1" class="section-number selfRef">4.6.1. </a><a href="#name-collection-job-initializati" class="section-name selfRef">Collection Job Initialization</a>
           </h4>
-<p id="section-4.6.1-1">First, the Collector chooses a collection job ID, which <span class="bcp14">MUST</span> be unique within
-the scope of the corresponding DAP task.<a href="#section-4.6.1-1" class="pilcrow">¶</a></p>
-<p id="section-4.6.1-2">To initiate the collection job, the Collector issues a PUT request to the
-collection job with media type "application/ppm-dap;message=collection-job-req",
-and a body structured as follows:<a href="#section-4.6.1-2" class="pilcrow">¶</a></p>
-<div class="lang-tls-presentation sourcecode" id="section-4.6.1-3">
+<p id="section-4.6.1-1">To initiate a collection job, the Collector issues a POST request to
+<code>{leader}/tasks/{task-id}/collection_jobs</code> with media type
+"application/ppm-dap;message=collection-job-req", and a body structured as
+follows:<a href="#section-4.6.1-1" class="pilcrow">¶</a></p>
+<div class="lang-tls-presentation sourcecode" id="section-4.6.1-2">
 <pre>
 struct {
   BatchMode batch_mode;
@@ -5764,22 +5801,22 @@ struct {
   opaque agg_param&lt;0..2^32-1&gt;;
   CollectionJobExtension extensions&lt;0..2^16-1&gt;;
 } CollectionJobReq;
-</pre><a href="#section-4.6.1-3" class="pilcrow">¶</a>
+</pre><a href="#section-4.6.1-2" class="pilcrow">¶</a>
 </div>
 <ul class="normal">
-<li class="normal" id="section-4.6.1-4.1">
-              <p id="section-4.6.1-4.1.1"><code>query</code>, the Collector's query. The content of this field depends on the
-indicated batch mode (<a href="#batch-modes" class="auto internal xref">Section 5</a>).<a href="#section-4.6.1-4.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="section-4.6.1-3.1">
+              <p id="section-4.6.1-3.1.1"><code>query</code>, the Collector's query. The content of this field depends on the
+indicated batch mode (<a href="#batch-modes" class="auto internal xref">Section 5</a>).<a href="#section-4.6.1-3.1.1" class="pilcrow">¶</a></p>
 </li>
-            <li class="normal" id="section-4.6.1-4.2">
-              <p id="section-4.6.1-4.2.1"><code>agg_param</code>, an aggregation parameter for the VDAF being executed. This is
-the same value as in <code>AggregationJobInitReq</code> (see <a href="#leader-init" class="auto internal xref">Section 4.5.3.1</a>).<a href="#section-4.6.1-4.2.1" class="pilcrow">¶</a></p>
+            <li class="normal" id="section-4.6.1-3.2">
+              <p id="section-4.6.1-3.2.1"><code>agg_param</code>, an aggregation parameter for the VDAF being executed. This is
+the same value as in <code>AggregationJobInitReq</code> (see <a href="#leader-init" class="auto internal xref">Section 4.5.3.1</a>).<a href="#section-4.6.1-3.2.1" class="pilcrow">¶</a></p>
 </li>
-            <li class="normal" id="section-4.6.1-4.3">
-              <p id="section-4.6.1-4.3.1"><code>extensions</code>, a set of extensions (see <a href="#collect-ext" class="auto internal xref">Section 4.6.2</a>).<a href="#section-4.6.1-4.3.1" class="pilcrow">¶</a></p>
+            <li class="normal" id="section-4.6.1-3.3">
+              <p id="section-4.6.1-3.3.1"><code>extensions</code>, a set of extensions (see <a href="#collect-ext" class="auto internal xref">Section 4.6.2</a>).<a href="#section-4.6.1-3.3.1" class="pilcrow">¶</a></p>
 </li>
           </ul>
-<p id="section-4.6.1-5">Depending on the VDAF scheme and how the Leader is configured, the Leader and
+<p id="section-4.6.1-4">Depending on the VDAF scheme and how the Leader is configured, the Leader and
 Helper may already have aggregated a sufficient number of reports satisfying the
 query and be ready to return the aggregate shares right away. However, this is
 not always the case. In fact, for some VDAFs, it is not be possible to begin
@@ -5787,88 +5824,89 @@ running aggregation jobs (<a href="#aggregate-flow" class="auto internal xref">S
 collection job. This is because, in general (see <a href="#eager-aggregation" class="auto internal xref">Section 4.5.2</a>), the
 aggregation parameter is not known until this point. In certain situations it is
 possible to predict the aggregation parameter in advance. For example, for Prio3
-the only valid aggregation parameter is the empty string.<a href="#section-4.6.1-5" class="pilcrow">¶</a></p>
-<p id="section-4.6.1-6">The collection request can be handled either asynchronously or synchronously as
-described in <a href="#http-usage" class="auto internal xref">Section 3</a>. The representation of the collection job is a
-<code>CollectionJobResp</code> (defined below).<a href="#section-4.6.1-6" class="pilcrow">¶</a></p>
-<p id="section-4.6.1-7">If the job fails with <code>invalidBatchSize</code>, then the Collector <span class="bcp14">MAY</span> retry it later,
+the only valid aggregation parameter is the empty string.<a href="#section-4.6.1-4" class="pilcrow">¶</a></p>
+<p id="section-4.6.1-5">The collection request can be handled either asynchronously or synchronously as
+described in <a href="#resource-creation" class="auto internal xref">Section 3.2</a> and <a href="#http-usage" class="auto internal xref">Section 3</a>. The response includes a
+Location header indicating the location of the new collection job resource. The
+representation of the collection job is a <code>CollectionJobResp</code> (defined below).<a href="#section-4.6.1-5" class="pilcrow">¶</a></p>
+<p id="section-4.6.1-6">If the job fails with <code>invalidBatchSize</code>, then the Collector <span class="bcp14">MAY</span> retry it later,
 once it believes enough new reports have been uploaded and aggregated to allow
-the collection job to succeed.<a href="#section-4.6.1-7" class="pilcrow">¶</a></p>
-<p id="section-4.6.1-8">The Leader begins handling a <code>CollectionJobReq</code> by checking the following
-conditions:<a href="#section-4.6.1-8" class="pilcrow">¶</a></p>
+the collection job to succeed.<a href="#section-4.6.1-6" class="pilcrow">¶</a></p>
+<p id="section-4.6.1-7">The Leader begins handling a <code>CollectionJobReq</code> by checking the following
+conditions:<a href="#section-4.6.1-7" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-4.6.1-9.1">
-              <p id="section-4.6.1-9.1.1">Whether it recognizes the task ID. If not, the Leader <span class="bcp14">MUST</span> fail the collection
-job with error <code>unrecognizedTask</code>.<a href="#section-4.6.1-9.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="section-4.6.1-8.1">
+              <p id="section-4.6.1-8.1.1">Whether it recognizes the task ID. If not, the Leader <span class="bcp14">MUST</span> fail the collection
+job with error <code>unrecognizedTask</code>.<a href="#section-4.6.1-8.1.1" class="pilcrow">¶</a></p>
 </li>
-            <li class="normal" id="section-4.6.1-9.2">
-              <p id="section-4.6.1-9.2.1">Whether the indicated batch mode matches the task's batch mode. If not, the
-Leader <span class="bcp14">MUST</span> fail the job with error <code>invalidMessage</code>.<a href="#section-4.6.1-9.2.1" class="pilcrow">¶</a></p>
+            <li class="normal" id="section-4.6.1-8.2">
+              <p id="section-4.6.1-8.2.1">Whether the indicated batch mode matches the task's batch mode. If not, the
+Leader <span class="bcp14">MUST</span> fail the job with error <code>invalidMessage</code>.<a href="#section-4.6.1-8.2.1" class="pilcrow">¶</a></p>
 </li>
-            <li class="normal" id="section-4.6.1-9.3">
-              <p id="section-4.6.1-9.3.1">Whether the <code>CollectionJobReq</code> is malformed. If so, the the Helper <span class="bcp14">MUST</span> fail
-the job with error <code>invalidMessage</code>.<a href="#section-4.6.1-9.3.1" class="pilcrow">¶</a></p>
+            <li class="normal" id="section-4.6.1-8.3">
+              <p id="section-4.6.1-8.3.1">Whether the <code>CollectionJobReq</code> is malformed. If so, the the Helper <span class="bcp14">MUST</span> fail
+the job with error <code>invalidMessage</code>.<a href="#section-4.6.1-8.3.1" class="pilcrow">¶</a></p>
 </li>
-            <li class="normal" id="section-4.6.1-9.4">
-              <p id="section-4.6.1-9.4.1">Whether the aggregation parameter is valid as described in
+            <li class="normal" id="section-4.6.1-8.4">
+              <p id="section-4.6.1-8.4.1">Whether the aggregation parameter is valid as described in
 <a href="#agg-param-validation" class="auto internal xref">Section 4.3</a>. If not, the Leader <span class="bcp14">MUST</span> fail the job with error
-<code>invalidAggregationParameter</code>.<a href="#section-4.6.1-9.4.1" class="pilcrow">¶</a></p>
+<code>invalidAggregationParameter</code>.<a href="#section-4.6.1-8.4.1" class="pilcrow">¶</a></p>
 </li>
-            <li class="normal" id="section-4.6.1-9.5">
-              <p id="section-4.6.1-9.5.1">Whether the <code>Query</code> in the Collector's request determines a batch that can be
+            <li class="normal" id="section-4.6.1-8.5">
+              <p id="section-4.6.1-8.5.1">Whether the <code>Query</code> in the Collector's request determines a batch that can be
 collected. If the query does not identify a valid set of batch buckets
 according to the criteria defined by the batch mode in use (<a href="#batch-modes" class="auto internal xref">Section 5</a>),
-then the Leader <span class="bcp14">MUST</span> fail the job with error <code>batchInvalid</code>.<a href="#section-4.6.1-9.5.1" class="pilcrow">¶</a></p>
+then the Leader <span class="bcp14">MUST</span> fail the job with error <code>batchInvalid</code>.<a href="#section-4.6.1-8.5.1" class="pilcrow">¶</a></p>
 </li>
-            <li class="normal" id="section-4.6.1-9.6">
-              <p id="section-4.6.1-9.6.1">Whether any of the batch buckets identified by the query have already been
-collected, then the Leader <span class="bcp14">MUST</span> fail the job with error <code>batchOverlap</code>.<a href="#section-4.6.1-9.6.1" class="pilcrow">¶</a></p>
+            <li class="normal" id="section-4.6.1-8.6">
+              <p id="section-4.6.1-8.6.1">Whether any of the batch buckets identified by the query have already been
+collected, then the Leader <span class="bcp14">MUST</span> fail the job with error <code>batchOverlap</code>.<a href="#section-4.6.1-8.6.1" class="pilcrow">¶</a></p>
 </li>
-            <li class="normal" id="section-4.6.1-9.7">
-              <p id="section-4.6.1-9.7.1">If aggregation was performed eagerly (<a href="#eager-aggregation" class="auto internal xref">Section 4.5.2</a>), then the Leader
+            <li class="normal" id="section-4.6.1-8.7">
+              <p id="section-4.6.1-8.7.1">If aggregation was performed eagerly (<a href="#eager-aggregation" class="auto internal xref">Section 4.5.2</a>), then the Leader
 checks that the aggregation parameter received in the <code>CollectionJobReq</code>
 matches the aggregation parameter used in each aggregation job pertaining to
-the batch. If not, the Leader <span class="bcp14">MUST</span> fail the job with error <code>invalidMessage</code>.<a href="#section-4.6.1-9.7.1" class="pilcrow">¶</a></p>
+the batch. If not, the Leader <span class="bcp14">MUST</span> fail the job with error <code>invalidMessage</code>.<a href="#section-4.6.1-8.7.1" class="pilcrow">¶</a></p>
 </li>
-            <li class="normal" id="section-4.6.1-9.8">
-              <p id="section-4.6.1-9.8.1">Whether all of the collection job extensions listed are supported.
+            <li class="normal" id="section-4.6.1-8.8">
+              <p id="section-4.6.1-8.8.1">Whether all of the collection job extensions listed are supported.
 If not, the Leader <span class="bcp14">MUST</span> fail the collection job
-with the error <code>unsupportedExtension</code>.<a href="#section-4.6.1-9.8.1" class="pilcrow">¶</a></p>
+with the error <code>unsupportedExtension</code>.<a href="#section-4.6.1-8.8.1" class="pilcrow">¶</a></p>
 </li>
-            <li class="normal" id="section-4.6.1-9.9">
-              <p id="section-4.6.1-9.9.1">Whether each included collection job extension is valid
+            <li class="normal" id="section-4.6.1-8.9">
+              <p id="section-4.6.1-8.9.1">Whether each included collection job extension is valid
 according to the definition of that extension.
 If not, the Leader <span class="bcp14">MUST</span> fail the collection job
-with the error indicated by the processing model for the extension.<a href="#section-4.6.1-9.9.1" class="pilcrow">¶</a></p>
+with the error indicated by the processing model for the extension.<a href="#section-4.6.1-8.9.1" class="pilcrow">¶</a></p>
 </li>
           </ul>
-<p id="section-4.6.1-10">The Leader then performs any configuration changes or processing
-defined in the included extensions; see <a href="#collect-ext" class="auto internal xref">Section 4.6.2</a>.<a href="#section-4.6.1-10" class="pilcrow">¶</a></p>
-<p id="section-4.6.1-11">Having validated the <code>CollectionJobReq</code>, the Leader begins working with the
+<p id="section-4.6.1-9">The Leader then performs any configuration changes or processing
+defined in the included extensions; see <a href="#collect-ext" class="auto internal xref">Section 4.6.2</a>.<a href="#section-4.6.1-9" class="pilcrow">¶</a></p>
+<p id="section-4.6.1-10">Having validated the <code>CollectionJobReq</code>, the Leader begins working with the
 Helper to aggregate the reports satisfying the query (or continues this process,
 depending on whether the Leader is aggregating eagerly; <a href="#eager-aggregation" class="auto internal xref">Section 4.5.2</a>)
-as described in <a href="#aggregate-flow" class="auto internal xref">Section 4.5</a>.<a href="#section-4.6.1-11" class="pilcrow">¶</a></p>
-<p id="section-4.6.1-12">If the Leader has a pending aggregation job that overlaps with the batch for the
+as described in <a href="#aggregate-flow" class="auto internal xref">Section 4.5</a>.<a href="#section-4.6.1-10" class="pilcrow">¶</a></p>
+<p id="section-4.6.1-11">If the Leader has a pending aggregation job that overlaps with the batch for the
 collection job, the Leader <span class="bcp14">MUST</span> first complete the aggregation job before
 proceeding and requesting an aggregate share from the Helper. This avoids a race
 condition between aggregation and collection jobs that can yield batch mismatch
-errors.<a href="#section-4.6.1-12" class="pilcrow">¶</a></p>
-<p id="section-4.6.1-13">If the number of validated reports in the batch is not equal to or greater than
+errors.<a href="#section-4.6.1-11" class="pilcrow">¶</a></p>
+<p id="section-4.6.1-12">If the number of validated reports in the batch is not equal to or greater than
 the task's minimum batch size, then the Leader <span class="bcp14">SHOULD</span> wait for more reports to
 be uploaded and aggregated and try the collection job again later. Alternately,
 the Leader <span class="bcp14">MAY</span> give up on the collection job (for example, if it decides that no
 new reports satisfying the query are likely to ever arrive), in which case it
 <span class="bcp14">MUST</span> fail the job with error <code>invalidBatchSize</code>. It <span class="bcp14">MUST NOT</span> fulfill any jobs
-with an insufficient number of validated reports.<a href="#section-4.6.1-13" class="pilcrow">¶</a></p>
-<p id="section-4.6.1-14">Once the Leader has validated the collection job and run to completion all the
+with an insufficient number of validated reports.<a href="#section-4.6.1-12" class="pilcrow">¶</a></p>
+<p id="section-4.6.1-13">Once the Leader has validated the collection job and run to completion all the
 aggregation jobs that pertain to it, it obtains the Helper's aggregate share
 following the aggregate-share request flow described in <a href="#collect-aggregate" class="auto internal xref">Section 4.6.4</a>.
 If obtaining the aggregate share fails, then the Leader <span class="bcp14">MUST</span> fail the collection
-job with the error that caused the failure.<a href="#section-4.6.1-14" class="pilcrow">¶</a></p>
-<p id="section-4.6.1-15">Once the Leader has the Helper's aggregate share and has computed its own, the
+job with the error that caused the failure.<a href="#section-4.6.1-13" class="pilcrow">¶</a></p>
+<p id="section-4.6.1-14">Once the Leader has the Helper's aggregate share and has computed its own, the
 collection job is ready. Its results are represented by a <code>CollectionJobResp</code>,
-which is structured as follows:<a href="#section-4.6.1-15" class="pilcrow">¶</a></p>
-<div class="lang-tls-presentation sourcecode" id="section-4.6.1-16">
+which is structured as follows:<a href="#section-4.6.1-14" class="pilcrow">¶</a></p>
+<div class="lang-tls-presentation sourcecode" id="section-4.6.1-15">
 <pre>
 struct {
   uint64 report_count;
@@ -5876,35 +5914,36 @@ struct {
   HpkeCiphertext leader_encrypted_agg_share;
   HpkeCiphertext helper_encrypted_agg_share;
 } CollectionJobResp;
-</pre><a href="#section-4.6.1-16" class="pilcrow">¶</a>
+</pre><a href="#section-4.6.1-15" class="pilcrow">¶</a>
 </div>
-<p id="section-4.6.1-17">A <code>CollectionJobResp</code>'s media type is
+<p id="section-4.6.1-16">A <code>CollectionJobResp</code>'s media type is
 "application/ppm-dap;message=collection-job-resp". The structure includes the
-following:<a href="#section-4.6.1-17" class="pilcrow">¶</a></p>
+following:<a href="#section-4.6.1-16" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-4.6.1-18.1">
-              <p id="section-4.6.1-18.1.1"><code>report_count</code>: The number of reports included in the batch.<a href="#section-4.6.1-18.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="section-4.6.1-17.1">
+              <p id="section-4.6.1-17.1.1"><code>report_count</code>: The number of reports included in the batch.<a href="#section-4.6.1-17.1.1" class="pilcrow">¶</a></p>
 </li>
-            <li class="normal" id="section-4.6.1-18.2">
-              <p id="section-4.6.1-18.2.1"><code>interval</code>: The smallest interval of time that contains the timestamps of all
+            <li class="normal" id="section-4.6.1-17.2">
+              <p id="section-4.6.1-17.2.1"><code>interval</code>: The smallest interval of time that contains the timestamps of all
 reports included in the batch. In the case of a time-interval query
 (<a href="#time-interval-batch-mode" class="auto internal xref">Section 5.1</a>), this interval can be smaller than the one in
-the corresponding <code>CollectionJobReq.query</code>.<a href="#section-4.6.1-18.2.1" class="pilcrow">¶</a></p>
+the corresponding <code>CollectionJobReq.query</code>.<a href="#section-4.6.1-17.2.1" class="pilcrow">¶</a></p>
 </li>
-            <li class="normal" id="section-4.6.1-18.3">
-              <p id="section-4.6.1-18.3.1"><code>leader_encrypted_agg_share</code>: The Leader's aggregate share, encrypted to the
-Collector (see <a href="#aggregate-share-encrypt" class="auto internal xref">Section 4.6.7</a>).<a href="#section-4.6.1-18.3.1" class="pilcrow">¶</a></p>
+            <li class="normal" id="section-4.6.1-17.3">
+              <p id="section-4.6.1-17.3.1"><code>leader_encrypted_agg_share</code>: The Leader's aggregate share, encrypted to the
+Collector (see <a href="#aggregate-share-encrypt" class="auto internal xref">Section 4.6.7</a>).<a href="#section-4.6.1-17.3.1" class="pilcrow">¶</a></p>
 </li>
-            <li class="normal" id="section-4.6.1-18.4">
-              <p id="section-4.6.1-18.4.1"><code>helper_encrypted_agg_share</code>: The Helper's aggregate share, encrypted to the
-Collector (see <a href="#aggregate-share-encrypt" class="auto internal xref">Section 4.6.7</a>).<a href="#section-4.6.1-18.4.1" class="pilcrow">¶</a></p>
+            <li class="normal" id="section-4.6.1-17.4">
+              <p id="section-4.6.1-17.4.1"><code>helper_encrypted_agg_share</code>: The Helper's aggregate share, encrypted to the
+Collector (see <a href="#aggregate-share-encrypt" class="auto internal xref">Section 4.6.7</a>).<a href="#section-4.6.1-17.4.1" class="pilcrow">¶</a></p>
 </li>
           </ul>
-<p id="section-4.6.1-19">Once the <code>Leader</code> has constructed a <code>CollectionJobResp</code> for the Collector, the
-Leader considers the batch to be collected, and further aggregation jobs <span class="bcp14">MUST NOT</span> commit more reports to the batch (see <a href="#batch-buckets" class="auto internal xref">Section 4.5.4.3</a>).<a href="#section-4.6.1-19" class="pilcrow">¶</a></p>
-<p id="section-4.6.1-20">Changing a collection job's parameters is illegal, so if there are further PUT
-requests to the collection job with a different <code>CollectionJobReq</code>, the Leader
-<span class="bcp14">MUST</span> abort with error <code>invalidMessage</code>.<a href="#section-4.6.1-20" class="pilcrow">¶</a></p>
+<p id="section-4.6.1-18">Once the <code>Leader</code> has constructed a <code>CollectionJobResp</code> for the Collector, the
+Leader considers the batch to be collected, and further aggregation jobs <span class="bcp14">MUST NOT</span> commit more reports to the batch (see <a href="#batch-buckets" class="auto internal xref">Section 4.5.4.3</a>).<a href="#section-4.6.1-18" class="pilcrow">¶</a></p>
+<p id="section-4.6.1-19">Two <code>CollectionJobReq</code> messages are considered identical if their encodings are
+byte-for-byte identical. If the Leader receives a POST whose
+content matches an existing collection job, it <span class="bcp14">MUST</span> return the existing job's
+location and current state as described in <a href="#resource-creation" class="auto internal xref">Section 3.2</a>.<a href="#section-4.6.1-19" class="pilcrow">¶</a></p>
 <div id="example-5">
 <section id="section-4.6.1.1">
             <h5 id="name-example-6">
@@ -5913,8 +5952,8 @@ requests to the collection job with a different <code>CollectionJobReq</code>, t
 <p id="section-4.6.1.1-1">The Leader handles the collection job request synchronously:<a href="#section-4.6.1.1-1" class="pilcrow">¶</a></p>
 <div class="lang-http sourcecode" id="section-4.6.1.1-2">
 <pre>
-PUT /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
-  collection_jobs/lc7aUeGpdSNosNlh-UZhKA
+POST /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+  collection_jobs
 Host: example.com
 Content-Type: application/ppm-dap;message=collection-job-req
 Authorization: Bearer auth-token
@@ -5929,6 +5968,8 @@ encoded(struct {
 } CollectionJobReq)
 
 HTTP/1.1 200
+Location: /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+  collection_jobs/lc7aUeGpdSNosNlh-UZhKA
 Content-Type: application/ppm-dap;message=collection-job-resp
 
 encoded(struct {
@@ -5943,10 +5984,10 @@ encoded(struct {
 </pre><a href="#section-4.6.1.1-2" class="pilcrow">¶</a>
 </div>
 <p id="section-4.6.1.1-3">Or asynchronously:<a href="#section-4.6.1.1-3" class="pilcrow">¶</a></p>
-<div class="lang-http sourcecode" id="section-4.6.1.1-4">
+<div class="breakable lang-http sourcecode" id="section-4.6.1.1-4">
 <pre>
-PUT /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
-  collection_jobs/lc7aUeGpdSNosNlh-UZhKA
+POST /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+  collection_jobs
 Host: example.com
 Content-Type: application/ppm-dap;message=collection-job-req
 Authorization: Bearer auth-token
@@ -5966,6 +6007,8 @@ encoded(struct {
 } CollectionJobReq)
 
 HTTP/1.1 200
+Location: /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+  collection_jobs/lc7aUeGpdSNosNlh-UZhKA
 Retry-After: 300
 
 GET /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
@@ -6032,10 +6075,10 @@ and arbitrary data (<code>extension_data</code>).
 The data is structured according to the definition of the extension.<a href="#section-4.6.2-3" class="pilcrow">¶</a></p>
 <p id="section-4.6.2-4">Extensions are mandatory to support by both Aggregators.
 A collection job that contains an unrecognized or unsupported extension
-<span class="bcp14">MUST</span> be aborted with an <code>unsupportedExtension</code> error; see <a href="#errors" class="auto internal xref">Section 3.5</a>.<a href="#section-4.6.2-4" class="pilcrow">¶</a></p>
+<span class="bcp14">MUST</span> be aborted with an <code>unsupportedExtension</code> error; see <a href="#errors" class="auto internal xref">Section 3.6</a>.<a href="#section-4.6.2-4" class="pilcrow">¶</a></p>
 <p id="section-4.6.2-5">Extensions <span class="bcp14">MUST</span> be encoded in strictly increasing order.
 If any <code>extension_type</code> value is equal to or less than that of the extension that precedes it,
-the job <span class="bcp14">MUST</span> be failed with an <code>invalidExtension</code> error; see <a href="#errors" class="auto internal xref">Section 3.5</a>.<a href="#section-4.6.2-5" class="pilcrow">¶</a></p>
+the job <span class="bcp14">MUST</span> be failed with an <code>invalidExtension</code> error; see <a href="#errors" class="auto internal xref">Section 3.6</a>.<a href="#section-4.6.2-5" class="pilcrow">¶</a></p>
 <p id="section-4.6.2-6">Each collection job extension <span class="bcp14">MUST</span> define how Aggregators
 alter their handling of collection jobs
 when the extension is present,
@@ -6119,20 +6162,15 @@ share for this collection job.<a href="#section-4.6.4-5.1.1" class="pilcrow">¶<
               <p id="section-4.6.4-5.3.1">Checksums are combined via bitwise XOR.<a href="#section-4.6.4-5.3.1" class="pilcrow">¶</a></p>
 </li>
           </ul>
-<p id="section-4.6.4-6">A Helper aggregate share is identified by a 16-byte ID:<a href="#section-4.6.4-6" class="pilcrow">¶</a></p>
-<div class="lang-tls-presentation sourcecode" id="section-4.6.4-7">
-<pre>
-opaque AggregateShareID[16];
-</pre><a href="#section-4.6.4-7" class="pilcrow">¶</a>
-</div>
-<p id="section-4.6.4-8">The Helper's aggregate share is an HTTP resource served by the Helper at the URL
-<code>{helper}/tasks/{task-id}/aggregate_shares/{aggregate-share-id}</code>. To obtain it,
-the Leader first chooses an aggregate share ID, which <span class="bcp14">MUST</span> be unique within the
-scope of the corresponding DAP task. Since this resource corresponds to
-exactly one collection job, the Leader might use the collection job ID as the
-aggregate share ID.<a href="#section-4.6.4-8" class="pilcrow">¶</a></p>
-<p id="section-4.6.4-9">Then the Leader sends a PUT request to the aggregate share with the body:<a href="#section-4.6.4-9" class="pilcrow">¶</a></p>
-<div class="lang-tls-presentation sourcecode" id="section-4.6.4-10">
+<p id="section-4.6.4-6">A Helper aggregate share is identified by a server-selected identifier, unique within
+the scope of the task, assigned during resource creation (<a href="#resource-creation" class="auto internal xref">Section 3.2</a>).
+Since this resource corresponds to exactly one collection job, the Leader might use
+the collection job ID as the aggregate share ID.<a href="#section-4.6.4-6" class="pilcrow">¶</a></p>
+<p id="section-4.6.4-7">The Helper's aggregate share is an HTTP resource served by the Helper at the URL
+<code>{helper}/tasks/{task-id}/aggregate_shares/{aggregate-share-id}</code>. To obtain an
+aggregate share, the Leader sends a POST request to
+<code>{helper}/tasks/{task-id}/aggregate_shares</code> with the body:<a href="#section-4.6.4-7" class="pilcrow">¶</a></p>
+<div class="lang-tls-presentation sourcecode" id="section-4.6.4-8">
 <pre>
 struct {
   BatchMode batch_mode;
@@ -6145,98 +6183,100 @@ struct {
   uint64 report_count;
   opaque checksum[32];
 } AggregateShareReq;
-</pre><a href="#section-4.6.4-10" class="pilcrow">¶</a>
+</pre><a href="#section-4.6.4-8" class="pilcrow">¶</a>
 </div>
-<p id="section-4.6.4-11">The media type of <code>AggregateShareReq</code> is
+<p id="section-4.6.4-9">The media type of <code>AggregateShareReq</code> is
 "application/ppm-dap;message=aggregate-share-req". The structure contains the
-following parameters:<a href="#section-4.6.4-11" class="pilcrow">¶</a></p>
+following parameters:<a href="#section-4.6.4-9" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-4.6.4-12.1">
-              <p id="section-4.6.4-12.1.1"><code>collection_job_req</code>: The details of the collection job,
-as provided by the Collector when initiating the job; see <a href="#collect-init" class="auto internal xref">Section 4.6.1</a>.<a href="#section-4.6.4-12.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="section-4.6.4-10.1">
+              <p id="section-4.6.4-10.1.1"><code>collection_job_req</code>: The details of the collection job,
+as provided by the Collector when initiating the job; see <a href="#collect-init" class="auto internal xref">Section 4.6.1</a>.<a href="#section-4.6.4-10.1.1" class="pilcrow">¶</a></p>
 </li>
-            <li class="normal" id="section-4.6.4-12.2">
-              <p id="section-4.6.4-12.2.1"><code>batch_selector</code>: The "batch selector", the contents of which depends on the
-indicated batch mode; see <a href="#batch-modes" class="auto internal xref">Section 5</a>.<a href="#section-4.6.4-12.2.1" class="pilcrow">¶</a></p>
+            <li class="normal" id="section-4.6.4-10.2">
+              <p id="section-4.6.4-10.2.1"><code>batch_selector</code>: The "batch selector", the contents of which depends on the
+indicated batch mode; see <a href="#batch-modes" class="auto internal xref">Section 5</a>.<a href="#section-4.6.4-10.2.1" class="pilcrow">¶</a></p>
 </li>
-            <li class="normal" id="section-4.6.4-12.3">
-              <p id="section-4.6.4-12.3.1"><code>report_count</code>: The number number of reports included in the batch, as
-computed above.<a href="#section-4.6.4-12.3.1" class="pilcrow">¶</a></p>
+            <li class="normal" id="section-4.6.4-10.3">
+              <p id="section-4.6.4-10.3.1"><code>report_count</code>: The number number of reports included in the batch, as
+computed above.<a href="#section-4.6.4-10.3.1" class="pilcrow">¶</a></p>
 </li>
-            <li class="normal" id="section-4.6.4-12.4">
-              <p id="section-4.6.4-12.4.1"><code>checksum</code>: The batch checksum, as computed above.<a href="#section-4.6.4-12.4.1" class="pilcrow">¶</a></p>
+            <li class="normal" id="section-4.6.4-10.4">
+              <p id="section-4.6.4-10.4.1"><code>checksum</code>: The batch checksum, as computed above.<a href="#section-4.6.4-10.4.1" class="pilcrow">¶</a></p>
 </li>
           </ul>
-<p id="section-4.6.4-13">The aggregate share request can be handled either asynchronously or
+<p id="section-4.6.4-11">The aggregate share request can be handled either asynchronously or
 synchronously as described in <a href="#http-usage" class="auto internal xref">Section 3</a>. The representation of the share is
-an <code>AggregateShare</code> (defined below).<a href="#section-4.6.4-13" class="pilcrow">¶</a></p>
-<p id="section-4.6.4-14">The Helper first ensures that it recognizes the task ID. If not, it <span class="bcp14">MUST</span> fail
-the job with error <code>unrecognizedTask</code>.<a href="#section-4.6.4-14" class="pilcrow">¶</a></p>
-<p id="section-4.6.4-15">The indicated batch mode <span class="bcp14">MUST</span> match the task's batch mode. If not, the Helper
-<span class="bcp14">MUST</span> fail the job with error <code>invalidMessage</code>.<a href="#section-4.6.4-15" class="pilcrow">¶</a></p>
-<p id="section-4.6.4-16">If the <code>AggregateShareReq</code> is malformed, the Helper <span class="bcp14">MUST</span> fail the job with error
-<code>invalidMessage</code>.<a href="#section-4.6.4-16" class="pilcrow">¶</a></p>
-<p id="section-4.6.4-17">The Helper then verifies that the <code>batch_selector</code> in the Leader's request
+an <code>AggregateShare</code> (defined below).<a href="#section-4.6.4-11" class="pilcrow">¶</a></p>
+<p id="section-4.6.4-12">The Helper first ensures that it recognizes the task ID. If not, it <span class="bcp14">MUST</span> fail
+the job with error <code>unrecognizedTask</code>.<a href="#section-4.6.4-12" class="pilcrow">¶</a></p>
+<p id="section-4.6.4-13">The indicated batch mode <span class="bcp14">MUST</span> match the task's batch mode. If not, the Helper
+<span class="bcp14">MUST</span> fail the job with error <code>invalidMessage</code>.<a href="#section-4.6.4-13" class="pilcrow">¶</a></p>
+<p id="section-4.6.4-14">If the <code>AggregateShareReq</code> is malformed, the Helper <span class="bcp14">MUST</span> fail the job with error
+<code>invalidMessage</code>.<a href="#section-4.6.4-14" class="pilcrow">¶</a></p>
+<p id="section-4.6.4-15">The Helper then verifies that the <code>batch_selector</code> in the Leader's request
 is consistent with the <code>collection_job_req.query</code>.
 Each batch mode needs to define any consistency checks necessary.
 The Helper also determines whether <code>batch_selector</code> identifies a set of batch buckets
 that can be collected. If the selector does not identify a
 valid set of batch buckets according to the criteria defined by the batch mode
 in use (<a href="#batch-modes" class="auto internal xref">Section 5</a>), then the Helper <span class="bcp14">MUST</span> fail the job with error
-<code>batchInvalid</code>.<a href="#section-4.6.4-17" class="pilcrow">¶</a></p>
-<p id="section-4.6.4-18">If any of the batch buckets identified by the selector have already been
-collected, then the Helper <span class="bcp14">MUST</span> fail the job with error <code>batchOverlap</code>.<a href="#section-4.6.4-18" class="pilcrow">¶</a></p>
-<p id="section-4.6.4-19">If the number of validated reports in the batch is not equal to or greater than
+<code>batchInvalid</code>.<a href="#section-4.6.4-15" class="pilcrow">¶</a></p>
+<p id="section-4.6.4-16">If any of the batch buckets identified by the selector have already been
+collected, then the Helper <span class="bcp14">MUST</span> fail the job with error <code>batchOverlap</code>.<a href="#section-4.6.4-16" class="pilcrow">¶</a></p>
+<p id="section-4.6.4-17">If the number of validated reports in the batch is not equal to or greater than
 the task's minimum batch size, then the Helper <span class="bcp14">MUST</span> abort with
-<code>invalidBatchSize</code>.<a href="#section-4.6.4-19" class="pilcrow">¶</a></p>
-<p id="section-4.6.4-20">The aggregation parameter in <code>collection_job_req.agg_param</code>
+<code>invalidBatchSize</code>.<a href="#section-4.6.4-17" class="pilcrow">¶</a></p>
+<p id="section-4.6.4-18">The aggregation parameter in <code>collection_job_req.agg_param</code>
             <span class="bcp14">MUST</span> match the aggregation parameter used in
 aggregation jobs pertaining to this batch. If not, the Helper <span class="bcp14">MUST</span> fail the job
-with error <code>invalidMessage</code>.<a href="#section-4.6.4-20" class="pilcrow">¶</a></p>
-<p id="section-4.6.4-21">The Helper then validates any extensions in <code>collection_job_req.extensions</code>,
+with error <code>invalidMessage</code>.<a href="#section-4.6.4-18" class="pilcrow">¶</a></p>
+<p id="section-4.6.4-19">The Helper then validates any extensions in <code>collection_job_req.extensions</code>,
 following the same logic as the Leader; see <a href="#collect-ext" class="auto internal xref">Section 4.6.2</a>.
 Though invalid extension encoding should have been detected by the Leader,
 the Helper <span class="bcp14">MUST</span> independently validate extensions
-and fail the job if necessary.<a href="#section-4.6.4-21" class="pilcrow">¶</a></p>
-<p id="section-4.6.4-22">The Helper performs any configuration changes or processing
-that are dictated by the extensions that are included; see <a href="#collect-ext" class="auto internal xref">Section 4.6.2</a>.<a href="#section-4.6.4-22" class="pilcrow">¶</a></p>
-<p id="section-4.6.4-23">Next, the Helper retrieves and combines the batch buckets associated with the
+and fail the job if necessary.<a href="#section-4.6.4-19" class="pilcrow">¶</a></p>
+<p id="section-4.6.4-20">The Helper performs any configuration changes or processing
+that are dictated by the extensions that are included; see <a href="#collect-ext" class="auto internal xref">Section 4.6.2</a>.<a href="#section-4.6.4-20" class="pilcrow">¶</a></p>
+<p id="section-4.6.4-21">Next, the Helper retrieves and combines the batch buckets associated with the
 request using the same process used by the Leader (described at the beginning of
 this section), arriving at its aggregate share, report count, and checksum
 values. If the Helper's computed report count and checksum values do not match
 the values provided in the <code>AggregateShareReq</code>, it <span class="bcp14">MUST</span> fail the job with error
-<code>batchMismatch</code>.<a href="#section-4.6.4-23" class="pilcrow">¶</a></p>
-<p id="section-4.6.4-24">The Helper then encrypts <code>agg_share</code> under the Collector's HPKE public key as
+<code>batchMismatch</code>.<a href="#section-4.6.4-21" class="pilcrow">¶</a></p>
+<p id="section-4.6.4-22">The Helper then encrypts <code>agg_share</code> under the Collector's HPKE public key as
 described in <a href="#aggregate-share-encrypt" class="auto internal xref">Section 4.6.7</a>, yielding <code>encrypted_agg_share</code>.
 Encryption prevents the Leader from learning the actual result, as it only has
-its own aggregate share and cannot compute the Helper's.<a href="#section-4.6.4-24" class="pilcrow">¶</a></p>
-<p id="section-4.6.4-25">Once the Helper has encrypted its aggregate share, the aggregate share job is
+its own aggregate share and cannot compute the Helper's.<a href="#section-4.6.4-22" class="pilcrow">¶</a></p>
+<p id="section-4.6.4-23">Once the Helper has encrypted its aggregate share, the aggregate share job is
 ready. Its results are represented by an <code>AggregateShare</code>, with media type
-"application/ppm-dap;message=aggregate-share":<a href="#section-4.6.4-25" class="pilcrow">¶</a></p>
-<div class="lang-tls-presentation sourcecode" id="section-4.6.4-26">
+"application/ppm-dap;message=aggregate-share":<a href="#section-4.6.4-23" class="pilcrow">¶</a></p>
+<div class="lang-tls-presentation sourcecode" id="section-4.6.4-24">
 <pre>
 struct {
   HpkeCiphertext encrypted_aggregate_share;
 } AggregateShare;
-</pre><a href="#section-4.6.4-26" class="pilcrow">¶</a>
+</pre><a href="#section-4.6.4-24" class="pilcrow">¶</a>
 </div>
-<p id="section-4.6.4-27"><code>encrypted_aggregate_share.config_id</code> is set to the Collector's HPKE config ID.
+<p id="section-4.6.4-25"><code>encrypted_aggregate_share.config_id</code> is set to the Collector's HPKE config ID.
 <code>encrypted_aggregate_share.enc</code> is set to the encapsulated HPKE context <code>enc</code>
 computed above and <code>encrypted_aggregate_share.ciphertext</code> is the ciphertext
-<code>encrypted_agg_share</code> computed above.<a href="#section-4.6.4-27" class="pilcrow">¶</a></p>
-<p id="section-4.6.4-28">After receiving the Helper's response, the Leader includes the HpkeCiphertext in
-its response to the Collector (see <a href="#collect-finalization" class="auto internal xref">Section 4.6.6</a>).<a href="#section-4.6.4-28" class="pilcrow">¶</a></p>
-<p id="section-4.6.4-29">Once an <code>AggregateShareReq</code> has been constructed for the batch determined by a
+<code>encrypted_agg_share</code> computed above.<a href="#section-4.6.4-25" class="pilcrow">¶</a></p>
+<p id="section-4.6.4-26">After receiving the Helper's response, the Leader includes the HpkeCiphertext in
+its response to the Collector (see <a href="#collect-finalization" class="auto internal xref">Section 4.6.6</a>).<a href="#section-4.6.4-26" class="pilcrow">¶</a></p>
+<p id="section-4.6.4-27">Once an <code>AggregateShareReq</code> has been constructed for the batch determined by a
 given query, the Helper considers the batch to be collected. The Helper <span class="bcp14">MUST NOT</span>
 commit any more output shares to the batch. It is an error for the Leader to
 issue any more aggregation jobs for additional reports that satisfy the query.
-These reports <span class="bcp14">MUST</span> be rejected by the Helper as described in <a href="#batch-buckets" class="auto internal xref">Section 4.5.4.3</a>.<a href="#section-4.6.4-29" class="pilcrow">¶</a></p>
-<p id="section-4.6.4-30">Changing an aggregate share's parameters is illegal, so if there are further PUT
-requests to the aggregate share with a different <code>AggregateShareReq</code>, the Helper
-<span class="bcp14">MUST</span> abort with error <code>invalidMessage</code>.<a href="#section-4.6.4-30" class="pilcrow">¶</a></p>
-<p id="section-4.6.4-31">Before completing the collection job, the Leader encrypts its aggregate share
+These reports <span class="bcp14">MUST</span> be rejected by the Helper as described in <a href="#batch-buckets" class="auto internal xref">Section 4.5.4.3</a>.<a href="#section-4.6.4-27" class="pilcrow">¶</a></p>
+<p id="section-4.6.4-28">Two <code>AggregateShareReq</code> messages are considered identical if their encodings are
+byte-for-byte identical. Note that, within a task, a given batch can only be
+collected once, so the batch selector is a natural key. If the Helper receives a
+POST whose content matches an existing aggregate share, it <span class="bcp14">MUST</span> return the existing
+resource's location and current state as described in <a href="#resource-creation" class="auto internal xref">Section 3.2</a>.<a href="#section-4.6.4-28" class="pilcrow">¶</a></p>
+<p id="section-4.6.4-29">Before completing the collection job, the Leader encrypts its aggregate share
 under the Collector's HPKE public key as described in
-<a href="#aggregate-share-encrypt" class="auto internal xref">Section 4.6.7</a>.<a href="#section-4.6.4-31" class="pilcrow">¶</a></p>
+<a href="#aggregate-share-encrypt" class="auto internal xref">Section 4.6.7</a>.<a href="#section-4.6.4-29" class="pilcrow">¶</a></p>
 <div id="example-7">
 <section id="section-4.6.4.1">
             <h5 id="name-example-8">
@@ -6245,8 +6285,8 @@ under the Collector's HPKE public key as described in
 <p id="section-4.6.4.1-1">The Helper handles the aggregate share request synchronously:<a href="#section-4.6.4.1-1" class="pilcrow">¶</a></p>
 <div class="lang-http sourcecode" id="section-4.6.4.1-2">
 <pre>
-PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
-  aggregate_shares/lc7aUeGpdSNosNlh-UZhKA
+POST /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+  aggregate_shares
 Host: example.com
 Content-Type: application/ppm-dap;message=aggregate-share-req
 Authorization: Bearer auth-token
@@ -6279,6 +6319,8 @@ encoded(struct {
 } AggregateShareReq)
 
 HTTP/1.1 200
+Location: /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+  aggregate_shares/lc7aUeGpdSNosNlh-UZhKA
 Content-Type: application/ppm-dap;message=aggregate-share
 
 encoded(struct {
@@ -6289,8 +6331,8 @@ encoded(struct {
 <p id="section-4.6.4.1-3">Or asynchronously:<a href="#section-4.6.4.1-3" class="pilcrow">¶</a></p>
 <div class="breakable lang-http sourcecode" id="section-4.6.4.1-4">
 <pre>
-PUT /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
-  aggregate_shares/lc7aUeGpdSNosNlh-UZhKA
+POST /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+  aggregate_shares
 Host: example.com
 Content-Type: application/ppm-dap;message=aggregate-share-req
 Authorization: Bearer auth-token
@@ -6323,6 +6365,8 @@ encoded(struct {
 } AggregateShareReq)
 
 HTTP/1.1 200
+Location: /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
+  aggregate_shares/lc7aUeGpdSNosNlh-UZhKA
 Retry-After: 300
 
 GET /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
@@ -8389,11 +8433,12 @@ specifications.<a href="#appendix-A-2" class="pilcrow">¶</a></p>
 <a href="#appendix-A.2.2" class="section-number selfRef">A.2.2. </a><a href="#name-collection-jobs" class="section-name selfRef">Collection Jobs</a>
           </h4>
 <p id="appendix-A.2.2-1">A Collector's request to collect reports identified by some query.<a href="#appendix-A.2.2-1" class="pilcrow">¶</a></p>
-<p id="appendix-A.2.2-2">Resource URL: <code>{leader}/tasks/{task-id}/collection_jobs/{collection-job-id}</code><a href="#appendix-A.2.2-2" class="pilcrow">¶</a></p>
-<p id="appendix-A.2.2-3">HTTP methods: PUT, GET<a href="#appendix-A.2.2-3" class="pilcrow">¶</a></p>
-<p id="appendix-A.2.2-4">Request media-type <code>message</code> values: <code>collection-job-req</code><a href="#appendix-A.2.2-4" class="pilcrow">¶</a></p>
-<p id="appendix-A.2.2-5">Response media-type <code>message</code> values: <code>collection-job-resp</code><a href="#appendix-A.2.2-5" class="pilcrow">¶</a></p>
-<p id="appendix-A.2.2-6">Reference: <a href="#collect-flow" class="auto internal xref">Section 4.6</a><a href="#appendix-A.2.2-6" class="pilcrow">¶</a></p>
+<p id="appendix-A.2.2-2">Creation URL: <code>{leader}/tasks/{task-id}/collection_jobs</code><a href="#appendix-A.2.2-2" class="pilcrow">¶</a></p>
+<p id="appendix-A.2.2-3">Resource URL: <code>{leader}/tasks/{task-id}/collection_jobs/{collection-job-id}</code><a href="#appendix-A.2.2-3" class="pilcrow">¶</a></p>
+<p id="appendix-A.2.2-4">HTTP methods: POST (creation URL), GET, DELETE (resource URL)<a href="#appendix-A.2.2-4" class="pilcrow">¶</a></p>
+<p id="appendix-A.2.2-5">Request media-type <code>message</code> values: <code>collection-job-req</code><a href="#appendix-A.2.2-5" class="pilcrow">¶</a></p>
+<p id="appendix-A.2.2-6">Response media-type <code>message</code> values: <code>collection-job-resp</code><a href="#appendix-A.2.2-6" class="pilcrow">¶</a></p>
+<p id="appendix-A.2.2-7">Reference: <a href="#collect-flow" class="auto internal xref">Section 4.6</a><a href="#appendix-A.2.2-7" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -8409,12 +8454,13 @@ specifications.<a href="#appendix-A-2" class="pilcrow">¶</a></p>
 <a href="#appendix-A.3.1" class="section-number selfRef">A.3.1. </a><a href="#name-aggregation-jobs" class="section-name selfRef">Aggregation Jobs</a>
           </h4>
 <p id="appendix-A.3.1-1">An aggregation job created by the Leader.<a href="#appendix-A.3.1-1" class="pilcrow">¶</a></p>
-<p id="appendix-A.3.1-2">Resource URL: <code>/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}</code><a href="#appendix-A.3.1-2" class="pilcrow">¶</a></p>
-<p id="appendix-A.3.1-3">HTTP methods: PUT, POST, GET<a href="#appendix-A.3.1-3" class="pilcrow">¶</a></p>
-<p id="appendix-A.3.1-4">Request media-type <code>message</code> values: <code>aggregation-job-init-req</code>,
-<code>aggregation-job-continue-req</code><a href="#appendix-A.3.1-4" class="pilcrow">¶</a></p>
-<p id="appendix-A.3.1-5">Response media-type <code>message</code> values: <code>aggregation-job-resp</code><a href="#appendix-A.3.1-5" class="pilcrow">¶</a></p>
-<p id="appendix-A.3.1-6">Reference: <a href="#aggregate-flow" class="auto internal xref">Section 4.5</a><a href="#appendix-A.3.1-6" class="pilcrow">¶</a></p>
+<p id="appendix-A.3.1-2">Creation URL: <code>{helper}/tasks/{task-id}/aggregation_jobs</code><a href="#appendix-A.3.1-2" class="pilcrow">¶</a></p>
+<p id="appendix-A.3.1-3">Resource URL: <code>{helper}/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}</code><a href="#appendix-A.3.1-3" class="pilcrow">¶</a></p>
+<p id="appendix-A.3.1-4">HTTP methods: POST (creation URL), POST, GET, DELETE (resource URL)<a href="#appendix-A.3.1-4" class="pilcrow">¶</a></p>
+<p id="appendix-A.3.1-5">Request media-type <code>message</code> values: <code>aggregation-job-init-req</code>,
+<code>aggregation-job-continue-req</code><a href="#appendix-A.3.1-5" class="pilcrow">¶</a></p>
+<p id="appendix-A.3.1-6">Response media-type <code>message</code> values: <code>aggregation-job-resp</code><a href="#appendix-A.3.1-6" class="pilcrow">¶</a></p>
+<p id="appendix-A.3.1-7">Reference: <a href="#aggregate-flow" class="auto internal xref">Section 4.5</a><a href="#appendix-A.3.1-7" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="aggregate-shares">
@@ -8424,11 +8470,12 @@ specifications.<a href="#appendix-A-2" class="pilcrow">¶</a></p>
           </h4>
 <p id="appendix-A.3.2-1">The Helper's share of an aggregation over the reports identified by the
 Collector's query.<a href="#appendix-A.3.2-1" class="pilcrow">¶</a></p>
-<p id="appendix-A.3.2-2">Resource URL: <code>{helper}/tasks/{task-id}/aggregate_shares/{aggregate-share-id}</code><a href="#appendix-A.3.2-2" class="pilcrow">¶</a></p>
-<p id="appendix-A.3.2-3">HTTP methods: PUT, GET<a href="#appendix-A.3.2-3" class="pilcrow">¶</a></p>
-<p id="appendix-A.3.2-4">Request media-type <code>message</code> values: <code>aggregate-share-req</code><a href="#appendix-A.3.2-4" class="pilcrow">¶</a></p>
-<p id="appendix-A.3.2-5">Response media-type <code>message</code> values: <code>aggregate-share</code><a href="#appendix-A.3.2-5" class="pilcrow">¶</a></p>
-<p id="appendix-A.3.2-6">Reference: <a href="#collect-aggregate" class="auto internal xref">Section 4.6.4</a><a href="#appendix-A.3.2-6" class="pilcrow">¶</a></p>
+<p id="appendix-A.3.2-2">Creation URL: <code>{helper}/tasks/{task-id}/aggregate_shares</code><a href="#appendix-A.3.2-2" class="pilcrow">¶</a></p>
+<p id="appendix-A.3.2-3">Resource URL: <code>{helper}/tasks/{task-id}/aggregate_shares/{aggregate-share-id}</code><a href="#appendix-A.3.2-3" class="pilcrow">¶</a></p>
+<p id="appendix-A.3.2-4">HTTP methods: POST (creation URL), GET, DELETE (resource URL)<a href="#appendix-A.3.2-4" class="pilcrow">¶</a></p>
+<p id="appendix-A.3.2-5">Request media-type <code>message</code> values: <code>aggregate-share-req</code><a href="#appendix-A.3.2-5" class="pilcrow">¶</a></p>
+<p id="appendix-A.3.2-6">Response media-type <code>message</code> values: <code>aggregate-share</code><a href="#appendix-A.3.2-6" class="pilcrow">¶</a></p>
+<p id="appendix-A.3.2-7">Reference: <a href="#collect-aggregate" class="auto internal xref">Section 4.6.4</a><a href="#appendix-A.3.2-7" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
