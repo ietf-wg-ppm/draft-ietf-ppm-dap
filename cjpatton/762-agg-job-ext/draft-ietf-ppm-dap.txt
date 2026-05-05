@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 5 November 2026                                      Cloudflare
+Expires: 6 November 2026                                      Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                              4 May 2026
+                                                              5 May 2026
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -64,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 5 November 2026.
+   This Internet-Draft will expire on 6 November 2026.
 
 Copyright Notice
 
@@ -226,6 +226,9 @@ Table of Contents
       (#776)
 
    *  Require report extensions to be sorted by type. (*) (#775)
+
+   *  Remove the partial batch selector from the collection job
+      response. (*) (#778)
 
    *  Replace the partial batch selector with aggregation job
       extensions.  If a batch mode needs to convey information to the
@@ -2088,7 +2091,7 @@ Table of Contents
 
    enum {
      reserved(0),
-     (65535)
+     (2^16-1)
    } ExtensionType;
 
    Field extension_type indicates the type of extension, and
@@ -2249,7 +2252,7 @@ Table of Contents
 
    enum {
      reserved(0),
-     (65535)
+     (2^16-1)
    } AggregationJobExtensionType;
 
    Each extension is identified by an AggregationJobExtensionType
@@ -4125,7 +4128,7 @@ Table of Contents
 
    enum {
      leader_selected_batch_id(1),
-     (65535)
+     (2^16-1)
    } AggregationJobExtensionType;
 
    The payload of this extension is a BatchID selected by the Leader.
