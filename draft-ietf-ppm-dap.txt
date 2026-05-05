@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 5 November 2026                                      Cloudflare
+Expires: 6 November 2026                                      Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                              4 May 2026
+                                                              5 May 2026
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -64,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 5 November 2026.
+   This Internet-Draft will expire on 6 November 2026.
 
 Copyright Notice
 
@@ -114,10 +114,11 @@ Table of Contents
        4.4.2.  Upload Request
        4.4.3.  Report Extensions
      4.5.  Verifying and Aggregating Reports
-       4.5.1.  Eager Aggregation
-       4.5.2.  Aggregate Initialization
-       4.5.3.  Aggregate Continuation
-       4.5.4.  Aggregation Job Abandonment and Deletion
+       4.5.1.  Aggregation Job Extensions
+       4.5.2.  Eager Aggregation
+       4.5.3.  Aggregate Initialization
+       4.5.4.  Aggregate Continuation
+       4.5.5.  Aggregation Job Abandonment and Deletion
      4.6.  Collecting Results
        4.6.1.  Collection Job Initialization
        4.6.2.  Collection Job Extensions
@@ -129,12 +130,11 @@ Table of Contents
    5.  Batch Modes
      5.1.  Time Interval
        5.1.1.  Query Configuration
-       5.1.2.  Partial Batch Selector Configuration
-       5.1.3.  Batch Selector Configuration
-       5.1.4.  Batch Buckets
+       5.1.2.  Batch Selector Configuration
+       5.1.3.  Batch Buckets
      5.2.  Leader-selected Batch Mode
        5.2.1.  Query Configuration
-       5.2.2.  Partial Batch Selector Configuration
+       5.2.2.  Aggregation Job Extension
        5.2.3.  Batch Selector Configuration
        5.2.4.  Batch Buckets
    6.  Operational Considerations
@@ -167,10 +167,11 @@ Table of Contents
      9.2.  DAP Type Registries
        9.2.1.  Batch Modes Registry
        9.2.2.  Task Extensions Registry
-       9.2.3.  Report Extensions Registry
-       9.2.4.  Collection Job Extensions Registry
-       9.2.5.  Report Errors Registry
-       9.2.6.  Guidance for Designated Experts
+       9.2.3.  Aggregation Job Extensions Registry
+       9.2.4.  Report Extensions Registry
+       9.2.5.  Collection Job Extensions Registry
+       9.2.6.  Report Errors Registry
+       9.2.7.  Guidance for Designated Experts
      9.3.  URN Sub-namespace for DAP (urn:ietf:params:ppm:dap)
    10. Extending this Document
    11. References
@@ -228,6 +229,12 @@ Table of Contents
 
    *  Remove the partial batch selector from the collection job
       response. (*) (#778)
+
+   *  Replace the partial batch selector with aggregation job
+      extensions.  If a batch mode needs to convey information to the
+      Helper during aggregation, it defines an aggregation job
+      extension.  For example, the leader-selected batch mode defines an
+      extension that conveys the batch ID. (*) (#762)
 
    17:
 
@@ -921,7 +928,7 @@ Table of Contents
    to the same batch bucket.
 
    The assignation of output shares to batch buckets is specified in
-   Section 4.5.3.3.
+   Section 4.5.4.3.
 
                  from upload interaction
                             |
@@ -974,7 +981,7 @@ Table of Contents
    share, Leader report share and Helper report share) into k Leader
    output shares and k Helper output shares.  The aggregation parameter
    is chosen by the Collector (or in some settings it may be known prior
-   to the Collector's involvement, as discussed in Section 4.5.1) and is
+   to the Collector's involvement, as discussed in Section 4.5.2) and is
    used to verify all the reports in one or more aggregation jobs.
 
      report 1         report 2    ...     report k
@@ -1106,7 +1113,7 @@ Table of Contents
 
    *  Variables {task-id}, {aggregation-job-id}, {aggregate-share-id},
       and {collection-job-id} are replaced with the task ID
-      (Section 4.2), aggregation job ID (Section 4.5.2), aggregate share
+      (Section 4.2), aggregation job ID (Section 4.5.3), aggregate share
       ID (Section 4.6.4) and collection job ID (Section 4.6.1)
       respectively.  The value MUST be encoded in its URL-safe, unpadded
       Base 64 representation as specified in Sections 5 and 3.2 of
@@ -1631,7 +1638,7 @@ Table of Contents
    see Section 4.1.1 for details.
 
    Reports with a timestamp that are outside of this interval MUST be
-   rejected by the Aggregators; see Section 4.5.2.4.
+   rejected by the Aggregators; see Section 4.5.3.4.
 
 4.3.  Aggregation Parameter Validation
 
@@ -2084,15 +2091,15 @@ Table of Contents
 
    enum {
      reserved(0),
-     (65535)
+     (2^16-1)
    } ExtensionType;
 
    Field extension_type indicates the type of extension, and
    extension_data contains the opaque encoding of the extension.
-   Extension type values are defined in Section 9.2.3.
+   Extension type values are defined in Section 9.2.4.
 
    Extensions are mandatory to support.  Unrecognized extensions are
-   handled as specified in Section 4.5.2.4.
+   handled as specified in Section 4.5.3.4.
 
 4.5.  Verifying and Aggregating Reports
 
@@ -2204,7 +2211,7 @@ Table of Contents
    histograms, may be better suited for the asynchronous model.
 
    Aggregation cannot begin until the Collector specifies a query and an
-   aggregation parameter, except where eager aggregation (Section 4.5.1)
+   aggregation parameter, except where eager aggregation (Section 4.5.2)
    is possible.
 
    An aggregation job has three phases:
@@ -2221,7 +2228,7 @@ Table of Contents
    After an aggregation job is completed, each Aggregator commits to the
    output shares by updating running-total aggregate shares and other
    values for each batch bucket associated with a verified output share,
-   as described in Section 4.5.3.3.  These values are stored until a
+   as described in Section 4.5.4.3.  These values are stored until a
    batch that includes the batch bucket is collected as described in
    Section 4.6.
 
@@ -2232,7 +2239,34 @@ Table of Contents
    its report ID has already been aggregated and whether the batch
    bucket being updated has been collected.
 
-4.5.1.  Eager Aggregation
+4.5.1.  Aggregation Job Extensions
+
+   The Leader may include extensions in the AggregationJobInitReq to
+   convey additional parameters for the aggregation job to the Helper.
+   Extensions use the following types:
+
+   struct {
+     AggregationJobExtensionType extension_type;
+     opaque extension_data<0..2^16-1>;
+   } AggregationJobExtension;
+
+   enum {
+     reserved(0),
+     (2^16-1)
+   } AggregationJobExtensionType;
+
+   Each extension is identified by an AggregationJobExtensionType
+   codepoint.  Extension type values are defined in Section 9.2.3.
+
+   Extensions are mandatory to support.  If the Helper does not
+   recognize an extension type, it MUST abort with error
+   unsupportedExtension.
+
+   Extensions MUST be encoded in strictly increasing order of
+   extension_type.  That is, each extension_type value must be greater
+   than that of the extension that precedes it.
+
+4.5.2.  Eager Aggregation
 
    In general, aggregation cannot begin until the Collector specifies a
    query and an aggregation parameter.  However, depending on the VDAF
@@ -2259,7 +2293,7 @@ Table of Contents
    therefore ensure they only ever use the aggregation parameter chosen
    by the Collector.
 
-4.5.2.  Aggregate Initialization
+4.5.3.  Aggregate Initialization
 
    Aggregation initialization accomplishes two tasks:
 
@@ -2270,7 +2304,7 @@ Table of Contents
 
    The Leader and Helper initialization behavior is detailed below.
 
-4.5.2.1.  Leader Initialization
+4.5.3.1.  Leader Initialization
 
                         VerifyResp
    Report --> Continued -----+----> Continued
@@ -2289,13 +2323,13 @@ Table of Contents
    unique within the task.
 
    First, the Leader MUST ensure each report in the candidate set can be
-   committed per the criteria detailed in Section 4.5.3.3.  If a report
+   committed per the criteria detailed in Section 4.5.4.3.  If a report
    cannot be committed, then the Leader rejects it and removes it from
    the candidate set.
 
    Next, the Leader decrypts each of its report shares as described in
-   Section 4.5.2.3, then checks input share validity as described in
-   Section 4.5.2.4.  If either step fails, the Leader rejects the report
+   Section 4.5.3.3, then checks input share validity as described in
+   Section 4.5.3.4.  If either step fails, the Leader rejects the report
    and removes it from the candidate set.
 
    For each report the Leader executes the following procedure:
@@ -2362,14 +2396,9 @@ Table of Contents
    for the relevant reports.
 
    struct {
-     BatchMode batch_mode;
-     opaque config<0..2^16-1>;
-   } PartialBatchSelector;
-
-   struct {
      uint8 verification_key_id;
      opaque agg_param<0..2^32-1>;
-     PartialBatchSelector part_batch_selector;
+     AggregationJobExtension extensions<0..2^16-1>;
      VerifyInit verify_inits[verify_inits_length];
    } AggregationJobInitReq;
 
@@ -2386,18 +2415,14 @@ Table of Contents
       Before initializing an aggregation job, the Leader MUST validate
       the parameter as described in Section 4.3.
 
-   *  part_batch_selector: The "partial batch selector" used by the
-      Aggregators to determine how to aggregate each report.  Its
-      contents depends on the indicated batch mode.  This field is
-      called the "partial" batch selector because depending on the batch
-      mode, it may only partially determine a batch.  See Section 5.
+   *  extensions: A list of aggregation job extensions (Section 4.5.1)
+      providing additional parameters for the aggregation job.
 
    *  verify_inits: the sequence of VerifyInit messages constructed in
       the previous step.  Here verify_inits_length is the length of the
       HTTP message content ([RFC9110], Section 6.4), minus the lengths
-      in octets of the encoded agg_param and part_batch_selector fields.
-      That is, the remainder of the HTTP message consists of
-      verify_inits.
+      in octets of the encoded agg_param and extensions fields.  That
+      is, the remainder of the HTTP message consists of verify_inits.
 
       |  IMPORTANT: this this does not change the security requirements
       |  for verification keys; see Section 8.6.2.  The analysis in
@@ -2443,12 +2468,12 @@ Table of Contents
        If the new state has type Continued or FinishedWithOutbound, then
        there is at least one more outbound message to send before
        verification is complete.  The Leader stores state and proceeds
-       as in Section 4.5.3.1.
+       as in Section 4.5.4.1.
 
        Else if the new state has type Finished, then verification is
        complete and the state includes an output share, denoted
        state.out_share.  The Leader commits to state.out_share as
-       described in Section 4.5.3.3.
+       described in Section 4.5.4.3.
 
        Else if state has type Rejected, then the Leader rejects the
        report and removes it from the candidate set.
@@ -2473,7 +2498,7 @@ Table of Contents
    will never be the case that verification is complete for some of the
    reports in an aggregation job but not others.
 
-4.5.2.2.  Helper Initialization
+4.5.3.2.  Helper Initialization
 
    VerifyInit --+--> Continued
                 |
@@ -2498,7 +2523,7 @@ Table of Contents
    /tasks/{task-id}/aggregation_jobs/{aggregation-job-id}?step=0.
    Subsequent GET requests to the aggregation job MUST include the step
    query parameter so that the Helper can figure out which step of
-   preparation the Leader is on (see Section 4.5.3.4).  When the job is
+   preparation the Leader is on (see Section 4.5.4.4).  When the job is
    ready, the Helper responds with the AggregationJobResp (defined
    below).
 
@@ -2511,9 +2536,15 @@ Table of Contents
    *  Whether the AggregationJobInitReq is malformed.  If so, the the
       Helper MUST fail the job with error invalidMessage.
 
-   *  Whether the batch mode indicated by part_batch_selector.batch_mode
-      matches the task's batch mode.  If not, then the Helper MUST fail
-      the job with error invalidMessage.
+   *  Whether the extensions in AggregationJobInitReq.extensions are
+      valid:
+
+      -  If any extension type is unrecognized, the Helper MUST fail the
+         job with error unsupportedExtension.
+
+      -  If the extensions are not encoded in strictly increasing order
+         of extension_type, the Helper MUST fail the job with error
+         invalidMessage.
 
    *  Whether the aggregation parameter is valid as described in
       Section 4.3.  If the aggregation parameter is invalid, then the
@@ -2549,8 +2580,8 @@ Table of Contents
 
    The Helper processes each of the remaining report shares in turn.
    First, the Helper decrypts each report share as described in
-   Section 4.5.2.3, then checks input share validity as described in
-   Section 4.5.2.4.  If either decryption of validation fails, the
+   Section 4.5.3.3, then checks input share validity as described in
+   Section 4.5.3.4.  If either decryption of validation fails, the
    Helper sets VerifyResp.verify_resp_type to reject and
    VerifyResp.report_error to the indicated error.
 
@@ -2597,10 +2628,10 @@ Table of Contents
    state.outbound.
 
    If state has type Continued, then the Helper stores state for use in
-   the first continuation step in Section 4.5.3.2.
+   the first continuation step in Section 4.5.4.2.
 
    Else if state has type FinishedWithOutbound, then the Helper commits
-   to state.out_share as described in Section 4.5.3.3.  If commitment
+   to state.out_share as described in Section 4.5.4.3.  If commitment
    fails with some report error commit_error (e.g., the report was
    replayed or its batch bucket was collected), then the Helper sets
    VerifyResp.verify_resp_type to reject and VerifyResp.report_error to
@@ -2629,10 +2660,10 @@ Table of Contents
    they do not.  It is illegal to rewind or reset the state of an
    aggregation job.  If the Helper receives requests to initialize an
    aggregation job once it has been continued at least once, confirming
-   that the Leader received the Helper's response (see Section 4.5.3),
+   that the Leader received the Helper's response (see Section 4.5.4),
    it MUST abort with a client error.
 
-4.5.2.3.  Input Share Decryption
+4.5.3.3.  Input Share Decryption
 
    Each report share has a corresponding task ID, report metadata
    (report ID, timestamp, and public extensions), public share, and the
@@ -2665,7 +2696,7 @@ Table of Contents
    hpke_decrypt_error.  Otherwise, the Aggregator outputs the resulting
    PlaintextInputShare plaintext_input_share.
 
-4.5.2.4.  Input Share Validation
+4.5.3.4.  Input Share Validation
 
    Before initialization, Aggregators MUST perform the following checks
    for each input share in the job, in any order:
@@ -2710,7 +2741,7 @@ Table of Contents
 
    If all of the above checks succeed, the input share is valid.
 
-4.5.2.5.  Example
+4.5.3.5.  Example
 
    The Helper handles the aggregation job initialization synchronously:
 
@@ -2723,12 +2754,12 @@ Table of Contents
 
    encoded(struct {
      agg_param = [0x00, 0x01, 0x02, 0x04, ...],
-     part_batch_selector = struct {
-       batch_mode = BatchMode.leader_selected,
-       config = encoded(struct {
-         batch_id = [0x1f, 0x1e, ..., 0x00],
-       } LeaderSelectedPartialBatchSelectorConfig),
-     } PartialBatchSelector,
+     extensions = [
+       struct {
+         extension_type = AggregationJobExtensionType.leader_selected_batch_id,
+         extension_data = encoded([0x1f, 0x1e, ..., 0x00] BatchID),
+       } AggregationJobExtension,
+     ],
      verify_inits,
    } AggregationJobInitReq)
 
@@ -2749,10 +2780,7 @@ Table of Contents
 
    encoded(struct {
      agg_param = [0x00, 0x01, 0x02, 0x04, ...],
-     part_batch_selector = struct {
-       batch_mode = BatchMode.time_interval,
-       config = encoded(Empty),
-     },
+     extensions = [],
      verify_inits,
    } AggregationJobInitReq)
 
@@ -2782,7 +2810,7 @@ Table of Contents
 
    encoded(struct { verify_resps } AggregationJobResp)
 
-4.5.3.  Aggregate Continuation
+4.5.4.  Aggregate Continuation
 
    In the continuation phase, the Leader drives the VDAF verification of
    each report in the candidate set until the underlying VDAF moves into
@@ -2792,7 +2820,7 @@ Table of Contents
    Continuation is only required for VDAFs that require more than one
    round.  Single round VDAFs like Prio3 will never reach this phase.
 
-4.5.3.1.  Leader Continuation
+4.5.4.1.  Leader Continuation
 
               VerifyResp
    Continued -----+----> Continued
@@ -2889,12 +2917,12 @@ Table of Contents
           rejection in its response.
 
        *  Else if the new type is Finished, then the Leader commits to
-          state.out_share as described in Section 4.5.3.3.
+          state.out_share as described in Section 4.5.4.3.
 
    2.  Else if state has type FinishedWithOutbound and the inbound
        VerifyResp has type "finish", then verification is complete and
        the Leader commits to state.out_share as described in
-       Section 4.5.3.3.
+       Section 4.5.4.3.
 
    3.  Else if the inbound VerifyResp has type "reject", then the Leader
        rejects the report and removes it from the candidate set.  The
@@ -2911,9 +2939,9 @@ Table of Contents
    example because of a transient failure such as a network connection
    failure or process crash, the Leader SHOULD re-send the original
    request unmodified in order to attempt recovery (see
-   Section 4.5.3.4).
+   Section 4.5.4.4).
 
-4.5.3.2.  Helper Continuation
+4.5.4.2.  Helper Continuation
 
              VerifyContinue
    Continued -----+----> Continued
@@ -2940,7 +2968,7 @@ Table of Contents
    where step is set to AggregationJobContinueReq.step.  Subsequent GET
    requests to the aggregation job MUST include the step query parameter
    so that the Helper can figure out which step of preparation the
-   Leader is on (see Section 4.5.3.4).  The representation of the
+   Leader is on (see Section 4.5.4.4).  The representation of the
    aggregation job is an AggregationJobResp.
 
    To begin handling an AggregationJobContinueReq, the Helper checks the
@@ -2980,7 +3008,7 @@ Table of Contents
    illegal to rewind or reset the state of an aggregation job, so in
    this case it MUST verify that the contents of the
    AggregationJobContinueReq are identical to the previous message (see
-   Section 4.5.3.4).
+   Section 4.5.4.4).
 
    If the Helper does not wish to attempt recovery, or if the step has
    some other value, the Helper MUST fail the job with error
@@ -3005,7 +3033,7 @@ Table of Contents
    the next continuation step.
 
    If state has type FinishedWithOutbound or Finished, then the Helper
-   commits to state.out_share as described in Section 4.5.3.3.  If
+   commits to state.out_share as described in Section 4.5.4.3.  If
    commitment fails with some report error commit_error (e.g., the
    report was replayed or its batch bucket was collected), then the
    Helper sets VerifyResp.verify_resp_type to reject and
@@ -3022,11 +3050,11 @@ Table of Contents
 
    Once the Helper has computed a VerifyResp for every report, the
    aggregation job response is ready.  It is represented by an
-   AggregationJobResp message (see Section 4.5.2.2) with each
+   AggregationJobResp message (see Section 4.5.3.2) with each
    verification step.  The order of the verification steps MUST match
    the Leader's AggregationJobContinueReq.
 
-4.5.3.3.  Batch Buckets
+4.5.4.3.  Batch Buckets
 
    When aggregation refines an output share, it must be stored into an
    appropriate "batch bucket", which is defined in this section.  An
@@ -3034,15 +3062,16 @@ Table of Contents
    say that the Aggregator _commits_ the output share.  The data stored
    in a batch bucket is kept for eventual use in the Section 4.6.
 
-   Batch buckets are indexed by a "batch bucket identifier" as as
-   specified by the task's batch mode:
+   Batch buckets are indexed by a "batch bucket identifier" as specified
+   by the task's batch mode:
 
-   *  For the time-interval batch mode (Section 5.1, the batch bucket
+   *  For the time-interval batch mode (Section 5.1), the batch bucket
       identifier is an interval of time and is determined by the
       report's timestamp.
 
    *  For the leader-selected batch mode (Section 5.2), the batch bucket
-      identifier is the batch ID and indicated in the aggregation job.
+      identifier is the batch ID carried in the leader_selected_batch_id
+      aggregation job extension (Section 5.2.2).
 
    A few different pieces of information are associated with each batch
    bucket:
@@ -3111,7 +3140,7 @@ Table of Contents
    easy to determine whether a report pertains to a batch that was
    collected.  See Section 6.4.2 for more information.
 
-4.5.3.4.  Recovering from Aggregation Step Skew
+4.5.4.4.  Recovering from Aggregation Step Skew
 
    AggregationJobContinueReq messages contain a step field, allowing
    Aggregators to ensure that their peer is on an expected step of
@@ -3138,7 +3167,7 @@ Table of Contents
    refuse to service a request for a given aggregation step unless it
    matches the previously seen request (if any).
 
-4.5.3.5.  Example
+4.5.4.5.  Example
 
    The Helper handles the aggregation job continuation synchronously:
 
@@ -3200,14 +3229,14 @@ Table of Contents
 
    encoded(struct { verify_resps } AggregationJobResp)
 
-4.5.4.  Aggregation Job Abandonment and Deletion
+4.5.5.  Aggregation Job Abandonment and Deletion
 
    This document describes various error cases where a Leader is
    required to abandon an aggregation job.  This means the Leader should
    discontinue further processing of the job and the reports included in
    it.  Reports included in an abandoned aggregation job MUST NOT be
    considered collected for purposes of replay and double collection
-   checks (Section 4.5.3.3) and MAY be included in future aggregation
+   checks (Section 4.5.4.3) and MAY be included in future aggregation
    jobs.
 
    If the Leader must abandon an aggregation job, it SHOULD let the
@@ -3215,7 +3244,7 @@ Table of Contents
    the job.  Deletion of a completed aggregation job MUST NOT delete
    information needed for replay or double collection checks.
 
-4.5.4.1.  Example
+4.5.5.1.  Example
 
    DELETE /helper/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/\
      aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA
@@ -3275,7 +3304,7 @@ Table of Contents
 
    *  agg_param, an aggregation parameter for the VDAF being executed.
       This is the same value as in AggregationJobInitReq (see
-      Section 4.5.2.1).
+      Section 4.5.3.1).
 
    *  extensions, a set of extensions (see Section 4.6.2).
 
@@ -3285,7 +3314,7 @@ Table of Contents
    shares right away.  However, this is not always the case.  In fact,
    for some VDAFs, it is not be possible to begin running aggregation
    jobs (Section 4.5) until the Collector initiates a collection job.
-   This is because, in general (see Section 4.5.1), the aggregation
+   This is because, in general (see Section 4.5.2), the aggregation
    parameter is not known until this point.  In certain situations it is
    possible to predict the aggregation parameter in advance.  For
    example, for Prio3 the only valid aggregation parameter is the empty
@@ -3325,7 +3354,7 @@ Table of Contents
       already been collected, then the Leader MUST fail the job with
       error batchOverlap.
 
-   *  If aggregation was performed eagerly (Section 4.5.1), then the
+   *  If aggregation was performed eagerly (Section 4.5.2), then the
       Leader checks that the aggregation parameter received in the
       CollectionJobReq matches the aggregation parameter used in each
       aggregation job pertaining to the batch.  If not, the Leader MUST
@@ -3346,7 +3375,7 @@ Table of Contents
    Having validated the CollectionJobReq, the Leader begins working with
    the Helper to aggregate the reports satisfying the query (or
    continues this process, depending on whether the Leader is
-   aggregating eagerly; Section 4.5.1) as described in Section 4.5.
+   aggregating eagerly; Section 4.5.2) as described in Section 4.5.
 
    If the Leader has a pending aggregation job that overlaps with the
    batch for the collection job, the Leader MUST first complete the
@@ -3401,7 +3430,7 @@ Table of Contents
    Once the Leader has constructed a CollectionJobResp for the
    Collector, the Leader considers the batch to be collected, and
    further aggregation jobs MUST NOT commit more reports to the batch
-   (see Section 4.5.3.3).
+   (see Section 4.5.4.3).
 
    Changing a collection job's parameters is illegal, so if there are
    further PUT requests to the collection job with a different
@@ -3528,7 +3557,7 @@ Table of Contents
    An extension could limit its compatibility to specific VDAFs, batch
    modes, or those with certain properties.  For instance, an extension
    might only apply if the VDAF supports eager aggregation; see
-   Section 4.5.1.  In that case, jobs can be failed with an
+   Section 4.5.2.  In that case, jobs can be failed with an
    invalidExtension error if the extension is incompatible.
 
    Collection job extensions are distinct from report and task
@@ -3544,7 +3573,7 @@ Table of Contents
    discard state related to it.
 
    Aggregators MUST NOT delete information needed for replay or double
-   collection checks (Section 4.5.3.3).
+   collection checks (Section 4.5.4.3).
 
 4.6.3.1.  Example
 
@@ -3561,7 +3590,7 @@ Table of Contents
    Helper's encrypted aggregate share before it can complete a
    collection job.
 
-   First, the Leader retrieves all batch buckets (Section 4.5.3.3)
+   First, the Leader retrieves all batch buckets (Section 4.5.4.3)
    associated with this collection job.  The batch buckets to retrieve
    depend on the batch mode of this task:
 
@@ -3707,7 +3736,7 @@ Table of Contents
    collected.  The Helper MUST NOT commit any more output shares to the
    batch.  It is an error for the Leader to issue any more aggregation
    jobs for additional reports that satisfy the query.  These reports
-   MUST be rejected by the Helper as described in Section 4.5.3.3.
+   MUST be rejected by the Helper as described in Section 4.5.4.3.
 
    Changing an aggregate share's parameters is illegal, so if there are
    further PUT requests to the aggregate share with a different
@@ -3826,7 +3855,7 @@ Table of Contents
    discard state related to it.
 
    Aggregators MUST NOT delete information needed for replay or double
-   collection checks (Section 4.5.3.3).
+   collection checks (Section 4.5.4.3).
 
 4.6.5.1.  Example
 
@@ -3936,10 +3965,9 @@ Table of Contents
 
    Each batch mode specifies the following:
 
-   1.  The value of the config field of Query, PartialBatchSelector, and
-       BatchSelector
+   1.  The value of the config field of Query and BatchSelector
 
-   2.  Batch buckets (Section 4.5.3.3): how reports are assigned to
+   2.  Batch buckets (Section 4.5.4.3): how reports are assigned to
        batch buckets; how each bucket is identified; and how batch
        buckets are mapped to batches
 
@@ -3947,6 +3975,13 @@ Table of Contents
        mode.  New batch modes MUST define a deterministic encoding of
        their configuration so it can be incorporated into
        TaskConfiguration (Section 4.2) structures.
+
+   It may be necessary for the Leader to convey additional information
+   to the Helper during aggregation in order to assign reports to batch
+   buckets.  This may be done with the aggregation job extension
+   mechanism (see Section 4.5.1).  A batch mode that defines such an
+   extension should specify how it is used to assign reports to batch
+   buckets.  See the leader-selected mode (Section 5.2) for an example.
 
 5.1.  Time Interval
 
@@ -3994,11 +4029,7 @@ Table of Contents
    Section 4.1.1.  Otherwise, the query does not specify a set of valid
    batch buckets.
 
-5.1.2.  Partial Batch Selector Configuration
-
-   The payload of PartialBatchSelector.config is empty.
-
-5.1.3.  Batch Selector Configuration
+5.1.2.  Batch Selector Configuration
 
    The payload of BatchSelector.config is
 
@@ -4022,7 +4053,7 @@ Table of Contents
       (TimeIntervalBatchSelectorConfig.batch_interval.{start+duration})
       is not after the query (TimeIntervalQueryConfig.batch_interval).
 
-5.1.4.  Batch Buckets
+5.1.3.  Batch Buckets
 
    Each batch bucket is identified by an Interval whose duration is
    equal to the task's time_precision.  The identifier associated with a
@@ -4089,18 +4120,20 @@ Table of Contents
    They payload of Query.config is empty.  The request merely indicates
    the Collector would like the next batch selected by the Leader.
 
-5.2.2.  Partial Batch Selector Configuration
+5.2.2.  Aggregation Job Extension
 
-   The payload of PartialBatchSelector.config is:
+   During aggregation, the Leader needs to convey the batch ID of the
+   reports being aggregated to the Helper.  An aggregation job extension
+   is defined for this purpose:
 
-   struct {
-     BatchID batch_id;
-   } LeaderSelectedPartialBatchSelectorConfig;
+   enum {
+     leader_selected_batch_id(1),
+     (2^16-1)
+   } AggregationJobExtensionType;
 
-   where batch_id is the batch ID selected by the Leader.
-
-   It is impossible for a BatchSelector.config to be inconsistent with
-   Query.config for this batch mode.
+   The payload of this extension is a BatchID selected by the Leader.
+   The Helper MUST abort with error invalidMessage if this extension is
+   absent or the payload is not a valid batch ID.
 
 5.2.3.  Batch Selector Configuration
 
@@ -4116,7 +4149,8 @@ Table of Contents
 
    Each batch consists of a single bucket and is identified by the batch
    ID.  A report is assigned to the batch indicated by the
-   PartialBatchSelector during aggregation.
+   leader_selected_batch_id aggregation job extension (Section 5.2.2)
+   during aggregation.
 
 6.  Operational Considerations
 
@@ -4162,7 +4196,7 @@ Table of Contents
       and intra-batch replay mitigation storage, which includes some way
       of tracking batch report size.  Some of this state may be used for
       replay attack mitigation.  The replay mitigation strategy is
-      described in Section 4.5.2.4.
+      described in Section 4.5.3.4.
 
    Beyond the minimal capabilities required of Helpers, Leaders are
    generally required to:
@@ -4275,7 +4309,7 @@ Table of Contents
    report upload rate, this can result in high storage costs.  To
    alleviate this burden, DAP allows Aggregators to drop this state as
    needed, so long as reports are dropped properly as described in
-   Section 4.5.2.4.  Aggregators SHOULD take steps to mitigate the risk
+   Section 4.5.3.4.  Aggregators SHOULD take steps to mitigate the risk
    of dropping reports (e.g., by evicting the oldest data first).
 
    Furthermore, the Aggregators MUST store data related to a task.
@@ -4657,10 +4691,10 @@ Table of Contents
    DAP Aggregators enforce several rules for report processing related
    to the privacy of individual measurements:
 
-   1.  Each report may be aggregated at most once (Section 4.5.3.3)
+   1.  Each report may be aggregated at most once (Section 4.5.4.3)
 
    2.  A batch bucket may be collected at most once (reports pertaining
-       to collected buckets are rejected; see Section 4.5.3.3)
+       to collected buckets are rejected; see Section 4.5.4.3)
 
    3.  A batch may only be collected if the number of reports aggregated
        exceeds the minimum batch size (Section 4.6)
@@ -4737,11 +4771,11 @@ Table of Contents
 
    *  UploadErrors Section 4.4.2: "upload-errors"
 
-   *  AggregationJobInitReq Section 4.5.2.1: "aggregation-job-init-req"
+   *  AggregationJobInitReq Section 4.5.3.1: "aggregation-job-init-req"
 
-   *  AggregationJobResp Section 4.5.2.2: "aggregation-job-resp"
+   *  AggregationJobResp Section 4.5.3.2: "aggregation-job-resp"
 
-   *  AggregationJobContinueReq Section 4.5.3.1: "aggregation-job-
+   *  AggregationJobContinueReq Section 4.5.4.1: "aggregation-job-
       continue-req"
 
    *  AggregateShareReq Section 4.6.4: "aggregate-share-req"
@@ -4878,7 +4912,33 @@ Table of Contents
              Table 3: Initial contents of the Task Extensions
                                 registry.
 
-9.2.3.  Report Extensions Registry
+9.2.3.  Aggregation Job Extensions Registry
+
+   A new registry will be (RFC EDITOR: change "will be" to "has been")
+   created called "DAP Aggregation Job Extension Identifiers" for
+   extensions included in aggregation job initialization requests
+   (Section 4.5.1).  This registry should contain the following columns:
+
+   Value:  The two-byte identifier for the aggregation job extension
+
+   Name:  The name of the aggregation job extension
+
+   Reference:  Where the extension is defined
+
+   The initial contents of this registry are listed in Table 4.
+
+     +========+==========================+===========================+
+     | Value  | Name                     | Reference                 |
+     +========+==========================+===========================+
+     | 0x0000 | reserved                 | Section 9.2.3 of RFC XXXX |
+     +--------+--------------------------+---------------------------+
+     | 0x0001 | leader_selected_batch_id | Section 5.2.2 of RFC XXXX |
+     +--------+--------------------------+---------------------------+
+
+            Table 4: Initial contents of the DAP Aggregation Job
+                       Extension Identifiers registry
+
+9.2.4.  Report Extensions Registry
 
    A new registry will be (RFC EDITOR: change "will be" to "has been")
    created called "DAP Report Extension Identifiers" for extensions to
@@ -4891,18 +4951,18 @@ Table of Contents
 
    Reference:  Where the report extension is defined
 
-   The initial contents of this registry are listed in Table 4.
+   The initial contents of this registry are listed in Table 5.
 
              +========+==========+===========================+
              | Value  | Name     | Reference                 |
              +========+==========+===========================+
-             | 0x0000 | reserved | Section 9.2.3 of RFC XXXX |
+             | 0x0000 | reserved | Section 9.2.4 of RFC XXXX |
              +--------+----------+---------------------------+
 
-                Table 4: Initial contents of the DAP Report
+                Table 5: Initial contents of the DAP Report
                       Extension Identifiers registry.
 
-9.2.4.  Collection Job Extensions Registry
+9.2.5.  Collection Job Extensions Registry
 
    A new registry will be (RFC EDITOR: change "will be" to "has been")
    created called "DAP Collection Job Extension Identifiers" for
@@ -4915,7 +4975,7 @@ Table of Contents
 
    Reference:  Where the extension is defined
 
-   The initial contents of this registry are listed in Table 5.
+   The initial contents of this registry are listed in Table 6.
 
                      +========+==========+===========+
                      | Value  | Name     | Reference |
@@ -4923,12 +4983,12 @@ Table of Contents
                      | 0x0000 | reserved | RFC XXXX  |
                      +--------+----------+-----------+
 
-                        Table 5: Initial contents of
+                        Table 6: Initial contents of
                            the DAP Collection Job
                            Extension Identifiers
                                  registry.
 
-9.2.5.  Report Errors Registry
+9.2.6.  Report Errors Registry
 
    A new registry will be (RFC EDITOR: change "will be" to "has been")
    created called "DAP Report Error Identifiers".
@@ -4939,7 +4999,7 @@ Table of Contents
 
    Reference:  Where the report error is defined
 
-   The initial contents of this registry are listed below in Table 6.
+   The initial contents of this registry are listed below in Table 7.
 
        +=======+========================+=========================+
        | Value | Name                   | Reference               |
@@ -4969,10 +5029,10 @@ Table of Contents
        | 0x0B  | outdated_config        | Section 4.1 of RFX XXXX |
        +-------+------------------------+-------------------------+
 
-            Table 6: Initial contents of the DAP Report Error
+            Table 7: Initial contents of the DAP Report Error
                           Identifiers registry.
 
-9.2.6.  Guidance for Designated Experts
+9.2.7.  Guidance for Designated Experts
 
    When reviewing requests to extend a DAP registry, experts should
    ensure that a document exists that defines the newly registered items
@@ -5008,11 +5068,13 @@ Table of Contents
 
    3.  a new report extension (Section 4.4.3)
 
-   4.  a new collection job extension (Section 4.6.2)
+   4.  a new aggregation job extension (Section 4.5.1)
 
-   5.  a new report error (Section 4.5.2.2)
+   5.  a new collection job extension (Section 4.6.2)
 
-   6.  a new entry in the URN sub-namespace for DAP (Table 1)
+   6.  a new report error (Section 4.5.3.2)
+
+   7.  a new entry in the URN sub-namespace for DAP (Table 1)
 
    Each of these requires registration of a codepoint or other value;
    see Section 9.  No other considerations are required except in the
@@ -5022,10 +5084,13 @@ Table of Contents
       section titled "DAP Batch Mode Considerations" specifying the
       following:
 
-      -  The value of the config field of Query, PartialBatchSelector,
-         and BatchSelector
+      -  The value of the config field of Query and BatchSelector
 
-      -  Batch buckets (Section 4.5.3.3): how reports are assigned to
+      -  Aggregation job extensions, if any, needed for batch mode
+         operation (Section 4.5.1), including how the extension is used
+         to assign reports to batch buckets.
+
+      -  Batch buckets (Section 4.5.4.3): how reports are assigned to
          batch buckets; how each bucket is identified; and how batch
          buckets are mapped to batches.
 
