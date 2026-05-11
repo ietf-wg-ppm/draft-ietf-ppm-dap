@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 6 November 2026                                      Cloudflare
+Expires: 12 November 2026                                     Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                              5 May 2026
+                                                             11 May 2026
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -64,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 6 November 2026.
+   This Internet-Draft will expire on 12 November 2026.
 
 Copyright Notice
 
@@ -240,6 +240,10 @@ Table of Contents
    *  Move resource creation from PUT to POST with server-selected
       identifiers for aggregation jobs, collection jobs, and aggregate
       shares. (*) (#781)
+
+   *  Bump version tag from "dap-16" to "dap-18". (*)
+
+   *  Bump draft-irtf-cfrg-vdaf to -19 ([VDAF]).
 
    17:
 
@@ -1839,7 +1843,7 @@ Table of Contents
    algorithm (Section 5.1 of [VDAF]), using the report ID as the nonce:
 
    (public_share, input_shares) = Vdaf.shard(
-       "dap-17" || task_id,
+       "dap-18" || task_id,
        measurement,
        report_id,
        rand,
@@ -1876,10 +1880,10 @@ Table of Contents
 
    (RFC EDITOR: Once the document becomes an RFC, we will stop including
    the draft version in domain separation tags.  In the remainder of
-   this section, replace "dap-17" with "dap".)
+   this section, replace "dap-18" with "dap".)
 
    enc, payload = SealBase(pk,
-     "dap-17 input share" || 0x01 || server_role,
+     "dap-18 input share" || 0x01 || server_role,
      input_share_aad, plaintext_input_share)
 
    *  pk is the public key from the Aggregator's HPKE configuration.
@@ -2367,7 +2371,7 @@ Table of Contents
 
    state = Vdaf.ping_pong_leader_init(
        vdaf_verify_key,
-       "dap-17" || task_id,
+       "dap-18" || task_id,
        agg_param,
        report_id,
        public_share,
@@ -2486,7 +2490,7 @@ Table of Contents
        the Leader computes
 
       state = Vdaf.ping_pong_leader_continued(
-          "dap-17" || task_id,
+          "dap-18" || task_id,
           agg_param,
           state,
           inbound,
@@ -2628,7 +2632,7 @@ Table of Contents
 
    state = Vdaf.ping_pong_helper_init(
        vdaf_verify_key,
-       "dap-17" || task_id,
+       "dap-18" || task_id,
        agg_param,
        report_id,
        public_share,
@@ -2716,7 +2720,7 @@ Table of Contents
    procedure:
 
    plaintext_input_share = OpenBase(encrypted_input_share.enc, sk,
-     "dap-17 input share" || 0x01 || server_role,
+     "dap-18 input share" || 0x01 || server_role,
      input_share_aad, encrypted_input_share.payload)
 
    *  sk is the secret key from the HPKE configuration indicated by
@@ -2932,7 +2936,7 @@ Table of Contents
        "continue", then the Leader computes
 
       state = Vdaf.ping_pong_leader_continued(
-          "dap-17" || task_id,
+          "dap-18" || task_id,
           agg_param,
           state,
           inbound,
@@ -3058,7 +3062,7 @@ Table of Contents
    For each report, the Helper does the following:
 
    state = Vdaf.ping_pong_helper_continued(
-       "dap-17" || task_id,
+       "dap-18" || task_id,
        agg_param,
        state,
        inbound,
@@ -3944,7 +3948,7 @@ Table of Contents
 
    (enc, payload) = SealBase(
        pk,
-       "dap-17 aggregate share" || server_role || 0x00,
+       "dap-18 aggregate share" || server_role || 0x00,
        agg_share_aad,
        agg_share)
 
@@ -3982,7 +3986,7 @@ Table of Contents
    agg_share = OpenBase(
        enc_share.enc,
        sk,
-       "dap-17 aggregate share" || server_role || 0x00,
+       "dap-18 aggregate share" || server_role || 0x00,
        agg_share_aad,
        enc_share.payload)
 
@@ -5238,9 +5242,9 @@ Table of Contents
 
    [VDAF]     Barnes, R., Cook, D., Patton, C., and P. Schoppmann,
               "Verifiable Distributed Aggregation Functions", Work in
-              Progress, Internet-Draft, draft-irtf-cfrg-vdaf-18, 30
-              January 2026, <https://datatracker.ietf.org/doc/html/
-              draft-irtf-cfrg-vdaf-18>.
+              Progress, Internet-Draft, draft-irtf-cfrg-vdaf-19, 14
+              April 2026, <https://datatracker.ietf.org/doc/html/draft-
+              irtf-cfrg-vdaf-19>.
 
 11.2.  Informative References
 
