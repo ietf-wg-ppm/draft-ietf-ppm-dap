@@ -2430,7 +2430,7 @@ The Leader proceeds as follows with each report:
 1. Else if the `VerifyResp` has type "reject", then the Leader rejects the
    report and removes it from the candidate set. The Leader MUST NOT include
    the report in a subsequent aggregation job, unless the report error is
-   `report_too_early` or `     `, in which case the
+   `report_too_early` or `unknown_verification_key_id`, in which case the
    Leader MAY include the report in a subsequent aggregation job.
 
 1. Otherwise the inbound message type is invalid for the Leader's current
