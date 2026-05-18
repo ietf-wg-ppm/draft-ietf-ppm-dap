@@ -112,6 +112,11 @@ contributor:
        email: mt@mozilla.com
 
  -
+       name: Stan Ulbrych
+       org: Independent
+       email: stanulbrych@gmail.com
+
+ -
        name: Shan Wang
        org: Apple
        email: shan_wang@apple.com
@@ -1339,6 +1344,7 @@ enum {
   report_too_early(9),
   task_not_started(10),
   outdated_config(11),
+  unknown_verification_key_id(12),
   (255)
 } ReportError;
 ~~~
@@ -2279,7 +2285,8 @@ state = Vdaf.ping_pong_leader_init(
 
 where:
 
-* `vdaf_verify_key` is the VDAF verification key for the task
+* `vdaf_verify_key` is the VDAF verification key identified by
+  `verification_key_id`
 * `task_id` is the task ID
 * `agg_param` is the VDAF aggregation parameter provided by the Collector (see
   {{collect-flow}})
@@ -2340,7 +2347,8 @@ This message consists of:
   see {{Section 5.2 of VDAF}} and {{verification-key}}.
   This allows a Leader to nominate a verification key
   from a set of prearranged keys.
-  This might also allow for verification keys to be updated by Aggregators.
+  The Helper MUST use the verification key identified by this field when
+  initializing VDAF verification.
 
 * `agg_param`: The VDAF aggregation parameter chosen by the Collector. Before
   initializing an aggregation job, the Leader MUST validate the parameter as
@@ -2352,8 +2360,8 @@ This message consists of:
 * `verify_inits`: the sequence of `VerifyInit` messages constructed in the
   previous step. Here `verify_inits_length` is the length of the HTTP message
   content ({{!RFC9110, Section 6.4}}), minus the lengths in octets of the
-  encoded `agg_param` and `extensions` fields. That is, the remainder
-  of the HTTP message consists of `verify_inits`.
+  `verification_key_id` field and the encoded `agg_param` and `extensions`
+  fields. That is, the remainder of the HTTP message consists of `verify_inits`.
 
 {:aside}
 > IMPORTANT: this does not change the security requirements
@@ -2422,8 +2430,10 @@ The Leader proceeds as follows with each report:
 1. Else if the `VerifyResp` has type "reject", then the Leader rejects the
    report and removes it from the candidate set. The Leader MUST NOT include
    the report in a subsequent aggregation job, unless the report error is
-   `report_too_early`, in which case the Leader MAY include the report in a
-   subsequent aggregation job.
+   `report_too_early` or `unknown_verification_key_id`, in which case the
+   Leader MAY include the report in a subsequent aggregation job. If the report
+   error is `unknown_verification_key_id`, the Leader MAY retry the report after
+   selecting a verification key ID known to the Helper.
 
 1. Otherwise the inbound message type is invalid for the Leader's current
    state, in which case the Leader MUST abandon the aggregation job.
@@ -2468,6 +2478,10 @@ conditions:
 
 * Whether the `AggregationJobInitReq` is malformed. If so, the Helper MUST
   fail the job with error `invalidMessage`.
+
+* Whether `AggregationJobInitReq.verification_key_id` identifies a VDAF
+  verification key configured for the task. If not, the Helper MUST reject each
+  report with error `unknown_verification_key_id`.
 
 * Whether the extensions in `AggregationJobInitReq.extensions` are valid:
   - If any extension type is unrecognized, the Helper MUST fail the job with
@@ -2530,7 +2544,8 @@ state = Vdaf.ping_pong_helper_init(
 )
 ~~~
 
-* `vdaf_verify_key` is the VDAF verification key for the task
+* `vdaf_verify_key` is the VDAF verification key identified by
+  `verification_key_id`
 * `task_id` is the task ID
 * `verification_key_id` is the key identifier for the verification key
   chosen by the Leader and included in the `AggregationJobInitReq` message
@@ -2674,6 +2689,7 @@ Content-Length: 100
 Authorization: Bearer auth-token
 
 encoded(struct {
+  verification_key_id = 0,
   agg_param = [0x00, 0x01, 0x02, 0x04, ...],
   extensions = [
     struct {
@@ -2704,6 +2720,7 @@ Content-Length: 100
 Authorization: Bearer auth-token
 
 encoded(struct {
+  verification_key_id = 0,
   agg_param = [0x00, 0x01, 0x02, 0x04, ...],
   extensions = [],
   verify_inits,
@@ -4511,13 +4528,11 @@ verification key must be kept secret from Clients.
 
 Furthermore, for a given report, it may be possible to craft a verification key
 which leaks information about that report's measurement during verification.
-Therefore, the verification key for a task SHOULD be chosen before any reports
-are generated. To achieve this, the current design and analysis assume that
-the verification key is fixed for the lifetime of the task.
-One way to ensure that the verification key is generated
-independently from any given report is to derive the key based on the task ID
-and some previously agreed upon secret (verify_key_seed) between Aggregators,
-as follows:
+Therefore, each verification key used for a task SHOULD be chosen before any
+reports that use it are generated. One way to ensure that the verification key
+is generated independently from any given report is to derive the key based on
+the task ID and some previously agreed upon secret (verify_key_seed) between
+Aggregators, as follows:
 
 ~~~ pseudocode
 vdaf_verify_key = HKDF-Expand(
@@ -4873,20 +4888,21 @@ Reference:
 
 The initial contents of this registry are listed below in {{report-error-id}}.
 
-| Value  | Name                     | Reference                               |
-|:-------|:-------------------------|:----------------------------------------|
-| `0x00` | `reserved`               | {{basic-definitions}} of RFC XXXX |
-| `0x01` | `batch_collected`        | {{basic-definitions}} of RFC XXXX |
-| `0x02` | `report_replayed`        | {{basic-definitions}} of RFC XXXX |
-| `0x03` | `report_dropped`         | {{basic-definitions}} of RFC XXXX |
-| `0x04` | `hpke_unknown_config_id` | {{basic-definitions}} of RFC XXXX |
-| `0x05` | `hpke_decrypt_error`     | {{basic-definitions}} of RFC XXXX |
-| `0x06` | `vdaf_verify_error`      | {{basic-definitions}} of RFC XXXX |
-| `0x07` | `task_expired`           | {{basic-definitions}} of RFC XXXX |
-| `0x08` | `invalid_message`        | {{basic-definitions}} of RFC XXXX |
-| `0x09` | `report_too_early`       | {{basic-definitions}} of RFC XXXX |
-| `0x0A` | `task_not_started`       | {{basic-definitions}} of RFC XXXX |
-| `0x0B` | `outdated_config`        | {{basic-definitions}} of RFC XXXX |
+| Value  | Name                          | Reference                         |
+|:-------|:------------------------------|:----------------------------------|
+| `0x00` | `reserved`                    | {{basic-definitions}} of RFC XXXX |
+| `0x01` | `batch_collected`             | {{basic-definitions}} of RFC XXXX |
+| `0x02` | `report_replayed`             | {{basic-definitions}} of RFC XXXX |
+| `0x03` | `report_dropped`              | {{basic-definitions}} of RFC XXXX |
+| `0x04` | `hpke_unknown_config_id`      | {{basic-definitions}} of RFC XXXX |
+| `0x05` | `hpke_decrypt_error`          | {{basic-definitions}} of RFC XXXX |
+| `0x06` | `vdaf_verify_error`           | {{basic-definitions}} of RFC XXXX |
+| `0x07` | `task_expired`                | {{basic-definitions}} of RFC XXXX |
+| `0x08` | `invalid_message`             | {{basic-definitions}} of RFC XXXX |
+| `0x09` | `report_too_early`            | {{basic-definitions}} of RFC XXXX |
+| `0x0A` | `task_not_started`            | {{basic-definitions}} of RFC XXXX |
+| `0x0B` | `outdated_config`             | {{basic-definitions}} of RFC XXXX |
+| `0x0C` | `unknown_verification_key_id` | {{basic-definitions}} of RFC XXXX |
 {: #report-error-id title="Initial contents of the DAP Report Error Identifiers
 registry."}
 
