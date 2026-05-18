@@ -1060,7 +1060,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
 </tr></thead>
 <tfoot><tr>
 <td class="left">Geoghegan, et al.</td>
-<td class="center">Expires 12 November 2026</td>
+<td class="center">Expires 19 November 2026</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1073,12 +1073,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-ietf-ppm-dap-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2026-05-11" class="published">11 May 2026</time>
+<time datetime="2026-05-18" class="published">18 May 2026</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Standards Track</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2026-11-12">12 November 2026</time></dd>
+<dd class="expires"><time datetime="2026-11-19">19 November 2026</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -1152,7 +1152,7 @@ without revealing any individual contributor's data.<a href="#section-abstract-1
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 12 November 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 19 November 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -4771,7 +4771,7 @@ of the HTTP message consists of <code>verify_inits</code>.<a href="#section-4.5.
 </li>
             </ul>
 <aside id="section-4.5.3.1-18">
-              <p id="section-4.5.3.1-18.1">IMPORTANT: this this does not change the security requirements
+              <p id="section-4.5.3.1-18.1">IMPORTANT: this does not change the security requirements
 for verification keys; see <a href="#verification-key" class="auto internal xref">Section 8.6.2</a>.
 The analysis in <span>[<a href="#DPRS23" class="cite xref">DPRS23</a>]</span> depends on an assumption
 that verification keys are selected prior to a report being generated;
@@ -4788,7 +4788,7 @@ described in <a href="#http-usage" class="auto internal xref">Section 3</a> to o
 byte-for-byte identical when serialized. The Helper uses this to provide the
 idempotency guarantee described in <a href="#resource-creation" class="auto internal xref">Section 3.2</a>. A Leader that retries a
 request <span class="bcp14">MUST</span> replay the identical serialized body.<a href="#section-4.5.3.1-20" class="pilcrow">¶</a></p>
-<p id="section-4.5.3.1-21">The <code>AggregationJobResp.verify_resps</code> field must include exactly the same
+<p id="section-4.5.3.1-21">The <code>AggregationJobResp.verify_resps</code> field <span class="bcp14">MUST</span> include exactly the same
 report IDs in the same order as the Leader's <code>AggregationJobInitReq</code>. Otherwise,
 the Leader <span class="bcp14">MUST</span> abandon the aggregation job.<a href="#section-4.5.3.1-21" class="pilcrow">¶</a></p>
 <p id="section-4.5.3.1-22">The Leader proceeds as follows with each report:<a href="#section-4.5.3.1-22" class="pilcrow">¶</a></p>
@@ -4913,7 +4913,7 @@ conditions:<a href="#section-4.5.3.2-4" class="pilcrow">¶</a></p>
 with error <code>unrecognizedTask</code>.<a href="#section-4.5.3.2-5.1.1" class="pilcrow">¶</a></p>
 </li>
               <li class="normal" id="section-4.5.3.2-5.2">
-                <p id="section-4.5.3.2-5.2.1">Whether the <code>AggregationJobInitReq</code> is malformed. If so, the the Helper <span class="bcp14">MUST</span>
+                <p id="section-4.5.3.2-5.2.1">Whether the <code>AggregationJobInitReq</code> is malformed. If so, the Helper <span class="bcp14">MUST</span>
 fail the job with error <code>invalidMessage</code>.<a href="#section-4.5.3.2-5.2.1" class="pilcrow">¶</a></p>
 </li>
               <li class="normal" id="section-4.5.3.2-5.3">
@@ -4946,7 +4946,7 @@ report share. This includes the following structures:<a href="#section-4.5.3.2-6
 <pre>
 enum {
   continue(0),
-  finish(1)
+  finish(1),
   reject(2),
   (255)
 } VerifyRespType;
@@ -5457,7 +5457,7 @@ with error <code>unrecognizedTask</code>.<a href="#section-4.5.4.2-5.1.1" class=
 <span class="bcp14">MUST</span> fail the job with error <code>unrecognizedAggregationJob</code>.<a href="#section-4.5.4.2-5.2.1" class="pilcrow">¶</a></p>
 </li>
               <li class="normal" id="section-4.5.4.2-5.3">
-                <p id="section-4.5.4.2-5.3.1">Whether the <code>AggregationJobContinueReq</code> is malformed. If so, the the Helper
+                <p id="section-4.5.4.2-5.3.1">Whether the <code>AggregationJobContinueReq</code> is malformed. If so, the Helper
 <span class="bcp14">MUST</span> fail the job with error <code>invalidMessage</code>.<a href="#section-4.5.4.2-5.3.1" class="pilcrow">¶</a></p>
 </li>
               <li class="normal" id="section-4.5.4.2-5.4">
@@ -5825,7 +5825,7 @@ the same value as in <code>AggregationJobInitReq</code> (see <a href="#leader-in
 <p id="section-4.6.1-4">Depending on the VDAF scheme and how the Leader is configured, the Leader and
 Helper may already have aggregated a sufficient number of reports satisfying the
 query and be ready to return the aggregate shares right away. However, this is
-not always the case. In fact, for some VDAFs, it is not be possible to begin
+not always the case. In fact, for some VDAFs, it is not possible to begin
 running aggregation jobs (<a href="#aggregate-flow" class="auto internal xref">Section 4.5</a>) until the Collector initiates a
 collection job. This is because, in general (see <a href="#eager-aggregation" class="auto internal xref">Section 4.5.2</a>), the
 aggregation parameter is not known until this point. In certain situations it is
@@ -5850,7 +5850,7 @@ job with error <code>unrecognizedTask</code>.<a href="#section-4.6.1-8.1.1" clas
 Leader <span class="bcp14">MUST</span> fail the job with error <code>invalidMessage</code>.<a href="#section-4.6.1-8.2.1" class="pilcrow">¶</a></p>
 </li>
             <li class="normal" id="section-4.6.1-8.3">
-              <p id="section-4.6.1-8.3.1">Whether the <code>CollectionJobReq</code> is malformed. If so, the the Helper <span class="bcp14">MUST</span> fail
+              <p id="section-4.6.1-8.3.1">Whether the <code>CollectionJobReq</code> is malformed. If so, the Leader <span class="bcp14">MUST</span> fail
 the job with error <code>invalidMessage</code>.<a href="#section-4.6.1-8.3.1" class="pilcrow">¶</a></p>
 </li>
             <li class="normal" id="section-4.6.1-8.4">
@@ -8034,7 +8034,7 @@ called "DAP Report Error Identifiers".<a href="#section-9.2.6-1" class="pilcrow"
                   <code>reserved</code>
 </td>
                 <td class="text-left" rowspan="1" colspan="1">
-                  <a href="#basic-definitions" class="auto internal xref">Section 4.1</a> of RFX XXXX</td>
+                  <a href="#basic-definitions" class="auto internal xref">Section 4.1</a> of RFC XXXX</td>
               </tr>
               <tr>
                 <td class="text-left" rowspan="1" colspan="1">
@@ -8044,7 +8044,7 @@ called "DAP Report Error Identifiers".<a href="#section-9.2.6-1" class="pilcrow"
                   <code>batch_collected</code>
 </td>
                 <td class="text-left" rowspan="1" colspan="1">
-                  <a href="#basic-definitions" class="auto internal xref">Section 4.1</a> of RFX XXXX</td>
+                  <a href="#basic-definitions" class="auto internal xref">Section 4.1</a> of RFC XXXX</td>
               </tr>
               <tr>
                 <td class="text-left" rowspan="1" colspan="1">
@@ -8054,7 +8054,7 @@ called "DAP Report Error Identifiers".<a href="#section-9.2.6-1" class="pilcrow"
                   <code>report_replayed</code>
 </td>
                 <td class="text-left" rowspan="1" colspan="1">
-                  <a href="#basic-definitions" class="auto internal xref">Section 4.1</a> of RFX XXXX</td>
+                  <a href="#basic-definitions" class="auto internal xref">Section 4.1</a> of RFC XXXX</td>
               </tr>
               <tr>
                 <td class="text-left" rowspan="1" colspan="1">
@@ -8064,7 +8064,7 @@ called "DAP Report Error Identifiers".<a href="#section-9.2.6-1" class="pilcrow"
                   <code>report_dropped</code>
 </td>
                 <td class="text-left" rowspan="1" colspan="1">
-                  <a href="#basic-definitions" class="auto internal xref">Section 4.1</a> of RFX XXXX</td>
+                  <a href="#basic-definitions" class="auto internal xref">Section 4.1</a> of RFC XXXX</td>
               </tr>
               <tr>
                 <td class="text-left" rowspan="1" colspan="1">
@@ -8074,7 +8074,7 @@ called "DAP Report Error Identifiers".<a href="#section-9.2.6-1" class="pilcrow"
                   <code>hpke_unknown_config_id</code>
 </td>
                 <td class="text-left" rowspan="1" colspan="1">
-                  <a href="#basic-definitions" class="auto internal xref">Section 4.1</a> of RFX XXXX</td>
+                  <a href="#basic-definitions" class="auto internal xref">Section 4.1</a> of RFC XXXX</td>
               </tr>
               <tr>
                 <td class="text-left" rowspan="1" colspan="1">
@@ -8084,7 +8084,7 @@ called "DAP Report Error Identifiers".<a href="#section-9.2.6-1" class="pilcrow"
                   <code>hpke_decrypt_error</code>
 </td>
                 <td class="text-left" rowspan="1" colspan="1">
-                  <a href="#basic-definitions" class="auto internal xref">Section 4.1</a> of RFX XXXX</td>
+                  <a href="#basic-definitions" class="auto internal xref">Section 4.1</a> of RFC XXXX</td>
               </tr>
               <tr>
                 <td class="text-left" rowspan="1" colspan="1">
@@ -8094,7 +8094,7 @@ called "DAP Report Error Identifiers".<a href="#section-9.2.6-1" class="pilcrow"
                   <code>vdaf_verify_error</code>
 </td>
                 <td class="text-left" rowspan="1" colspan="1">
-                  <a href="#basic-definitions" class="auto internal xref">Section 4.1</a> of RFX XXXX</td>
+                  <a href="#basic-definitions" class="auto internal xref">Section 4.1</a> of RFC XXXX</td>
               </tr>
               <tr>
                 <td class="text-left" rowspan="1" colspan="1">
@@ -8104,7 +8104,7 @@ called "DAP Report Error Identifiers".<a href="#section-9.2.6-1" class="pilcrow"
                   <code>task_expired</code>
 </td>
                 <td class="text-left" rowspan="1" colspan="1">
-                  <a href="#basic-definitions" class="auto internal xref">Section 4.1</a> of RFX XXXX</td>
+                  <a href="#basic-definitions" class="auto internal xref">Section 4.1</a> of RFC XXXX</td>
               </tr>
               <tr>
                 <td class="text-left" rowspan="1" colspan="1">
@@ -8114,7 +8114,7 @@ called "DAP Report Error Identifiers".<a href="#section-9.2.6-1" class="pilcrow"
                   <code>invalid_message</code>
 </td>
                 <td class="text-left" rowspan="1" colspan="1">
-                  <a href="#basic-definitions" class="auto internal xref">Section 4.1</a> of RFX XXXX</td>
+                  <a href="#basic-definitions" class="auto internal xref">Section 4.1</a> of RFC XXXX</td>
               </tr>
               <tr>
                 <td class="text-left" rowspan="1" colspan="1">
@@ -8124,7 +8124,7 @@ called "DAP Report Error Identifiers".<a href="#section-9.2.6-1" class="pilcrow"
                   <code>report_too_early</code>
 </td>
                 <td class="text-left" rowspan="1" colspan="1">
-                  <a href="#basic-definitions" class="auto internal xref">Section 4.1</a> of RFX XXXX</td>
+                  <a href="#basic-definitions" class="auto internal xref">Section 4.1</a> of RFC XXXX</td>
               </tr>
               <tr>
                 <td class="text-left" rowspan="1" colspan="1">
@@ -8134,7 +8134,7 @@ called "DAP Report Error Identifiers".<a href="#section-9.2.6-1" class="pilcrow"
                   <code>task_not_started</code>
 </td>
                 <td class="text-left" rowspan="1" colspan="1">
-                  <a href="#basic-definitions" class="auto internal xref">Section 4.1</a> of RFX XXXX</td>
+                  <a href="#basic-definitions" class="auto internal xref">Section 4.1</a> of RFC XXXX</td>
               </tr>
               <tr>
                 <td class="text-left" rowspan="1" colspan="1">
@@ -8144,7 +8144,7 @@ called "DAP Report Error Identifiers".<a href="#section-9.2.6-1" class="pilcrow"
                   <code>outdated_config</code>
 </td>
                 <td class="text-left" rowspan="1" colspan="1">
-                  <a href="#basic-definitions" class="auto internal xref">Section 4.1</a> of RFX XXXX</td>
+                  <a href="#basic-definitions" class="auto internal xref">Section 4.1</a> of RFC XXXX</td>
               </tr>
             </tbody>
           </table>
