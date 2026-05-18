@@ -2431,7 +2431,9 @@ The Leader proceeds as follows with each report:
    report and removes it from the candidate set. The Leader MUST NOT include
    the report in a subsequent aggregation job, unless the report error is
    `report_too_early` or `unknown_verification_key_id`, in which case the
-   Leader MAY include the report in a subsequent aggregation job.
+   Leader MAY include the report in a subsequent aggregation job. If the report
+   error is `unknown_verification_key_id`, the Leader MAY retry the report after
+   selecting a verification key ID known to the Helper.
 
 1. Otherwise the inbound message type is invalid for the Leader's current
    state, in which case the Leader MUST abandon the aggregation job.
