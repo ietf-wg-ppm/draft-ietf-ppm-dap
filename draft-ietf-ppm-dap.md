@@ -1344,6 +1344,7 @@ enum {
   report_too_early(9),
   task_not_started(10),
   outdated_config(11),
+  unknown_verification_key_id(12),
   (255)
 } ReportError;
 ~~~
@@ -1519,7 +1520,7 @@ Finally, the Collector is configured with the HPKE secret key corresponding to
 
 A task's parameters are immutable for the lifetime of that task. The only way to
 change parameters or to rotate secret values like Collector HPKE configuration
-is to configure a new task.
+or the VDAF verification key is to configure a new task.
 
 ### Batch Modes, Batches, and Queries {#batch-modes-overview}
 
@@ -2429,8 +2430,8 @@ The Leader proceeds as follows with each report:
 1. Else if the `VerifyResp` has type "reject", then the Leader rejects the
    report and removes it from the candidate set. The Leader MUST NOT include
    the report in a subsequent aggregation job, unless the report error is
-   `report_too_early`, in which case the Leader MAY include the report in a
-   subsequent aggregation job.
+   `report_too_early` or `     `, in which case the
+   Leader MAY include the report in a subsequent aggregation job.
 
 1. Otherwise the inbound message type is invalid for the Leader's current
    state, in which case the Leader MUST abandon the aggregation job.
@@ -2477,8 +2478,8 @@ conditions:
   fail the job with error `invalidMessage`.
 
 * Whether `AggregationJobInitReq.verification_key_id` identifies a VDAF
-  verification key configured for the task. If not, the Helper MUST fail the job
-  with error `invalidMessage`.
+  verification key configured for the task. If not, the Helper MUST reject each
+  report with error `unknown_verification_key_id`.
 
 * Whether the extensions in `AggregationJobInitReq.extensions` are valid:
   - If any extension type is unrecognized, the Helper MUST fail the job with
@@ -4885,20 +4886,21 @@ Reference:
 
 The initial contents of this registry are listed below in {{report-error-id}}.
 
-| Value  | Name                     | Reference                               |
-|:-------|:-------------------------|:----------------------------------------|
-| `0x00` | `reserved`               | {{basic-definitions}} of RFX XXXX |
-| `0x01` | `batch_collected`        | {{basic-definitions}} of RFX XXXX |
-| `0x02` | `report_replayed`        | {{basic-definitions}} of RFX XXXX |
-| `0x03` | `report_dropped`         | {{basic-definitions}} of RFX XXXX |
-| `0x04` | `hpke_unknown_config_id` | {{basic-definitions}} of RFX XXXX |
-| `0x05` | `hpke_decrypt_error`     | {{basic-definitions}} of RFX XXXX |
-| `0x06` | `vdaf_verify_error`      | {{basic-definitions}} of RFX XXXX |
-| `0x07` | `task_expired`           | {{basic-definitions}} of RFX XXXX |
-| `0x08` | `invalid_message`        | {{basic-definitions}} of RFX XXXX |
-| `0x09` | `report_too_early`       | {{basic-definitions}} of RFX XXXX |
-| `0x0A` | `task_not_started`       | {{basic-definitions}} of RFX XXXX |
-| `0x0B` | `outdated_config`        | {{basic-definitions}} of RFX XXXX |
+| Value  | Name                          | Reference                         |
+|:-------|:------------------------------|:----------------------------------|
+| `0x00` | `reserved`                    | {{basic-definitions}} of RFX XXXX |
+| `0x01` | `batch_collected`             | {{basic-definitions}} of RFX XXXX |
+| `0x02` | `report_replayed`             | {{basic-definitions}} of RFX XXXX |
+| `0x03` | `report_dropped`              | {{basic-definitions}} of RFX XXXX |
+| `0x04` | `hpke_unknown_config_id`      | {{basic-definitions}} of RFX XXXX |
+| `0x05` | `hpke_decrypt_error`          | {{basic-definitions}} of RFX XXXX |
+| `0x06` | `vdaf_verify_error`           | {{basic-definitions}} of RFX XXXX |
+| `0x07` | `task_expired`                | {{basic-definitions}} of RFX XXXX |
+| `0x08` | `invalid_message`             | {{basic-definitions}} of RFX XXXX |
+| `0x09` | `report_too_early`            | {{basic-definitions}} of RFX XXXX |
+| `0x0A` | `task_not_started`            | {{basic-definitions}} of RFX XXXX |
+| `0x0B` | `outdated_config`             | {{basic-definitions}} of RFX XXXX |
+| `0x0C` | `unknown_verification_key_id` | {{basic-definitions}} of RFC XXXX |
 {: #report-error-id title="Initial contents of the DAP Report Error Identifiers
 registry."}
 
