@@ -2364,7 +2364,7 @@ This message consists of:
   fields. That is, the remainder of the HTTP message consists of `verify_inits`.
 
 {:aside}
-> IMPORTANT: this this does not change the security requirements
+> IMPORTANT: this does not change the security requirements
 > for verification keys; see {{verification-key}}.
 > The analysis in {{DPRS23}} depends on an assumption
 > that verification keys are selected prior to a report being generated;
@@ -2383,7 +2383,7 @@ byte-for-byte identical when serialized. The Helper uses this to provide the
 idempotency guarantee described in {{resource-creation}}. A Leader that retries a
 request MUST replay the identical serialized body.
 
-The `AggregationJobResp.verify_resps` field must include exactly the same
+The `AggregationJobResp.verify_resps` field MUST include exactly the same
 report IDs in the same order as the Leader's `AggregationJobInitReq`. Otherwise,
 the Leader MUST abandon the aggregation job.
 
@@ -2474,7 +2474,7 @@ conditions:
 * Whether it recognizes the task ID. If not, then the Helper MUST fail the job
   with error `unrecognizedTask`.
 
-* Whether the `AggregationJobInitReq` is malformed. If so, the the Helper MUST
+* Whether the `AggregationJobInitReq` is malformed. If so, the Helper MUST
   fail the job with error `invalidMessage`.
 
 * Whether `AggregationJobInitReq.verification_key_id` identifies a VDAF
@@ -2501,7 +2501,7 @@ report share. This includes the following structures:
 ~~~ tls-presentation
 enum {
   continue(0),
-  finish(1)
+  finish(1),
   reject(2),
   (255)
 } VerifyRespType;
@@ -2920,7 +2920,7 @@ following conditions:
 * Whether it recognizes the indicated aggregation job ID. If not, the Helper
   MUST fail the job with error `unrecognizedAggregationJob`.
 
-* Whether the `AggregationJobContinueReq` is malformed. If so, the the Helper
+* Whether the `AggregationJobContinueReq` is malformed. If so, the Helper
   MUST fail the job with error `invalidMessage`.
 
 * Whether `AggregationJobContinueReq.step` is equal to `0`. If so, the Helper
@@ -3233,7 +3233,7 @@ struct {
 Depending on the VDAF scheme and how the Leader is configured, the Leader and
 Helper may already have aggregated a sufficient number of reports satisfying the
 query and be ready to return the aggregate shares right away. However, this is
-not always the case. In fact, for some VDAFs, it is not be possible to begin
+not always the case. In fact, for some VDAFs, it is not possible to begin
 running aggregation jobs ({{aggregate-flow}}) until the Collector initiates a
 collection job. This is because, in general (see {{eager-aggregation}}), the
 aggregation parameter is not known until this point. In certain situations it is
@@ -3258,7 +3258,7 @@ conditions:
 * Whether the indicated batch mode matches the task's batch mode. If not, the
   Leader MUST fail the job with error `invalidMessage`.
 
-* Whether the `CollectionJobReq` is malformed. If so, the the Helper MUST fail
+* Whether the `CollectionJobReq` is malformed. If so, the Leader MUST fail
   the job with error `invalidMessage`.
 
 * Whether the aggregation parameter is valid as described in
@@ -4888,18 +4888,18 @@ The initial contents of this registry are listed below in {{report-error-id}}.
 
 | Value  | Name                          | Reference                         |
 |:-------|:------------------------------|:----------------------------------|
-| `0x00` | `reserved`                    | {{basic-definitions}} of RFX XXXX |
-| `0x01` | `batch_collected`             | {{basic-definitions}} of RFX XXXX |
-| `0x02` | `report_replayed`             | {{basic-definitions}} of RFX XXXX |
-| `0x03` | `report_dropped`              | {{basic-definitions}} of RFX XXXX |
-| `0x04` | `hpke_unknown_config_id`      | {{basic-definitions}} of RFX XXXX |
-| `0x05` | `hpke_decrypt_error`          | {{basic-definitions}} of RFX XXXX |
-| `0x06` | `vdaf_verify_error`           | {{basic-definitions}} of RFX XXXX |
-| `0x07` | `task_expired`                | {{basic-definitions}} of RFX XXXX |
-| `0x08` | `invalid_message`             | {{basic-definitions}} of RFX XXXX |
-| `0x09` | `report_too_early`            | {{basic-definitions}} of RFX XXXX |
-| `0x0A` | `task_not_started`            | {{basic-definitions}} of RFX XXXX |
-| `0x0B` | `outdated_config`             | {{basic-definitions}} of RFX XXXX |
+| `0x00` | `reserved`                    | {{basic-definitions}} of RFC XXXX |
+| `0x01` | `batch_collected`             | {{basic-definitions}} of RFC XXXX |
+| `0x02` | `report_replayed`             | {{basic-definitions}} of RFC XXXX |
+| `0x03` | `report_dropped`              | {{basic-definitions}} of RFC XXXX |
+| `0x04` | `hpke_unknown_config_id`      | {{basic-definitions}} of RFC XXXX |
+| `0x05` | `hpke_decrypt_error`          | {{basic-definitions}} of RFC XXXX |
+| `0x06` | `vdaf_verify_error`           | {{basic-definitions}} of RFC XXXX |
+| `0x07` | `task_expired`                | {{basic-definitions}} of RFC XXXX |
+| `0x08` | `invalid_message`             | {{basic-definitions}} of RFC XXXX |
+| `0x09` | `report_too_early`            | {{basic-definitions}} of RFC XXXX |
+| `0x0A` | `task_not_started`            | {{basic-definitions}} of RFC XXXX |
+| `0x0B` | `outdated_config`             | {{basic-definitions}} of RFC XXXX |
 | `0x0C` | `unknown_verification_key_id` | {{basic-definitions}} of RFC XXXX |
 {: #report-error-id title="Initial contents of the DAP Report Error Identifiers
 registry."}
