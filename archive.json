@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-05-17T02:53:24.950790+00:00",
+  "timestamp": "2026-05-19T03:24:16.269270+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -192,6 +192,11 @@
       "name": "draft-18",
       "description": "",
       "color": "4db263"
+    },
+    {
+      "name": "draft-19",
+      "description": "",
+      "color": "14F9D7"
     }
   ],
   "issues": [
@@ -93577,25 +93582,37 @@
       "id": "PR_kwDOFEJYQs7cCrvv",
       "title": "Some minor fixes",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/783",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "StanFromIreland",
-      "authorAssociation": "NONE",
+      "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
-      "labels": [],
+      "labels": [
+        "draft-19"
+      ],
       "body": "A few things I noticed while reading through the draft. Some larger thoughts to follow, as separate PRs.",
       "createdAt": "2026-05-15T19:27:20Z",
-      "updatedAt": "2026-05-16T18:17:41Z",
+      "updatedAt": "2026-05-18T16:31:18Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "04a9f95fc4e2217bb4edf2c270fc7699f6ce7ede",
       "headRepository": "StanFromIreland/draft-ietf-ppm-dap",
       "headRefName": "initial-read",
       "headRefOid": "c8f2f437b3a059d91385e4d801544064a2bd9c9f",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
-      "comments": [],
+      "closedAt": "2026-05-18T16:27:42Z",
+      "mergedAt": "2026-05-18T16:27:42Z",
+      "mergedBy": "tgeoghegan",
+      "mergeCommit": {
+        "oid": "96a27acd8bc045d06a766eeab3144e478cafaca9"
+      },
+      "comments": [
+        {
+          "author": "StanFromIreland",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "Thanks all!",
+          "createdAt": "2026-05-18T16:31:18Z",
+          "updatedAt": "2026-05-18T16:31:18Z"
+        }
+      ],
       "reviews": [
         {
           "id": "PRR_kwDOFEJYQs8AAAABAIrSwg",
@@ -93609,6 +93626,19 @@
           "createdAt": "2026-05-16T18:17:18Z",
           "updatedAt": "2026-05-16T18:17:18Z",
           "comments": []
+        },
+        {
+          "id": "PRR_kwDOFEJYQs8AAAABAPQbHg",
+          "commit": {
+            "abbreviatedOid": "c8f2f43"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2026-05-18T14:19:38Z",
+          "updatedAt": "2026-05-18T14:19:38Z",
+          "comments": []
         }
       ]
     },
@@ -93619,18 +93649,20 @@
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/784",
       "state": "OPEN",
       "author": "StanFromIreland",
-      "authorAssociation": "NONE",
+      "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
-      "labels": [],
+      "labels": [
+        "draft-19"
+      ],
       "body": "I found it quite confusing and contradictory, so I took a stab at trying to correct a few things :-)\r\nAdditionally, I think that the Helper should reject an unknown `verification_key_id`, I've included that here, but if controversial I can revert it.\r\n\r\n",
       "createdAt": "2026-05-15T19:48:41Z",
-      "updatedAt": "2026-05-16T18:32:36Z",
+      "updatedAt": "2026-05-18T16:55:35Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
-      "baseRefOid": "04a9f95fc4e2217bb4edf2c270fc7699f6ce7ede",
+      "baseRefOid": "96a27acd8bc045d06a766eeab3144e478cafaca9",
       "headRepository": "StanFromIreland/draft-ietf-ppm-dap",
       "headRefName": "verification_key_id",
-      "headRefOid": "f4c70c28996980b44164354a2c49dff684e1cd07",
+      "headRefOid": "fcddf76c66138fedcb6fc15c1adfb4b991755267",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
@@ -93660,6 +93692,178 @@
               "body": "I'd like @martinthomson and @cjpatton to comment here: when we added verification key ID, did that change our expectations around the key's arity?",
               "createdAt": "2026-05-16T18:29:52Z",
               "updatedAt": "2026-05-16T18:32:36Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs8AAAABAPRAlQ",
+          "commit": {
+            "abbreviatedOid": "f4c70c2"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-05-18T14:20:48Z",
+          "updatedAt": "2026-05-18T14:25:59Z",
+          "comments": [
+            {
+              "originalPosition": 17,
+              "body": "Why this change?",
+              "createdAt": "2026-05-18T14:20:48Z",
+              "updatedAt": "2026-05-18T14:25:59Z"
+            },
+            {
+              "originalPosition": 58,
+              "body": "I think a distinguished error would be useful for this case.",
+              "createdAt": "2026-05-18T14:22:24Z",
+              "updatedAt": "2026-05-18T14:25:59Z"
+            },
+            {
+              "originalPosition": 95,
+              "body": "What do you mean by arity? Are you asking whether the same key can be used across tasks or whether multiple keys can be used within a task?",
+              "createdAt": "2026-05-18T14:25:56Z",
+              "updatedAt": "2026-05-18T14:25:59Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs8AAAABAP0_-A",
+          "commit": {
+            "abbreviatedOid": "f4c70c2"
+          },
+          "author": "StanFromIreland",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-05-18T15:34:26Z",
+          "updatedAt": "2026-05-18T15:34:27Z",
+          "comments": [
+            {
+              "originalPosition": 17,
+              "body": "I understood `verification_key_id` as allowing multiple keys within a task, I'll revert it.",
+              "createdAt": "2026-05-18T15:34:26Z",
+              "updatedAt": "2026-05-18T15:34:27Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs8AAAABAP1QDw",
+          "commit": {
+            "abbreviatedOid": "f4c70c2"
+          },
+          "author": "StanFromIreland",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-05-18T15:34:54Z",
+          "updatedAt": "2026-05-18T15:34:55Z",
+          "comments": [
+            {
+              "originalPosition": 58,
+              "body": "I added `unknown_verification_key_id`",
+              "createdAt": "2026-05-18T15:34:54Z",
+              "updatedAt": "2026-05-18T15:34:55Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs8AAAABAQNXSw",
+          "commit": {
+            "abbreviatedOid": "f4c70c2"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-05-18T16:31:14Z",
+          "updatedAt": "2026-05-18T16:31:14Z",
+          "comments": [
+            {
+              "originalPosition": 95,
+              "body": "Both! Are tasks : verification keys 1:1, 1:many, many:1 or many:many? Does the change to the text here change our assumptions at all?",
+              "createdAt": "2026-05-18T16:31:14Z",
+              "updatedAt": "2026-05-18T16:31:15Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs8AAAABAQN_Lg",
+          "commit": {
+            "abbreviatedOid": "9c44357"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-05-18T16:32:50Z",
+          "updatedAt": "2026-05-18T16:34:13Z",
+          "comments": [
+            {
+              "originalPosition": 57,
+              "body": "Something missing in this blank space? Was this meant to be `unknown_verification_key_id`? If so, I think we might need more guidance here. Should the Leader retry after some out of band interaction to \"activate\" the new key ID, or retry with a known-valid key ID?",
+              "createdAt": "2026-05-18T16:32:50Z",
+              "updatedAt": "2026-05-18T16:34:13Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs8AAAABAQO_yw",
+          "commit": {
+            "abbreviatedOid": "d2b008c"
+          },
+          "author": "StanFromIreland",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-05-18T16:35:41Z",
+          "updatedAt": "2026-05-18T16:35:42Z",
+          "comments": [
+            {
+              "originalPosition": 57,
+              "body": "```suggestion\r\n   `report_too_early` or `unknown_verification_key_id`, in which case the\r\n```\r\nAh oops, I must have cut.",
+              "createdAt": "2026-05-18T16:35:41Z",
+              "updatedAt": "2026-05-18T16:35:42Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs8AAAABAQRO0A",
+          "commit": {
+            "abbreviatedOid": "d2b008c"
+          },
+          "author": "StanFromIreland",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-05-18T16:42:24Z",
+          "updatedAt": "2026-05-18T16:42:24Z",
+          "comments": [
+            {
+              "originalPosition": 57,
+              "body": "Hmm, a retry makes sense, WDYT about:\r\n\r\n> The Leader MAY retry the report after selecting a verification key ID known to the Helper",
+              "createdAt": "2026-05-18T16:42:24Z",
+              "updatedAt": "2026-05-18T16:42:24Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs8AAAABAQSOKg",
+          "commit": {
+            "abbreviatedOid": "d2b008c"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-05-18T16:45:25Z",
+          "updatedAt": "2026-05-18T16:45:25Z",
+          "comments": [
+            {
+              "originalPosition": 57,
+              "body": "I think that's good enough, since the goal of the verification key ID stuff was not to spell out the whole lifecycle of the things, but just to add enough of an affordance in the protocol for something robust to be done by implementations or in later documents extending DAP.",
+              "createdAt": "2026-05-18T16:45:25Z",
+              "updatedAt": "2026-05-18T16:45:25Z"
             }
           ]
         }
