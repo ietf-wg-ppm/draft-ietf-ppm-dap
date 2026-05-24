@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-05-19T03:24:16.269270+00:00",
+  "timestamp": "2026-05-24T03:26:53.527124+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -93656,13 +93656,13 @@
       ],
       "body": "I found it quite confusing and contradictory, so I took a stab at trying to correct a few things :-)\r\nAdditionally, I think that the Helper should reject an unknown `verification_key_id`, I've included that here, but if controversial I can revert it.\r\n\r\n",
       "createdAt": "2026-05-15T19:48:41Z",
-      "updatedAt": "2026-05-18T16:55:35Z",
+      "updatedAt": "2026-05-23T15:16:59Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "96a27acd8bc045d06a766eeab3144e478cafaca9",
       "headRepository": "StanFromIreland/draft-ietf-ppm-dap",
       "headRefName": "verification_key_id",
-      "headRefOid": "fcddf76c66138fedcb6fc15c1adfb4b991755267",
+      "headRefOid": "0ecc0065cb2c07e62ee7e3ec3eb1f5da54215944",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
@@ -93864,6 +93864,26 @@
               "body": "I think that's good enough, since the goal of the verification key ID stuff was not to spell out the whole lifecycle of the things, but just to add enough of an affordance in the protocol for something robust to be done by implementations or in later documents extending DAP.",
               "createdAt": "2026-05-18T16:45:25Z",
               "updatedAt": "2026-05-18T16:45:25Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs8AAAABAzcDxA",
+          "commit": {
+            "abbreviatedOid": "fcddf76"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-05-22T21:21:43Z",
+          "updatedAt": "2026-05-22T21:21:43Z",
+          "comments": [
+            {
+              "originalPosition": 95,
+              "body": "I don't think we should change this right now. The point of the key ID is to allow the key to be rotated independently of the task lifetime, but as the text here suggests, this is only safe to do under specific conditions. In the absence of a concrete mechanism for managing key rotation, I think we should be conservative.\n\nIn other words, @StanFromIreland I suggest reverting this change.",
+              "createdAt": "2026-05-22T21:21:43Z",
+              "updatedAt": "2026-05-22T21:21:43Z"
             }
           ]
         }
