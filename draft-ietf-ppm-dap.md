@@ -182,11 +182,16 @@ aggregator.
 
 (RFC EDITOR: Remove this section.)
 
+19:
+
+- Delete unused or redundant `ReportError` variants. (\*) (#786)
+
+- Define explicit `unknown_verification_key_id` error. (\*) (#784)
 
 18:
 
 - Add verification key ID to aggregation jobs to enable but not require
-  verification key management. (\*) (#766, #784)
+  verification key management. (\*) (#766)
 
 - Define collection job extensions. (\*) (#769)
 
