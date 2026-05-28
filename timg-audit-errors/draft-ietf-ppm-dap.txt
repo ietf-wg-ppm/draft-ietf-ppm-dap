@@ -1410,11 +1410,9 @@ Table of Contents
      hpke_unknown_config_id(4),
      hpke_decrypt_error(5),
      vdaf_verify_error(6),
-     task_expired(7),
-     invalid_message(8),
-     report_too_early(9),
-     task_not_started(10),
-     unknown_verification_key_id(12),
+     invalid_message(7),
+     report_too_early(8),
+     unknown_verification_key_id(9),
      (255)
    } ReportError;
 
@@ -1976,9 +1974,10 @@ Table of Contents
    already been collected (see Section 2.3 for details).  The Leader MAY
    also set the corresponding error field to report_replayed.
 
-   The Leader MUST discard any report whose timestamp is outside of the
-   task's time_interval.  When it does so, it SHOULD set the
-   corresponding error field to report_dropped.
+   If the Task Interval Task Extension (Section 4.2.3) is in use, then
+   the Leader MUST discard any report whose timestamp is outside of the
+   task_interval.  When it does so, it SHOULD set the corresponding
+   error field to report_dropped.
 
    The Leader may need to buffer reports while waiting to aggregate them
    (e.g., while waiting for an aggregation parameter from the Collector;
@@ -2770,30 +2769,25 @@ Table of Contents
        input share as invalid with error report_too_early.
 
    3.  If the task_interval task extension (Section 4.2.3) is
-       configured, check if the report's timestamp is before the task's
+       configured, check if the report's timestamp is outside the task's
        task_interval.  If so, the Aggregator MUST mark the input share
-       as invalid with the error task_not_started.
+       as invalid with the error report_dropped.
 
-   4.  If the task_interval task extension (Section 4.2.3) is
-       configured, check if the report's timestamp is after the task's
-       task_interval.  If so, the Aggregator MUST mark the input share
-       as invalid with the error task_expired.
-
-   5.  Check if the public or private report extensions contain any
+   4.  Check if the public or private report extensions contain any
        unrecognized report extension types.  If so, the Aggregator MUST
        mark the input share as invalid with error invalid_message.
 
-   6.  Check if any two extensions have the same extension type across
+   5.  Check if any two extensions have the same extension type across
        public and private extension fields.  If so, the Aggregator MUST
        mark the input share as invalid with error invalid_message.
 
-   7.  Check that the public and private extension vectors are each
+   6.  Check that the public and private extension vectors are each
        encoded in strictly increasing order.  If any extension_type
        value is equal to or less than that of the extension that
        precedes it, the Aggregator MUST mark the input share as invalid
        with error invalid_message.
 
-   8.  If an Aggregator cannot determine if an input share is valid--for
+   7.  If an Aggregator cannot determine if an input share is valid--for
        example, the report timestamp may be so far in the past that the
        state required to perform the check has been evicted from the
        Aggregator's storage (see Section 6.4.1 for details)--it MUST
@@ -5092,15 +5086,11 @@ Table of Contents
      +-------+-----------------------------+-------------------------+
      | 0x06  | vdaf_verify_error           | Section 4.1 of RFX XXXX |
      +-------+-----------------------------+-------------------------+
-     | 0x07  | task_expired                | Section 4.1 of RFX XXXX |
+     | 0x07  | invalid_message             | Section 4.1 of RFX XXXX |
      +-------+-----------------------------+-------------------------+
-     | 0x08  | invalid_message             | Section 4.1 of RFX XXXX |
+     | 0x08  | report_too_early            | Section 4.1 of RFX XXXX |
      +-------+-----------------------------+-------------------------+
-     | 0x09  | report_too_early            | Section 4.1 of RFX XXXX |
-     +-------+-----------------------------+-------------------------+
-     | 0x0A  | task_not_started            | Section 4.1 of RFX XXXX |
-     +-------+-----------------------------+-------------------------+
-     | 0x0C  | unknown_verification_key_id | Section 4.1 of RFC XXXX |
+     | 0x09  | unknown_verification_key_id | Section 4.1 of RFC XXXX |
      +-------+-----------------------------+-------------------------+
 
        Table 7: Initial contents of the DAP Report Error Identifiers
