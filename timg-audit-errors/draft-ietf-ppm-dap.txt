@@ -213,10 +213,14 @@ Table of Contents
 
    (RFC EDITOR: Remove this section.)
 
-   18:
+   19:
+
+   *  Delete unused or redundant ReportError variants. (*) (#786)
 
    *  Add verification key ID to aggregation jobs to enable but not
       require verification key management. (*) (#766, #784)
+
+   18:
 
    *  Define collection job extensions. (*) (#769)
 
