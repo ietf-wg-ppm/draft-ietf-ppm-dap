@@ -1339,9 +1339,9 @@ enum {
   hpke_unknown_config_id(4),
   hpke_decrypt_error(5),
   vdaf_verify_error(6),
-  invalid_message(8),
-  report_too_early(9),
-  unknown_verification_key_id(12),
+  invalid_message(7),
+  report_too_early(8),
+  unknown_verification_key_id(9),
   (255)
 } ReportError;
 ~~~
@@ -4898,9 +4898,9 @@ The initial contents of this registry are listed below in {{report-error-id}}.
 | `0x04` | `hpke_unknown_config_id`      | {{basic-definitions}} of RFX XXXX |
 | `0x05` | `hpke_decrypt_error`          | {{basic-definitions}} of RFX XXXX |
 | `0x06` | `vdaf_verify_error`           | {{basic-definitions}} of RFX XXXX |
-| `0x08` | `invalid_message`             | {{basic-definitions}} of RFX XXXX |
-| `0x09` | `report_too_early`            | {{basic-definitions}} of RFX XXXX |
-| `0x0C` | `unknown_verification_key_id` | {{basic-definitions}} of RFC XXXX |
+| `0x07` | `invalid_message`             | {{basic-definitions}} of RFX XXXX |
+| `0x08` | `report_too_early`            | {{basic-definitions}} of RFX XXXX |
+| `0x09` | `unknown_verification_key_id` | {{basic-definitions}} of RFC XXXX |
 {: #report-error-id title="Initial contents of the DAP Report Error Identifiers
 registry."}
 
