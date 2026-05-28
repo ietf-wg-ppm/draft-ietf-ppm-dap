@@ -1343,7 +1343,6 @@ enum {
   invalid_message(8),
   report_too_early(9),
   task_not_started(10),
-  outdated_config(11),
   unknown_verification_key_id(12),
   (255)
 } ReportError;
@@ -1878,10 +1877,11 @@ and includes the `ReportId` from the input and a `ReportError`
 is always less than or equal to the length of the upload sequence.
 
 If the Leader does not recognize the `config_id` in the encrypted input share,
-it sets the corresponding error field to `outdated_config`. When the Client
-receives an `outdated_config` error, it SHOULD invalidate any cached
-`HpkeConfigList` and retry with a freshly generated `Report`. If this retried
-upload does not succeed, the Client SHOULD abort and discontinue retrying.
+it sets the corresponding error field to `hpke_unknown_config_id`. When the
+Client receives an `hpke_unknown_config_id` error, it SHOULD invalidate any
+cached `HpkeConfigList` and retry with a freshly generated `Report`. If this
+retried upload does not succeed, the Client SHOULD abort and discontinue
+retrying.
 
 If a report's ID matches that of a previously uploaded report, the Leader MUST
 discard it. In addition, it MAY set the corresponding error field to
@@ -2628,10 +2628,15 @@ plaintext_input_share = OpenBase(encrypted_input_share.enc, sk,
 The `OpenBase()` function is as specified in {{!HPKE, Section 6.1}} for the
 ciphersuite indicated by the HPKE configuration.
 
-If the HPKE configuration ID is unrecognized or decryption fails, the Aggregator
-marks the report share as invalid with the error `hpke_decrypt_error`.
-Otherwise, the Aggregator outputs the resulting PlaintextInputShare
-`plaintext_input_share`.
+If the HPKE configuration ID is unrecognized, the Aggregator marks the report
+share as invalid with the error `hpke_unknown_config_id`. If reports are
+rejected for this reason, Clients MAY retry the report upload after fetching
+current HPKE configurations for the Aggregators and re-encrypting the reports,
+though this may not be possible in all deployments.
+
+If decryption fails, the Aggregator marks the report share as invalid with the
+error `hpke_decrypt_error`. Otherwise, the Aggregator outputs the resulting
+PlaintextInputShare `plaintext_input_share`.
 
 #### Input Share Validation {#input-share-validation}
 
@@ -4903,7 +4908,6 @@ The initial contents of this registry are listed below in {{report-error-id}}.
 | `0x08` | `invalid_message`             | {{basic-definitions}} of RFX XXXX |
 | `0x09` | `report_too_early`            | {{basic-definitions}} of RFX XXXX |
 | `0x0A` | `task_not_started`            | {{basic-definitions}} of RFX XXXX |
-| `0x0B` | `outdated_config`             | {{basic-definitions}} of RFX XXXX |
 | `0x0C` | `unknown_verification_key_id` | {{basic-definitions}} of RFC XXXX |
 {: #report-error-id title="Initial contents of the DAP Report Error Identifiers
 registry."}
