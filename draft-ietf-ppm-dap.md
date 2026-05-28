@@ -1339,10 +1339,8 @@ enum {
   hpke_unknown_config_id(4),
   hpke_decrypt_error(5),
   vdaf_verify_error(6),
-  task_expired(7),
   invalid_message(8),
   report_too_early(9),
-  task_not_started(10),
   unknown_verification_key_id(12),
   (255)
 } ReportError;
@@ -1891,8 +1889,9 @@ The Leader MUST discard any report pertaining to a batch that has already been
 collected (see {{replay-protection}} for details). The Leader MAY also set the
 corresponding error field to `report_replayed`.
 
-The Leader MUST discard any report whose timestamp is outside of the task's
-`time_interval`. When it does so, it SHOULD set the corresponding error field to
+If the Task Interval Task Extension ({{task-interval-extension}}) is in use,
+then the Leader MUST discard any report whose timestamp is outside of the
+`task_interval`. When it does so, it SHOULD set the corresponding error field to
 `report_dropped`.
 
 The Leader may need to buffer reports while waiting to aggregate them (e.g.,
@@ -2650,15 +2649,10 @@ input share in the job, in any order:
    current time. If so, then the Aggregator SHOULD mark the input share as
    invalid with error `report_too_early`.
 
-1. If the `task_interval` task extension ({{task-interval-extension}}) is configured,
-   check if the report's timestamp is before the task's `task_interval`. If so,
-   the Aggregator MUST mark the input share as invalid with the error
-   `task_not_started`.
-
-1. If the `task_interval` task extension ({{task-interval-extension}}) is configured,
-   check if the report's timestamp is after the task's `task_interval`. If so,
-   the Aggregator MUST mark the input share as invalid with the error
-   `task_expired`.
+1. If the `task_interval` task extension ({{task-interval-extension}}) is
+   configured, check if the report's timestamp is outside the task's
+   `task_interval`. If so, the Aggregator MUST mark the input share as invalid
+   with the error `report_dropped`.
 
 1. Check if the public or private report extensions contain any unrecognized
    report extension types. If so, the Aggregator MUST mark the input share as
@@ -4904,10 +4898,8 @@ The initial contents of this registry are listed below in {{report-error-id}}.
 | `0x04` | `hpke_unknown_config_id`      | {{basic-definitions}} of RFX XXXX |
 | `0x05` | `hpke_decrypt_error`          | {{basic-definitions}} of RFX XXXX |
 | `0x06` | `vdaf_verify_error`           | {{basic-definitions}} of RFX XXXX |
-| `0x07` | `task_expired`                | {{basic-definitions}} of RFX XXXX |
 | `0x08` | `invalid_message`             | {{basic-definitions}} of RFX XXXX |
 | `0x09` | `report_too_early`            | {{basic-definitions}} of RFX XXXX |
-| `0x0A` | `task_not_started`            | {{basic-definitions}} of RFX XXXX |
 | `0x0C` | `unknown_verification_key_id` | {{basic-definitions}} of RFC XXXX |
 {: #report-error-id title="Initial contents of the DAP Report Error Identifiers
 registry."}
