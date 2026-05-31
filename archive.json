@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-05-24T03:26:53.527124+00:00",
+  "timestamp": "2026-05-31T03:38:11.147703+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -14212,12 +14212,22 @@
       "assignees": [
         "tgeoghegan"
       ],
-      "labels": [],
+      "labels": [
+        "draft-19"
+      ],
       "body": "We define:\n\n```\nenum {\n  reserved(0),\n  batch_collected(1),\n  report_replayed(2),\n  report_dropped(3),\n  hpke_unknown_config_id(4),\n  hpke_decrypt_error(5),\n  vdaf_verify_error(6),\n  task_expired(7),\n  invalid_message(8),\n  report_too_early(9),\n  task_not_started(10),\n  outdated_config(11),\n  (255)\n} ReportError;\n```\n\nWe should audit these error codes and make sure that they're used appropriately in the text.\n\nFor example, `hpke_unknown_config_id` is not currently mentioned anywhere but the enum definition and the error registry, but I think it would be appropriate for `{{input-share-decryption}}` to require using it when an aggregator receives an HPKE ciphertext encrypted to an unknown config ID.",
       "createdAt": "2026-05-16T18:28:34Z",
-      "updatedAt": "2026-05-16T18:32:42Z",
+      "updatedAt": "2026-05-28T17:45:59Z",
       "closedAt": null,
-      "comments": []
+      "comments": [
+        {
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "body": "I did this same exercise with the problem document types in {{urn-space-errors}} and satisfied myself that they're all useful and that their usage is well-described in the protocol text.",
+          "createdAt": "2026-05-28T17:45:59Z",
+          "updatedAt": "2026-05-28T17:45:59Z"
+        }
+      ]
     }
   ],
   "pulls": [
@@ -93647,7 +93657,7 @@
       "id": "PR_kwDOFEJYQs7cDDUk",
       "title": "Clarify aggregation verification key ID handling",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/784",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "StanFromIreland",
       "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
@@ -93656,18 +93666,42 @@
       ],
       "body": "I found it quite confusing and contradictory, so I took a stab at trying to correct a few things :-)\r\nAdditionally, I think that the Helper should reject an unknown `verification_key_id`, I've included that here, but if controversial I can revert it.\r\n\r\n",
       "createdAt": "2026-05-15T19:48:41Z",
-      "updatedAt": "2026-05-23T15:16:59Z",
+      "updatedAt": "2026-05-28T16:11:30Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "96a27acd8bc045d06a766eeab3144e478cafaca9",
       "headRepository": "StanFromIreland/draft-ietf-ppm-dap",
       "headRefName": "verification_key_id",
-      "headRefOid": "0ecc0065cb2c07e62ee7e3ec3eb1f5da54215944",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
-      "comments": [],
+      "headRefOid": "81d5ef6f70c156dc95ac8c3e31171e8d2a49a20d",
+      "closedAt": "2026-05-28T16:03:04Z",
+      "mergedAt": "2026-05-28T16:03:04Z",
+      "mergedBy": "tgeoghegan",
+      "mergeCommit": {
+        "oid": "823c5431e794c3681ea63ee54e9cbdc470c2ca9b"
+      },
+      "comments": [
+        {
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "body": "I will fix the merge conflicts, rebase into a single commit, and merge to `main` later this morning.",
+          "createdAt": "2026-05-28T15:23:28Z",
+          "updatedAt": "2026-05-28T15:23:28Z"
+        },
+        {
+          "author": "StanFromIreland",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "> I will fix the merge conflicts\r\n\r\nHmm, I'd be happy to fix them but I don't see any?\r\n\r\n> rebase into a single commit\r\n\r\nI suggest [\"Squash merging\"](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/incorporating-changes-from-a-pull-request/about-pull-request-merges#squash-and-merge-your-commits), it's far easier IMO, I use it for example in python/cpython.",
+          "createdAt": "2026-05-28T15:32:45Z",
+          "updatedAt": "2026-05-28T15:32:45Z"
+        },
+        {
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> Hmm, I'd be happy to fix them but I don't see any?\r\n\r\nJust a minor issue with the error types table. I cleaned it up and GitHub is now happy. I also took the opportunity to add this PR # to the changelog, since the new error type is wire breaking and thus worth calling out.\r\n \r\n> I suggest [\"Squash merging\"](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/incorporating-changes-from-a-pull-request/about-pull-request-merges#squash-and-merge-your-commits), it's far easier IMO, I use it for example in python/cpython.\r\n\r\nI know, I do the same on the repos I control. We just never got around to doing it here.",
+          "createdAt": "2026-05-28T16:02:56Z",
+          "updatedAt": "2026-05-28T16:02:56Z"
+        }
+      ],
       "reviews": [
         {
           "id": "PRR_kwDOFEJYQs8AAAABAIr8wg",
@@ -93884,6 +93918,102 @@
               "body": "I don't think we should change this right now. The point of the key ID is to allow the key to be rotated independently of the task lifetime, but as the text here suggests, this is only safe to do under specific conditions. In the absence of a concrete mechanism for managing key rotation, I think we should be conservative.\n\nIn other words, @StanFromIreland I suggest reverting this change.",
               "createdAt": "2026-05-22T21:21:43Z",
               "updatedAt": "2026-05-22T21:21:43Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs8AAAABBTO3LA",
+          "commit": {
+            "abbreviatedOid": "0ecc006"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2026-05-28T15:14:18Z",
+          "updatedAt": "2026-05-28T15:14:18Z",
+          "comments": []
+        },
+        {
+          "id": "PRR_kwDOFEJYQs8AAAABBTSaWg",
+          "commit": {
+            "abbreviatedOid": "0ecc006"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "This looks good to me. @StanFromIreland: our sincere thanks for improving the draft.",
+          "createdAt": "2026-05-28T15:21:12Z",
+          "updatedAt": "2026-05-28T15:21:12Z",
+          "comments": []
+        }
+      ]
+    },
+    {
+      "number": 786,
+      "id": "PR_kwDOFEJYQs7gVcHW",
+      "title": "Audit `ReportError` variants and make sure they're used properly",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/786",
+      "state": "OPEN",
+      "author": "tgeoghegan",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [
+        "wire breaking",
+        "draft-19"
+      ],
+      "body": "See individual commits for detailed discussion. The headline changes:\r\n\r\n- Delete `ReportError::task_expired, task_not_started` and use `report_dropped` instead\r\n- Delete `outdated_config` and use `hpke_unknown_config_id` instead\r\n\r\nWhat's most likely to be controversional here is whether we still want specific `ReportError` values for when the task interval extension is in use and the report timestamp is outside of it.\r\n\r\nMy position is: no, `report_dropped` suffices. My argument is: if the Task Interval extension is configured, then the Client has to have agreed to its parameters because it gets included in the `TaskConfiguration` and then HPKE AADs. That means that before it ever uploads, the Client can assure itself that its report timestamp is inside the task's time interval, and thus we don't need a recovery mechanism that would nudge the Client into waiting until the task starts to upload.\r\n\r\nCloses #785 ",
+      "createdAt": "2026-05-28T17:27:59Z",
+      "updatedAt": "2026-05-31T02:22:25Z",
+      "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "baseRefName": "main",
+      "baseRefOid": "823c5431e794c3681ea63ee54e9cbdc470c2ca9b",
+      "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "headRefName": "timg-audit-errors",
+      "headRefOid": "10db239bc7c27a8610ca5e98877718c3864e8914",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOFEJYQs8AAAABBdvWrw",
+          "commit": {
+            "abbreviatedOid": "7568133"
+          },
+          "author": "divergentdave",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2026-05-29T22:39:14Z",
+          "updatedAt": "2026-05-29T22:42:18Z",
+          "comments": [
+            {
+              "originalPosition": 10,
+              "body": "The changes represented by this item are partly before the draft-18 tag, and partly after.",
+              "createdAt": "2026-05-29T22:39:14Z",
+              "updatedAt": "2026-05-29T22:42:19Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs8AAAABBgnM2w",
+          "commit": {
+            "abbreviatedOid": "10db239"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-05-31T02:22:25Z",
+          "updatedAt": "2026-05-31T02:22:25Z",
+          "comments": [
+            {
+              "originalPosition": 10,
+              "body": "Yep, I was getting too clever there.",
+              "createdAt": "2026-05-31T02:22:25Z",
+              "updatedAt": "2026-05-31T02:22:25Z"
             }
           ]
         }
