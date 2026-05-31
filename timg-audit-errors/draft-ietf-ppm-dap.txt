@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 29 November 2026                                     Cloudflare
+Expires: 2 December 2026                                      Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                             28 May 2026
+                                                             31 May 2026
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -64,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 29 November 2026.
+   This Internet-Draft will expire on 2 December 2026.
 
 Copyright Notice
 
@@ -217,10 +217,12 @@ Table of Contents
 
    *  Delete unused or redundant ReportError variants. (*) (#786)
 
-   *  Add verification key ID to aggregation jobs to enable but not
-      require verification key management. (*) (#766, #784)
+   *  Define explicit unknown_verification_key_id error. (*) #(784)
 
    18:
+
+   *  Add verification key ID to aggregation jobs to enable but not
+      require verification key management. (*) (#766)
 
    *  Define collection job extensions. (*) (#769)
 
