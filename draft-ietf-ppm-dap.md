@@ -1464,7 +1464,7 @@ by a `TaskConfiguration` structure:
 uint32 VdafType;
 
 struct {
-    opaque task_info<1..2^8-1>;
+    opaque task_info<0..2^8-1>;
     Url leader_aggregator_endpoint;
     Url helper_aggregator_endpoint;
     TimePrecision time_precision;
