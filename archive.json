@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-05-31T03:38:11.147703+00:00",
+  "timestamp": "2026-06-09T02:54:59.420692+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -41852,7 +41852,7 @@
       "labels": [],
       "body": "This fixes a reference that was pointing at the wrong section. The behavior relating to `ReportShareError.report-replayed` is under \"Input Share Validation\".",
       "createdAt": "2022-05-18T19:06:14Z",
-      "updatedAt": "2022-05-19T01:27:11Z",
+      "updatedAt": "2026-06-08T21:45:01Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "a9d046da0b4a7b8b8b80658e68572dc8ecdf74c5",
@@ -52290,7 +52290,7 @@
       ],
       "body": "This revises the sections dealing with encryption and decryption of input shares and aggregate shares, rewriting the construction of each AAD input to be in terms of RFC 8446-style structs instead of byte string concatenation. This fixes #371.",
       "createdAt": "2022-10-31T22:32:34Z",
-      "updatedAt": "2022-11-09T16:23:11Z",
+      "updatedAt": "2026-06-08T21:44:55Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "66aa97a400784cfe11836d385552230257cbd1d0",
@@ -62678,7 +62678,7 @@
       "labels": [],
       "body": "This adds mention of media types throughout the document where they were missing. Fixes #449.",
       "createdAt": "2023-05-03T21:15:52Z",
-      "updatedAt": "2023-05-09T11:19:32Z",
+      "updatedAt": "2026-06-08T21:44:51Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "eeb6264c3ac4f5c3f8b2722061ed576e07e27011",
@@ -62735,7 +62735,7 @@
       ],
       "body": "This adds the batchOverlap error type, which is mentioned in section 4.6.6, to table 1.",
       "createdAt": "2023-05-05T16:47:01Z",
-      "updatedAt": "2023-05-05T18:13:00Z",
+      "updatedAt": "2026-06-08T21:44:48Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "eeb6264c3ac4f5c3f8b2722061ed576e07e27011",
@@ -66534,7 +66534,7 @@
       ],
       "body": "This adds explanation to each HPKE operation of what the byte literals in each info string represent. This addresses #478.",
       "createdAt": "2023-10-24T22:09:08Z",
-      "updatedAt": "2023-10-26T15:45:58Z",
+      "updatedAt": "2026-06-08T21:44:45Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "f3b02c10bb1f3efcd82e2f9106a64dc3c5ea8301",
@@ -69205,7 +69205,7 @@
       "labels": [],
       "body": "This PR addresses the possibility that reports could be successfully prepared with a first aggregation parameter, but fail preparation with a subsequent aggregation parameter. A suggestion is added to increase actual batch size above the minimum batch size. The description of the fixed size query type is loosened -- the goal is no longer to create batches of the minimum batch size, but to create batches of a deployment-specific target batch size.\r\n\r\nThis closes #548.",
       "createdAt": "2024-02-28T15:02:00Z",
-      "updatedAt": "2024-02-28T23:26:51Z",
+      "updatedAt": "2026-06-08T21:44:42Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "3448ba400a628b18a785e069d544314c1bbff8c6",
@@ -79650,7 +79650,7 @@
       ],
       "body": "Following PR #612, this sentence is unclear, because the batch modes are no longer listed in the following source code element. This PR instead lists them in the prose.",
       "createdAt": "2024-10-25T19:22:58Z",
-      "updatedAt": "2024-10-25T20:19:19Z",
+      "updatedAt": "2026-06-08T21:44:33Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "79eb8a5eb133d710142f5ae7e12c09d3a8c25a6c",
@@ -80943,7 +80943,7 @@
       ],
       "body": "This paragraph should reference the `Content-Type` HTTP header.",
       "createdAt": "2025-01-17T17:31:56Z",
-      "updatedAt": "2025-01-17T22:04:13Z",
+      "updatedAt": "2026-06-08T21:44:30Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "712f0fb52e89ceb326546eb44b42ae97623c770c",
@@ -81001,7 +81001,7 @@
       ],
       "body": "This fixes one stray use of \"collect job\". These were renamed a while back.",
       "createdAt": "2025-01-17T17:35:54Z",
-      "updatedAt": "2025-01-17T22:03:35Z",
+      "updatedAt": "2026-06-08T21:44:26Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "712f0fb52e89ceb326546eb44b42ae97623c770c",
@@ -82643,7 +82643,7 @@
       ],
       "body": "This is a follow-up to #661. While the problem types defined in this document are all URNs, we should still allow for servers to use other URIs that are not URNs as problem types. In particular, our implementation, Janus, uses `about:blank` in one case, where want to add a detail field while keeping the semantics of one of the HTTP status codes. We also use `https:` URLs for a couple of implementation-specific error cases.",
       "createdAt": "2025-03-06T20:07:41Z",
-      "updatedAt": "2025-06-26T20:26:16Z",
+      "updatedAt": "2026-06-08T21:44:21Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "cfbb7a432747fbe83a8328fb3067b60e26b131d9",
@@ -94016,6 +94016,46 @@
               "updatedAt": "2026-05-31T02:22:25Z"
             }
           ]
+        }
+      ]
+    },
+    {
+      "number": 787,
+      "id": "PR_kwDOFEJYQs7kFIIL",
+      "title": "Allow task_info to be empty",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/787",
+      "state": "OPEN",
+      "author": "divergentdave",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "While implementing DAP draft-18, we noticed that the `task_info` field of `TaskConfiguration` has a minimum length of 1. When this was part of the Taskprov draft, this made sense, because distinct `task_info` fields would be the only way to produce distinct task IDs for similar measurement tasks. In the context of DAP draft-18, `TaskConfiguration` gets included in `InputShareAad` and `AggregateShareAad` alongside the task ID, so `TaskConfiguration` does not need to be unique in all deployment scenarios. If unique `task_info` values are not needed because task IDs are chosen uniformly at random, then it would be nice if we could set `task_info` to the empty string as a sensible default.\r\n\r\nIn the context of Taskprov, the editor's copy suggests including entropy in `task_info` in order to defend against task enumeration attacks. If we take this DAP change, we could change Taskprov to require that `task_info` be non-empty. We may want stronger language pointing out that the whole `TaskConfiguration` struct needs to be unique in order to distinguish semantically different measurement tasks, and that `task_info` is the one place operators can stick enough entropy to achieve that uniqueness, when all other parameters are the same.",
+      "createdAt": "2026-06-08T20:15:40Z",
+      "updatedAt": "2026-06-08T21:20:48Z",
+      "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "baseRefName": "main",
+      "baseRefOid": "823c5431e794c3681ea63ee54e9cbdc470c2ca9b",
+      "headRepository": "divergentdave/ppm-specification",
+      "headRefName": "david/allow-empty-task-info",
+      "headRefOid": "1f8f9148ddde1e005e62a273ca951fc027eaff0c",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOFEJYQs8AAAABCXNaxA",
+          "commit": {
+            "abbreviatedOid": "1f8f914"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2026-06-08T21:20:48Z",
+          "updatedAt": "2026-06-08T21:20:48Z",
+          "comments": []
         }
       ]
     }
