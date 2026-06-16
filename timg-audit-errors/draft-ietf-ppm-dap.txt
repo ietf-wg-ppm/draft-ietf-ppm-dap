@@ -217,7 +217,7 @@ Table of Contents
 
    *  Delete unused or redundant ReportError variants. (*) (#786)
 
-   *  Define explicit unknown_verification_key_id error. (*) #(784)
+   *  Define explicit unknown_verification_key_id error. (*) (#784)
 
    18:
 
