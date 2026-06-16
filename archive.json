@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-06-09T02:54:59.420692+00:00",
+  "timestamp": "2026-06-16T03:55:15.150315+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -94024,24 +94024,26 @@
       "id": "PR_kwDOFEJYQs7kFIIL",
       "title": "Allow task_info to be empty",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/787",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "divergentdave",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "While implementing DAP draft-18, we noticed that the `task_info` field of `TaskConfiguration` has a minimum length of 1. When this was part of the Taskprov draft, this made sense, because distinct `task_info` fields would be the only way to produce distinct task IDs for similar measurement tasks. In the context of DAP draft-18, `TaskConfiguration` gets included in `InputShareAad` and `AggregateShareAad` alongside the task ID, so `TaskConfiguration` does not need to be unique in all deployment scenarios. If unique `task_info` values are not needed because task IDs are chosen uniformly at random, then it would be nice if we could set `task_info` to the empty string as a sensible default.\r\n\r\nIn the context of Taskprov, the editor's copy suggests including entropy in `task_info` in order to defend against task enumeration attacks. If we take this DAP change, we could change Taskprov to require that `task_info` be non-empty. We may want stronger language pointing out that the whole `TaskConfiguration` struct needs to be unique in order to distinguish semantically different measurement tasks, and that `task_info` is the one place operators can stick enough entropy to achieve that uniqueness, when all other parameters are the same.",
       "createdAt": "2026-06-08T20:15:40Z",
-      "updatedAt": "2026-06-08T21:20:48Z",
+      "updatedAt": "2026-06-15T15:45:45Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "823c5431e794c3681ea63ee54e9cbdc470c2ca9b",
       "headRepository": "divergentdave/ppm-specification",
       "headRefName": "david/allow-empty-task-info",
       "headRefOid": "1f8f9148ddde1e005e62a273ca951fc027eaff0c",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "closedAt": "2026-06-15T15:45:45Z",
+      "mergedAt": "2026-06-15T15:45:45Z",
+      "mergedBy": "tgeoghegan",
+      "mergeCommit": {
+        "oid": "82b8f0b7ff7990eefda8e05058d805b85c205b47"
+      },
       "comments": [],
       "reviews": [
         {
@@ -94055,6 +94057,19 @@
           "body": "",
           "createdAt": "2026-06-08T21:20:48Z",
           "updatedAt": "2026-06-08T21:20:48Z",
+          "comments": []
+        },
+        {
+          "id": "PRR_kwDOFEJYQs8AAAABDCglLA",
+          "commit": {
+            "abbreviatedOid": "1f8f914"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "Thanks, David. I wrote up https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap-taskprov/issues/128 for taskprov to consider setting a minimum size on task_info.",
+          "createdAt": "2026-06-15T15:45:38Z",
+          "updatedAt": "2026-06-15T15:45:38Z",
           "comments": []
         }
       ]
