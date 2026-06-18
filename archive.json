@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-06-16T03:55:15.150315+00:00",
+  "timestamp": "2026-06-18T03:43:20.401486+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -14206,7 +14206,7 @@
       "id": "I_kwDOFEJYQs8AAAABCePE4A",
       "title": "Audit `ReportError` variants and make sure they're used properly",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/785",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "tgeoghegan",
       "authorAssociation": "COLLABORATOR",
       "assignees": [
@@ -14217,8 +14217,8 @@
       ],
       "body": "We define:\n\n```\nenum {\n  reserved(0),\n  batch_collected(1),\n  report_replayed(2),\n  report_dropped(3),\n  hpke_unknown_config_id(4),\n  hpke_decrypt_error(5),\n  vdaf_verify_error(6),\n  task_expired(7),\n  invalid_message(8),\n  report_too_early(9),\n  task_not_started(10),\n  outdated_config(11),\n  (255)\n} ReportError;\n```\n\nWe should audit these error codes and make sure that they're used appropriately in the text.\n\nFor example, `hpke_unknown_config_id` is not currently mentioned anywhere but the enum definition and the error registry, but I think it would be appropriate for `{{input-share-decryption}}` to require using it when an aggregator receives an HPKE ciphertext encrypted to an unknown config ID.",
       "createdAt": "2026-05-16T18:28:34Z",
-      "updatedAt": "2026-05-28T17:45:59Z",
-      "closedAt": null,
+      "updatedAt": "2026-06-16T15:40:38Z",
+      "closedAt": "2026-06-16T15:40:38Z",
       "comments": [
         {
           "author": "tgeoghegan",
@@ -93954,7 +93954,7 @@
       "id": "PR_kwDOFEJYQs7gVcHW",
       "title": "Audit `ReportError` variants and make sure they're used properly",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/786",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "tgeoghegan",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
@@ -93964,18 +93964,35 @@
       ],
       "body": "See individual commits for detailed discussion. The headline changes:\r\n\r\n- Delete `ReportError::task_expired, task_not_started` and use `report_dropped` instead\r\n- Delete `outdated_config` and use `hpke_unknown_config_id` instead\r\n\r\nWhat's most likely to be controversional here is whether we still want specific `ReportError` values for when the task interval extension is in use and the report timestamp is outside of it.\r\n\r\nMy position is: no, `report_dropped` suffices. My argument is: if the Task Interval extension is configured, then the Client has to have agreed to its parameters because it gets included in the `TaskConfiguration` and then HPKE AADs. That means that before it ever uploads, the Client can assure itself that its report timestamp is inside the task's time interval, and thus we don't need a recovery mechanism that would nudge the Client into waiting until the task starts to upload.\r\n\r\nCloses #785 ",
       "createdAt": "2026-05-28T17:27:59Z",
-      "updatedAt": "2026-05-31T02:22:25Z",
+      "updatedAt": "2026-06-16T15:40:37Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
-      "baseRefOid": "823c5431e794c3681ea63ee54e9cbdc470c2ca9b",
+      "baseRefOid": "82b8f0b7ff7990eefda8e05058d805b85c205b47",
       "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "headRefName": "timg-audit-errors",
-      "headRefOid": "10db239bc7c27a8610ca5e98877718c3864e8914",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
-      "comments": [],
+      "headRefOid": "35199cc7cb33baa51d2813c0776862157c1b26c6",
+      "closedAt": "2026-06-16T15:40:37Z",
+      "mergedAt": "2026-06-16T15:40:37Z",
+      "mergedBy": "tgeoghegan",
+      "mergeCommit": {
+        "oid": "d6451b8df1bb389371200c9e3d9777ecffc3140f"
+      },
+      "comments": [
+        {
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> Consider compacting the codepoints once more.\r\n\r\nDo they need more compacting?",
+          "createdAt": "2026-06-16T14:21:01Z",
+          "updatedAt": "2026-06-16T14:21:01Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> > Consider compacting the codepoints once more.\r\n> \r\n> Do they need more compacting?\r\n\r\nNope! I was looking at the commits individually and didn't notice they're now in order :) Disregard",
+          "createdAt": "2026-06-16T14:24:19Z",
+          "updatedAt": "2026-06-16T14:24:19Z"
+        }
+      ],
       "reviews": [
         {
           "id": "PRR_kwDOFEJYQs8AAAABBdvWrw",
@@ -94016,6 +94033,19 @@
               "updatedAt": "2026-05-31T02:22:25Z"
             }
           ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs8AAAABDKbsgw",
+          "commit": {
+            "abbreviatedOid": "adc95eb"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "Looks good. Consider compacting the codepoints once more.",
+          "createdAt": "2026-06-16T14:13:12Z",
+          "updatedAt": "2026-06-16T15:36:38Z",
+          "comments": []
         }
       ]
     },
