@@ -4251,7 +4251,7 @@ tradeoffs.
 * The upload interaction requires the Leader to discard uploaded reports with a
   duplicated ID, including concurrently-uploaded reports. This might be
   implemented by synchronization or via an eventually-consistent process. If the
-  Leader wishes to alert the Client with a `reportRejected` error,
+  Leader wishes to alert the Client with a `report_replayed` error,
   synchronization will be necessary to ensure all but one concurrent request
   receive the error.
 
