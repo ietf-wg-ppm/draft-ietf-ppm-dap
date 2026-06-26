@@ -1347,6 +1347,7 @@ enum {
   invalid_message(7),
   report_too_early(8),
   unknown_verification_key_id(9),
+  unsupported_extension(10),
   (255)
 } ReportError;
 ~~~
@@ -1910,18 +1911,13 @@ on.
 
 If the report contains an unrecognized public report extension, or if the
 Leader's input share contains an unrecognized private report extension, then the
-Leader MUST discard the report and MAY abort with error `unsupportedExtension`.
-If the Leader does abort for this reason, it SHOULD indicate the unsupported
-extensions in the resulting problem document via an extension member ({{Section
-3.2 of !RFC9457}}) `unsupported_extensions` on the problem document. This member
-MUST contain an array of numbers indicating the extension code points which were
-not recognized. For example, if the report upload contained two unsupported
-extensions with code points `23` and `42`, the "unsupported_extensions" member
-would contain the JSON value `[23, 42]`.
+Leader MUST discard the report and MAY set the corresponding error field to
+`unsupported_extension`.
 
 If the same extension type appears more than once among the public extensions
 and the private extensions in the Leader's input share, then the Leader MUST
-discard the report and MAY abort with error `invalidMessage`.
+discard the report and MAY set the corresponding error field to
+`invalid_message`.
 
 Validation of anti-replay and extensions is not mandatory during the handling of
 upload requests to avoid blocking on storage transactions or decryption of input
@@ -4906,6 +4902,7 @@ The initial contents of this registry are listed below in {{report-error-id}}.
 | `0x07` | `invalid_message`             | {{basic-definitions}} of RFX XXXX |
 | `0x08` | `report_too_early`            | {{basic-definitions}} of RFX XXXX |
 | `0x09` | `unknown_verification_key_id` | {{basic-definitions}} of RFC XXXX |
+| `0x0A` | `unsupported_extension`       | {{basic-definitions}} of RFC XXXX |
 {: #report-error-id title="Initial contents of the DAP Report Error Identifiers
 registry."}
 
