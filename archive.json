@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-06-18T03:43:20.401486+00:00",
+  "timestamp": "2026-06-28T03:36:59.601310+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -14228,6 +14228,22 @@
           "updatedAt": "2026-05-28T17:45:59Z"
         }
       ]
+    },
+    {
+      "number": 788,
+      "id": "I_kwDOFEJYQs8AAAABGv5B0Q",
+      "title": "Error handling for bad reports mixes ReportError and problem documents",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/788",
+      "state": "OPEN",
+      "author": "divergentdave",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Section 4.4.2.2 discusses how the leader processes an incoming upload request. Since upload requests may contain multiple reports, errors related to just one report are transmitted back to the client via an `UploadErrors` response. Errors with the whole request are transmitted via a problem document response. However, certain parts of this section still discuss problem details responses and problem type URIs for some report validation steps.\n\nThe report extension validation paragraph mentions aborting with `unsupportedExtension` and providing additional information in an extension member of the problem document. I think we should be fine with not replicating the additional information in the `UploadErrors` response, it should be apparent to operators which report extensions their software supports, and thus easy to identify which extension caused the issue.\n\nThe next paragraph, covering duplicate report extensions, says to abort with `invalidMessage`, when it should just mark the report with `invalid_message`.",
+      "createdAt": "2026-06-25T22:29:23Z",
+      "updatedAt": "2026-06-25T22:29:23Z",
+      "closedAt": null,
+      "comments": []
     }
   ],
   "pulls": [
@@ -94100,6 +94116,74 @@
           "body": "Thanks, David. I wrote up https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap-taskprov/issues/128 for taskprov to consider setting a minimum size on task_info.",
           "createdAt": "2026-06-15T15:45:38Z",
           "updatedAt": "2026-06-15T15:45:38Z",
+          "comments": []
+        }
+      ]
+    },
+    {
+      "number": 789,
+      "id": "PR_kwDOFEJYQs7rB05w",
+      "title": "Fix report extension validation error handling",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/789",
+      "state": "OPEN",
+      "author": "divergentdave",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "This fixes #788 by adding an `unsupported_extensions variant to `ReportError` and making it clear that issues with report extensions are treated as per-report errors only.",
+      "createdAt": "2026-06-26T15:10:04Z",
+      "updatedAt": "2026-06-26T21:41:20Z",
+      "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "baseRefName": "main",
+      "baseRefOid": "d6451b8df1bb389371200c9e3d9777ecffc3140f",
+      "headRepository": "divergentdave/ppm-specification",
+      "headRefName": "david/extension-error-handling",
+      "headRefOid": "0652bea0d8a7d1475b47e2618092af2106ddf309",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [
+        {
+          "author": "divergentdave",
+          "authorAssociation": "COLLABORATOR",
+          "body": "I spotted one more old error type in the Operational Considerations section, and pushed a commit to fix that as well.",
+          "createdAt": "2026-06-26T16:02:57Z",
+          "updatedAt": "2026-06-26T16:02:57Z"
+        },
+        {
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Let's take a beat to unpack this statement from the issue, which informs the part of this PR where the aggregators no longer indicate which extensions are unsupported:\r\n\r\n> I think we should be fine with not replicating the additional information in the UploadErrors response, it should be apparent to operators which report extensions their software supports, and thus easy to identify which extension caused the issue.\r\n\r\nI believe I agree with this, because now that `TaskConfiguration` gets mixed into the AAD, the client can't even upload reports unless it agrees with the aggregators about which extensions are in use and how they're configured. So it makes sense to me that we don't need an in-band mechanism for aggregators to indicate supported extensions: DAP assumes that this has been negotiated before the start of a task. Put another way, we are not interested in enabling a flow like this:\r\n\r\n- client constructs reports with extensions a, b, c\r\n- leader rejects the upload indicating extension b is unsupported\r\n- client tries again with just a, c\r\n- leader now accepts the report\r\n\r\nSome other dynamic task provisioning protocol could decide to incorporate extension negotiation, but DAP is putting it out of scope. I think this is correct and sensible (it rules out extension downgrade attacks) but want to highlight this implication for other reviewers.\r\n\r\nOtherwise I think it's sensible to narrow these errors to per-report instead of them causing the rejection of an entire `UploadReq` or `AggregationJobInitReq`. The nuance here is that because individual reports or report shares in those messages are not encoded opaquely, the failure to decode a single element can have implications for decoding everything else. For example, if a length field is wrong in the n-th report, then we can't really continue trying to parse the n+1-th and beyond reports because we're left in an ambiguous state.\r\n\r\nBut the specific cases here are well-defined encodings of invalid data (out of order extensions, duplicate extension type). So I think it's reasonable to continue trying to parse other elements in these arrays. It makes me wish we'd somehow made duplicate or out of order extensions impossible to represent, but I don't think that's possible in TLS presentation/encoding language (maybe CBOR? but we're not doing CBOR in DAP).",
+          "createdAt": "2026-06-26T21:41:06Z",
+          "updatedAt": "2026-06-26T21:41:06Z"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "PRR_kwDOFEJYQs8AAAABESAO9g",
+          "commit": {
+            "abbreviatedOid": "0652bea"
+          },
+          "author": "jcjones",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "APPROVED",
+          "body": "Good catch! Thanks for the forethought!",
+          "createdAt": "2026-06-26T19:44:13Z",
+          "updatedAt": "2026-06-26T19:44:13Z",
+          "comments": []
+        },
+        {
+          "id": "PRR_kwDOFEJYQs8AAAABESmnJQ",
+          "commit": {
+            "abbreviatedOid": "0652bea"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2026-06-26T21:41:19Z",
+          "updatedAt": "2026-06-26T21:41:19Z",
           "comments": []
         }
       ]
