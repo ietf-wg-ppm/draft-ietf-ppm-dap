@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-06-28T03:36:59.601310+00:00",
+  "timestamp": "2026-06-30T03:29:39.480328+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -94132,7 +94132,7 @@
       "labels": [],
       "body": "This fixes #788 by adding an `unsupported_extensions variant to `ReportError` and making it clear that issues with report extensions are treated as per-report errors only.",
       "createdAt": "2026-06-26T15:10:04Z",
-      "updatedAt": "2026-06-26T21:41:20Z",
+      "updatedAt": "2026-06-29T22:06:52Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "d6451b8df1bb389371200c9e3d9777ecffc3140f",
@@ -94184,6 +94184,19 @@
           "body": "",
           "createdAt": "2026-06-26T21:41:19Z",
           "updatedAt": "2026-06-26T21:41:19Z",
+          "comments": []
+        },
+        {
+          "id": "PRR_kwDOFEJYQs8AAAABEe0UkA",
+          "commit": {
+            "abbreviatedOid": "0652bea"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2026-06-29T22:06:52Z",
+          "updatedAt": "2026-06-29T22:06:52Z",
           "comments": []
         }
       ]
