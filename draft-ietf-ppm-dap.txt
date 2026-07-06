@@ -219,6 +219,10 @@ Table of Contents
 
    *  Define explicit unknown_verification_key_id error. (*) (#784)
 
+   *  Bump version tag from "dap-18" to "dap-19". (*)
+
+   *  Bump draft-irtf-cfrg-vdaf to -20 ([VDAF]).
+
    18:
 
    *  Add verification key ID to aggregation jobs to enable but not
@@ -1848,7 +1852,7 @@ Table of Contents
    algorithm (Section 5.1 of [VDAF]), using the report ID as the nonce:
 
    (public_share, input_shares) = Vdaf.shard(
-       "dap-18" || task_id,
+       "dap-19" || task_id,
        measurement,
        report_id,
        rand,
@@ -1885,10 +1889,10 @@ Table of Contents
 
    (RFC EDITOR: Once the document becomes an RFC, we will stop including
    the draft version in domain separation tags.  In the remainder of
-   this section, replace "dap-18" with "dap".)
+   this section, replace "dap-19" with "dap".)
 
    enc, payload = SealBase(pk,
-     "dap-18 input share" || 0x01 || server_role,
+     "dap-19 input share" || 0x01 || server_role,
      input_share_aad, plaintext_input_share)
 
    *  pk is the public key from the Aggregator's HPKE configuration.
@@ -2370,7 +2374,7 @@ Table of Contents
 
    state = Vdaf.ping_pong_leader_init(
        vdaf_verify_key,
-       "dap-18" || task_id,
+       "dap-19" || task_id,
        agg_param,
        report_id,
        public_share,
@@ -2491,7 +2495,7 @@ Table of Contents
        the Leader computes
 
       state = Vdaf.ping_pong_leader_continued(
-          "dap-18" || task_id,
+          "dap-19" || task_id,
           agg_param,
           state,
           inbound,
@@ -2640,7 +2644,7 @@ Table of Contents
 
    state = Vdaf.ping_pong_helper_init(
        vdaf_verify_key,
-       "dap-18" || task_id,
+       "dap-19" || task_id,
        agg_param,
        report_id,
        public_share,
@@ -2729,7 +2733,7 @@ Table of Contents
    procedure:
 
    plaintext_input_share = OpenBase(encrypted_input_share.enc, sk,
-     "dap-18 input share" || 0x01 || server_role,
+     "dap-19 input share" || 0x01 || server_role,
      input_share_aad, encrypted_input_share.payload)
 
    *  sk is the secret key from the HPKE configuration indicated by
@@ -2948,7 +2952,7 @@ Table of Contents
        "continue", then the Leader computes
 
       state = Vdaf.ping_pong_leader_continued(
-          "dap-18" || task_id,
+          "dap-19" || task_id,
           agg_param,
           state,
           inbound,
@@ -3074,7 +3078,7 @@ Table of Contents
    For each report, the Helper does the following:
 
    state = Vdaf.ping_pong_helper_continued(
-       "dap-18" || task_id,
+       "dap-19" || task_id,
        agg_param,
        state,
        inbound,
@@ -3959,7 +3963,7 @@ Table of Contents
 
    (enc, payload) = SealBase(
        pk,
-       "dap-18 aggregate share" || server_role || 0x00,
+       "dap-19 aggregate share" || server_role || 0x00,
        agg_share_aad,
        agg_share)
 
@@ -3997,7 +4001,7 @@ Table of Contents
    agg_share = OpenBase(
        enc_share.enc,
        sk,
-       "dap-18 aggregate share" || server_role || 0x00,
+       "dap-19 aggregate share" || server_role || 0x00,
        agg_share_aad,
        enc_share.payload)
 
@@ -5251,9 +5255,9 @@ Table of Contents
 
    [VDAF]     Barnes, R., Cook, D., Patton, C., and P. Schoppmann,
               "Verifiable Distributed Aggregation Functions", Work in
-              Progress, Internet-Draft, draft-irtf-cfrg-vdaf-19, 14
-              April 2026, <https://datatracker.ietf.org/doc/html/draft-
-              irtf-cfrg-vdaf-19>.
+              Progress, Internet-Draft, draft-irtf-cfrg-vdaf-20, 24 June
+              2026, <https://datatracker.ietf.org/doc/html/draft-irtf-
+              cfrg-vdaf-20>.
 
 11.2.  Informative References
 
