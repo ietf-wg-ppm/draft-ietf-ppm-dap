@@ -21,21 +21,22 @@ This document describes a multi-party Distributed Aggregation Protocol (DAP) for
 privacy preserving measurement which can be used to collect aggregate data
 without revealing any individual contributor's data. 
     " name="description">
-<meta content="xml2rfc 3.33.0" name="generator">
+<meta content="xml2rfc 3.34.0" name="generator">
 <meta content="draft-ietf-ppm-dap-latest" name="ietf.draft">
 <!-- Generator version information:
-  xml2rfc 3.33.0
-    Python 3.12.13
-    ConfigArgParse 1.7
+  xml2rfc 3.34.0
+    Python 3.14.5
+    ConfigArgParse 1.7.5
     google-i18n-address 3.1.1
     intervaltree 3.2.1
     Jinja2 3.1.6
-    lxml 6.0.2
-    platformdirs 4.9.6
+    lxml 6.1.1
+    natsort 8.4.0
+    platformdirs 4.10.0
     pycountry 24.6.1
     PyYAML 6.0.3
     requests 2.33.1
-    wcwidth 0.7.0
+    wcwidth 0.8.2
 -->
 <link href="draft-ietf-ppm-dap.xml" rel="alternate" type="application/rfc+xml">
 <link href="#copyright" rel="license">
@@ -1054,11 +1055,11 @@ svg {
 <thead><tr>
 <td class="left">Internet-Draft</td>
 <td class="center">DAP</td>
-<td class="right">June 2026</td>
+<td class="right">July 2026</td>
 </tr></thead>
 <tfoot><tr>
 <td class="left">Geoghegan, et al.</td>
-<td class="center">Expires 18 December 2026</td>
+<td class="center">Expires 7 January 2027</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1071,12 +1072,12 @@ svg {
 <dd class="internet-draft">draft-ietf-ppm-dap-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2026-06-16" class="published">16 June 2026</time>
+<time datetime="2026-07-06" class="published">6 July 2026</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Standards Track</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2026-12-18">18 December 2026</time></dd>
+<dd class="expires"><time datetime="2027-01-07">7 January 2027</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -1150,7 +1151,7 @@ without revealing any individual contributor's data.<a href="#section-abstract-1
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 18 December 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 7 January 2027.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -3575,6 +3576,7 @@ enum {
   invalid_message(7),
   report_too_early(8),
   unknown_verification_key_id(9),
+  unsupported_extension(10),
   (255)
 } ReportError;
 </pre><a href="#section-4.1-11" class="pilcrow">¶</a>
@@ -4236,16 +4238,12 @@ report for this reason, it <span class="bcp14">SHOULD</span> set the correspondi
 on.<a href="#section-4.4.2.2-15" class="pilcrow">¶</a></p>
 <p id="section-4.4.2.2-16">If the report contains an unrecognized public report extension, or if the
 Leader's input share contains an unrecognized private report extension, then the
-Leader <span class="bcp14">MUST</span> discard the report and <span class="bcp14">MAY</span> abort with error <code>unsupportedExtension</code>.
-If the Leader does abort for this reason, it <span class="bcp14">SHOULD</span> indicate the unsupported
-extensions in the resulting problem document via an extension member (<span><a href="https://rfc-editor.org/rfc/rfc9457#section-3.2" class="relref">Section 3.2</a> of [<a href="#RFC9457" class="cite xref">RFC9457</a>]</span>) <code>unsupported_extensions</code> on the problem document. This member
-<span class="bcp14">MUST</span> contain an array of numbers indicating the extension code points which were
-not recognized. For example, if the report upload contained two unsupported
-extensions with code points <code>23</code> and <code>42</code>, the "unsupported_extensions" member
-would contain the JSON value <code>[23, 42]</code>.<a href="#section-4.4.2.2-16" class="pilcrow">¶</a></p>
+Leader <span class="bcp14">MUST</span> discard the report and <span class="bcp14">MAY</span> set the corresponding error field to
+<code>unsupported_extension</code>.<a href="#section-4.4.2.2-16" class="pilcrow">¶</a></p>
 <p id="section-4.4.2.2-17">If the same extension type appears more than once among the public extensions
 and the private extensions in the Leader's input share, then the Leader <span class="bcp14">MUST</span>
-discard the report and <span class="bcp14">MAY</span> abort with error <code>invalidMessage</code>.<a href="#section-4.4.2.2-17" class="pilcrow">¶</a></p>
+discard the report and <span class="bcp14">MAY</span> set the corresponding error field to
+<code>invalid_message</code>.<a href="#section-4.4.2.2-17" class="pilcrow">¶</a></p>
 <p id="section-4.4.2.2-18">Validation of anti-replay and extensions is not mandatory during the handling of
 upload requests to avoid blocking on storage transactions or decryption of input
 shares. The Leader also cannot validate the Helper's extensions because it
@@ -7024,7 +7022,7 @@ tradeoffs.<a href="#section-6.4.2-1" class="pilcrow">¶</a></p>
               <p id="section-6.4.2-2.1.1">The upload interaction requires the Leader to discard uploaded reports with a
 duplicated ID, including concurrently-uploaded reports. This might be
 implemented by synchronization or via an eventually-consistent process. If the
-Leader wishes to alert the Client with a <code>reportRejected</code> error,
+Leader wishes to alert the Client with a <code>report_replayed</code> error,
 synchronization will be necessary to ensure all but one concurrent request
 receive the error.<a href="#section-6.4.2-2.1.1" class="pilcrow">¶</a></p>
 </li>
@@ -8139,6 +8137,16 @@ called "DAP Report Error Identifiers".<a href="#section-9.2.6-1" class="pilcrow"
 </td>
                 <td class="text-left" rowspan="1" colspan="1">
                   <code>unknown_verification_key_id</code>
+</td>
+                <td class="text-left" rowspan="1" colspan="1">
+                  <a href="#basic-definitions" class="auto internal xref">Section 4.1</a> of RFC XXXX</td>
+              </tr>
+              <tr>
+                <td class="text-left" rowspan="1" colspan="1">
+                  <code>0x0A</code>
+</td>
+                <td class="text-left" rowspan="1" colspan="1">
+                  <code>unsupported_extension</code>
 </td>
                 <td class="text-left" rowspan="1" colspan="1">
                   <a href="#basic-definitions" class="auto internal xref">Section 4.1</a> of RFC XXXX</td>
