@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-06-30T03:29:39.480328+00:00",
+  "timestamp": "2026-07-07T02:53:41.504003+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -14234,15 +14234,15 @@
       "id": "I_kwDOFEJYQs8AAAABGv5B0Q",
       "title": "Error handling for bad reports mixes ReportError and problem documents",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/788",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "divergentdave",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "Section 4.4.2.2 discusses how the leader processes an incoming upload request. Since upload requests may contain multiple reports, errors related to just one report are transmitted back to the client via an `UploadErrors` response. Errors with the whole request are transmitted via a problem document response. However, certain parts of this section still discuss problem details responses and problem type URIs for some report validation steps.\n\nThe report extension validation paragraph mentions aborting with `unsupportedExtension` and providing additional information in an extension member of the problem document. I think we should be fine with not replicating the additional information in the `UploadErrors` response, it should be apparent to operators which report extensions their software supports, and thus easy to identify which extension caused the issue.\n\nThe next paragraph, covering duplicate report extensions, says to abort with `invalidMessage`, when it should just mark the report with `invalid_message`.",
       "createdAt": "2026-06-25T22:29:23Z",
-      "updatedAt": "2026-06-25T22:29:23Z",
-      "closedAt": null,
+      "updatedAt": "2026-07-06T14:36:42Z",
+      "closedAt": "2026-07-06T14:36:42Z",
       "comments": []
     }
   ],
@@ -94125,24 +94125,26 @@
       "id": "PR_kwDOFEJYQs7rB05w",
       "title": "Fix report extension validation error handling",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/789",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "divergentdave",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "This fixes #788 by adding an `unsupported_extensions variant to `ReportError` and making it clear that issues with report extensions are treated as per-report errors only.",
       "createdAt": "2026-06-26T15:10:04Z",
-      "updatedAt": "2026-06-29T22:06:52Z",
+      "updatedAt": "2026-07-06T14:36:41Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "d6451b8df1bb389371200c9e3d9777ecffc3140f",
       "headRepository": "divergentdave/ppm-specification",
       "headRefName": "david/extension-error-handling",
       "headRefOid": "0652bea0d8a7d1475b47e2618092af2106ddf309",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "closedAt": "2026-07-06T14:36:41Z",
+      "mergedAt": "2026-07-06T14:36:41Z",
+      "mergedBy": "tgeoghegan",
+      "mergeCommit": {
+        "oid": "b9a08ed49d164e5d547be07c7f8b130e3a329231"
+      },
       "comments": [
         {
           "author": "divergentdave",
@@ -94197,6 +94199,61 @@
           "body": "",
           "createdAt": "2026-06-29T22:06:52Z",
           "updatedAt": "2026-06-29T22:06:52Z",
+          "comments": []
+        }
+      ]
+    },
+    {
+      "number": 790,
+      "id": "PR_kwDOFEJYQs7uewRd",
+      "title": "chores for draft-ietf-ppm-dap-19",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/790",
+      "state": "MERGED",
+      "author": "tgeoghegan",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "- Bump domain separation tags to \"dap-19\"\r\n- Bump VDAF reference to draft-irtf-cfrg-vdaf-20",
+      "createdAt": "2026-07-06T18:04:41Z",
+      "updatedAt": "2026-07-06T18:26:46Z",
+      "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "baseRefName": "main",
+      "baseRefOid": "b9a08ed49d164e5d547be07c7f8b130e3a329231",
+      "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "headRefName": "timg-draft-19",
+      "headRefOid": "cfcbef2aaa48ceb2884ba669b678057d2379c1b1",
+      "closedAt": "2026-07-06T18:26:46Z",
+      "mergedAt": "2026-07-06T18:26:46Z",
+      "mergedBy": "tgeoghegan",
+      "mergeCommit": {
+        "oid": "e42c6ed95f2ee62b66df01feb89f0f6a580c9816"
+      },
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOFEJYQs8AAAABFHpWxA",
+          "commit": {
+            "abbreviatedOid": "cfcbef2"
+          },
+          "author": "jcjones",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2026-07-06T18:06:11Z",
+          "updatedAt": "2026-07-06T18:06:11Z",
+          "comments": []
+        },
+        {
+          "id": "PRR_kwDOFEJYQs8AAAABFHwwIA",
+          "commit": {
+            "abbreviatedOid": "cfcbef2"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2026-07-06T18:24:00Z",
+          "updatedAt": "2026-07-06T18:24:00Z",
           "comments": []
         }
       ]
