@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-07-07T02:53:41.504003+00:00",
+  "timestamp": "2026-07-28T02:22:35.666110+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -14244,6 +14244,63 @@
       "updatedAt": "2026-07-06T14:36:42Z",
       "closedAt": "2026-07-06T14:36:42Z",
       "comments": []
+    },
+    {
+      "number": 791,
+      "id": "I_kwDOFEJYQs8AAAABKWYxxQ",
+      "title": "Batch selector, query, aggregate share ambiguities",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/791",
+      "state": "OPEN",
+      "author": "tgeoghegan",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [
+        "tgeoghegan"
+      ],
+      "labels": [],
+      "body": "While implementing AAD binding in Janus (https://github.com/divviup/janus/pull/4714), we ran into some ambiguities in the specification that should be cleared up.\n\n## Aggregate share and collection job IDs\n\nIn the latest DAP versions, we have asserted that HTTP servers always choose resource identifiers. But [this paragraph](https://datatracker.ietf.org/doc/html/draft-ietf-ppm-dap-19#section-4.6.4-6) in 4.6.4 is ambiguous at best if not contradictory:\n\n> A Helper aggregate share is identified by a server-selected identifier, unique within the scope of the task, assigned during resource creation ([Section 3.2](https://datatracker.ietf.org/doc/html/draft-ietf-ppm-dap-19#resource-creation)). Since this resource corresponds to exactly one collection job, the Leader might use the collection job ID as the aggregate share ID.\n\nSentence 1 correctly asserts that the Helper chooses the aggregate share ID, but sentence 2 implies that the Leader might chooses it to match the collection job ID, which isn't right. The simple fix is to replace \"Leader\" with \"Helper\" in sentence 2, and since this is just a \"might\", not even a \"MAY\", I think we can avoid laboriously spelling out all other possible scenarios.\n\n## Consistency of time interval collection job query and batch selector\n\nA _query_ is constructed by the Collector and send to the Leader, which then constructs a corresponding _batch selector_ that satisfies the query, which will be relayed to the Helper. The batch selector must be _consistent_ with the query according to per-batch-mode semantics.\n\nIn the time interval batch mode, both the query and the batch selector are `Interval`s. [5.1.2](https://datatracker.ietf.org/doc/html/draft-ietf-ppm-dap-19#section-5.1.2) makes it clear that they must be the same:\n\n> The payload of BatchSelector.config is\n>\n> struct {\n>   Interval batch_interval;\n> } TimeIntervalBatchSelectorConfig;\n>\n> where batch_interval is the batch interval requested by the Collector.\n\nBut the very following paragraph disagrees:\n\n> A TimeIntervalBatchSelectorConfig.config is consistent with Query.config for this batch mode if the batch selector's interval is within the queried time interval.\n\nI think the second paragraph is correct: it's alright for the interval in the batch selector constructed by the Leader to be smaller than the interval in the Collector's query. For example, the Collector might request an aggregation over every report that arrived on a given day, but if the Leader happens to know that nothing arrived outside of a particular hour, then it's reasonable for it to send a narrower batch selector to the Helper so it can search its data store more efficiently. This isn't a problem for AADs, because the Collector's original query gets transmitted to the Helper along with the batch selector.\n\nWe should clean up this text so that it doesn't require `TimeIntervalBatchSelectorConfig.batch_interval == Query.batch_interval`.\n\n## Re-iteration of `Interval` semantics\n\nFinally, the following two paragraphs spell out in excruciating detail how to decide if one `Interval` is within another. That belongs in [4.1.1](https://datatracker.ietf.org/doc/html/draft-ietf-ppm-dap-19#section-4.1.1).",
+      "createdAt": "2026-07-27T15:25:34Z",
+      "updatedAt": "2026-07-27T15:51:07Z",
+      "closedAt": null,
+      "comments": [
+        {
+          "author": "divergentdave",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> The simple fix is to replace \"Leader\" with \"Helper\" in sentence 2, and since this is just a \"might\", not even a \"MAY\", I think we can avoid laboriously spelling out all other possible scenarios.\n\nThe Leader only sends the body of the collection job request to the Helper, not its identifier, so the Helper cannot reuse the collection job ID as the aggregate share ID. Thus, we should just delete this second sentence.\n\nRelatedly, it seems like we no longer explicitly define the structure of aggregation job IDs, collection job IDs, and aggregate share IDs. In previous versions, these had TLS presentation language definitions defining them as 16-byte opaque byte strings. Now, the closest we get is an example in section 3 mentioning that its aggregation job ID is 16 bytes long, before base64url encoding. We should add these type definitions back in their respective sections, then the existing section references in section 3 can point to them.",
+          "createdAt": "2026-07-27T15:39:42Z",
+          "updatedAt": "2026-07-27T15:39:42Z"
+        },
+        {
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> The Leader only sends the body of the collection job request to the Helper, not its identifier, so the Helper cannot reuse the collection job ID as the aggregate share ID. Thus, we should just delete this second sentence.\n\nI agree, good point.\n\n> Relatedly, it seems like we no longer explicitly define the structure of aggregation job IDs, collection job IDs, and aggregate share IDs. In previous versions, these had TLS presentation language definitions defining them as 16-byte opaque byte strings. Now, the closest we get is an example in section 3 mentioning that its aggregation job ID is 16 bytes long, before base64url encoding. We should add these type definitions back in their respective sections, then the existing section references in section 3 can point to them.\n\nI think we deleted those deliberately, because so long as the aggregation job, collection job and aggregate share IDs are unique within the scope of the task (a requirement which we do spell out) and are valid HTTP path components, we don't care how long they are or what, if any, structure they might have. In fact, I think it's better to allow flexibility here, so that for instance an implementation could pack some routing or debugging information into the front of an aggregation job ID. But I agree that the text in section 3 reads awkwardly now. I filed #792 for that.",
+          "createdAt": "2026-07-27T15:51:07Z",
+          "updatedAt": "2026-07-27T15:51:07Z"
+        }
+      ]
+    },
+    {
+      "number": 792,
+      "id": "I_kwDOFEJYQs8AAAABKWnt2g",
+      "title": "Revisit section 3 to account for relaxed requirements on aggregation job, aggregate share, collection job IDs",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/792",
+      "state": "OPEN",
+      "author": "tgeoghegan",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Section 3 discusses DAP's usage of HTTP, and 3.2 specifically discusses resource creation. Recently, we revisited how that works, making the HTTP server in each sub-interaction responsible for choosing resource IDs. We also relaxed requirements on the structure of those IDs. Previously, they were all required to be 16 byte values, unique within the task, and section 3 discussed how to render such values into URI templates.\n\nNow that those IDs are less structured, we should revisit the text in section 3 accordingly. If the IDs are already understood to be byte sequences that themselves are valid HTTP path components (we'd have to find some RFC reference that defines what a valid path component is), then DAP doesn't need to define rules for expanding them.",
+      "createdAt": "2026-07-27T15:50:55Z",
+      "updatedAt": "2026-07-27T15:55:36Z",
+      "closedAt": null,
+      "comments": [
+        {
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Additionally, we should double check/double think about whether DAP needs to mandate that task IDs be 32 byte strings anymore. The requirements are stronger for task IDs (they must be globally unique, not just in task scope) but otherwise we should harmonize their definition with the job IDs as much as we can.",
+          "createdAt": "2026-07-27T15:55:36Z",
+          "updatedAt": "2026-07-27T15:55:36Z"
+        }
+      ]
     }
   ],
   "pulls": [
