@@ -1411,6 +1411,11 @@ is said to be after the interval. A time that is either before or after an
 interval is said to be outside the interval. A time that is neither before nor
 after an interval is said to be inside or fall within the interval.
 
+An interval `a` is said to be inside or fall within another interval `b` if:
+
+* `a.start` is not before `b` and
+* the the end of `a` (`a.start + a.duration`) is not after `b`.
+
 Intervals can only be meaningfully compared to one another if they use the same
 time precision.
 
@@ -3984,17 +3989,8 @@ where `batch_interval` is an interval containing all of the reports in the
 batch.
 
 A `TimeIntervalBatchSelectorConfig` is consistent with `TimeIntervalQueryConfig`
-for this batch mode if the batch selector's interval is inside of the queried
-time interval.
-
-That is, the values are consistent if:
-
-* The start time from the batch selector
-  (`TimeIntervalBatchSelectorConfig.batch_interval.start`) is not before the
-  query (`TimeIntervalQueryConfig.batch_interval`), and
-* The end time from the batch selector
-  (`TimeIntervalBatchSelectorConfig.batch_interval.{start+duration}`)
-  is not after the query (`TimeIntervalQueryConfig.batch_interval`).
+for this batch mode if the batch selector's interval is within the query's time
+interval.
 
 ### Batch Buckets {#time-interval-batch-buckets}
 
