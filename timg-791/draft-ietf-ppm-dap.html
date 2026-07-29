@@ -21,21 +21,22 @@ This document describes a multi-party Distributed Aggregation Protocol (DAP) for
 privacy preserving measurement which can be used to collect aggregate data
 without revealing any individual contributor's data. 
     " name="description">
-<meta content="xml2rfc 3.33.0" name="generator">
+<meta content="xml2rfc 3.34.0" name="generator">
 <meta content="draft-ietf-ppm-dap-latest" name="ietf.draft">
 <!-- Generator version information:
-  xml2rfc 3.33.0
-    Python 3.12.13
-    ConfigArgParse 1.7
+  xml2rfc 3.34.0
+    Python 3.14.5
+    ConfigArgParse 1.7.5
     google-i18n-address 3.1.1
     intervaltree 3.2.1
     Jinja2 3.1.6
-    lxml 6.0.2
-    platformdirs 4.9.6
+    lxml 6.1.1
+    natsort 8.4.0
+    platformdirs 4.10.1
     pycountry 24.6.1
     PyYAML 6.0.3
     requests 2.33.1
-    wcwidth 0.7.0
+    wcwidth 0.8.2
 -->
 <link href="draft-ietf-ppm-dap.xml" rel="alternate" type="application/rfc+xml">
 <link href="#copyright" rel="license">
@@ -71,7 +72,6 @@ without revealing any individual contributor's data.
   src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-latin-ext.woff2') format('woff2');
   unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
-
 @font-face {
   font-family: 'Lora';
   font-style: italic;
@@ -120,7 +120,6 @@ without revealing any individual contributor's data.
   src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-latin.woff2') format('woff2');
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
-
 @font-face {
   font-family: 'Lora';
   font-style: normal;
@@ -185,7 +184,6 @@ without revealing any individual contributor's data.
   font-display: swap;
   src: local('Oxygen Mono'), local('OxygenMono-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/oxygenmono-regular-latin.woff2') format('woff2');
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
 }
 
 @font-face {
@@ -1054,11 +1052,11 @@ svg {
 <thead><tr>
 <td class="left">Internet-Draft</td>
 <td class="center">DAP</td>
-<td class="right">June 2026</td>
+<td class="right">July 2026</td>
 </tr></thead>
 <tfoot><tr>
 <td class="left">Geoghegan, et al.</td>
-<td class="center">Expires 18 December 2026</td>
+<td class="center">Expires 30 January 2027</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1071,12 +1069,12 @@ svg {
 <dd class="internet-draft">draft-ietf-ppm-dap-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2026-06-16" class="published">16 June 2026</time>
+<time datetime="2026-07-29" class="published">29 July 2026</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Standards Track</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2026-12-18">18 December 2026</time></dd>
+<dd class="expires"><time datetime="2027-01-30">30 January 2027</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -1150,7 +1148,7 @@ without revealing any individual contributor's data.<a href="#section-abstract-1
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 18 December 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 30 January 2027.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1605,6 +1603,12 @@ aggregator.<a href="#section-1-1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-1.1-3.2">
             <p id="section-1.1-3.2.1">Define explicit <code>unknown_verification_key_id</code> error. (*) (#784)<a href="#section-1.1-3.2.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-1.1-3.3">
+            <p id="section-1.1-3.3.1">Bump version tag from "dap-18" to "dap-19". (*)<a href="#section-1.1-3.3.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-1.1-3.4">
+            <p id="section-1.1-3.4.1">Bump draft-irtf-cfrg-vdaf to -20 (<span>[<a href="#VDAF" class="cite xref">VDAF</a>]</span>).<a href="#section-1.1-3.4.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 <p id="section-1.1-4">18:<a href="#section-1.1-4" class="pilcrow">¶</a></p>
@@ -2309,7 +2313,7 @@ the aggregate result.<a href="#section-2-5.2.1" class="pilcrow">¶</a></p>
       </ul>
 <p id="section-2-6">DAP is not compatible with all VDAFs. DAP only supports VDAFs whose aggregation
 results are independent of the order in which measurements are aggregated (see
-<span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-19#section-4.4.1" class="relref">Section 4.4.1</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>). Some VDAFs may involve three or more Aggregators,
+<span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-20#section-4.4.1" class="relref">Section 4.4.1</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>). Some VDAFs may involve three or more Aggregators,
 but DAP requires exactly two Aggregators. Some VDAFs allow measurements to be
 aggregated multiple times with a different aggregation parameter. DAP may be
 compatible with such VDAFs, but only allows each measurement to be aggregated
@@ -2450,10 +2454,10 @@ share uploaded by the Client. At the end of the computation, each Aggregator
 either obtains an output share that is ready to be aggregated or rejects the
 report as invalid.<a href="#section-2.2-2" class="pilcrow">¶</a></p>
 <p id="section-2.2-3">This process is known as "verification" and is specified by the VDAF itself
-(<span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-19#section-5.2" class="relref">Section 5.2</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>). The report generated by the Client includes
+(<span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-20#section-5.2" class="relref">Section 5.2</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>). The report generated by the Client includes
 information used by the Aggregators to verify the report. For example, Prio3
-(<span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-19#section-7" class="relref">Section 7</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>) includes a zero-knowledge proof of the measurement's
-validity (<span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-19#section-7.1" class="relref">Section 7.1</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>). Verifying this proof reveals nothing about
+(<span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-20#section-7" class="relref">Section 7</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>) includes a zero-knowledge proof of the measurement's
+validity (<span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-20#section-7.1" class="relref">Section 7.1</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>). Verifying this proof reveals nothing about
 the underlying measurement but its validity.<a href="#section-2.2-3" class="pilcrow">¶</a></p>
 <p id="section-2.2-4">The specific properties attested to by the proof depend on the measurement being
 taken. For instance, if the task is measuring the latency of some operation, the
@@ -3575,6 +3579,7 @@ enum {
   invalid_message(7),
   report_too_early(8),
   unknown_verification_key_id(9),
+  unsupported_extension(10),
   (255)
 } ReportError;
 </pre><a href="#section-4.1-11" class="pilcrow">¶</a>
@@ -3634,8 +3639,17 @@ interval. A time that is equal to or after <code>Interval.start + Interval.durat
 is said to be after the interval. A time that is either before or after an
 interval is said to be outside the interval. A time that is neither before nor
 after an interval is said to be inside or fall within the interval.<a href="#section-4.1.1-9" class="pilcrow">¶</a></p>
-<p id="section-4.1.1-10">Intervals can only be meaningfully compared to one another if they use the same
-time precision.<a href="#section-4.1.1-10" class="pilcrow">¶</a></p>
+<p id="section-4.1.1-10">An interval <code>a</code> is said to be inside or fall within another interval <code>b</code> if:<a href="#section-4.1.1-10" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-4.1.1-11.1">
+              <p id="section-4.1.1-11.1.1"><code>a.start</code> is not before <code>b</code> and<a href="#section-4.1.1-11.1.1" class="pilcrow">¶</a></p>
+</li>
+            <li class="normal" id="section-4.1.1-11.2">
+              <p id="section-4.1.1-11.2.1">the the end of <code>a</code> (<code>a.start + a.duration</code>) is not after <code>b</code>.<a href="#section-4.1.1-11.2.1" class="pilcrow">¶</a></p>
+</li>
+          </ul>
+<p id="section-4.1.1-12">Intervals can only be meaningfully compared to one another if they use the same
+time precision.<a href="#section-4.1.1-12" class="pilcrow">¶</a></p>
 <div id="examples">
 <section id="section-4.1.1.1">
             <h5 id="name-examples">
@@ -3657,7 +3671,7 @@ the interval from time from POSIX timestamp <code>1234567890</code> to <code>123
 <a href="#section-4.1.2" class="section-number selfRef">4.1.2. </a><a href="#name-vdaf-types" class="section-name selfRef">VDAF Types</a>
           </h4>
 <p id="section-4.1.2-1">The 16-byte <code>ReportID</code> is used as the nonce parameter for the VDAF <code>shard</code> and
-<code>verify_init</code> methods (see <span>[<a href="#VDAF" class="cite xref">VDAF</a>], <a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-19#section-5" class="relref">Section 5</a></span>). Additionally, DAP includes
+<code>verify_init</code> methods (see <span>[<a href="#VDAF" class="cite xref">VDAF</a>], <a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-20#section-5" class="relref">Section 5</a></span>). Additionally, DAP includes
 messages defined in the VDAF specification encoded as opaque byte strings within
 various DAP messages. Thus, for a VDAF to be compatible with DAP, it <span class="bcp14">MUST</span>
 specify a <code>NONCE_SIZE</code> of 16 bytes, and <span class="bcp14">MUST</span> specify encodings for the following
@@ -3717,7 +3731,7 @@ by a <code>TaskConfiguration</code> structure:<a href="#section-4.2-5" class="pi
 uint32 VdafType;
 
 struct {
-    opaque task_info&lt;1..2^8-1&gt;;
+    opaque task_info&lt;0..2^8-1&gt;;
     Url leader_aggregator_endpoint;
     Url helper_aggregator_endpoint;
     TimePrecision time_precision;
@@ -3763,7 +3777,7 @@ payload; see <a href="#batch-modes" class="auto internal xref">Section 5</a> for
 </li>
           <li class="normal" id="section-4.2-7.8">
             <p id="section-4.2-7.8.1"><code>vdaf_type</code> indicates which VDAF the task is using and corresponds to a
-codepoint in the VDAF Identifiers registry (<span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-19#section-10" class="relref">Section 10</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>).<a href="#section-4.2-7.8.1" class="pilcrow">¶</a></p>
+codepoint in the VDAF Identifiers registry (<span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-20#section-10" class="relref">Section 10</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>).<a href="#section-4.2-7.8.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-4.2-7.9">
             <p id="section-4.2-7.9.1"><code>vdaf_configuration</code> is the encoding of the VDAF's configuration. Encodings
@@ -3890,7 +3904,7 @@ VDAF. If decoding fails, then the aggregation parameter is invalid.<a href="#sec
 </li>
           <li id="section-4.3-2.2">
             <p id="section-4.3-2.2.1">Run <code>vdaf.is_valid(decoded_agg_param, [])</code>, where <code>decoded_agg_param</code> is the
-decoded <code>AggParam</code> and <code>is_valid()</code> is as defined in <span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-19#section-5.3" class="relref">Section 5.3</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>. If the output is not <code>True</code>, then the aggregation parameter is
+decoded <code>AggParam</code> and <code>is_valid()</code> is as defined in <span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-20#section-5.3" class="relref">Section 5.3</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>. If the output is not <code>True</code>, then the aggregation parameter is
 invalid.<a href="#section-4.3-2.2.1" class="pilcrow">¶</a></p>
 </li>
         </ol>
@@ -4068,11 +4082,11 @@ meets the requirements in <a href="#request-authentication" class="auto internal
 <a href="#section-4.4.2.1" class="section-number selfRef">4.4.2.1. </a><a href="#name-client-behavior" class="section-name selfRef">Client Behavior</a>
             </h5>
 <p id="section-4.4.2.1-1">To generate a report, the Client begins by sharding its measurement into input
-shares and the public share using the VDAF's sharding algorithm (<span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-19#section-5.1" class="relref">Section 5.1</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>), using the report ID as the nonce:<a href="#section-4.4.2.1-1" class="pilcrow">¶</a></p>
+shares and the public share using the VDAF's sharding algorithm (<span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-20#section-5.1" class="relref">Section 5.1</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>), using the report ID as the nonce:<a href="#section-4.4.2.1-1" class="pilcrow">¶</a></p>
 <div class="lang-pseudocode sourcecode" id="section-4.4.2.1-2">
 <pre>
 (public_share, input_shares) = Vdaf.shard(
-    "dap-18" || task_id,
+    "dap-19" || task_id,
     measurement,
     report_id,
     rand,
@@ -4120,11 +4134,11 @@ struct {
 <p id="section-4.4.2.1-8">Next, the Client encrypts each <code>PlaintextInputShare</code> as follows:<a href="#section-4.4.2.1-8" class="pilcrow">¶</a></p>
 <p id="section-4.4.2.1-9">(RFC EDITOR: Once the document becomes an RFC, we will stop including the draft
 version in domain separation tags. In the remainder of this section, replace
-"dap-18" with "dap".)<a href="#section-4.4.2.1-9" class="pilcrow">¶</a></p>
+"dap-19" with "dap".)<a href="#section-4.4.2.1-9" class="pilcrow">¶</a></p>
 <div class="lang-pseudocode sourcecode" id="section-4.4.2.1-10">
 <pre>
 enc, payload = SealBase(pk,
-  "dap-18 input share" || 0x01 || server_role,
+  "dap-19 input share" || 0x01 || server_role,
   input_share_aad, plaintext_input_share)
 </pre><a href="#section-4.4.2.1-10" class="pilcrow">¶</a>
 </div>
@@ -4236,16 +4250,12 @@ report for this reason, it <span class="bcp14">SHOULD</span> set the correspondi
 on.<a href="#section-4.4.2.2-15" class="pilcrow">¶</a></p>
 <p id="section-4.4.2.2-16">If the report contains an unrecognized public report extension, or if the
 Leader's input share contains an unrecognized private report extension, then the
-Leader <span class="bcp14">MUST</span> discard the report and <span class="bcp14">MAY</span> abort with error <code>unsupportedExtension</code>.
-If the Leader does abort for this reason, it <span class="bcp14">SHOULD</span> indicate the unsupported
-extensions in the resulting problem document via an extension member (<span><a href="https://rfc-editor.org/rfc/rfc9457#section-3.2" class="relref">Section 3.2</a> of [<a href="#RFC9457" class="cite xref">RFC9457</a>]</span>) <code>unsupported_extensions</code> on the problem document. This member
-<span class="bcp14">MUST</span> contain an array of numbers indicating the extension code points which were
-not recognized. For example, if the report upload contained two unsupported
-extensions with code points <code>23</code> and <code>42</code>, the "unsupported_extensions" member
-would contain the JSON value <code>[23, 42]</code>.<a href="#section-4.4.2.2-16" class="pilcrow">¶</a></p>
+Leader <span class="bcp14">MUST</span> discard the report and <span class="bcp14">MAY</span> set the corresponding error field to
+<code>unsupported_extension</code>.<a href="#section-4.4.2.2-16" class="pilcrow">¶</a></p>
 <p id="section-4.4.2.2-17">If the same extension type appears more than once among the public extensions
 and the private extensions in the Leader's input share, then the Leader <span class="bcp14">MUST</span>
-discard the report and <span class="bcp14">MAY</span> abort with error <code>invalidMessage</code>.<a href="#section-4.4.2.2-17" class="pilcrow">¶</a></p>
+discard the report and <span class="bcp14">MAY</span> set the corresponding error field to
+<code>invalid_message</code>.<a href="#section-4.4.2.2-17" class="pilcrow">¶</a></p>
 <p id="section-4.4.2.2-18">Validation of anti-replay and extensions is not mandatory during the handling of
 upload requests to avoid blocking on storage transactions or decryption of input
 shares. The Leader also cannot validate the Helper's extensions because it
@@ -4404,7 +4414,7 @@ the system to handle large batches of reports, this process is parallelized
 across many "aggregation jobs" in which subsets of the reports are processed
 independently. Each aggregation job is associated with a single task, but a task
 can have many aggregation jobs.<a href="#section-4.5-1" class="pilcrow">¶</a></p>
-<p id="section-4.5-2">An aggregation job runs the VDAF verification process described in <span>[<a href="#VDAF" class="cite xref">VDAF</a>], <a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-19#section-5.2" class="relref">Section 5.2</a></span> for each report in the job. Verification has two purposes:<a href="#section-4.5-2" class="pilcrow">¶</a></p>
+<p id="section-4.5-2">An aggregation job runs the VDAF verification process described in <span>[<a href="#VDAF" class="cite xref">VDAF</a>], <a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-20#section-5.2" class="relref">Section 5.2</a></span> for each report in the job. Verification has two purposes:<a href="#section-4.5-2" class="pilcrow">¶</a></p>
 <ol start="1" type="1" class="normal type-1" id="section-4.5-3">
 <li id="section-4.5-3.1">
             <p id="section-4.5-3.1.1">To "refine" the input shares into "output shares" that have the desired
@@ -4416,9 +4426,9 @@ Collector.<a href="#section-4.5-3.1.1" class="pilcrow">¶</a></p>
           <li id="section-4.5-3.2">
             <p id="section-4.5-3.2.1">To verify that each pair of output shares, when combined, corresponds to a
 valid, refined measurement, where validity is determined by the VDAF itself.
-For example, the Prio3Sum variant of Prio3 (<span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-19#section-7.4.2" class="relref">Section 7.4.2</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>)
+For example, the Prio3Sum variant of Prio3 (<span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-20#section-7.4.2" class="relref">Section 7.4.2</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>)
 proves that the output shares sum up to an integer in a specific range, while
-the Prio3Histogram variant (<span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-19#section-7.4.4" class="relref">Section 7.4.4</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>) proves that output
+the Prio3Histogram variant (<span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-20#section-7.4.4" class="relref">Section 7.4.4</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>) proves that output
 shares sum up to a one-hot vector representing a contribution to a single
 bucket of the histogram.<a href="#section-4.5-3.2.1" class="pilcrow">¶</a></p>
 </li>
@@ -4510,7 +4520,7 @@ subsections.<a href="#section-4.5-8" class="pilcrow">¶</a></p>
 triggered by receiving a message from the Aggregator's peer. Eventually this
 process results in a terminal state, either rejecting the report or recovering
 an output share. Once a report has reached a terminal state, no more messages
-will be processed for it. There are four possible states (see <span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-19#section-5.7" class="relref">Section 5.7</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>: <code>Continued</code>, <code>FinishedWithOutbound</code>, <code>Finished</code> and <code>Rejected</code>. The
+will be processed for it. There are four possible states (see <span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-20#section-5.7" class="relref">Section 5.7</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>: <code>Continued</code>, <code>FinishedWithOutbound</code>, <code>Finished</code> and <code>Rejected</code>. The
 first two states include an outbound message to be processed by the peer.<a href="#section-4.5-9" class="pilcrow">¶</a></p>
 <p id="section-4.5-10">The Helper can either process each step synchronously, meaning it computes each
 verification step before producing a response to the Leader's HTTP request, or
@@ -4593,7 +4603,7 @@ aggregation, but future batch modes might preclude it.<a href="#section-4.5.2-2"
 <p id="section-4.5.2-3">Even when the VDAF uses a non-empty aggregation parameter, there still might be
 some applications in which the Aggregators can anticipate the parameter the
 Collector will choose and begin aggregation.<a href="#section-4.5.2-3" class="pilcrow">¶</a></p>
-<p id="section-4.5.2-4">For example, when using Poplar1 (<span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-19#section-8" class="relref">Section 8</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>), the Collector and
+<p id="section-4.5.2-4">For example, when using Poplar1 (<span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-20#section-8" class="relref">Section 8</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>), the Collector and
 Aggregators might agree ahead of time on the set of candidate prefixes to use.
 In such cases, it is important that Aggregators ensure that the parameter
 eventually chosen by the Collector matches what they used. Depending on the
@@ -4613,7 +4623,7 @@ parameter chosen by the Collector.<a href="#section-4.5.2-4" class="pilcrow">¶<
               <p id="section-4.5.3-2.1.1">Determine which report shares are valid.<a href="#section-4.5.3-2.1.1" class="pilcrow">¶</a></p>
 </li>
             <li id="section-4.5.3-2.2">
-              <p id="section-4.5.3-2.2.1">For each valid report share, initialize VDAF verification (see <span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-19#section-5.2" class="relref">Section 5.2</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>).<a href="#section-4.5.3-2.2.1" class="pilcrow">¶</a></p>
+              <p id="section-4.5.3-2.2.1">For each valid report share, initialize VDAF verification (see <span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-20#section-5.2" class="relref">Section 5.2</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>).<a href="#section-4.5.3-2.2.1" class="pilcrow">¶</a></p>
 </li>
           </ol>
 <p id="section-4.5.3-3">The Leader and Helper initialization behavior is detailed below.<a href="#section-4.5.3-3" class="pilcrow">¶</a></p>
@@ -4670,7 +4680,7 @@ and removes it from the candidate set.<a href="#section-4.5.3.1-4" class="pilcro
 <pre>
 state = Vdaf.ping_pong_leader_init(
     vdaf_verify_key,
-    "dap-18" || task_id,
+    "dap-19" || task_id,
     agg_param,
     report_id,
     public_share,
@@ -4701,9 +4711,9 @@ state = Vdaf.ping_pong_leader_init(
                 <p id="section-4.5.3.1-8.6.1"><code>plaintext_input_share</code> is the Leader's <code>PlaintextInputShare</code><a href="#section-4.5.3.1-8.6.1" class="pilcrow">¶</a></p>
 </li>
             </ul>
-<p id="section-4.5.3.1-9"><code>ping_pong_leader_init</code> is defined in <span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-19#section-5.7.1" class="relref">Section 5.7.1</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>. This process
+<p id="section-4.5.3.1-9"><code>ping_pong_leader_init</code> is defined in <span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-20#section-5.7.1" class="relref">Section 5.7.1</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>. This process
 determines the initial per-report <code>state</code>. If <code>state</code> is of type <code>Rejected</code>
-(<span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-19#section-5.7" class="relref">Section 5.7</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>, then the report is rejected and removed from the
+(<span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-20#section-5.7" class="relref">Section 5.7</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>, then the report is rejected and removed from the
 candidate set, and no message is sent to the Helper for this report.<a href="#section-4.5.3.1-9" class="pilcrow">¶</a></p>
 <p id="section-4.5.3.1-10">Otherwise, if <code>state</code> is of type <code>Continued</code> (no other state is reachable at
 this point), then the state includes an outbound message denoted
@@ -4756,7 +4766,7 @@ struct {
 <li class="normal" id="section-4.5.3.1-17.1">
                 <p id="section-4.5.3.1-17.1.1"><code>verification_key_id</code>: An identifier for the shared VDAF verification key
 that Aggregators use to verify report integrity;
-see <span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-19#section-5.2" class="relref">Section 5.2</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span> and <a href="#verification-key" class="auto internal xref">Section 8.6.2</a>.
+see <span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-20#section-5.2" class="relref">Section 5.2</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span> and <a href="#verification-key" class="auto internal xref">Section 8.6.2</a>.
 This allows a Leader to nominate a verification key
 from a set of prearranged keys.
 The Helper <span class="bcp14">MUST</span> use the verification key identified by this field when
@@ -4808,7 +4818,7 @@ computes<a href="#section-4.5.3.1-23.1.1" class="pilcrow">¶</a></p>
 <div class="lang-pseudocode sourcecode" id="section-4.5.3.1-23.1.2">
 <pre>
 state = Vdaf.ping_pong_leader_continued(
-    "dap-18" || task_id,
+    "dap-19" || task_id,
     agg_param,
     state,
     inbound,
@@ -4904,7 +4914,7 @@ aggregation job but not others.<a href="#section-4.5.3.1-24" class="pilcrow">¶<
 </div>
 <p id="section-4.5.3.2-2">The Helper begins an aggregation job when it receives an <code>AggregationJobInitReq</code>
 message from the Leader. For each <code>VerifyInit</code> in this message, the Helper
-attempts to initialize VDAF verification (see <span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-19#section-5.1" class="relref">Section 5.1</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>) just as
+attempts to initialize VDAF verification (see <span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-20#section-5.1" class="relref">Section 5.1</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>) just as
 the Leader does. If successful, it includes the result in its response for the
 Leader to use to continue verifying the report.<a href="#section-4.5.3.2-2" class="pilcrow">¶</a></p>
 <p id="section-4.5.3.2-3">The initialization request can be handled either asynchronously or synchronously
@@ -4992,7 +5002,7 @@ to the indicated error.<a href="#section-4.5.3.2-9" class="pilcrow">¶</a></p>
 <pre>
 state = Vdaf.ping_pong_helper_init(
     vdaf_verify_key,
-    "dap-18" || task_id,
+    "dap-19" || task_id,
     agg_param,
     report_id,
     public_share,
@@ -5086,7 +5096,7 @@ the following procedure:<a href="#section-4.5.3.3-1" class="pilcrow">¶</a></p>
 <div class="lang-pseudocode sourcecode" id="section-4.5.3.3-2">
 <pre>
 plaintext_input_share = OpenBase(encrypted_input_share.enc, sk,
-  "dap-18 input share" || 0x01 || server_role,
+  "dap-19 input share" || 0x01 || server_role,
   input_share_aad, encrypted_input_share.payload)
 </pre><a href="#section-4.5.3.3-2" class="pilcrow">¶</a>
 </div>
@@ -5355,7 +5365,7 @@ type "continue", then the Leader computes<a href="#section-4.5.4.1-12.1.1" class
 <div class="lang-pseudocode sourcecode" id="section-4.5.4.1-12.1.2">
 <pre>
 state = Vdaf.ping_pong_leader_continued(
-    "dap-18" || task_id,
+    "dap-19" || task_id,
     agg_param,
     state,
     inbound,
@@ -5507,7 +5517,7 @@ value, the Helper <span class="bcp14">MUST</span> fail the job with error <code>
 <div class="lang-pseudocode sourcecode" id="section-4.5.4.2-11">
 <pre>
 state = Vdaf.ping_pong_helper_continued(
-    "dap-18" || task_id,
+    "dap-19" || task_id,
     agg_param,
     state,
     inbound,
@@ -5603,7 +5613,7 @@ associated with the aggregation job and output share.<a href="#section-4.5.4.3-1
                     <p id="section-4.5.4.3-10.1.2.1.1">If there is no existing batch bucket, initialize a new one. The initial
 aggregate share value is computed as <code>Vdaf.agg_init(agg_param)</code>, where
 <code>agg_param</code> is the aggregation parameter associated with the aggregation job
-(see <span>[<a href="#VDAF" class="cite xref">VDAF</a>], <a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-19#section-4.4" class="relref">Section 4.4</a></span>). The initial count is <code>0</code> and the initial
+(see <span>[<a href="#VDAF" class="cite xref">VDAF</a>], <a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-20#section-4.4" class="relref">Section 4.4</a></span>). The initial count is <code>0</code> and the initial
 checksum is 32 zero bytes.<a href="#section-4.5.4.3-10.1.2.1.1" class="pilcrow">¶</a></p>
 </li>
                 </ul>
@@ -5627,7 +5637,7 @@ associated with the output share.<a href="#section-4.5.4.3-10.4.1" class="pilcro
 <p id="section-4.5.4.3-11">This section describes a single set of values associated with each batch bucket.
 However, implementations are free to shard batch buckets, combining them back
 into a single set of values when reading the batch bucket. The aggregate shares
-are combined using <code>Vdaf.merge(agg_param, agg_shares)</code> (see <span>[<a href="#VDAF" class="cite xref">VDAF</a>], <a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-19#section-4.4" class="relref">Section 4.4</a></span>), the count values are combined by summing, and the checksum values are
+are combined using <code>Vdaf.merge(agg_param, agg_shares)</code> (see <span>[<a href="#VDAF" class="cite xref">VDAF</a>], <a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-20#section-4.4" class="relref">Section 4.4</a></span>), the count values are combined by summing, and the checksum values are
 combined by bitwise XOR.<a href="#section-4.5.4.3-11" class="pilcrow">¶</a></p>
 <p id="section-4.5.4.3-12">Implementation note: The Leader considers a batch to be collected once it has
 completed a collection job for a CollectionJobReq message from the Collector;
@@ -6173,7 +6183,7 @@ job.<a href="#section-4.6.4-3.2.1" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-4.6.4-5.1">
               <p id="section-4.6.4-5.1.1">Aggregate shares are combined via <code>Vdaf.merge(agg_param, agg_shares)</code> (see
-<span>[<a href="#VDAF" class="cite xref">VDAF</a>], <a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-19#section-4.4" class="relref">Section 4.4</a></span>), where <code>agg_param</code> is the aggregation parameter
+<span>[<a href="#VDAF" class="cite xref">VDAF</a>], <a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-20#section-4.4" class="relref">Section 4.4</a></span>), where <code>agg_param</code> is the aggregation parameter
 provided in the <code>CollectionJobReq</code>, and <code>agg_shares</code> are the (partial)
 aggregate shares in the batch buckets. The result is the Leader aggregate
 share for this collection job.<a href="#section-4.6.4-5.1.1" class="pilcrow">¶</a></p>
@@ -6186,9 +6196,7 @@ share for this collection job.<a href="#section-4.6.4-5.1.1" class="pilcrow">¶<
 </li>
           </ul>
 <p id="section-4.6.4-6">A Helper aggregate share is identified by a server-selected identifier, unique within
-the scope of the task, assigned during resource creation (<a href="#resource-creation" class="auto internal xref">Section 3.2</a>).
-Since this resource corresponds to exactly one collection job, the Leader might use
-the collection job ID as the aggregate share ID.<a href="#section-4.6.4-6" class="pilcrow">¶</a></p>
+the scope of the task, assigned during resource creation (<a href="#resource-creation" class="auto internal xref">Section 3.2</a>).<a href="#section-4.6.4-6" class="pilcrow">¶</a></p>
 <p id="section-4.6.4-7">The Helper's aggregate share is an HTTP resource served by the Helper at the URL
 <code>{helper}/tasks/{task-id}/aggregate_shares/{aggregate-share-id}</code>. To obtain an
 aggregate share, the Leader sends a POST request to
@@ -6480,7 +6488,7 @@ done as follows:<a href="#section-4.6.7-1" class="pilcrow">¶</a></p>
 <pre>
 (enc, payload) = SealBase(
     pk,
-    "dap-18 aggregate share" || server_role || 0x00,
+    "dap-19 aggregate share" || server_role || 0x00,
     agg_share_aad,
     agg_share)
 </pre><a href="#section-4.6.7-2" class="pilcrow">¶</a>
@@ -6533,7 +6541,7 @@ batch selector, decryption works as follows:<a href="#section-4.6.7-7" class="pi
 agg_share = OpenBase(
     enc_share.enc,
     sk,
-    "dap-18 aggregate share" || server_role || 0x00,
+    "dap-19 aggregate share" || server_role || 0x00,
     agg_share_aad,
     enc_share.payload)
 </pre><a href="#section-4.6.7-8" class="pilcrow">¶</a>
@@ -6587,15 +6595,18 @@ enum {
           <p id="section-5-5.1.1">The value of the <code>config</code> field of <code>Query</code> and <code>BatchSelector</code><a href="#section-5-5.1.1" class="pilcrow">¶</a></p>
 </li>
         <li id="section-5-5.2">
-          <p id="section-5-5.2.1">Batch buckets (<a href="#batch-buckets" class="auto internal xref">Section 4.5.4.3</a>): how reports are assigned to batch
-buckets; how each bucket is identified; and how batch buckets are mapped to
-batches<a href="#section-5-5.2.1" class="pilcrow">¶</a></p>
+          <p id="section-5-5.2.1">How to determine if a <code>BatchSelector</code> is consistent with a <code>Query</code><a href="#section-5-5.2.1" class="pilcrow">¶</a></p>
 </li>
         <li id="section-5-5.3">
-          <p id="section-5-5.3.1">Batch mode configuration: any configuration needed for the batch mode. New
+          <p id="section-5-5.3.1">Batch buckets (<a href="#batch-buckets" class="auto internal xref">Section 4.5.4.3</a>): how reports are assigned to batch
+buckets; how each bucket is identified; and how batch buckets are mapped to
+batches<a href="#section-5-5.3.1" class="pilcrow">¶</a></p>
+</li>
+        <li id="section-5-5.4">
+          <p id="section-5-5.4.1">Batch mode configuration: any configuration needed for the batch mode. New
 batch modes <span class="bcp14">MUST</span> define a deterministic encoding of their configuration so it
 can be incorporated into <code>TaskConfiguration</code> (<a href="#task-configuration" class="auto internal xref">Section 4.2</a>)
-structures.<a href="#section-5-5.3.1" class="pilcrow">¶</a></p>
+structures.<a href="#section-5-5.4.1" class="pilcrow">¶</a></p>
 </li>
       </ol>
 <p id="section-5-6">It may be necessary for the Leader to convey additional information to the
@@ -6671,22 +6682,11 @@ struct {
 } TimeIntervalBatchSelectorConfig;
 </pre><a href="#section-5.1.2-2" class="pilcrow">¶</a>
 </div>
-<p id="section-5.1.2-3">where <code>batch_interval</code> is the batch interval requested by the Collector.<a href="#section-5.1.2-3" class="pilcrow">¶</a></p>
-<p id="section-5.1.2-4">A <code>TimeIntervalBatchSelectorConfig.config</code> is consistent with <code>Query.config</code>
-for this batch mode if the batch selector's interval is within the queried time
-interval. That is, the values are consistent if:<a href="#section-5.1.2-4" class="pilcrow">¶</a></p>
-<ul class="normal">
-<li class="normal" id="section-5.1.2-5.1">
-              <p id="section-5.1.2-5.1.1">The start time from the batch selector
-(<code>TimeIntervalBatchSelectorConfig.batch_interval.start</code>) is not before the
-query (<code>TimeIntervalQueryConfig.batch_interval</code>), and<a href="#section-5.1.2-5.1.1" class="pilcrow">¶</a></p>
-</li>
-            <li class="normal" id="section-5.1.2-5.2">
-              <p id="section-5.1.2-5.2.1">The end time from the batch selector
-(<code>TimeIntervalBatchSelectorConfig.batch_interval.{start+duration}</code>)
-is not after the query (<code>TimeIntervalQueryConfig.batch_interval</code>).<a href="#section-5.1.2-5.2.1" class="pilcrow">¶</a></p>
-</li>
-          </ul>
+<p id="section-5.1.2-3">where <code>batch_interval</code> is an interval containing all of the reports in the
+batch.<a href="#section-5.1.2-3" class="pilcrow">¶</a></p>
+<p id="section-5.1.2-4">A <code>TimeIntervalBatchSelectorConfig</code> is consistent with <code>TimeIntervalQueryConfig</code>
+for this batch mode if the batch selector's interval is within the query's time
+interval.<a href="#section-5.1.2-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="time-interval-batch-buckets">
@@ -6804,6 +6804,8 @@ struct {
 </pre><a href="#section-5.2.3-2" class="pilcrow">¶</a>
 </div>
 <p id="section-5.2.3-3">where <code>batch_id</code> is the batch ID selected by the Leader.<a href="#section-5.2.3-3" class="pilcrow">¶</a></p>
+<p id="section-5.2.3-4">Since <code>Query.config</code> is empty in this batch mode, batch selectors are trivially
+consistent with queries.<a href="#section-5.2.3-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="leader-selected-batch-buckets">
@@ -6925,14 +6927,14 @@ task:<a href="#section-6.2-1" class="pilcrow">¶</a></p>
 <li class="normal" id="section-6.2-2.1">
             <p id="section-6.2-2.1.1">The runtime of VDAF sharding and verification is related to the "size" of the
 underlying measurements. For example, the Prio3SumVec VDAF defined in
-<span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-19#section-7" class="relref">Section 7</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span> requires each measurement to be a vector of the same
+<span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-20#section-7" class="relref">Section 7</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span> requires each measurement to be a vector of the same
 length, which all parties need to agree on prior to VDAF execution. The
 computation required for such tasks increases linearly as a function of the
 chosen length, as each vector element must be processed in turn.<a href="#section-6.2-2.1.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-6.2-2.2">
             <p id="section-6.2-2.2.1">The runtime of VDAF verification is related to the size of the aggregation
-parameter. For example for Poplar1 defined in <span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-19#section-8" class="relref">Section 8</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>,
+parameter. For example for Poplar1 defined in <span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-20#section-8" class="relref">Section 8</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>,
 verification takes as input a sequence of so-called "candidate prefixes", and
 the amount of computation is linear in the number of prefixes.<a href="#section-6.2-2.2.1" class="pilcrow">¶</a></p>
 </li>
@@ -7024,7 +7026,7 @@ tradeoffs.<a href="#section-6.4.2-1" class="pilcrow">¶</a></p>
               <p id="section-6.4.2-2.1.1">The upload interaction requires the Leader to discard uploaded reports with a
 duplicated ID, including concurrently-uploaded reports. This might be
 implemented by synchronization or via an eventually-consistent process. If the
-Leader wishes to alert the Client with a <code>reportRejected</code> error,
+Leader wishes to alert the Client with a <code>report_replayed</code> error,
 synchronization will be necessary to ensure all but one concurrent request
 receive the error.<a href="#section-6.4.2-2.1.1" class="pilcrow">¶</a></p>
 </li>
@@ -7128,7 +7130,7 @@ suite:<a href="#section-7-1" class="pilcrow">¶</a></p>
 <a href="#section-8" class="section-number selfRef">8. </a><a href="#name-security-considerations" class="section-name selfRef">Security Considerations</a>
       </h2>
 <p id="section-8-1">DAP aims to achieve the privacy and verifiability security goals defined in
-<span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-19#section-9" class="relref">Section 9</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>. That is, an active attacker that controls a subset of
+<span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-20#section-9" class="relref">Section 9</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>. That is, an active attacker that controls a subset of
 the Clients, one of the Aggregators, and the Collector learns nothing about the
 honest Clients' measurements beyond their aggregate result. At the same time,
 an attacker that controls a subset of Clients cannot force the Collector to
@@ -7207,7 +7209,7 @@ such leakages using differential privacy (<a href="#dp" class="auto internal xre
         <h3 id="name-sybil-attacks">
 <a href="#section-8.1" class="section-number selfRef">8.1. </a><a href="#name-sybil-attacks" class="section-name selfRef">Sybil Attacks</a>
         </h3>
-<p id="section-8.1-1">Several attacks on the security of the VDAF (<span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-19#section-9" class="relref">Section 9</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>) involve
+<p id="section-8.1-1">Several attacks on the security of the VDAF (<span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-20#section-9" class="relref">Section 9</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>) involve
 malicious Clients uploading reports that are valid under the chosen VDAF but
 incorrect.<a href="#section-8.1-1" class="pilcrow">¶</a></p>
 <p id="section-8.1-2">For example, a DAP deployment might be measuring the heights of a human
@@ -7372,7 +7374,7 @@ label describing the task, the identities of participating Aggregators or the
 fact that some measurement is being taken at all.<a href="#section-8.6.1-2" class="pilcrow">¶</a></p>
 <p id="section-8.6.1-3">Such enumeration attacks can be mitigated by incorporating unpredictable values
 into the task ID derivation. They do not, however, affect the core security
-goals of VDAFs (<span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-19#section-9" class="relref">Section 9</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>).<a href="#section-8.6.1-3" class="pilcrow">¶</a></p>
+goals of VDAFs (<span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-20#section-9" class="relref">Section 9</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span>).<a href="#section-8.6.1-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="verification-key">
@@ -7454,7 +7456,7 @@ requirements, they:<a href="#section-8.6.4-3" class="pilcrow">¶</a></p>
 <ol start="1" type="1" class="normal type-1" id="section-8.6.4-4">
 <li id="section-8.6.4-4.1">
               <p id="section-8.6.4-4.1.1"><span class="bcp14">MUST</span> adhere to the VDAF's requirements for aggregating a report more than
-once. See <span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-19#section-5.3" class="relref">Section 5.3</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span> for details.<a href="#section-8.6.4-4.1.1" class="pilcrow">¶</a></p>
+once. See <span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-20#section-5.3" class="relref">Section 5.3</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span> for details.<a href="#section-8.6.4-4.1.1" class="pilcrow">¶</a></p>
 </li>
             <li id="section-8.6.4-4.2">
               <p id="section-8.6.4-4.2.1"><span class="bcp14">SHOULD</span> define a mechanism by which each party explicitly opts into the
@@ -7470,7 +7472,7 @@ relaxing the rules by mistake.<a href="#section-8.6.4-4.2.1" class="pilcrow">¶<
           <h4 id="name-task-configuration-agreemen">
 <a href="#section-8.6.5" class="section-number selfRef">8.6.5. </a><a href="#name-task-configuration-agreemen" class="section-name selfRef">Task Configuration Agreement and Consistency</a>
           </h4>
-<p id="section-8.6.5-1"><span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-19#section-9.9" class="relref">Section 9.9</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span> warns of cross protocol attacks, in which a message
+<p id="section-8.6.5-1"><span><a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-20#section-9.9" class="relref">Section 9.9</a> of [<a href="#VDAF" class="cite xref">VDAF</a>]</span> warns of cross protocol attacks, in which a message
 recipient can be manipulated into handling a message intended for use in one
 protocol as a message from another (i.e., evaluating a <code>Prio3Count</code> input share
 as though it was a <code>Prio3Sum</code> input share).<a href="#section-8.6.5-1" class="pilcrow">¶</a></p>
@@ -8143,6 +8145,16 @@ called "DAP Report Error Identifiers".<a href="#section-9.2.6-1" class="pilcrow"
                 <td class="text-left" rowspan="1" colspan="1">
                   <a href="#basic-definitions" class="auto internal xref">Section 4.1</a> of RFC XXXX</td>
               </tr>
+              <tr>
+                <td class="text-left" rowspan="1" colspan="1">
+                  <code>0x0A</code>
+</td>
+                <td class="text-left" rowspan="1" colspan="1">
+                  <code>unsupported_extension</code>
+</td>
+                <td class="text-left" rowspan="1" colspan="1">
+                  <a href="#basic-definitions" class="auto internal xref">Section 4.1</a> of RFC XXXX</td>
+              </tr>
             </tbody>
           </table>
 </div>
@@ -8247,7 +8259,7 @@ impacts the security of DAP with respect to the threat model in
 <a href="#sec-considerations" class="auto internal xref">Section 8</a>.<a href="#section-10-4.2.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-10-4.3">
-          <p id="section-10-4.3.1">When a document defines a new VDAF (<span>[<a href="#VDAF" class="cite xref">VDAF</a>], <a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-19#section-5" class="relref">Section 5</a></span>), it <span class="bcp14">MUST</span> specify an
+          <p id="section-10-4.3.1">When a document defines a new VDAF (<span>[<a href="#VDAF" class="cite xref">VDAF</a>], <a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-20#section-5" class="relref">Section 5</a></span>), it <span class="bcp14">MUST</span> specify an
 encoding of that VDAF's configuration like the ones in
 <a href="#vdaf-configuration-encodings" class="auto internal xref">Appendix B</a>. The encoding <span class="bcp14">MUST</span> be sufficient to prevent
 attacks described in <a href="#task-binding" class="auto internal xref">Section 8.6.5</a>.<a href="#section-10-4.3.1" class="pilcrow">¶</a></p>
@@ -8332,7 +8344,7 @@ attacks described in <a href="#task-binding" class="auto internal xref">Section 
 <dd class="break"></dd>
 <dt id="VDAF">[VDAF]</dt>
       <dd>
-<span class="refAuthor">Barnes, R.</span>, <span class="refAuthor">Cook, D.</span>, <span class="refAuthor">Patton, C.</span>, and <span class="refAuthor">P. Schoppmann</span>, <span class="refTitle">"Verifiable Distributed Aggregation Functions"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-irtf-cfrg-vdaf-19</span>, <time datetime="2026-04-14" class="refDate">14 April 2026</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-19">https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-19</a>&gt;</span>. </dd>
+<span class="refAuthor">Barnes, R.</span>, <span class="refAuthor">Cook, D.</span>, <span class="refAuthor">Patton, C.</span>, and <span class="refAuthor">P. Schoppmann</span>, <span class="refTitle">"Verifiable Distributed Aggregation Functions"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-irtf-cfrg-vdaf-20</span>, <time datetime="2026-06-24" class="refDate">24 June 2026</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-20">https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-20</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 </dl>
 </section>
@@ -8517,7 +8529,7 @@ struct {
 </div>
 <p id="appendix-B.2-2"><code>max_measurement</code> is the largest summand permitted in this instantiation of the
 VDAF. The value <span class="bcp14">MUST</span> be less than the modulus of the field associated with the
-circuit; see <span>[<a href="#VDAF" class="cite xref">VDAF</a>], <a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-19#section-6.1.4" class="relref">Section 6.1.4</a></span>.<a href="#appendix-B.2-2" class="pilcrow">¶</a></p>
+circuit; see <span>[<a href="#VDAF" class="cite xref">VDAF</a>], <a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-20#section-6.1.4" class="relref">Section 6.1.4</a></span>.<a href="#appendix-B.2-2" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="prio3sumvec">
@@ -8595,7 +8607,7 @@ struct {
           <li class="normal" id="appendix-B.5-2.3">
             <p id="appendix-B.5-2.3.1"><code>max_weight</code> is the largest weight allowed for measurements; the maximum
 number of true entries in the bit vector. The value <span class="bcp14">MUST</span> be less than the
-modulus of the field associated with the circuit; see <span>[<a href="#VDAF" class="cite xref">VDAF</a>], <a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-19#section-6.1.4" class="relref">Section 6.1.4</a></span>.<a href="#appendix-B.5-2.3.1" class="pilcrow">¶</a></p>
+modulus of the field associated with the circuit; see <span>[<a href="#VDAF" class="cite xref">VDAF</a>], <a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-20#section-6.1.4" class="relref">Section 6.1.4</a></span>.<a href="#appendix-B.5-2.3.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 </section>
