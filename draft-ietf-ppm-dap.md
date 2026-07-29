@@ -3549,8 +3549,6 @@ The Leader then combines the values inside the batch bucket as follows:
 
 A Helper aggregate share is identified by a server-selected identifier, unique within
 the scope of the task, assigned during resource creation ({{resource-creation}}).
-Since this resource corresponds to exactly one collection job, the Leader might use
-the collection job ID as the aggregate share ID.
 
 The Helper's aggregate share is an HTTP resource served by the Helper at the URL
 `{helper}/tasks/{task-id}/aggregate_shares/{aggregate-share-id}`. To obtain an
