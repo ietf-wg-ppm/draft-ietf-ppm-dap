@@ -3906,6 +3906,8 @@ Each batch mode specifies the following:
 
 1. The value of the `config` field of `Query` and `BatchSelector`
 
+1. How to determine if a `BatchSelector` is consistent with a `Query`
+
 1. Batch buckets ({{batch-buckets}}): how reports are assigned to batch
    buckets; how each bucket is identified; and how batch buckets are mapped to
    batches
@@ -3981,11 +3983,14 @@ struct {
 } TimeIntervalBatchSelectorConfig;
 ~~~
 
-where `batch_interval` is the batch interval requested by the Collector.
+where `batch_interval` is an interval containing all of the reports in the
+batch.
 
-A `TimeIntervalBatchSelectorConfig.config` is consistent with `Query.config`
-for this batch mode if the batch selector's interval is within the queried time
-interval. That is, the values are consistent if:
+A `TimeIntervalBatchSelectorConfig` is consistent with `TimeIntervalQueryConfig`
+for this batch mode if the batch selector's interval is inside of the queried
+time interval.
+
+That is, the values are consistent if:
 
 * The start time from the batch selector
   (`TimeIntervalBatchSelectorConfig.batch_interval.start`) is not before the
@@ -4091,6 +4096,9 @@ struct {
 ~~~
 
 where `batch_id` is the batch ID selected by the Leader.
+
+Since `Query.config` is empty in this batch mode, batch selectors are trivially
+consistent with queries.
 
 ### Batch Buckets {#leader-selected-batch-buckets}
 
