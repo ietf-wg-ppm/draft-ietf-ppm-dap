@@ -1097,17 +1097,18 @@ following rules:
 
 * Variables `{leader}` and `{helper}` are replaced with the base API URL of the
   Leader and Helper respectively.
-* Variables `{task-id}`, `{aggregation-job-id}`, `{aggregate-share-id}`, and
-  `{collection-job-id}` are replaced with the task ID ({{task-configuration}}),
-  aggregation job ID ({{agg-init}}), aggregate share ID ({{collect-aggregate}})
-  and collection job ID ({{collect-init}}) respectively. The value MUST be
-  encoded in its URL-safe, unpadded Base 64 representation as specified in
-  {{Sections 5 and 3.2 of !RFC4648}}.
+* Variable `{task-id}` is replaced with the task ID ({{task-configuration}}).
+  The value MUST be encoded in its URL-safe, unpadded Base 64 representation as
+  specified in {{Sections 5 and 3.2 of !RFC4648}}.
+* Variables `{aggregation-job-id}`, `{aggregate-share-id}`, and
+  `{collection-job-id}` are replaced with the aggregation job ID ({{agg-init}}),
+  aggregate share ID ({{collect-aggregate}}) and collection job ID
+  ({{collect-init}}) respectively.
 
 For example, given a helper URL "https://example.com/api/dap", task ID "f0 16 34
 47 36 4c cf 1b c0 e3 af fc ca 68 73 c9 c3 81 f6 4a cd f9 02 06 62 f8 3f 46 c0 72
-19 e7" and an aggregation job ID "95 ce da 51 e1 a9 75 23 68 b0 d9 61 f9 46 61
-28" (32 and 16 byte octet strings, represented in hexadecimal), resource URL
+19 e7" (a 32 byte octet string, represented in hexadecimal) and an aggregation
+job ID "lc7aUeGpdSNosNlh-UZhKA" (an ASCII string), resource URL
 `{helper}/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}` would be
 expanded into
 `https://example.com/api/dap/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA`.
@@ -1159,7 +1160,9 @@ Several DAP interactions involve creating new resources on an HTTP server:
 aggregation jobs ({{agg-init}}), collection jobs ({{collect-init}}), and
 aggregate shares ({{collect-aggregate}}). In each case, the HTTP client sends a
 POST request to a creation URL and the HTTP server assigns the new resource a
-unique identifier.
+unique identifier. These identifiers MUST match the "path-rootless" rule of
+{{!RFC3986, Section 3.3}}. That is, one or more path segments joined by slash
+("/") characters.
 
 The server responds with a successful status code and a Location header field
 ({{!RFC9110, Section 10.2.2}}) indicating the location of the newly created
