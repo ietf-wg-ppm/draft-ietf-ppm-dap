@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-07-28T02:22:35.666110+00:00",
+  "timestamp": "2026-07-30T02:09:01.041968+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -14290,7 +14290,7 @@
       "labels": [],
       "body": "Section 3 discusses DAP's usage of HTTP, and 3.2 specifically discusses resource creation. Recently, we revisited how that works, making the HTTP server in each sub-interaction responsible for choosing resource IDs. We also relaxed requirements on the structure of those IDs. Previously, they were all required to be 16 byte values, unique within the task, and section 3 discussed how to render such values into URI templates.\n\nNow that those IDs are less structured, we should revisit the text in section 3 accordingly. If the IDs are already understood to be byte sequences that themselves are valid HTTP path components (we'd have to find some RFC reference that defines what a valid path component is), then DAP doesn't need to define rules for expanding them.",
       "createdAt": "2026-07-27T15:50:55Z",
-      "updatedAt": "2026-07-27T15:55:36Z",
+      "updatedAt": "2026-07-29T16:39:29Z",
       "closedAt": null,
       "comments": [
         {
@@ -14299,6 +14299,13 @@
           "body": "Additionally, we should double check/double think about whether DAP needs to mandate that task IDs be 32 byte strings anymore. The requirements are stronger for task IDs (they must be globally unique, not just in task scope) but otherwise we should harmonize their definition with the job IDs as much as we can.",
           "createdAt": "2026-07-27T15:55:36Z",
           "updatedAt": "2026-07-27T15:55:36Z"
+        },
+        {
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "body": "While aggregation job, aggregate share and collection job IDs appear exclusively in resource URLs, we do include task IDs in AADs, so we need some crisp definition of them, and `opaque TaskID[32];` works fine. We could make it a variable length vector, but since we do have the requirement that task IDs be _globally_ unique, I think it's wise for the spec to err on the side of safety and force everyone to randomly generate very big values.",
+          "createdAt": "2026-07-29T16:39:29Z",
+          "updatedAt": "2026-07-29T16:39:29Z"
         }
       ]
     }
@@ -94312,6 +94319,158 @@
           "createdAt": "2026-07-06T18:24:00Z",
           "updatedAt": "2026-07-06T18:24:00Z",
           "comments": []
+        }
+      ]
+    },
+    {
+      "number": 793,
+      "id": "PR_kwDOFEJYQs74Ez3r",
+      "title": "Batch selector, query, aggregate share ambiguities",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/793",
+      "state": "OPEN",
+      "author": "tgeoghegan",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "See #791 for discussion of these problems and individual commits for details discussion of the fixes.",
+      "createdAt": "2026-07-29T15:40:57Z",
+      "updatedAt": "2026-07-29T15:41:11Z",
+      "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "baseRefName": "main",
+      "baseRefOid": "e42c6ed95f2ee62b66df01feb89f0f6a580c9816",
+      "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "headRefName": "timg-791",
+      "headRefOid": "7b8909e053ba7c14f6641b670bda25e3ec6b7629",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 794,
+      "id": "PR_kwDOFEJYQs74GWlP",
+      "title": "Clarify nature of resource IDs",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/794",
+      "state": "OPEN",
+      "author": "tgeoghegan",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "In the past, we concretely defined aggregation job, aggregate share and collection job IDs as strings of 16 bytes, and accordingly specified that they get rendered into URL path components via Base64 URL encoding.\r\n\r\nMore recently, we relaxed the specification these IDs, choosing to leave their size and structure up to implementations.\r\n\r\nThis commit revisits language in section 3 HTTP Usage around these IDs. Rather than stating that whatever their form is should be Base64 URL encoded, we make it clear that the actual value of IDs is itself a valid URL path component, meaning no special transformation is needed to render them into URLs.\r\n\r\nAn implementation is free to meet this requirement by generating 16 random bytes and base64url encoding it, which is what a DAP-17 implementation would do.",
+      "createdAt": "2026-07-29T16:37:35Z",
+      "updatedAt": "2026-07-30T01:41:16Z",
+      "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "baseRefName": "main",
+      "baseRefOid": "e42c6ed95f2ee62b66df01feb89f0f6a580c9816",
+      "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "headRefName": "timg-792",
+      "headRefOid": "dc329d1619679c8ed386ea00b71a764d58888ac9",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOFEJYQs8AAAABHr4d2g",
+          "commit": {
+            "abbreviatedOid": "dc329d1"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-07-29T16:40:59Z",
+          "updatedAt": "2026-07-29T16:40:59Z",
+          "comments": [
+            {
+              "originalPosition": 33,
+              "body": "This is nuanced: I don't want draft-ietf-ppm-dap to spend any text describing what a valid path component is, hence the reference to RFC 3986. But maybe I'm missing some subtlety in that document's definition of a path that would burn us.",
+              "createdAt": "2026-07-29T16:40:59Z",
+              "updatedAt": "2026-07-29T16:40:59Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs8AAAABHu561Q",
+          "commit": {
+            "abbreviatedOid": "dc329d1"
+          },
+          "author": "martinthomson",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2026-07-29T23:54:31Z",
+          "updatedAt": "2026-07-29T23:54:31Z",
+          "comments": []
+        },
+        {
+          "id": "PRR_kwDOFEJYQs8AAAABHu9FBw",
+          "commit": {
+            "abbreviatedOid": "dc329d1"
+          },
+          "author": "martinthomson",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-07-30T00:04:21Z",
+          "updatedAt": "2026-07-30T00:04:26Z",
+          "comments": [
+            {
+              "originalPosition": 32,
+              "body": "```suggestion\nunique identifier. These identifiers MUST be URL path segments conforming to\n```",
+              "createdAt": "2026-07-30T00:04:21Z",
+              "updatedAt": "2026-07-30T00:04:26Z"
+            },
+            {
+              "originalPosition": 33,
+              "body": "So easy to miss commentary...\n\nI think that you want to use the word \"segment\" rather than \"component\".  RFC 3986 uses the word \"component\" to refer to the entire path.\n",
+              "createdAt": "2026-07-30T00:04:23Z",
+              "updatedAt": "2026-07-30T00:04:26Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs8AAAABHvCYmg",
+          "commit": {
+            "abbreviatedOid": "dc329d1"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-07-30T00:23:43Z",
+          "updatedAt": "2026-07-30T00:23:43Z",
+          "comments": [
+            {
+              "originalPosition": 33,
+              "body": "I considered that. It seems to me there's no harm in allowing multiple path segments. If some helper implementation wants to serve aggregation jobs at `https://example.com/tasks/{task_id}/aggregation_jobs/eu-west/1/somethingelse/another-segment/unique-identifier` then I don't see a reason to forbid it. I don't think it introduces any ambiguities in handling requests. But then again maybe it's a good idea to restrict what implementations can do.",
+              "createdAt": "2026-07-30T00:23:43Z",
+              "updatedAt": "2026-07-30T00:23:44Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs8AAAABHvbc3w",
+          "commit": {
+            "abbreviatedOid": "dc329d1"
+          },
+          "author": "martinthomson",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-07-30T01:41:16Z",
+          "updatedAt": "2026-07-30T01:41:16Z",
+          "comments": [
+            {
+              "originalPosition": 33,
+              "body": "I used \"segments\", plural, in my suggestion because I share your view :)  And reasoning.  The path \"component\" is a complete path, which only approximately makes sense when pluralized and not a lot of sense when tacked on to another URL.  That said, what you described probably syntactically-compatible, in the sense that concatenating multiple path components produces another path component.\r\n\r\nThere is also the possibility of this including a query component.  That seems eminently reasonable also.\r\n\r\nThat's what you get when you start to prescribe (or proscribe): complication.\r\n\r\nMaybe you can say this instead:\r\n\r\n> When these identifiers are formed into a URL, the result MUST conform to URL syntax {{!RFC3986}}.\r\n",
+              "createdAt": "2026-07-30T01:41:16Z",
+              "updatedAt": "2026-07-30T01:41:16Z"
+            }
+          ]
         }
       ]
     }
