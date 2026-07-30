@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 30 January 2027                                      Cloudflare
+Expires: 31 January 2027                                      Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                            29 July 2026
+                                                            30 July 2026
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -64,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 30 January 2027.
+   This Internet-Draft will expire on 31 January 2027.
 
 Copyright Notice
 
@@ -1201,8 +1201,9 @@ Table of Contents
    (Section 4.6.1), and aggregate shares (Section 4.6.4).  In each case,
    the HTTP client sends a POST request to a creation URL and the HTTP
    server assigns the new resource a unique identifier.  These
-   identifiers MUST be URL path components conforming to the definition
-   in [RFC3986], Section 3.3.
+   identifiers MUST match the "path-rootless" rule of [RFC3986],
+   Section 3.3.  That is, one or more path segments joined by slash
+   ("/") characters.
 
    The server responds with a successful status code and a Location
    header field ([RFC9110], Section 10.2.2) indicating the location of
