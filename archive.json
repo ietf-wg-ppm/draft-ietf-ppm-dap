@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-07-30T02:09:01.041968+00:00",
+  "timestamp": "2026-08-02T02:34:15.567361+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -94360,13 +94360,13 @@
       "labels": [],
       "body": "In the past, we concretely defined aggregation job, aggregate share and collection job IDs as strings of 16 bytes, and accordingly specified that they get rendered into URL path components via Base64 URL encoding.\r\n\r\nMore recently, we relaxed the specification these IDs, choosing to leave their size and structure up to implementations.\r\n\r\nThis commit revisits language in section 3 HTTP Usage around these IDs. Rather than stating that whatever their form is should be Base64 URL encoded, we make it clear that the actual value of IDs is itself a valid URL path component, meaning no special transformation is needed to render them into URLs.\r\n\r\nAn implementation is free to meet this requirement by generating 16 random bytes and base64url encoding it, which is what a DAP-17 implementation would do.",
       "createdAt": "2026-07-29T16:37:35Z",
-      "updatedAt": "2026-07-30T01:41:16Z",
+      "updatedAt": "2026-07-30T14:34:36Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "e42c6ed95f2ee62b66df01feb89f0f6a580c9816",
       "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "headRefName": "timg-792",
-      "headRefOid": "dc329d1619679c8ed386ea00b71a764d58888ac9",
+      "headRefOid": "f6c8c92434ea764cb482765f70c666ac39881954",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
@@ -94469,6 +94469,46 @@
               "body": "I used \"segments\", plural, in my suggestion because I share your view :)  And reasoning.  The path \"component\" is a complete path, which only approximately makes sense when pluralized and not a lot of sense when tacked on to another URL.  That said, what you described probably syntactically-compatible, in the sense that concatenating multiple path components produces another path component.\r\n\r\nThere is also the possibility of this including a query component.  That seems eminently reasonable also.\r\n\r\nThat's what you get when you start to prescribe (or proscribe): complication.\r\n\r\nMaybe you can say this instead:\r\n\r\n> When these identifiers are formed into a URL, the result MUST conform to URL syntax {{!RFC3986}}.\r\n",
               "createdAt": "2026-07-30T01:41:16Z",
               "updatedAt": "2026-07-30T01:41:16Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs8AAAABH0gopQ",
+          "commit": {
+            "abbreviatedOid": "dc329d1"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-07-30T14:23:11Z",
+          "updatedAt": "2026-07-30T14:23:11Z",
+          "comments": [
+            {
+              "originalPosition": 33,
+              "body": "Query gets complicated, because DAP itself uses a query param in at least one place, and I think it could get hairy if we try to spell out how to reconcile those. But I like your notion of carefully using the plural \"segments\"! And it sounds like we agree about the desired outcome.",
+              "createdAt": "2026-07-30T14:23:11Z",
+              "updatedAt": "2026-07-30T14:23:11Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs8AAAABH0nhkA",
+          "commit": {
+            "abbreviatedOid": "dc329d1"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-07-30T14:34:36Z",
+          "updatedAt": "2026-07-30T14:34:36Z",
+          "comments": [
+            {
+              "originalPosition": 33,
+              "body": "Last nuance here, I think: on its own, the 3986 definition of \"segment\" forbids \"/\" and doesn't tell you how to join segments together. So I chose to point to the `path-rootless` rule, which I think has exactly the semantics we want.",
+              "createdAt": "2026-07-30T14:34:36Z",
+              "updatedAt": "2026-07-30T14:34:36Z"
             }
           ]
         }
