@@ -3644,8 +3644,17 @@ interval. A time that is equal to or after <code>Interval.start + Interval.durat
 is said to be after the interval. A time that is either before or after an
 interval is said to be outside the interval. A time that is neither before nor
 after an interval is said to be inside or fall within the interval.<a href="#section-4.1.1-9" class="pilcrow">¶</a></p>
-<p id="section-4.1.1-10">Intervals can only be meaningfully compared to one another if they use the same
-time precision.<a href="#section-4.1.1-10" class="pilcrow">¶</a></p>
+<p id="section-4.1.1-10">An interval <code>a</code> is said to be inside or fall within another interval <code>b</code> if:<a href="#section-4.1.1-10" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-4.1.1-11.1">
+              <p id="section-4.1.1-11.1.1"><code>a.start</code> is not before <code>b</code> and<a href="#section-4.1.1-11.1.1" class="pilcrow">¶</a></p>
+</li>
+            <li class="normal" id="section-4.1.1-11.2">
+              <p id="section-4.1.1-11.2.1">the the end of <code>a</code> (<code>a.start + a.duration</code>) is not after <code>b</code>.<a href="#section-4.1.1-11.2.1" class="pilcrow">¶</a></p>
+</li>
+          </ul>
+<p id="section-4.1.1-12">Intervals can only be meaningfully compared to one another if they use the same
+time precision.<a href="#section-4.1.1-12" class="pilcrow">¶</a></p>
 <div id="examples">
 <section id="section-4.1.1.1">
             <h5 id="name-examples">
@@ -6192,9 +6201,7 @@ share for this collection job.<a href="#section-4.6.4-5.1.1" class="pilcrow">¶<
 </li>
           </ul>
 <p id="section-4.6.4-6">A Helper aggregate share is identified by a server-selected identifier, unique within
-the scope of the task, assigned during resource creation (<a href="#resource-creation" class="auto internal xref">Section 3.2</a>).
-Since this resource corresponds to exactly one collection job, the Leader might use
-the collection job ID as the aggregate share ID.<a href="#section-4.6.4-6" class="pilcrow">¶</a></p>
+the scope of the task, assigned during resource creation (<a href="#resource-creation" class="auto internal xref">Section 3.2</a>).<a href="#section-4.6.4-6" class="pilcrow">¶</a></p>
 <p id="section-4.6.4-7">The Helper's aggregate share is an HTTP resource served by the Helper at the URL
 <code>{helper}/tasks/{task-id}/aggregate_shares/{aggregate-share-id}</code>. To obtain an
 aggregate share, the Leader sends a POST request to
@@ -6593,15 +6600,18 @@ enum {
           <p id="section-5-5.1.1">The value of the <code>config</code> field of <code>Query</code> and <code>BatchSelector</code><a href="#section-5-5.1.1" class="pilcrow">¶</a></p>
 </li>
         <li id="section-5-5.2">
-          <p id="section-5-5.2.1">Batch buckets (<a href="#batch-buckets" class="auto internal xref">Section 4.5.4.3</a>): how reports are assigned to batch
-buckets; how each bucket is identified; and how batch buckets are mapped to
-batches<a href="#section-5-5.2.1" class="pilcrow">¶</a></p>
+          <p id="section-5-5.2.1">How to determine if a <code>BatchSelector</code> is consistent with a <code>Query</code><a href="#section-5-5.2.1" class="pilcrow">¶</a></p>
 </li>
         <li id="section-5-5.3">
-          <p id="section-5-5.3.1">Batch mode configuration: any configuration needed for the batch mode. New
+          <p id="section-5-5.3.1">Batch buckets (<a href="#batch-buckets" class="auto internal xref">Section 4.5.4.3</a>): how reports are assigned to batch
+buckets; how each bucket is identified; and how batch buckets are mapped to
+batches<a href="#section-5-5.3.1" class="pilcrow">¶</a></p>
+</li>
+        <li id="section-5-5.4">
+          <p id="section-5-5.4.1">Batch mode configuration: any configuration needed for the batch mode. New
 batch modes <span class="bcp14">MUST</span> define a deterministic encoding of their configuration so it
 can be incorporated into <code>TaskConfiguration</code> (<a href="#task-configuration" class="auto internal xref">Section 4.2</a>)
-structures.<a href="#section-5-5.3.1" class="pilcrow">¶</a></p>
+structures.<a href="#section-5-5.4.1" class="pilcrow">¶</a></p>
 </li>
       </ol>
 <p id="section-5-6">It may be necessary for the Leader to convey additional information to the
@@ -6677,22 +6687,11 @@ struct {
 } TimeIntervalBatchSelectorConfig;
 </pre><a href="#section-5.1.2-2" class="pilcrow">¶</a>
 </div>
-<p id="section-5.1.2-3">where <code>batch_interval</code> is the batch interval requested by the Collector.<a href="#section-5.1.2-3" class="pilcrow">¶</a></p>
-<p id="section-5.1.2-4">A <code>TimeIntervalBatchSelectorConfig.config</code> is consistent with <code>Query.config</code>
-for this batch mode if the batch selector's interval is within the queried time
-interval. That is, the values are consistent if:<a href="#section-5.1.2-4" class="pilcrow">¶</a></p>
-<ul class="normal">
-<li class="normal" id="section-5.1.2-5.1">
-              <p id="section-5.1.2-5.1.1">The start time from the batch selector
-(<code>TimeIntervalBatchSelectorConfig.batch_interval.start</code>) is not before the
-query (<code>TimeIntervalQueryConfig.batch_interval</code>), and<a href="#section-5.1.2-5.1.1" class="pilcrow">¶</a></p>
-</li>
-            <li class="normal" id="section-5.1.2-5.2">
-              <p id="section-5.1.2-5.2.1">The end time from the batch selector
-(<code>TimeIntervalBatchSelectorConfig.batch_interval.{start+duration}</code>)
-is not after the query (<code>TimeIntervalQueryConfig.batch_interval</code>).<a href="#section-5.1.2-5.2.1" class="pilcrow">¶</a></p>
-</li>
-          </ul>
+<p id="section-5.1.2-3">where <code>batch_interval</code> is an interval containing all of the reports in the
+batch.<a href="#section-5.1.2-3" class="pilcrow">¶</a></p>
+<p id="section-5.1.2-4">A <code>TimeIntervalBatchSelectorConfig</code> is consistent with <code>TimeIntervalQueryConfig</code>
+for this batch mode if the batch selector's interval is within the query's time
+interval.<a href="#section-5.1.2-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="time-interval-batch-buckets">
@@ -6810,6 +6809,8 @@ struct {
 </pre><a href="#section-5.2.3-2" class="pilcrow">¶</a>
 </div>
 <p id="section-5.2.3-3">where <code>batch_id</code> is the batch ID selected by the Leader.<a href="#section-5.2.3-3" class="pilcrow">¶</a></p>
+<p id="section-5.2.3-4">Since <code>Query.config</code> is empty in this batch mode, batch selectors are trivially
+consistent with queries.<a href="#section-5.2.3-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="leader-selected-batch-buckets">
