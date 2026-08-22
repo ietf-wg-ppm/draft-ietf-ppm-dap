@@ -25,14 +25,14 @@ without revealing any individual contributor's data.
 <meta content="draft-ietf-ppm-dap-latest" name="ietf.draft">
 <!-- Generator version information:
   xml2rfc 3.34.0
-    Python 3.14.5
+    Python 3.14.7
     ConfigArgParse 1.7.5
     google-i18n-address 3.1.1
     intervaltree 3.2.1
     Jinja2 3.1.6
     lxml 6.1.1
     natsort 8.4.0
-    platformdirs 4.10.0
+    platformdirs 4.11.3
     pycountry 24.6.1
     PyYAML 6.0.3
     requests 2.33.1
@@ -72,7 +72,6 @@ without revealing any individual contributor's data.
   src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-latin-ext.woff2') format('woff2');
   unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
-
 @font-face {
   font-family: 'Lora';
   font-style: italic;
@@ -121,7 +120,6 @@ without revealing any individual contributor's data.
   src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-latin.woff2') format('woff2');
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
-
 @font-face {
   font-family: 'Lora';
   font-style: normal;
@@ -186,7 +184,6 @@ without revealing any individual contributor's data.
   font-display: swap;
   src: local('Oxygen Mono'), local('OxygenMono-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/oxygenmono-regular-latin.woff2') format('woff2');
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
 }
 
 @font-face {
@@ -1055,11 +1052,11 @@ svg {
 <thead><tr>
 <td class="left">Internet-Draft</td>
 <td class="center">DAP</td>
-<td class="right">July 2026</td>
+<td class="right">August 2026</td>
 </tr></thead>
 <tfoot><tr>
 <td class="left">Geoghegan, et al.</td>
-<td class="center">Expires 7 January 2027</td>
+<td class="center">Expires 23 February 2027</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1072,12 +1069,12 @@ svg {
 <dd class="internet-draft">draft-ietf-ppm-dap-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2026-07-06" class="published">6 July 2026</time>
+<time datetime="2026-08-22" class="published">22 August 2026</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Standards Track</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2027-01-07">7 January 2027</time></dd>
+<dd class="expires"><time datetime="2027-02-23">23 February 2027</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -1151,7 +1148,7 @@ without revealing any individual contributor's data.<a href="#section-abstract-1
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 7 January 2027.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 23 February 2027.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -3262,18 +3259,21 @@ following rules:<a href="#section-3-2" class="pilcrow">¶</a></p>
 Leader and Helper respectively.<a href="#section-3-3.1.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-3-3.2">
-          <p id="section-3-3.2.1">Variables <code>{task-id}</code>, <code>{aggregation-job-id}</code>, <code>{aggregate-share-id}</code>, and
-<code>{collection-job-id}</code> are replaced with the task ID (<a href="#task-configuration" class="auto internal xref">Section 4.2</a>),
-aggregation job ID (<a href="#agg-init" class="auto internal xref">Section 4.5.3</a>), aggregate share ID (<a href="#collect-aggregate" class="auto internal xref">Section 4.6.4</a>)
-and collection job ID (<a href="#collect-init" class="auto internal xref">Section 4.6.1</a>) respectively. The value <span class="bcp14">MUST</span> be
-encoded in its URL-safe, unpadded Base 64 representation as specified in
-Sections <a href="https://rfc-editor.org/rfc/rfc4648#section-5" class="relref">5</a> and <a href="https://rfc-editor.org/rfc/rfc4648#section-3.2" class="relref">3.2</a> of <span>[<a href="#RFC4648" class="cite xref">RFC4648</a>]</span>.<a href="#section-3-3.2.1" class="pilcrow">¶</a></p>
+          <p id="section-3-3.2.1">Variable <code>{task-id}</code> is replaced with the task ID (<a href="#task-configuration" class="auto internal xref">Section 4.2</a>).
+The value <span class="bcp14">MUST</span> be encoded in its URL-safe, unpadded Base 64 representation as
+specified in Sections <a href="https://rfc-editor.org/rfc/rfc4648#section-5" class="relref">5</a> and <a href="https://rfc-editor.org/rfc/rfc4648#section-3.2" class="relref">3.2</a> of <span>[<a href="#RFC4648" class="cite xref">RFC4648</a>]</span>.<a href="#section-3-3.2.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-3-3.3">
+          <p id="section-3-3.3.1">Variables <code>{aggregation-job-id}</code>, <code>{aggregate-share-id}</code>, and
+<code>{collection-job-id}</code> are replaced with the aggregation job ID (<a href="#agg-init" class="auto internal xref">Section 4.5.3</a>),
+aggregate share ID (<a href="#collect-aggregate" class="auto internal xref">Section 4.6.4</a>) and collection job ID
+(<a href="#collect-init" class="auto internal xref">Section 4.6.1</a>) respectively.<a href="#section-3-3.3.1" class="pilcrow">¶</a></p>
 </li>
       </ul>
 <p id="section-3-4">For example, given a helper URL "https://example.com/api/dap", task ID "f0 16 34
 47 36 4c cf 1b c0 e3 af fc ca 68 73 c9 c3 81 f6 4a cd f9 02 06 62 f8 3f 46 c0 72
-19 e7" and an aggregation job ID "95 ce da 51 e1 a9 75 23 68 b0 d9 61 f9 46 61
-28" (32 and 16 byte octet strings, represented in hexadecimal), resource URL
+19 e7" (a 32 byte octet string, represented in hexadecimal) and an aggregation
+job ID "lc7aUeGpdSNosNlh-UZhKA" (an ASCII string), resource URL
 <code>{helper}/tasks/{task-id}/aggregation_jobs/{aggregation-job-id}</code> would be
 expanded into
 <code>https://example.com/api/dap/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/aggregation_jobs/lc7aUeGpdSNosNlh-UZhKA</code>.<a href="#section-3-4" class="pilcrow">¶</a></p>
@@ -3323,7 +3323,9 @@ job results is an implementation detail.<a href="#section-3.1-5" class="pilcrow"
 aggregation jobs (<a href="#agg-init" class="auto internal xref">Section 4.5.3</a>), collection jobs (<a href="#collect-init" class="auto internal xref">Section 4.6.1</a>), and
 aggregate shares (<a href="#collect-aggregate" class="auto internal xref">Section 4.6.4</a>). In each case, the HTTP client sends a
 POST request to a creation URL and the HTTP server assigns the new resource a
-unique identifier.<a href="#section-3.2-1" class="pilcrow">¶</a></p>
+unique identifier. These identifiers <span class="bcp14">MUST</span> match the "path-rootless" rule of
+<span>[<a href="#RFC3986" class="cite xref">RFC3986</a>], <a href="https://rfc-editor.org/rfc/rfc3986#section-3.3" class="relref">Section 3.3</a></span>. That is, one or more path segments joined by slash
+("/") characters.<a href="#section-3.2-1" class="pilcrow">¶</a></p>
 <p id="section-3.2-2">The server responds with a successful status code and a Location header field
 (<span>[<a href="#RFC9110" class="cite xref">RFC9110</a>], <a href="https://rfc-editor.org/rfc/rfc9110#section-10.2.2" class="relref">Section 10.2.2</a></span>) indicating the location of the newly created
 resource. If the server handles the request synchronously, the response also
