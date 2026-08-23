@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-08-02T02:34:15.567361+00:00",
+  "timestamp": "2026-08-23T01:10:20.965683+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -14250,7 +14250,7 @@
       "id": "I_kwDOFEJYQs8AAAABKWYxxQ",
       "title": "Batch selector, query, aggregate share ambiguities",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/791",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "tgeoghegan",
       "authorAssociation": "COLLABORATOR",
       "assignees": [
@@ -14259,8 +14259,8 @@
       "labels": [],
       "body": "While implementing AAD binding in Janus (https://github.com/divviup/janus/pull/4714), we ran into some ambiguities in the specification that should be cleared up.\n\n## Aggregate share and collection job IDs\n\nIn the latest DAP versions, we have asserted that HTTP servers always choose resource identifiers. But [this paragraph](https://datatracker.ietf.org/doc/html/draft-ietf-ppm-dap-19#section-4.6.4-6) in 4.6.4 is ambiguous at best if not contradictory:\n\n> A Helper aggregate share is identified by a server-selected identifier, unique within the scope of the task, assigned during resource creation ([Section 3.2](https://datatracker.ietf.org/doc/html/draft-ietf-ppm-dap-19#resource-creation)). Since this resource corresponds to exactly one collection job, the Leader might use the collection job ID as the aggregate share ID.\n\nSentence 1 correctly asserts that the Helper chooses the aggregate share ID, but sentence 2 implies that the Leader might chooses it to match the collection job ID, which isn't right. The simple fix is to replace \"Leader\" with \"Helper\" in sentence 2, and since this is just a \"might\", not even a \"MAY\", I think we can avoid laboriously spelling out all other possible scenarios.\n\n## Consistency of time interval collection job query and batch selector\n\nA _query_ is constructed by the Collector and send to the Leader, which then constructs a corresponding _batch selector_ that satisfies the query, which will be relayed to the Helper. The batch selector must be _consistent_ with the query according to per-batch-mode semantics.\n\nIn the time interval batch mode, both the query and the batch selector are `Interval`s. [5.1.2](https://datatracker.ietf.org/doc/html/draft-ietf-ppm-dap-19#section-5.1.2) makes it clear that they must be the same:\n\n> The payload of BatchSelector.config is\n>\n> struct {\n>   Interval batch_interval;\n> } TimeIntervalBatchSelectorConfig;\n>\n> where batch_interval is the batch interval requested by the Collector.\n\nBut the very following paragraph disagrees:\n\n> A TimeIntervalBatchSelectorConfig.config is consistent with Query.config for this batch mode if the batch selector's interval is within the queried time interval.\n\nI think the second paragraph is correct: it's alright for the interval in the batch selector constructed by the Leader to be smaller than the interval in the Collector's query. For example, the Collector might request an aggregation over every report that arrived on a given day, but if the Leader happens to know that nothing arrived outside of a particular hour, then it's reasonable for it to send a narrower batch selector to the Helper so it can search its data store more efficiently. This isn't a problem for AADs, because the Collector's original query gets transmitted to the Helper along with the batch selector.\n\nWe should clean up this text so that it doesn't require `TimeIntervalBatchSelectorConfig.batch_interval == Query.batch_interval`.\n\n## Re-iteration of `Interval` semantics\n\nFinally, the following two paragraphs spell out in excruciating detail how to decide if one `Interval` is within another. That belongs in [4.1.1](https://datatracker.ietf.org/doc/html/draft-ietf-ppm-dap-19#section-4.1.1).",
       "createdAt": "2026-07-27T15:25:34Z",
-      "updatedAt": "2026-07-27T15:51:07Z",
-      "closedAt": null,
+      "updatedAt": "2026-08-22T19:22:50Z",
+      "closedAt": "2026-08-22T19:22:50Z",
       "comments": [
         {
           "author": "divergentdave",
@@ -14275,6 +14275,13 @@
           "body": "> The Leader only sends the body of the collection job request to the Helper, not its identifier, so the Helper cannot reuse the collection job ID as the aggregate share ID. Thus, we should just delete this second sentence.\n\nI agree, good point.\n\n> Relatedly, it seems like we no longer explicitly define the structure of aggregation job IDs, collection job IDs, and aggregate share IDs. In previous versions, these had TLS presentation language definitions defining them as 16-byte opaque byte strings. Now, the closest we get is an example in section 3 mentioning that its aggregation job ID is 16 bytes long, before base64url encoding. We should add these type definitions back in their respective sections, then the existing section references in section 3 can point to them.\n\nI think we deleted those deliberately, because so long as the aggregation job, collection job and aggregate share IDs are unique within the scope of the task (a requirement which we do spell out) and are valid HTTP path components, we don't care how long they are or what, if any, structure they might have. In fact, I think it's better to allow flexibility here, so that for instance an implementation could pack some routing or debugging information into the front of an aggregation job ID. But I agree that the text in section 3 reads awkwardly now. I filed #792 for that.",
           "createdAt": "2026-07-27T15:51:07Z",
           "updatedAt": "2026-07-27T15:51:07Z"
+        },
+        {
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Resolved by #793",
+          "createdAt": "2026-08-22T19:22:50Z",
+          "updatedAt": "2026-08-22T19:22:50Z"
         }
       ]
     },
@@ -14283,15 +14290,15 @@
       "id": "I_kwDOFEJYQs8AAAABKWnt2g",
       "title": "Revisit section 3 to account for relaxed requirements on aggregation job, aggregate share, collection job IDs",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/792",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "tgeoghegan",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "Section 3 discusses DAP's usage of HTTP, and 3.2 specifically discusses resource creation. Recently, we revisited how that works, making the HTTP server in each sub-interaction responsible for choosing resource IDs. We also relaxed requirements on the structure of those IDs. Previously, they were all required to be 16 byte values, unique within the task, and section 3 discussed how to render such values into URI templates.\n\nNow that those IDs are less structured, we should revisit the text in section 3 accordingly. If the IDs are already understood to be byte sequences that themselves are valid HTTP path components (we'd have to find some RFC reference that defines what a valid path component is), then DAP doesn't need to define rules for expanding them.",
       "createdAt": "2026-07-27T15:50:55Z",
-      "updatedAt": "2026-07-29T16:39:29Z",
-      "closedAt": null,
+      "updatedAt": "2026-08-22T19:23:05Z",
+      "closedAt": "2026-08-22T19:23:05Z",
       "comments": [
         {
           "author": "tgeoghegan",
@@ -14306,6 +14313,13 @@
           "body": "While aggregation job, aggregate share and collection job IDs appear exclusively in resource URLs, we do include task IDs in AADs, so we need some crisp definition of them, and `opaque TaskID[32];` works fine. We could make it a variable length vector, but since we do have the requirement that task IDs be _globally_ unique, I think it's wise for the spec to err on the side of safety and force everyone to randomly generate very big values.",
           "createdAt": "2026-07-29T16:39:29Z",
           "updatedAt": "2026-07-29T16:39:29Z"
+        },
+        {
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Resolved by #794",
+          "createdAt": "2026-08-22T19:23:05Z",
+          "updatedAt": "2026-08-22T19:23:05Z"
         }
       ]
     }
@@ -94327,50 +94341,95 @@
       "id": "PR_kwDOFEJYQs74Ez3r",
       "title": "Batch selector, query, aggregate share ambiguities",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/793",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "tgeoghegan",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "See #791 for discussion of these problems and individual commits for details discussion of the fixes.",
       "createdAt": "2026-07-29T15:40:57Z",
-      "updatedAt": "2026-07-29T15:41:11Z",
+      "updatedAt": "2026-08-22T19:22:28Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "e42c6ed95f2ee62b66df01feb89f0f6a580c9816",
       "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "headRefName": "timg-791",
       "headRefOid": "7b8909e053ba7c14f6641b670bda25e3ec6b7629",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "closedAt": "2026-08-22T19:22:28Z",
+      "mergedAt": "2026-08-22T19:22:28Z",
+      "mergedBy": "tgeoghegan",
+      "mergeCommit": {
+        "oid": "06c5a6beb598795661b560ddbb1ababefe635cc3"
+      },
       "comments": [],
-      "reviews": []
+      "reviews": [
+        {
+          "id": "PRR_kwDOFEJYQs8AAAABKel0uA",
+          "commit": {
+            "abbreviatedOid": "7b8909e"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2026-08-21T23:20:22Z",
+          "updatedAt": "2026-08-21T23:21:17Z",
+          "comments": [
+            {
+              "originalPosition": 7,
+              "body": "I find this way more readable. It allows you to visualize the intervals on a number line.\n\n```suggestion\nAn interval `a` is said to be inside or fall within another interval `b` if `b.start >= a.start` and `a.start+a.duration <= b.start+b.duration`.\n```",
+              "createdAt": "2026-08-21T23:20:22Z",
+              "updatedAt": "2026-08-21T23:21:17Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs8AAAABKhNnmQ",
+          "commit": {
+            "abbreviatedOid": "7b8909e"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-08-22T19:21:59Z",
+          "updatedAt": "2026-08-22T19:21:59Z",
+          "comments": [
+            {
+              "originalPosition": 7,
+              "body": "`a.start` and `a.start + a.duration` are `Time`s, and in this section we clearly define what it means for a time to be before or after another, but now that it means to do \"<=\" or \">=\". I want to build on definitions this document provides.\n",
+              "createdAt": "2026-08-22T19:21:59Z",
+              "updatedAt": "2026-08-22T19:21:59Z"
+            }
+          ]
+        }
+      ]
     },
     {
       "number": 794,
       "id": "PR_kwDOFEJYQs74GWlP",
       "title": "Clarify nature of resource IDs",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/794",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "tgeoghegan",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "In the past, we concretely defined aggregation job, aggregate share and collection job IDs as strings of 16 bytes, and accordingly specified that they get rendered into URL path components via Base64 URL encoding.\r\n\r\nMore recently, we relaxed the specification these IDs, choosing to leave their size and structure up to implementations.\r\n\r\nThis commit revisits language in section 3 HTTP Usage around these IDs. Rather than stating that whatever their form is should be Base64 URL encoded, we make it clear that the actual value of IDs is itself a valid URL path component, meaning no special transformation is needed to render them into URLs.\r\n\r\nAn implementation is free to meet this requirement by generating 16 random bytes and base64url encoding it, which is what a DAP-17 implementation would do.",
       "createdAt": "2026-07-29T16:37:35Z",
-      "updatedAt": "2026-07-30T14:34:36Z",
+      "updatedAt": "2026-08-22T19:22:14Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "e42c6ed95f2ee62b66df01feb89f0f6a580c9816",
       "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "headRefName": "timg-792",
-      "headRefOid": "f6c8c92434ea764cb482765f70c666ac39881954",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "headRefOid": "69b5cbfa6f52595c1f4abac170c778ba28c1ba58",
+      "closedAt": "2026-08-22T19:22:14Z",
+      "mergedAt": "2026-08-22T19:22:14Z",
+      "mergedBy": "tgeoghegan",
+      "mergeCommit": {
+        "oid": "e6d9b79e0c250b4219de60a6b418346216e3ff26"
+      },
       "comments": [],
       "reviews": [
         {
@@ -94511,6 +94570,19 @@
               "updatedAt": "2026-07-30T14:34:36Z"
             }
           ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs8AAAABKeklUg",
+          "commit": {
+            "abbreviatedOid": "69b5cbf"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2026-08-21T23:17:41Z",
+          "updatedAt": "2026-08-22T19:19:45Z",
+          "comments": []
         }
       ]
     }
