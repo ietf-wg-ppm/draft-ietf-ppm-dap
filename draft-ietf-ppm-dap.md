@@ -1172,10 +1172,10 @@ handling, the response body is empty and the HTTP client polls the resource at
 the location indicated by the Location header, as described in {{http-usage}}.
 
 Resource creation MUST be idempotent: if the server receives a POST request
-identical to one that created an existing resource (as defined by the interaction-
-specific criteria below), it MUST indicate the existing resource's location
-in the Location header rather than creating a duplicate. This allows HTTP clients
-to safely retry requests without risking side effects.
+identical to one that created an existing resource (as defined by the
+interaction-specific criteria below), it MUST indicate the existing resource's
+location in the Location header rather than creating a duplicate. This allows
+HTTP clients to safely retry requests without risking side effects.
 
 One way to achieve this is to derive the resource identifier deterministically
 from the request content.
