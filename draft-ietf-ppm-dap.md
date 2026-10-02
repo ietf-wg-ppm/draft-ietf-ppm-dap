@@ -3382,7 +3382,9 @@ Authorization: Bearer auth-token
 encoded(struct {
   query = struct {
     batch_mode = BatchMode.leader_selected,
-    query = encoded(Empty),
+    query = encoded(struct {
+      idempotency_key = [0x0a, 0x0b, 0x0c, ...],
+    } LeaderSelectedQueryConfig),
   } Query,
   agg_param = [0x00, 0x01, ...],
   extensions = [],
@@ -4061,8 +4063,32 @@ interaction (see {{aggregate-flow}}) need to be coordinated.
 
 ### Query Configuration
 
-They payload of `Query.config` is empty. The request merely indicates the
-Collector would like the next batch selected by the Leader.
+They payload of `Query.config` is:
+
+~~~ tls-presentation
+struct {
+  opaque idempotency_key<1..2^8-1>;
+} LeaderSelectedQueryConfig;
+~~~
+
+The request indicates the Collector would like the next batch selected by the
+Leader. The `idempotency_key` is chosen by the Collector and MUST be unique
+within the scope of the task. Its purpose is to make it possible for
+implementations of collection job creation in the leader-selected batch mode to
+satisfy the requirements in {{resource-creation}}.
+
+The Collector SHOULD keep track of the `idempotency_key` values it uses so that
+it can retry collection job creation requests without the risk of orphaning
+batches. The Leader MUST associate `idempotency_key` values with the batch IDs
+and collection job IDs it assigns so that it can successfully service collection
+job creation retries.
+
+If the Leader receives a `LeaderSelectedQueryConfig` containing an
+`idempotency_key` it recognizes, then it MUST respond using the associated batch
+ID and collection job ID (which could mean responding with an error if the batch
+has already been collected or in other conditions described in
+{{collect-init}}). If the `idempotency_key` is unrecognized, then the Leader
+attempts to create a new collection job.
 
 ### Aggregation Job Extension {#leader-selected-batch-id-extension}
 
@@ -4093,8 +4119,8 @@ struct {
 
 where `batch_id` is the batch ID selected by the Leader.
 
-Since `Query.config` is empty in this batch mode, batch selectors are trivially
-consistent with queries.
+Since this batch mode's query does not contain the batch ID, batch selectors are
+always consistent with queries.
 
 ### Batch Buckets {#leader-selected-batch-buckets}
 
