@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 4 April 2027                                         Cloudflare
+Expires: 5 April 2027                                         Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                          1 October 2026
+                                                          2 October 2026
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -64,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 4 April 2027.
+   This Internet-Draft will expire on 5 April 2027.
 
 Copyright Notice
 
@@ -4195,7 +4195,7 @@ Table of Contents
    They payload of Query.config is:
 
    struct {
-     opaque idempotency_key<1..16>;
+     opaque idempotency_key<1..2^8-1>;
    } LeaderSelectedQueryConfig;
 
    The request indicates the Collector would like the next batch
@@ -4244,8 +4244,8 @@ Table of Contents
 
    where batch_id is the batch ID selected by the Leader.
 
-   Since Query.config is empty in this batch mode, batch selectors are
-   trivially consistent with queries.
+   Since this batch mode's query does not contain the batch ID, batch
+   selectors are always consistent with queries.
 
 5.2.4.  Batch Buckets
 
