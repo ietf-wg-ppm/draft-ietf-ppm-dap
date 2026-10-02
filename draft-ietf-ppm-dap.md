@@ -4067,7 +4067,7 @@ They payload of `Query.config` is:
 
 ~~~ tls-presentation
 struct {
-  opaque idempotency_key<1..16>;
+  opaque idempotency_key<1..2^8-1>;
 } LeaderSelectedQueryConfig;
 ~~~
 
@@ -4119,8 +4119,8 @@ struct {
 
 where `batch_id` is the batch ID selected by the Leader.
 
-Since `Query.config` is empty in this batch mode, batch selectors are trivially
-consistent with queries.
+Since this batch mode's query does not contain the batch ID, batch selectors are
+always consistent with queries.
 
 ### Batch Buckets {#leader-selected-batch-buckets}
 
