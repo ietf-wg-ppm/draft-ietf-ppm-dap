@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-10-01T04:10:22.345929+00:00",
+  "timestamp": "2026-10-04T04:19:36.907208+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -94188,7 +94188,7 @@
       "labels": [],
       "body": "While implementing DAP draft-18, we noticed that the `task_info` field of `TaskConfiguration` has a minimum length of 1. When this was part of the Taskprov draft, this made sense, because distinct `task_info` fields would be the only way to produce distinct task IDs for similar measurement tasks. In the context of DAP draft-18, `TaskConfiguration` gets included in `InputShareAad` and `AggregateShareAad` alongside the task ID, so `TaskConfiguration` does not need to be unique in all deployment scenarios. If unique `task_info` values are not needed because task IDs are chosen uniformly at random, then it would be nice if we could set `task_info` to the empty string as a sensible default.\r\n\r\nIn the context of Taskprov, the editor's copy suggests including entropy in `task_info` in order to defend against task enumeration attacks. If we take this DAP change, we could change Taskprov to require that `task_info` be non-empty. We may want stronger language pointing out that the whole `TaskConfiguration` struct needs to be unique in order to distinguish semantically different measurement tasks, and that `task_info` is the one place operators can stick enough entropy to achieve that uniqueness, when all other parameters are the same.",
       "createdAt": "2026-06-08T20:15:40Z",
-      "updatedAt": "2026-06-15T15:45:45Z",
+      "updatedAt": "2026-10-01T18:42:30Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "823c5431e794c3681ea63ee54e9cbdc470c2ca9b",
@@ -94241,9 +94241,9 @@
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
-      "body": "This fixes #788 by adding an `unsupported_extensions variant to `ReportError` and making it clear that issues with report extensions are treated as per-report errors only.",
+      "body": "This fixes #788 by adding an `unsupported_extensions` variant to `ReportError` and making it clear that issues with report extensions are treated as per-report errors only.",
       "createdAt": "2026-06-26T15:10:04Z",
-      "updatedAt": "2026-07-06T14:36:41Z",
+      "updatedAt": "2026-10-01T18:43:20Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "d6451b8df1bb389371200c9e3d9777ecffc3140f",
@@ -94631,7 +94631,7 @@
       "labels": [],
       "body": "This fixes a minor typesetting error I noticed.",
       "createdAt": "2026-09-24T19:05:34Z",
-      "updatedAt": "2026-09-24T19:48:43Z",
+      "updatedAt": "2026-10-01T18:43:25Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "06c5a6beb598795661b560ddbb1ababefe635cc3",
@@ -94658,6 +94658,79 @@
           "createdAt": "2026-09-24T19:25:22Z",
           "updatedAt": "2026-09-24T19:25:22Z",
           "comments": []
+        }
+      ]
+    },
+    {
+      "number": 797,
+      "id": "PR_kwDOFEJYQs8AAAABGINfVg",
+      "title": "Add idempotency key to leader selected query",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/797",
+      "state": "OPEN",
+      "author": "tgeoghegan",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "The idempotent resource creation semantics of section 3.2 are impossible to realize for leader-selected collection jobs unless the creation request contains some unique identifier. This commit defines `LeaderSelectedQueryConfig`, consisting of a variable length idempotency key, so that Collectors can retry collection job creation without risk of orphaning batches.\r\n\r\nCloses #795",
+      "createdAt": "2026-10-01T16:01:31Z",
+      "updatedAt": "2026-10-02T14:43:01Z",
+      "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "baseRefName": "main",
+      "baseRefOid": "e20e3e531765f43228521a5ffbbe9b0fdadef80c",
+      "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "headRefName": "timg-fix-collection-jobs",
+      "headRefOid": "1af12a40e7e72bedfe55ac9bfeb8573433ccd25d",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOFEJYQs8AAAABQOUIRA",
+          "commit": {
+            "abbreviatedOid": "84c79c8"
+          },
+          "author": "divergentdave",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-10-01T18:28:25Z",
+          "updatedAt": "2026-10-01T18:35:51Z",
+          "comments": [
+            {
+              "originalPosition": 21,
+              "body": "This length limit seems pretty strict. With only 128 bits available, I'd be hesitant to do anything but select a byte string at random. Plus, it being variable length is not as valuable with the ceiling so low. I presume you'd need to pick a length between eight bytes and sixteen bytes to keep the risk of collisions low. If longer lengths were allowed, that could potentially allow deployments to more comfortably use structured idempotency keys, which could be operationally useful.\n```suggestion\n  opaque idempotency_key<1..32>;\n```\n```suggestion\n  opaque idempotency_key<1..2^8-1>;\n```",
+              "createdAt": "2026-10-01T18:28:25Z",
+              "updatedAt": "2026-10-01T18:35:51Z"
+            },
+            {
+              "originalPosition": 1,
+              "body": "We need to update this as well.\n```suggestion\nIn this batch mode, batch selectors are trivially consistent with queries.\n```",
+              "createdAt": "2026-10-01T18:34:03Z",
+              "updatedAt": "2026-10-01T18:35:51Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs8AAAABQXRiTQ",
+          "commit": {
+            "abbreviatedOid": "84c79c8"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-10-02T14:41:09Z",
+          "updatedAt": "2026-10-02T14:41:10Z",
+          "comments": [
+            {
+              "originalPosition": 21,
+              "body": "Okay, I buy the argument that allowing structured keys is valuable. I'll go with 2^8-1.",
+              "createdAt": "2026-10-02T14:41:10Z",
+              "updatedAt": "2026-10-02T14:41:10Z"
+            }
+          ]
         }
       ]
     }
