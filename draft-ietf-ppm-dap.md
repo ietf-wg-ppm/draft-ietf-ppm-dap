@@ -3365,8 +3365,10 @@ NOT commit more reports to the batch (see {{batch-buckets}}).
 
 Two `CollectionJobReq` messages are considered identical if their encodings are
 byte-for-byte identical. If the Leader receives a POST whose
-content matches an existing collection job, it MUST return the existing job's
-location and current state as described in {{resource-creation}}.
+content matches an existing collection job for the task, it MUST return the
+existing job's location and current state as described in {{resource-creation}}.
+This existing-resource response takes precedence over the `batchOverlap` check
+above, including when the existing collection job has completed.
 
 #### Example
 
