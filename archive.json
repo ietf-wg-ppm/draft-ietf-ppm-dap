@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-10-04T04:19:36.907208+00:00",
+  "timestamp": "2026-10-18T03:02:00.092494+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -94673,7 +94673,7 @@
       "labels": [],
       "body": "The idempotent resource creation semantics of section 3.2 are impossible to realize for leader-selected collection jobs unless the creation request contains some unique identifier. This commit defines `LeaderSelectedQueryConfig`, consisting of a variable length idempotency key, so that Collectors can retry collection job creation without risk of orphaning batches.\r\n\r\nCloses #795",
       "createdAt": "2026-10-01T16:01:31Z",
-      "updatedAt": "2026-10-02T14:43:01Z",
+      "updatedAt": "2026-10-16T02:48:41Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "e20e3e531765f43228521a5ffbbe9b0fdadef80c",
@@ -94731,8 +94731,55 @@
               "updatedAt": "2026-10-02T14:41:10Z"
             }
           ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs8AAAABSlSqWw",
+          "commit": {
+            "abbreviatedOid": "1af12a4"
+          },
+          "author": "autoCAT6",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "A concrete follow-up to #795: [#798](https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/798) makes the existing \u00a74.6.1 response rule explicitly take precedence over `batchOverlap` for a retained, byte-identical collection job in the same task. It does not change this PR\u2019s key format.\n\nThe recognized-key paragraph here could align with that rule as follows:\n\n> If the Leader receives a `LeaderSelectedQueryConfig` containing an `idempotency_key` it recognizes, then it MUST use the associated batch ID and collection job ID. If the request is identical to the request that created an existing collection job, it MUST return that job\u2019s location and current state as described in {{collect-init}}, including when the job has completed. Otherwise, using the associated identifiers could mean responding with an error under the conditions described in {{collect-init}}. If the `idempotency_key` is unrecognized, then the Leader attempts to create a new collection job.\n\nTwo additional boundaries may be useful to make explicit:\n\n- A known key with changed `agg_param` or extensions is not a byte-identical retry. Associating the key with the original complete request and rejecting a mismatch could avoid inconsistent semantics. Selecting `invalidMessage` here would be an additional validation rule, rather than a currently specified requirement.\n- Key-to-identifier association and retained job results are different state. Recognizing a key after discarding a result must still refer to the same identifiers; this observation does not require a permanent association lifetime after task expiry.\n\n[Executable design probes and recorded traces](https://github.com/autoCAT6/draft-ietf-ppm-dap/tree/0b152b5e7ba26d65fd853c808a0201e82d5c901f/contrib/collection-retry-vectors) cover these boundaries: 13 sequential scenarios, 11 passing tests and 20 enumerated two-request interleavings per policy. The retained-resource-first scenario explicitly exercises the proposed clarification; the alternative error interpretation remains separately inspectable. These are synthetic state models, not Janus behavior or conformance tests. The original lost-response problem and query-key solution come from this issue/PR discussion.\n",
+          "createdAt": "2026-10-16T01:47:14Z",
+          "updatedAt": "2026-10-16T02:48:41Z",
+          "comments": []
         }
       ]
+    },
+    {
+      "number": 798,
+      "id": "PR_kwDOFEJYQs8AAAABIwDRCQ",
+      "title": "Clarify collection retry response precedence over overlap errors",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/798",
+      "state": "OPEN",
+      "author": "autoCAT6",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "When a collection job finishes, its batch is marked collected. A byte-identical creation retry must still return the retained job\u2019s location and current state under \u00a73.2 and \u00a74.6.1. Make that response\u2019s precedence over `batchOverlap` explicit, and clarify that the existing job belongs to the same task.\n\nThis complements #795 and #797 without changing the leader-selected query format, adding an error code, or selecting a retention period.\n\nValidation: `make all`, `make lint`, and `git diff --check` pass; generated text and HTML include the clarified rule. Supplementary [executable design probes](https://github.com/autoCAT6/draft-ietf-ppm-dap/tree/0b152b5e7ba26d65fd853c808a0201e82d5c901f/contrib/collection-retry-vectors) include a retained-completed-resource scenario (13 sequential probes, 11 tests). These are synthetic protocol models rather than implementation conformance tests.\n",
+      "createdAt": "2026-10-16T01:45:51Z",
+      "updatedAt": "2026-10-16T02:54:28Z",
+      "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "baseRefName": "main",
+      "baseRefOid": "e20e3e531765f43228521a5ffbbe9b0fdadef80c",
+      "headRepository": "autoCAT6/draft-ietf-ppm-dap",
+      "headRefName": "clarify-collection-retry-precedence",
+      "headRefOid": "b166f9ce7a10dd6cce4f6ac5c3c9529f108bb4d1",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [
+        {
+          "author": "autoCAT6",
+          "authorAssociation": "NONE",
+          "body": "Local `make all` and `make lint` pass for the identical source tree of `b1750a226eabdc69653e0427f04e0bc9a59db5e7`. The [Update Editor\u2019s Copy workflow](https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/actions/runs/38842220164) currently has `action_required` status and no build jobs have started. Could a repository maintainer approve the workflow run so the upstream document build can execute?",
+          "createdAt": "2026-10-16T02:00:59Z",
+          "updatedAt": "2026-10-16T02:50:00Z"
+        }
+      ],
+      "reviews": []
     }
   ]
 }
