@@ -25,18 +25,18 @@ without revealing any individual contributor's data.
 <meta content="draft-ietf-ppm-dap-latest" name="ietf.draft">
 <!-- Generator version information:
   xml2rfc 3.34.1
-    Python 3.14.7
-    ConfigArgParse 1.7.7
+    Python 3.14.8
+    ConfigArgParse 1.8.0
     google-i18n-address 3.1.1
     intervaltree 3.2.1
     Jinja2 3.1.6
     lxml 6.1.1
     natsort 8.4.0
-    platformdirs 4.11.10
+    platformdirs 4.13.4
     pycountry 24.6.1
     PyYAML 6.0.3
     requests 2.33.1
-    wcwidth 0.8.4
+    wcwidth 0.9.2
 -->
 <link href="draft-ietf-ppm-dap.xml" rel="alternate" type="application/rfc+xml">
 <link href="#copyright" rel="license">
@@ -1056,7 +1056,7 @@ svg {
 </tr></thead>
 <tfoot><tr>
 <td class="left">Geoghegan, et al.</td>
-<td class="center">Expires 5 April 2027</td>
+<td class="center">Expires 22 April 2027</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1069,12 +1069,12 @@ svg {
 <dd class="internet-draft">draft-ietf-ppm-dap-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2026-10-02" class="published">2 October 2026</time>
+<time datetime="2026-10-19" class="published">19 October 2026</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Standards Track</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2027-04-05">5 April 2027</time></dd>
+<dd class="expires"><time datetime="2027-04-22">22 April 2027</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -1148,7 +1148,7 @@ without revealing any individual contributor's data.<a href="#section-abstract-1
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 5 April 2027.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 22 April 2027.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -6788,14 +6788,15 @@ satisfy the requirements in <a href="#resource-creation" class="auto internal xr
 <p id="section-5.2.1-4">The Collector <span class="bcp14">SHOULD</span> keep track of the <code>idempotency_key</code> values it uses so that
 it can retry collection job creation requests without the risk of orphaning
 batches. The Leader <span class="bcp14">MUST</span> associate <code>idempotency_key</code> values with the batch IDs
-and collection job IDs it assigns so that it can successfully service collection
-job creation retries.<a href="#section-5.2.1-4" class="pilcrow">¶</a></p>
+and collection job IDs it assigns, as well as the parameters of the collection
+job so that it can successfully service collection job creation retries.<a href="#section-5.2.1-4" class="pilcrow">¶</a></p>
 <p id="section-5.2.1-5">If the Leader receives a <code>LeaderSelectedQueryConfig</code> containing an
 <code>idempotency_key</code> it recognizes, then it <span class="bcp14">MUST</span> respond using the associated batch
-ID and collection job ID (which could mean responding with an error if the batch
-has already been collected or in other conditions described in
-<a href="#collect-init" class="auto internal xref">Section 4.6.1</a>). If the <code>idempotency_key</code> is unrecognized, then the Leader
-attempts to create a new collection job.<a href="#section-5.2.1-5" class="pilcrow">¶</a></p>
+ID and collection job ID. If any fields such a collection job request do not
+match what the Leader previously associated with the idempotency key, then that
+means responding with an error as described in <a href="#collect-init" class="auto internal xref">Section 4.6.1</a>.<a href="#section-5.2.1-5" class="pilcrow">¶</a></p>
+<p id="section-5.2.1-6">If the <code>idempotency_key</code> is unrecognized, then the Leader attempts to create a
+new collection job.<a href="#section-5.2.1-6" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="leader-selected-batch-id-extension">

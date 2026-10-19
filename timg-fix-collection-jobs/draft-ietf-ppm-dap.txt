@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 5 April 2027                                         Cloudflare
+Expires: 22 April 2027                                        Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                          2 October 2026
+                                                         19 October 2026
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -64,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 5 April 2027.
+   This Internet-Draft will expire on 22 April 2027.
 
 Copyright Notice
 
@@ -4208,16 +4208,19 @@ Table of Contents
    The Collector SHOULD keep track of the idempotency_key values it uses
    so that it can retry collection job creation requests without the
    risk of orphaning batches.  The Leader MUST associate idempotency_key
-   values with the batch IDs and collection job IDs it assigns so that
-   it can successfully service collection job creation retries.
+   values with the batch IDs and collection job IDs it assigns, as well
+   as the parameters of the collection job so that it can successfully
+   service collection job creation retries.
 
    If the Leader receives a LeaderSelectedQueryConfig containing an
    idempotency_key it recognizes, then it MUST respond using the
-   associated batch ID and collection job ID (which could mean
-   responding with an error if the batch has already been collected or
-   in other conditions described in Section 4.6.1).  If the
-   idempotency_key is unrecognized, then the Leader attempts to create a
-   new collection job.
+   associated batch ID and collection job ID.  If any fields such a
+   collection job request do not match what the Leader previously
+   associated with the idempotency key, then that means responding with
+   an error as described in Section 4.6.1.
+
+   If the idempotency_key is unrecognized, then the Leader attempts to
+   create a new collection job.
 
 5.2.2.  Aggregation Job Extension
 
