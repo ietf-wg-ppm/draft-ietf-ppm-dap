@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 28 March 2027                                        Cloudflare
+Expires: 23 April 2027                                        Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                       24 September 2026
+                                                         20 October 2026
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -64,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 28 March 2027.
+   This Internet-Draft will expire on 23 April 2027.
 
 Copyright Notice
 
@@ -3523,7 +3523,9 @@ Table of Contents
    encoded(struct {
      query = struct {
        batch_mode = BatchMode.leader_selected,
-       query = encoded(Empty),
+       query = encoded(struct {
+         idempotency_key = [0x0a, 0x0b, 0x0c, ...],
+       } LeaderSelectedQueryConfig),
      } Query,
      agg_param = [0x00, 0x01, ...],
      extensions = [],
@@ -4190,8 +4192,35 @@ Table of Contents
 
 5.2.1.  Query Configuration
 
-   They payload of Query.config is empty.  The request merely indicates
-   the Collector would like the next batch selected by the Leader.
+   They payload of Query.config is:
+
+   struct {
+     opaque idempotency_key<1..2^8-1>;
+   } LeaderSelectedQueryConfig;
+
+   The request indicates the Collector would like the next batch
+   selected by the Leader.  The idempotency_key is chosen by the
+   Collector and MUST be unique within the scope of the task.  Its
+   purpose is to make it possible for implementations of collection job
+   creation in the leader-selected batch mode to satisfy the
+   requirements in Section 3.2.
+
+   The Collector SHOULD keep track of the idempotency_key values it uses
+   so that it can retry collection job creation requests without the
+   risk of orphaning batches.  The Leader MUST associate idempotency_key
+   values with the batch IDs and collection job IDs it assigns, as well
+   as the parameters of the collection job so that it can successfully
+   service collection job creation retries.
+
+   If the Leader receives a LeaderSelectedQueryConfig containing an
+   idempotency_key it recognizes, then it MUST respond using the
+   associated batch ID and collection job ID.  If any fields such a
+   collection job request do not match what the Leader previously
+   associated with the idempotency key, then that means responding with
+   an error as described in Section 4.6.1.
+
+   If the idempotency_key is unrecognized, then the Leader attempts to
+   create a new collection job.
 
 5.2.2.  Aggregation Job Extension
 
@@ -4218,8 +4247,8 @@ Table of Contents
 
    where batch_id is the batch ID selected by the Leader.
 
-   Since Query.config is empty in this batch mode, batch selectors are
-   trivially consistent with queries.
+   Since this batch mode's query does not contain the batch ID, batch
+   selectors are always consistent with queries.
 
 5.2.4.  Batch Buckets
 
