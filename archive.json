@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-10-18T03:02:00.092494+00:00",
+  "timestamp": "2026-10-20T03:24:32.625365+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -94673,18 +94673,26 @@
       "labels": [],
       "body": "The idempotent resource creation semantics of section 3.2 are impossible to realize for leader-selected collection jobs unless the creation request contains some unique identifier. This commit defines `LeaderSelectedQueryConfig`, consisting of a variable length idempotency key, so that Collectors can retry collection job creation without risk of orphaning batches.\r\n\r\nCloses #795",
       "createdAt": "2026-10-01T16:01:31Z",
-      "updatedAt": "2026-10-16T02:48:41Z",
+      "updatedAt": "2026-10-19T17:52:22Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "e20e3e531765f43228521a5ffbbe9b0fdadef80c",
       "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "headRefName": "timg-fix-collection-jobs",
-      "headRefOid": "1af12a40e7e72bedfe55ac9bfeb8573433ccd25d",
+      "headRefOid": "4e77c345ca835957ee7d9ff8ce4fdb7cc1dbf331",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
       "mergeCommit": null,
-      "comments": [],
+      "comments": [
+        {
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "body": "I added some text clarifying the case called out above. I don't think we want to prescribe `invalidMessage` in this case.",
+          "createdAt": "2026-10-19T17:52:21Z",
+          "updatedAt": "2026-10-19T17:52:21Z"
+        }
+      ],
       "reviews": [
         {
           "id": "PRR_kwDOFEJYQs8AAAABQOUIRA",
