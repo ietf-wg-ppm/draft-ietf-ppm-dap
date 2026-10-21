@@ -182,6 +182,16 @@ aggregator.
 
 (RFC EDITOR: Remove this section.)
 
+20:
+
+- Clarify nature of resource IDs (#794)
+
+- Add idempotency key in leader selected query (\*) (#798)
+
+- Bump version tag from "dap-19" to "dap-20". (\*)
+
+- Bump draft-irtf-cfrg-vdaf to -22 ({{!VDAF}}).
+
 19:
 
 - Delete unused or redundant `ReportError` variants. (\*) (#786)
@@ -1774,7 +1784,7 @@ of !VDAF}}), using the report ID as the nonce:
 
 ~~~ pseudocode
 (public_share, input_shares) = Vdaf.shard(
-    "dap-19" || task_id,
+    "dap-20" || task_id,
     measurement,
     report_id,
     rand,
@@ -1814,11 +1824,11 @@ Next, the Client encrypts each `PlaintextInputShare` as follows:
 
 (RFC EDITOR: Once the document becomes an RFC, we will stop including the draft
 version in domain separation tags. In the remainder of this section, replace
-"dap-19" with "dap".)
+"dap-20" with "dap".)
 
 ~~~ pseudocode
 enc, payload = SealBase(pk,
-  "dap-19 input share" || 0x01 || server_role,
+  "dap-20 input share" || 0x01 || server_role,
   input_share_aad, plaintext_input_share)
 ~~~
 
@@ -2287,7 +2297,7 @@ For each report the Leader executes the following procedure:
 ~~~ pseudocode
 state = Vdaf.ping_pong_leader_init(
     vdaf_verify_key,
-    "dap-19" || task_id,
+    "dap-20" || task_id,
     agg_param,
     report_id,
     public_share,
@@ -2406,7 +2416,7 @@ The Leader proceeds as follows with each report:
 
    ~~~ pseudocode
    state = Vdaf.ping_pong_leader_continued(
-       "dap-19" || task_id,
+       "dap-20" || task_id,
        agg_param,
        state,
        inbound,
@@ -2547,7 +2557,7 @@ For all other reports it initializes the VDAF verification state as follows:
 ~~~ pseudocode
 state = Vdaf.ping_pong_helper_init(
     vdaf_verify_key,
-    "dap-19" || task_id,
+    "dap-20" || task_id,
     agg_param,
     report_id,
     public_share,
@@ -2627,7 +2637,7 @@ the following procedure:
 
 ~~~ pseudocode
 plaintext_input_share = OpenBase(encrypted_input_share.enc, sk,
-  "dap-19 input share" || 0x01 || server_role,
+  "dap-20 input share" || 0x01 || server_role,
   input_share_aad, encrypted_input_share.payload)
 ~~~
 
@@ -2849,7 +2859,7 @@ Otherwise, the Leader proceeds as follows with each report:
 
    ~~~ pseudocode
    state = Vdaf.ping_pong_leader_continued(
-       "dap-19" || task_id,
+       "dap-20" || task_id,
        agg_param,
        state,
        inbound,
@@ -2968,7 +2978,7 @@ For each report, the Helper does the following:
 
 ~~~ pseudocode
 state = Vdaf.ping_pong_helper_continued(
-    "dap-19" || task_id,
+    "dap-20" || task_id,
     agg_param,
     state,
     inbound,
@@ -3842,7 +3852,7 @@ done as follows:
 ~~~ pseudocode
 (enc, payload) = SealBase(
     pk,
-    "dap-19 aggregate share" || server_role || 0x00,
+    "dap-20 aggregate share" || server_role || 0x00,
     agg_share_aad,
     agg_share)
 ~~~
@@ -3879,7 +3889,7 @@ batch selector, decryption works as follows:
 agg_share = OpenBase(
     enc_share.enc,
     sk,
-    "dap-19 aggregate share" || server_role || 0x00,
+    "dap-20 aggregate share" || server_role || 0x00,
     agg_share_aad,
     enc_share.payload)
 ~~~
