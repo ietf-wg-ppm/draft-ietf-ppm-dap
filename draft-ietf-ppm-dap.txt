@@ -213,6 +213,16 @@ Table of Contents
 
    (RFC EDITOR: Remove this section.)
 
+   20:
+
+   *  Clarify nature of resource IDs (#794)
+
+   *  Add idempotency key in leader selected query (*) (#798)
+
+   *  Bump version tag from "dap-19" to "dap-20". (*)
+
+   *  Bump draft-irtf-cfrg-vdaf to -22 ([VDAF]).
+
    19:
 
    *  Delete unused or redundant ReportError variants. (*) (#786)
@@ -1863,7 +1873,7 @@ Table of Contents
    algorithm (Section 5.1 of [VDAF]), using the report ID as the nonce:
 
    (public_share, input_shares) = Vdaf.shard(
-       "dap-19" || task_id,
+       "dap-20" || task_id,
        measurement,
        report_id,
        rand,
@@ -1900,10 +1910,10 @@ Table of Contents
 
    (RFC EDITOR: Once the document becomes an RFC, we will stop including
    the draft version in domain separation tags.  In the remainder of
-   this section, replace "dap-19" with "dap".)
+   this section, replace "dap-20" with "dap".)
 
    enc, payload = SealBase(pk,
-     "dap-19 input share" || 0x01 || server_role,
+     "dap-20 input share" || 0x01 || server_role,
      input_share_aad, plaintext_input_share)
 
    *  pk is the public key from the Aggregator's HPKE configuration.
@@ -2385,7 +2395,7 @@ Table of Contents
 
    state = Vdaf.ping_pong_leader_init(
        vdaf_verify_key,
-       "dap-19" || task_id,
+       "dap-20" || task_id,
        agg_param,
        report_id,
        public_share,
@@ -2506,7 +2516,7 @@ Table of Contents
        the Leader computes
 
       state = Vdaf.ping_pong_leader_continued(
-          "dap-19" || task_id,
+          "dap-20" || task_id,
           agg_param,
           state,
           inbound,
@@ -2655,7 +2665,7 @@ Table of Contents
 
    state = Vdaf.ping_pong_helper_init(
        vdaf_verify_key,
-       "dap-19" || task_id,
+       "dap-20" || task_id,
        agg_param,
        report_id,
        public_share,
@@ -2744,7 +2754,7 @@ Table of Contents
    procedure:
 
    plaintext_input_share = OpenBase(encrypted_input_share.enc, sk,
-     "dap-19 input share" || 0x01 || server_role,
+     "dap-20 input share" || 0x01 || server_role,
      input_share_aad, encrypted_input_share.payload)
 
    *  sk is the secret key from the HPKE configuration indicated by
@@ -2963,7 +2973,7 @@ Table of Contents
        "continue", then the Leader computes
 
       state = Vdaf.ping_pong_leader_continued(
-          "dap-19" || task_id,
+          "dap-20" || task_id,
           agg_param,
           state,
           inbound,
@@ -3089,7 +3099,7 @@ Table of Contents
    For each report, the Helper does the following:
 
    state = Vdaf.ping_pong_helper_continued(
-       "dap-19" || task_id,
+       "dap-20" || task_id,
        agg_param,
        state,
        inbound,
@@ -3976,7 +3986,7 @@ Table of Contents
 
    (enc, payload) = SealBase(
        pk,
-       "dap-19 aggregate share" || server_role || 0x00,
+       "dap-20 aggregate share" || server_role || 0x00,
        agg_share_aad,
        agg_share)
 
@@ -4014,7 +4024,7 @@ Table of Contents
    agg_share = OpenBase(
        enc_share.enc,
        sk,
-       "dap-19 aggregate share" || server_role || 0x00,
+       "dap-20 aggregate share" || server_role || 0x00,
        agg_share_aad,
        enc_share.payload)
 
