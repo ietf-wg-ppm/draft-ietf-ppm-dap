@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-10-20T03:24:32.625365+00:00",
+  "timestamp": "2026-10-22T03:21:48.484633+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -14328,7 +14328,7 @@
       "id": "I_kwDOFEJYQs8AAAABTCGz_w",
       "title": "Synchronous leader selected collection job creation can't be idempotent",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/795",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "tgeoghegan",
       "authorAssociation": "COLLABORATOR",
       "assignees": [
@@ -14337,8 +14337,8 @@
       "labels": [],
       "body": "DAP aims to have consistent semantics across all of its HTTP resources. In particular, we tried to make both synchronous and asynchronous creation of resources consistent across aggregation jobs, aggregate shares and collection jobs, described in [section 3.2](https://ietf-wg-ppm.github.io/draft-ietf-ppm-dap/draft-ietf-ppm-dap.html#section-3.2).\n\nUnfortunately, the \"simple\", synchronous, one-shot collection job creation interaction cannot be realized idempotently for leader selected collection jobs. I believe we should require asynchronous interaction for at least leader selected collection jobs. And I think it would make more sense for all collection jobs to the asynchronous, always. This is something we (specifically, @jcjones) realized while implementing the latest DAP version in [Janus](https://github.com/divviup/janus).\n\nWe've been round and round on this over a period of years, and I'd like to settle this once and for all, so I'm going to explain this in some detail. Let's start by examining a sequence of successful leader selected collection job interactions and consider when the Leader can decide that some batch has been collected.\n\n## The synchronous collection interaction\n\n*(a)* First, the Collector sends a collection job request. Because the mode is Leader selected, `CollectionJobReq.query.query` is empty.\n\n```http\nPOST /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/collection_jobs\nHost: example.com\nContent-Type: application/ppm-dap;message=collection-job-req\nAuthorization: Bearer auth-token\n\nencoded(struct {\n  query = struct {\n    batch_mode = BatchMode.leader_selected,\n    query = encoded(Empty),\n  } Query,\n  agg_param = [0x00, 0x01, ...],\n  extensions = [],\n} CollectionJobReq)\n```\n\n*(b)* Now, the Leader decides what the \"next\" batch to collect is (as implied by the name, the Leader selects what notion of \"next\"-ness to implement) and respond with is and assigns it collection job ID `lc7aUeGpdSNosNlh-UZhKA` and replies to the Collector.\n\n```http\nHTTP/1.1 200\nLocation: /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/collection_jobs/lc7aUeGpdSNosNlh-UZhKA\nContent-Type: application/ppm-dap;message=collection-job-resp\n\nencoded(struct {\n  report_count = 1000,\n  interval = struct {\n    start = 16595440,\n    duration = 1,\n  } Interval,\n  leader_encrypted_agg_share = struct { ... } HpkeCiphertext,\n  helper_encrypted_agg_share = struct { ... } HpkeCiphertext,\n} CollectionJobResp)\n```\n\n*(c)* Now, the Collector wants to get the \"next\" batch, so it does another post to the collection jobs endpoint. Note that the request is identical to the one it sent before, because of how leader selected mode works!\n\n```http\nPOST /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/collection_jobs\nHost: example.com\nContent-Type: application/ppm-dap;message=collection-job-req\nAuthorization: Bearer auth-token\n\nencoded(struct {\n  query = struct {\n    batch_mode = BatchMode.leader_selected,\n    query = encoded(Empty),\n  } Query,\n  agg_param = [0x00, 0x01, ...],\n  extensions = [],\n} CollectionJobReq)\n```\n\nThe Leader decides that the \"next\" batch is collection job ID `64N-Mri9A7dTagmYUhf7Yg` and responds accordingly:\n\n```http\nHTTP/1.1 200\nLocation: /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/collection_jobs/64N-Mri9A7dTagmYUhf7Yg\nContent-Type: application/ppm-dap;message=collection-job-resp\n\nencoded(struct {\n  report_count = 1000,\n  interval = struct {\n    start = 16595440,\n    duration = 1,\n  } Interval,\n  leader_encrypted_agg_share = struct { ... } HpkeCiphertext,\n  helper_encrypted_agg_share = struct { ... } HpkeCiphertext,\n} CollectionJobResp)\n```\n\nNow, let's consider: at what point could the Leader decide that the first batch, `lc7aUeGpdSNosNlh-UZhKA` had been successfully collected, and thus that the subsequent request for a batch should serve up `64N-Mri9A7dTagmYUhf7Yg`? The Leader can't know whether the response it served at *(b)* was actually received by the Collector. It's forced to assume that it did get through and mark `lc7aUeGpdSNosNlh-UZhKA` collected.\n\nBut let's say the response at *(b)* does get dropped on its way to the Collector. The Collector would eventually observe a timeout, or an unparseable response, or something, and it would want to retry its request from *(a)*, but the Leader thinks it's at *(c)* and collects the wrong batch. There's no way for the Collector to recover `lc7aUeGpdSNosNlh-UZhKA`.\n\n## The asynchronous collection interaction\n\nNow, let's compare to the asynchronous interaction. First, the Collector creates the collection job, much as before:\n\n```http\nPOST /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/collection_jobs\nHost: example.com\nContent-Type: application/ppm-dap;message=collection-job-req\nAuthorization: Bearer auth-token\n\nencoded(struct {\n  query = struct {\n    batch_mode = BatchMode.leader_selected,\n    query = encoded(Empty),\n  } Query,\n  agg_param = encoded(Empty),\n  extensions = [],\n} CollectionJobReq)\n```\n\n*(a)* The Leader responds, acknowledging the creation of the collection job and indicating a collection job ID.\n\n```http\nHTTP/1.1 200\nLocation: /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/collection_jobs/lc7aUeGpdSNosNlh-UZhKA\nRetry-After: 300\n```\n\n*(b)* The Collector polls the state of the collection job. Note that the Collector's request path contains the collection job ID assigned by the Leader!\n\n```http\nGET /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/collection_jobs/lc7aUeGpdSNosNlh-UZhKA\nHost: example.com\nAuthorization: Bearer auth-token\n```\n\nHaving now completed servicing the collection job, the Leader responds with its full representation.\n\n```http\nHTTP/1.1 200\nContent-Type: application/ppm-dap;message=collection-job-resp\n\nencoded(struct {\n  report_count = 4000,\n  interval = struct {\n    start = 1659547,\n    duration = 10,\n  } Interval,\n  leader_encrypted_agg_share = struct { ... } HpkeCiphertext,\n  helper_encrypted_agg_share = struct { ... } HpkeCiphertext,\n} CollectionJobResp)\n```\n\nIn this setting, the Leader can assign a collection job ID to a batch at *(a)*, but it knows not to change its view of what the \"next\" batch is until it observes the Collector's request at *(b)*: there's no way that the Collector's request could include the collection job ID unless the response was successfully delivered at *(a)*.\n\nContinuing the example, the Collector now asks for the \"next\" batch by sending another empty query:\n\n```http\nPOST /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/collection_jobs\nHost: example.com\nContent-Type: application/ppm-dap;message=collection-job-req\nAuthorization: Bearer auth-token\n\nencoded(struct {\n  query = struct {\n    batch_mode = BatchMode.leader_selected,\n    query = encoded(Empty),\n  } Query,\n  agg_param = encoded(Empty),\n  extensions = [],\n} CollectionJobReq)\n```\n\nBecause the Leader confirmed at *(b)* that the Collector is aware of job `lc7aUeGpdSNosNlh-UZhKA`, it can respond to this request with the \"next\" batch, `64N-Mri9A7dTagmYUhf7Yg`.\n\n```http\nHTTP/1.1 200\nLocation: /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/collection_jobs/64N-Mri9A7dTagmYUhf7Yg\nRetry-After: 300\n```\n\n## Recovery from dropped responses in asynchronous collection job flow\n\nLet's spell out recovery from a response being dropped just make things very very explicit.\n\nOnce again, we start with the Collector requesting the \"next\" batch:\n\n```http\nPOST /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/collection_jobs\nHost: example.com\nContent-Type: application/ppm-dap;message=collection-job-req\nAuthorization: Bearer auth-token\n\nencoded(struct {\n  query = struct {\n    batch_mode = BatchMode.leader_selected,\n    query = encoded(Empty),\n  } Query,\n  agg_param = encoded(Empty),\n  extensions = [],\n} CollectionJobReq)\n```\n\n*(a)* The Leader determines that `lc7aUeGpdSNosNlh-UZhKA` is \"next\", but the response does not make it to the Collector because some router on the path crashed. After a timeout, it resends its initial request:\n\n```http\nPOST /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/collection_jobs\nHost: example.com\nContent-Type: application/ppm-dap;message=collection-job-req\nAuthorization: Bearer auth-token\n\nencoded(struct {\n  query = struct {\n    batch_mode = BatchMode.leader_selected,\n    query = encoded(Empty),\n  } Query,\n  agg_param = encoded(Empty),\n  extensions = [],\n} CollectionJobReq)\n```\n\nIn the Leader's state, `lc7aUeGpdSNosNlh-UZhKA` is still \"next\" (even if it might have started or completed the work of gathering the aggregate shares since *(a)*), so it responds with that collection job ID:\n\n```http\nHTTP/1.1 200\nLocation: /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/collection_jobs/lc7aUeGpdSNosNlh-UZhKA\nRetry-After: 300\n```\n\nThis time, the response gets through, and the Collector can poll on that resource's state:\n\n```http\nGET /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/collection_jobs/lc7aUeGpdSNosNlh-UZhKA\nHost: example.com\nAuthorization: Bearer auth-token\n```\n\n*(b)* The Leader has serviced the job and responds with the results, but once again the response gets lost. The Collector eventually polls the job again:\n\n```http\nGET /leader/tasks/8BY0RzZMzxvA46_8ymhzycOB9krN-QIGYvg_RsByGec/collection_jobs/lc7aUeGpdSNosNlh-UZhKA\nHost: example.com\nAuthorization: Bearer auth-token\n```\n\nHaving now completed servicing the collection job, the Leader responds with its full representation.\n\n```http\nHTTP/1.1 200\nContent-Type: application/ppm-dap;message=collection-job-resp\n\nencoded(struct {\n  report_count = 4000,\n  interval = struct {\n    start = 1659547,\n    duration = 10,\n  } Interval,\n  leader_encrypted_agg_share = struct { ... } HpkeCiphertext,\n  helper_encrypted_agg_share = struct { ... } HpkeCiphertext,\n} CollectionJobResp)\n```\n\nSo we observe that in the asynchronous interaction, recovery from message loss is always possible. I'll add that from *(b)* onward, the Leader could respond to further \"next\" batch requests with collection job ID `64N-Mri9A7dTagmYUhf7Yg`, because it knows that the Collector has observed (and hopefully persisted) collection job ID `lc7aUeGpdSNosNlh-UZhKA` and thus can poll on both collection jobs as needed.\n\n## What about time interval?\n\nTime interval batch mode collection jobs don't have this problem, because the `CollectionJobReq` sent by the Collector contains the desired interval of time, which is enough information for the Leader to determine which batch it pertains to and respond appropriately.\n\n## What do we do about it?\n\nI see three options.\n\n### Collector chooses collection job ID\n\nIf the Collector's initial request included the collection job ID, either in the request path or in a field of `CollectionJobReq`, then this would make explicit which collection job it's talking about in any given request, enabling it to retry.\n\nThe downside is that this would be inconsistent with other resources, where the HTTP server is responsible for choosing collection job ID.\n\n### Include an idempotency key in the collection job initialization request\n\nIf the Collector's initial request included an [`Idempotency-Key` HTTP header](https://datatracker.ietf.org/doc/draft-ietf-httpapi-idempotency-key-header/), then the Leader could still generate collection job IDs and the Collector would be able to idempotently retry requests. So technically this would maintain consistent semantics with the other resources.\n\nThe downside is that the Leader would then have to maintain a mapping of `Idempotency-Key` values to generated collection job IDs, and the Collector would have to persistently track which `Idempotency-Key` values it has sent and eventually map those to collection job IDs. Mechanically, this option is the same as Collector-chosen collection job IDs, except we can pretend that it works the same way as the rest of the HTTP resources.\n\n### Forbid synchronous collection job interaction\n\nAs illustrated above, asynchronous collection jobs work fine. We could amend sections [3.2](https://ietf-wg-ppm.github.io/draft-ietf-ppm-dap/draft-ietf-ppm-dap.html#section-3.2) and [4.6](https://ietf-wg-ppm.github.io/draft-ietf-ppm-dap/draft-ietf-ppm-dap.html#section-4.6) to state that the collection job interaction can only be asynchronous.\n\nThe downside is that this makes collection jobs different from everything else. The upside is that it doesn't impose any new state tracking on Collectors.\n\nPersonally I think this is the best option.",
       "createdAt": "2026-09-24T17:42:17Z",
-      "updatedAt": "2026-09-30T17:08:46Z",
-      "closedAt": null,
+      "updatedAt": "2026-10-20T17:53:22Z",
+      "closedAt": "2026-10-20T17:53:22Z",
       "comments": [
         {
           "author": "divergentdave",
@@ -94666,24 +94666,26 @@
       "id": "PR_kwDOFEJYQs8AAAABGINfVg",
       "title": "Add idempotency key to leader selected query",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/797",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "tgeoghegan",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "The idempotent resource creation semantics of section 3.2 are impossible to realize for leader-selected collection jobs unless the creation request contains some unique identifier. This commit defines `LeaderSelectedQueryConfig`, consisting of a variable length idempotency key, so that Collectors can retry collection job creation without risk of orphaning batches.\r\n\r\nCloses #795",
       "createdAt": "2026-10-01T16:01:31Z",
-      "updatedAt": "2026-10-19T17:52:22Z",
+      "updatedAt": "2026-10-20T17:53:21Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "e20e3e531765f43228521a5ffbbe9b0fdadef80c",
       "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "headRefName": "timg-fix-collection-jobs",
-      "headRefOid": "4e77c345ca835957ee7d9ff8ce4fdb7cc1dbf331",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "headRefOid": "d881403547d882e0455cc7092f72c9fc2ea86999",
+      "closedAt": "2026-10-20T17:53:21Z",
+      "mergedAt": "2026-10-20T17:53:20Z",
+      "mergedBy": "tgeoghegan",
+      "mergeCommit": {
+        "oid": "8a0096573be54c21bf717b96f4b8232747798bfc"
+      },
       "comments": [
         {
           "author": "tgeoghegan",
@@ -94691,6 +94693,13 @@
           "body": "I added some text clarifying the case called out above. I don't think we want to prescribe `invalidMessage` in this case.",
           "createdAt": "2026-10-19T17:52:21Z",
           "updatedAt": "2026-10-19T17:52:21Z"
+        },
+        {
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "body": "We feel that the [implementation experience in Janus](https://github.com/divviup/janus/pull/4897) gives us confidence this specification change is sound. Nobody has objected to it in the last few weeks, so I'm merging this in the interest of cutting draft-ietf-ppm-dap-20 in time for IETF 127.",
+          "createdAt": "2026-10-20T17:51:27Z",
+          "updatedAt": "2026-10-20T17:51:27Z"
         }
       ],
       "reviews": [
@@ -94746,7 +94755,7 @@
             "abbreviatedOid": "1af12a4"
           },
           "author": "autoCAT6",
-          "authorAssociation": "NONE",
+          "authorAssociation": "CONTRIBUTOR",
           "state": "COMMENTED",
           "body": "A concrete follow-up to #795: [#798](https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/798) makes the existing \u00a74.6.1 response rule explicitly take precedence over `batchOverlap` for a retained, byte-identical collection job in the same task. It does not change this PR\u2019s key format.\n\nThe recognized-key paragraph here could align with that rule as follows:\n\n> If the Leader receives a `LeaderSelectedQueryConfig` containing an `idempotency_key` it recognizes, then it MUST use the associated batch ID and collection job ID. If the request is identical to the request that created an existing collection job, it MUST return that job\u2019s location and current state as described in {{collect-init}}, including when the job has completed. Otherwise, using the associated identifiers could mean responding with an error under the conditions described in {{collect-init}}. If the `idempotency_key` is unrecognized, then the Leader attempts to create a new collection job.\n\nTwo additional boundaries may be useful to make explicit:\n\n- A known key with changed `agg_param` or extensions is not a byte-identical retry. Associating the key with the original complete request and rejecting a mismatch could avoid inconsistent semantics. Selecting `invalidMessage` here would be an additional validation rule, rather than a currently specified requirement.\n- Key-to-identifier association and retained job results are different state. Recognizing a key after discarding a result must still refer to the same identifiers; this observation does not require a permanent association lifetime after task expiry.\n\n[Executable design probes and recorded traces](https://github.com/autoCAT6/draft-ietf-ppm-dap/tree/0b152b5e7ba26d65fd853c808a0201e82d5c901f/contrib/collection-retry-vectors) cover these boundaries: 13 sequential scenarios, 11 passing tests and 20 enumerated two-request interleavings per policy. The retained-resource-first scenario explicitly exercises the proposed clarification; the alternative error interpretation remains separately inspectable. These are synthetic state models, not Janus behavior or conformance tests. The original lost-response problem and query-key solution come from this issue/PR discussion.\n",
           "createdAt": "2026-10-16T01:47:14Z",
@@ -94760,33 +94769,91 @@
       "id": "PR_kwDOFEJYQs8AAAABIwDRCQ",
       "title": "Clarify collection retry response precedence over overlap errors",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/798",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "autoCAT6",
-      "authorAssociation": "NONE",
+      "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
       "labels": [],
       "body": "When a collection job finishes, its batch is marked collected. A byte-identical creation retry must still return the retained job\u2019s location and current state under \u00a73.2 and \u00a74.6.1. Make that response\u2019s precedence over `batchOverlap` explicit, and clarify that the existing job belongs to the same task.\n\nThis complements #795 and #797 without changing the leader-selected query format, adding an error code, or selecting a retention period.\n\nValidation: `make all`, `make lint`, and `git diff --check` pass; generated text and HTML include the clarified rule. Supplementary [executable design probes](https://github.com/autoCAT6/draft-ietf-ppm-dap/tree/0b152b5e7ba26d65fd853c808a0201e82d5c901f/contrib/collection-retry-vectors) include a retained-completed-resource scenario (13 sequential probes, 11 tests). These are synthetic protocol models rather than implementation conformance tests.\n",
       "createdAt": "2026-10-16T01:45:51Z",
-      "updatedAt": "2026-10-16T02:54:28Z",
+      "updatedAt": "2026-10-21T00:55:48Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "e20e3e531765f43228521a5ffbbe9b0fdadef80c",
       "headRepository": "autoCAT6/draft-ietf-ppm-dap",
       "headRefName": "clarify-collection-retry-precedence",
       "headRefOid": "b166f9ce7a10dd6cce4f6ac5c3c9529f108bb4d1",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "closedAt": "2026-10-21T00:55:47Z",
+      "mergedAt": "2026-10-21T00:55:47Z",
+      "mergedBy": "tgeoghegan",
+      "mergeCommit": {
+        "oid": "f587bb05ce636c024accf8747f78b7906c7921b4"
+      },
       "comments": [
         {
           "author": "autoCAT6",
-          "authorAssociation": "NONE",
+          "authorAssociation": "CONTRIBUTOR",
           "body": "Local `make all` and `make lint` pass for the identical source tree of `b1750a226eabdc69653e0427f04e0bc9a59db5e7`. The [Update Editor\u2019s Copy workflow](https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/actions/runs/38842220164) currently has `action_required` status and no build jobs have started. Could a repository maintainer approve the workflow run so the upstream document build can execute?",
           "createdAt": "2026-10-16T02:00:59Z",
           "updatedAt": "2026-10-16T02:50:00Z"
+        },
+        {
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "body": "I think this change is a good clarification and an improvement to the text, though I believe it's not strictly necessary in the sense that there's no change to the expected behavior of a leader.",
+          "createdAt": "2026-10-20T17:55:55Z",
+          "updatedAt": "2026-10-20T17:55:55Z"
+        },
+        {
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Thank you for this contribution!",
+          "createdAt": "2026-10-21T00:55:33Z",
+          "updatedAt": "2026-10-21T00:55:33Z"
         }
       ],
+      "reviews": [
+        {
+          "id": "PRR_kwDOFEJYQs8AAAABTSXb7A",
+          "commit": {
+            "abbreviatedOid": "b166f9c"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2026-10-20T17:53:27Z",
+          "updatedAt": "2026-10-20T17:53:27Z",
+          "comments": []
+        }
+      ]
+    },
+    {
+      "number": 799,
+      "id": "PR_kwDOFEJYQs8AAAABJrqkEQ",
+      "title": "chores for draft-ietf-ppm-dap-20",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/799",
+      "state": "MERGED",
+      "author": "tgeoghegan",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Add changelog and bump the version tag.",
+      "createdAt": "2026-10-21T01:00:30Z",
+      "updatedAt": "2026-10-21T01:01:19Z",
+      "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "baseRefName": "main",
+      "baseRefOid": "f587bb05ce636c024accf8747f78b7906c7921b4",
+      "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "headRefName": "timg-draft-20-chores",
+      "headRefOid": "0ffa93b6f60e978da4073b780bb3875cf17dae51",
+      "closedAt": "2026-10-21T01:01:19Z",
+      "mergedAt": "2026-10-21T01:01:18Z",
+      "mergedBy": "tgeoghegan",
+      "mergeCommit": {
+        "oid": "b67dea77488aac1cf0a4244eda1b80edb736fee7"
+      },
+      "comments": [],
       "reviews": []
     }
   ]
