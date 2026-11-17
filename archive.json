@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-10-22T03:21:48.484633+00:00",
+  "timestamp": "2026-11-17T06:32:40.777904+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -94853,6 +94853,32 @@
       "mergeCommit": {
         "oid": "b67dea77488aac1cf0a4244eda1b80edb736fee7"
       },
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 800,
+      "id": "PR_kwDOFEJYQs8AAAABPs7NFw",
+      "title": "Fix interval containment definition for half-open intervals",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/800",
+      "state": "OPEN",
+      "author": "cryptoecurve",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "Section 4.1.1 defines when an interval `a` falls within another interval `b`.\nThe current definition implies mathemtically\n- `a.start >= b.start`\n- `a.start + a.duration < b.start + b.duration` (a.start + a.duration is not after b)\n\nThis excludes intervals sharing the same exclusive end, even though such intervals should be considered contained under half-open interval semantics and it is also the case that an interval `a` is not part of itself. \nAn example would be that the interval `a = [102, 103)` would not be contained in an interval `b = [100,103)`.\n\nI suggest the following change.\n\nDefine interval containment explicitly using:\n- `a.start >= b.start`\n- `a.start + a.duration <= b.start + b.duration`\n\nThis permits intervals to share the same exclusive endpoint, including identical intervals, and ensures consistency with half-open interval semantics. \n\nI think this ensures the correct semantic.",
+      "createdAt": "2026-11-17T01:38:04Z",
+      "updatedAt": "2026-11-17T01:38:05Z",
+      "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "baseRefName": "main",
+      "baseRefOid": "b67dea77488aac1cf0a4244eda1b80edb736fee7",
+      "headRepository": "cryptoecurve/draft-ietf-ppm-dap",
+      "headRefName": "main",
+      "headRefOid": "b3748faff4b503a1e9dca31a553cfca846da2b0a",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
       "comments": [],
       "reviews": []
     }
