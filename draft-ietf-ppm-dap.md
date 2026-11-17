@@ -1432,8 +1432,14 @@ after an interval is said to be inside or fall within the interval.
 
 An interval `a` is said to be inside or fall within another interval `b` if:
 
+* `a.start >= b.start` and
+* `a.start + a.duration <= b.start + b.duration`.
+
+Equivalently, the following conditions must both hold:
+
 * `a.start` is not before `b` and
-* the the end of `a` (`a.start + a.duration`) is not after `b`.
+* the end of `a` (`a.start + a.duration`) is not after the end of `b`
+(`b.start + b.duration`).
 
 Intervals can only be meaningfully compared to one another if they use the same
 time precision.
