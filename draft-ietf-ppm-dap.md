@@ -102,6 +102,11 @@ contributor:
        email: shivankaulsahib@gmail.com
 
  -
+       name: Pascal Schäfer
+       org: Accenture
+       email: pascal.schaefer@accenture.com
+
+ -
        name: Phillipp Schoppmann
        org: Google
        email: schoppmann@google.com
@@ -4011,12 +4016,12 @@ interval.
 
 ### Batch Buckets {#time-interval-batch-buckets}
 
-Each batch bucket is identified by an `Interval` whose duration is equal to the
-task's `time_precision`. The identifier associated with a given report is the
-unique such interval containing the timestamp of the report. For example, if
-the task's `time_precision` is 1000 seconds and the report was generated at
-1729629081 seconds after the start of the UNIX epoch, the relevant batch
-bucket identifier is
+Each batch bucket is identified by an `Interval` whose duration is `1`,
+representing a duration of one `TimePrecision`. The identifier associated with
+a given report is the unique such interval containing the timestamp of the
+report. For example, if the task's `time_precision` is 1000 seconds and the
+report was generated at 1729629081 seconds after the start of the UNIX epoch,
+the relevant batch bucket identifier is
 
 ~~~ tls-presentation
 struct {
@@ -4027,7 +4032,10 @@ struct {
 
 The `Query` received by the Leader or `BatchSelector` received by the Helper
 determines a valid set of batch bucket identifiers if the batch interval's
-duration is greater than or equal to the task's `time_precision`.
+duration is greater than or equal to `1`.
+
+The duration of the batch interval in seconds is an integer multiple of the
+task's `time_precision`.
 
 A batch consists of a sequence of contiguous batch buckets. That is, the set of
 batch bucket identifiers for the batch interval is
