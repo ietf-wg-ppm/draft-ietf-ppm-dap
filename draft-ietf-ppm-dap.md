@@ -1204,9 +1204,9 @@ code as the most general code of that class. For example, 202 may be handled as
 
 ## Presentation Language
 
-We use the presentation language defined in {{!RFC8446, Section 3}} to define
+We use the presentation language defined in {{!RFC9846, Section 3}} to define
 messages in the protocol. Encoding and decoding of these messages as byte
-strings also follows {{!RFC8446}}.
+strings also follows {{!RFC9846}}.
 
 ## Request Authentication {#request-authentication}
 
