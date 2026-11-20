@@ -1386,8 +1386,8 @@ uint64 TimePrecision;
 uint64 Time;
 ~~~
 
-A `TimePrecision` is an integer number of seconds, used to compute times and
-durations in DAP. The time precision is a parameter of a task
+A `TimePrecision` is a nonzero integer number of seconds, used to compute times
+ and durations in DAP. The time precision is a parameter of a task
 ({{task-configuration}}).
 
 Times are integers, representing a number of `TimePrecision`s since the Epoch,
