@@ -1199,9 +1199,9 @@ code as the most general code of that class. For example, 202 may be handled as
 
 ## Presentation Language
 
-We use the presentation language defined in {{!RFC8446, Section 3}} to define
+We use the presentation language defined in {{!RFC9846, Section 3}} to define
 messages in the protocol. Encoding and decoding of these messages as byte
-strings also follows {{!RFC8446}}.
+strings also follows {{!RFC9846}}.
 
 ## Request Authentication {#request-authentication}
 
@@ -1209,8 +1209,9 @@ The protocol is made up of several interactions in which different subsets of
 participants interact with each other.
 
 In those cases where a channel between two participants is tunneled through
-another protocol participant, Hybrid Public Key Encryption ({{!HPKE=RFC9180}})
-ensures that only the intended recipient can see a message in the clear.
+another protocol participant, Hybrid Public Key Encryption
+({{!HPKE=I-D.draft-ietf-hpke-hpke-06}}) ensures that only the intended recipient
+can see a message in the clear.
 
 In other cases, HTTP client authentication is required as well as server
 authentication. Any authentication scheme that is composable with HTTP is
