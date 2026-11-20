@@ -1209,8 +1209,9 @@ The protocol is made up of several interactions in which different subsets of
 participants interact with each other.
 
 In those cases where a channel between two participants is tunneled through
-another protocol participant, Hybrid Public Key Encryption ({{!HPKE=RFC9180}})
-ensures that only the intended recipient can see a message in the clear.
+another protocol participant, Hybrid Public Key Encryption
+({{!HPKE=I-D.draft-ietf-hpke-hpke-06}}) ensures that only the intended recipient
+can see a message in the clear.
 
 In other cases, HTTP client authentication is required as well as server
 authentication. Any authentication scheme that is composable with HTTP is
