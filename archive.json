@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-11-19T05:54:48.936501+00:00",
+  "timestamp": "2026-11-22T05:04:44.080409+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -14353,6 +14353,37 @@
           "body": "I find David's argument for putting an idempotency key inside the `Query` compelling, and now think that's how we should resolve this.\n\nAt the heart of this whole problem is that the leader selected mode has an inherent complexity, quirkiness, ugliness to it. We've tried and tried and tried but we can't find another way to articulate the problem that makes the complexity go away. Inherently complex problems require solutions with matched complexity, meaning that we can't possibly paper over leader selected mode with the collection job abstraction. There has to be some quirkiness _somewhere_ in the system to accommodate the leader selected problem, and putting it somewhere specific to the leader selected mode is the right answer.",
           "createdAt": "2026-09-28T15:48:47Z",
           "updatedAt": "2026-09-28T15:48:47Z"
+        }
+      ]
+    },
+    {
+      "number": 803,
+      "id": "I_kwDOFEJYQs8AAAABhIfjuw",
+      "title": "Update HPKE reference to HPKE WG doc",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/803",
+      "state": "OPEN",
+      "author": "tgeoghegan",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "We currently reference RFC 9180 for HPKE, but we should instead use the [HPKE WG HPKE draft](https://datatracker.ietf.org/doc/draft-ietf-hpke-hpke/) so we get its better maintained IANA registries and stuff. Also something something downrefs.",
+      "createdAt": "2026-11-20T19:43:54Z",
+      "updatedAt": "2026-11-20T19:49:54Z",
+      "closedAt": null,
+      "comments": [
+        {
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "body": "draft-ietf-hpke-hpke is still a draft, but it's in the something-or-other queue, and will get an RFC number long before DAP does, so the reference will get updated automagically for us in the publishing process.",
+          "createdAt": "2026-11-20T19:45:11Z",
+          "updatedAt": "2026-11-20T19:45:11Z"
+        },
+        {
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Deb Cooley points out we should update our reference for TLS from RFC 8446 to 9846.",
+          "createdAt": "2026-11-20T19:49:53Z",
+          "updatedAt": "2026-11-20T19:49:53Z"
         }
       ]
     }
@@ -94868,13 +94899,13 @@
       "labels": [],
       "body": "Section 4.1.1 defines when an interval `a` falls within another interval `b`.\r\nThe current definition implies mathemtically\r\n- `a.start >= b.start`\r\n- `a.start + a.duration < b.start + b.duration` (a.start + a.duration is not after b)\r\n\r\nThis excludes intervals sharing the same exclusive end, even though such intervals should be considered contained under half-open interval semantics and it is also the case that an interval `a` is not part of itself. \r\nAn example would be that the interval `a = [102, 103)` would not be contained in an interval `b = [100,103)`.\r\n\r\nThis might affect the interpretation of batch selector consistency in Section 5.1.2 and Batch bucket selection in Sections 4.6.4 and 5.1.3 - at least if I correctly understood the text.\r\n\r\nIn particular, 5.1.3 states: \r\n```\r\nInterval {\r\n    start = batch_interval.start\r\n          + batch_interval.duration - 1,\r\n    duration = 1\r\n}\r\n````\r\n\r\nThis means that by using the example above it would mean that the last batch bucket is:\r\n\r\n```\r\nInterval {\r\n    start = 102,\r\n    duration = 1\r\n}\r\n```\r\n\r\nIf the definition of 4.1.1 is used this is interval does not fall within `b = [100,103)`, but it seems to be that it should, which seems to be an inconsistency between 5.1.3 and 4.1.1.\r\n\r\nI suggest the following change to correct this semantic.\r\n\r\nDefine interval containment explicitly using, which would fix the inconsistency above:\r\n- `a.start >= b.start`\r\n- `a.start + a.duration <= b.start + b.duration`\r\n\r\nThis permits intervals to share the same exclusive endpoint, including identical intervals, and ensures consistency with half-open interval semantics. ",
       "createdAt": "2026-11-17T01:38:04Z",
-      "updatedAt": "2026-11-18T06:04:28Z",
+      "updatedAt": "2026-11-20T17:26:58Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "b67dea77488aac1cf0a4244eda1b80edb736fee7",
       "headRepository": "cryptoecurve/draft-ietf-ppm-dap",
       "headRefName": "main",
-      "headRefOid": "765885c6edded206af97634d574132e85ea20211",
+      "headRefOid": "b3748faff4b503a1e9dca31a553cfca846da2b0a",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
@@ -94908,13 +94939,100 @@
       "labels": [],
       "body": "# Fix duration unit inconsistencies in time-interval batch buckets\n\nIt seems that Section 5.1.3 (\"Batch Buckets\") may contains two inconsistencies regarding the units used for `Duration`.\n\nThis PR tries to clarify the duration of individual batch buckets and try to correct the minimum-duration condition for valid batch intervals.\n\n## Description of the Problem\n\n### Batch bucket duration\n\nSection 5.1.3 states currently:\n\n> Each batch bucket is identified by an `Interval` whose duration is equal to the task's `time_precision`.\n\nNevertheless, Section 4.1.1 defines `Duration` as the number of `TimePrecision` units (i.e. \"That is, a number of seconds divided by the task's time_precision.\").\n\nIt seems to be intended that a batch bucket spanning exactly one `TimePrecision` unit has `Interval.duration = 1`, regardless of the configured `time_precision`.\n\nTake the example that is provided already in 5.1.3 with:\n\n- `time_precision = 1000` seconds\n- `Interval.duration = 1`\n\nThe interval represents 1000 seconds.\n\nThe current wording could be interpreted as `duration = time_precision`, where the duration seems to be always `1` in this case.\nNevertheless, if `duration = time_precision` is the intended text, this seems to be not consistent with the definition of `duration` in 4.1.1 where duration is the number of `TimePrecision` units.\n\nMoreover, the document states \"That is, a number of seconds divided by the task's time_precision\". This would mean that the seconds that are mentioned in this part of the text are required to be always a multiple of `time_precision` to ensure that the duration is always an unsigned integer. Is this always guaranteed?\n\n### Minimum valid batch interval duration\n\nSection 5.1.3 also states:\n\n> The `Query` received by the Leader or `BatchSelector` received by the Helper determines a valid set of batch bucket identifiers if the batch interval's duration is greater than or equal to the task's `time_precision`.\n\nAccording to Section 4.1.1, this condition compares values expressed in different units:\n\n- `batch_interval.duration`: number of TimePrecision units\n- `time_precision`: seconds per TimePrecision unit\n\nFor example, consider:\n\n```text\ntime_precision = 1000\n\nbatch_interval = Interval {\n    start = 1729629,\n    duration = 3\n}\n```\n\nThis interval represents 3000 seconds and contains three complete batch buckets.\n\nNevertheless, applying the current condition would lead to\n\n`3 >= 1000`\n\n and evaluates to false.\n\nThe interval would therefore be considered invalid despite containing three complete batch buckets.\n\nThe problem also affects a single-bucket interval with `duration = 1` whenever `time_precision > 1`.\n\n## Proposed changes\n\n**Change 1 - Batch bucket duration**\n\nClarify that an individual batch bucket has `Interval.duration = 1` (i.e. `Interval.duration = time_precision/time_precision`), corresponding to `time_precision` seconds.\n\n**Change 2 - Minimum batch interval duration**\n\nReplace the comparison with `time_precision` by a minimum duration of `1`, i.e.\n\n`batch_interval.duration >= 1`\n\nThis ensures that a valid batch interval contains at least one complete batch bucket.\n\n**Change 3 - Adding Me as a contributor**\n\nAs discussed on the hallway at the IETF 127 I added myself as a contributor in this PR.",
       "createdAt": "2026-11-18T06:52:15Z",
-      "updatedAt": "2026-11-18T06:52:57Z",
+      "updatedAt": "2026-11-20T19:18:32Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "b67dea77488aac1cf0a4244eda1b80edb736fee7",
       "headRepository": "cryptoecurve/draft-ietf-ppm-dap",
       "headRefName": "fix-duration-inconsistency",
       "headRefOid": "48abe4f672971196a386d456e39b9fc2f91e349c",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOFEJYQs8AAAABZYQH6w",
+          "commit": {
+            "abbreviatedOid": "48abe4f"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-11-20T19:18:27Z",
+          "updatedAt": "2026-11-20T19:18:31Z",
+          "comments": [
+            {
+              "originalPosition": 27,
+              "body": "Consider reminding the reader here that the actual interval is a multiple of `time_precision`.",
+              "createdAt": "2026-11-20T19:18:27Z",
+              "updatedAt": "2026-11-20T19:18:31Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 802,
+      "id": "PR_kwDOFEJYQs8AAAABQvbrLQ",
+      "title": "Require nonzero time_precision in task configurations",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/802",
+      "state": "OPEN",
+      "author": "cryptoecurve",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "## Problem \n\nSection 4.1.1 defines TimePrecision as a uint64 representing an integer number of seconds. \nIt allows `time_precision = 0` in the task configuration.\n\nMoreover, Section 4.1.1 states \n> Times are integers, representing a number of `TimePrecision`s since the Epoch,\ndefined in section 4.16 of {{POSIX}}. That is, the number of seconds after\n1970-01-01 00:00:00 UTC, excluding leap seconds, divided by the task's\n`time_precision`.\n \nwhich might lead to a division by zero if `time_precision` could be `0`.\n\n## Proposed Change\n\nThis PR:\n\nClarifies in Section 4.1.1 that a TimePrecision is a positive integer number of seconds.\n\n## Rationale\n\nThe change clarifies the valid range of time_precision without modifying its wire representation.\n\nIt also ensures that implementations can identify invalid task configurations before performing time calculations that require division by time_precision.",
+      "createdAt": "2026-11-20T18:37:30Z",
+      "updatedAt": "2026-11-20T19:18:56Z",
+      "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "baseRefName": "main",
+      "baseRefOid": "b67dea77488aac1cf0a4244eda1b80edb736fee7",
+      "headRepository": "cryptoecurve/draft-ietf-ppm-dap",
+      "headRefName": "time_precision_is_zero",
+      "headRefOid": "fc4f2c7e9bceac84655003fb55d7026469284b5c",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOFEJYQs8AAAABZYQb5g",
+          "commit": {
+            "abbreviatedOid": "fc4f2c7"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2026-11-20T19:18:56Z",
+          "updatedAt": "2026-11-20T19:18:56Z",
+          "comments": []
+        }
+      ]
+    },
+    {
+      "number": 804,
+      "id": "PR_kwDOFEJYQs8AAAABQwxU2A",
+      "title": "Update HPKE and TLS references",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/804",
+      "state": "OPEN",
+      "author": "tgeoghegan",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Closes #803",
+      "createdAt": "2026-11-20T20:32:14Z",
+      "updatedAt": "2026-11-20T20:32:47Z",
+      "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "baseRefName": "main",
+      "baseRefOid": "b67dea77488aac1cf0a4244eda1b80edb736fee7",
+      "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "headRefName": "timg-hpke-ref",
+      "headRefOid": "5fece40fd83289856819c11872bf5b64bdeebb88",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
