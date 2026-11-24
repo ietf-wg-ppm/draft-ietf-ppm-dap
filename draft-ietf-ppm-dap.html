@@ -3663,14 +3663,24 @@ after an interval is said to be inside or fall within the interval.<a href="#sec
 <p id="section-4.1.1-10">An interval <code>a</code> is said to be inside or fall within another interval <code>b</code> if:<a href="#section-4.1.1-10" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-4.1.1-11.1">
-              <p id="section-4.1.1-11.1.1"><code>a.start</code> is not before <code>b</code> and<a href="#section-4.1.1-11.1.1" class="pilcrow">¶</a></p>
+              <p id="section-4.1.1-11.1.1"><code>a.start &gt;= b.start</code> and<a href="#section-4.1.1-11.1.1" class="pilcrow">¶</a></p>
 </li>
             <li class="normal" id="section-4.1.1-11.2">
-              <p id="section-4.1.1-11.2.1">the the end of <code>a</code> (<code>a.start + a.duration</code>) is not after <code>b</code>.<a href="#section-4.1.1-11.2.1" class="pilcrow">¶</a></p>
+              <p id="section-4.1.1-11.2.1"><code>a.start + a.duration &lt;= b.start + b.duration</code>.<a href="#section-4.1.1-11.2.1" class="pilcrow">¶</a></p>
 </li>
           </ul>
-<p id="section-4.1.1-12">Intervals can only be meaningfully compared to one another if they use the same
-time precision.<a href="#section-4.1.1-12" class="pilcrow">¶</a></p>
+<p id="section-4.1.1-12">Equivalently, the following conditions must both hold:<a href="#section-4.1.1-12" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-4.1.1-13.1">
+              <p id="section-4.1.1-13.1.1"><code>a.start</code> is not before <code>b</code> and<a href="#section-4.1.1-13.1.1" class="pilcrow">¶</a></p>
+</li>
+            <li class="normal" id="section-4.1.1-13.2">
+              <p id="section-4.1.1-13.2.1">the end of <code>a</code> (<code>a.start + a.duration</code>) is not after the end of <code>b</code>
+(<code>b.start + b.duration</code>).<a href="#section-4.1.1-13.2.1" class="pilcrow">¶</a></p>
+</li>
+          </ul>
+<p id="section-4.1.1-14">Intervals can only be meaningfully compared to one another if they use the same
+time precision.<a href="#section-4.1.1-14" class="pilcrow">¶</a></p>
 <div id="examples">
 <section id="section-4.1.1.1">
             <h5 id="name-examples">
