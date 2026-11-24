@@ -3372,9 +3372,9 @@ code as the most general code of that class. For example, 202 may be handled as
         <h3 id="name-presentation-language">
 <a href="#section-3.4" class="section-number selfRef">3.4. </a><a href="#name-presentation-language" class="section-name selfRef">Presentation Language</a>
         </h3>
-<p id="section-3.4-1">We use the presentation language defined in <span>[<a href="#RFC8446" class="cite xref">RFC8446</a>], <a href="https://rfc-editor.org/rfc/rfc8446#section-3" class="relref">Section 3</a></span> to define
+<p id="section-3.4-1">We use the presentation language defined in <span>[<a href="#RFC9846" class="cite xref">RFC9846</a>], <a href="https://rfc-editor.org/rfc/rfc9846#section-3" class="relref">Section 3</a></span> to define
 messages in the protocol. Encoding and decoding of these messages as byte
-strings also follows <span>[<a href="#RFC8446" class="cite xref">RFC8446</a>]</span>.<a href="#section-3.4-1" class="pilcrow">¶</a></p>
+strings also follows <span>[<a href="#RFC9846" class="cite xref">RFC9846</a>]</span>.<a href="#section-3.4-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="request-authentication">
@@ -3385,8 +3385,9 @@ strings also follows <span>[<a href="#RFC8446" class="cite xref">RFC8446</a>]</s
 <p id="section-3.5-1">The protocol is made up of several interactions in which different subsets of
 participants interact with each other.<a href="#section-3.5-1" class="pilcrow">¶</a></p>
 <p id="section-3.5-2">In those cases where a channel between two participants is tunneled through
-another protocol participant, Hybrid Public Key Encryption (<span>[<a href="#HPKE" class="cite xref">HPKE</a>]</span>)
-ensures that only the intended recipient can see a message in the clear.<a href="#section-3.5-2" class="pilcrow">¶</a></p>
+another protocol participant, Hybrid Public Key Encryption
+(<span>[<a href="#HPKE" class="cite xref">HPKE</a>]</span>) ensures that only the intended recipient
+can see a message in the clear.<a href="#section-3.5-2" class="pilcrow">¶</a></p>
 <p id="section-3.5-3">In other cases, HTTP client authentication is required as well as server
 authentication. Any authentication scheme that is composable with HTTP is
 allowed. For example:<a href="#section-3.5-3" class="pilcrow">¶</a></p>
@@ -3974,7 +3975,7 @@ uint16 HpkeKdfId;
 </pre><a href="#section-4.4.1-4" class="pilcrow">¶</a>
 </div>
 <p id="section-4.4.1-5">The possible values for <code>HpkeAeadId</code>, <code>HpkeKemId</code> and <code>HpkeKdfId</code> are as defined
-in <span>[<a href="#HPKE" class="cite xref">HPKE</a>], <a href="https://rfc-editor.org/rfc/rfc9180#section-7" class="relref">Section 7</a></span>.<a href="#section-4.4.1-5" class="pilcrow">¶</a></p>
+in <span>[<a href="#HPKE" class="cite xref">HPKE</a>], <a href="https://datatracker.ietf.org/doc/html/draft-ietf-hpke-hpke-06#section-7" class="relref">Section 7</a></span>.<a href="#section-4.4.1-5" class="pilcrow">¶</a></p>
 <p id="section-4.4.1-6">Aggregators <span class="bcp14">MUST</span> allocate distinct <code>id</code> values for each <code>HpkeConfig</code> in an
 <code>HpkeConfigList</code>.<a href="#section-4.4.1-6" class="pilcrow">¶</a></p>
 <p id="section-4.4.1-7">The Client <span class="bcp14">MUST</span> abort if:<a href="#section-4.4.1-7" class="pilcrow">¶</a></p>
@@ -4180,7 +4181,7 @@ enc, payload = SealBase(pk,
                 <p id="section-4.4.2.1-11.5.1"><code>input_share_aad</code> is an encoded <code>InputShareAad</code>, defined below.<a href="#section-4.4.2.1-11.5.1" class="pilcrow">¶</a></p>
 </li>
             </ul>
-<p id="section-4.4.2.1-12">The <code>SealBase()</code> function is as specified in <span>[<a href="#HPKE" class="cite xref">HPKE</a>], <a href="https://rfc-editor.org/rfc/rfc9180#section-6.1" class="relref">Section 6.1</a></span> for the
+<p id="section-4.4.2.1-12">The <code>SealBase()</code> function is as specified in <span>[<a href="#HPKE" class="cite xref">HPKE</a>], <a href="https://datatracker.ietf.org/doc/html/draft-ietf-hpke-hpke-06#section-6.1" class="relref">Section 6.1</a></span> for the
 ciphersuite indicated by the Aggregator's HPKE configuration.<a href="#section-4.4.2.1-12" class="pilcrow">¶</a></p>
 <div class="lang-tls-presentation sourcecode" id="section-4.4.2.1-13">
 <pre>
@@ -5133,7 +5134,7 @@ plaintext_input_share = OpenBase(encrypted_input_share.enc, sk,
 and <code>0x03</code> for the Helper).<a href="#section-4.5.3.3-3.3.1" class="pilcrow">¶</a></p>
 </li>
             </ul>
-<p id="section-4.5.3.3-4">The <code>OpenBase()</code> function is as specified in <span>[<a href="#HPKE" class="cite xref">HPKE</a>], <a href="https://rfc-editor.org/rfc/rfc9180#section-6.1" class="relref">Section 6.1</a></span> for the
+<p id="section-4.5.3.3-4">The <code>OpenBase()</code> function is as specified in <span>[<a href="#HPKE" class="cite xref">HPKE</a>], <a href="https://datatracker.ietf.org/doc/html/draft-ietf-hpke-hpke-06#section-6.1" class="relref">Section 6.1</a></span> for the
 ciphersuite indicated by the HPKE configuration.<a href="#section-4.5.3.3-4" class="pilcrow">¶</a></p>
 <p id="section-4.5.3.3-5">If the HPKE configuration ID is unrecognized, the Aggregator marks the report
 share as invalid with the error <code>hpke_unknown_config_id</code>. If reports are
@@ -6532,7 +6533,7 @@ done as follows:<a href="#section-4.6.7-1" class="pilcrow">¶</a></p>
               <p id="section-4.6.7-3.4.1"><code>agg_share_aad</code> is an <code>AggregateShareAad</code> (defined below).<a href="#section-4.6.7-3.4.1" class="pilcrow">¶</a></p>
 </li>
           </ul>
-<p id="section-4.6.7-4">The <code>SealBase()</code> function is as specified in <span>[<a href="#HPKE" class="cite xref">HPKE</a>], <a href="https://rfc-editor.org/rfc/rfc9180#section-6.1" class="relref">Section 6.1</a></span> for the
+<p id="section-4.6.7-4">The <code>SealBase()</code> function is as specified in <span>[<a href="#HPKE" class="cite xref">HPKE</a>], <a href="https://datatracker.ietf.org/doc/html/draft-ietf-hpke-hpke-06#section-6.1" class="relref">Section 6.1</a></span> for the
 ciphersuite indicated by the HPKE configuration.<a href="#section-4.6.7-4" class="pilcrow">¶</a></p>
 <div class="lang-tls-presentation sourcecode" id="section-4.6.7-5">
 <pre>
@@ -6586,7 +6587,7 @@ for the Leader and <code>0x03</code> for the Helper)<a href="#section-4.6.7-9.2.
 and the collection job request (see <a href="#collect-init" class="auto internal xref">Section 4.6.1</a>).<a href="#section-4.6.7-9.4.1" class="pilcrow">¶</a></p>
 </li>
           </ul>
-<p id="section-4.6.7-10">The <code>OpenBase()</code> function is as specified in <span>[<a href="#HPKE" class="cite xref">HPKE</a>], <a href="https://rfc-editor.org/rfc/rfc9180#section-6.1" class="relref">Section 6.1</a></span> for the
+<p id="section-4.6.7-10">The <code>OpenBase()</code> function is as specified in <span>[<a href="#HPKE" class="cite xref">HPKE</a>], <a href="https://datatracker.ietf.org/doc/html/draft-ietf-hpke-hpke-06#section-6.1" class="relref">Section 6.1</a></span> for the
 ciphersuite indicated by the HPKE configuration.<a href="#section-4.6.7-10" class="pilcrow">¶</a></p>
 </section>
 </div>
@@ -7162,13 +7163,13 @@ otherwise, a compliant DAP application <span class="bcp14">MUST</span> implement
 suite:<a href="#section-7-1" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-7-2.1">
-          <p id="section-7-2.1.1">KEM: DHKEM(X25519, HKDF-SHA256) (see <span>[<a href="#HPKE" class="cite xref">HPKE</a>], <a href="https://rfc-editor.org/rfc/rfc9180#section-7.1" class="relref">Section 7.1</a></span>)<a href="#section-7-2.1.1" class="pilcrow">¶</a></p>
+          <p id="section-7-2.1.1">KEM: DHKEM(X25519, HKDF-SHA256) (see <span>[<a href="#HPKE" class="cite xref">HPKE</a>], <a href="https://datatracker.ietf.org/doc/html/draft-ietf-hpke-hpke-06#section-7.1" class="relref">Section 7.1</a></span>)<a href="#section-7-2.1.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-7-2.2">
-          <p id="section-7-2.2.1">KDF: HKDF-SHA256 (see <span>[<a href="#HPKE" class="cite xref">HPKE</a>], <a href="https://rfc-editor.org/rfc/rfc9180#section-7.2" class="relref">Section 7.2</a></span>)<a href="#section-7-2.2.1" class="pilcrow">¶</a></p>
+          <p id="section-7-2.2.1">KDF: HKDF-SHA256 (see <span>[<a href="#HPKE" class="cite xref">HPKE</a>], <a href="https://datatracker.ietf.org/doc/html/draft-ietf-hpke-hpke-06#section-7.2" class="relref">Section 7.2</a></span>)<a href="#section-7-2.2.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-7-2.3">
-          <p id="section-7-2.3.1">AEAD: AES-128-GCM (see <span>[<a href="#HPKE" class="cite xref">HPKE</a>], <a href="https://rfc-editor.org/rfc/rfc9180#section-7.3" class="relref">Section 7.3</a></span>)<a href="#section-7-2.3.1" class="pilcrow">¶</a></p>
+          <p id="section-7-2.3.1">AEAD: AES-128-GCM (see <span>[<a href="#HPKE" class="cite xref">HPKE</a>], <a href="https://datatracker.ietf.org/doc/html/draft-ietf-hpke-hpke-06#section-7.3" class="relref">Section 7.3</a></span>)<a href="#section-7-2.3.1" class="pilcrow">¶</a></p>
 </li>
       </ul>
 </section>
@@ -8329,7 +8330,7 @@ attacks described in <a href="#task-binding" class="auto internal xref">Section 
 <dl class="references">
 <dt id="HPKE">[HPKE]</dt>
         <dd>
-<span class="refAuthor">Barnes, R.</span>, <span class="refAuthor">Bhargavan, K.</span>, <span class="refAuthor">Lipp, B.</span>, and <span class="refAuthor">C. Wood</span>, <span class="refTitle">"Hybrid Public Key Encryption"</span>, <span class="seriesInfo">RFC 9180</span>, <span class="seriesInfo">DOI 10.17487/RFC9180</span>, <time datetime="2022-02" class="refDate">February 2022</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc9180">https://www.rfc-editor.org/rfc/rfc9180</a>&gt;</span>. </dd>
+<span class="refAuthor">Barnes, R.</span>, <span class="refAuthor">Bhargavan, K.</span>, <span class="refAuthor">Lipp, B.</span>, and <span class="refAuthor">C. A. Wood</span>, <span class="refTitle">"Hybrid Public Key Encryption"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-hpke-hpke-06</span>, <time datetime="2026-10-28" class="refDate">28 October 2026</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-hpke-hpke-06">https://datatracker.ietf.org/doc/html/draft-ietf-hpke-hpke-06</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="POSIX">[POSIX]</dt>
         <dd>
@@ -8386,6 +8387,10 @@ attacks described in <a href="#task-binding" class="auto internal xref">Section 
 <dt id="RFC9458">[RFC9458]</dt>
         <dd>
 <span class="refAuthor">Thomson, M.</span> and <span class="refAuthor">C. A. Wood</span>, <span class="refTitle">"Oblivious HTTP"</span>, <span class="seriesInfo">RFC 9458</span>, <span class="seriesInfo">DOI 10.17487/RFC9458</span>, <time datetime="2024-01" class="refDate">January 2024</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc9458">https://www.rfc-editor.org/rfc/rfc9458</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC9846">[RFC9846]</dt>
+        <dd>
+<span class="refAuthor">Rescorla, E.</span>, <span class="refTitle">"The Transport Layer Security (TLS) Protocol Version 1.3"</span>, <span class="seriesInfo">RFC 9846</span>, <span class="seriesInfo">DOI 10.17487/RFC9846</span>, <time datetime="2026-07" class="refDate">July 2026</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc9846">https://www.rfc-editor.org/rfc/rfc9846</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="SHS">[SHS]</dt>
         <dd>

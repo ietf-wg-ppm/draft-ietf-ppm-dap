@@ -1242,9 +1242,9 @@ Table of Contents
 
 3.4.  Presentation Language
 
-   We use the presentation language defined in [RFC8446], Section 3 to
+   We use the presentation language defined in [RFC9846], Section 3 to
    define messages in the protocol.  Encoding and decoding of these
-   messages as byte strings also follows [RFC8446].
+   messages as byte strings also follows [RFC9846].
 
 3.5.  Request Authentication
 
@@ -5228,9 +5228,11 @@ Table of Contents
 
 11.1.  Normative References
 
-   [HPKE]     Barnes, R., Bhargavan, K., Lipp, B., and C. Wood, "Hybrid
-              Public Key Encryption", RFC 9180, DOI 10.17487/RFC9180,
-              February 2022, <https://www.rfc-editor.org/rfc/rfc9180>.
+   [HPKE]     Barnes, R., Bhargavan, K., Lipp, B., and C. A. Wood,
+              "Hybrid Public Key Encryption", Work in Progress,
+              Internet-Draft, draft-ietf-hpke-hpke-06, 28 October 2026,
+              <https://datatracker.ietf.org/doc/html/draft-ietf-hpke-
+              hpke-06>.
 
    [POSIX]    "IEEE Standard for Information Technology--Portable
               Operating System Interface (POSIX(TM)) Base
@@ -5297,6 +5299,10 @@ Table of Contents
    [RFC9458]  Thomson, M. and C. A. Wood, "Oblivious HTTP", RFC 9458,
               DOI 10.17487/RFC9458, January 2024,
               <https://www.rfc-editor.org/rfc/rfc9458>.
+
+   [RFC9846]  Rescorla, E., "The Transport Layer Security (TLS) Protocol
+              Version 1.3", RFC 9846, DOI 10.17487/RFC9846, July 2026,
+              <https://www.rfc-editor.org/rfc/rfc9846>.
 
    [SHS]      "Secure hash standard", National Institute of Standards
               and Technology (U.S.), DOI 10.6028/nist.fips.180-4, 2015,
