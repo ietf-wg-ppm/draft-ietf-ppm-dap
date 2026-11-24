@@ -5,14 +5,14 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 24 April 2027                                        Cloudflare
+Expires: 28 May 2027                                          Cloudflare
                                                                B. Pitman
                                                                     ISRG
                                                              E. Rescorla
                                                              Independent
                                                               C. A. Wood
                                                               Cloudflare
-                                                         21 October 2026
+                                                        24 November 2026
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -64,7 +64,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 24 April 2027.
+   This Internet-Draft will expire on 28 May 2027.
 
 Copyright Notice
 
@@ -1455,9 +1455,9 @@ Table of Contents
 
    uint64 Time;
 
-   A TimePrecision is an integer number of seconds, used to compute
-   times and durations in DAP.  The time precision is a parameter of a
-   task (Section 4.2).
+   A TimePrecision is a nonzero integer number of seconds, used to
+   compute times and durations in DAP.  The time precision is a
+   parameter of a task (Section 4.2).
 
    Times are integers, representing a number of TimePrecisions since the
    Epoch, defined in section 4.16 of [POSIX].  That is, the number of
